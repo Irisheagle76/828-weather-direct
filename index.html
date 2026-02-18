@@ -458,4 +458,13 @@
                 if (parts.length === 0) {
                     trendEl.innerText = "No strong recent pattern — conditions have been fairly changeable over the last 60 days.";
                 } else {
-                    trendEl
+                    trendEl.innerText = parts.join(" ");
+                }
+
+            } catch (err) {
+                trendEl.innerText = "Trend data unavailable.";
+            }
+        }
+    </script>
+</body>
+</html>
