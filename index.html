@@ -18,10 +18,26 @@
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .stat-item { background: #f9f9f9; padding: 15px; border-radius: 10px; border: 1px solid #eee; }
         .label { font-size: 0.7em; color: var(--navy); font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 5px; }
-        .value { font-size: 1.1em; font-weight: 600; }
-        .btn-geo { background: var(--orange); color: white; border: none; padding: 12px; border-radius: 25px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 20px; font-size: 1em; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .value { font-size: 1.1em; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+
+        /* Comfort Badges */
+        .comfort-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.7em;
+            font-weight: bold;
+            color: white;
+        }
+        .badge-danger { background: #d63031; }
+        .badge-ideal { background: #2ecc71; }
+        .badge-warm { background: #e67e22; }
+        .badge-chilly { background: #15286c; }
+        .badge-seasonal { background: #d7b894; color: #4a3b2a; }
+
         .trend-card { background: #f9f9f9; padding: 15px; border-radius: 10px; border: 1px solid #eee; margin-top: 20px; }
         .trend-text { font-size: 0.95em; line-height: 1.4; }
+        .btn-geo { background: var(--orange); color: white; border: none; padding: 12px; border-radius: 25px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 20px; font-size: 1em; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     </style>
 </head>
 
@@ -44,14 +60,20 @@
                 <span class="label">PWS Temp</span>
                 <div id="local-temp" class="value">--°F</div>
             </div>
+
             <div class="stat-item">
                 <span class="label">Your Elevation</span>
                 <div id="user-elev" class="value">-- ft</div>
             </div>
+
             <div class="stat-item">
                 <span class="label">Human Comfort</span>
-                <div id="comfort-report" class="value">Syncing...</div>
+                <div class="value">
+                    <span id="comfort-badge" class="comfort-badge"></span>
+                    <span id="comfort-report">Syncing...</span>
+                </div>
             </div>
+
             <div class="stat-item">
                 <span class="label">Wind Status</span>
                 <div id="wind-status" class="value">Checking...</div>
@@ -92,7 +114,6 @@
                 if (!response.ok) throw new Error("API Error");
                 const data = await response.json();
 
-                // --- Core Data ---
                 document.getElementById('local-temp').innerText =
                     Math.round(data.current.temperature_2m) + "°F";
 
@@ -143,12 +164,18 @@
                 // --- Comfort Logic ---
                 const temp = data.current.temperature_2m;
                 const comfort = document.getElementById('comfort-report');
+                const badge = document.getElementById('comfort-badge');
+                badge.className = "comfort-badge";
 
                 if (temp <= 10 || (temp <= 20 && gusts >= 15)) {
                     comfort.innerText = "🚨 DANGEROUSLY COLD: Frostbite risk!";
+                    badge.classList.add("badge-danger");
+                    badge.innerText = "DANGER";
                 }
                 else if (temp >= 68 && temp <= 74 && dewPoint >= 45 && dewPoint <= 52) {
                     comfort.innerText = "✨ Goldilocks! Just right!";
+                    badge.classList.add("badge-ideal");
+                    badge.innerText = "IDEAL";
                 }
                 else if (temp >= 75) {
                     if (dewPoint < 50) comfort.innerText = "✨ Ultra Crisp";
@@ -158,12 +185,19 @@
                     else if (dewPoint < 70) comfort.innerText = "💧 Muggy";
                     else if (dewPoint < 75) comfort.innerText = "🌡️ Oppressive";
                     else comfort.innerText = "🌋 Extreme Humidity";
+
+                    badge.classList.add("badge-warm");
+                    badge.innerText = "WARM";
                 }
                 else if (temp < 45 && gusts > 15) {
                     comfort.innerText = "🥶 Biting Chill: Bundle up!";
+                    badge.classList.add("badge-chilly");
+                    badge.innerText = "CHILLY";
                 }
                 else {
                     comfort.innerText = "Seasonably Comfortable Overall";
+                    badge.classList.add("badge-seasonal");
+                    badge.innerText = "SEASONAL";
                 }
 
                 // --- Impacts ---
@@ -173,7 +207,7 @@
                 document.getElementById('icon-snow').classList.toggle('active', hasSnow);
                 document.getElementById('icon-rain').classList.toggle('active', hasRain);
 
-                // --- Trends (last 60 days) ---
+                // --- Trends ---
                 updateTrends(lat, lon);
 
             } catch (err) {
@@ -188,7 +222,7 @@
             try {
                 const today = new Date();
                 const start = new Date();
-                start.setDate(today.getDate() - 59); // last 60 days including today
+                start.setDate(today.getDate() - 59);
 
                 const startDate = formatDate(start);
                 const endDate = formatDate(today);
@@ -209,25 +243,22 @@
                     return;
                 }
 
-                // --- Warm streak (>= 60°F) ---
                 let warmStreak = 0;
                 for (let i = n - 1; i >= 0; i--) {
                     if (tmax[i] >= 60) warmStreak++;
                     else break;
                 }
 
-                // --- Dry streak (precip < 0.01") ---
                 let dryStreak = 0;
                 for (let i = n - 1; i >= 0; i--) {
                     if (precip[i] < 0.01) dryStreak++;
                     else break;
                 }
 
-                // --- Weekend pattern (last several Sundays) ---
                 const weekendInfos = [];
                 for (let i = n - 1; i >= 0; i--) {
                     const d = new Date(times[i]);
-                    const dow = d.getUTCDay(); // 0 = Sunday
+                    const dow = d.getUTCDay();
                     if (dow === 0) {
                         let wet = precip[i] > 0.05;
                         if (i - 1 >= 0) {
@@ -242,13 +273,12 @@
 
                 let unsettledStreak = 0;
                 let dryWeekendStreak = 0;
+
                 if (weekendInfos.length > 0) {
-                    // consecutive unsettled weekends from most recent
                     for (let i = 0; i < weekendInfos.length; i++) {
                         if (weekendInfos[i].wet) unsettledStreak++;
                         else break;
                     }
-                    // consecutive mainly dry weekends from most recent
                     for (let i = 0; i < weekendInfos.length; i++) {
                         if (!weekendInfos[i].wet) dryWeekendStreak++;
                         else break;
@@ -266,7 +296,7 @@
                 }
 
                 if (unsettledStreak >= 2) {
-                    parts.push(`Weekends: ${unsettledStreak} unsettled weekend(s) in a row (rain on Saturday and/or Sunday).`);
+                    parts.push(`Weekends: ${unsettledStreak} unsettled weekend(s) in a row.`);
                 } else if (dryWeekendStreak >= 2) {
                     parts.push(`Weekends: ${dryWeekendStreak} mainly dry weekend(s) in a row.`);
                 }
