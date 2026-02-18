@@ -33,41 +33,44 @@
         <button class="btn-geo" onclick="getLocation()">Detect My Elevation & Station</button>
         <div class="stat-grid">
             <div class="stat-item"><span class="label">PWS Temp</span><div id="local-temp" class="value">--°F</div></div>
-            <div class="stat-item"><span class="label">Elevation</span><div id="user-elev" class="value">-- ft</div></div>
+            <div class="stat-item"><span class="label">Your Elevation</span><div id="user-elev" class="value">-- ft</div></div>
             <div class="stat-item"><span class="label">Human Comfort</span><div id="comfort-report" class="value">Loading...</div></div>
             <div class="stat-item"><span class="label">Wind Status</span><div id="wind-status" class="value">Loading...</div></div>
         </div>
     </div>
 
     <script>
-        const NWS_PROXY = "https://api.allorigins.win/get?url=";
+        // Set default Asheville coords
+        const defLat = 35.5951;
+        const defLon = -82.5515;
 
-        // Default to Asheville City
-        window.onload = () => updateWeather(35.5951, -82.5515);
+        // Auto-load on startup
+        window.onload = () => updateWeather(defLat, defLon);
 
         function getLocation() {
             if (navigator.geolocation) {
                 document.getElementById('user-elev').innerText = "Locating...";
                 navigator.geolocation.getCurrentPosition(pos => {
                     updateWeather(pos.coords.latitude, pos.coords.longitude);
-                }, () => updateWeather(35.5951, -82.5515));
+                }, () => updateWeather(defLat, defLon));
             }
         }
 
         async function updateWeather(lat, lon) {
             try {
-                // 1. OPEN-METEO DATA (Direct, No Proxy)
-                // Includes: Current Temp, Elevation, Dewpoint, Wind Gusts, Snowfall
+                // OPEN-METEO DATA: Direct, No Proxy, No CORS issues
                 const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_gusts_10m&hourly=dew_point_2m,snowfall,rain&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&elevation=true&forecast_days=3`;
                 
                 const response = await fetch(weatherUrl);
+                if (!response.ok) throw new Error("Weather server unreachable");
                 const data = await response.json();
 
-                // Elevation & Temp
-                document.getElementById('user-elev').innerText = Math.round(data.elevation * 3.28084) + " ft";
+                // 1. Elevation & Temp (Immune to NWS errors)
+                const elevInFeet = Math.round(data.elevation * 3.28084);
+                document.getElementById('user-elev').innerText = isNaN(elevInFeet) ? "-- ft" : elevInFeet + " ft";
                 document.getElementById('local-temp').innerText = Math.round(data.current.temperature_2m) + "°F";
 
-                // Human Comfort (Dew Point)
+                // 2. Human Comfort
                 const dewPoint = data.hourly.dew_point_2m[0];
                 const temp = data.current.temperature_2m;
                 const comfort = document.getElementById('comfort-report');
@@ -79,7 +82,7 @@
                     comfort.innerText = "Neutral (Cool)";
                 }
 
-                // Wind Status (Actionable Tiers)
+                // 3. Wind Status (Actionable Tiers)
                 const gusts = data.current.wind_gusts_10m;
                 const windStatus = document.getElementById('wind-status');
                 const alertPill = document.getElementById('main-alert');
@@ -101,39 +104,17 @@
                     alertPill.style.display = 'none';
                 }
 
-                // Snow & Rain Icons (Look ahead 48h)
+                // 4. Snow & Rain Icons
                 const hasSnow = data.hourly.snowfall.slice(0, 48).some(s => s > 0);
-                const hasHeavyRain = data.hourly.rain.slice(0, 12).some(r => r > 0.1); // 0.1in per hour
-                if (hasSnow) document.getElementById('icon-snow').classList.add('active');
-                if (hasHeavyRain) document.getElementById('icon-rain').classList.add('active');
-
-                // 2. NWS ALERTS (Through Proxy - Only for official text)
-                fetchNWSAlerts(lat, lon);
+                const hasHeavyRain = data.hourly.rain.slice(0, 12).some(r => r > 0.1);
+                document.getElementById('icon-snow').classList.toggle('active', hasSnow);
+                document.getElementById('icon-rain').classList.toggle('active', hasHeavyRain);
 
             } catch (e) {
-                console.error("Open-Meteo Error", e);
+                console.error("Critical Error", e);
                 document.getElementById('comfort-report').innerText = "Offline";
+                document.getElementById('wind-status').innerText = "Offline";
             }
-        }
-
-        async function fetchNWSAlerts(lat, lon) {
-            try {
-                const alertUrl = `https://api.weather.gov/alerts/active?point=${lat},${lon}`;
-                const res = await fetch(NWS_PROXY + encodeURIComponent(alertUrl));
-                const wrapper = await res.json();
-                const aData = JSON.parse(wrapper.contents);
-                
-                if (aData.features && aData.features.length > 0) {
-                    const alertPill = document.getElementById('main-alert');
-                    const event = aData.features[0].properties.event;
-                    // Only overwrite if wind isn't already showing a higher-priority alert
-                    if (alertPill.style.display !== 'block') {
-                        alertPill.style.display = 'block';
-                        alertPill.style.background = 'var(--navy)';
-                        alertPill.innerHTML = `⚠️ NWS ALERT: ${event}`;
-                    }
-                }
-            } catch (e) { console.log("NWS Alert Fetch skipped or failed."); }
         }
     </script>
 </body>
