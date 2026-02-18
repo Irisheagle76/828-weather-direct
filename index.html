@@ -52,44 +52,38 @@ function getLocation() {
 }
 
 async function updateWeather(lat, lon) {
-    try {
+    const weatherUrl =
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_gusts_10m&hourly=dewpoint_2m,snowfall,rain&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America/New_York`;
 
-        const weatherUrl =
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_gusts_10m&hourly=dewpoint_2m,snowfall,rain&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&forecast_days=3`;
+    try {
+        console.log("Fetching:", weatherUrl);
 
         const response = await fetch(weatherUrl);
 
-        if (!response.ok) throw new Error("API response not OK");
+        if (!response.ok) {
+            console.error("API Status:", response.status);
+            throw new Error("API failure");
+        }
 
         const data = await response.json();
+        console.log("API Success:", data);
 
-        if (!data.current || !data.hourly) throw new Error("Malformed API data");
+        if (!data.current) throw new Error("Missing current data");
 
-        // Elevation
-        const feet = Math.round((data.elevation || 0) * 3.28084);
-        document.getElementById('user-elev').innerText =
-            feet ? feet + " ft" : "-- ft";
-
-        // Temperature
         document.getElementById('local-temp').innerText =
             Math.round(data.current.temperature_2m) + "°F";
 
-        // Comfort
-        const dewArray = data.hourly.dewpoint_2m || [];
-        const dewPoint = dewArray.length ? dewArray[0] : null;
-        const temp = data.current.temperature_2m;
+        document.getElementById('wind-status').innerText =
+            "CALM (" + Math.round(data.current.wind_gusts_10m || 0) + " mph)";
 
-        const comfort = document.getElementById('comfort-report');
+        document.getElementById('comfort-report').innerText = "Online";
 
-        if (dewPoint === null) {
-            comfort.innerText = "Unavailable";
-        } else if (temp >= 65) {
-            if (dewPoint < 55) comfort.innerText = "🧤 Crisp";
-            else if (dewPoint <= 60) comfort.innerText = "👌 Pleasant";
-            else comfort.innerText = "💧 Sticky";
-        } else {
-            comfort.innerText = "Neutral (Cool)";
-        }
+    } catch (err) {
+        console.error("Weather Load Failed:", err);
+        document.getElementById('comfort-report').innerText = "Offline";
+        document.getElementById('wind-status').innerText = "Offline";
+    }
+}
 
         // Wind
         const gusts = data.current.wind_gusts_10m || 0;
@@ -130,4 +124,5 @@ async function updateWeather(lat, lon) {
 
 </body>
 </html>
+
 
