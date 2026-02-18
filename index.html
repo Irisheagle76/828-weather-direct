@@ -40,89 +40,78 @@
     </div>
 
     <script>
-window.onload = () => updateWeather(35.5951, -82.5515);
+        // Start with Asheville Default
+        window.onload = () => updateWeather(35.5951, -82.5515);
 
-function getLocation() {
-    if (navigator.geolocation) {
-        document.getElementById('user-elev').innerText = "Locating...";
-        navigator.geolocation.getCurrentPosition(pos => {
-            updateWeather(pos.coords.latitude, pos.coords.longitude);
-        }, () => updateWeather(35.5951, -82.5515));
-    }
-}
-
-async function updateWeather(lat, lon) {
-    const weatherUrl =
-    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_gusts_10m&hourly=dewpoint_2m,snowfall,rain&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America/New_York`;
-
-    try {
-        console.log("Fetching:", weatherUrl);
-
-        const response = await fetch(weatherUrl);
-
-        if (!response.ok) {
-            console.error("API Status:", response.status);
-            throw new Error("API failure");
+        function getLocation() {
+            if (navigator.geolocation) {
+                document.getElementById('user-elev').innerText = "Locating...";
+                navigator.geolocation.getCurrentPosition(pos => {
+                    updateWeather(pos.coords.latitude, pos.coords.longitude);
+                }, () => updateWeather(35.5951, -82.5515));
+            }
         }
 
-        const data = await response.json();
-        console.log("API Success:", data);
+        async function updateWeather(lat, lon) {
+            // Using elevation=true directly in the query to avoid NaN
+            const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_gusts_10m&hourly=dew_point_2m,snowfall,rain&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&elevation=true&timezone=America/New_York&forecast_days=3`;
 
-        if (!data.current) throw new Error("Missing current data");
+            try {
+                const response = await fetch(weatherUrl);
+                if (!response.ok) throw new Error("API failure");
+                const data = await response.json();
 
-        document.getElementById('local-temp').innerText =
-            Math.round(data.current.temperature_2m) + "°F";
+                // 1. PWS Temp & Elevation
+                document.getElementById('local-temp').innerText = Math.round(data.current.temperature_2m) + "°F";
+                const elevFeet = Math.round(data.elevation * 3.28084);
+                document.getElementById('user-elev').innerText = elevFeet + " ft";
 
-        document.getElementById('wind-status').innerText =
-            "CALM (" + Math.round(data.current.wind_gusts_10m || 0) + " mph)";
+                // 2. Wind Logic (Your Actionable Alerts)
+                const gusts = data.current.wind_gusts_10m || 0;
+                const windStatus = document.getElementById('wind-status');
+                const alertPill = document.getElementById('main-alert');
 
-        document.getElementById('comfort-report').innerText = "Online";
+                if (gusts >= 40) {
+                    windStatus.innerText = "HIGH IMPACT";
+                    alertPill.style.display = 'block'; alertPill.style.background = 'var(--red)';
+                    alertPill.innerHTML = "🚨 Stay indoors if possible; falling limbs and power outages likely.";
+                } else if (gusts >= 25) {
+                    windStatus.innerText = "BIN ALERT";
+                    alertPill.style.display = 'block'; alertPill.style.background = 'var(--orange)';
+                    alertPill.innerHTML = "⚠️ Secure bins and porch/patio furniture. Some power outages possible.";
+                } else if (gusts >= 20) {
+                    windStatus.innerText = "GUSTY";
+                    alertPill.style.display = 'block'; alertPill.style.background = 'var(--navy)';
+                    alertPill.innerHTML = "ℹ️ Keep an eye on your green garbage bins!";
+                } else {
+                    windStatus.innerText = "CALM (" + Math.round(gusts) + " mph)";
+                    alertPill.style.display = 'none';
+                }
 
-    } catch (err) {
-        console.error("Weather Load Failed:", err);
-        document.getElementById('comfort-report').innerText = "Offline";
-        document.getElementById('wind-status').innerText = "Offline";
-    }
-}
+                // 3. Human Comfort
+                const temp = data.current.temperature_2m;
+                const dewPoint = data.hourly.dew_point_2m[0];
+                const comfort = document.getElementById('comfort-report');
+                if (temp >= 65) {
+                    if (dewPoint < 55) comfort.innerText = "🧤 Crisp";
+                    else if (dewPoint <= 60) comfort.innerText = "👌 Pleasant";
+                    else comfort.innerText = "💧 Sticky";
+                } else {
+                    comfort.innerText = "Neutral (Cool)";
+                }
 
-        // Wind
-        const gusts = data.current.wind_gusts_10m || 0;
-        const windStatus = document.getElementById('wind-status');
-        const alertPill = document.getElementById('main-alert');
+                // 4. Snow & Rain Icons
+                const hasSnow = data.hourly.snowfall.slice(0, 48).some(s => s > 0);
+                const hasHeavyRain = data.hourly.rain.slice(0, 12).some(r => r > 0.1);
+                document.getElementById('icon-snow').classList.toggle('active', hasSnow);
+                document.getElementById('icon-rain').classList.toggle('active', hasHeavyRain);
 
-        if (gusts >= 40) {
-            windStatus.innerText = "HIGH IMPACT";
-            alertPill.style.display = 'block';
-            alertPill.style.background = 'var(--red)';
-            alertPill.innerHTML =
-                "🚨 Stay indoors if possible; falling limbs and power outages likely.";
-        } else if (gusts >= 25) {
-            windStatus.innerText = "BIN ALERT";
-            alertPill.style.display = 'block';
-            alertPill.style.background = 'var(--orange)';
-            alertPill.innerHTML =
-                "⚠️ Secure bins and porch/patio furniture. Some power outages possible.";
-        } else if (gusts >= 20) {
-            windStatus.innerText = "GUSTY";
-            alertPill.style.display = 'block';
-            alertPill.style.background = 'var(--navy)';
-            alertPill.innerHTML =
-                "ℹ️ Keep an eye on your green garbage bins!";
-        } else {
-            windStatus.innerText = "CALM (" + Math.round(gusts) + " mph)";
-            alertPill.style.display = 'none';
+            } catch (err) {
+                console.error("Load Failed:", err);
+                document.getElementById('comfort-report').innerText = "Offline";
+                document.getElementById('wind-status').innerText = "Offline";
+            }
         }
-
-        // Snow & Rain
-        const snowArray = data.hourly.snowfall || [];
-        const rainArray = data.hourly.rain || [];
-
-        const hasSnow = snowArray.slice(0, 48).some(s => s > 0);
-        const hasHeavyRain = rainArray.slice(0, 12).some(r => r > 0.1);
-
-        docum
-
+    </script>
 </body>
 </html>
-
-
