@@ -20,6 +20,8 @@
         .label { font-size: 0.7em; color: var(--navy); font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 5px; }
         .value { font-size: 1.1em; font-weight: 600; }
         .btn-geo { background: var(--orange); color: white; border: none; padding: 12px; border-radius: 25px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 20px; font-size: 1em; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .trend-card { background: #f9f9f9; padding: 15px; border-radius: 10px; border: 1px solid #eee; margin-top: 20px; }
+        .trend-text { font-size: 0.95em; line-height: 1.4; }
     </style>
 </head>
 
@@ -38,10 +40,27 @@
         <button class="btn-geo" onclick="getLocation()">Detect My Elevation & Station</button>
 
         <div class="stat-grid">
-            <div class="stat-item"><span class="label">PWS Temp</span><div id="local-temp" class="value">--°F</div></div>
-            <div class="stat-item"><span class="label">Your Elevation</span><div id="user-elev" class="value">-- ft</div></div>
-            <div class="stat-item"><span class="label">Human Comfort</span><div id="comfort-report" class="value">Syncing...</div></div>
-            <div class="stat-item"><span class="label">Wind Status</span><div id="wind-status" class="value">Checking...</div></div>
+            <div class="stat-item">
+                <span class="label">PWS Temp</span>
+                <div id="local-temp" class="value">--°F</div>
+            </div>
+            <div class="stat-item">
+                <span class="label">Your Elevation</span>
+                <div id="user-elev" class="value">-- ft</div>
+            </div>
+            <div class="stat-item">
+                <span class="label">Human Comfort</span>
+                <div id="comfort-report" class="value">Syncing...</div>
+            </div>
+            <div class="stat-item">
+                <span class="label">Wind Status</span>
+                <div id="wind-status" class="value">Checking...</div>
+            </div>
+        </div>
+
+        <div class="trend-card">
+            <span class="label">Recent Weather Pattern</span>
+            <div id="trend-summary" class="trend-text">Analyzing the last 60 days...</div>
         </div>
     </div>
 
@@ -56,6 +75,13 @@
                     () => updateWeather(35.5951, -82.5515)
                 );
             }
+        }
+
+        function formatDate(d) {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
         }
 
         async function updateWeather(lat, lon) {
@@ -147,14 +173,115 @@
                 document.getElementById('icon-snow').classList.toggle('active', hasSnow);
                 document.getElementById('icon-rain').classList.toggle('active', hasRain);
 
+                // --- Trends (last 60 days) ---
+                updateTrends(lat, lon);
+
             } catch (err) {
                 document.getElementById('comfort-report').innerText = "Offline";
                 document.getElementById('wind-status').innerText = "Offline";
+                document.getElementById('trend-summary').innerText = "Trend data unavailable.";
+            }
+        }
+
+        async function updateTrends(lat, lon) {
+            const trendEl = document.getElementById('trend-summary');
+            try {
+                const today = new Date();
+                const start = new Date();
+                start.setDate(today.getDate() - 59); // last 60 days including today
+
+                const startDate = formatDate(start);
+                const endDate = formatDate(today);
+
+                const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startDate}&end_date=${endDate}&daily=temperature_2m_max,precipitation_sum&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=auto`;
+
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("Archive API Error");
+                const data = await response.json();
+
+                const times = data.daily.time;
+                const tmax = data.daily.temperature_2m_max;
+                const precip = data.daily.precipitation_sum;
+                const n = times.length;
+
+                if (!times || !tmax || !precip || n === 0) {
+                    trendEl.innerText = "Not enough recent data to analyze trends.";
+                    return;
+                }
+
+                // --- Warm streak (>= 60°F) ---
+                let warmStreak = 0;
+                for (let i = n - 1; i >= 0; i--) {
+                    if (tmax[i] >= 60) warmStreak++;
+                    else break;
+                }
+
+                // --- Dry streak (precip < 0.01") ---
+                let dryStreak = 0;
+                for (let i = n - 1; i >= 0; i--) {
+                    if (precip[i] < 0.01) dryStreak++;
+                    else break;
+                }
+
+                // --- Weekend pattern (last several Sundays) ---
+                const weekendInfos = [];
+                for (let i = n - 1; i >= 0; i--) {
+                    const d = new Date(times[i]);
+                    const dow = d.getUTCDay(); // 0 = Sunday
+                    if (dow === 0) {
+                        let wet = precip[i] > 0.05;
+                        if (i - 1 >= 0) {
+                            const dPrev = new Date(times[i - 1]);
+                            if (dPrev.getUTCDay() === 6) {
+                                if (precip[i - 1] > 0.05) wet = true;
+                            }
+                        }
+                        weekendInfos.push({ date: d, wet });
+                    }
+                }
+
+                let unsettledStreak = 0;
+                let dryWeekendStreak = 0;
+                if (weekendInfos.length > 0) {
+                    // consecutive unsettled weekends from most recent
+                    for (let i = 0; i < weekendInfos.length; i++) {
+                        if (weekendInfos[i].wet) unsettledStreak++;
+                        else break;
+                    }
+                    // consecutive mainly dry weekends from most recent
+                    for (let i = 0; i < weekendInfos.length; i++) {
+                        if (!weekendInfos[i].wet) dryWeekendStreak++;
+                        else break;
+                    }
+                }
+
+                const parts = [];
+
+                if (warmStreak >= 3) {
+                    parts.push(`Warm streak: ${warmStreak} consecutive day(s) at or above 60°F.`);
+                }
+
+                if (dryStreak >= 3) {
+                    parts.push(`Dry stretch: ${dryStreak} consecutive day(s) with little or no measurable precipitation.`);
+                }
+
+                if (unsettledStreak >= 2) {
+                    parts.push(`Weekends: ${unsettledStreak} unsettled weekend(s) in a row (rain on Saturday and/or Sunday).`);
+                } else if (dryWeekendStreak >= 2) {
+                    parts.push(`Weekends: ${dryWeekendStreak} mainly dry weekend(s) in a row.`);
+                }
+
+                if (parts.length === 0) {
+                    trendEl.innerText = "No strong recent pattern — conditions have been fairly changeable over the last 60 days.";
+                } else {
+                    trendEl.innerText = parts.join(" ");
+                }
+
+            } catch (err) {
+                trendEl.innerText = "Trend data unavailable.";
             }
         }
     </script>
 
 </body>
 </html>
-
-
