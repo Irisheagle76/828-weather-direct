@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>828 Weather Direct - Pro</title>
+    <title>828 Weather Direct - Asheville</title>
     <style>
-        :root { --navy: #15286c; --orange: #e27030; --light-bg: #f4f7f9; }
+        :root { --navy: #15286c; --orange: #e27030; --light-bg: #f4f7f9; --red: #d63031; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--light-bg); color: #333; padding: 20px; max-width: 600px; margin: auto; }
         
         header { background: var(--navy); color: white; padding: 25px; border-radius: 15px 15px 0 0; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
@@ -13,16 +13,15 @@
         .subtitle { color: #a5b1d9; font-size: 0.9em; text-transform: uppercase; font-weight: bold; }
 
         .card { background: white; border-radius: 0 0 15px 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-top: 4px solid var(--orange); }
-        .alert-area { margin-top: -10px; margin-bottom: 20px; }
-        .alert-pill { background: var(--orange); color: white; padding: 10px; border-radius: 8px; font-weight: bold; margin-top: 10px; display: none; text-align: center; border: 2px solid #c55a1e; }
+        .alert-pill { color: white; padding: 15px; border-radius: 10px; font-weight: bold; margin-bottom: 15px; display: none; text-align: center; border: 2px solid rgba(0,0,0,0.1); line-height: 1.4; }
         
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
-        .stat-item { background: #f9f9f9; padding: 15px; border-radius: 10px; border: 1px solid #eee; }
-        .label { font-size: 0.75em; color: var(--navy); font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 5px; }
-        .value { font-size: 1.2em; font-weight: 600; color: #222; }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 5px; }
+        .stat-item { background: #f9f9f9; padding: 15px; border-radius: 10px; border: 1px solid #eee; display: flex; flex-direction: column; justify-content: center; }
+        .label { font-size: 0.75em; color: var(--navy); font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
+        .value { font-size: 1.1em; font-weight: 600; color: #222; }
         
-        .btn-geo { background: var(--orange); color: white; border: none; padding: 10px 20px; border-radius: 25px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 15px; transition: 0.3s; }
-        .btn-geo:hover { background: var(--navy); }
+        .btn-geo { background: var(--orange); color: white; border: none; padding: 12px 20px; border-radius: 25px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 20px; transition: 0.3s; font-size: 1em; }
+        .btn-geo:hover { background: var(--navy); transform: translateY(-2px); }
     </style>
 </head>
 <body>
@@ -32,30 +31,27 @@
         <h1>828 Weather Direct</h1>
     </header>
 
-    <div class="alert-area">
-        <div id="bin-alert" class="alert-pill">🚨 BIN ALERT: HIGH WINDS</div>
-        <div id="nws-alert" class="alert-pill" style="background: #d63031;">⚠️ NWS ADVISORY</div>
-    </div>
-
-    <button class="btn-geo" onclick="getLocation()">Detect My Elevation & Station</button>
-
     <div class="card">
+        <div id="main-alert" class="alert-pill"></div>
+        
+        <button class="btn-geo" onclick="getLocation()">Detect My Elevation & Station</button>
+
         <div class="stat-grid">
             <div class="stat-item">
                 <span class="label">Local Station Temp</span>
                 <div id="local-temp" class="value">--°F</div>
             </div>
-            <div id="elev-card" class="stat-item">
-                <span class="label">Detected Elevation</span>
+            <div class="stat-item">
+                <span class="label">Your Elevation</span>
                 <div id="user-elev" class="value">Unknown</div>
             </div>
             <div class="stat-item">
                 <span class="label">Human Comfort</span>
-                <div id="comfort-report" class="value">Calculating...</div>
+                <div id="comfort-report" class="value">Awaiting Sync...</div>
             </div>
             <div class="stat-item">
                 <span class="label">Wind Status</span>
-                <div id="bin-status" class="value">Safe</div>
+                <div id="wind-status" class="value">Checking...</div>
             </div>
         </div>
     </div>
@@ -65,30 +61,30 @@
 
         async function getLocation() {
             if (navigator.geolocation) {
+                document.querySelector('.btn-geo').innerText = "Locating...";
                 navigator.geolocation.getCurrentPosition(async (position) => {
                     const lat = position.coords.latitude;
                     const lon = position.coords.longitude;
                     
-                    // 1. Detect Elevation (Meters to Feet)
+                    // 1. Elevation Fetch
                     const elevResponse = await fetch(`https://api.open-meteo.com/v1/elevation?latitude=${lat}&longitude=${lon}`);
                     const elevData = await elevResponse.json();
                     const feet = Math.round(elevData.elevation * 3.28084);
                     document.getElementById('user-elev').innerText = feet + " ft";
 
-                    // 2. Fetch PWS-style Local Temp
+                    // 2. Local PWS-Style Temp Fetch
                     const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&temperature_unit=fahrenheit&windspeed_unit=mph`);
                     const weatherData = await weatherResponse.json();
                     document.getElementById('local-temp').innerText = Math.round(weatherData.current_weather.temperature) + "°F";
                     
-                    // 3. Update Custom Logic
-                    updateDirectLogic(lat, lon);
+                    updateWindAndComfort(lat, lon);
+                    document.querySelector('.btn-geo').innerText = "Update My Location";
                 });
             }
         }
 
-        async function updateDirectLogic(lat, lon) {
+        async function updateWindAndComfort(lat, lon) {
             try {
-                // Fetch NWS Data for the detected point
                 const pointsUrl = `https://api.weather.gov/points/${lat},${lon}`;
                 const pReq = await fetch(proxy + encodeURIComponent(pointsUrl));
                 const pData = await pReq.json();
@@ -98,29 +94,49 @@
                 const fData = await fReq.json();
                 const now = fData.properties.periods[0];
 
-                // Human Comfort
+                // 1. New Tiered Wind Logic
+                const windNumbers = now.windSpeed.match(/\d+/g);
+                const maxWind = windNumbers ? Math.max(...windNumbers.map(Number)) : 0;
+                
+                const windStatus = document.getElementById('wind-status');
+                const alertPill = document.getElementById('main-alert');
+                
+                if (maxWind >= 40) {
+                    windStatus.innerText = "HIGH IMPACT";
+                    alertPill.style.display = 'block';
+                    alertPill.style.background = 'var(--red)';
+                    alertPill.innerHTML = `🚨 DANGER: ${maxWind} mph winds. Stay indoors if possible; falling limbs and power outages likely.`;
+                } else if (maxWind >= 25) {
+                    windStatus.innerText = "BIN ALERT";
+                    alertPill.style.display = 'block';
+                    alertPill.style.background = 'var(--orange)';
+                    alertPill.innerHTML = `⚠️ BIN ALERT: ${maxWind} mph gusts. Secure bins and porch/patio furniture. Some power outages possible.`;
+                } else if (maxWind >= 20) {
+                    windStatus.innerText = "GUSTY";
+                    alertPill.style.display = 'block';
+                    alertPill.style.background = 'var(--navy)';
+                    alertPill.innerHTML = `ℹ️ ADVISORY: Keep an eye on your green garbage bins!`;
+                } else {
+                    windStatus.innerText = "CALM / SAFE";
+                    alertPill.style.display = 'none';
+                }
+
+                // 2. Human Comfort
                 const dp = now.dewpoint ? (now.dewpoint.value * 9/5 + 32) : 40;
                 const comfortDiv = document.getElementById('comfort-report');
                 if (now.temperature >= 65) {
-                    if (dp < 55) comfortDiv.innerText = "🧤 Crisp";
+                    if (dp < 55) comfortDiv.innerText = "🧤 Crisp & Dry";
                     else if (dp <= 60) comfortDiv.innerText = "👌 Pleasant";
-                    else comfortDiv.innerText = "💧 Sticky";
+                    else comfortDiv.innerText = "💧 Sticky/Humid";
                 } else {
-                    comfortDiv.innerText = "Neutral";
+                    comfortDiv.innerText = "Neutral (Cool)";
                 }
 
-                // Bin Alert (25mph)
-                const windSpeed = parseInt(now.windSpeed);
-                if (windSpeed >= 25) {
-                    document.getElementById('bin-alert').style.display = 'block';
-                    document.getElementById('bin-status').innerText = "SECURE BINS";
-                }
-
-            } catch (e) { console.log("NWS Fetch Error", e); }
+            } catch (e) { console.log("Update Error", e); }
         }
 
-        // Default Load
-        updateDirectLogic(35.5951, -82.5515);
+        // Default Load for Asheville City
+        updateWindAndComfort(35.5951, -82.5515);
     </script>
 </body>
 </html>
