@@ -27,63 +27,62 @@
 
     <div class="card">
         <span class="metric-label">Human Comfort</span>
-        <div class="metric-value" id="comfort-report">Calculating skin-feel...</div>
+        <div class="metric-value" id="comfort-report">Connecting to Asheville sensors...</div>
 
         <span class="metric-label">Garbage Bins</span>
-        <div class="metric-value" id="bin-status">Safe to stay out.</div>
+        <div class="metric-value" id="bin-status">Monitoring wind speeds...</div>
     </div>
 
     <div class="card">
         <span class="metric-label">Noticeable Trends</span>
         <p><b>Condition:</b> <span class="trend-tag">Notably Dry</span></p>
-        <p style="font-size: 0.85em;">February is currently running below average for precipitation in WNC.</p>
+        <p style="font-size: 0.85em;">February is currently running below average for precipitation in the French Broad Valley.</p>
     </div>
 
-<script>
-        // Asheville Grid GSP/108,110
+    <script>
+        // Using the primary forecast endpoint for better browser compatibility
         const FORECAST_URL = "https://api.weather.gov/gridpoints/GSP/108,110/forecast";
         const ALERTS_URL = "https://api.weather.gov/alerts/active?area=NC";
 
         async function updateWeather() {
             try {
-                // We are removing the manual headers to avoid browser 'Forbidden Header' errors
+                // Fetch Forecast
                 const fReq = await fetch(FORECAST_URL);
-                if (!fReq.ok) throw new Error("Forecast unavailable");
-                
+                if (!fReq.ok) throw new Error("NWS Handshake Failed");
                 const fData = await fReq.json();
                 const periods = fData.properties.periods;
                 const now = periods[0];
 
-                // 1. DEW POINT PARSING
-                let dewPointValue = 0;
-                if (now.dewpoint && typeof now.dewpoint === 'object') {
-                    dewPointValue = now.dewpoint.value;
-                } else if (typeof now.dewpoint === 'number') {
-                    dewPointValue = now.dewpoint;
-                }
-
+                // 1. Human Comfort (Dew Point Logic)
                 const comfortDiv = document.getElementById('comfort-report');
                 if (now.temperature >= 65) {
-                    const dpF = (dewPointValue * 9/5) + 32;
-                    if (dpF < 55) comfortDiv.innerText = "🧤 Crisp & Dry: Great hair day!";
-                    else if (dpF <= 60) comfortDiv.innerText = "👌 Pleasant: Standard mountain comfort.";
-                    else if (dpF <= 65) comfortDiv.innerText = "💧 Sticky: You'll feel the humidity.";
-                    else comfortDiv.innerText = "🌡️ Oppressive: Air you can wear.";
+                    // Pulling dewpoint from the forecast object
+                    const dp = now.dewpoint ? (now.dewpoint.value * 9/5 + 32) : 0;
+                    if (dp > 0) {
+                        if (dp < 55) comfortDiv.innerText = "🧤 Crisp & Dry";
+                        else if (dp <= 60) comfortDiv.innerText = "👌 Pleasant";
+                        else if (dp <= 65) comfortDiv.innerText = "💧 Sticky";
+                        else comfortDiv.innerText = "🌡️ Oppressive";
+                    } else {
+                        comfortDiv.innerText = "Neutral (Low Humidity)";
+                    }
                 } else {
                     comfortDiv.innerText = "Neutral (Temp below 65°F)";
                 }
 
-                // 2. BIN ALERT LOGIC (Wind >= 25mph)
+                // 2. Bin Alert Logic (Wind >= 25mph)
                 const windNumbers = now.windSpeed.match(/\d+/g);
                 const maxWind = windNumbers ? Math.max(...windNumbers.map(Number)) : 0;
+                const binStatus = document.getElementById('bin-status');
                 if (maxWind >= 25) {
-                    const binDiv = document.getElementById('bin-alert');
-                    binDiv.innerHTML = `🚨 BIN ALERT: Wind gusts forecasted at ${maxWind} mph. Secure your bins!`;
-                    binDiv.style.display = 'block';
-                    document.getElementById('bin-status').innerText = "BRING THEM IN!";
+                    document.getElementById('bin-alert').innerHTML = `🚨 BIN ALERT: Gusts at ${maxWind} mph. Secure your bins!`;
+                    document.getElementById('bin-alert').style.display = 'block';
+                    binStatus.innerText = "BRING THEM IN!";
+                } else {
+                    binStatus.innerText = "Safe to stay out (" + maxWind + " mph).";
                 }
 
-                // 3. SNOW WATCH (48-Hour Rule)
+                // 3. Snow Watch (48-Hour Rule)
                 const snowPeriods = periods.filter(p => p.detailedForecast.toLowerCase().includes("snow"));
                 if (snowPeriods.length > 0) {
                     const snowDiv = document.getElementById('snow-alert');
@@ -96,25 +95,24 @@
                     } else {
                         snowMsg += " (Amounts hidden until 48hr window).";
                     }
-                    snowDiv.innerHTML = snowMsg + "<br><small>Trend: Monitoring potential.</small>";
+                    snowDiv.innerHTML = snowMsg;
                     snowDiv.style.display = 'block';
                 }
 
-                // 4. NWS ALERTS FOR BUNCOMBE
+                // 4. Buncombe Alerts
                 const aReq = await fetch(ALERTS_URL);
                 const aData = await aReq.json();
-                const buncombeAlerts = aData.features.filter(a => 
-                    a.properties.areaDesc && a.properties.areaDesc.includes("Buncombe")
-                );
-                if (buncombeAlerts.length > 0) {
+                const localAlerts = aData.features.filter(a => a.properties.areaDesc.includes("Buncombe"));
+                if (localAlerts.length > 0) {
                     const alertDiv = document.getElementById('nws-alert');
-                    alertDiv.innerText = `⚠️ NWS ALERT: ${buncombeAlerts[0].properties.event}`;
+                    alertDiv.innerText = `⚠️ NWS ALERT: ${localAlerts[0].properties.event}`;
                     alertDiv.style.display = 'block';
                 }
 
-            } catch (e) { 
-                console.error("828 Weather Direct Error:", e);
-                document.getElementById('comfort-report').innerText = "System updating... please refresh in a moment.";
+            } catch (e) {
+                console.error(e);
+                document.getElementById('comfort-report').innerText = "Neutral (Station Offline)";
+                document.getElementById('bin-status').innerText = "Calm (Station Offline)";
             }
         }
 
@@ -122,5 +120,3 @@
     </script>
 </body>
 </html>
-
-
