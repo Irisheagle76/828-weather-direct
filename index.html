@@ -3,107 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>828 Weather Direct - Asheville</title>
+    <title>828 Weather Direct - Pro</title>
     <style>
-        body { font-family: -apple-system, sans-serif; background: #f0f2f5; color: #1c1e21; padding: 20px; max-width: 600px; margin: auto; }
-        .card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); border-left: 5px solid #2e86de; }
-        .alert-box { background: #d63031; color: white; padding: 15px; border-radius: 10px; font-weight: bold; margin-bottom: 15px; display: none; }
-        .snow-box { background: #74b9ff; color: white; padding: 15px; border-radius: 10px; font-weight: bold; margin-bottom: 15px; display: none; }
-        .bin-warning { background: #27ae60; color: white; padding: 15px; border-radius: 10px; font-weight: bold; margin-bottom: 15px; display: none; }
-        h1 { color: #2d3436; font-size: 1.8em; margin-bottom: 5px; }
-        .metric-label { font-weight: bold; color: #0984e3; text-transform: uppercase; font-size: 0.75em; display: block; }
-        .metric-value { font-size: 1.1em; margin-bottom: 12px; }
-        .trend-tag { background: #dfe6e9; padding: 3px 6px; border-radius: 4px; font-size: 0.8em; }
+        :root { --navy: #15286c; --orange: #e27030; --light-bg: #f4f7f9; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--light-bg); color: #333; padding: 20px; max-width: 600px; margin: auto; }
+        
+        header { background: var(--navy); color: white; padding: 25px; border-radius: 15px 15px 0 0; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { margin: 0; font-size: 1.8em; letter-spacing: 1px; }
+        .subtitle { color: #a5b1d9; font-size: 0.9em; text-transform: uppercase; font-weight: bold; }
+
+        .card { background: white; border-radius: 0 0 15px 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-top: 4px solid var(--orange); }
+        .alert-area { margin-top: -10px; margin-bottom: 20px; }
+        .alert-pill { background: var(--orange); color: white; padding: 10px; border-radius: 8px; font-weight: bold; margin-top: 10px; display: none; text-align: center; border: 2px solid #c55a1e; }
+        
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+        .stat-item { background: #f9f9f9; padding: 15px; border-radius: 10px; border: 1px solid #eee; }
+        .label { font-size: 0.75em; color: var(--navy); font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 5px; }
+        .value { font-size: 1.2em; font-weight: 600; color: #222; }
+        
+        .btn-geo { background: var(--orange); color: white; border: none; padding: 10px 20px; border-radius: 25px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 15px; transition: 0.3s; }
+        .btn-geo:hover { background: var(--navy); }
     </style>
 </head>
 <body>
 
-    <h1>828 Weather Direct</h1>
-    <p style="color: #636e72; font-size: 0.9em; margin-top:-10px;">Hyper-local Asheville Forecast (Elev: 2,130 ft)</p>
+    <header>
+        <div class="subtitle">Blue Ridge Weather Intelligence</div>
+        <h1>828 Weather Direct</h1>
+    </header>
 
-    <div id="nws-alert" class="alert-box"></div>
-    <div id="snow-alert" class="snow-box"></div>
-    <div id="bin-alert" class="bin-warning"></div>
-
-    <div class="card">
-        <span class="metric-label">Human Comfort</span>
-        <div id="comfort-report" class="metric-value">Loading comfort data...</div>
-
-        <span class="metric-label">Garbage Bins</span>
-        <div id="bin-status" class="metric-value">Checking wind...</div>
+    <div class="alert-area">
+        <div id="bin-alert" class="alert-pill">🚨 BIN ALERT: HIGH WINDS</div>
+        <div id="nws-alert" class="alert-pill" style="background: #d63031;">⚠️ NWS ADVISORY</div>
     </div>
 
+    <button class="btn-geo" onclick="getLocation()">Detect My Elevation & Station</button>
+
     <div class="card">
-        <span class="metric-label">Noticeable Trends</span>
-        <p><b>Condition:</b> <span class="trend-tag">Notably Dry</span></p>
-        <p style="font-size: 0.85em;">February is currently running below average for precipitation in the Asheville area.</p>
+        <div class="stat-grid">
+            <div class="stat-item">
+                <span class="label">Local Station Temp</span>
+                <div id="local-temp" class="value">--°F</div>
+            </div>
+            <div id="elev-card" class="stat-item">
+                <span class="label">Detected Elevation</span>
+                <div id="user-elev" class="value">Unknown</div>
+            </div>
+            <div class="stat-item">
+                <span class="label">Human Comfort</span>
+                <div id="comfort-report" class="value">Calculating...</div>
+            </div>
+            <div class="stat-item">
+                <span class="label">Wind Status</span>
+                <div id="bin-status" class="value">Safe</div>
+            </div>
+        </div>
     </div>
 
     <script>
-        const NWS_URL = "https://api.weather.gov/gridpoints/GSP/108,110/forecast";
-        const ALERT_URL = "https://api.weather.gov/alerts/active?area=NC";
-        
-        // This Proxy "wraps" the NWS request so the browser doesn't block it
-        const proxy = "https://api.allorigins.win/get?url=";
+        const proxy = "https://corsproxy.io/?url=";
 
-        async function updateWeather() {
-            try {
-                // 1. Fetch Forecast via Proxy
-                const response = await fetch(proxy + encodeURIComponent(NWS_URL));
-                const wrapper = await response.json();
-                const data = JSON.parse(wrapper.contents);
-                const now = data.properties.periods[0];
+        async function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    
+                    // 1. Detect Elevation (Meters to Feet)
+                    const elevResponse = await fetch(`https://api.open-meteo.com/v1/elevation?latitude=${lat}&longitude=${lon}`);
+                    const elevData = await elevResponse.json();
+                    const feet = Math.round(elevData.elevation * 3.28084);
+                    document.getElementById('user-elev').innerText = feet + " ft";
 
-                // Human Comfort Logic
-                const comfortDiv = document.getElementById('comfort-report');
-                if (now.temperature >= 65) {
-                    const dp = now.dewpoint ? (now.dewpoint.value * 9/5 + 32) : 40;
-                    if (dp < 55) comfortDiv.innerText = "🧤 Crisp & Dry";
-                    else if (dp <= 60) comfortDiv.innerText = "👌 Pleasant";
-                    else if (dp <= 65) comfortDiv.innerText = "💧 Sticky";
-                    else comfortDiv.innerText = "🌡️ Oppressive";
-                } else {
-                    comfortDiv.innerText = "Neutral (Temp below 65°F)";
-                }
-
-                // Bin Alert Logic
-                const windNumbers = now.windSpeed.match(/\d+/g);
-                const maxWind = windNumbers ? Math.max(...windNumbers.map(Number)) : 0;
-                const binStatus = document.getElementById('bin-status');
-                if (maxWind >= 25) {
-                    document.getElementById('bin-alert').innerHTML = `🚨 BIN ALERT: Gusts at ${maxWind} mph. Secure your bins!`;
-                    document.getElementById('bin-alert').style.display = 'block';
-                    binStatus.innerText = "BRING THEM IN!";
-                } else {
-                    binStatus.innerText = "Safe to stay out (" + maxWind + " mph).";
-                }
-
-                // Snow Watch
-                const snowPeriods = data.properties.periods.filter(p => p.detailedForecast.toLowerCase().includes("snow"));
-                if (snowPeriods.length > 0) {
-                    const snowDiv = document.getElementById('snow-alert');
-                    snowDiv.innerHTML = "❄️ SNOW WATCH: Snow in the 5-day. (Amounts hidden until 48hr window).";
-                    snowDiv.style.display = 'block';
-                }
-
-                // 2. Fetch Alerts via Proxy
-                const aResponse = await fetch(proxy + encodeURIComponent(ALERT_URL));
-                const aWrapper = await aResponse.json();
-                const aData = JSON.parse(aWrapper.contents);
-                const localAlerts = aData.features.filter(a => a.properties.areaDesc.includes("Buncombe"));
-                if (localAlerts.length > 0) {
-                    const alertDiv = document.getElementById('nws-alert');
-                    alertDiv.innerText = `⚠️ NWS ALERT: ${localAlerts[0].properties.event}`;
-                    alertDiv.style.display = 'block';
-                }
-
-            } catch (e) {
-                console.error(e);
-                document.getElementById('comfort-report').innerText = "System Offline (NWS Server Error)";
+                    // 2. Fetch PWS-style Local Temp
+                    const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&temperature_unit=fahrenheit&windspeed_unit=mph`);
+                    const weatherData = await weatherResponse.json();
+                    document.getElementById('local-temp').innerText = Math.round(weatherData.current_weather.temperature) + "°F";
+                    
+                    // 3. Update Custom Logic
+                    updateDirectLogic(lat, lon);
+                });
             }
         }
 
-        updateWeather();
+        async function updateDirectLogic(lat, lon) {
+            try {
+                // Fetch NWS Data for the detected point
+                const pointsUrl = `https://api.weather.gov/points/${lat},${lon}`;
+                const pReq = await fetch(proxy + encodeURIComponent(pointsUrl));
+                const pData = await pReq.json();
+                const forecastUrl = pData.properties.forecastHourly;
+
+                const fReq = await fetch(proxy + encodeURIComponent(forecastUrl));
+                const fData = await fReq.json();
+                const now = fData.properties.periods[0];
+
+                // Human Comfort
+                const dp = now.dewpoint ? (now.dewpoint.value * 9/5 + 32) : 40;
+                const comfortDiv = document.getElementById('comfort-report');
+                if (now.temperature >= 65) {
+                    if (dp < 55) comfortDiv.innerText = "🧤 Crisp";
+                    else if (dp <= 60) comfortDiv.innerText = "👌 Pleasant";
+                    else comfortDiv.innerText = "💧 Sticky";
+                } else {
+                    comfortDiv.innerText = "Neutral";
+                }
+
+                // Bin Alert (25mph)
+                const windSpeed = parseInt(now.windSpeed);
+                if (windSpeed >= 25) {
+                    document.getElementById('bin-alert').style.display = 'block';
+                    document.getElementById('bin-status').innerText = "SECURE BINS";
+                }
+
+            } catch (e) { console.log("NWS Fetch Error", e); }
+        }
+
+        // Default Load
+        updateDirectLogic(35.5951, -82.5515);
     </script>
 </body>
 </html>
