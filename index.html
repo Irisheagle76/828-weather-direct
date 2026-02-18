@@ -34,43 +34,38 @@
         <div class="stat-grid">
             <div class="stat-item"><span class="label">PWS Temp</span><div id="local-temp" class="value">--°F</div></div>
             <div class="stat-item"><span class="label">Your Elevation</span><div id="user-elev" class="value">-- ft</div></div>
-            <div class="stat-item"><span class="label">Human Comfort</span><div id="comfort-report" class="value">Loading...</div></div>
-            <div class="stat-item"><span class="label">Wind Status</span><div id="wind-status" class="value">Loading...</div></div>
+            <div class="stat-item"><span class="label">Human Comfort</span><div id="comfort-report" class="value">Syncing...</div></div>
+            <div class="stat-item"><span class="label">Wind Status</span><div id="wind-status" class="value">Checking...</div></div>
         </div>
     </div>
 
     <script>
-        // Set default Asheville coords
-        const defLat = 35.5951;
-        const defLon = -82.5515;
-
-        // Auto-load on startup
-        window.onload = () => updateWeather(defLat, defLon);
+        // Start with Asheville City coordinates immediately
+        window.onload = () => updateWeather(35.5951, -82.5515);
 
         function getLocation() {
             if (navigator.geolocation) {
                 document.getElementById('user-elev').innerText = "Locating...";
                 navigator.geolocation.getCurrentPosition(pos => {
                     updateWeather(pos.coords.latitude, pos.coords.longitude);
-                }, () => updateWeather(defLat, defLon));
+                }, () => updateWeather(35.5951, -82.5515));
             }
         }
 
         async function updateWeather(lat, lon) {
             try {
-                // OPEN-METEO DATA: Direct, No Proxy, No CORS issues
-                const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_gusts_10m&hourly=dew_point_2m,snowfall,rain&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&elevation=true&forecast_days=3`;
+                // ALL DATA COMES FROM OPEN-METEO (Direct, no proxy needed)
+                const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_gusts_10m&hourly=dew_point_2m,snowfall,rain&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&elevation=true&forecast_days=3`;
                 
                 const response = await fetch(weatherUrl);
-                if (!response.ok) throw new Error("Weather server unreachable");
                 const data = await response.json();
 
-                // 1. Elevation & Temp (Immune to NWS errors)
-                const elevInFeet = Math.round(data.elevation * 3.28084);
-                document.getElementById('user-elev').innerText = isNaN(elevInFeet) ? "-- ft" : elevInFeet + " ft";
+                // 1. Elevation & Temp
+                const feet = Math.round(data.elevation * 3.28084);
+                document.getElementById('user-elev').innerText = isNaN(feet) ? "-- ft" : feet + " ft";
                 document.getElementById('local-temp').innerText = Math.round(data.current.temperature_2m) + "°F";
 
-                // 2. Human Comfort
+                // 2. Human Comfort (Dew Point @ 65F threshold)
                 const dewPoint = data.hourly.dew_point_2m[0];
                 const temp = data.current.temperature_2m;
                 const comfort = document.getElementById('comfort-report');
@@ -82,7 +77,7 @@
                     comfort.innerText = "Neutral (Cool)";
                 }
 
-                // 3. Wind Status (Actionable Tiers)
+                // 3. Wind Logic with your Actionable Verbs
                 const gusts = data.current.wind_gusts_10m;
                 const windStatus = document.getElementById('wind-status');
                 const alertPill = document.getElementById('main-alert');
@@ -104,9 +99,9 @@
                     alertPill.style.display = 'none';
                 }
 
-                // 4. Snow & Rain Icons
+                // 4. Snow & Rain Icons (Look ahead 48h)
                 const hasSnow = data.hourly.snowfall.slice(0, 48).some(s => s > 0);
-                const hasHeavyRain = data.hourly.rain.slice(0, 12).some(r => r > 0.1);
+                const hasHeavyRain = data.hourly.rain.slice(0, 12).some(r => r > 0.1); 
                 document.getElementById('icon-snow').classList.toggle('active', hasSnow);
                 document.getElementById('icon-rain').classList.toggle('active', hasHeavyRain);
 
