@@ -24,6 +24,7 @@
             max-width: 600px;
             margin: auto;
             transition: background 0.6s ease;
+            overflow-x: hidden;
         }
 
         header {
@@ -44,6 +45,7 @@
             margin-bottom: 20px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             border-top: 4px solid var(--orange);
+            max-width: 100%;
         }
 
         .alert-pill {
@@ -55,6 +57,8 @@
             display: none;
             text-align: center;
             line-height: 1.4;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         .impact-bar {
@@ -93,11 +97,19 @@
             gap: 15px;
         }
 
+        @media (max-width: 480px) {
+            .stat-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .stat-item {
             background: #f9f9f9;
             padding: 15px;
             border-radius: 10px;
             border: 1px solid #eee;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         .label {
@@ -115,9 +127,11 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            flex-wrap: wrap;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
-        /* Comfort Badges */
         .comfort-badge {
             display: inline-block;
             padding: 3px 8px;
@@ -125,6 +139,7 @@
             font-size: 0.7em;
             font-weight: bold;
             color: white;
+            white-space: nowrap;
         }
 
         .badge-danger { background: #d63031; }
@@ -140,9 +155,16 @@
             border-radius: 10px;
             border: 1px solid #eee;
             margin-top: 20px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
-        .trend-text { font-size: 0.95em; line-height: 1.4; }
+        .trend-text {
+            font-size: 0.95em;
+            line-height: 1.4;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
 
         .btn-geo {
             background: var(--orange);
@@ -156,6 +178,7 @@
             margin-bottom: 20px;
             font-size: 1em;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            max-width: 100%;
         }
     </style>
 </head>
@@ -312,25 +335,21 @@
                 const badge = document.getElementById('comfort-badge');
                 badge.className = "comfort-badge";
 
-                /* Frostbite Danger Tier */
                 if (temp <= 10 || (temp <= 20 && gusts >= 15)) {
                     comfort.innerText = "🚨 DANGEROUSLY COLD: Frostbite risk!";
                     badge.classList.add("badge-danger");
                     badge.innerText = "DANGER";
                 }
-                /* NEW Magenta Tier: Dangerously Cold (<15°F) */
                 else if (temp < 15) {
                     comfort.innerText = "❄️ Dangerously Cold: Limit time outdoors.";
                     badge.classList.add("badge-frigid");
                     badge.innerText = "FRIGID";
                 }
-                /* Goldilocks */
                 else if (temp >= 68 && temp <= 74 && dewPoint >= 45 && dewPoint <= 52) {
                     comfort.innerText = "✨ Goldilocks! Just right!";
                     badge.classList.add("badge-ideal");
                     badge.innerText = "IDEAL";
                 }
-                /* Warm/Humid */
                 else if (temp >= 75) {
                     if (dewPoint < 50) comfort.innerText = "✨ Ultra Crisp";
                     else if (dewPoint < 55) comfort.innerText = "🧤 Refreshing";
@@ -343,13 +362,11 @@
                     badge.classList.add("badge-warm");
                     badge.innerText = "WARM";
                 }
-                /* Biting Chill */
                 else if (temp < 45 && gusts > 15) {
                     comfort.innerText = "🥶 Biting Chill: Bundle up!";
                     badge.classList.add("badge-chilly");
                     badge.innerText = "CHILLY";
                 }
-                /* Seasonal Comfortable */
                 else {
                     comfort.innerText = "Seasonably Comfortable Overall";
                     badge.classList.add("badge-seasonal");
@@ -466,5 +483,6 @@
             }
         }
     </script>
+
 </body>
 </html>
