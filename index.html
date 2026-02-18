@@ -40,7 +40,7 @@
     </div>
 
     <script>
-        // Start with Asheville Default
+        // Default to Asheville on load
         window.onload = () => updateWeather(35.5951, -82.5515);
 
         function getLocation() {
@@ -53,20 +53,20 @@
         }
 
         async function updateWeather(lat, lon) {
-            // Using elevation=true directly in the query to avoid NaN
+            // FIXED: dew_point_2m (with the underscore)
             const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_gusts_10m&hourly=dew_point_2m,snowfall,rain&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&elevation=true&timezone=America/New_York&forecast_days=3`;
 
             try {
                 const response = await fetch(weatherUrl);
-                if (!response.ok) throw new Error("API failure");
+                if (!response.ok) throw new Error("API Offline");
                 const data = await response.json();
 
-                // 1. PWS Temp & Elevation
+                // 1. Temp & Elevation
                 document.getElementById('local-temp').innerText = Math.round(data.current.temperature_2m) + "°F";
-                const elevFeet = Math.round(data.elevation * 3.28084);
-                document.getElementById('user-elev').innerText = elevFeet + " ft";
+                const feet = Math.round(data.elevation * 3.28084);
+                document.getElementById('user-elev').innerText = isNaN(feet) ? "-- ft" : feet + " ft";
 
-                // 2. Wind Logic (Your Actionable Alerts)
+                // 2. Wind Status & Custom Alerts
                 const gusts = data.current.wind_gusts_10m || 0;
                 const windStatus = document.getElementById('wind-status');
                 const alertPill = document.getElementById('main-alert');
@@ -100,11 +100,11 @@
                     comfort.innerText = "Neutral (Cool)";
                 }
 
-                // 4. Snow & Rain Icons
+                // 4. Snow & Rain Watch Icons
                 const hasSnow = data.hourly.snowfall.slice(0, 48).some(s => s > 0);
-                const hasHeavyRain = data.hourly.rain.slice(0, 12).some(r => r > 0.1);
+                const hasRain = data.hourly.rain.slice(0, 12).some(r => r > 0.1);
                 document.getElementById('icon-snow').classList.toggle('active', hasSnow);
-                document.getElementById('icon-rain').classList.toggle('active', hasHeavyRain);
+                document.getElementById('icon-rain').classList.toggle('active', hasRain);
 
             } catch (err) {
                 console.error("Load Failed:", err);
