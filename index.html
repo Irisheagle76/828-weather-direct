@@ -5,20 +5,117 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>828 Weather Direct</title>
     <style>
-        :root { --navy: #15286c; --orange: #e27030; --light-bg: #f4f7f9; --red: #d63031; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--light-bg); color: #333; padding: 20px; max-width: 600px; margin: auto; }
-        header { background: var(--navy); color: white; padding: 25px; border-radius: 15px 15px 0 0; text-align: center; }
+        :root {
+            --navy: #15286c;
+            --orange: #e27030;
+            --light-bg: #f4f7f9;
+            --red: #d63031;
+
+            /* Dynamic theme variables */
+            --theme-bg: #f4f7f9;
+            --theme-header: #15286c;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--theme-bg);
+            color: #333;
+            padding: 20px;
+            max-width: 600px;
+            margin: auto;
+            transition: background 0.6s ease;
+        }
+
+        header {
+            background: var(--theme-header);
+            color: white;
+            padding: 25px;
+            border-radius: 15px 15px 0 0;
+            text-align: center;
+            transition: background 0.6s ease;
+        }
+
         h1 { margin: 0; font-size: 1.8em; letter-spacing: 1px; }
-        .card { background: white; border-radius: 0 0 15px 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-top: 4px solid var(--orange); }
-        .alert-pill { color: white; padding: 15px; border-radius: 10px; font-weight: bold; margin-bottom: 15px; display: none; text-align: center; line-height: 1.4; }
-        .impact-bar { display: flex; justify-content: center; gap: 25px; margin-bottom: 20px; }
-        .impact-icon { font-size: 2.2em; opacity: 0.15; filter: grayscale(1); transition: 0.3s; position: relative; }
-        .impact-icon.active { opacity: 1; filter: grayscale(0); }
-        .impact-label { font-size: 0.4em; position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%); color: var(--navy); font-weight: bold; }
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .stat-item { background: #f9f9f9; padding: 15px; border-radius: 10px; border: 1px solid #eee; }
-        .label { font-size: 0.7em; color: var(--navy); font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 5px; }
-        .value { font-size: 1.1em; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+
+        .card {
+            background: white;
+            border-radius: 0 0 15px 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-top: 4px solid var(--orange);
+        }
+
+        .alert-pill {
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: none;
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .impact-bar {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-bottom: 20px;
+        }
+
+        .impact-icon {
+            font-size: 2.2em;
+            opacity: 0.15;
+            filter: grayscale(1);
+            transition: 0.3s;
+            position: relative;
+        }
+
+        .impact-icon.active {
+            opacity: 1;
+            filter: grayscale(0);
+        }
+
+        .impact-label {
+            font-size: 0.4em;
+            position: absolute;
+            bottom: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--navy);
+            font-weight: bold;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .stat-item {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #eee;
+        }
+
+        .label {
+            font-size: 0.7em;
+            color: var(--navy);
+            font-weight: bold;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .value {
+            font-size: 1.1em;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
 
         /* Comfort Badges */
         .comfort-badge {
@@ -29,15 +126,37 @@
             font-weight: bold;
             color: white;
         }
+
         .badge-danger { background: #d63031; }
+        .badge-frigid { background: #c218c2; color: white; }
         .badge-ideal { background: #2ecc71; }
         .badge-warm { background: #e67e22; }
         .badge-chilly { background: #15286c; }
         .badge-seasonal { background: #d7b894; color: #4a3b2a; }
 
-        .trend-card { background: #f9f9f9; padding: 15px; border-radius: 10px; border: 1px solid #eee; margin-top: 20px; }
+        .trend-card {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #eee;
+            margin-top: 20px;
+        }
+
         .trend-text { font-size: 0.95em; line-height: 1.4; }
-        .btn-geo { background: var(--orange); color: white; border: none; padding: 12px; border-radius: 25px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 20px; font-size: 1em; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+        .btn-geo {
+            background: var(--orange);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 20px;
+            font-size: 1em;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 
@@ -106,6 +225,34 @@
             return `${y}-${m}-${day}`;
         }
 
+        function applySeasonalTheme(temp) {
+            let bg, header;
+
+            if (temp <= 32) {
+                bg = "linear-gradient(to bottom, #d9e9ff, #bcd4f5)";
+                header = "#3b6ea8";
+            }
+            else if (temp <= 55) {
+                bg = "linear-gradient(to bottom, #e0f4f4, #c7e7df)";
+                header = "#2e8b8b";
+            }
+            else if (temp <= 74) {
+                bg = "linear-gradient(to bottom, #f7f2e8, #e8dcc4)";
+                header = "#b89b5e";
+            }
+            else if (temp <= 85) {
+                bg = "linear-gradient(to bottom, #ffe7c2, #ffd39a)";
+                header = "#e08a2e";
+            }
+            else {
+                bg = "linear-gradient(to bottom, #ffcfb8, #ff9e7a)";
+                header = "#d65a2a";
+            }
+
+            document.documentElement.style.setProperty("--theme-bg", bg);
+            document.documentElement.style.setProperty("--theme-header", header);
+        }
+
         async function updateWeather(lat, lon) {
             const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_gusts_10m&hourly=dew_point_2m,snowfall,rain&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto`;
 
@@ -114,14 +261,15 @@
                 if (!response.ok) throw new Error("API Error");
                 const data = await response.json();
 
-                document.getElementById('local-temp').innerText =
-                    Math.round(data.current.temperature_2m) + "°F";
+                const temp = Math.round(data.current.temperature_2m);
+                document.getElementById('local-temp').innerText = temp + "°F";
+
+                applySeasonalTheme(temp);
 
                 const elevFeet = Math.round(data.elevation * 3.28084);
                 document.getElementById('user-elev').innerText =
                     isNaN(elevFeet) ? "-- ft" : elevFeet + " ft";
 
-                // --- Wind Logic ---
                 const gusts = data.current.wind_gusts_10m ?? 0;
                 const windStatus = document.getElementById('wind-status');
                 const alertPill = document.getElementById('main-alert');
@@ -155,28 +303,34 @@
                     }
                 }
 
-                // --- Dew Point Matching ---
                 const currentIndex = data.hourly.time.indexOf(data.current.time);
                 const dewPoint = currentIndex >= 0
                     ? data.hourly.dew_point_2m[currentIndex]
                     : data.hourly.dew_point_2m[0];
 
-                // --- Comfort Logic ---
-                const temp = data.current.temperature_2m;
                 const comfort = document.getElementById('comfort-report');
                 const badge = document.getElementById('comfort-badge');
                 badge.className = "comfort-badge";
 
+                /* Frostbite Danger Tier */
                 if (temp <= 10 || (temp <= 20 && gusts >= 15)) {
                     comfort.innerText = "🚨 DANGEROUSLY COLD: Frostbite risk!";
                     badge.classList.add("badge-danger");
                     badge.innerText = "DANGER";
                 }
+                /* NEW Magenta Tier: Dangerously Cold (<15°F) */
+                else if (temp < 15) {
+                    comfort.innerText = "❄️ Dangerously Cold: Limit time outdoors.";
+                    badge.classList.add("badge-frigid");
+                    badge.innerText = "FRIGID";
+                }
+                /* Goldilocks */
                 else if (temp >= 68 && temp <= 74 && dewPoint >= 45 && dewPoint <= 52) {
                     comfort.innerText = "✨ Goldilocks! Just right!";
                     badge.classList.add("badge-ideal");
                     badge.innerText = "IDEAL";
                 }
+                /* Warm/Humid */
                 else if (temp >= 75) {
                     if (dewPoint < 50) comfort.innerText = "✨ Ultra Crisp";
                     else if (dewPoint < 55) comfort.innerText = "🧤 Refreshing";
@@ -189,25 +343,25 @@
                     badge.classList.add("badge-warm");
                     badge.innerText = "WARM";
                 }
+                /* Biting Chill */
                 else if (temp < 45 && gusts > 15) {
                     comfort.innerText = "🥶 Biting Chill: Bundle up!";
                     badge.classList.add("badge-chilly");
                     badge.innerText = "CHILLY";
                 }
+                /* Seasonal Comfortable */
                 else {
                     comfort.innerText = "Seasonably Comfortable Overall";
                     badge.classList.add("badge-seasonal");
                     badge.innerText = "SEASONAL";
                 }
 
-                // --- Impacts ---
                 const hasSnow = data.hourly.snowfall.slice(0, 48).some(s => s > 0);
                 const hasRain = data.hourly.rain.slice(0, 24).some(r => r > 0.1);
 
                 document.getElementById('icon-snow').classList.toggle('active', hasSnow);
                 document.getElementById('icon-rain').classList.toggle('active', hasRain);
 
-                // --- Trends ---
                 updateTrends(lat, lon);
 
             } catch (err) {
@@ -304,14 +458,4 @@
                 if (parts.length === 0) {
                     trendEl.innerText = "No strong recent pattern — conditions have been fairly changeable over the last 60 days.";
                 } else {
-                    trendEl.innerText = parts.join(" ");
-                }
-
-            } catch (err) {
-                trendEl.innerText = "Trend data unavailable.";
-            }
-        }
-    </script>
-
-</body>
-</html>
+                    trendEl
