@@ -39,13 +39,20 @@
         <p style="font-size: 0.85em;">February is currently running below average for precipitation in WNC.</p>
     </div>
 
-    <script>
+<script>
+        // Use Asheville Grid Coordinates
         const FORECAST_URL = "https://api.weather.gov/gridpoints/GSP/108,110/forecast";
         const ALERTS_URL = "https://api.weather.gov/alerts/active?area=NC";
 
         async function updateWeather() {
             try {
-                const fReq = await fetch(FORECAST_URL);
+                // NWS requires a User-Agent header to identify the requester
+                const headers = { "User-Agent": "828WeatherDirectApp (your-email@example.com)" };
+
+                // 1. Fetch Forecast Data
+                const fReq = await fetch(FORECAST_URL, { headers });
+                if (!fReq.ok) throw new Error("Forecast fetch failed");
+                
                 const fData = await fReq.json();
                 const periods = fData.properties.periods;
                 const now = periods[0];
@@ -79,7 +86,7 @@
                     document.getElementById('bin-status').innerText = "BRING THEM IN!";
                 }
 
-                // SNOW WATCH LOGIC (48-Hour Accumulation Rule)
+                // SNOW WATCH LOGIC (48-Hour Rule)
                 const snowPeriods = periods.filter(p => p.detailedForecast.toLowerCase().includes("snow"));
                 if (snowPeriods.length > 0) {
                     const snowDiv = document.getElementById('snow-alert');
@@ -96,8 +103,8 @@
                     snowDiv.style.display = 'block';
                 }
 
-                // NWS ALERTS FOR BUNCOMBE
-                const aReq = await fetch(ALERTS_URL);
+                // 2. NWS ALERTS FOR BUNCOMBE
+                const aReq = await fetch(ALERTS_URL, { headers });
                 const aData = await aReq.json();
                 const buncombeAlerts = aData.features.filter(a => 
                     a.properties.areaDesc && a.properties.areaDesc.includes("Buncombe")
@@ -112,7 +119,7 @@
 
             } catch (e) { 
                 console.error("828 Weather Direct Error:", e);
-                document.getElementById('comfort-report').innerText = "Data temporarily unavailable.";
+                document.getElementById('comfort-report').innerText = "NWS Data currently restricted. Checking connection...";
             }
         }
 
@@ -120,3 +127,4 @@
     </script>
 </body>
 </html>
+
