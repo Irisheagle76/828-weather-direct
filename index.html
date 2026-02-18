@@ -87,18 +87,25 @@
                     alertPill.style.display = 'block';
                     alertPill.style.background = 'var(--red)';
                     alertPill.innerHTML = "🚨 Stay indoors if possible; falling limbs and power outages likely.";
-                } else if (gusts >= 25) {
+                }
+                else if (gusts >= 25) {
                     windStatus.innerText = "BIN ALERT";
                     alertPill.style.display = 'block';
                     alertPill.style.background = 'var(--orange)';
                     alertPill.innerHTML = "⚠️ Secure bins and porch/patio furniture. Some power outages possible.";
-                } else if (gusts >= 20) {
-                    windStatus.innerText = "GUSTY";
+                }
+                else if (gusts >= 20) {
+                    windStatus.innerText = "GUSTY (gusting to " + Math.round(gusts) + " mph)";
                     alertPill.style.display = 'block';
                     alertPill.style.background = 'var(--navy)';
                     alertPill.innerHTML = "ℹ️ Keep an eye on your green garbage bins!";
-                } else {
-                    windStatus.innerText = `CALM (${Math.round(gusts)} mph)`;
+                }
+                else {
+                    if (gusts <= 5) {
+                        windStatus.innerText = "CALM (gusting occasionally to " + Math.round(gusts) + " mph)";
+                    } else {
+                        windStatus.innerText = "Light Winds (gusting occasionally to " + Math.round(gusts) + " mph)";
+                    }
                 }
 
                 // --- Dew Point Matching ---
@@ -113,9 +120,11 @@
 
                 if (temp <= 10 || (temp <= 20 && gusts >= 15)) {
                     comfort.innerText = "🚨 DANGEROUSLY COLD: Frostbite risk!";
-                } else if (temp >= 68 && temp <= 74 && dewPoint >= 45 && dewPoint <= 52) {
-                    comfort.innerText = "✨ Goldilocks! Just right.";
-                } else if (temp >= 75) {
+                }
+                else if (temp >= 68 && temp <= 74 && dewPoint >= 45 && dewPoint <= 52) {
+                    comfort.innerText = "✨ Goldilocks! Just right!";
+                }
+                else if (temp >= 75) {
                     if (dewPoint < 50) comfort.innerText = "✨ Ultra Crisp";
                     else if (dewPoint < 55) comfort.innerText = "🧤 Refreshing";
                     else if (dewPoint < 60) comfort.innerText = "👌 Pleasant";
@@ -123,10 +132,12 @@
                     else if (dewPoint < 70) comfort.innerText = "💧 Muggy";
                     else if (dewPoint < 75) comfort.innerText = "🌡️ Oppressive";
                     else comfort.innerText = "🌋 Extreme Humidity";
-                } else if (temp < 45 && gusts > 15) {
+                }
+                else if (temp < 45 && gusts > 15) {
                     comfort.innerText = "🥶 Biting Chill: Bundle up!";
-                } else {
-                    comfort.innerText = "Neutral / Standard Cool";
+                }
+                else {
+                    comfort.innerText = "✨ Goldilocks! Just right!";
                 }
 
                 // --- Impacts ---
