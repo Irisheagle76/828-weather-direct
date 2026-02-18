@@ -40,24 +40,21 @@
     </div>
 
 <script>
-        // Use Asheville Grid Coordinates
+        // Asheville Grid GSP/108,110
         const FORECAST_URL = "https://api.weather.gov/gridpoints/GSP/108,110/forecast";
         const ALERTS_URL = "https://api.weather.gov/alerts/active?area=NC";
 
         async function updateWeather() {
             try {
-                // NWS requires a User-Agent header to identify the requester
-                const headers = { "User-Agent": "828WeatherDirectApp (your-email@example.com)" };
-
-                // 1. Fetch Forecast Data
-                const fReq = await fetch(FORECAST_URL, { headers });
-                if (!fReq.ok) throw new Error("Forecast fetch failed");
+                // We are removing the manual headers to avoid browser 'Forbidden Header' errors
+                const fReq = await fetch(FORECAST_URL);
+                if (!fReq.ok) throw new Error("Forecast unavailable");
                 
                 const fData = await fReq.json();
                 const periods = fData.properties.periods;
                 const now = periods[0];
 
-                // FIX: DEW POINT DATA PARSING
+                // 1. DEW POINT PARSING
                 let dewPointValue = 0;
                 if (now.dewpoint && typeof now.dewpoint === 'object') {
                     dewPointValue = now.dewpoint.value;
@@ -76,7 +73,7 @@
                     comfortDiv.innerText = "Neutral (Temp below 65°F)";
                 }
 
-                // BIN ALERT LOGIC (Wind Gusts >= 25mph)
+                // 2. BIN ALERT LOGIC (Wind >= 25mph)
                 const windNumbers = now.windSpeed.match(/\d+/g);
                 const maxWind = windNumbers ? Math.max(...windNumbers.map(Number)) : 0;
                 if (maxWind >= 25) {
@@ -86,7 +83,7 @@
                     document.getElementById('bin-status').innerText = "BRING THEM IN!";
                 }
 
-                // SNOW WATCH LOGIC (48-Hour Rule)
+                // 3. SNOW WATCH (48-Hour Rule)
                 const snowPeriods = periods.filter(p => p.detailedForecast.toLowerCase().includes("snow"));
                 if (snowPeriods.length > 0) {
                     const snowDiv = document.getElementById('snow-alert');
@@ -95,31 +92,29 @@
                     const hoursUntilSnow = (startTime - new Date()) / 36e5;
                     let snowMsg = "❄️ SNOW WATCH: Snow is in the forecast.";
                     if (hoursUntilSnow <= 48) {
-                        snowMsg += " Accumulations likely within 48 hours. Check local totals.";
+                        snowMsg += " Accumulations likely within 48 hours.";
                     } else {
                         snowMsg += " (Amounts hidden until 48hr window).";
                     }
-                    snowDiv.innerHTML = snowMsg + "<br><small>Trend: Monitoring snowfall potential.</small>";
+                    snowDiv.innerHTML = snowMsg + "<br><small>Trend: Monitoring potential.</small>";
                     snowDiv.style.display = 'block';
                 }
 
-                // 2. NWS ALERTS FOR BUNCOMBE
-                const aReq = await fetch(ALERTS_URL, { headers });
+                // 4. NWS ALERTS FOR BUNCOMBE
+                const aReq = await fetch(ALERTS_URL);
                 const aData = await aReq.json();
                 const buncombeAlerts = aData.features.filter(a => 
                     a.properties.areaDesc && a.properties.areaDesc.includes("Buncombe")
                 );
                 if (buncombeAlerts.length > 0) {
                     const alertDiv = document.getElementById('nws-alert');
-                    const eventName = buncombeAlerts[0].properties.event;
-                    const isElevSpecific = buncombeAlerts[0].properties.description.toLowerCase().includes("elevation");
-                    alertDiv.innerText = `⚠️ NWS ALERT: ${eventName}${isElevSpecific ? " (Elevation Specific)" : ""}`;
+                    alertDiv.innerText = `⚠️ NWS ALERT: ${buncombeAlerts[0].properties.event}`;
                     alertDiv.style.display = 'block';
                 }
 
             } catch (e) { 
                 console.error("828 Weather Direct Error:", e);
-                document.getElementById('comfort-report').innerText = "NWS Data currently restricted. Checking connection...";
+                document.getElementById('comfort-report').innerText = "System updating... please refresh in a moment.";
             }
         }
 
@@ -127,4 +122,5 @@
     </script>
 </body>
 </html>
+
 
