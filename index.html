@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>828 Weather Direct - Asheville</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f0f2f5; color: #1c1e21; line-height: 1.5; padding: 20px; max-width: 600px; margin: auto; }
+        body { font-family: -apple-system, sans-serif; background: #f0f2f5; color: #1c1e21; padding: 20px; max-width: 600px; margin: auto; }
         .card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); border-left: 5px solid #2e86de; }
         .alert-box { background: #d63031; color: white; padding: 15px; border-radius: 10px; font-weight: bold; margin-bottom: 15px; display: none; }
         .snow-box { background: #74b9ff; color: white; padding: 15px; border-radius: 10px; font-weight: bold; margin-bottom: 15px; display: none; }
@@ -27,50 +27,46 @@
 
     <div class="card">
         <span class="metric-label">Human Comfort</span>
-        <div class="metric-value" id="comfort-report">Connecting to Asheville sensors...</div>
+        <div id="comfort-report" class="metric-value">Loading comfort data...</div>
 
         <span class="metric-label">Garbage Bins</span>
-        <div class="metric-value" id="bin-status">Monitoring wind speeds...</div>
+        <div id="bin-status" class="metric-value">Checking wind...</div>
     </div>
 
     <div class="card">
         <span class="metric-label">Noticeable Trends</span>
         <p><b>Condition:</b> <span class="trend-tag">Notably Dry</span></p>
-        <p style="font-size: 0.85em;">February is currently running below average for precipitation in the French Broad Valley.</p>
+        <p style="font-size: 0.85em;">February is currently running below average for precipitation in the Asheville area.</p>
     </div>
 
     <script>
-        // Using the primary forecast endpoint for better browser compatibility
-        const FORECAST_URL = "https://api.weather.gov/gridpoints/GSP/108,110/forecast";
-        const ALERTS_URL = "https://api.weather.gov/alerts/active?area=NC";
+        const NWS_URL = "https://api.weather.gov/gridpoints/GSP/108,110/forecast";
+        const ALERT_URL = "https://api.weather.gov/alerts/active?area=NC";
+        
+        // This Proxy "wraps" the NWS request so the browser doesn't block it
+        const proxy = "https://api.allorigins.win/get?url=";
 
         async function updateWeather() {
             try {
-                // Fetch Forecast
-                const fReq = await fetch(FORECAST_URL);
-                if (!fReq.ok) throw new Error("NWS Handshake Failed");
-                const fData = await fReq.json();
-                const periods = fData.properties.periods;
-                const now = periods[0];
+                // 1. Fetch Forecast via Proxy
+                const response = await fetch(proxy + encodeURIComponent(NWS_URL));
+                const wrapper = await response.json();
+                const data = JSON.parse(wrapper.contents);
+                const now = data.properties.periods[0];
 
-                // 1. Human Comfort (Dew Point Logic)
+                // Human Comfort Logic
                 const comfortDiv = document.getElementById('comfort-report');
                 if (now.temperature >= 65) {
-                    // Pulling dewpoint from the forecast object
-                    const dp = now.dewpoint ? (now.dewpoint.value * 9/5 + 32) : 0;
-                    if (dp > 0) {
-                        if (dp < 55) comfortDiv.innerText = "🧤 Crisp & Dry";
-                        else if (dp <= 60) comfortDiv.innerText = "👌 Pleasant";
-                        else if (dp <= 65) comfortDiv.innerText = "💧 Sticky";
-                        else comfortDiv.innerText = "🌡️ Oppressive";
-                    } else {
-                        comfortDiv.innerText = "Neutral (Low Humidity)";
-                    }
+                    const dp = now.dewpoint ? (now.dewpoint.value * 9/5 + 32) : 40;
+                    if (dp < 55) comfortDiv.innerText = "🧤 Crisp & Dry";
+                    else if (dp <= 60) comfortDiv.innerText = "👌 Pleasant";
+                    else if (dp <= 65) comfortDiv.innerText = "💧 Sticky";
+                    else comfortDiv.innerText = "🌡️ Oppressive";
                 } else {
                     comfortDiv.innerText = "Neutral (Temp below 65°F)";
                 }
 
-                // 2. Bin Alert Logic (Wind >= 25mph)
+                // Bin Alert Logic
                 const windNumbers = now.windSpeed.match(/\d+/g);
                 const maxWind = windNumbers ? Math.max(...windNumbers.map(Number)) : 0;
                 const binStatus = document.getElementById('bin-status');
@@ -82,26 +78,18 @@
                     binStatus.innerText = "Safe to stay out (" + maxWind + " mph).";
                 }
 
-                // 3. Snow Watch (48-Hour Rule)
-                const snowPeriods = periods.filter(p => p.detailedForecast.toLowerCase().includes("snow"));
+                // Snow Watch
+                const snowPeriods = data.properties.periods.filter(p => p.detailedForecast.toLowerCase().includes("snow"));
                 if (snowPeriods.length > 0) {
                     const snowDiv = document.getElementById('snow-alert');
-                    const firstSnow = snowPeriods[0];
-                    const startTime = new Date(firstSnow.startTime);
-                    const hoursUntilSnow = (startTime - new Date()) / 36e5;
-                    let snowMsg = "❄️ SNOW WATCH: Snow is in the forecast.";
-                    if (hoursUntilSnow <= 48) {
-                        snowMsg += " Accumulations likely within 48 hours.";
-                    } else {
-                        snowMsg += " (Amounts hidden until 48hr window).";
-                    }
-                    snowDiv.innerHTML = snowMsg;
+                    snowDiv.innerHTML = "❄️ SNOW WATCH: Snow in the 5-day. (Amounts hidden until 48hr window).";
                     snowDiv.style.display = 'block';
                 }
 
-                // 4. Buncombe Alerts
-                const aReq = await fetch(ALERTS_URL);
-                const aData = await aReq.json();
+                // 2. Fetch Alerts via Proxy
+                const aResponse = await fetch(proxy + encodeURIComponent(ALERT_URL));
+                const aWrapper = await aResponse.json();
+                const aData = JSON.parse(aWrapper.contents);
                 const localAlerts = aData.features.filter(a => a.properties.areaDesc.includes("Buncombe"));
                 if (localAlerts.length > 0) {
                     const alertDiv = document.getElementById('nws-alert');
@@ -111,8 +99,7 @@
 
             } catch (e) {
                 console.error(e);
-                document.getElementById('comfort-report').innerText = "Neutral (Station Offline)";
-                document.getElementById('bin-status').innerText = "Calm (Station Offline)";
+                document.getElementById('comfort-report').innerText = "System Offline (NWS Server Error)";
             }
         }
 
