@@ -251,11 +251,13 @@
     // Main flow
     // ==========================
     async function initWUWeather() {
-      if (!WU_API_KEY || WU_API_KEY === "eba9581da59d4972a9581da59d497236") {
-        setWUStatus("error", "WU Key Missing", "Add your Weather Underground API key in the code.");
-        showWUError("Weather Underground API key is not set. Please update WU_API_KEY.");
-        return;
-      }
+    if (!WU_API_KEY || WU_API_KEY.length < 10) {
+setWUStatus("error", "Location Denied", "We can't find a nearby station without your location.");
+showWUError("Location access was denied. Enable location to get hyper‑local conditions.");
+    return;
+}
+
+console.log("WU key validated:", WU_API_KEY);
 
       if (!navigator.geolocation) {
         setWUStatus("error", "Location Unavailable", "Geolocation is not supported in this browser.");
@@ -323,5 +325,6 @@
   </script>
 </body>
 </html>
+
 
 
