@@ -209,6 +209,11 @@
             </div>
 
             <div class="stat-item">
+                <span class="label">Nearest Station</span>
+                <div id="station-name" class="value">--</div>
+            </div>
+
+            <div class="stat-item">
                 <span class="label">Human Comfort</span>
                 <div class="value">
                     <span id="comfort-badge" class="comfort-badge"></span>
@@ -229,6 +234,9 @@
     </div>
 
     <script>
+        // 🔐 Tempest token placeholder – replace locally with your real token
+        const TEMPEST_TOKEN = "YOUR_TEMPEST_API_TOKEN_HERE";
+
         window.onload = () => updateWeather(35.5951, -82.5515);
 
         function getLocation() {
@@ -276,26 +284,70 @@
             document.documentElement.style.setProperty("--theme-header", header);
         }
 
+        async function getTempestData(lat, lon) {
+            if (!TEMPEST_TOKEN || TEMPEST_TOKEN === "65a47ad8-7cc8-4dcd-b963-4d0101f43b6d") {
+                throw new Error("Tempest token not set");
+            }
+            const url = `https://swd.weatherflow.com/swd/rest/better_forecast?lat=${lat}&lon=${lon}&token=${TEMPEST_TOKEN}`;
+            const response = await fetch(url);
+            if (!response.ok) throw new Error("Tempest API error");
+            return await response.json();
+        }
+
         async function updateWeather(lat, lon) {
-            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_gusts_10m&hourly=dew_point_2m,snowfall,rain&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto`;
+            const omUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_gusts_10m&hourly=dew_point_2m,snowfall,rain&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto`;
+
+            const windStatus = document.getElementById('wind-status');
+            const alertPill = document.getElementById('main-alert');
+            const comfort = document.getElementById('comfort-report');
+            const badge = document.getElementById('comfort-badge');
+            const stationNameEl = document.getElementById('station-name');
 
             try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error("API Error");
-                const data = await response.json();
+                // Always fetch Open-Meteo (forecast + fallback + elevation)
+                const omResponse = await fetch(omUrl);
+                if (!omResponse.ok) throw new Error("Open-Meteo API error");
+                const omData = await omResponse.json();
 
-                const temp = Math.round(data.current.temperature_2m);
-                document.getElementById('local-temp').innerText = temp + "°F";
+                // Try Tempest for hyper-local current obs
+                let useTempest = false;
+                let tempest = null;
+                try {
+                    tempest = await getTempestData(lat, lon);
+                    useTempest = true;
+                } catch (e) {
+                    useTempest = false;
+                }
+
+                let temp, gusts, dewPoint;
+
+                if (useTempest && tempest && tempest.current_conditions) {
+                    const cc = tempest.current_conditions;
+                    temp = Math.round(cc.air_temperature);
+                    gusts = cc.wind_gust != null ? cc.wind_gust : (cc.wind_avg || 0);
+                    dewPoint = cc.dew_point != null ? cc.dew_point : null;
+
+                    document.getElementById('local-temp').innerText = temp + "°F";
+
+                    if (tempest.station && tempest.station.name) {
+                        stationNameEl.innerText = tempest.station.name;
+                    } else {
+                        stationNameEl.innerText = "Nearest Tempest Station";
+                    }
+                } else {
+                    // Fallback to Open-Meteo current
+                    temp = Math.round(omData.current.temperature_2m);
+                    gusts = omData.current.wind_gusts_10m ?? 0;
+
+                    document.getElementById('local-temp').innerText = temp + "°F";
+                    stationNameEl.innerText = "Using Open-Meteo";
+                }
 
                 applySeasonalTheme(temp);
 
-                const elevFeet = Math.round(data.elevation * 3.28084);
+                const elevFeet = Math.round(omData.elevation * 3.28084);
                 document.getElementById('user-elev').innerText =
                     isNaN(elevFeet) ? "-- ft" : elevFeet + " ft";
-
-                const gusts = data.current.wind_gusts_10m ?? 0;
-                const windStatus = document.getElementById('wind-status');
-                const alertPill = document.getElementById('main-alert');
 
                 alertPill.style.display = 'none';
                 alertPill.innerHTML = "";
@@ -326,13 +378,14 @@
                     }
                 }
 
-                const currentIndex = data.hourly.time.indexOf(data.current.time);
-                const dewPoint = currentIndex >= 0
-                    ? data.hourly.dew_point_2m[currentIndex]
-                    : data.hourly.dew_point_2m[0];
+                // Dew point: prefer Tempest, else Open-Meteo hourly
+                if (dewPoint == null) {
+                    const currentIndex = omData.hourly.time.indexOf(omData.current.time);
+                    dewPoint = currentIndex >= 0
+                        ? omData.hourly.dew_point_2m[currentIndex]
+                        : omData.hourly.dew_point_2m[0];
+                }
 
-                const comfort = document.getElementById('comfort-report');
-                const badge = document.getElementById('comfort-badge');
                 badge.className = "comfort-badge";
 
                 if (temp <= 10 || (temp <= 20 && gusts >= 15)) {
@@ -373,8 +426,8 @@
                     badge.innerText = "SEASONAL";
                 }
 
-                const hasSnow = data.hourly.snowfall.slice(0, 48).some(s => s > 0);
-                const hasRain = data.hourly.rain.slice(0, 24).some(r => r > 0.1);
+                const hasSnow = omData.hourly.snowfall.slice(0, 48).some(s => s > 0);
+                const hasRain = omData.hourly.rain.slice(0, 24).some(r => r > 0.1);
 
                 document.getElementById('icon-snow').classList.toggle('active', hasSnow);
                 document.getElementById('icon-rain').classList.toggle('active', hasRain);
@@ -382,8 +435,8 @@
                 updateTrends(lat, lon);
 
             } catch (err) {
-                document.getElementById('comfort-report').innerText = "Offline";
-                document.getElementById('wind-status').innerText = "Offline";
+                comfort.innerText = "Offline";
+                windStatus.innerText = "Offline";
                 document.getElementById('trend-summary').innerText = "Trend data unavailable.";
             }
         }
@@ -486,4 +539,3 @@
 
 </body>
 </html>
-
