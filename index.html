@@ -231,11 +231,11 @@
 async function initWUWeather() {
 
     // Correct API key validation
-    if (!WU_API_KEY || WU_API_KEY === "eba9581da59d4972a9581da59d497236") {
-        setWUStatus("error", "WU Key Missing", "Your Weather Underground API key is missing.");
-        showWUError("Your Weather Underground API key is missing or invalid.");
-        return;
-    }
+   if (!WU_API_KEY || WU_API_KEY === "eba9581da59d4972a9581da59d497236") {
+    setWUStatus("error", "WU Key Missing", "Your Weather Underground API key is missing.");
+    showWUError("Your Weather Underground API key is missing or invalid.");
+    return;
+}
 
     console.log("WU key validated:", WU_API_KEY);
 
@@ -307,6 +307,7 @@ async function initWUWeather() {
   </script>
 </body>
 </html>
+
 
 
 
