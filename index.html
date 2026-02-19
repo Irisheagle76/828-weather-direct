@@ -170,143 +170,182 @@
   </div>
 
   <script>
-    const WU_API_KEY = "eba9581da59d4972a9581da59d497236";
-    console.log("Key exists at top:", WU_API_KEY);
-    // ==========================
-    // CONFIG
-    // ==========================
-    console.log("WU key loaded:", WU_API_KEY);
-    // ==========================
-    // UI helpers
-    // ==========================
-    function setWUStatus(state, label, text) {
-      const dot = document.getElementById("wu-status-dot");
-      const labelEl = document.getElementById("wu-status-label");
-      const textEl = document.getElementById("wu-status-text");
+  const WU_API_KEY = "eba9581da59d4972a9581da59d497236";
+  console.log("WU key loaded:", WU_API_KEY);
 
-      dot.classList.remove("ok", "error");
-      if (state === "ok") dot.classList.add("ok");
-      if (state === "error") dot.classList.add("error");
+  // ==========================
+  // UI helpers
+  // ==========================
+  function setWUStatus(state, label, text) {
+    const dot = document.getElementById("wu-status-dot");
+    const labelEl = document.getElementById("wu-status-label");
+    const textEl = document.getElementById("wu-status-text");
 
-      labelEl.textContent = label;
-      textEl.textContent = text;
-    }
+    dot.classList.remove("ok", "error");
+    if (state === "ok") dot.classList.add("ok");
+    if (state === "error") dot.classList.add("error");
 
-    function showWUError(msg) {
-      const el = document.getElementById("wu-error");
-      el.style.display = "block";
-      el.textContent = msg;
-    }
+    labelEl.textContent = label;
+    textEl.textContent = text;
+  }
 
-    // ==========================
-    // Weather Underground calls
-    // ==========================
-   async function getNearestWUStation(lat, lon, apiKey) {
+  function showWUError(msg) {
+    const el = document.getElementById("wu-error");
+    el.style.display = "block";
+    el.textContent = msg;
+  }
+
+  // ==========================
+  // Weather Underground calls
+  // ==========================
+  async function getNearestWUStation(lat, lon, apiKey) {
     const url = `https://api.weather.com/v3/location/near?geocode=${lat},${lon}&product=pws&format=json&apiKey=${apiKey}`;
 
     const res = await fetch(url);
     if (!res.ok) {
-        throw new Error("WU station lookup failed: " + res.status);
+      throw new Error("WU station lookup failed: " + res.status);
     }
 
     const data = await res.json();
 
-    // SAFETY CHECKS
-    if (!data.location) {
-        throw new Error("WU returned no location object.");
-    }
-
-    if (!data.location.stationId || data.location.stationId.length === 0) {
-        throw new Error("No nearby Weather Underground PWS stations found.");
+    if (!data.location || !data.location.stationId || data.location.stationId.length === 0) {
+      throw new Error("No nearby Weather Underground PWS stations found.");
     }
 
     return {
-        stationId: data.location.stationId[0],
-        distance: data.location.distance?.[0] ?? null,
-        city: data.location.city?.[0] ?? null,
-        neighborhood: data.location.neighborhood?.[0] ?? null
+      stationId: data.location.stationId[0],
+      distance: data.location.distance?.[0] ?? null,
+      city: data.location.city?.[0] ?? null,
+      neighborhood: data.location.neighborhood?.[0] ?? null
     };
-}
+  }
 
-async function initWUWeather() {
+  async function getWUCurrentConditions(stationId, apiKey) {
+    const url = `https://api.weather.com/v2/pws/observations/current?stationId=${stationId}&format=json&units=e&apiKey=${apiKey}`;
+
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error("WU current conditions failed: " + res.status);
+    }
+
+    const data = await res.json();
+    if (!data.observations || data.observations.length === 0) {
+      throw new Error("No observations returned from WU");
+    }
+
+    const obs = data.observations[0];
+
+    return {
+      temp: obs.imperial?.temp ?? null,
+      dewPoint: obs.imperial?.dewpt ?? null,
+      humidity: obs.humidity ?? null,
+      windSpeed: obs.imperial?.windSpeed ?? null,
+      windGust: obs.imperial?.windGust ?? null,
+      pressure: obs.imperial?.pressure ?? null,
+      rainRate: obs.imperial?.precipRate ?? null,
+      rainToday: obs.imperial?.precipTotal ?? null,
+      solarRadiation: obs.solarRadiation ?? null,
+      uv: obs.uv ?? null,
+      stationId: obs.stationID,
+      obsTimeLocal: obs.obsTimeLocal
+    };
+  }
+
+  // ==========================
+  // Main flow
+  // ==========================
+  async function initWUWeather() {
 
     // Correct API key validation
-   if (!WU_API_KEY || WU_API_KEY === "eba9581da59d4972a9581da59d497236") {
-    setWUStatus("error", "WU Key Missing", "Your Weather Underground API key is missing.");
-    showWUError("Your Weather Underground API key is missing or invalid.");
-    return;
-}
+    if (!WU_API_KEY || WU_API_KEY === "YOUR_WU_API_KEY_HERE") {
+      setWUStatus("error", "WU Key Missing", "Your Weather Underground API key is missing.");
+      showWUError("Your Weather Underground API key is missing or invalid.");
+      return;
+    }
 
     console.log("WU key validated:", WU_API_KEY);
 
     if (!navigator.geolocation) {
-        setWUStatus("error", "Location Unavailable", "Geolocation is not supported in this browser.");
-        showWUError("Your browser does not support geolocation, so we can't find the nearest station.");
-        return;
+      setWUStatus("error", "Location Unavailable", "Geolocation is not supported in this browser.");
+      showWUError("Your browser does not support geolocation, so we can't find the nearest station.");
+      return;
     }
 
     setWUStatus("pending", "Requesting Location", "Waiting for permission to access your location…");
 
     navigator.geolocation.getCurrentPosition(async (pos) => {
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
 
-        try {
-            setWUStatus("pending", "Finding Station", "Locating the nearest Weather Underground PWS…");
-            const nearest = await getNearestWUStation(lat, lon, WU_API_KEY);
+      try {
+        setWUStatus("pending", "Finding Station", "Locating the nearest Weather Underground PWS…");
+        const nearest = await getNearestWUStation(lat, lon, WU_API_KEY);
 
-            document.getElementById("wu-station-id").textContent = nearest.stationId;
-            document.getElementById("wu-station-meta").textContent =
-                `${nearest.neighborhood || nearest.city || "Nearby"} • ${nearest.distance.toFixed(1)} mi`;
+        // Safe station name
+        const stationName =
+          nearest.neighborhood ||
+          nearest.city ||
+          "Nearby";
 
-            setWUStatus("pending", "Fetching Observations", "Pulling current conditions from the nearest station…");
-            const wu = await getWUCurrentConditions(nearest.stationId, WU_API_KEY);
+        // Safe distance formatting
+        const stationDistance =
+          typeof nearest.distance === "number"
+            ? `${nearest.distance.toFixed(1)} mi`
+            : "distance unknown";
 
-            // Update UI
-            document.getElementById("wu-temp").textContent =
-                wu.temp != null ? `${wu.temp.toFixed(0)}°F` : "--";
-            document.getElementById("wu-dew").textContent =
-                wu.dewPoint != null ? `${wu.dewPoint.toFixed(0)}°F` : "--";
-            document.getElementById("wu-humidity").textContent =
-                wu.humidity != null ? `Humidity ${wu.humidity}%` : "Humidity --";
+        document.getElementById("wu-station-id").textContent = nearest.stationId;
+        document.getElementById("wu-station-meta").textContent =
+          `${stationName} • ${stationDistance}`;
 
-            document.getElementById("wu-wind").textContent =
-                wu.windSpeed != null ? `${wu.windSpeed.toFixed(0)} mph` : "--";
-            document.getElementById("wu-wind-gust").textContent =
-                wu.windGust != null ? `Gusts ${wu.windGust.toFixed(0)} mph` : "Gusts --";
+        setWUStatus("pending", "Fetching Observations", "Pulling current conditions from the nearest station…");
+        const wu = await getWUCurrentConditions(nearest.stationId, WU_API_KEY);
 
-            document.getElementById("wu-pressure").textContent =
-                wu.pressure != null ? `${wu.pressure.toFixed(2)} inHg` : "--";
-            document.getElementById("wu-rain").textContent =
-                wu.rainRate != null ? `Rate ${wu.rainRate.toFixed(2)} in/hr` : "Rain rate --";
+        // Update UI
+        document.getElementById("wu-temp").textContent =
+          wu.temp != null ? `${wu.temp.toFixed(0)}°F` : "--";
+        document.getElementById("wu-dew").textContent =
+          wu.dewPoint != null ? `${wu.dewPoint.toFixed(0)}°F` : "--";
+        document.getElementById("wu-humidity").textContent =
+          wu.humidity != null ? `Humidity ${wu.humidity}%` : "Humidity --";
 
-            document.getElementById("wu-uv").textContent =
-                wu.uv != null ? `UV ${wu.uv.toFixed(1)}` : "--";
-            document.getElementById("wu-solar").textContent =
-                wu.solarRadiation != null ? `${wu.solarRadiation.toFixed(0)} W/m²` : "Solar --";
+        document.getElementById("wu-wind").textContent =
+          wu.windSpeed != null ? `${wu.windSpeed.toFixed(0)} mph` : "--";
+        document.getElementById("wu-wind-gust").textContent =
+          wu.windGust != null ? `Gusts ${wu.windGust.toFixed(0)} mph` : "Gusts --";
 
-            document.getElementById("wu-feels").textContent =
-                wu.temp != null ? `Feels like ${wu.temp.toFixed(0)}°F` : "Feels like --";
+        document.getElementById("wu-pressure").textContent =
+          wu.pressure != null ? `${wu.pressure.toFixed(2)} inHg` : "--";
+        document.getElementById("wu-rain").textContent =
+          wu.rainRate != null ? `Rate ${wu.rainRate.toFixed(2)} in/hr` : "Rain rate --";
 
-            setWUStatus("ok", "WU Connected", `Live data from ${nearest.stationId} • Updated ${wu.obsTimeLocal || "just now"}`);
+        document.getElementById("wu-uv").textContent =
+          wu.uv != null ? `UV ${wu.uv.toFixed(1)}` : "--";
+        document.getElementById("wu-solar").textContent =
+          wu.solarRadiation != null ? `${wu.solarRadiation.toFixed(0)} W/m²` : "Solar --";
 
-        } catch (err) {
-            console.error(err);
-            setWUStatus("error", "WU Error", "We couldn't load data from Weather Underground.");
-            showWUError(err.message || "Unknown error while fetching Weather Underground data.");
-        }
+        document.getElementById("wu-feels").textContent =
+          wu.temp != null ? `Feels like ${wu.temp.toFixed(0)}°F` : "Feels like --";
+
+        setWUStatus("ok", "WU Connected", `Live data from ${nearest.stationId} • Updated ${wu.obsTimeLocal || "just now"}`);
+
+      } catch (err) {
+        console.error(err);
+        setWUStatus("error", "WU Error", "We couldn't load data from Weather Underground.");
+        showWUError(err.message || "Unknown error while fetching Weather Underground data.");
+      }
 
     }, (err) => {
-        console.error(err);
-        setWUStatus("error", "Location Denied", "We can't find a nearby station without your location.");
-        showWUError("Location access was denied. Enable location to get hyper‑local conditions.");
+      console.error(err);
+      setWUStatus("error", "Location Denied", "We can't find a nearby station without your location.");
+      showWUError("Location access was denied. Enable location to get hyper‑local conditions.");
     });
-}
+  }
 
-    document.addEventListener("DOMContentLoaded", initWUWeather);
-  </script>
+  document.addEventListener("DOMContentLoaded", initWUWeather);
+</script>
 </body>
 </html>
+
 
 
 
