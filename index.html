@@ -11,7 +11,6 @@
             --light-bg: #f4f7f9;
             --red: #d63031;
 
-            /* Dynamic theme variables */
             --theme-bg: #f4f7f9;
             --theme-header: #15286c;
         }
@@ -143,7 +142,7 @@
         }
 
         .badge-danger { background: #d63031; }
-        .badge-frigid { background: #c218c2; color: white; }
+        .badge-frigid { background: #c218c2; }
         .badge-ideal { background: #2ecc71; }
         .badge-warm { background: #e67e22; }
         .badge-chilly { background: #15286c; }
@@ -180,6 +179,10 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             max-width: 100%;
         }
+
+        #tempest-status {
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -198,6 +201,7 @@
         <button class="btn-geo" onclick="getLocation()">Detect My Elevation & Station</button>
 
         <div class="stat-grid">
+
             <div class="stat-item">
                 <span class="label">PWS Temp</span>
                 <div id="local-temp" class="value">--°F</div>
@@ -214,6 +218,11 @@
             </div>
 
             <div class="stat-item">
+                <span class="label">Tempest Status</span>
+                <div id="tempest-status" class="value">Checking...</div>
+            </div>
+
+            <div class="stat-item">
                 <span class="label">Human Comfort</span>
                 <div class="value">
                     <span id="comfort-badge" class="comfort-badge"></span>
@@ -225,6 +234,7 @@
                 <span class="label">Wind Status</span>
                 <div id="wind-status" class="value">Checking...</div>
             </div>
+
         </div>
 
         <div class="trend-card">
@@ -233,315 +243,318 @@
         </div>
     </div>
 
-<script>
-    // 🔐 Tempest token placeholder – replace locally with your real token
-    const TEMPEST_TOKEN = "65a47ad8-7cc8-4dcd-b963-4d0101f43b6d";
+    <script>
+        const TEMPEST_TOKEN = "YOUR_TEMPEST_API_TOKEN_HERE";
 
-    window.onload = () => updateWeather(35.5951, -82.5515);
+        window.onload = () => updateWeather(35.5951, -82.5515);
 
-    function getLocation() {
-        if (navigator.geolocation) {
-            document.getElementById('user-elev').innerText = "Locating...";
-            navigator.geolocation.getCurrentPosition(
-                pos => updateWeather(pos.coords.latitude, pos.coords.longitude),
-                () => updateWeather(35.5951, -82.5515)
-            );
-        }
-    }
-
-    function formatDate(d) {
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${y}-${m}-${day}`;
-    }
-
-    function applySeasonalTheme(temp) {
-        let bg, header;
-
-        if (temp <= 32) {
-            bg = "linear-gradient(to bottom, #d9e9ff, #bcd4f5)";
-            header = "#3b6ea8";
-        }
-        else if (temp <= 55) {
-            bg = "linear-gradient(to bottom, #e0f4f4, #c7e7df)";
-            header = "#2e8b8b";
-        }
-        else if (temp <= 74) {
-            bg = "linear-gradient(to bottom, #f7f2e8, #e8dcc4)";
-            header = "#b89b5e";
-        }
-        else if (temp <= 85) {
-            bg = "linear-gradient(to bottom, #ffe7c2, #ffd39a)";
-            header = "#e08a2e";
-        }
-        else {
-            bg = "linear-gradient(to bottom, #ffcfb8, #ff9e7a)";
-            header = "#d65a2a";
-        }
-
-        document.documentElement.style.setProperty("--theme-bg", bg);
-        document.documentElement.style.setProperty("--theme-header", header);
-    }
-
-    async function getTempestData(lat, lon) {
-        if (!TEMPEST_TOKEN || TEMPEST_TOKEN === "65a47ad8-7cc8-4dcd-b963-4d0101f43b6d") {
-            throw new Error("Tempest token not set");
-        }
-        const url = `https://swd.weatherflow.com/swd/rest/better_forecast?lat=${lat}&lon=${lon}&token=${TEMPEST_TOKEN}`;
-        const response = await fetch(url);
-        if (!response.ok) throw new Error("Tempest API error");
-        return await response.json();
-    }
-
-    async function updateWeather(lat, lon) {
-        const omUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_gusts_10m&hourly=dew_point_2m,snowfall,rain&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto`;
-
-        const windStatus = document.getElementById('wind-status');
-        const alertPill = document.getElementById('main-alert');
-        const comfort = document.getElementById('comfort-report');
-        const badge = document.getElementById('comfort-badge');
-        const stationNameEl = document.getElementById('station-name');
-
-        try {
-            // Always fetch Open-Meteo (forecast + fallback + elevation)
-            const omResponse = await fetch(omUrl);
-            if (!omResponse.ok) throw new Error("Open-Meteo API error");
-            const omData = await omResponse.json();
-
-            // Try Tempest for hyper-local current obs
-            let useTempest = false;
-            let tempest = null;
-            try {
-                tempest = await getTempestData(lat, lon);
-
-                // 🔍 DEBUG: See exactly what Tempest returned
-                console.log("Tempest response:", tempest);
-
-                useTempest = true;
-            } catch (e) {
-                console.warn("Tempest failed:", e);
-                useTempest = false;
+        function getLocation() {
+            if (navigator.geolocation) {
+                document.getElementById('user-elev').innerText = "Locating...";
+                navigator.geolocation.getCurrentPosition(
+                    pos => updateWeather(pos.coords.latitude, pos.coords.longitude),
+                    () => updateWeather(35.5951, -82.5515)
+                );
             }
+        }
 
-            let temp, gusts, dewPoint;
+        function formatDate(d) {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
 
-            if (useTempest && tempest && tempest.current_conditions) {
-                const cc = tempest.current_conditions;
-                temp = Math.round(cc.air_temperature);
-                gusts = cc.wind_gust != null ? cc.wind_gust : (cc.wind_avg || 0);
-                dewPoint = cc.dew_point != null ? cc.dew_point : null;
+        function applySeasonalTheme(temp) {
+            let bg, header;
 
-                document.getElementById('local-temp').innerText = temp + "°F";
-
-                if (tempest.station && tempest.station.name) {
-                    stationNameEl.innerText = tempest.station.name;
-                } else {
-                    stationNameEl.innerText = "Nearest Tempest Station";
-                }
-            } else {
-                // Fallback to Open-Meteo current
-                temp = Math.round(omData.current.temperature_2m);
-                gusts = omData.current.wind_gusts_10m ?? 0;
-
-                document.getElementById('local-temp').innerText = temp + "°F";
-                stationNameEl.innerText = "Using Open-Meteo";
+            if (temp <= 32) {
+                bg = "linear-gradient(to bottom, #d9e9ff, #bcd4f5)";
+                header = "#3b6ea8";
             }
-
-            applySeasonalTheme(temp);
-
-            const elevFeet = Math.round(omData.elevation * 3.28084);
-            document.getElementById('user-elev').innerText =
-                isNaN(elevFeet) ? "-- ft" : elevFeet + " ft";
-
-            alertPill.style.display = 'none';
-            alertPill.innerHTML = "";
-
-            if (gusts >= 40) {
-                windStatus.innerText = "HIGH IMPACT";
-                alertPill.style.display = 'block';
-                alertPill.style.background = 'var(--red)';
-                alertPill.innerHTML = "🚨 Stay indoors if possible; falling limbs and power outages likely.";
+            else if (temp <= 55) {
+                bg = "linear-gradient(to bottom, #e0f4f4, #c7e7df)";
+                header = "#2e8b8b";
             }
-            else if (gusts >= 25) {
-                windStatus.innerText = "BIN ALERT";
-                alertPill.style.display = 'block';
-                alertPill.style.background = 'var(--orange)';
-                alertPill.innerHTML = "⚠️ Secure bins and porch/patio furniture. Some power outages possible.";
+            else if (temp <= 74) {
+                bg = "linear-gradient(to bottom, #f7f2e8, #e8dcc4)";
+                header = "#b89b5e";
             }
-            else if (gusts >= 20) {
-                windStatus.innerText = "QUITE BREEZY (gusting to " + Math.round(gusts) + " mph)";
-                alertPill.style.display = 'block';
-                alertPill.style.background = 'var(--navy)';
-                alertPill.innerHTML = "ℹ️ Keep an eye on your green garbage bins!";
+            else if (temp <= 85) {
+                bg = "linear-gradient(to bottom, #ffe7c2, #ffd39a)";
+                header = "#e08a2e";
             }
             else {
-                if (gusts <= 5) {
-                    windStatus.innerText = "CALM (gusting occasionally to " + Math.round(gusts) + " mph)";
-                } else {
-                    windStatus.innerText = "Light Winds (gusting occasionally to " + Math.round(gusts) + " mph)";
-                }
+                bg = "linear-gradient(to bottom, #ffcfb8, #ff9e7a)";
+                header = "#d65a2a";
             }
 
-            // Dew point: prefer Tempest, else Open-Meteo hourly
-            if (dewPoint == null) {
-                const currentIndex = omData.hourly.time.indexOf(omData.current.time);
-                dewPoint = currentIndex >= 0
-                    ? omData.hourly.dew_point_2m[currentIndex]
-                    : omData.hourly.dew_point_2m[0];
-            }
-
-            badge.className = "comfort-badge";
-
-            if (temp <= 10 || (temp <= 20 && gusts >= 15)) {
-                comfort.innerText = "🚨 DANGEROUSLY COLD: Frostbite risk!";
-                badge.classList.add("badge-danger");
-                badge.innerText = "DANGER";
-            }
-            else if (temp < 15) {
-                comfort.innerText = "❄️ Dangerously Cold: Limit time outdoors.";
-                badge.classList.add("badge-frigid");
-                badge.innerText = "FRIGID";
-            }
-            else if (temp >= 68 && temp <= 74 && dewPoint >= 45 && dewPoint <= 52) {
-                comfort.innerText = "✨ Goldilocks! Just right!";
-                badge.classList.add("badge-ideal");
-                badge.innerText = "IDEAL";
-            }
-            else if (temp >= 75) {
-                if (dewPoint < 50) comfort.innerText = "✨ Ultra Crisp";
-                else if (dewPoint < 55) comfort.innerText = "🧤 Refreshing";
-                else if (dewPoint < 60) comfort.innerText = "👌 Pleasant";
-                else if (dewPoint < 65) comfort.innerText = "☁️ Noticeable";
-                else if (dewPoint < 70) comfort.innerText = "💧 Muggy";
-                else if (dewPoint < 75) comfort.innerText = "🌡️ Oppressive";
-                else comfort.innerText = "🌋 Extreme Humidity";
-
-                badge.classList.add("badge-warm");
-                badge.innerText = "WARM";
-            }
-            else if (temp < 45 && gusts > 15) {
-                comfort.innerText = "🥶 Biting Chill: Bundle up!";
-                badge.classList.add("badge-chilly");
-                badge.innerText = "CHILLY";
-            }
-            else {
-                comfort.innerText = "Seasonably Comfortable";
-                badge.classList.add("badge-seasonal");
-                badge.innerText = "SEASONAL";
-            }
-
-            const hasSnow = omData.hourly.snowfall.slice(0, 48).some(s => s > 0);
-            const hasRain = omData.hourly.rain.slice(0, 24).some(r => r > 0.1);
-
-            document.getElementById('icon-snow').classList.toggle('active', hasSnow);
-            document.getElementById('icon-rain').classList.toggle('active', hasRain);
-
-            updateTrends(lat, lon);
-
-        } catch (err) {
-            comfort.innerText = "Offline";
-            windStatus.innerText = "Offline";
-            document.getElementById('trend-summary').innerText = "Trend data unavailable.";
+            document.documentElement.style.setProperty("--theme-bg", bg);
+            document.documentElement.style.setProperty("--theme-header", header);
         }
-    }
 
-    async function updateTrends(lat, lon) {
-        const trendEl = document.getElementById('trend-summary');
-        try {
-            const today = new Date();
-            const start = new Date();
-            start.setDate(today.getDate() - 59);
-
-            const startDate = formatDate(start);
-            const endDate = formatDate(today);
-
-            const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startDate}&end_date=${endDate}&daily=temperature_2m_max,precipitation_sum&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=auto`;
-
+        async function getTempestData(lat, lon) {
+            if (!TEMPEST_TOKEN || TEMPEST_TOKEN === "65a47ad8-7cc8-4dcd-b963-4d0101f43b6d") {
+                throw new Error("Tempest token not set");
+            }
+            const url = `https://swd.weatherflow.com/swd/rest/better_forecast?lat=${lat}&lon=${lon}&token=${TEMPEST_TOKEN}`;
             const response = await fetch(url);
-            if (!response.ok) throw new Error("Archive API Error");
-            const data = await response.json();
-
-            const times = data.daily.time;
-            const tmax = data.daily.temperature_2m_max;
-            const precip = data.daily.precipitation_sum;
-            const n = times.length;
-
-            if (!times || !tmax || !precip || n === 0) {
-                trendEl.innerText = "Not enough recent data to analyze trends.";
-                return;
-            }
-
-            let warmStreak = 0;
-            for (let i = n - 1; i >= 0; i--) {
-                if (tmax[i] >= 60) warmStreak++;
-                else break;
-            }
-
-            let dryStreak = 0;
-            for (let i = n - 1; i >= 0; i--) {
-                if (precip[i] < 0.01) dryStreak++;
-                else break;
-            }
-
-            const weekendInfos = [];
-            for (let i = n - 1; i >= 0; i--) {
-                const d = new Date(times[i]);
-                const dow = d.getUTCDay();
-                if (dow === 0) {
-                    let wet = precip[i] > 0.05;
-                    if (i - 1 >= 0) {
-                        const dPrev = new Date(times[i - 1]);
-                        if (dPrev.getUTCDay() === 6) {
-                            if (precip[i - 1] > 0.05) wet = true;
-                        }
-                    }
-                    weekendInfos.push({ date: d, wet });
-                }
-            }
-
-            let unsettledStreak = 0;
-            let dryWeekendStreak = 0;
-
-            if (weekendInfos.length > 0) {
-                for (let i = 0; i < weekendInfos.length; i++) {
-                    if (weekendInfos[i].wet) unsettledStreak++;
-                    else break;
-                }
-                for (let i = 0; i < weekendInfos.length; i++) {
-                    if (!weekendInfos[i].wet) dryWeekendStreak++;
-                    else break;
-                }
-            }
-
-            const parts = [];
-
-            if (warmStreak >= 3) {
-                parts.push(`Warm streak: ${warmStreak} consecutive day(s) at or above 60°F.`);
-            }
-
-            if (dryStreak >= 3) {
-                parts.push(`Dry stretch: ${dryStreak} consecutive day(s) with little or no measurable precipitation.`);
-            }
-
-            if (unsettledStreak >= 2) {
-                parts.push(`Weekends: ${unsettledStreak} unsettled weekend(s) in a row.`);
-            } else if (dryWeekendStreak >= 2) {
-                parts.push(`Weekends: ${dryWeekendStreak} mainly dry weekend(s) in a row.`);
-            }
-
-            if (parts.length === 0) {
-                trendEl.innerText = "No strong recent pattern — conditions have been fairly changeable over the last 60 days.";
-            } else {
-                trendEl.innerText = parts.join(" ");
-            }
-
-        } catch (err) {
-            trendEl.innerText = "Trend data unavailable.";
+            if (!response.ok) throw new Error("Tempest API error");
+            return await response.json();
         }
-    }
-</script>
+                async function updateWeather(lat, lon) {
+            const omUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_gusts_10m&hourly=dew_point_2m,snowfall,rain&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto`;
+
+            const windStatus = document.getElementById('wind-status');
+            const alertPill = document.getElementById('main-alert');
+            const comfort = document.getElementById('comfort-report');
+            const badge = document.getElementById('comfort-badge');
+            const stationNameEl = document.getElementById('station-name');
+            const tempestStatus = document.getElementById('tempest-status');
+
+            try {
+                const omResponse = await fetch(omUrl);
+                if (!omResponse.ok) throw new Error("Open-Meteo API error");
+                const omData = await omResponse.json();
+
+                let useTempest = false;
+                let tempest = null;
+
+                try {
+                    tempest = await getTempestData(lat, lon);
+                    console.log("Tempest response:", tempest);
+                    useTempest = true;
+                } catch (e) {
+                    console.warn("Tempest failed:", e);
+                    useTempest = false;
+                }
+
+                let temp, gusts, dewPoint;
+
+                if (useTempest && tempest && tempest.current_conditions) {
+                    const cc = tempest.current_conditions;
+                    temp = Math.round(cc.air_temperature);
+                    gusts = cc.wind_gust != null ? cc.wind_gust : (cc.wind_avg || 0);
+                    dewPoint = cc.dew_point != null ? cc.dew_point : null;
+
+                    document.getElementById('local-temp').innerText = temp + "°F";
+
+                    if (tempest.station && tempest.station.name) {
+                        stationNameEl.innerText = tempest.station.name;
+                    } else {
+                        stationNameEl.innerText = "Nearest Tempest Station";
+                    }
+
+                    tempestStatus.innerText = "Connected ✓";
+                    tempestStatus.style.color = "green";
+
+                } else {
+                    temp = Math.round(omData.current.temperature_2m);
+                    gusts = omData.current.wind_gusts_10m ?? 0;
+
+                    document.getElementById('local-temp').innerText = temp + "°F";
+                    stationNameEl.innerText = "Using Open-Meteo";
+
+                    if (TEMPEST_TOKEN === "YOUR_TEMPEST_API_TOKEN_HERE") {
+                        tempestStatus.innerText = "Token Missing";
+                        tempestStatus.style.color = "red";
+                    } else {
+                        tempestStatus.innerText = "Offline — using fallback";
+                        tempestStatus.style.color = "red";
+                    }
+                }
+
+                applySeasonalTheme(temp);
+
+                const elevFeet = Math.round(omData.elevation * 3.28084);
+                document.getElementById('user-elev').innerText =
+                    isNaN(elevFeet) ? "-- ft" : elevFeet + " ft";
+
+                alertPill.style.display = 'none';
+                alertPill.innerHTML = "";
+
+                if (gusts >= 40) {
+                    windStatus.innerText = "HIGH IMPACT";
+                    alertPill.style.display = 'block';
+                    alertPill.style.background = 'var(--red)';
+                    alertPill.innerHTML = "🚨 Stay indoors if possible; falling limbs and power outages likely.";
+                }
+                else if (gusts >= 25) {
+                    windStatus.innerText = "BIN ALERT";
+                    alertPill.style.display = 'block';
+                    alertPill.style.background = 'var(--orange)';
+                    alertPill.innerHTML = "⚠️ Secure bins and porch/patio furniture. Some power outages possible.";
+                }
+                else if (gusts >= 20) {
+                    windStatus.innerText = "QUITE BREEZY (gusting to " + Math.round(gusts) + " mph)";
+                    alertPill.style.display = 'block';
+                    alertPill.style.background = 'var(--navy)';
+                    alertPill.innerHTML = "ℹ️ Keep an eye on your green garbage bins!";
+                }
+                else {
+                    if (gusts <= 5) {
+                        windStatus.innerText = "CALM (gusting occasionally to " + Math.round(gusts) + " mph)";
+                    } else {
+                        windStatus.innerText = "Light Winds (gusting occasionally to " + Math.round(gusts) + " mph)";
+                    }
+                }
+
+                if (dewPoint == null) {
+                    const currentIndex = omData.hourly.time.indexOf(omData.current.time);
+                    dewPoint = currentIndex >= 0
+                        ? omData.hourly.dew_point_2m[currentIndex]
+                        : omData.hourly.dew_point_2m[0];
+                }
+
+                badge.className = "comfort-badge";
+
+                if (temp <= 10 || (temp <= 20 && gusts >= 15)) {
+                    comfort.innerText = "🚨 DANGEROUSLY COLD: Frostbite risk!";
+                    badge.classList.add("badge-danger");
+                    badge.innerText = "DANGER";
+                }
+                else if (temp < 15) {
+                    comfort.innerText = "❄️ Dangerously Cold: Limit time outdoors.";
+                    badge.classList.add("badge-frigid");
+                    badge.innerText = "FRIGID";
+                }
+                else if (temp >= 68 && temp <= 74 && dewPoint >= 45 && dewPoint <= 52) {
+                    comfort.innerText = "✨ Goldilocks! Just right!";
+                    badge.classList.add("badge-ideal");
+                    badge.innerText = "IDEAL";
+                }
+                else if (temp >= 75) {
+                    if (dewPoint < 50) comfort.innerText = "✨ Ultra Crisp";
+                    else if (dewPoint < 55) comfort.innerText = "🧤 Refreshing";
+                    else if (dewPoint < 60) comfort.innerText = "👌 Pleasant";
+                    else if (dewPoint < 65) comfort.innerText = "☁️ Noticeable";
+                    else if (dewPoint < 70) comfort.innerText = "💧 Muggy";
+                    else if (dewPoint < 75) comfort.innerText = "🌡️ Oppressive";
+                    else comfort.innerText = "🌋 Extreme Humidity";
+
+                    badge.classList.add("badge-warm");
+                    badge.innerText = "WARM";
+                }
+                else if (temp < 45 && gusts > 15) {
+                    comfort.innerText = "🥶 Biting Chill: Bundle up!";
+                    badge.classList.add("badge-chilly");
+                    badge.innerText = "CHILLY";
+                }
+                else {
+                    comfort.innerText = "Seasonably Comfortable";
+                    badge.classList.add("badge-seasonal");
+                    badge.innerText = "SEASONAL";
+                }
+
+                const hasSnow = omData.hourly.snowfall.slice(0, 48).some(s => s > 0);
+                const hasRain = omData.hourly.rain.slice(0, 24).some(r => r > 0.1);
+
+                document.getElementById('icon-snow').classList.toggle('active', hasSnow);
+                document.getElementById('icon-rain').classList.toggle('active', hasRain);
+
+                updateTrends(lat, lon);
+
+            } catch (err) {
+                comfort.innerText = "Offline";
+                windStatus.innerText = "Offline";
+                document.getElementById('trend-summary').innerText = "Trend data unavailable.";
+            }
+        }
+                async function updateTrends(lat, lon) {
+            const trendEl = document.getElementById('trend-summary');
+            try {
+                const today = new Date();
+                const start = new Date();
+                start.setDate(today.getDate() - 59);
+
+                const startDate = formatDate(start);
+                const endDate = formatDate(today);
+
+                const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startDate}&end_date=${endDate}&daily=temperature_2m_max,precipitation_sum&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=auto`;
+
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("Archive API Error");
+                const data = await response.json();
+
+                const times = data.daily.time;
+                const tmax = data.daily.temperature_2m_max;
+                const precip = data.daily.precipitation_sum;
+                const n = times.length;
+
+                if (!times || !tmax || !precip || n === 0) {
+                    trendEl.innerText = "Not enough recent data to analyze trends.";
+                    return;
+                }
+
+                let warmStreak = 0;
+                for (let i = n - 1; i >= 0; i--) {
+                    if (tmax[i] >= 60) warmStreak++;
+                    else break;
+                }
+
+                let dryStreak = 0;
+                for (let i = n - 1; i >= 0; i--) {
+                    if (precip[i] < 0.01) dryStreak++;
+                    else break;
+                }
+
+                const weekendInfos = [];
+                for (let i = n - 1; i >= 0; i--) {
+                    const d = new Date(times[i]);
+                    const dow = d.getUTCDay();
+                    if (dow === 0) {
+                        let wet = precip[i] > 0.05;
+                        if (i - 1 >= 0) {
+                            const dPrev = new Date(times[i - 1]);
+                            if (dPrev.getUTCDay() === 6) {
+                                if (precip[i - 1] > 0.05) wet = true;
+                            }
+                        }
+                        weekendInfos.push({ date: d, wet });
+                    }
+                }
+
+                let unsettledStreak = 0;
+                let dryWeekendStreak = 0;
+
+                if (weekendInfos.length > 0) {
+                    for (let i = 0; i < weekendInfos.length; i++) {
+                        if (weekendInfos[i].wet) unsettledStreak++;
+                        else break;
+                    }
+                    for (let i = 0; i < weekendInfos.length; i++) {
+                        if (!weekendInfos[i].wet) dryWeekendStreak++;
+                        else break;
+                    }
+                }
+
+                const parts = [];
+
+                if (warmStreak >= 3) {
+                    parts.push(`Warm streak: ${warmStreak} consecutive day(s) at or above 60°F.`);
+                }
+
+                if (dryStreak >= 3) {
+                    parts.push(`Dry stretch: ${dryStreak} consecutive day(s) with little or no measurable precipitation.`);
+                }
+
+                if (unsettledStreak >= 2) {
+                    parts.push(`Weekends: ${unsettledStreak} unsettled weekend(s) in a row.`);
+                } else if (dryWeekendStreak >= 2) {
+                    parts.push(`Weekends: ${dryWeekendStreak} mainly dry weekend(s) in a row.`);
+                }
+
+                if (parts.length === 0) {
+                    trendEl.innerText = "No strong recent pattern — conditions have been fairly changeable over the last 60 days.";
+                } else {
+                    trendEl.innerText = parts.join(" ");
+                }
+
+            } catch (err) {
+                trendEl.innerText = "Trend data unavailable.";
+            }
+        }
+    </script>
 
 </body>
 </html>
-
