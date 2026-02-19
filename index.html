@@ -1,6 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>828 Weather Direct</title>
+    <style>
+        :root {
+            --navy: #15286c;
+            --orange: #e27030;
+            --light-bg: #f4f7f9;
+            --red: #d63031;
+
+            /* Dynamic theme variables */
+            --theme-bg: #f4f7f9;
+            --theme-header: #15286c;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--theme-bg);
+            color: #333;
+            padding: 20px;
+            max-width: 600px;
+            margin: auto;
+            transition: background 0.6s ease;
+            overflow-x: hidden;
+        }
+
+        header {
+            background: var(--theme-header);
+            color: white;
+            padding: 25px;
+            border-radius: 15px 15px 0 0;
+            text-align: center;
+            transition: background 0.6s ease;
+        }
+
+        h1 { margin: 0; font-size: 1.8em; letter-spacing: 1px; }
+
+        .card {
+            background: white;
+            border-radius: 0 0 15px 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-top: 4px solid var(--orange);
+            max-width: 100%;
+        }
+
+        .alert-pill {
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: none;
+            text-align: center;
+            line-height: 1.4;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .impact-bar {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-bottom: 20px;
+        }
+
+        .impact-icon {
+            font-size: 2.2em;
+            opacity: 0.15;
+            filter: grayscale(1);
+            transition: 0.3s;
+            position: relative;
+        }
+
+        .impact-icon.active {
+            opacity: 1;
+            filter: grayscale(0);
+        }
+
+        .impact-label {
+            font-size: 0.4em;
+            position: absolute;
+            bottom: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--navy);
+            font-weight: bold;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 480px) {
+            .stat-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .stat-item {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #eee;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .label {
+            font-size: 0.7em;
+            color: var(--navy);
+            font-weight: bold;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .value {
+            font-size: 1.1em;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .comfort-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.7em;
+            font-weight: bold;
+            color: white;
+            white-space: nowrap;
+        }
+
+        .badge-danger { background: #d63031; }
+        .badge-frigid { background: #c218c2; color: white; }
+        .badge-ideal { background: #2ecc71; }
+        .badge-warm { background: #e67e22; }
+        .badge-chilly { background: #15286c; }
+        .badge-seasonal { background: #d7b894; color: #4a3b2a; }
+
+        .trend-card {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #eee;
+            margin-top: 20px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .trend-text {
+            font-size: 0.95em;
+            line-height: 1.4;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .btn-geo {
+            background: var(--orange);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 20px;
+            font-size: 1em;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            max-width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <header><h1>828 Weather Direct</h1></header>
+
+    <div class="card">
+
+        <div class="impact-bar">
+            <div id="icon-snow" class="impact-icon">❄️<span class="impact-label">SNOW</span></div>
+            <div id="icon-rain" class="impact-icon">🌧️<span class="impact-label">RAIN</span></div>
+        </div>
+
+        <div id="main-alert" class="alert-pill"></div>
+
+        <button class="btn-geo" onclick="getLocation()">Detect My Elevation & Station</button>
+
+        <div class="stat-grid">
+            <div class="stat-item">
+                <span class="label">PWS Temp</span>
+                <div id="local-temp" class="value">--°F</div>
+            </div>
+
+            <div class="stat-item">
+                <span class="label">Your Elevation</span>
+                <div id="user-elev" class="value">-- ft</div>
+            </div>
+
+            <div class="stat-item">
+                <span class="label">Nearest Station</span>
+                <div id="station-name" class="value">--</div>
+            </div>
+
+            <div class="stat-item">
+                <span class="label">Human Comfort</span>
+                <div class="value">
+                    <span id="comfort-badge" class="comfort-badge"></span>
+                    <span id="comfort-report">Syncing...</span>
+                </div>
+            </div>
+
+            <div class="stat-item">
+                <span class="label">Wind Status</span>
+                <div id="wind-status" class="value">Checking...</div>
+            </div>
+        </div>
+
+        <div class="trend-card">
+            <span class="label">Recent Weather Pattern</span>
+            <div id="trend-summary" class="trend-text">Analyzing the last 60 days...</div>
+        </div>
+    </div>
+
 <script>
     // 🔐 Tempest token placeholder – replace locally with your real token
-    const TEMPEST_TOKEN = "YOUR_TEMPEST_API_TOKEN_HERE";
+    const TEMPEST_TOKEN = "65a47ad8-7cc8-4dcd-b963-4d0101f43b6d";
 
     window.onload = () => updateWeather(35.5951, -82.5515);
 
@@ -306,3 +541,7 @@
         }
     }
 </script>
+
+</body>
+</html>
+
