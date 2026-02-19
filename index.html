@@ -245,7 +245,7 @@
     </div>
 
     <script>
-        const TEMPEST_TOKEN = "65a47ad8-7cc8-4dcd-b963-4d0101f43b6d";
+        const TEMPEST_TOKEN = "7854bed4-a3f0-4e37-845c-2eb9a6142adf";
 console.log("Loaded token:", TEMPEST_TOKEN);
         window.onload = () => updateWeather(35.5951, -82.5515);
 
@@ -295,7 +295,7 @@ console.log("Loaded token:", TEMPEST_TOKEN);
         }
 
         async function getTempestData(lat, lon) {
-            if (!TEMPEST_TOKEN || TEMPEST_TOKEN === "65a47ad8-7cc8-4dcd-b963-4d0101f43b6d") {
+            if (!TEMPEST_TOKEN || TEMPEST_TOKEN === "7854bed4-a3f0-4e37-845c-2eb9a6142adf") {
                 throw new Error("Tempest token not set");
                 console.log("Loaded token:", TEMPEST_TOKEN);
             }
@@ -357,7 +357,7 @@ console.log("Loaded token:", TEMPEST_TOKEN);
                     document.getElementById('local-temp').innerText = temp + "°F";
                     stationNameEl.innerText = "Using Open-Meteo";
 
-                    if (TEMPEST_TOKEN === "65a47ad8-7cc8-4dcd-b963-4d0101f43b6d") {
+                    if (TEMPEST_TOKEN === "7854bed4-a3f0-4e37-845c-2eb9a6142adf") {
                         tempestStatus.innerText = "Token Missing";
                         tempestStatus.style.color = "red";
                      
@@ -561,6 +561,7 @@ console.log("Loaded token:", TEMPEST_TOKEN);
 
 </body>
 </html>
+
 
 
 
