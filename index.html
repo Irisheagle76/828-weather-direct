@@ -296,6 +296,7 @@
         async function getTempestData(lat, lon) {
             if (!TEMPEST_TOKEN || TEMPEST_TOKEN === "65a47ad8-7cc8-4dcd-b963-4d0101f43b6d") {
                 throw new Error("Tempest token not set");
+                console.log("Loaded token:", TEMPEST_TOKEN);
             }
             const url = `https://swd.weatherflow.com/swd/rest/better_forecast?lat=${lat}&lon=${lon}&token=${TEMPEST_TOKEN}`;
             const response = await fetch(url);
@@ -358,6 +359,7 @@
                     if (TEMPEST_TOKEN === "65a47ad8-7cc8-4dcd-b963-4d0101f43b6d") {
                         tempestStatus.innerText = "Token Missing";
                         tempestStatus.style.color = "red";
+                     
                     } else {
                         tempestStatus.innerText = "Offline — using fallback";
                         tempestStatus.style.color = "red";
@@ -558,5 +560,6 @@
 
 </body>
 </html>
+
 
 
