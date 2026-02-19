@@ -201,23 +201,33 @@
     // ==========================
     // Weather Underground calls
     // ==========================
-    async function getNearestWUStation(lat, lon, apiKey) {
-      const url = `https://api.weather.com/v3/location/near?geocode=${lat},${lon}&product=pws&format=json&apiKey=${apiKey}`;
-      const res = await fetch(url);
-      if (!res.ok) {
+    console.log("Using coords:", lat, lon);
+ async function getNearestWUStation(lat, lon, apiKey) {
+    const url = `https://api.weather.com/v3/location/near?geocode=${lat},${lon}&product=pws&format=json&apiKey=${apiKey}`;
+
+    const res = await fetch(url);
+    if (!res.ok) {
         throw new Error("WU station lookup failed: " + res.status);
-      }
-      const data = await res.json();
-      if (!data.location || !data.location.stationId || data.location.stationId.length === 0) {
-        throw new Error("No nearby WU stations found");
-      }
-      return {
-        stationId: data.location.stationId[0],
-        distance: data.location.distance[0],
-        city: data.location.city[0],
-        neighborhood: data.location.neighborhood[0]
-      };
     }
+
+    const data = await res.json();
+
+    // SAFETY CHECKS
+    if (!data.location) {
+        throw new Error("WU returned no location object.");
+    }
+
+    if (!data.location.stationId || data.location.stationId.length === 0) {
+        throw new Error("No nearby Weather Underground PWS stations found.");
+    }
+
+    return {
+        stationId: data.location.stationId[0],
+        distance: data.location.distance?.[0] ?? null,
+        city: data.location.city?.[0] ?? null,
+        neighborhood: data.location.neighborhood?.[0] ?? null
+    };
+}
 
     async function getWUCurrentConditions(stationId, apiKey) {
       const url = `https://api.weather.com/v2/pws/observations/current?stationId=${stationId}&format=json&units=e&apiKey=${apiKey}`;
@@ -325,6 +335,7 @@ console.log("WU key validated:", WU_API_KEY);
   </script>
 </body>
 </html>
+
 
 
 
