@@ -7,7 +7,7 @@
   <style>
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #0b1020;
+      background: #0a0f1c;
       color: #f5f5f5;
       margin: 0;
       padding: 1.5rem;
@@ -15,11 +15,11 @@
     .card {
       max-width: 720px;
       margin: 0 auto;
-      background: #151a2b;
+      background: #141a2a;
       border-radius: 16px;
       padding: 1.5rem;
       box-shadow: 0 18px 40px rgba(0,0,0,0.45);
-      border: 1px solid rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.05);
     }
     h1 {
       margin: 0 0 0.5rem;
@@ -28,7 +28,7 @@
     }
     .subtitle {
       font-size: 0.9rem;
-      color: #a5b0d0;
+      color: #9aa3c2;
       margin-bottom: 1.25rem;
     }
     .status-row {
@@ -73,10 +73,10 @@
       margin-top: 0.5rem;
     }
     .metric {
-      background: rgba(255,255,255,0.02);
+      background: rgba(255,255,255,0.03);
       border-radius: 12px;
       padding: 0.75rem 0.9rem;
-      border: 1px solid rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.05);
     }
     .metric-label {
       font-size: 0.75rem;
@@ -91,7 +91,7 @@
     }
     .metric-sub {
       font-size: 0.8rem;
-      color: #9fa8d8;
+      color: #9aa3c2;
       margin-top: 0.15rem;
     }
     .footer-note {
@@ -134,221 +134,233 @@
         <div class="metric-label">Temperature</div>
         <div class="metric-value" id="wu-temp">--</div>
         <div class="metric-sub" id="wu-feels">Feels like --</div>
+        <div class="metric-sub" id="wu-comfort">Comfort --</div>
       </div>
+
       <div class="metric">
         <div class="metric-label">Dew Point & Humidity</div>
         <div class="metric-value" id="wu-dew">--</div>
         <div class="metric-sub" id="wu-humidity">Humidity --</div>
       </div>
+
       <div class="metric">
         <div class="metric-label">Wind</div>
         <div class="metric-value" id="wu-wind">--</div>
         <div class="metric-sub" id="wu-wind-gust">Gusts --</div>
       </div>
+
       <div class="metric">
         <div class="metric-label">Pressure & Rain</div>
         <div class="metric-value" id="wu-pressure">--</div>
         <div class="metric-sub" id="wu-rain">Rain rate --</div>
       </div>
+
       <div class="metric">
         <div class="metric-label">UV & Solar</div>
         <div class="metric-value" id="wu-uv">--</div>
         <div class="metric-sub" id="wu-solar">Solar --</div>
       </div>
-      <div class="metric">
-        <div class="metric-label">Station</div>
-        <div class="metric-value" id="wu-station-id">--</div>
-        <div class="metric-sub" id="wu-station-meta">Locating nearest PWS…</div>
-      </div>
     </div>
 
     <div class="error-text" id="wu-error" style="display:none;"></div>
 
-    <div class="footer-note">
-      Data from nearest Weather Underground personal weather station. Location is used only in your browser to find the closest station.
+    <div class="footer-note" id="wu-station-footer">
+      Station: --
     </div>
   </div>
 
   <script>
-  const WU_API_KEY = "eba9581da59d4972a9581da59d497236";
-  console.log("WU key loaded:", WU_API_KEY);
+    const WU_API_KEY = "eba9581da59d4972a9581da59d497236";
 
-  // ==========================
-  // UI helpers
-  // ==========================
-  function setWUStatus(state, label, text) {
-    const dot = document.getElementById("wu-status-dot");
-    const labelEl = document.getElementById("wu-status-label");
-    const textEl = document.getElementById("wu-status-text");
+    // ==========================
+    // Comfort Logic
+    // ==========================
+    function getComfortMessage(temp, dew) {
+      if (temp == null || dew == null) return "Comfort unavailable";
 
-    dot.classList.remove("ok", "error");
-    if (state === "ok") dot.classList.add("ok");
-    if (state === "error") dot.classList.add("error");
+      const humidityEffect = temp - dew;
 
-    labelEl.textContent = label;
-    textEl.textContent = text;
-  }
+      if (temp >= 85 && humidityEffect < 15) return "Hot & Humid";
+      if (temp >= 85) return "Hot but Dry";
 
-  function showWUError(msg) {
-    const el = document.getElementById("wu-error");
-    el.style.display = "block";
-    el.textContent = msg;
-  }
+      if (temp >= 70 && humidityEffect < 10) return "Warm & Muggy";
+      if (temp >= 70) return "Warm & Pleasant";
 
-  // ==========================
-  // Weather Underground calls
-  // ==========================
-  async function getNearestWUStation(lat, lon, apiKey) {
-    const url = `https://api.weather.com/v3/location/near?geocode=${lat},${lon}&product=pws&format=json&apiKey=${apiKey}`;
+      if (temp >= 55) return "Cool & Comfortable";
 
-    const res = await fetch(url);
-    if (!res.ok) {
-      throw new Error("WU station lookup failed: " + res.status);
+      if (temp >= 40) return "Chilly — Light Jacket Recommended";
+
+      if (temp >= 25) return "Cold — Bundle Up";
+
+      return "Frigid — Stay Warm";
     }
 
-    const data = await res.json();
+    // ==========================
+    // UI helpers
+    // ==========================
+    function setWUStatus(state, label, text) {
+      const dot = document.getElementById("wu-status-dot");
+      const labelEl = document.getElementById("wu-status-label");
+      const textEl = document.getElementById("wu-status-text");
 
-    if (!data.location || !data.location.stationId || data.location.stationId.length === 0) {
-      throw new Error("No nearby Weather Underground PWS stations found.");
+      dot.classList.remove("ok", "error");
+      if (state === "ok") dot.classList.add("ok");
+      if (state === "error") dot.classList.add("error");
+
+      labelEl.textContent = label;
+      textEl.textContent = text;
     }
 
-    return {
-      stationId: data.location.stationId[0],
-      distance: data.location.distance?.[0] ?? null,
-      city: data.location.city?.[0] ?? null,
-      neighborhood: data.location.neighborhood?.[0] ?? null
-    };
-  }
-
-  async function getWUCurrentConditions(stationId, apiKey) {
-    const url = `https://api.weather.com/v2/pws/observations/current?stationId=${stationId}&format=json&units=e&apiKey=${apiKey}`;
-
-    const res = await fetch(url);
-    if (!res.ok) {
-      throw new Error("WU current conditions failed: " + res.status);
+    function showWUError(msg) {
+      const el = document.getElementById("wu-error");
+      el.style.display = "block";
+      el.textContent = msg;
     }
 
-    const data = await res.json();
-    if (!data.observations || data.observations.length === 0) {
-      throw new Error("No observations returned from WU");
-    }
+    // ==========================
+    // Weather Underground calls
+    // ==========================
+    async function getNearestWUStation(lat, lon, apiKey) {
+      const url = `https://api.weather.com/v3/location/near?geocode=${lat},${lon}&product=pws&format=json&apiKey=${apiKey}`;
 
-    const obs = data.observations[0];
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("WU station lookup failed: " + res.status);
 
-    return {
-      temp: obs.imperial?.temp ?? null,
-      dewPoint: obs.imperial?.dewpt ?? null,
-      humidity: obs.humidity ?? null,
-      windSpeed: obs.imperial?.windSpeed ?? null,
-      windGust: obs.imperial?.windGust ?? null,
-      pressure: obs.imperial?.pressure ?? null,
-      rainRate: obs.imperial?.precipRate ?? null,
-      rainToday: obs.imperial?.precipTotal ?? null,
-      solarRadiation: obs.solarRadiation ?? null,
-      uv: obs.uv ?? null,
-      stationId: obs.stationID,
-      obsTimeLocal: obs.obsTimeLocal
-    };
-  }
+      const data = await res.json();
 
-  // ==========================
-  // Main flow
-  // ==========================
-  async function initWUWeather() {
-
-    // Correct API key validation
-    if (!WU_API_KEY || WU_API_KEY === "YOUR_WU_API_KEY_HERE") {
-      setWUStatus("error", "WU Key Missing", "Your Weather Underground API key is missing.");
-      showWUError("Your Weather Underground API key is missing or invalid.");
-      return;
-    }
-
-    console.log("WU key validated:", WU_API_KEY);
-
-    if (!navigator.geolocation) {
-      setWUStatus("error", "Location Unavailable", "Geolocation is not supported in this browser.");
-      showWUError("Your browser does not support geolocation, so we can't find the nearest station.");
-      return;
-    }
-
-    setWUStatus("pending", "Requesting Location", "Waiting for permission to access your location…");
-
-    navigator.geolocation.getCurrentPosition(async (pos) => {
-      const lat = pos.coords.latitude;
-      const lon = pos.coords.longitude;
-
-      try {
-        setWUStatus("pending", "Finding Station", "Locating the nearest Weather Underground PWS…");
-        const nearest = await getNearestWUStation(lat, lon, WU_API_KEY);
-
-        // Safe station name
-        const stationName =
-          nearest.neighborhood ||
-          nearest.city ||
-          "Nearby";
-
-        // Safe distance formatting
-        const stationDistance =
-          typeof nearest.distance === "number"
-            ? `${nearest.distance.toFixed(1)} mi`
-            : "distance unknown";
-
-        document.getElementById("wu-station-id").textContent = nearest.stationId;
-        document.getElementById("wu-station-meta").textContent =
-          `${stationName} • ${stationDistance}`;
-
-        setWUStatus("pending", "Fetching Observations", "Pulling current conditions from the nearest station…");
-        const wu = await getWUCurrentConditions(nearest.stationId, WU_API_KEY);
-
-        // Update UI
-        document.getElementById("wu-temp").textContent =
-          wu.temp != null ? `${wu.temp.toFixed(0)}°F` : "--";
-        document.getElementById("wu-dew").textContent =
-          wu.dewPoint != null ? `${wu.dewPoint.toFixed(0)}°F` : "--";
-        document.getElementById("wu-humidity").textContent =
-          wu.humidity != null ? `Humidity ${wu.humidity}%` : "Humidity --";
-
-        document.getElementById("wu-wind").textContent =
-          wu.windSpeed != null ? `${wu.windSpeed.toFixed(0)} mph` : "--";
-        document.getElementById("wu-wind-gust").textContent =
-          wu.windGust != null ? `Gusts ${wu.windGust.toFixed(0)} mph` : "Gusts --";
-
-        document.getElementById("wu-pressure").textContent =
-          wu.pressure != null ? `${wu.pressure.toFixed(2)} inHg` : "--";
-        document.getElementById("wu-rain").textContent =
-          wu.rainRate != null ? `Rate ${wu.rainRate.toFixed(2)} in/hr` : "Rain rate --";
-
-        document.getElementById("wu-uv").textContent =
-          wu.uv != null ? `UV ${wu.uv.toFixed(1)}` : "--";
-        document.getElementById("wu-solar").textContent =
-          wu.solarRadiation != null ? `${wu.solarRadiation.toFixed(0)} W/m²` : "Solar --";
-
-        document.getElementById("wu-feels").textContent =
-          wu.temp != null ? `Feels like ${wu.temp.toFixed(0)}°F` : "Feels like --";
-
-        setWUStatus("ok", "WU Connected", `Live data from ${nearest.stationId} • Updated ${wu.obsTimeLocal || "just now"}`);
-
-      } catch (err) {
-        console.error(err);
-        setWUStatus("error", "WU Error", "We couldn't load data from Weather Underground.");
-        showWUError(err.message || "Unknown error while fetching Weather Underground data.");
+      if (!data.location || !data.location.stationId || data.location.stationId.length === 0) {
+        throw new Error("No nearby Weather Underground PWS stations found.");
       }
 
-    }, (err) => {
-      console.error(err);
-      setWUStatus("error", "Location Denied", "We can't find a nearby station without your location.");
-      showWUError("Location access was denied. Enable location to get hyper‑local conditions.");
-    });
-  }
+      return {
+        stationId: data.location.stationId[0],
+        distance: data.location.distance?.[0] ?? null,
+        city: data.location.city?.[0] ?? null,
+        neighborhood: data.location.neighborhood?.[0] ?? null
+      };
+    }
 
-  document.addEventListener("DOMContentLoaded", initWUWeather);
-</script>
+    async function getWUCurrentConditions(stationId, apiKey) {
+      const url = `https://api.weather.com/v2/pws/observations/current?stationId=${stationId}&format=json&units=e&apiKey=${apiKey}`;
+
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("WU current conditions failed: " + res.status);
+
+      const data = await res.json();
+      if (!data.observations || data.observations.length === 0) {
+        throw new Error("No observations returned from WU");
+      }
+
+      const obs = data.observations[0];
+
+      return {
+        temp: obs.imperial?.temp ?? null,
+        dewPoint: obs.imperial?.dewpt ?? null,
+        humidity: obs.humidity ?? null,
+        windSpeed: obs.imperial?.windSpeed ?? null,
+        windGust: obs.imperial?.windGust ?? null,
+        pressure: obs.imperial?.pressure ?? null,
+        rainRate: obs.imperial?.precipRate ?? null,
+        rainToday: obs.imperial?.precipTotal ?? null,
+        solarRadiation: obs.solarRadiation ?? null,
+        uv: obs.uv ?? null,
+        stationId: obs.stationID,
+        obsTimeLocal: obs.obsTimeLocal
+      };
+    }
+
+    // ==========================
+    // Main flow
+    // ==========================
+    async function initWUWeather() {
+
+      if (!WU_API_KEY || WU_API_KEY === "YOUR_WU_API_KEY_HERE") {
+        setWUStatus("error", "WU Key Missing", "Your Weather Underground API key is missing.");
+        showWUError("Your Weather Underground API key is missing or invalid.");
+        return;
+      }
+
+      if (!navigator.geolocation) {
+        setWUStatus("error", "Location Unavailable", "Geolocation is not supported in this browser.");
+        showWUError("Your browser does not support geolocation.");
+        return;
+      }
+
+      setWUStatus("pending", "Requesting Location", "Waiting for permission…");
+
+      navigator.geolocation.getCurrentPosition(async (pos) => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+
+        try {
+          setWUStatus("pending", "Finding Station", "Locating nearest PWS…");
+          const nearest = await getNearestWUStation(lat, lon, WU_API_KEY);
+
+          const stationName =
+            nearest.neighborhood ||
+            nearest.city ||
+            "Nearby";
+
+          const stationDistance =
+            typeof nearest.distance === "number"
+              ? `${nearest.distance.toFixed(1)} mi`
+              : "distance unknown";
+
+          document.getElementById("wu-station-footer").textContent =
+            `Station: ${nearest.stationId} • ${stationDistance}`;
+
+          setWUStatus("pending", "Fetching Observations", "Pulling current conditions…");
+          const wu = await getWUCurrentConditions(nearest.stationId, WU_API_KEY);
+
+          document.getElementById("wu-temp").textContent =
+            wu.temp != null ? `${wu.temp.toFixed(0)}°F` : "--";
+
+          document.getElementById("wu-feels").textContent =
+            wu.temp != null ? `Feels like ${wu.temp.toFixed(0)}°F` : "Feels like --";
+
+          const comfort = getComfortMessage(wu.temp, wu.dewPoint);
+          document.getElementById("wu-comfort").textContent = `Comfort: ${comfort}`;
+
+          document.getElementById("wu-dew").textContent =
+            wu.dewPoint != null ? `${wu.dewPoint.toFixed(0)}°F` : "--";
+
+          document.getElementById("wu-humidity").textContent =
+            wu.humidity != null ? `Humidity ${wu.humidity}%` : "Humidity --";
+
+          document.getElementById("wu-wind").textContent =
+            wu.windSpeed != null ? `${wu.windSpeed.toFixed(0)} mph` : "--";
+
+          document.getElementById("wu-wind-gust").textContent =
+            wu.windGust != null ? `Gusts ${wu.windGust.toFixed(0)} mph` : "Gusts --";
+
+          document.getElementById("wu-pressure").textContent =
+            wu.pressure != null ? `${wu.pressure.toFixed(2)} inHg` : "--";
+
+          document.getElementById("wu-rain").textContent =
+            wu.rainRate != null ? `Rate ${wu.rainRate.toFixed(2)} in/hr` : "Rain rate --";
+
+          document.getElementById("wu-uv").textContent =
+            wu.uv != null ? `UV ${wu.uv.toFixed(1)}` : "--";
+
+          document.getElementById("wu-solar").textContent =
+            wu.solarRadiation != null ? `${wu.solarRadiation.toFixed(0)} W/m²` : "Solar --";
+
+          setWUStatus("ok", "WU Connected", `Live data from ${nearest.stationId}`);
+
+        } catch (err) {
+          console.error(err);
+          setWUStatus("error", "WU Error", "Could not load Weather Underground data.");
+          showWUError(err.message || "Unknown error.");
+        }
+
+      }, (err) => {
+        console.error(err);
+        setWUStatus("error", "Location Denied", "Location access denied.");
+        showWUError("Enable location to get hyper‑local conditions.");
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", initWUWeather);
+  </script>
 </body>
 </html>
-
-
-
-
-
-
-
