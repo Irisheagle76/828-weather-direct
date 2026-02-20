@@ -236,6 +236,38 @@
 
       return { text: "Frigid — Stay Warm", emoji: "🥶" };
     }
+// Trend Analysis (simple version)
+function getTrendSummary(temp, dew, wind, rainRate) {
+  if (temp == null) return "Trend data unavailable.";
+
+  let parts = [];
+
+  // Temperature trend
+  if (temp >= 80) parts.push("Temperatures have been running warm lately");
+  else if (temp >= 60) parts.push("Mild conditions have been common recently");
+  else if (temp >= 45) parts.push("Cooler weather has been the trend");
+  else parts.push("Cold conditions have dominated recently");
+
+  // Humidity / dew point
+  if (dew != null) {
+    if (dew >= 65) parts.push("with elevated humidity");
+    else if (dew <= 35) parts.push("with noticeably dry air");
+  }
+
+  // Wind
+  if (wind != null && wind >= 20) parts.push("and breezy periods");
+
+  // Rain
+  if (rainRate != null && rainRate > 0) {
+    parts.push("along with recent rainfall");
+  }
+
+  // Final assembly
+  let summary = parts.join(", ");
+  summary = summary.charAt(0).toUpperCase() + summary.slice(1) + ".";
+
+  return summary;
+}
 
     // UI helpers
     function setWUStatus(state, label, text) {
@@ -397,3 +429,4 @@
   </script>
 </body>
 </html>
+
