@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>828 Weather Direct – WU Powered</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <style>
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -12,6 +13,7 @@
       margin: 0;
       padding: 1.5rem;
     }
+
     .card {
       max-width: 720px;
       margin: 0 auto;
@@ -21,16 +23,19 @@
       box-shadow: 0 18px 40px rgba(0,0,0,0.45);
       border: 1px solid rgba(255,255,255,0.05);
     }
+
     h1 {
       margin: 0 0 0.5rem;
       font-size: 1.6rem;
       letter-spacing: 0.03em;
     }
+
     .subtitle {
       font-size: 0.9rem;
       color: #9aa3c2;
       margin-bottom: 1.25rem;
     }
+
     .status-row {
       display: flex;
       flex-wrap: wrap;
@@ -38,6 +43,7 @@
       gap: 0.75rem;
       margin-bottom: 1.25rem;
     }
+
     .badge {
       display: inline-flex;
       align-items: center;
@@ -50,37 +56,37 @@
       border: 1px solid rgba(255,255,255,0.12);
       background: rgba(255,255,255,0.04);
     }
+
     .badge-dot {
       width: 8px;
       height: 8px;
       border-radius: 999px;
       background: #f5c84c;
     }
-    .badge-dot.ok {
-      background: #ffa94d;
-    }
-    .badge-dot.error {
-      background: #fb7185;
-    }
+
+    .badge-dot.ok { background: #ffa94d; }
+    .badge-dot.error { background: #fb7185; }
+
     .status-text {
       font-size: 0.85rem;
       color: #c4c9e5;
     }
 
-    /* Two-column NOW vs TOMORROW wrapper */
+    /* NOW vs TOMORROW layout */
     .now-tomorrow-row {
       display: flex;
       flex-wrap: wrap;
       gap: 1rem;
       margin-bottom: 1.4rem;
     }
+
     .now-col,
     .tomorrow-col {
       flex: 1 1 260px;
       min-width: 0;
     }
 
-    /* Comfort Module (NOW) */
+    /* Comfort Module */
     .comfort-module {
       background: rgba(255, 169, 77, 0.10);
       border: 1px solid rgba(255, 169, 77, 0.35);
@@ -90,13 +96,14 @@
       align-items: center;
       gap: 0.8rem;
     }
+
     .comfort-emoji {
       font-size: 2rem;
       flex-shrink: 0;
     }
-    .comfort-content {
-      min-width: 0;
-    }
+
+    .comfort-content { min-width: 0; }
+
     .comfort-label {
       font-size: 0.78rem;
       text-transform: uppercase;
@@ -105,6 +112,7 @@
       margin-bottom: 0.15rem;
       white-space: nowrap;
     }
+
     .comfort-text {
       font-size: 1.02rem;
       font-weight: 600;
@@ -113,13 +121,14 @@
       line-height: 1.25;
       word-wrap: break-word;
     }
+
     .comfort-sub {
       font-size: 0.78rem;
       color: #9aa3c2;
       margin-top: 0.15rem;
     }
 
-    /* Human-Action Outlook (TOMORROW) */
+    /* Human‑Action Outlook */
     .action-module {
       background: rgba(120, 180, 255, 0.10);
       border: 1px solid rgba(120, 180, 255, 0.35);
@@ -129,13 +138,14 @@
       align-items: flex-start;
       gap: 0.8rem;
     }
+
     .action-emoji {
       font-size: 1.8rem;
       flex-shrink: 0;
     }
-    .action-content {
-      min-width: 0;
-    }
+
+    .action-content { min-width: 0; }
+
     .action-label {
       font-size: 0.78rem;
       text-transform: uppercase;
@@ -144,6 +154,7 @@
       margin-bottom: 0.15rem;
       white-space: nowrap;
     }
+
     .action-headline {
       font-size: 0.98rem;
       font-weight: 600;
@@ -152,6 +163,7 @@
       line-height: 1.3;
       word-wrap: break-word;
     }
+
     .action-text {
       font-size: 0.84rem;
       color: #c4d4ff;
@@ -166,12 +178,14 @@
       gap: 1rem;
       margin-top: 0.5rem;
     }
+
     .metric {
       background: rgba(255,255,255,0.03);
       border-radius: 12px;
       padding: 0.75rem 0.9rem;
       border: 1px solid rgba(255,255,255,0.05);
     }
+
     .metric-label {
       font-size: 0.75rem;
       text-transform: uppercase;
@@ -179,17 +193,19 @@
       color: #f0b777;
       margin-bottom: 0.25rem;
     }
+
     .metric-value {
       font-size: 1.2rem;
       font-weight: 600;
     }
+
     .metric-sub {
       font-size: 0.8rem;
       color: #9aa3c2;
       margin-top: 0.15rem;
     }
 
-    /* Forecast Alerts Module */
+    /* Forecast Alerts */
     .forecast-module {
       margin-top: 1.6rem;
       background: rgba(255, 169, 77, 0.10);
@@ -197,6 +213,7 @@
       border-radius: 14px;
       padding: 1rem 1.2rem;
     }
+
     .forecast-title {
       font-size: 0.95rem;
       font-weight: 600;
@@ -204,6 +221,7 @@
       margin-bottom: 0.6rem;
       letter-spacing: 0.03em;
     }
+
     .forecast-icons {
       display: flex;
       gap: 1rem;
@@ -211,12 +229,15 @@
       font-size: 2rem;
       cursor: pointer;
     }
+
     .forecast-icon {
       transition: transform 0.15s ease;
     }
+
     .forecast-icon:hover {
       transform: scale(1.2);
     }
+
     .forecast-detail {
       margin-top: 0.9rem;
       padding: 0.8rem 1rem;
@@ -225,12 +246,14 @@
       border: 1px solid rgba(255,255,255,0.08);
       display: none;
     }
+
     .detail-title {
       font-size: 0.95rem;
       font-weight: 600;
       margin-bottom: 0.25rem;
       color: #ffa94d;
     }
+
     .detail-text {
       font-size: 0.85rem;
       color: #d8d8e0;
@@ -245,6 +268,7 @@
       border-radius: 14px;
       padding: 1rem 1.2rem;
     }
+
     .trend-headline {
       font-size: 1.05rem;
       font-weight: 700;
@@ -254,6 +278,7 @@
       align-items: center;
       gap: 0.4rem;
     }
+
     .trend-text {
       font-size: 0.9rem;
       color: #d8d8e0;
@@ -273,19 +298,13 @@
       margin-top: 0.5rem;
     }
 
-    /* Mobile tweaks */
+    /* Mobile */
     @media (max-width: 640px) {
-      .card {
-        padding: 1.1rem;
-      }
-      .now-tomorrow-row {
-        flex-direction: column;
-      }
+      .card { padding: 1.1rem; }
+      .now-tomorrow-row { flex-direction: column; }
       .comfort-text,
       .action-headline,
-      .action-text {
-        font-size: 0.9rem;
-      }
+      .action-text { font-size: 0.9rem; }
     }
   </style>
 </head>
@@ -305,9 +324,8 @@
       </div>
     </div>
 
-    <!-- NOW vs TOMORROW row -->
+    <!-- NOW vs TOMORROW -->
     <div class="now-tomorrow-row">
-      <!-- Comfort (NOW) -->
       <div class="now-col">
         <div id="comfort-module" class="comfort-module">
           <div id="comfort-emoji" class="comfort-emoji">--</div>
@@ -319,7 +337,6 @@
         </div>
       </div>
 
-      <!-- Human-Action Outlook (TOMORROW) -->
       <div class="tomorrow-col">
         <div id="action-module" class="action-module">
           <div id="action-emoji" class="action-emoji">--</div>
@@ -333,8 +350,7 @@
         </div>
       </div>
     </div>
-
-    <!-- Metrics Grid -->
+        <!-- Metrics Grid -->
     <div class="grid">
       <div class="metric">
         <div class="metric-label">Temperature</div>
@@ -380,11 +396,12 @@
     <div class="footer-note" id="wu-station-footer">
       Live data from Weather Underground Station --
     </div>
-  </div>
+  </div> <!-- end .card -->
 
   <script>
     const WU_API_KEY = "eba9581da59d4972a9581da59d497236";
-        /* -----------------------------------------
+
+    /* -----------------------------------------
        STATUS BADGE + ERROR HANDLING
     ----------------------------------------- */
     function setWUStatus(state, label, text) {
@@ -396,7 +413,6 @@
       desc.textContent = text;
 
       dot.classList.remove("ok", "error");
-
       if (state === "ok") dot.classList.add("ok");
       if (state === "error") dot.classList.add("error");
     }
@@ -474,30 +490,11 @@
     }
 
     /* -----------------------------------------
-       CUMULATIVE → HOURLY CONVERSION
+       WIND CHILL
     ----------------------------------------- */
-    function toHourlyDeltas(arr) {
-      if (!arr || arr.length === 0) return [];
-      const out = [];
-      for (let i = 1; i < arr.length; i++) {
-        const prev = typeof arr[i - 1] === "number" ? arr[i - 1] : 0;
-        const curr = typeof arr[i] === "number" ? arr[i] : 0;
-        const diff = curr - prev;
-        out.push(Math.max(diff, 0));
-      }
-      return out;
-    }
-
-    /* -----------------------------------------
-       HUMAN‑ACTION OUTLOOK HELPERS (Tomorrow)
-       These do NOT generate the outlook yet —
-       Part 3 will contain the full logic.
-    ----------------------------------------- */
-
-    // Compute wind chill (Fahrenheit)
     function computeWindChill(tempF, windMph) {
       if (tempF == null || windMph == null) return null;
-      if (tempF > 50 || windMph < 3) return tempF; // Wind chill formula not valid above 50°F
+      if (tempF > 50 || windMph < 3) return tempF;
 
       return (
         35.74 +
@@ -507,37 +504,43 @@
       );
     }
 
-    // Detect sharp hourly rain spikes (convective signature)
- function detectConvectiveSpike(rainHourly, dewHourly, tempHourly, start, end) {
-  if (!rainHourly) return false;
+    /* -----------------------------------------
+       CONVECTIVE SIGNATURE DETECTION
+    ----------------------------------------- */
+    function detectConvectiveSpike(rainHourly, dewHourly, tempHourly, start, end) {
+      if (!rainHourly) return false;
 
-  // Look for any hour with a heavy burst
-  let heavyHour = false;
-  for (let i = start; i < end; i++) {
-    const r = rainHourly[i] ?? 0;
-    if (r >= 0.20) { // heavy shower threshold
-      heavyHour = true;
-      break;
+      // Heavy burst threshold
+      let heavyHour = false;
+      for (let i = start; i < end; i++) {
+        const r = rainHourly[i] ?? 0;
+        if (r >= 0.20) {
+          heavyHour = true;
+          break;
+        }
+      }
+
+      // Require warm + humid for convection
+      let maxDew = -999;
+      let maxTemp = -999;
+
+      for (let i = start; i < end; i++) {
+        const d = dewHourly?.[i];
+        const t = tempHourly?.[i];
+        if (typeof d === "number") maxDew = Math.max(maxDew, d);
+        if (typeof t === "number") maxTemp = Math.max(maxTemp, t);
+      }
+
+      const warmHumid = maxDew >= 65 && maxTemp >= 75;
+      return heavyHour && warmHumid;
     }
-  }
 
-  // Require warm + humid for true convection
-  let maxDew = -999;
-  let maxTemp = -999;
-  for (let i = start; i < end; i++) {
-    const d = dewHourly?.[i];
-    const t = tempHourly?.[i];
-    if (typeof d === "number") maxDew = Math.max(maxDew, d);
-    if (typeof t === "number") maxTemp = Math.max(maxTemp, t);
-  }
-
-  const warmHumid = maxDew >= 65 && maxTemp >= 75;
-
-  return heavyHour && warmHumid;
-}
-    // Compute diurnal spread for tomorrow
+    /* -----------------------------------------
+       DIURNAL SPREAD
+    ----------------------------------------- */
     function computeDiurnalSpread(hourly, startIndex, endIndex) {
       let minT = 999, maxT = -999;
+
       for (let i = startIndex; i < endIndex; i++) {
         const t = hourly.temperature_2m?.[i];
         if (typeof t === "number") {
@@ -545,28 +548,29 @@
           maxT = Math.max(maxT, t);
         }
       }
+
       return { minT, maxT, spread: maxT - minT };
     }
-        /* -----------------------------------------
+    /* -----------------------------------------
        72‑HOUR FORECAST FETCH (Open‑Meteo)
        Using hourly temps, dew point, precip, gusts
     ----------------------------------------- */
-   async function getShortTermForecast(lat, lon) {
-  const url =
-    `https://api.open-meteo.com/v1/forecast` +
-    `?latitude=${lat}&longitude=${lon}` +
-    `&hourly=temperature_2m,dewpoint_2m,precipitation,snowfall,windgusts_10m,uv_index` +
-    `&forecast_days=3&timezone=auto` +
-    `&temperature_unit=fahrenheit` +
-    `&dewpoint_unit=fahrenheit` +
-    `&wind_speed_unit=mph` +
-    `&precipitation_unit=inch`;
+    async function getShortTermForecast(lat, lon) {
+      const url =
+        `https://api.open-meteo.com/v1/forecast` +
+        `?latitude=${lat}&longitude=${lon}` +
+        `&hourly=temperature_2m,dewpoint_2m,precipitation,snowfall,windgusts_10m,uv_index` +
+        `&forecast_days=3&timezone=auto` +
+        `&temperature_unit=fahrenheit` +
+        `&dewpoint_unit=fahrenheit` +
+        `&wind_speed_unit=mph` +
+        `&precipitation_unit=inch`;
 
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("Short-term forecast fetch failed: " + res.status);
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Short-term forecast fetch failed: " + res.status);
 
-  return (await res.json()).hourly;
-}
+      return (await res.json()).hourly;
+    }
 
     /* -----------------------------------------
        HUMAN‑ACTION OUTLOOK ENGINE (Tomorrow)
@@ -594,9 +598,11 @@
       const start = Math.min(24, hours - 1);
       const end = Math.min(48, hours);
 
-      // Extract hourly deltas
-    const rainHourly = hourly.precipitation || [];
-    const snowHourly = hourly.snowfall || [];
+      // Hourly arrays (already hourly, not cumulative)
+      const rainHourly = hourly.precipitation || [];
+      const snowHourly = hourly.snowfall || [];
+      const dewHourly = hourly.dewpoint_2m || [];
+      const tempHourly = hourly.temperature_2m || [];
 
       // Compute totals + extremes
       let rainTotal = 0;
@@ -610,17 +616,16 @@
         const rain = rainHourly[i] ?? 0;
         rainTotal += rain;
 
-
         const gust = hourly.windgusts_10m?.[i] ?? 0;
         maxGust = Math.max(maxGust, gust);
 
-        const t = hourly.temperature_2m?.[i];
+        const t = tempHourly[i];
         if (typeof t === "number") {
           maxTemp = Math.max(maxTemp, t);
           minTemp = Math.min(minTemp, t);
         }
 
-        const dew = hourly.dewpoint_2m?.[i];
+        const dew = dewHourly[i];
         if (typeof dew === "number") {
           maxDew = Math.max(maxDew, dew);
         }
@@ -636,14 +641,18 @@
       /* -----------------------------------------
          CATEGORY 1 — RAIN / THUNDERSTORMS
       ----------------------------------------- */
-     const rainHourly = hourly.precipitation || [];
-const dewHourly = hourly.dewpoint_2m || [];
-const tempHourly = hourly.temperature_2m || [];
+      const convective = detectConvectiveSpike(
+        rainHourly,
+        dewHourly,
+        tempHourly,
+        start,
+        end
+      );
 
-const convective = detectConvectiveSpike(rainHourly, dewHourly, tempHourly, start, end);
-
-const thunderstormLikely =
-  convective && maxGust >= 25 && rainTotal >= 0.20;
+      const thunderstormLikely =
+        convective &&
+        maxGust >= 25 &&
+        rainTotal >= 0.20;
 
       if (thunderstormLikely) {
         return {
@@ -655,28 +664,32 @@ const thunderstormLikely =
         };
       }
 
-   if (rainTotal >= 0.10) {
-  return {
-    emoji: "💧",
-    headline: "Showers expected tomorrow",
-    text:
-      `Scattered showers are likely, with around ${rainTotal.toFixed(2)}" of rain possible. ` +
-      "A light rain jacket or small umbrella will be handy."
-  };
-}
+      if (rainTotal >= 0.10) {
+        return {
+          emoji: "💧",
+          headline: "Showers expected tomorrow",
+          text:
+            `Scattered showers are likely, with around ${rainTotal.toFixed(2)}" of rain possible. ` +
+            "A light rain jacket or small umbrella will be handy."
+        };
+      }
 
       /* -----------------------------------------
          CATEGORY 2 — COLD WEATHER (wind chill)
       ----------------------------------------- */
       let minWindChill = 999;
       for (let i = start; i < end; i++) {
-        const t = hourly.temperature_2m?.[i];
+        const t = tempHourly[i];
         const gust = hourly.windgusts_10m?.[i] ?? 0;
         const wc = computeWindChill(t, gust);
         if (wc != null) minWindChill = Math.min(minWindChill, wc);
       }
 
-      if (minWindChill <= 35 || minTemp <= 35 || (maxGust >= 25 && maxTemp <= 40)) {
+      if (
+        minWindChill <= 35 ||
+        minTemp <= 35 ||
+        (maxGust >= 25 && maxTemp <= 40)
+      ) {
         return {
           emoji: "🥶",
           headline: "Cold and breezy tomorrow",
@@ -687,7 +700,7 @@ const thunderstormLikely =
       }
 
       /* -----------------------------------------
-         CATEGORY 3 — HEAT + HUMIDITY (dew ≥ 68 & temp ≥ 82)
+         CATEGORY 3 — HEAT + HUMIDITY
       ----------------------------------------- */
       if (maxDew >= 68 && maxTemp >= 82) {
         let humidityPhrase = "humid";
@@ -708,9 +721,14 @@ const thunderstormLikely =
       }
 
       /* -----------------------------------------
-         CATEGORY 4 — LAYERS DAY (spread ≥ 30°)
+         CATEGORY 4 — LAYERS DAY
       ----------------------------------------- */
-      if (spread >= 30 && maxTemp < 82 && minTemp > 20 && rainTotal < 0.10) {
+      if (
+        spread >= 30 &&
+        maxTemp < 82 &&
+        minTemp > 20 &&
+        rainTotal < 0.10
+      ) {
         return {
           emoji: "🏔️",
           headline: "Classic mountain layers day",
@@ -762,164 +780,19 @@ const thunderstormLikely =
         text: "Comfortable weather with no special prep needed."
       };
     }
-
-    /* -----------------------------------------
-       60‑DAY TREND ANALYSIS
-    ----------------------------------------- */
-    function analyzeHistoricalTrends(daily) {
-      if (!daily || daily.length === 0) {
-        return {
-          headline: "Trend Data Unavailable",
-          text: "Unable to analyze the last 60 days of weather."
-        };
-      }
-
-      const n = daily.length;
-      const last7 = daily.slice(-7);
-
-      const overallMean = daily.reduce((s, d) => s + d.tMean, 0) / n;
-      const recentMean = last7.reduce((s, d) => s + d.tMean, 0) / last7.length;
-      const tempAnomaly = recentMean - overallMean;
-
-      let tempPhrase = "";
-      let tempIcon = "";
-
-      if (tempAnomaly >= 5) {
-        tempPhrase = `Temperatures this past week have been about ${tempAnomaly.toFixed(0)}° warmer than average`;
-        tempIcon = "🌤️";
-      } else if (tempAnomaly <= -5) {
-        tempPhrase = `Temperatures this past week have been about ${Math.abs(tempAnomaly).toFixed(0)}° cooler than average`;
-        tempIcon = "❄️";
-      } else {
-        tempPhrase = "Temperatures this past week have been close to the recent average";
-        tempIcon = "🌦️";
-      }
-
-      let longestDry = 0, currentDry = 0;
-      let longestWet = 0, currentWet = 0;
-
-      for (let i = 0; i < n; i++) {
-        const p = daily[i].precip || 0;
-
-        if (p < 0.01) {
-          currentDry++;
-          longestDry = Math.max(longestDry, currentDry);
-        } else {
-          currentDry = 0;
-        }
-
-        if (p >= 0.1) {
-          currentWet++;
-          longestWet = Math.max(longestWet, currentWet);
-        } else {
-          currentWet = 0;
-        }
-      }
-
-      let ongoingDry = 0;
-      for (let i = n - 1; i >= 0; i--) {
-        if ((daily[i].precip || 0) < 0.01) ongoingDry++;
-        else break;
-      }
-
-      let ongoingWet = 0;
-      for (let i = n - 1; i >= 0; i--) {
-        if ((daily[i].precip || 0) >= 0.1) ongoingWet++;
-        else break;
-      }
-
-      let precipPhrase = "";
-      let precipIcon = "";
-
-      if (ongoingDry >= 3) {
-        precipPhrase = `with an ongoing dry stretch of ${ongoingDry} days`;
-        precipIcon = "🌞";
-      } else if (ongoingWet >= 3) {
-        precipPhrase = `with an ongoing wet stretch of ${ongoingWet} days`;
-        precipIcon = "🌧️";
-      } else if (longestDry >= 5) {
-        precipPhrase = `including a notable dry spell lasting ${longestDry} days`;
-        precipIcon = "🌞";
-      } else if (longestWet >= 5) {
-        precipPhrase = `including a soggy stretch lasting ${longestWet} days`;
-        precipIcon = "🌧️";
-      } else {
-        precipPhrase = "with mixed precipitation patterns";
-        precipIcon = "🌦️";
-      }
-
-      let headline = "";
-
-      if (ongoingDry >= 3) headline = `${precipIcon} A Dry Stretch Is Underway`;
-      else if (ongoingWet >= 3) headline = `${precipIcon} A Wet Pattern Has Been Persistent`;
-      else if (tempAnomaly >= 5) headline = `${tempIcon} A Warm Spell Has Taken Hold`;
-      else if (tempAnomaly <= -5) headline = `${tempIcon} A Cold Snap Is Settling In`;
-      else headline = `${tempIcon} Recent Weather Has Been Near Average`;
-
-      const text = `${tempPhrase}, ${precipPhrase}.`;
-
-      return { headline, text };
-    }
-        /* -----------------------------------------
-       WEATHER UNDERGROUND (STATION LOOKUP)
-    ----------------------------------------- */
-    async function getNearestWUStation(lat, lon, apiKey) {
-      const url =
-        `https://api.weather.com/v3/location/near?geocode=${lat},${lon}` +
-        `&product=pws&format=json&apiKey=${apiKey}`;
-
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("WU station lookup failed: " + res.status);
-
-      const data = await res.json();
-      return {
-        stationId: data.location.stationId[0],
-        distance: data.location.distance?.[0] ?? null
-      };
-    }
-
-    /* -----------------------------------------
-       WEATHER UNDERGROUND (CURRENT CONDITIONS)
-    ----------------------------------------- */
-    async function getWUCurrentConditions(stationId, apiKey) {
-      const url =
-        `https://api.weather.com/v2/pws/observations/current?stationId=${stationId}` +
-        `&format=json&units=e&apiKey=${apiKey}`;
-
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("WU current conditions failed: " + res.status);
-
-      const data = await res.json();
-      const obs = data.observations[0];
-
-      return {
-        temp: obs.imperial?.temp ?? null,
-        dewPoint: obs.imperial?.dewpt ?? null,
-        humidity: obs.humidity ?? null,
-        windSpeed: obs.imperial?.windSpeed ?? null,
-        windGust: obs.imperial?.windGust ?? null,
-        pressure: obs.imperial?.pressure ?? null,
-        rainRate: obs.imperial?.precipRate ?? null,
-        rainToday: obs.imperial?.precipTotal ?? null,
-        solarRadiation: obs.solarRadiation ?? null,
-        uv: obs.uv ?? null,
-        stationId: obs.stationID
-      };
-    }
-
     /* -----------------------------------------
        FORECAST ALERT LOGIC (12–48 hours)
        Separate from Human‑Action Outlook
     ----------------------------------------- */
     function analyzeForecastAlerts(hourly) {
+      if (!hourly || !hourly.time) return [];
+
       const hours = hourly.time.length;
-
-     const rainHourly = hourly.precipitation || [];
-     const snowHourly = hourly.snowfall || [];
-
-
       const start = Math.min(12, hours - 1);
       const end = Math.min(48, hours);
+
+      const rainHourly = hourly.precipitation || [];
+      const snowHourly = hourly.snowfall || [];
 
       let rainTotal = 0;
       let snowTotal = 0;
@@ -929,8 +802,8 @@ const thunderstormLikely =
       let validTempCount = 0;
 
       for (let i = start; i < end; i++) {
-       const rain = rainHourly[i] ?? 0;
-       const snow = snowHourly[i] ?? 0;
+        const rain = rainHourly[i] ?? 0;
+        const snow = snowHourly[i] ?? 0;
         const gust = hourly.windgusts_10m?.[i] ?? 0;
         const t = hourly.temperature_2m?.[i];
 
@@ -938,7 +811,7 @@ const thunderstormLikely =
         snowTotal += snow;
         maxGust = Math.max(maxGust, gust);
 
-        if (typeof t === "number" && !isNaN(t)) {
+        if (typeof t === "number") {
           maxTemp = Math.max(maxTemp, t);
           minTemp = Math.min(minTemp, t);
           validTempCount++;
@@ -947,7 +820,7 @@ const thunderstormLikely =
 
       const alerts = [];
 
-      if (rainTotal >= 0.5) {
+      if (rainTotal >= 0.50) {
         alerts.push({
           icon: "💧",
           id: "rain",
@@ -1029,6 +902,53 @@ const thunderstormLikely =
 
         container.appendChild(iconEl);
       });
+    }
+
+    /* -----------------------------------------
+       WEATHER UNDERGROUND (STATION LOOKUP)
+    ----------------------------------------- */
+    async function getNearestWUStation(lat, lon, apiKey) {
+      const url =
+        `https://api.weather.com/v3/location/near?geocode=${lat},${lon}` +
+        `&product=pws&format=json&apiKey=${apiKey}`;
+
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("WU station lookup failed: " + res.status);
+
+      const data = await res.json();
+      return {
+        stationId: data.location.stationId[0],
+        distance: data.location.distance?.[0] ?? null
+      };
+    }
+
+    /* -----------------------------------------
+       WEATHER UNDERGROUND (CURRENT CONDITIONS)
+    ----------------------------------------- */
+    async function getWUCurrentConditions(stationId, apiKey) {
+      const url =
+        `https://api.weather.com/v2/pws/observations/current?stationId=${stationId}` +
+        `&format=json&units=e&apiKey=${apiKey}`;
+
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("WU current conditions failed: " + res.status);
+
+      const data = await res.json();
+      const obs = data.observations[0];
+
+      return {
+        temp: obs.imperial?.temp ?? null,
+        dewPoint: obs.imperial?.dewpt ?? null,
+        humidity: obs.humidity ?? null,
+        windSpeed: obs.imperial?.windSpeed ?? null,
+        windGust: obs.imperial?.windGust ?? null,
+        pressure: obs.imperial?.pressure ?? null,
+        rainRate: obs.imperial?.precipRate ?? null,
+        rainToday: obs.imperial?.precipTotal ?? null,
+        solarRadiation: obs.solarRadiation ?? null,
+        uv: obs.uv ?? null,
+        stationId: obs.stationID
+      };
     }
 
     /* -----------------------------------------
@@ -1117,6 +1037,7 @@ const thunderstormLikely =
 
             // Forecast alerts (12–48h)
             const alerts = analyzeForecastAlerts(hourly);
+
             if (!alerts || alerts.length === 0) {
               document.getElementById("forecast-icons").innerHTML = "";
               const detailBox = document.getElementById("forecast-detail");
@@ -1155,7 +1076,7 @@ const thunderstormLikely =
         showWUError("Enable location to get hyper‑local conditions.");
       });
     }
-         /* -----------------------------------------
+       /* -----------------------------------------
        DOM READY → Initialize Everything
     ----------------------------------------- */
     document.addEventListener("DOMContentLoaded", async () => {
@@ -1163,5 +1084,4 @@ const thunderstormLikely =
     });
   </script>
 </body>
-</html>  
-
+</html>
