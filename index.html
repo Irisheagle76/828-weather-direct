@@ -342,6 +342,7 @@
         </div>
       </div>
     </div>
+
     <!-- Metrics Grid -->
     <div class="grid">
       <div class="metric">
@@ -440,7 +441,7 @@
 
       return { text: "Very Cold — Dress Warmly", emoji: "🥶" };
     }
-
+  </script>
     /* -----------------------------------------
        60‑DAY TREND FETCH (Stable Version)
        Uses yesterday‑2 as end date to avoid
@@ -552,7 +553,8 @@
 
       return { minT, maxT, spread: maxT - minT };
     }
-        /* -----------------------------------------
+
+    /* -----------------------------------------
        SHORT‑TERM FORECAST (Open‑Meteo)
     ----------------------------------------- */
     async function getShortTermForecast(lat, lon) {
@@ -580,7 +582,6 @@
       const times = hourly.time.map(t => new Date(t));
       if (!times.length) return { start: 0, end: 0 };
 
-      // Browser-local "today"
       const now = new Date();
       const tomorrow = new Date(now);
       tomorrow.setHours(0, 0, 0, 0);
@@ -601,7 +602,6 @@
         }
       }
 
-      // If Open-Meteo doesn't include tomorrow (rare), fallback to 24–48h
       if (start === null) {
         const hours = hourly.time.length;
         return {
@@ -612,7 +612,6 @@
 
       return { start, end };
     }
-
     /* -----------------------------------------
        HUMAN‑ACTION OUTLOOK ENGINE (Tomorrow)
     ----------------------------------------- */
@@ -808,7 +807,7 @@
         text: "Comfortable weather with no special prep needed."
       };
     }
-        /* -----------------------------------------
+    /* -----------------------------------------
        FORECAST ALERT LOGIC (12–48 hours)
     ----------------------------------------- */
     function analyzeForecastAlerts(hourly) {
@@ -1076,7 +1075,7 @@
         stationId: obs.stationID
       };
     }
-      /* -----------------------------------------
+    /* -----------------------------------------
        MAIN INITIALIZATION
     ----------------------------------------- */
     async function initWUWeather() {
@@ -1114,7 +1113,7 @@
             wu.humidity != null ? `Humidity ${wu.humidity}%` : "Humidity --";
 
           document.getElementById("wu-wind").textContent =
-            wu.windSpeed != null ? `${wu.windSpeed.toFixed(0)} mph` : "--`;
+            wu.windSpeed != null ? `${wu.windSpeed.toFixed(0)} mph` : "--";
 
           document.getElementById("wu-wind-gust").textContent =
             wu.windGust != null ? `Gusts ${wu.windGust.toFixed(0)} mph` : "Gusts --";
@@ -1130,7 +1129,7 @@
           document.getElementById("wu-station-footer").textContent =
             `Live data from Weather Underground Station ${nearest.stationId}`;
 
-          // 2) Historical trend (60 days, robust)
+          // 2) Historical trend (60 days)
           try {
             const dailyHistory = await getHistoricalDaily(lat, lon);
             const trend = analyzeHistoricalTrends(dailyHistory);
@@ -1181,4 +1180,7 @@
     document.addEventListener("DOMContentLoaded", initWUWeather);
   </script>
 </body>
-</html>  
+</html>
+
+
+
