@@ -643,19 +643,6 @@ function getTomorrowWindow(hourly) {
 
   return { start, end };
 }
-
-      // If tomorrow is missing entirely (rare), fallback to 24–48h
-      if (start === null) {
-        const hours = hourly.time.length;
-        return {
-          start: Math.min(24, hours - 1),
-          end: Math.min(48, hours)
-        };
-      }
-
-      return { start, end };
-    }
-
     /* ----------------------------------------------------
        HUMAN‑ACTION OUTLOOK ENGINE (Tomorrow)
        Priority:
@@ -1214,6 +1201,7 @@ function getTomorrowWindow(hourly) {
   </script>
 </body>
 </html>
+
 
 
 
