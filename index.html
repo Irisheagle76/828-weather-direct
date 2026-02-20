@@ -657,183 +657,108 @@ console.log("Browser date:", new Date());
 function generateHumanActionOutlook(hourly) {
   const { start, end } = getTomorrowWindow(hourly);
 
-  const temps = hourly.temperature_2m.slice(start, end);
-  const dew = hourly.dewpoint_2m.slice(start, end);
-  const rain = hourly.precipitation.slice(start, end);
-  const snow = hourly.snowfall.slice(start, end);
-  const gusts = hourly.windgusts_10m.slice(start, end);
-  const uv = hourly.uv_index.slice(start, end);
+  const rainHourly = hourly.precipitation || [];
+  const dewHourly = hourly.dewpoint_2m || [];
+  const tempHourly = hourly.temperature_2m || [];
 
-  const maxTemp = Math.max(...temps);
-  const minTemp = Math.min(...temps);
-  const maxGust = Math.max(...gusts);
-  const totalRain = rain.reduce((a,b)=>a+b,0);
-  const totalSnow = snow.reduce((a,b)=>a+b,0);
-  const maxUV = Math.max(...uv);
+  let rainTotal = 0;
+  let maxGust = 0;
+  let maxTemp = -999;
+  let minTemp = 999;
+  let maxDew = -999;
+  let maxUV = 0;
 
+  for (let i = start; i < end; i++) {
+    rainTotal += rainHourly[i] ?? 0;
+    maxGust = Math.max(maxGust, hourly.windgusts_10m?.[i] ?? 0);
+
+    const t = tempHourly[i];
+    if (typeof t === "number") {
+      maxTemp = Math.max(maxTemp, t);
+      minTemp = Math.min(minTemp, t);
+    }
+
+    const dew = dewHourly[i];
+    if (typeof dew === "number") {
+      maxDew = Math.max(maxDew, dew);
+    }
+
+    const uv = hourly.uv_index?.[i];
+    if (typeof uv === "number") {
+      maxUV = Math.max(maxUV, uv);
+    }
+  }
+
+  const { spread } = computeDiurnalSpread(hourly, start, end);
+
+  /* --- RAIN --- */
+  if (rainTotal >= 0.10) {
+    return {
+      emoji: "💧",
+      headline: "Showers expected tomorrow",
+      text: `Around ${rainTotal.toFixed(2)}" of rain possible. A light rain jacket will help.`
+    };
+  }
+
+  /* --- COLD --- */
+  if (minTemp <= 35 || (maxGust >= 25 && maxTemp <= 40)) {
+    return {
+      emoji: "🥶",
+      headline: "Cold and breezy tomorrow",
+      text: "Wind chill may make it feel colder. Dress in warm layers."
+    };
+  }
+
+  /* --- HOT + HUMID --- */
+  if (maxDew >= 68 && maxTemp >= 82) {
+    return {
+      emoji: "😅",
+      headline: "Hot and humid tomorrow",
+      text: "Stay hydrated and wear light, breathable clothing."
+    };
+  }
+
+  /* --- LAYERS --- */
+  if (spread >= 30 && rainTotal < 0.10) {
+    return {
+      emoji: "🏔️",
+      headline: "Classic mountain layers day",
+      text: "Chilly morning, warm afternoon. Dress in layers."
+    };
+  }
+
+  /* --- WIND --- */
+  if (maxGust >= 30) {
+    return {
+      emoji: "🌬️",
+      headline: "Gusty conditions tomorrow",
+      text: "Secure outdoor items and expect breezy conditions."
+    };
+  }
+
+  /* --- GOLDILOCKS --- */
+  if (
+    maxTemp >= 68 &&
+    maxTemp <= 74 &&
+    maxDew >= 45 &&
+    maxDew <= 52 &&
+    rainTotal < 0.05 &&
+    maxGust < 20
+  ) {
+    return {
+      emoji: "🌟",
+      headline: "Goldilocks Day!",
+      text: "Mild temps, low humidity, no rain. Beautiful day ahead."
+    };
+  }
+
+  /* --- FALLBACK --- */
   return {
-    maxTemp,
-    minTemp,
-    maxGust,
-    totalRain,
-    totalSnow,
-    maxUV
+    emoji: "🙂",
+    headline: "A mild, uneventful day tomorrow",
+    text: "Comfortable weather with no special prep needed."
   };
 }
-    for (let i = start; i < end; i++) {
-        const rain = rainHourly[i] ?? 0;
-        rainTotal += rain;
-
-        const gust = hourly.windgusts_10m?.[i] ?? 0;
-        maxGust = Math.max(maxGust, gust);
-
-        const t = tempHourly[i];
-        if (typeof t === "number") {
-          maxTemp = Math.max(maxTemp, t);
-          minTemp = Math.min(minTemp, t);
-        }
-
-        const dew = dewHourly[i];
-        if (typeof dew === "number") {
-          maxDew = Math.max(maxDew, dew);
-        }
-
-        const uv = hourly.uv_index?.[i];
-        if (typeof uv === "number") {
-          maxUV = Math.max(maxUV, uv);
-        }
-      }
-
-      const { spread } = computeDiurnalSpread(hourly, start, end);
-
-      /* ------------------ CATEGORY 1 — RAIN / THUNDER ------------------ */
-      const convective = detectConvectiveSpike(
-        rainHourly,
-        dewHourly,
-        tempHourly,
-        start,
-        end
-      );
-
-      const thunderstormLikely =
-        convective &&
-        maxGust >= 25 &&
-        rainTotal >= 0.20;
-
-      if (thunderstormLikely) {
-        return {
-          emoji: "🌩️",
-          headline: "Thunderstorms possible tomorrow",
-          text:
-            "Expect scattered storms, brief heavy downpours, and possible lightning. " +
-            "Keep an umbrella handy and be prepared to seek shelter during thunder."
-        };
-      }
-
-      if (rainTotal >= 0.10) {
-        return {
-          emoji: "💧",
-          headline: "Showers expected tomorrow",
-          text:
-            `Scattered showers are likely, with around ${rainTotal.toFixed(2)}" of rain possible. ` +
-            "A light rain jacket or small umbrella will be handy."
-        };
-      }
-
-      /* ------------------ CATEGORY 2 — COLD / WIND CHILL ------------------ */
-      let minWindChill = 999;
-      for (let i = start; i < end; i++) {
-        const t = tempHourly[i];
-        const gust = hourly.windgusts_10m?.[i] ?? 0;
-        const wc = computeWindChill(t, gust);
-        if (wc != null) minWindChill = Math.min(minWindChill, wc);
-      }
-
-      if (
-        minWindChill <= 35 ||
-        minTemp <= 35 ||
-        (maxGust >= 25 && maxTemp <= 40)
-      ) {
-        return {
-          emoji: "🥶",
-          headline: "Cold and breezy tomorrow",
-          text:
-            "Wind chill will make the morning feel colder. " +
-            "A jacket, gloves, and warm layers are recommended."
-        };
-      }
-
-      /* ------------------ CATEGORY 3 — HEAT + HUMIDITY ------------------ */
-      if (maxDew >= 68 && maxTemp >= 82) {
-        let humidityPhrase = "humid";
-        if (maxDew >= 72) humidityPhrase = "very humid";
-        if (maxDew >= 75) humidityPhrase = "oppressively humid";
-
-        let uvLine = "";
-        if (maxUV >= 6) uvLine = " UV levels will be high — sunscreen recommended.";
-
-        return {
-          emoji: "😅",
-          headline: "Hot and humid tomorrow",
-          text:
-            `Expect ${humidityPhrase} conditions with highs near ${maxTemp.toFixed(0)}°F.` +
-            " Light clothing, hydration, and shade breaks will help." +
-            uvLine
-        };
-      }
-
-      /* ------------------ CATEGORY 4 — LAYERS DAY ------------------ */
-      if (
-        spread >= 30 &&
-        maxTemp < 82 &&
-        minTemp > 20 &&
-        rainTotal < 0.10
-      ) {
-        return {
-          emoji: "🏔️",
-          headline: "Classic mountain layers day",
-          text:
-            "A chilly morning followed by a warm afternoon. " +
-            "Dress in layers to stay comfortable from sunrise to sunset."
-        };
-      }
-
-      /* ------------------ CATEGORY 5 — WIND ------------------ */
-      if (maxGust >= 30) {
-        return {
-          emoji: "🌬️",
-          headline: "Gusty conditions tomorrow",
-          text:
-            "Secure outdoor items and expect a breezy afternoon. " +
-            "Loose hats may be a challenge."
-        };
-      }
-
-      /* ------------------ CATEGORY 6 — GOLDILOCKS DAY (🌟) ------------------ */
-      if (
-        maxTemp >= 68 &&
-        maxTemp <= 74 &&
-        maxDew >= 45 &&
-        maxDew <= 52 &&
-        rainTotal < 0.05 &&
-        maxGust < 20
-      ) {
-        return {
-          emoji: "🌟",
-          headline: "Goldilocks Day!",
-          text:
-            "Just right — mild temps, low humidity, and no rain expected. " +
-            "A beautiful day ahead."
-        };
-      }
-
-      /* ------------------ CATEGORY 7 — FALLBACK ------------------ */
-      return {
-        emoji: "🙂",
-        headline: "A mild, uneventful day tomorrow",
-        text: "Comfortable weather with no special prep needed."
-      };
-    }
     /* ----------------------------------------------------
        FORECAST ALERT LOGIC (12–48 hours)
        ---------------------------------------------------- */
@@ -1205,6 +1130,7 @@ function generateHumanActionOutlook(hourly) {
   </script>
 </body>
 </html>
+
 
 
 
