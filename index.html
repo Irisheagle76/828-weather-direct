@@ -605,35 +605,46 @@
     }
     /* ----------------------------------------------------
        GET TOMORROW'S CALENDAR-DAY WINDOW
-       (Matches by date — fixes Sunday drift)
+       (Matches by date — ChatGPT fix)
        ---------------------------------------------------- */
-    function getTomorrowWindow(hourly) {
-      const times = hourly.time.map(t => new Date(t));
-      if (!times.length) return { start: 0, end: 0 };
+   function getTomorrowWindow(hourly) {
+  if (!hourly.time || !hourly.time.length) {
+    return { start: 0, end: 0 };
+  }
 
-      const now = new Date();
-      const tomorrow = new Date(now);
-      tomorrow.setDate(now.getDate() + 1);
+  // Build tomorrow string in YYYY-MM-DD format
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(now.getDate() + 1);
 
-      const targetYear = tomorrow.getFullYear();
-      const targetMonth = tomorrow.getMonth();
-      const targetDay = tomorrow.getDate();
+  const yyyy = tomorrow.getFullYear();
+  const mm = String(tomorrow.getMonth() + 1).padStart(2, "0");
+  const dd = String(tomorrow.getDate()).padStart(2, "0");
+  const targetDate = `${yyyy}-${mm}-${dd}`;
 
-      let start = null;
-      let end = null;
+  let start = null;
+  let end = null;
 
-      for (let i = 0; i < times.length; i++) {
-        const d = times[i];
+  for (let i = 0; i < hourly.time.length; i++) {
+    const dateStr = hourly.time[i].slice(0, 10); // <-- key fix
 
-        if (
-          d.getFullYear() === targetYear &&
-          d.getMonth() === targetMonth &&
-          d.getDate() === targetDay
-        ) {
-          if (start === null) start = i;
-          end = i + 1;
-        }
-      }
+    if (dateStr === targetDate) {
+      if (start === null) start = i;
+      end = i + 1;
+    }
+  }
+
+  // Fallback if not found
+  if (start === null) {
+    const hours = hourly.time.length;
+    return {
+      start: Math.min(24, hours - 1),
+      end: Math.min(48, hours)
+    };
+  }
+
+  return { start, end };
+}
 
       // If tomorrow is missing entirely (rare), fallback to 24–48h
       if (start === null) {
@@ -1205,6 +1216,7 @@
   </script>
 </body>
 </html>
+
 
 
 
