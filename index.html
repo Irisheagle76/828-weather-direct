@@ -492,7 +492,7 @@
         `&start_date=${format(start)}` +
         `&end_date=${format(end)}` +
         `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum` +
-        `&timezone=auto`;
+        `&timezone=America/New_York`;
 
       const res = await fetch(url);
       if (!res.ok) throw new Error("Historical data fetch failed: " + res.status);
@@ -1201,6 +1201,7 @@ function getTomorrowWindow(hourly) {
   </script>
 </body>
 </html>
+
 
 
 
