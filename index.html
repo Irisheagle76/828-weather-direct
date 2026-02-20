@@ -605,20 +605,19 @@
     }
     /* ----------------------------------------------------
        GET TOMORROW'S CALENDAR-DAY WINDOW
-       (Matches by date — ChatGPT fix2)
+       (Matches by date — ChatGPT fix3)
        ---------------------------------------------------- */
 function getTomorrowWindow(hourly) {
   if (!hourly.time || hourly.time.length === 0) {
     return { start: 0, end: 0 };
   }
 
-  // Use first API timestamp as baseline (NOT system clock)
-  const firstDateStr = hourly.time[0].slice(0, 10);
-  const firstDate = new Date(firstDateStr + "T00:00:00");
+  // Get tomorrow based on REAL current date (browser clock)
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
 
-  // Tomorrow relative to API day
-  const tomorrow = new Date(firstDate);
-  tomorrow.setDate(firstDate.getDate() + 1);
+  const tomorrow = new Date(now);
+  tomorrow.setDate(now.getDate() + 1);
 
   const yyyy = tomorrow.getFullYear();
   const mm = String(tomorrow.getMonth() + 1).padStart(2, "0");
@@ -638,7 +637,8 @@ function getTomorrowWindow(hourly) {
   }
 
   if (start === null) {
-    return { start: 24, end: 48 }; // safe fallback
+    console.warn("Tomorrow not found in forecast");
+    return { start: 24, end: 48 };
   }
 
   return { start, end };
@@ -1201,6 +1201,7 @@ console.log("First 5 times:", hourly.time.slice(0, 5));
   </script>
 </body>
 </html>
+
 
 
 
