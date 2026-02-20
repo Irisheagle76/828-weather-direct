@@ -662,7 +662,7 @@ function getTomorrowWindow(hourly) {
           text: "We couldn’t load tomorrow’s forecast data."
         };
       }
-
+console.log("First 5 times:", hourly.time.slice(0, 5));
       const { start, end } = getTomorrowWindow(hourly);
 
       const rainHourly = hourly.precipitation || [];
@@ -1201,6 +1201,7 @@ function getTomorrowWindow(hourly) {
   </script>
 </body>
 </html>
+
 
 
 
