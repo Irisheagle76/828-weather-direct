@@ -759,7 +759,12 @@
           setWUStatus("error", "WU Error", "Could not load Weather Underground data.");
           showWUError(err.message || "Unknown error.");
         }
-    /* -----------------------------------------
+
+      }, () => {
+        showWUError("Enable location to get hyper‑local conditions.");
+      });
+    }
+        /* -----------------------------------------
        FINAL RENDERING OF FORECAST MODULE
        (Option C — subtle text if no alerts)
     ----------------------------------------- */
@@ -789,8 +794,3 @@
   </script>
 </body>
 </html>
-      }, () => {
-        showWUError("Enable location to get hyper‑local conditions.");
-      });
-    }
-    
