@@ -67,25 +67,96 @@
       color: #c4c9e5;
     }
 
-    /* Comfort Module */
+    /* Two-column NOW vs TOMORROW wrapper */
+    .now-tomorrow-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.4rem;
+    }
+    .now-col,
+    .tomorrow-col {
+      flex: 1 1 260px;
+      min-width: 0;
+    }
+
+    /* Comfort Module (NOW) */
     .comfort-module {
       background: rgba(255, 169, 77, 0.10);
       border: 1px solid rgba(255, 169, 77, 0.35);
       border-radius: 14px;
-      padding: 1rem 1.2rem;
-      margin-bottom: 1.4rem;
+      padding: 1rem 1.1rem;
       display: flex;
       align-items: center;
-      gap: 0.9rem;
+      gap: 0.8rem;
     }
     .comfort-emoji {
       font-size: 2rem;
+      flex-shrink: 0;
+    }
+    .comfort-content {
+      min-width: 0;
+    }
+    .comfort-label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #f0b777;
+      margin-bottom: 0.15rem;
+      white-space: nowrap;
     }
     .comfort-text {
-      font-size: 1.1rem;
+      font-size: 1.02rem;
       font-weight: 600;
       color: #ffa94d;
       letter-spacing: 0.02em;
+      line-height: 1.25;
+      word-wrap: break-word;
+    }
+    .comfort-sub {
+      font-size: 0.78rem;
+      color: #9aa3c2;
+      margin-top: 0.15rem;
+    }
+
+    /* Human-Action Outlook (TOMORROW) */
+    .action-module {
+      background: rgba(120, 180, 255, 0.10);
+      border: 1px solid rgba(120, 180, 255, 0.35);
+      border-radius: 14px;
+      padding: 1rem 1.1rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.8rem;
+    }
+    .action-emoji {
+      font-size: 1.8rem;
+      flex-shrink: 0;
+    }
+    .action-content {
+      min-width: 0;
+    }
+    .action-label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #8fb7ff;
+      margin-bottom: 0.15rem;
+      white-space: nowrap;
+    }
+    .action-headline {
+      font-size: 0.98rem;
+      font-weight: 600;
+      color: #e0ecff;
+      margin-bottom: 0.15rem;
+      line-height: 1.3;
+      word-wrap: break-word;
+    }
+    .action-text {
+      font-size: 0.84rem;
+      color: #c4d4ff;
+      line-height: 1.35;
+      word-wrap: break-word;
     }
 
     /* Metrics Grid */
@@ -201,6 +272,21 @@
       font-size: 0.85rem;
       margin-top: 0.5rem;
     }
+
+    /* Mobile tweaks */
+    @media (max-width: 640px) {
+      .card {
+        padding: 1.1rem;
+      }
+      .now-tomorrow-row {
+        flex-direction: column;
+      }
+      .comfort-text,
+      .action-headline,
+      .action-text {
+        font-size: 0.9rem;
+      }
+    }
   </style>
 </head>
 
@@ -219,10 +305,33 @@
       </div>
     </div>
 
-    <!-- Comfort Module -->
-    <div id="comfort-module" class="comfort-module">
-      <div id="comfort-emoji" class="comfort-emoji">--</div>
-      <div id="comfort-text" class="comfort-text">Comfort loading…</div>
+    <!-- NOW vs TOMORROW row -->
+    <div class="now-tomorrow-row">
+      <!-- Comfort (NOW) -->
+      <div class="now-col">
+        <div id="comfort-module" class="comfort-module">
+          <div id="comfort-emoji" class="comfort-emoji">--</div>
+          <div class="comfort-content">
+            <div class="comfort-label">Right now comfort</div>
+            <div id="comfort-text" class="comfort-text">Comfort loading…</div>
+            <div class="comfort-sub">Based on current conditions</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Human-Action Outlook (TOMORROW) -->
+      <div class="tomorrow-col">
+        <div id="action-module" class="action-module">
+          <div id="action-emoji" class="action-emoji">--</div>
+          <div class="action-content">
+            <div class="action-label">Tomorrow’s human‑action outlook</div>
+            <div id="action-headline" class="action-headline">Analyzing tomorrow’s setup…</div>
+            <div id="action-text" class="action-text">
+              We’ll highlight what you’ll actually need tomorrow — layers, rain gear, hydration, or nothing special.
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Metrics Grid -->
@@ -271,7 +380,6 @@
     <div class="footer-note" id="wu-station-footer">
       Live data from Weather Underground Station --
     </div>
-
   </div>
 
   <script>
@@ -300,7 +408,7 @@
     }
 
     /* -----------------------------------------
-       COMFORT CATEGORY (Temperature + Dew Point)
+       COMFORT CATEGORY (Right Now)
     ----------------------------------------- */
     function getComfortCategory(tempF, dewF) {
       if (tempF == null || dewF == null) {
@@ -366,7 +474,7 @@
     }
 
     /* -----------------------------------------
-       CUMULATIVE → HOURLY CONVERSION (used later)
+       CUMULATIVE → HOURLY CONVERSION
     ----------------------------------------- */
     function toHourlyDeltas(arr) {
       if (!arr || arr.length === 0) return [];
@@ -379,7 +487,254 @@
       }
       return out;
     }
+
+    /* -----------------------------------------
+       HUMAN‑ACTION OUTLOOK HELPERS (Tomorrow)
+       These do NOT generate the outlook yet —
+       Part 3 will contain the full logic.
+    ----------------------------------------- */
+
+    // Compute wind chill (Fahrenheit)
+    function computeWindChill(tempF, windMph) {
+      if (tempF == null || windMph == null) return null;
+      if (tempF > 50 || windMph < 3) return tempF; // Wind chill formula not valid above 50°F
+
+      return (
+        35.74 +
+        0.6215 * tempF -
+        35.75 * Math.pow(windMph, 0.16) +
+        0.4275 * tempF * Math.pow(windMph, 0.16)
+      );
+    }
+
+    // Detect sharp hourly rain spikes (convective signature)
+    function detectConvectiveSpike(rainHourly) {
+      if (!rainHourly) return false;
+      for (let i = 1; i < rainHourly.length; i++) {
+        if (rainHourly[i] - rainHourly[i - 1] >= 0.15) return true;
+      }
+      return false;
+    }
+
+    // Compute diurnal spread for tomorrow
+    function computeDiurnalSpread(hourly, startIndex, endIndex) {
+      let minT = 999, maxT = -999;
+      for (let i = startIndex; i < endIndex; i++) {
+        const t = hourly.temperature_2m?.[i];
+        if (typeof t === "number") {
+          minT = Math.min(minT, t);
+          maxT = Math.max(maxT, t);
+        }
+      }
+      return { minT, maxT, spread: maxT - minT };
+    }
         /* -----------------------------------------
+       72‑HOUR FORECAST FETCH (Open‑Meteo)
+       Using hourly temps, dew point, precip, gusts
+    ----------------------------------------- */
+    async function getShortTermForecast(lat, lon) {
+      const url =
+        `https://api.open-meteo.com/v1/forecast` +
+        `?latitude=${lat}&longitude=${lon}` +
+        `&hourly=temperature_2m,dewpoint_2m,precipitation,snowfall,windgusts_10m,uv_index` +
+        `&forecast_days=3&timezone=auto`;
+
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Short-term forecast fetch failed: " + res.status);
+
+      return (await res.json()).hourly;
+    }
+
+    /* -----------------------------------------
+       HUMAN‑ACTION OUTLOOK ENGINE (Tomorrow)
+       Priority:
+       1. Rain / Thunderstorms
+       2. Cold (wind chill)
+       3. Heat + Humidity (dew ≥ 68 & temp ≥ 82)
+       4. Layers Day (spread ≥ 30°)
+       5. Wind
+       6. Goldilocks
+       7. Fallback
+    ----------------------------------------- */
+    function generateHumanActionOutlook(hourly) {
+      if (!hourly || !hourly.time) {
+        return {
+          emoji: "❓",
+          headline: "Tomorrow’s outlook unavailable",
+          text: "We couldn’t load tomorrow’s forecast data."
+        };
+      }
+
+      const hours = hourly.time.length;
+
+      // Tomorrow = hours 24–48
+      const start = Math.min(24, hours - 1);
+      const end = Math.min(48, hours);
+
+      // Extract hourly deltas
+      const rainHourly = toHourlyDeltas(hourly.precipitation);
+      const snowHourly = toHourlyDeltas(hourly.snowfall);
+
+      // Compute totals + extremes
+      let rainTotal = 0;
+      let maxGust = 0;
+      let maxTemp = -999;
+      let minTemp = 999;
+      let maxDew = -999;
+      let maxUV = 0;
+
+      for (let i = start; i < end; i++) {
+        const rain = rainHourly[i - 1] ?? 0;
+        rainTotal += rain;
+
+        const gust = hourly.windgusts_10m?.[i] ?? 0;
+        maxGust = Math.max(maxGust, gust);
+
+        const t = hourly.temperature_2m?.[i];
+        if (typeof t === "number") {
+          maxTemp = Math.max(maxTemp, t);
+          minTemp = Math.min(minTemp, t);
+        }
+
+        const dew = hourly.dewpoint_2m?.[i];
+        if (typeof dew === "number") {
+          maxDew = Math.max(maxDew, dew);
+        }
+
+        const uv = hourly.uv_index?.[i];
+        if (typeof uv === "number") {
+          maxUV = Math.max(maxUV, uv);
+        }
+      }
+
+      const { spread } = computeDiurnalSpread(hourly, start, end);
+
+      /* -----------------------------------------
+         CATEGORY 1 — RAIN / THUNDERSTORMS
+      ----------------------------------------- */
+      const convective = detectConvectiveSpike(rainHourly);
+      const thunderstormLikely =
+        (rainTotal >= 0.20 && maxGust >= 25) || convective;
+
+      if (thunderstormLikely) {
+        return {
+          emoji: "🌩️",
+          headline: "Thunderstorms possible tomorrow",
+          text:
+            "Expect scattered storms, brief heavy downpours, and possible lightning. " +
+            "Keep an umbrella handy and be prepared to seek shelter during thunder."
+        };
+      }
+
+      if (rainTotal >= 0.10) {
+        return {
+          emoji: "💧",
+          headline: "Rain expected tomorrow",
+          text:
+            `Around ${rainTotal.toFixed(2)}" of rain is possible. ` +
+            "Pack an umbrella or rain jacket and consider waterproof shoes."
+        };
+      }
+
+      /* -----------------------------------------
+         CATEGORY 2 — COLD WEATHER (wind chill)
+      ----------------------------------------- */
+      let minWindChill = 999;
+      for (let i = start; i < end; i++) {
+        const t = hourly.temperature_2m?.[i];
+        const gust = hourly.windgusts_10m?.[i] ?? 0;
+        const wc = computeWindChill(t, gust);
+        if (wc != null) minWindChill = Math.min(minWindChill, wc);
+      }
+
+      if (minWindChill <= 35 || minTemp <= 35 || (maxGust >= 25 && maxTemp <= 40)) {
+        return {
+          emoji: "🥶",
+          headline: "Cold and breezy tomorrow",
+          text:
+            "Wind chill will make the morning feel colder. " +
+            "A jacket, gloves, and warm layers are recommended."
+        };
+      }
+
+      /* -----------------------------------------
+         CATEGORY 3 — HEAT + HUMIDITY (dew ≥ 68 & temp ≥ 82)
+      ----------------------------------------- */
+      if (maxDew >= 68 && maxTemp >= 82) {
+        let humidityPhrase = "humid";
+        if (maxDew >= 72) humidityPhrase = "very humid";
+        if (maxDew >= 75) humidityPhrase = "oppressively humid";
+
+        let uvLine = "";
+        if (maxUV >= 6) uvLine = " UV levels will be high — sunscreen recommended.";
+
+        return {
+          emoji: "😅",
+          headline: "Hot and humid tomorrow",
+          text:
+            `Expect ${humidityPhrase} conditions with highs near ${maxTemp.toFixed(0)}°F.` +
+            " Light clothing, hydration, and shade breaks will help." +
+            uvLine
+        };
+      }
+
+      /* -----------------------------------------
+         CATEGORY 4 — LAYERS DAY (spread ≥ 30°)
+      ----------------------------------------- */
+      if (spread >= 30 && maxTemp < 82 && minTemp > 20 && rainTotal < 0.10) {
+        return {
+          emoji: "🏔️",
+          headline: "Classic mountain layers day",
+          text:
+            "A chilly morning followed by a warm afternoon. " +
+            "Dress in layers to stay comfortable from sunrise to sunset."
+        };
+      }
+
+      /* -----------------------------------------
+         CATEGORY 5 — WIND PREP
+      ----------------------------------------- */
+      if (maxGust >= 30) {
+        return {
+          emoji: "🌬️",
+          headline: "Gusty conditions tomorrow",
+          text:
+            "Secure outdoor items and expect a breezy afternoon. " +
+            "Loose hats may be a challenge."
+        };
+      }
+
+      /* -----------------------------------------
+         CATEGORY 6 — GOLDILOCKS DAY
+      ----------------------------------------- */
+      if (
+        maxTemp >= 68 &&
+        maxTemp <= 74 &&
+        maxDew >= 45 &&
+        maxDew <= 52 &&
+        rainTotal < 0.05 &&
+        maxGust < 20
+      ) {
+        return {
+          emoji: "✨",
+          headline: "Goldilocks Day!",
+          text:
+            "Just right — mild temps, low humidity, and no rain expected. " +
+            "A beautiful day ahead."
+        };
+      }
+
+      /* -----------------------------------------
+         CATEGORY 7 — FALLBACK
+      ----------------------------------------- */
+      return {
+        emoji: "🙂",
+        headline: "A mild, uneventful day tomorrow",
+        text: "Comfortable weather with no special prep needed."
+      };
+    }
+
+    /* -----------------------------------------
        60‑DAY TREND ANALYSIS
     ----------------------------------------- */
     function analyzeHistoricalTrends(daily) {
@@ -401,13 +756,13 @@
       let tempIcon = "";
 
       if (tempAnomaly >= 5) {
-        tempPhrase = `Temperatures this past week have been running about ${tempAnomaly.toFixed(0)}° warmer than the recent 60‑day average`;
+        tempPhrase = `Temperatures this past week have been about ${tempAnomaly.toFixed(0)}° warmer than average`;
         tempIcon = "🌤️";
       } else if (tempAnomaly <= -5) {
-        tempPhrase = `Temperatures this past week have been running about ${Math.abs(tempAnomaly).toFixed(0)}° cooler than the recent 60‑day average`;
+        tempPhrase = `Temperatures this past week have been about ${Math.abs(tempAnomaly).toFixed(0)}° cooler than average`;
         tempIcon = "❄️";
       } else {
-        tempPhrase = "Temperatures this past week have been close to the recent 60‑day average";
+        tempPhrase = "Temperatures this past week have been close to the recent average";
         tempIcon = "🌦️";
       }
 
@@ -454,10 +809,10 @@
         precipPhrase = `with an ongoing wet stretch of ${ongoingWet} days`;
         precipIcon = "🌧️";
       } else if (longestDry >= 5) {
-        precipPhrase = `including a notable dry spell that lasted ${longestDry} days`;
+        precipPhrase = `including a notable dry spell lasting ${longestDry} days`;
         precipIcon = "🌞";
       } else if (longestWet >= 5) {
-        precipPhrase = `including a notably soggy stretch that lasted ${longestWet} days`;
+        precipPhrase = `including a soggy stretch lasting ${longestWet} days`;
         precipIcon = "🌧️";
       } else {
         precipPhrase = "with mixed precipitation patterns";
@@ -476,27 +831,56 @@
 
       return { headline, text };
     }
-
-    /* -----------------------------------------
-       72‑HOUR FORECAST FETCH (Open‑Meteo)
-       Using cumulative precip/snow + gusts + temps
+        /* -----------------------------------------
+       WEATHER UNDERGROUND (STATION LOOKUP)
     ----------------------------------------- */
-    async function getShortTermForecast(lat, lon) {
+    async function getNearestWUStation(lat, lon, apiKey) {
       const url =
-        `https://api.open-meteo.com/v1/forecast` +
-        `?latitude=${lat}&longitude=${lon}` +
-        `&hourly=temperature_2m,precipitation,snowfall,windgusts_10m` +
-        `&forecast_days=3&timezone=auto`;
+        `https://api.weather.com/v3/location/near?geocode=${lat},${lon}` +
+        `&product=pws&format=json&apiKey=${apiKey}`;
 
       const res = await fetch(url);
-      if (!res.ok) throw new Error("Short-term forecast fetch failed: " + res.status);
+      if (!res.ok) throw new Error("WU station lookup failed: " + res.status);
 
       const data = await res.json();
-      return data.hourly;
+      return {
+        stationId: data.location.stationId[0],
+        distance: data.location.distance?.[0] ?? null
+      };
+    }
+
+    /* -----------------------------------------
+       WEATHER UNDERGROUND (CURRENT CONDITIONS)
+    ----------------------------------------- */
+    async function getWUCurrentConditions(stationId, apiKey) {
+      const url =
+        `https://api.weather.com/v2/pws/observations/current?stationId=${stationId}` +
+        `&format=json&units=e&apiKey=${apiKey}`;
+
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("WU current conditions failed: " + res.status);
+
+      const data = await res.json();
+      const obs = data.observations[0];
+
+      return {
+        temp: obs.imperial?.temp ?? null,
+        dewPoint: obs.imperial?.dewpt ?? null,
+        humidity: obs.humidity ?? null,
+        windSpeed: obs.imperial?.windSpeed ?? null,
+        windGust: obs.imperial?.windGust ?? null,
+        pressure: obs.imperial?.pressure ?? null,
+        rainRate: obs.imperial?.precipRate ?? null,
+        rainToday: obs.imperial?.precipTotal ?? null,
+        solarRadiation: obs.solarRadiation ?? null,
+        uv: obs.uv ?? null,
+        stationId: obs.stationID
+      };
     }
 
     /* -----------------------------------------
        FORECAST ALERT LOGIC (12–48 hours)
+       Separate from Human‑Action Outlook
     ----------------------------------------- */
     function analyzeForecastAlerts(hourly) {
       const hours = hourly.time.length;
@@ -562,7 +946,7 @@
 
       if (validTempCount > 0 && maxTemp >= 85) {
         alerts.push({
-          icon: "🔥",
+          icon: "😅",
           id: "hot",
           title: "Heat Spike Expected",
           detail: `High temperatures may exceed ${maxTemp.toFixed(0)}°F in the next couple of days.`
@@ -616,52 +1000,6 @@
         container.appendChild(iconEl);
       });
     }
-        /* -----------------------------------------
-       WEATHER UNDERGROUND (STATION LOOKUP)
-    ----------------------------------------- */
-    async function getNearestWUStation(lat, lon, apiKey) {
-      const url =
-        `https://api.weather.com/v3/location/near?geocode=${lat},${lon}` +
-        `&product=pws&format=json&apiKey=${apiKey}`;
-
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("WU station lookup failed: " + res.status);
-
-      const data = await res.json();
-      return {
-        stationId: data.location.stationId[0],
-        distance: data.location.distance?.[0] ?? null
-      };
-    }
-
-    /* -----------------------------------------
-       WEATHER UNDERGROUND (CURRENT CONDITIONS)
-    ----------------------------------------- */
-    async function getWUCurrentConditions(stationId, apiKey) {
-      const url =
-        `https://api.weather.com/v2/pws/observations/current?stationId=${stationId}` +
-        `&format=json&units=e&apiKey=${apiKey}`;
-
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("WU current conditions failed: " + res.status);
-
-      const data = await res.json();
-      const obs = data.observations[0];
-
-      return {
-        temp: obs.imperial?.temp ?? null,
-        dewPoint: obs.imperial?.dewpt ?? null,
-        humidity: obs.humidity ?? null,
-        windSpeed: obs.imperial?.windSpeed ?? null,
-        windGust: obs.imperial?.windGust ?? null,
-        pressure: obs.imperial?.pressure ?? null,
-        rainRate: obs.imperial?.precipRate ?? null,
-        rainToday: obs.imperial?.precipTotal ?? null,
-        solarRadiation: obs.solarRadiation ?? null,
-        uv: obs.uv ?? null,
-        stationId: obs.stationID
-      };
-    }
 
     /* -----------------------------------------
        MAIN FLOW — INITIALIZATION
@@ -692,7 +1030,7 @@
           document.getElementById("wu-feels").textContent =
             wu.temp != null ? `Feels like ${wu.temp.toFixed(0)}°F` : "Feels like --";
 
-          /* Comfort Module */
+          /* Comfort Module (NOW) */
           const comfort = getComfortCategory(wu.temp, wu.dewPoint);
           document.getElementById("comfort-text").textContent = comfort.text;
           document.getElementById("comfort-emoji").textContent = comfort.emoji;
@@ -742,17 +1080,40 @@
           }
 
           /* -----------------------------------------
-             FORECAST ALERTS (12–48 hours)
+             FORECAST (ALERTS + HUMAN‑ACTION OUTLOOK)
           ----------------------------------------- */
           try {
             const hourly = await getShortTermForecast(lat, lon);
-            const alerts = analyzeForecastAlerts(hourly);
 
-            // Pass alerts to Part 5
-            window.__forecastAlerts = alerts;
+            // Forecast alerts (12–48h)
+            const alerts = analyzeForecastAlerts(hourly);
+            if (!alerts || alerts.length === 0) {
+              document.getElementById("forecast-icons").innerHTML = "";
+              const detailBox = document.getElementById("forecast-detail");
+              detailBox.style.display = "none";
+              detailBox.innerHTML = "";
+              document.getElementById("forecast-module").innerHTML = `
+                <div class="forecast-title">Upcoming Weather Alerts</div>
+                <div style="font-size:0.9rem; color:#d8d8e0; margin-top:0.4rem;">
+                  No significant alerts in the next couple of days.
+                </div>
+              `;
+            } else {
+              renderForecastIcons(alerts);
+            }
+
+            // Human‑Action Outlook (Tomorrow)
+            const outlook = generateHumanActionOutlook(hourly);
+            document.getElementById("action-emoji").textContent = outlook.emoji;
+            document.getElementById("action-headline").textContent = outlook.headline;
+            document.getElementById("action-text").textContent = outlook.text;
 
           } catch (forecastErr) {
-            window.__forecastAlerts = null;
+            document.getElementById("action-emoji").textContent = "❓";
+            document.getElementById("action-headline").textContent =
+              "Tomorrow’s outlook unavailable";
+            document.getElementById("action-text").textContent =
+              "We couldn’t load tomorrow’s forecast data.";
           }
 
         } catch (err) {
@@ -764,33 +1125,12 @@
         showWUError("Enable location to get hyper‑local conditions.");
       });
     }
-        /* -----------------------------------------
-       FINAL RENDERING OF FORECAST MODULE
-       (Option C — subtle text if no alerts)
-    ----------------------------------------- */
-    function finalizeForecastModule() {
-      const alerts = window.__forecastAlerts;
-      const moduleEl = document.getElementById("forecast-module");
-
-      if (!alerts || alerts.length === 0) {
-        moduleEl.innerHTML = `
-          <div class="forecast-title">Upcoming Weather Alerts</div>
-          <div style="font-size:0.9rem; color:#d8d8e0; margin-top:0.4rem;">
-            No significant alerts in the next couple of days.
-          </div>
-        `;
-      } else {
-        renderForecastIcons(alerts);
-      }
-    }
-
-    /* -----------------------------------------
-       DOM READY → Initialize + Finalize
+         /* -----------------------------------------
+       DOM READY → Initialize Everything
     ----------------------------------------- */
     document.addEventListener("DOMContentLoaded", async () => {
       await initWUWeather();
-      finalizeForecastModule();
     });
   </script>
 </body>
-</html>
+</html>  
