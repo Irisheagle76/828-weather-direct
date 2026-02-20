@@ -605,46 +605,48 @@
     }
     /* ----------------------------------------------------
        GET TOMORROW'S CALENDAR-DAY WINDOW
-       (Midnight → Midnight, Local Time)
+       (Matches by date — fixes Sunday drift)
        ---------------------------------------------------- */
-function getTomorrowWindow(hourly) {
-  const times = hourly.time.map(t => new Date(t));
-  if (!times.length) return { start: 0, end: 0 };
+    function getTomorrowWindow(hourly) {
+      const times = hourly.time.map(t => new Date(t));
+      if (!times.length) return { start: 0, end: 0 };
 
-  const now = new Date();
-  const tomorrowDate = new Date(now);
-  tomorrowDate.setDate(now.getDate() + 1);
+      const now = new Date();
+      const tomorrow = new Date(now);
+      tomorrow.setDate(now.getDate() + 1);
 
-  const targetYear = tomorrowDate.getFullYear();
-  const targetMonth = tomorrowDate.getMonth();
-  const targetDay = tomorrowDate.getDate();
+      const targetYear = tomorrow.getFullYear();
+      const targetMonth = tomorrow.getMonth();
+      const targetDay = tomorrow.getDate();
 
-  let start = null;
-  let end = null;
+      let start = null;
+      let end = null;
 
-  for (let i = 0; i < times.length; i++) {
-    const d = times[i];
-    if (
-      d.getFullYear() === targetYear &&
-      d.getMonth() === targetMonth &&
-      d.getDate() === targetDay
-    ) {
-      if (start === null) start = i;
-      end = i + 1;
+      for (let i = 0; i < times.length; i++) {
+        const d = times[i];
+
+        if (
+          d.getFullYear() === targetYear &&
+          d.getMonth() === targetMonth &&
+          d.getDate() === targetDay
+        ) {
+          if (start === null) start = i;
+          end = i + 1;
+        }
+      }
+
+      // If tomorrow is missing entirely (rare), fallback to 24–48h
+      if (start === null) {
+        const hours = hourly.time.length;
+        return {
+          start: Math.min(24, hours - 1),
+          end: Math.min(48, hours)
+        };
+      }
+
+      return { start, end };
     }
-  }
 
-  // If tomorrow is missing entirely, fallback
-  if (start === null) {
-    const hours = hourly.time.length;
-    return {
-      start: Math.min(24, hours - 1),
-      end: Math.min(48, hours)
-    };
-  }
-
-  return { start, end };
-}
     /* ----------------------------------------------------
        HUMAN‑ACTION OUTLOOK ENGINE (Tomorrow)
        Priority:
@@ -668,7 +670,6 @@ function getTomorrowWindow(hourly) {
       const { start, end } = getTomorrowWindow(hourly);
 
       const rainHourly = hourly.precipitation || [];
-      const snowHourly = hourly.snowfall || [];
       const dewHourly = hourly.dewpoint_2m || [];
       const tempHourly = hourly.temperature_2m || [];
 
@@ -1204,6 +1205,7 @@ function getTomorrowWindow(hourly) {
   </script>
 </body>
 </html>
+
 
 
 
