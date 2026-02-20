@@ -276,7 +276,110 @@
 
   <script>
     const WU_API_KEY = "eba9581da59d4972a9581da59d497236";
+        /* -----------------------------------------
+       STATUS BADGE + ERROR HANDLING
+    ----------------------------------------- */
+    function setWUStatus(state, label, text) {
+      const dot = document.getElementById("wu-status-dot");
+      const lbl = document.getElementById("wu-status-label");
+      const desc = document.getElementById("wu-status-text");
+
+      lbl.textContent = label;
+      desc.textContent = text;
+
+      dot.classList.remove("ok", "error");
+
+      if (state === "ok") dot.classList.add("ok");
+      if (state === "error") dot.classList.add("error");
+    }
+
+    function showWUError(msg) {
+      const el = document.getElementById("wu-error");
+      el.textContent = msg;
+      el.style.display = "block";
+    }
+
     /* -----------------------------------------
+       COMFORT CATEGORY (Temperature + Dew Point)
+    ----------------------------------------- */
+    function getComfortCategory(tempF, dewF) {
+      if (tempF == null || dewF == null) {
+        return { text: "Comfort data unavailable", emoji: "❓" };
+      }
+
+      // Dew point comfort scale
+      let humidityFeel = "";
+      if (dewF >= 70) humidityFeel = "very humid";
+      else if (dewF >= 65) humidityFeel = "humid";
+      else if (dewF >= 60) humidityFeel = "a bit muggy";
+      else if (dewF >= 50) humidityFeel = "comfortable";
+      else humidityFeel = "dry and crisp";
+
+      // Temperature comfort scale
+      if (tempF >= 90) return { text: "Hot — Stay Hydrated", emoji: "🥵" };
+      if (tempF >= 80) return { text: `Warm and ${humidityFeel}`, emoji: "🌤️" };
+      if (tempF >= 70) return { text: `Mild and ${humidityFeel}`, emoji: "🙂" };
+      if (tempF >= 60) return { text: "Cool and Comfortable", emoji: "😌" };
+      if (tempF >= 50) return { text: "Chilly — Light Jacket Recommended", emoji: "🧥" };
+      if (tempF >= 40) return { text: "Cold — Bundle Up", emoji: "🧣" };
+
+      return { text: "Very Cold — Dress Warmly", emoji: "🥶" };
+    }
+
+    /* -----------------------------------------
+       HISTORICAL DAILY DATA (60 days)
+       Uses Open‑Meteo daily archive
+    ----------------------------------------- */
+    async function getHistoricalDaily(lat, lon) {
+      const end = new Date();
+      const start = new Date();
+      start.setDate(end.getDate() - 60);
+
+      const format = d => d.toISOString().split("T")[0];
+
+      const url =
+        `https://archive-api.open-meteo.com/v1/archive` +
+        `?latitude=${lat}&longitude=${lon}` +
+        `&start_date=${format(start)}` +
+        `&end_date=${format(end)}` +
+        `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum` +
+        `&timezone=auto`;
+
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Historical data fetch failed: " + res.status);
+
+      const data = await res.json();
+
+      const out = [];
+      for (let i = 0; i < data.daily.time.length; i++) {
+        const tMax = data.daily.temperature_2m_max[i];
+        const tMin = data.daily.temperature_2m_min[i];
+        const precip = data.daily.precipitation_sum[i];
+
+        out.push({
+          tMean: (tMax + tMin) / 2,
+          precip: precip ?? 0
+        });
+      }
+
+      return out;
+    }
+
+    /* -----------------------------------------
+       CUMULATIVE → HOURLY CONVERSION (used later)
+    ----------------------------------------- */
+    function toHourlyDeltas(arr) {
+      if (!arr || arr.length === 0) return [];
+      const out = [];
+      for (let i = 1; i < arr.length; i++) {
+        const prev = typeof arr[i - 1] === "number" ? arr[i - 1] : 0;
+        const curr = typeof arr[i] === "number" ? arr[i] : 0;
+        const diff = curr - prev;
+        out.push(Math.max(diff, 0));
+      }
+      return out;
+    }
+        /* -----------------------------------------
        60‑DAY TREND ANALYSIS
     ----------------------------------------- */
     function analyzeHistoricalTrends(daily) {
@@ -372,21 +475,6 @@
       const text = `${tempPhrase}, ${precipPhrase}.`;
 
       return { headline, text };
-    }
-
-    /* -----------------------------------------
-       CUMULATIVE → HOURLY CONVERSION
-    ----------------------------------------- */
-    function toHourlyDeltas(arr) {
-      if (!arr || arr.length === 0) return [];
-      const out = [];
-      for (let i = 1; i < arr.length; i++) {
-        const prev = typeof arr[i - 1] === "number" ? arr[i - 1] : 0;
-        const curr = typeof arr[i] === "number" ? arr[i] : 0;
-        const diff = curr - prev;
-        out.push(Math.max(diff, 0));
-      }
-      return out;
     }
 
     /* -----------------------------------------
@@ -495,7 +583,6 @@
 
     /* -----------------------------------------
        RENDER FORECAST ALERT ICONS + DETAIL PANEL
-       (Module removal handled in Part 3)
     ----------------------------------------- */
     function renderForecastIcons(alerts) {
       const container = document.getElementById("forecast-icons");
@@ -529,7 +616,7 @@
         container.appendChild(iconEl);
       });
     }
-    /* -----------------------------------------
+        /* -----------------------------------------
        WEATHER UNDERGROUND (STATION LOOKUP)
     ----------------------------------------- */
     async function getNearestWUStation(lat, lon, apiKey) {
@@ -631,7 +718,7 @@
           document.getElementById("wu-solar").textContent =
             wu.solarRadiation != null ? `${wu.solarRadiation.toFixed(0)} W/m²` : "Solar --";
 
-          /* Status badge — station removed */
+          /* Status badge */
           setWUStatus("ok", "WU Connected", "Weather Underground data loaded.");
 
           /* Footer — station preserved */
@@ -656,13 +743,12 @@
 
           /* -----------------------------------------
              FORECAST ALERTS (12–48 hours)
-             Rendering handled in Part 4
           ----------------------------------------- */
           try {
             const hourly = await getShortTermForecast(lat, lon);
             const alerts = analyzeForecastAlerts(hourly);
 
-            // Pass alerts to Part 4 renderer
+            // Pass alerts to Part 5
             window.__forecastAlerts = alerts;
 
           } catch (forecastErr) {
@@ -673,42 +759,38 @@
           setWUStatus("error", "WU Error", "Could not load Weather Underground data.");
           showWUError(err.message || "Unknown error.");
         }
+    /* -----------------------------------------
+       FINAL RENDERING OF FORECAST MODULE
+       (Option C — subtle text if no alerts)
+    ----------------------------------------- */
+    function finalizeForecastModule() {
+      const alerts = window.__forecastAlerts;
+      const moduleEl = document.getElementById("forecast-module");
 
-      }, () => {
-        showWUError("Enable location to get hyper‑local conditions.");
-      });
-    }
-               /* -----------------------------------------
-           FINAL RENDERING OF FORECAST MODULE
-           (Option C — replace module with subtle line)
-        ----------------------------------------- */
-        const alerts = window.__forecastAlerts;
-
-        const moduleEl = document.getElementById("forecast-module");
-        const iconsEl = document.getElementById("forecast-icons");
-        const detailEl = document.getElementById("forecast-detail");
-
-        if (!alerts || alerts.length === 0) {
-          // Replace entire module with subtle text
-          moduleEl.innerHTML = `
-            <div class="forecast-title">Upcoming Weather Alerts</div>
-            <div style="font-size:0.9rem; color:#d8d8e0; margin-top:0.4rem;">
-              No significant alerts in the next couple of days.
-            </div>
-          `;
-        } else {
-          // Render icons normally
-          renderForecastIcons(alerts);
-        }
-      } catch (err) {
-        // Errors already handled above
+      if (!alerts || alerts.length === 0) {
+        moduleEl.innerHTML = `
+          <div class="forecast-title">Upcoming Weather Alerts</div>
+          <div style="font-size:0.9rem; color:#d8d8e0; margin-top:0.4rem;">
+            No significant alerts in the next couple of days.
+          </div>
+        `;
+      } else {
+        renderForecastIcons(alerts);
       }
     }
 
     /* -----------------------------------------
-       DOM READY
+       DOM READY → Initialize + Finalize
     ----------------------------------------- */
-    document.addEventListener("DOMContentLoaded", initWUWeather);
+    document.addEventListener("DOMContentLoaded", async () => {
+      await initWUWeather();
+      finalizeForecastModule();
+    });
   </script>
 </body>
 </html>
+      }, () => {
+        showWUError("Enable location to get hyper‑local conditions.");
+      });
+    }
+    
