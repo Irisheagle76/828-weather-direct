@@ -273,6 +273,105 @@
 
   <script>
     const WU_API_KEY = "eba9581da59d4972a9581da59d497236";
+
+    /* -----------------------------------------
+       UI STATUS HELPER (IMPORTANT!)
+    ----------------------------------------- */
+    function setWUStatus(state, label, text) {
+      const dot = document.getElementById("wu-status-dot");
+      const labelEl = document.getElementById("wu-status-label");
+      const textEl = document.getElementById("wu-status-text");
+
+      dot.classList.remove("ok", "error");
+      if (state === "ok") dot.classList.add("ok");
+      if (state === "error") dot.classList.add("error");
+
+      labelEl.textContent = label;
+      textEl.textContent = text;
+    }
+
+    function showWUError(msg) {
+      const el = document.getElementById("wu-error");
+      el.style.display = "block";
+      el.textContent = msg;
+    }
+
+    /* -----------------------------------------
+       COMFORT LOGIC (Goldilocks)
+    ----------------------------------------- */
+    function getComfortCategory(temp, dew) {
+      if (temp == null || dew == null) {
+        return { text: "Comfort unavailable", emoji: "❓" };
+      }
+
+      if (temp >= 68 && temp <= 74 && dew >= 45 && dew <= 52) {
+        return { text: "Goldilocks! Just right", emoji: "✨" };
+      }
+
+      const humidityEffect = temp - dew;
+
+      if (temp >= 85 && humidityEffect < 15)
+        return { text: "Hot & Humid", emoji: "🥵" };
+
+      if (temp >= 85)
+        return { text: "Hot but Dry", emoji: "🌵" };
+
+      if (temp >= 70 && humidityEffect < 10)
+        return { text: "Warm & Muggy", emoji: "😅" };
+
+      if (temp >= 70)
+        return { text: "Warm & Pleasant", emoji: "🙂" };
+
+      if (temp >= 55)
+        return { text: "Cool & Comfortable", emoji: "😊" };
+
+      if (temp >= 40)
+        return { text: "Chilly — Light Jacket Recommended", emoji: "🧥" };
+
+      if (temp >= 25)
+        return { text: "Cold — Bundle Up", emoji: "🧣" };
+
+      return { text: "Frigid — Stay Warm", emoji: "🥶" };
+    }
+
+    /* -----------------------------------------
+       60‑DAY HISTORICAL FETCH (Open‑Meteo)
+    ----------------------------------------- */
+    async function getHistoricalDaily(lat, lon) {
+      const end = new Date();
+      end.setDate(end.getDate() - 1);
+      const start = new Date();
+      start.setDate(end.getDate() - 59);
+
+      const fmt = d => d.toISOString().slice(0, 10);
+
+      const url =
+        `https://api.open-meteo.com/v1/forecast` +
+        `?latitude=${lat}&longitude=${lon}` +
+        `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum` +
+        `&timezone=auto&start_date=${fmt(start)}&end_date=${fmt(end)}`;
+
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Historical trend fetch failed: " + res.status);
+
+      const data = await res.json();
+      const daily = [];
+
+      for (let i = 0; i < data.daily.time.length; i++) {
+        const tMax = data.daily.temperature_2m_max[i];
+        const tMin = data.daily.temperature_2m_min[i];
+        const precip = data.daily.precipitation_sum[i];
+        daily.push({
+          date: data.daily.time[i],
+          tMax,
+          tMin,
+          tMean: (tMax + tMin) / 2,
+          precip
+        });
+      }
+
+      return daily;
+    }
         /* -----------------------------------------
        60‑DAY TREND ANALYSIS (Headline + Secondary)
     ----------------------------------------- */
@@ -389,7 +488,8 @@
       const res = await fetch(url);
       if (!res.ok) throw new Error("Short-term forecast fetch failed: " + res.status);
 
-      return res.json().then(d => d.hourly);
+      const data = await res.json();
+      return data.hourly;
     }
 
     /* -----------------------------------------
