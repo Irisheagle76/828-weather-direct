@@ -605,17 +605,20 @@
     }
     /* ----------------------------------------------------
        GET TOMORROW'S CALENDAR-DAY WINDOW
-       (Matches by date — ChatGPT fix)
+       (Matches by date — ChatGPT fix2)
        ---------------------------------------------------- */
-   function getTomorrowWindow(hourly) {
-  if (!hourly.time || !hourly.time.length) {
+function getTomorrowWindow(hourly) {
+  if (!hourly.time || hourly.time.length === 0) {
     return { start: 0, end: 0 };
   }
 
-  // Build tomorrow string in YYYY-MM-DD format
-  const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setDate(now.getDate() + 1);
+  // Use first API timestamp as baseline (NOT system clock)
+  const firstDateStr = hourly.time[0].slice(0, 10);
+  const firstDate = new Date(firstDateStr + "T00:00:00");
+
+  // Tomorrow relative to API day
+  const tomorrow = new Date(firstDate);
+  tomorrow.setDate(firstDate.getDate() + 1);
 
   const yyyy = tomorrow.getFullYear();
   const mm = String(tomorrow.getMonth() + 1).padStart(2, "0");
@@ -626,7 +629,7 @@
   let end = null;
 
   for (let i = 0; i < hourly.time.length; i++) {
-    const dateStr = hourly.time[i].slice(0, 10); // <-- key fix
+    const dateStr = hourly.time[i].slice(0, 10);
 
     if (dateStr === targetDate) {
       if (start === null) start = i;
@@ -634,13 +637,8 @@
     }
   }
 
-  // Fallback if not found
   if (start === null) {
-    const hours = hourly.time.length;
-    return {
-      start: Math.min(24, hours - 1),
-      end: Math.min(48, hours)
-    };
+    return { start: 24, end: 48 }; // safe fallback
   }
 
   return { start, end };
@@ -1216,6 +1214,7 @@
   </script>
 </body>
 </html>
+
 
 
 
