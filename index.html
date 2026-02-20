@@ -611,7 +611,7 @@ function getTomorrowWindow(hourly) {
   if (!hourly.time || hourly.time.length === 0) {
     return { start: 0, end: 0 };
   }
-
+console.log("Browser date:", new Date());
   // Get tomorrow based on REAL current date (browser clock)
   const now = new Date();
   now.setHours(0, 0, 0, 0);
@@ -1201,6 +1201,7 @@ console.log("First 5 times:", hourly.time.slice(0, 5));
   </script>
 </body>
 </html>
+
 
 
 
