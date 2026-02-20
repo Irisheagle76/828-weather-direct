@@ -607,44 +607,44 @@
        GET TOMORROW'S CALENDAR-DAY WINDOW
        (Midnight → Midnight, Local Time)
        ---------------------------------------------------- */
-    function getTomorrowWindow(hourly) {
-      const times = hourly.time.map(t => new Date(t));
-      if (!times.length) return { start: 0, end: 0 };
+function getTomorrowWindow(hourly) {
+  const times = hourly.time.map(t => new Date(t));
+  if (!times.length) return { start: 0, end: 0 };
 
-      // Local midnight tonight → tomorrow
-      const now = new Date();
-      const tomorrow = new Date(now);
-      tomorrow.setHours(0, 0, 0, 0);
-      tomorrow.setDate(now.getDate() + 1);
+  const now = new Date();
+  const tomorrowDate = new Date(now);
+  tomorrowDate.setDate(now.getDate() + 1);
 
-      const tomorrowEnd = new Date(tomorrow);
-      tomorrowEnd.setDate(tomorrow.getDate() + 1);
+  const targetYear = tomorrowDate.getFullYear();
+  const targetMonth = tomorrowDate.getMonth();
+  const targetDay = tomorrowDate.getDate();
 
-      let start = null;
-      let end = null;
+  let start = null;
+  let end = null;
 
-      // Select only hours that fall inside the true tomorrow window
-      for (let i = 0; i < times.length; i++) {
-        const t = times[i];
-
-        if (t >= tomorrow && t < tomorrowEnd) {
-          if (start === null) start = i;
-          end = i + 1;
-        }
-      }
-
-      // Fallback: if tomorrow not present (rare), use 24–48h
-      if (start === null) {
-        const hours = hourly.time.length;
-        return {
-          start: Math.min(24, hours - 1),
-          end: Math.min(48, hours)
-        };
-      }
-
-      return { start, end };
+  for (let i = 0; i < times.length; i++) {
+    const d = times[i];
+    if (
+      d.getFullYear() === targetYear &&
+      d.getMonth() === targetMonth &&
+      d.getDate() === targetDay
+    ) {
+      if (start === null) start = i;
+      end = i + 1;
     }
+  }
 
+  // If tomorrow is missing entirely, fallback
+  if (start === null) {
+    const hours = hourly.time.length;
+    return {
+      start: Math.min(24, hours - 1),
+      end: Math.min(48, hours)
+    };
+  }
+
+  return { start, end };
+}
     /* ----------------------------------------------------
        HUMAN‑ACTION OUTLOOK ENGINE (Tomorrow)
        Priority:
@@ -1204,6 +1204,7 @@
   </script>
 </body>
 </html>
+
 
 
 
