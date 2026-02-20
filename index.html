@@ -16,7 +16,7 @@
       --module-padding: 1rem 1.2rem;
       --module-radius: 22px; /* pill-shaped */
       --gap: 1.4rem;
-    }
+    console.log("Hourly length:", hourly.time.length);
 
     @media (max-height: 700px), (max-width: 380px) {
       :root {
@@ -663,6 +663,8 @@ console.log("Browser date:", new Date());
         };
       }
 console.log("First 5 times:", hourly.time.slice(0, 5));
+      console.log("Hourly length:", hourly.time.length);
+console.log("Daily length:", daily?.time?.length);
       const { start, end } = getTomorrowWindow(hourly);
 
       const rainHourly = hourly.precipitation || [];
@@ -1201,6 +1203,7 @@ console.log("First 5 times:", hourly.time.slice(0, 5));
   </script>
 </body>
 </html>
+
 
 
 
