@@ -372,7 +372,7 @@
 
       return daily;
     }
-        /* -----------------------------------------
+     /* -----------------------------------------
        60‑DAY TREND ANALYSIS (Headline + Secondary)
     ----------------------------------------- */
     function analyzeHistoricalTrends(daily) {
@@ -385,9 +385,7 @@
 
       const n = daily.length;
       const last7 = daily.slice(-7);
-      const last30 = daily.slice(-30);
 
-      /* Temperature anomaly */
       const overallMean = daily.reduce((s, d) => s + d.tMean, 0) / n;
       const recentMean = last7.reduce((s, d) => s + d.tMean, 0) / last7.length;
       const tempAnomaly = recentMean - overallMean;
@@ -406,7 +404,6 @@
         tempIcon = "🌦️";
       }
 
-      /* Dry / wet streaks */
       let longestDry = 0, currentDry = 0;
       let longestWet = 0, currentWet = 0;
 
@@ -428,7 +425,6 @@
         }
       }
 
-      /* Ongoing streaks */
       let ongoingDry = 0;
       for (let i = n - 1; i >= 0; i--) {
         if ((daily[i].precip || 0) < 0.01) ongoingDry++;
@@ -461,7 +457,6 @@
         precipIcon = "🌦️";
       }
 
-      /* Headline (Option B tone) */
       let headline = "";
 
       if (ongoingDry >= 3) headline = `${precipIcon} A Dry Stretch Is Underway`;
@@ -476,13 +471,13 @@
     }
 
     /* -----------------------------------------
-       72‑HOUR FORECAST FETCH (Open‑Meteo)
+       72‑HOUR FORECAST FETCH (Open‑Meteo, fixed fields)
     ----------------------------------------- */
     async function getShortTermForecast(lat, lon) {
       const url =
         `https://api.open-meteo.com/v1/forecast` +
         `?latitude=${lat}&longitude=${lon}` +
-        `&hourly=temperature_2m,precipitation,snowfall,windgusts_10m` +
+        `&hourly=temperature_2m,precipitation_sum,snowfall_sum,windgusts_10m` +
         `&forecast_days=3&timezone=auto`;
 
       const res = await fetch(url);
@@ -493,10 +488,13 @@
     }
 
     /* -----------------------------------------
-       FORECAST ALERT LOGIC (48–72 hours)
+       FORECAST ALERT LOGIC (48–72 hours window)
     ----------------------------------------- */
     function analyzeForecastAlerts(hourly) {
       const hours = hourly.time.length;
+
+      const start = Math.min(48, hours - 1);
+      const end = Math.min(72, hours);
 
       let rainTotal = 0;
       let snowTotal = 0;
@@ -504,12 +502,20 @@
       let maxTemp = -999;
       let minTemp = 999;
 
-      for (let i = 0; i < hours; i++) {
-        rainTotal += hourly.precipitation[i];
-        snowTotal += hourly.snowfall[i];
-        maxGust = Math.max(maxGust, hourly.windgusts_10m[i]);
-        maxTemp = Math.max(maxTemp, hourly.temperature_2m[i]);
-        minTemp = Math.min(minTemp, hourly.temperature_2m[i]);
+      for (let i = start; i < end; i++) {
+        const rain = hourly.precipitation_sum?.[i] ?? 0;
+        const snow = hourly.snowfall_sum?.[i] ?? 0;
+        const gust = hourly.windgusts_10m?.[i] ?? 0;
+        const t = hourly.temperature_2m?.[i];
+
+        rainTotal += rain;
+        snowTotal += snow;
+        maxGust = Math.max(maxGust, gust);
+
+        if (typeof t === "number") {
+          maxTemp = Math.max(maxTemp, t);
+          minTemp = Math.min(minTemp, t);
+        }
       }
 
       const alerts = [];
@@ -519,7 +525,7 @@
           icon: "💧",
           id: "rain",
           title: "Heavy Rain Expected",
-          detail: `Up to ${rainTotal.toFixed(2)}" of rain is forecast in the next 72 hours.`
+          detail: `Up to ${rainTotal.toFixed(2)}" of rain is forecast between 48–72 hours from now.`
         });
       }
 
@@ -528,7 +534,7 @@
           icon: "❄️",
           id: "snow",
           title: "Snowfall Expected",
-          detail: `${snowTotal.toFixed(1)}" of snow is forecast in the next 72 hours.`
+          detail: `${snowTotal.toFixed(1)}" of snow is forecast between 48–72 hours from now.`
         });
       }
 
@@ -537,25 +543,25 @@
           icon: "🌬️",
           id: "wind",
           title: "Strong Winds Ahead",
-          detail: `Wind gusts may reach ${maxGust.toFixed(0)} mph.`
+          detail: `Wind gusts may reach ${maxGust.toFixed(0)} mph in the 48–72 hour window.`
         });
       }
 
-      if (maxTemp >= 85) {
+      if (maxTemp >= 85 && maxTemp > -900) {
         alerts.push({
           icon: "🔥",
           id: "hot",
           title: "Heat Spike Expected",
-          detail: `High temperatures may exceed ${maxTemp.toFixed(0)}°F.`
+          detail: `High temperatures may exceed ${maxTemp.toFixed(0)}°F between 48–72 hours from now.`
         });
       }
 
-      if (minTemp <= 15) {
+      if (minTemp <= 15 && minTemp < 900) {
         alerts.push({
           icon: "🥶",
           id: "cold",
           title: "Bitter Cold Incoming",
-          detail: `Lows may fall to ${minTemp.toFixed(0)}°F.`
+          detail: `Lows may fall to around ${minTemp.toFixed(0)}°F between 48–72 hours from now.`
         });
       }
 
@@ -574,7 +580,7 @@
       detailBox.style.display = "none";
 
       if (alerts.length === 0) {
-        container.innerHTML = `<div class="no-alerts">No significant alerts in the next 72 hours.</div>`;
+        container.innerHTML = `<div class="no-alerts">No significant alerts in the 48–72 hour window.</div>`;
         return;
       }
 
@@ -602,7 +608,6 @@
         container.appendChild(iconEl);
       });
     }
-
     /* -----------------------------------------
        WEATHER UNDERGROUND (CURRENT CONDITIONS)
     ----------------------------------------- */
@@ -728,3 +733,4 @@
   </script>
 </body>
 </html>
+   
