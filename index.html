@@ -210,7 +210,7 @@
     <!-- Trend Module -->
     <div id="trend-module" class="trend-module">
       <div class="trend-title">Recent Weather Pattern</div>
-      <div id="trend-text" class="trend-text">Analyzing recent weather…</div>
+      <div id="trend-text" class="trend-text">Analyzing the last 60 days…</div>
     </div>
 
     <div class="footer-note" id="wu-station-footer">
@@ -257,34 +257,149 @@
       return { text: "Frigid — Stay Warm", emoji: "🥶" };
     }
 
-    /* Trend Logic */
-    function getTrendSummary(temp, dew, wind, rainRate) {
-      if (temp == null) return "Trend data unavailable.";
+    /* 60‑Day Historical Fetch (Open‑Meteo) */
+    async function getHistoricalDaily(lat, lon) {
+      const end = new Date();
+      end.setDate(end.getDate() - 1); // yesterday
+      const start = new Date();
+      start.setDate(end.getDate() - 59); // 60 days total
 
-      let parts = [];
-
-      if (temp >= 80) parts.push("Temperatures have been running warm lately");
-      else if (temp >= 60) parts.push("Mild conditions have been common recently");
-      else if (temp >= 45) parts.push("Cooler weather has been the trend");
-      else parts.push("Cold conditions have dominated recently");
-
-      if (dew != null) {
-        if (dew >= 65) parts.push("with elevated humidity");
-        else if (dew <= 35) parts.push("with noticeably dry air");
+      function fmt(d) {
+        return d.toISOString().slice(0, 10);
       }
 
-      if (wind != null && wind >= 20) parts.push("and breezy periods");
+      const url =
+        `https://api.open-meteo.com/v1/forecast` +
+        `?latitude=${lat}&longitude=${lon}` +
+        `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum` +
+        `&timezone=auto&start_date=${fmt(start)}&end_date=${fmt(end)}`;
 
-      if (rainRate != null && rainRate > 0) {
-        parts.push("along with recent rainfall");
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Historical trend fetch failed: " + res.status);
+
+      const data = await res.json();
+      if (!data.daily || !data.daily.time) {
+        throw new Error("Historical daily data unavailable.");
+      }
+
+      const days = data.daily.time.length;
+      const daily = [];
+
+      for (let i = 0; i < days; i++) {
+        const tMax = data.daily.temperature_2m_max[i];
+        const tMin = data.daily.temperature_2m_min[i];
+        const precip = data.daily.precipitation_sum[i];
+        daily.push({
+          date: data.daily.time[i],
+          tMax,
+          tMin,
+          tMean: (tMax + tMin) / 2,
+          precip
+        });
+      }
+
+      return daily;
+    }
+
+    /* Historical Trend Analysis (60 days) */
+    function analyzeHistoricalTrends(daily) {
+      if (!daily || daily.length === 0) return "Trend data unavailable.";
+
+      const n = daily.length;
+      const last7 = daily.slice(-7);
+      const last30 = daily.slice(-30);
+
+      // Overall mean temp for 60 days
+      const overallMean =
+        daily.reduce((sum, d) => sum + d.tMean, 0) / n;
+
+      // Recent 7‑day mean
+      const recentMean =
+        last7.reduce((sum, d) => sum + d.tMean, 0) / last7.length;
+
+      const tempAnomaly = recentMean - overallMean;
+
+      // Dry / wet streaks in last 60 days
+      let longestDry = 0, currentDry = 0;
+      let longestWet = 0, currentWet = 0;
+
+      for (let i = 0; i < n; i++) {
+        const p = daily[i].precip || 0;
+
+        if (p < 0.01) {
+          currentDry++;
+          longestDry = Math.max(longestDry, currentDry);
+        } else {
+          currentDry = 0;
+        }
+
+        if (p >= 0.1) {
+          currentWet++;
+          longestWet = Math.max(longestWet, currentWet);
+        } else {
+          currentWet = 0;
+        }
+      }
+
+      // Ongoing dry streak (ending yesterday)
+      let ongoingDry = 0;
+      for (let i = n - 1; i >= 0; i--) {
+        if ((daily[i].precip || 0) < 0.01) ongoingDry++;
+        else break;
+      }
+
+      // Ongoing wet streak
+      let ongoingWet = 0;
+      for (let i = n - 1; i >= 0; i--) {
+        if ((daily[i].precip || 0) >= 0.1) ongoingWet++;
+        else break;
+      }
+
+      const parts = [];
+
+      // Temperature story
+      if (Math.abs(tempAnomaly) >= 5) {
+        if (tempAnomaly > 0) {
+          parts.push(
+            `Temperatures over the past week have been running about ${tempAnomaly.toFixed(0)}° warmer than the recent 60‑day average`
+          );
+        } else {
+          parts.push(
+            `Temperatures over the past week have been running about ${Math.abs(tempAnomaly).toFixed(0)}° cooler than the recent 60‑day average`
+          );
+        }
+      } else {
+        parts.push("Temperatures this past week have been close to the recent 60‑day average");
+      }
+
+      // Dry / wet story
+      if (ongoingDry >= 3) {
+        parts.push(`with an ongoing dry stretch of ${ongoingDry} days`);
+      } else if (ongoingWet >= 3) {
+        parts.push(`with an ongoing wet stretch of ${ongoingWet} days`);
+      } else if (longestDry >= 5) {
+        parts.push(`including a notable dry spell that lasted ${longestDry} days`);
+      } else if (longestWet >= 5) {
+        parts.push(`including a notably soggy stretch that lasted ${longestWet} days`);
+      }
+
+      // Add a little 30‑day flavor
+      const last30WetDays = last30.filter(d => (d.precip || 0) >= 0.1).length;
+      const last30DryDays = last30.filter(d => (d.precip || 0) < 0.01).length;
+
+      if (last30WetDays >= 18) {
+        parts.push(`Rain has been fairly common, with ${last30WetDays} of the last 30 days seeing measurable precipitation`);
+      } else if (last30DryDays >= 20) {
+        parts.push(`It has been quite dry overall, with ${last30DryDays} of the last 30 days essentially rain‑free`);
       }
 
       let summary = parts.join(", ");
-      summary = summary.charAt(0).toUpperCase() + summary.slice(1) + ".";
+      if (!summary.endsWith(".")) summary += ".";
 
       return summary;
     }
-        /* UI Helpers */
+
+    /* UI Helpers */
     function setWUStatus(state, label, text) {
       const dot = document.getElementById("wu-status-dot");
       const labelEl = document.getElementById("wu-status-label");
@@ -390,20 +505,18 @@
           setWUStatus("pending", "Fetching Observations", "Pulling current conditions…");
           const wu = await getWUCurrentConditions(nearest.stationId, WU_API_KEY);
 
-          /* Update UI */
+          /* Current Conditions UI */
           document.getElementById("wu-temp").textContent =
             wu.temp != null ? `${wu.temp.toFixed(0)}°F` : "--";
 
           document.getElementById("wu-feels").textContent =
             wu.temp != null ? `Feels like ${wu.temp.toFixed(0)}°F` : "Feels like --";
 
-          /* Comfort Module */
           const comfort = getComfortCategory(wu.temp, wu.dewPoint);
           document.getElementById("comfort-text").textContent = comfort.text;
           document.getElementById("comfort-emoji").textContent = comfort.emoji;
           document.getElementById("wu-comfort").textContent = `Comfort: ${comfort.text}`;
 
-          /* Other Metrics */
           document.getElementById("wu-dew").textContent =
             wu.dewPoint != null ? `${wu.dewPoint.toFixed(0)}°F` : "--";
 
@@ -428,11 +541,18 @@
           document.getElementById("wu-solar").textContent =
             wu.solarRadiation != null ? `${wu.solarRadiation.toFixed(0)} W/m²` : "Solar --";
 
-          /* Trend Module */
-          const trend = getTrendSummary(wu.temp, wu.dewPoint, wu.windSpeed, wu.rainRate);
-          document.getElementById("trend-text").textContent = trend;
-
           setWUStatus("ok", "WU Connected", `Live data from ${nearest.stationId}`);
+
+          /* Historical Trend (60 days via Open‑Meteo) */
+          try {
+            const dailyHistory = await getHistoricalDaily(lat, lon);
+            const trendSummary = analyzeHistoricalTrends(dailyHistory);
+            document.getElementById("trend-text").textContent = trendSummary;
+          } catch (trendErr) {
+            console.error(trendErr);
+            document.getElementById("trend-text").textContent =
+              "Unable to load recent 60‑day trend details.";
+          }
 
         } catch (err) {
           console.error(err);
@@ -451,3 +571,4 @@
   </script>
 </body>
 </html>
+
