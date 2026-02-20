@@ -57,7 +57,7 @@
       background: #f5c84c;
     }
     .badge-dot.ok {
-      background: #ffa94d; /* bright orange OK state */
+      background: #ffa94d;
     }
     .badge-dot.error {
       background: #fb7185;
@@ -69,7 +69,7 @@
 
     /* Comfort Module */
     .comfort-module {
-      background: rgba(255, 169, 77, 0.10); /* orange tint */
+      background: rgba(255, 169, 77, 0.10);
       border: 1px solid rgba(255, 169, 77, 0.35);
       border-radius: 14px;
       padding: 1rem 1.2rem;
@@ -84,7 +84,7 @@
     .comfort-text {
       font-size: 1.1rem;
       font-weight: 600;
-      color: #ffa94d; /* primary accent */
+      color: #ffa94d;
       letter-spacing: 0.02em;
     }
 
@@ -104,7 +104,7 @@
       font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #f0b777; /* softer orange variant */
+      color: #f0b777;
       margin-bottom: 0.25rem;
     }
     .metric-value {
@@ -116,26 +116,41 @@
       color: #9aa3c2;
       margin-top: 0.15rem;
     }
+
+    /* Trend Module */
+    .trend-module {
+      margin-top: 1.6rem;
+      background: rgba(255, 169, 77, 0.10);
+      border: 1px solid rgba(255, 169, 77, 0.25);
+      border-radius: 14px;
+      padding: 1rem 1.2rem;
+    }
+    .trend-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #ffa94d;
+      margin-bottom: 0.4rem;
+      letter-spacing: 0.03em;
+    }
+    .trend-text {
+      font-size: 0.9rem;
+      color: #d8d8e0;
+      line-height: 1.35;
+    }
+
     .footer-note {
       margin-top: 1.25rem;
       font-size: 0.78rem;
-      color: #e0b27a; /* warm orange-gray */
+      color: #e0b27a;
     }
     .error-text {
       color: #fb7185;
       font-size: 0.85rem;
       margin-top: 0.5rem;
     }
-    @media (max-width: 480px) {
-      body {
-        padding: 1rem;
-      }
-      .card {
-        padding: 1.1rem;
-      }
-    }
   </style>
 </head>
+
 <body>
   <div class="card">
     <h1>828 Weather Direct</h1>
@@ -192,6 +207,12 @@
 
     <div class="error-text" id="wu-error" style="display:none;"></div>
 
+    <!-- Trend Module -->
+    <div id="trend-module" class="trend-module">
+      <div class="trend-title">Recent Weather Pattern</div>
+      <div id="trend-text" class="trend-text">Analyzing recent weather…</div>
+    </div>
+
     <div class="footer-note" id="wu-station-footer">
       Station: --
     </div>
@@ -200,13 +221,12 @@
   <script>
     const WU_API_KEY = "eba9581da59d4972a9581da59d497236";
 
-    // Comfort Logic (with Goldilocks)
+    /* Comfort Logic (with Goldilocks) */
     function getComfortCategory(temp, dew) {
       if (temp == null || dew == null) {
         return { text: "Comfort unavailable", emoji: "❓" };
       }
 
-      // Goldilocks zone
       if (temp >= 68 && temp <= 74 && dew >= 45 && dew <= 52) {
         return { text: "Goldilocks! Just right", emoji: "✨" };
       }
@@ -236,40 +256,35 @@
 
       return { text: "Frigid — Stay Warm", emoji: "🥶" };
     }
-// Trend Analysis (simple version)
-function getTrendSummary(temp, dew, wind, rainRate) {
-  if (temp == null) return "Trend data unavailable.";
 
-  let parts = [];
+    /* Trend Logic */
+    function getTrendSummary(temp, dew, wind, rainRate) {
+      if (temp == null) return "Trend data unavailable.";
 
-  // Temperature trend
-  if (temp >= 80) parts.push("Temperatures have been running warm lately");
-  else if (temp >= 60) parts.push("Mild conditions have been common recently");
-  else if (temp >= 45) parts.push("Cooler weather has been the trend");
-  else parts.push("Cold conditions have dominated recently");
+      let parts = [];
 
-  // Humidity / dew point
-  if (dew != null) {
-    if (dew >= 65) parts.push("with elevated humidity");
-    else if (dew <= 35) parts.push("with noticeably dry air");
-  }
+      if (temp >= 80) parts.push("Temperatures have been running warm lately");
+      else if (temp >= 60) parts.push("Mild conditions have been common recently");
+      else if (temp >= 45) parts.push("Cooler weather has been the trend");
+      else parts.push("Cold conditions have dominated recently");
 
-  // Wind
-  if (wind != null && wind >= 20) parts.push("and breezy periods");
+      if (dew != null) {
+        if (dew >= 65) parts.push("with elevated humidity");
+        else if (dew <= 35) parts.push("with noticeably dry air");
+      }
 
-  // Rain
-  if (rainRate != null && rainRate > 0) {
-    parts.push("along with recent rainfall");
-  }
+      if (wind != null && wind >= 20) parts.push("and breezy periods");
 
-  // Final assembly
-  let summary = parts.join(", ");
-  summary = summary.charAt(0).toUpperCase() + summary.slice(1) + ".";
+      if (rainRate != null && rainRate > 0) {
+        parts.push("along with recent rainfall");
+      }
 
-  return summary;
-}
+      let summary = parts.join(", ");
+      summary = summary.charAt(0).toUpperCase() + summary.slice(1) + ".";
 
-    // UI helpers
+      return summary;
+    }
+        /* UI Helpers */
     function setWUStatus(state, label, text) {
       const dot = document.getElementById("wu-status-dot");
       const labelEl = document.getElementById("wu-status-label");
@@ -289,7 +304,7 @@ function getTrendSummary(temp, dew, wind, rainRate) {
       el.textContent = msg;
     }
 
-    // WU calls
+    /* Weather Underground Calls */
     async function getNearestWUStation(lat, lon, apiKey) {
       const url = `https://api.weather.com/v3/location/near?geocode=${lat},${lon}&product=pws&format=json&apiKey=${apiKey}`;
 
@@ -339,7 +354,7 @@ function getTrendSummary(temp, dew, wind, rainRate) {
       };
     }
 
-    // Main flow
+    /* Main Flow */
     async function initWUWeather() {
 
       if (!WU_API_KEY || WU_API_KEY === "YOUR_WU_API_KEY_HERE") {
@@ -375,17 +390,20 @@ function getTrendSummary(temp, dew, wind, rainRate) {
           setWUStatus("pending", "Fetching Observations", "Pulling current conditions…");
           const wu = await getWUCurrentConditions(nearest.stationId, WU_API_KEY);
 
+          /* Update UI */
           document.getElementById("wu-temp").textContent =
             wu.temp != null ? `${wu.temp.toFixed(0)}°F` : "--";
 
           document.getElementById("wu-feels").textContent =
             wu.temp != null ? `Feels like ${wu.temp.toFixed(0)}°F` : "Feels like --";
 
+          /* Comfort Module */
           const comfort = getComfortCategory(wu.temp, wu.dewPoint);
           document.getElementById("comfort-text").textContent = comfort.text;
           document.getElementById("comfort-emoji").textContent = comfort.emoji;
           document.getElementById("wu-comfort").textContent = `Comfort: ${comfort.text}`;
 
+          /* Other Metrics */
           document.getElementById("wu-dew").textContent =
             wu.dewPoint != null ? `${wu.dewPoint.toFixed(0)}°F` : "--";
 
@@ -410,6 +428,10 @@ function getTrendSummary(temp, dew, wind, rainRate) {
           document.getElementById("wu-solar").textContent =
             wu.solarRadiation != null ? `${wu.solarRadiation.toFixed(0)} W/m²` : "Solar --";
 
+          /* Trend Module */
+          const trend = getTrendSummary(wu.temp, wu.dewPoint, wu.windSpeed, wu.rainRate);
+          document.getElementById("trend-text").textContent = trend;
+
           setWUStatus("ok", "WU Connected", `Live data from ${nearest.stationId}`);
 
         } catch (err) {
@@ -429,4 +451,3 @@ function getTrendSummary(temp, dew, wind, rainRate) {
   </script>
 </body>
 </html>
-
