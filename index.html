@@ -518,7 +518,10 @@
 
       return { minT, maxT, spread: maxT - minT };
     }
-        async function getShortTermForecast(lat, lon) {
+            /* -----------------------------------------
+       72‑HOUR FORECAST FETCH (Open‑Meteo)
+    ----------------------------------------- */
+    async function getShortTermForecast(lat, lon) {
       const url =
         `https://api.open-meteo.com/v1/forecast` +
         `?latitude=${lat}&longitude=${lon}` +
@@ -535,13 +538,22 @@
       return (await res.json()).hourly;
     }
 
+    /* -----------------------------------------
+       GET TOMORROW'S CALENDAR-DAY WINDOW
+       (Midnight → Midnight, Local Time)
+    ----------------------------------------- */
     function getTomorrowWindow(hourly) {
       const times = hourly.time.map(t => new Date(t));
       if (!times.length) return { start: 0, end: 0 };
 
-      const base = times[0];
-      const tomorrow = new Date(base);
-      tomorrow.setDate(base.getDate() + 1);
+      // Browser-local "today"
+      const now = new Date();
+      const tomorrow = new Date(now);
+      tomorrow.setHours(0, 0, 0, 0);
+      tomorrow.setDate(now.getDate() + 1);
+
+      const dayAfter = new Date(tomorrow);
+      dayAfter.setDate(tomorrow.getDate() + 1);
 
       const isSameDay = (a, b) =>
         a.getFullYear() === b.getFullYear() &&
@@ -558,6 +570,7 @@
         }
       }
 
+      // If Open-Meteo doesn't include tomorrow (rare), fallback to 24–48h
       if (start === null) {
         const hours = hourly.time.length;
         return {
@@ -569,6 +582,9 @@
       return { start, end };
     }
 
+    /* -----------------------------------------
+       HUMAN‑ACTION OUTLOOK ENGINE (Tomorrow)
+    ----------------------------------------- */
     function generateHumanActionOutlook(hourly) {
       if (!hourly || !hourly.time) {
         return {
@@ -578,6 +594,7 @@
         };
       }
 
+      // ⭐ Correct tomorrow window (calendar day)
       const { start, end } = getTomorrowWindow(hourly);
 
       const rainHourly = hourly.precipitation || [];
@@ -618,6 +635,9 @@
 
       const { spread } = computeDiurnalSpread(hourly, start, end);
 
+      /* -----------------------------------------
+         CATEGORY 1 — RAIN / THUNDERSTORMS
+      ----------------------------------------- */
       const convective = detectConvectiveSpike(
         rainHourly,
         dewHourly,
@@ -651,6 +671,9 @@
         };
       }
 
+      /* -----------------------------------------
+         CATEGORY 2 — COLD WEATHER
+      ----------------------------------------- */
       let minWindChill = 999;
       for (let i = start; i < end; i++) {
         const t = tempHourly[i];
@@ -673,6 +696,9 @@
         };
       }
 
+      /* -----------------------------------------
+         CATEGORY 3 — HEAT + HUMIDITY
+      ----------------------------------------- */
       if (maxDew >= 68 && maxTemp >= 82) {
         let humidityPhrase = "humid";
         if (maxDew >= 72) humidityPhrase = "very humid";
@@ -691,6 +717,9 @@
         };
       }
 
+      /* -----------------------------------------
+         CATEGORY 4 — LAYERS DAY
+      ----------------------------------------- */
       if (
         spread >= 30 &&
         maxTemp < 82 &&
@@ -706,6 +735,9 @@
         };
       }
 
+      /* -----------------------------------------
+         CATEGORY 5 — WIND
+      ----------------------------------------- */
       if (maxGust >= 30) {
         return {
           emoji: "🌬️",
@@ -716,6 +748,9 @@
         };
       }
 
+      /* -----------------------------------------
+         CATEGORY 6 — GOLDILOCKS DAY
+      ----------------------------------------- */
       if (
         maxTemp >= 68 &&
         maxTemp <= 74 &&
@@ -733,106 +768,14 @@
         };
       }
 
+      /* -----------------------------------------
+         CATEGORY 7 — FALLBACK
+      ----------------------------------------- */
       return {
         emoji: "🙂",
         headline: "A mild, uneventful day tomorrow",
         text: "Comfortable weather with no special prep needed."
       };
-    }
-
-    function analyzeHistoricalTrends(daily) {
-      if (!daily || daily.length === 0) {
-        return {
-          headline: "Trend Data Unavailable",
-          text: "Unable to analyze the last 60 days of weather."
-        };
-      }
-
-      const n = daily.length;
-      const last7 = daily.slice(-7);
-
-      const overallMean = daily.reduce((s, d) => s + d.tMean, 0) / n;
-      const recentMean = last7.reduce((s, d) => s + d.tMean, 0) / last7.length;
-      const tempAnomaly = recentMean - overallMean;
-
-      let tempPhrase = "";
-      let tempIcon = "";
-
-      if (tempAnomaly >= 5) {
-        tempPhrase = `Temperatures this past week have been about ${tempAnomaly.toFixed(0)}° warmer than average`;
-        tempIcon = "🌤️";
-      } else if (tempAnomaly <= -5) {
-        tempPhrase = `Temperatures this past week have been about ${Math.abs(tempAnomaly).toFixed(0)}° cooler than average`;
-        tempIcon = "❄️";
-      } else {
-        tempPhrase = "Temperatures this past week have been close to the recent average";
-        tempIcon = "🌦️";
-      }
-
-      let longestDry = 0, currentDry = 0;
-      let longestWet = 0, currentWet = 0;
-
-      for (let i = 0; i < n; i++) {
-        const p = daily[i].precip || 0;
-
-        if (p < 0.01) {
-          currentDry++;
-          longestDry = Math.max(longestDry, currentDry);
-        } else {
-          currentDry = 0;
-        }
-
-        if (p >= 0.1) {
-          currentWet++;
-          longestWet = Math.max(longestWet, currentWet);
-        } else {
-          currentWet = 0;
-        }
-      }
-
-      let ongoingDry = 0;
-      for (let i = n - 1; i >= 0; i--) {
-        if ((daily[i].precip || 0) < 0.01) ongoingDry++;
-        else break;
-      }
-
-      let ongoingWet = 0;
-      for (let i = n - 1; i >= 0; i--) {
-        if ((daily[i].precip || 0) >= 0.1) ongoingWet++;
-        else break;
-      }
-
-      let precipPhrase = "";
-      let precipIcon = "";
-
-      if (ongoingDry >= 3) {
-        precipPhrase = `with an ongoing dry stretch of ${ongoingDry} days`;
-        precipIcon = "🌞";
-      } else if (ongoingWet >= 3) {
-        precipPhrase = `with an ongoing wet stretch of ${ongoingWet} days`;
-        precipIcon = "🌧️";
-      } else if (longestDry >= 5) {
-        precipPhrase = `including a notable dry spell lasting ${longestDry} days`;
-        precipIcon = "🌞";
-      } else if (longestWet >= 5) {
-        precipPhrase = `including a soggy stretch lasting ${longestWet} days`;
-        precipIcon = "🌧️";
-      } else {
-        precipPhrase = "with mixed precipitation patterns";
-        precipIcon = "🌦️";
-      }
-
-      let headline = "";
-
-      if (ongoingDry >= 3) headline = `${precipIcon} A Dry Stretch Is Underway`;
-      else if (ongoingWet >= 3) headline = `${precipIcon} A Wet Pattern Has Been Persistent`;
-      else if (tempAnomaly >= 5) headline = `${tempIcon} A Warm Spell Has Taken Hold`;
-      else if (tempAnomaly <= -5) headline = `${tempIcon} A Cold Snap Is Settling In`;
-      else headline = `${tempIcon} Recent Weather Has Been Near Average`;
-
-      const text = `${tempPhrase}, ${precipPhrase}.`;
-
-      return { headline, text };
     }
         function analyzeForecastAlerts(hourly) {
       if (!hourly || !hourly.time) return [];
@@ -867,7 +810,6 @@
           validTempCount++;
         }
       }
-
       const alerts = [];
 
       if (rainTotal >= 0.50) {
@@ -1102,3 +1044,4 @@
   </script>
 </body>
 </html>
+
