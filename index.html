@@ -57,7 +57,7 @@
       background: #f5c84c;
     }
     .badge-dot.ok {
-      background: #4ade80;
+      background: #ffa94d; /* bright orange OK state */
     }
     .badge-dot.error {
       background: #fb7185;
@@ -67,10 +67,10 @@
       color: #c4c9e5;
     }
 
-    /* ⭐ Comfort Module */
+    /* Comfort Module */
     .comfort-module {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 169, 77, 0.10); /* orange tint */
+      border: 1px solid rgba(255, 169, 77, 0.35);
       border-radius: 14px;
       padding: 1rem 1.2rem;
       margin-bottom: 1.4rem;
@@ -84,7 +84,7 @@
     .comfort-text {
       font-size: 1.1rem;
       font-weight: 600;
-      color: #f7c873;
+      color: #ffa94d; /* primary accent */
       letter-spacing: 0.02em;
     }
 
@@ -104,7 +104,7 @@
       font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #8f9ac4;
+      color: #f0b777; /* softer orange variant */
       margin-bottom: 0.25rem;
     }
     .metric-value {
@@ -119,7 +119,7 @@
     .footer-note {
       margin-top: 1.25rem;
       font-size: 0.78rem;
-      color: #7f88b2;
+      color: #e0b27a; /* warm orange-gray */
     }
     .error-text {
       color: #fb7185;
@@ -151,7 +151,7 @@
       </div>
     </div>
 
-    <!-- ⭐ Comfort Module -->
+    <!-- Comfort Module -->
     <div id="comfort-module" class="comfort-module">
       <div id="comfort-emoji" class="comfort-emoji">--</div>
       <div id="comfort-text" class="comfort-text">Comfort loading…</div>
@@ -200,13 +200,13 @@
   <script>
     const WU_API_KEY = "eba9581da59d4972a9581da59d497236";
 
-    // ⭐ Comfort Logic (with Goldilocks)
+    // Comfort Logic (with Goldilocks)
     function getComfortCategory(temp, dew) {
       if (temp == null || dew == null) {
         return { text: "Comfort unavailable", emoji: "❓" };
       }
 
-      // ⭐ GOLDILOCKS ZONE
+      // Goldilocks zone
       if (temp >= 68 && temp <= 74 && dew >= 45 && dew <= 52) {
         return { text: "Goldilocks! Just right", emoji: "✨" };
       }
@@ -349,12 +349,9 @@
           document.getElementById("wu-feels").textContent =
             wu.temp != null ? `Feels like ${wu.temp.toFixed(0)}°F` : "Feels like --";
 
-          // ⭐ Update Comfort Module
           const comfort = getComfortCategory(wu.temp, wu.dewPoint);
           document.getElementById("comfort-text").textContent = comfort.text;
           document.getElementById("comfort-emoji").textContent = comfort.emoji;
-
-          // Inline comfort line
           document.getElementById("wu-comfort").textContent = `Comfort: ${comfort.text}`;
 
           document.getElementById("wu-dew").textContent =
