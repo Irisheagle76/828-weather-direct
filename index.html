@@ -508,14 +508,33 @@
     }
 
     // Detect sharp hourly rain spikes (convective signature)
-    function detectConvectiveSpike(rainHourly) {
-      if (!rainHourly) return false;
-      for (let i = 1; i < rainHourly.length; i++) {
-        if (rainHourly[i] - rainHourly[i - 1] >= 0.15) return true;
-      }
-      return false;
-    }
+ function detectConvectiveSpike(rainHourly, dewHourly, tempHourly, start, end) {
+  if (!rainHourly) return false;
 
+  // Look for any hour with a heavy burst
+  let heavyHour = false;
+  for (let i = start; i < end; i++) {
+    const r = rainHourly[i] ?? 0;
+    if (r >= 0.20) { // heavy shower threshold
+      heavyHour = true;
+      break;
+    }
+  }
+
+  // Require warm + humid for true convection
+  let maxDew = -999;
+  let maxTemp = -999;
+  for (let i = start; i < end; i++) {
+    const d = dewHourly?.[i];
+    const t = tempHourly?.[i];
+    if (typeof d === "number") maxDew = Math.max(maxDew, d);
+    if (typeof t === "number") maxTemp = Math.max(maxTemp, t);
+  }
+
+  const warmHumid = maxDew >= 65 && maxTemp >= 75;
+
+  return heavyHour && warmHumid;
+}
     // Compute diurnal spread for tomorrow
     function computeDiurnalSpread(hourly, startIndex, endIndex) {
       let minT = 999, maxT = -999;
@@ -532,18 +551,22 @@
        72‑HOUR FORECAST FETCH (Open‑Meteo)
        Using hourly temps, dew point, precip, gusts
     ----------------------------------------- */
-    async function getShortTermForecast(lat, lon) {
-      const url =
-        `https://api.open-meteo.com/v1/forecast` +
-        `?latitude=${lat}&longitude=${lon}` +
-        `&hourly=temperature_2m,dewpoint_2m,precipitation,snowfall,windgusts_10m,uv_index` +
-        `&forecast_days=3&timezone=auto`;
+   async function getShortTermForecast(lat, lon) {
+  const url =
+    `https://api.open-meteo.com/v1/forecast` +
+    `?latitude=${lat}&longitude=${lon}` +
+    `&hourly=temperature_2m,dewpoint_2m,precipitation,snowfall,windgusts_10m,uv_index` +
+    `&forecast_days=3&timezone=auto` +
+    `&temperature_unit=fahrenheit` +
+    `&dewpoint_unit=fahrenheit` +
+    `&wind_speed_unit=mph` +
+    `&precipitation_unit=inch`;
 
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Short-term forecast fetch failed: " + res.status);
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Short-term forecast fetch failed: " + res.status);
 
-      return (await res.json()).hourly;
-    }
+  return (await res.json()).hourly;
+}
 
     /* -----------------------------------------
        HUMAN‑ACTION OUTLOOK ENGINE (Tomorrow)
@@ -572,8 +595,8 @@
       const end = Math.min(48, hours);
 
       // Extract hourly deltas
-      const rainHourly = toHourlyDeltas(hourly.precipitation);
-      const snowHourly = toHourlyDeltas(hourly.snowfall);
+    const rainHourly = hourly.precipitation || [];
+    const snowHourly = hourly.snowfall || [];
 
       // Compute totals + extremes
       let rainTotal = 0;
@@ -584,8 +607,9 @@
       let maxUV = 0;
 
       for (let i = start; i < end; i++) {
-        const rain = rainHourly[i - 1] ?? 0;
+        const rain = rainHourly[i] ?? 0;
         rainTotal += rain;
+
 
         const gust = hourly.windgusts_10m?.[i] ?? 0;
         maxGust = Math.max(maxGust, gust);
@@ -612,9 +636,14 @@
       /* -----------------------------------------
          CATEGORY 1 — RAIN / THUNDERSTORMS
       ----------------------------------------- */
-      const convective = detectConvectiveSpike(rainHourly);
-      const thunderstormLikely =
-        (rainTotal >= 0.20 && maxGust >= 25) || convective;
+     const rainHourly = hourly.precipitation || [];
+const dewHourly = hourly.dewpoint_2m || [];
+const tempHourly = hourly.temperature_2m || [];
+
+const convective = detectConvectiveSpike(rainHourly, dewHourly, tempHourly, start, end);
+
+const thunderstormLikely =
+  convective && maxGust >= 25 && rainTotal >= 0.20;
 
       if (thunderstormLikely) {
         return {
@@ -626,15 +655,15 @@
         };
       }
 
-      if (rainTotal >= 0.10) {
-        return {
-          emoji: "💧",
-          headline: "Rain expected tomorrow",
-          text:
-            `Around ${rainTotal.toFixed(2)}" of rain is possible. ` +
-            "Pack an umbrella or rain jacket and consider waterproof shoes."
-        };
-      }
+   if (rainTotal >= 0.10) {
+  return {
+    emoji: "💧",
+    headline: "Showers expected tomorrow",
+    text:
+      `Scattered showers are likely, with around ${rainTotal.toFixed(2)}" of rain possible. ` +
+      "A light rain jacket or small umbrella will be handy."
+  };
+}
 
       /* -----------------------------------------
          CATEGORY 2 — COLD WEATHER (wind chill)
@@ -885,8 +914,9 @@
     function analyzeForecastAlerts(hourly) {
       const hours = hourly.time.length;
 
-      const rainHourly = toHourlyDeltas(hourly.precipitation);
-      const snowHourly = toHourlyDeltas(hourly.snowfall);
+     const rainHourly = hourly.precipitation || [];
+     const snowHourly = hourly.snowfall || [];
+
 
       const start = Math.min(12, hours - 1);
       const end = Math.min(48, hours);
@@ -899,8 +929,8 @@
       let validTempCount = 0;
 
       for (let i = start; i < end; i++) {
-        const rain = rainHourly[i - 1] ?? 0;
-        const snow = snowHourly[i - 1] ?? 0;
+       const rain = rainHourly[i] ?? 0;
+       const snow = snowHourly[i] ?? 0;
         const gust = hourly.windgusts_10m?.[i] ?? 0;
         const t = hourly.temperature_2m?.[i];
 
@@ -1134,3 +1164,4 @@
   </script>
 </body>
 </html>  
+
