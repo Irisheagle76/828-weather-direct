@@ -117,7 +117,60 @@ function getRelativeWindow(hourly, offsetStartHours, offsetEndHours) {
   const end = clamp(offsetEndHours, 0, len);
   return { start, end: Math.max(start, end) };
 }
+/**
+ * Find the first and last hour where a condition is true.
+ * Returns { firstHour, lastHour } as Date objects.
+ */
+function findEventTiming(hourly, start, end, predicate) {
+  const times = hourly.time || [];
+  let first = null;
+  let last = null;
 
+  for (let i = start; i < end; i++) {
+    if (predicate(i)) {
+      if (first === null) first = i;
+      last = i;
+    }
+  }
+
+  if (first === null) {
+    return { firstHour: null, lastHour: null };
+  }
+
+  return {
+    firstHour: new Date(times[first]),
+    lastHour: new Date(times[last])
+  };
+}
+
+/**
+ * Turn a Date into a friendly time‑of‑day phrase.
+ */
+function describeTimeOfDay(date) {
+  if (!date) return null;
+  const hour = date.getHours();
+
+  if (hour < 6) return "overnight";
+  if (hour < 10) return "early morning";
+  if (hour < 12) return "late morning";
+  if (hour < 15) return "early afternoon";
+  if (hour < 18) return "late afternoon";
+  if (hour < 21) return "evening";
+  return "late evening";
+}
+
+/**
+ * Build a short phrase like:
+ * " early morning", " from late afternoon into evening"
+ */
+function timingPhrase(timing) {
+  if (!timing.firstHour) return "";
+  const startPhrase = describeTimeOfDay(timing.firstHour);
+  const endPhrase = describeTimeOfDay(timing.lastHour);
+  if (!startPhrase && !endPhrase) return "";
+  if (startPhrase === endPhrase) return ` ${startPhrase}`;
+  return ` from ${startPhrase} into ${endPhrase}`;
+}
 /* ----------------------------------------------------
    PRECIP + TEMP ACCUMULATION HELPERS
    ---------------------------------------------------- */
