@@ -743,6 +743,7 @@ function detectMicroclimates(hourly, start, end) {
 
   return micro;
 }
+
 /* ----------------------------------------------------
    GOLDILOCKS DETECTION
    ---------------------------------------------------- */
@@ -762,8 +763,9 @@ function detectGoldilocks(qpf, thermal, wind, dew, micro) {
 
   return null;
 }
+
 /* ----------------------------------------------------
-   TEMPERATURE SWING DETECTOR (NEW)
+   TEMPERATURE SWING DETECTOR
    ---------------------------------------------------- */
 function describeTempSwing(hourly, start, end, thermal) {
   const temps = hourly.temperature_2m || [];
@@ -837,16 +839,17 @@ function buildSummary(qpf, thermal, wind, dew, micro, swingPhrase) {
 
   if (sentence1) parts.push(sentence1 + ".");
 
-  const microParts = [];
+  const microNotes = [];
 
-  if (swingPhrase) microParts.push(swingPhrase);
-  if (micro.layersDay) microParts.push("big temperature swings");
-  if (micro.ridgeWinds) microParts.push("breezy on ridges");
-  if (micro.nwFlowSnow) microParts.push("NW‑flow flurries possible");
-  if (micro.cad) microParts.push("CAD may keep temps cooler");
+  if (swingPhrase) microNotes.push(swingPhrase);
+  else if (micro.layersDay) microNotes.push("big temperature swings");
 
-  if (microParts.length > 0) {
-    parts.push(microParts.join(", ") + ".");
+  if (micro.ridgeWinds) microNotes.push("breezy on ridges");
+  if (micro.nwFlowSnow) microNotes.push("NW‑flow flurries possible");
+  if (micro.cad) microNotes.push("CAD may keep temps cooler");
+
+  if (microNotes.length > 0) {
+    parts.push(microNotes[0] + ".");
   }
 
   return parts.join(" ");
@@ -866,13 +869,11 @@ function buildGoldilocksHeadline(type) {
 }
 
 /* ----------------------------------------------------
-   HUMAN‑ACTION TEXT BUILDER (NEW)
+   HUMAN‑ACTION TEXT BUILDER (FINAL)
    ---------------------------------------------------- */
 function buildHumanActionText({ headline, summary, actions }) {
-  // Deduplicate similar actions
   const cleaned = [...new Set(actions)];
 
-  // Merge clothing duplicates
   const merged = cleaned.map(a => {
     if (a.includes("dress warmly") || a.includes("dress in layers")) {
       return "dress warmly in layers";
@@ -882,7 +883,6 @@ function buildHumanActionText({ headline, summary, actions }) {
 
   const deduped = [...new Set(merged)];
 
-  // Prioritize the top 2 actions only
   const priority = deduped.filter(a =>
     a.includes("travel") ||
     a.includes("secure") ||
@@ -895,9 +895,7 @@ function buildHumanActionText({ headline, summary, actions }) {
 
   const actionSentence =
     finalActions.length > 0
-      ? "Plan to " +
-        finalActions.join(" and ") +
-        "."
+      ? "Plan to " + finalActions.join(" and ") + "."
       : "";
 
   return (
@@ -924,50 +922,26 @@ export function getHumanActionOutlook(hourly) {
 
   const headline = buildGoldilocksHeadline(goldilocksType);
   const swingPhrase = describeTempSwing(hourly, start, end, thermal);
-function buildSummary(qpf, thermal, wind, dew, micro, swingPhrase) {
-  const parts = [];
+  const summary = buildSummary(qpf, thermal, wind, dew, micro, swingPhrase);
 
-  // Sentence 1: precip + temps + wind
-  const precipPart =
-    qpf.snowTotal >= 0.1
-      ? `Light snow (~${qpf.snowTotal.toFixed(1)}")`
-      : qpf.rainTotal >= 0.10
-      ? `Around ${qpf.rainTotal.toFixed(2)}" of rain`
-      : null;
+  const actions = buildActionList({ qpf, thermal, wind, dew, uv, micro });
 
-  const tempPart =
-    thermal.minTemp != null && thermal.maxTemp != null
-      ? `temps from ${thermal.minTemp.toFixed(0)}°F to ${thermal.maxTemp.toFixed(0)}°F`
-      : null;
+  const fullText = buildHumanActionText({
+    headline,
+    summary,
+    actions
+  });
 
-  const windPart =
-    wind.maxGust >= 30
-      ? `gusts up to ${wind.maxGust.toFixed(0)} mph`
-      : null;
-
-  const sentence1 = [precipPart, tempPart, windPart]
-    .filter(Boolean)
-    .join(", ");
-
-  if (sentence1) parts.push(sentence1 + ".");
-
-  // Sentence 2: ONE microclimate note + swing phrase
-  const microNotes = [];
-
-  if (swingPhrase) microNotes.push(swingPhrase);
-  else if (micro.layersDay) microNotes.push("big temperature swings");
-
-  if (micro.ridgeWinds) microNotes.push("breezy on ridges");
-  if (micro.nwFlowSnow) microNotes.push("NW‑flow flurries possible");
-  if (micro.cad) microNotes.push("CAD may keep temps cooler");
-
-  // Only keep the FIRST microclimate note
-  if (microNotes.length > 0) {
-    parts.push(microNotes[0] + ".");
-  }
-
-  return parts.join(" ");
+  return {
+    headline,
+    summary,
+    actions,
+    fullText,
+    text: fullText
+  };
 }
+
+
 /* ----------------------------------------------------
    PART 5 — ALERTS 2.0 + EXPORTS
    ---------------------------------------------------- */
