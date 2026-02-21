@@ -882,130 +882,104 @@ function generateHumanActionOutlook(hourly) {
         container.appendChild(iconEl);
       });
     }
-/* ----------------------------------------------------
-   CLIMATE NORMALS (Open-Meteo)
-   Fetches 30-year normals for February
-   ---------------------------------------------------- */
-async function getClimateNormals(lat, lon) {
-  const url =
-    `https://climate-api.open-meteo.com/v1/climate` +
-    `?latitude=${lat}&longitude=${lon}` +
-    `&month=2` +
-    `&temperature_2m_max=mean` +
-    `&temperature_2m_min=mean`;
 
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("Climate normals fetch failed: " + res.status);
+    /* ----------------------------------------------------
+       60‑DAY TREND ANALYSIS
+       ---------------------------------------------------- */
+    function analyzeHistoricalTrends(daily) {
+      if (!daily || daily.length === 0) {
+        return {
+          headline: "Trend Data Unavailable",
+          text: "Unable to analyze the last 60 days of weather."
+        };
+      }
 
-  const data = await res.json();
+      const n = daily.length;
+      const last7 = daily.slice(-7);
 
-  return {
-    febHigh: data.temperature_2m_max?.mean ?? null,
-    febLow: data.temperature_2m_min?.mean ?? null
-  };
-}
+      const overallMean = daily.reduce((s, d) => s + d.tMean, 0) / n;
+      const recentMean = last7.reduce((s, d) => s + d.tMean, 0) / last7.length;
+      const tempAnomaly = recentMean - overallMean;
 
-/* ----------------------------------------------------
-   60‑DAY TREND ANALYSIS
-   ---------------------------------------------------- */
-function analyzeHistoricalTrends(daily, normals) {
-    ...
-}
-   /* ----------------------------------------------------
-   60-DAY TREND USING CLIMATE NORMALS
-   ---------------------------------------------------- */
-function analyzeHistoricalTrends(daily, normals) {
-  if (!daily || daily.length < 7 || !normals) {
-    return {
-      headline: "Trend Data Unavailable",
-      text: "Not enough data to analyze recent trends."
-    };
-  }
+      let tempPhrase = "";
+      let tempIcon = "";
 
-  const { febHigh, febLow } = normals;
+      if (tempAnomaly >= 5) {
+        tempPhrase = `Temperatures this past week have been about ${tempAnomaly.toFixed(0)}° warmer than average`;
+        tempIcon = "🌤️";
+      } else if (tempAnomaly <= -5) {
+        tempPhrase = `Temperatures this past week have been about ${Math.abs(tempAnomaly).toFixed(0)}° cooler than average`;
+        tempIcon = "❄️";
+      } else {
+        tempPhrase = "Temperatures this past week have been close to the recent average";
+        tempIcon = "🌦️";
+      }
 
-  // Last 7 days
-  const last7 = daily.slice(-7);
-  const mean7 = last7.reduce((s, d) => s + d.tMean, 0) / last7.length;
+      let longestDry = 0, currentDry = 0;
+      let longestWet = 0, currentWet = 0;
 
-  // February climatological normal mean
-  const febMean = (febHigh + febLow) / 2;
+      for (let i = 0; i < n; i++) {
+        const p = daily[i].precip || 0;
 
-  const anomaly = mean7 - febMean;
+        if (p < 0.01) {
+          currentDry++;
+          longestDry = Math.max(longestDry, currentDry);
+        } else {
+          currentDry = 0;
+        }
 
-  let tempIcon = "";
-  let tempPhrase = "";
+        if (p >= 0.1) {
+          currentWet++;
+          longestWet = Math.max(longestWet, currentWet);
+        } else {
+          currentWet = 0;
+        }
+      }
 
-  if (anomaly >= 10) {
-    tempIcon = "🌤️";
-    tempPhrase = "Unseasonably warm — well above typical February temperatures";
-  } else if (anomaly >= 6) {
-    tempIcon = "🌤️";
-    tempPhrase = "Significantly warmer than normal for February";
-  } else if (anomaly >= 3) {
-    tempIcon = "🌤️";
-    tempPhrase = "Warmer than normal for this time of year";
-  } else if (anomaly <= -10) {
-    tempIcon = "❄️";
-    tempPhrase = "Unseasonably cold — well below typical February temperatures";
-  } else if (anomaly <= -6) {
-    tempIcon = "❄️";
-    tempPhrase = "Significantly colder than normal for February";
-  } else if (anomaly <= -3) {
-    tempIcon = "❄️";
-    tempPhrase = "Colder than normal for this time of year";
-  } else {
-    tempIcon = "🌦️";
-    tempPhrase = "Temperatures have been close to typical February norms";
-  }
+      let ongoingDry = 0;
+      for (let i = n - 1; i >= 0; i--) {
+        if ((daily[i].precip || 0) < 0.01) ongoingDry++;
+        else break;
+      }
 
-  // Precipitation streak logic stays the same
-  let longestDry = 0, currentDry = 0;
-  let longestWet = 0, currentWet = 0;
+      let ongoingWet = 0;
+      for (let i = n - 1; i >= 0; i--) {
+        if ((daily[i].precip || 0) >= 0.1) ongoingWet++;
+        else break;
+      }
 
-  for (let i = 0; i < daily.length; i++) {
-    const p = daily[i].precip || 0;
+      let precipPhrase = "";
+      let precipIcon = "";
 
-    if (p < 0.01) {
-      currentDry++;
-      longestDry = Math.max(longestDry, currentDry);
-    } else {
-      currentDry = 0;
+      if (ongoingDry >= 3) {
+        precipPhrase = `with an ongoing dry stretch of ${ongoingDry} days`;
+        precipIcon = "🌞";
+      } else if (ongoingWet >= 3) {
+        precipPhrase = `with an ongoing wet stretch of ${ongoingWet} days`;
+        precipIcon = "🌧️";
+      } else if (longestDry >= 5) {
+        precipPhrase = `including a notable dry spell lasting ${longestDry} days`;
+        precipIcon = "🌞";
+      } else if (longestWet >= 5) {
+        precipPhrase = `including a soggy stretch lasting ${longestWet} days`;
+        precipIcon = "🌧️";
+      } else {
+        precipPhrase = "with mixed precipitation patterns";
+        precipIcon = "🌦️";
+      }
+
+      let headline = "";
+
+      if (ongoingDry >= 3) headline = `${precipIcon} A Dry Stretch Is Underway`;
+      else if (ongoingWet >= 3) headline = `${precipIcon} A Wet Pattern Has Been Persistent`;
+      else if (tempAnomaly >= 5) headline = `${tempIcon} A Warm Spell Has Taken Hold`;
+      else if (tempAnomaly <= -5) headline = `${tempIcon} A Cold Snap Is Settling In`;
+      else headline = `${tempIcon} Recent Weather Has Been Near Average`;
+
+      const text = `${tempPhrase}, ${precipPhrase}.`;
+
+      return { headline, text };
     }
-
-    if (p >= 0.1) {
-      currentWet++;
-      longestWet = Math.max(longestWet, currentWet);
-    } else {
-      currentWet = 0;
-    }
-  }
-
-  let precipPhrase = "";
-  let precipIcon = "";
-
-  if (currentDry >= 3) {
-    precipPhrase = `with an ongoing dry stretch of ${currentDry} days`;
-    precipIcon = "🌞";
-  } else if (currentWet >= 3) {
-    precipPhrase = `with an ongoing wet stretch of ${currentWet} days`;
-    precipIcon = "🌧️";
-  } else if (longestDry >= 5) {
-    precipPhrase = `including a notable dry spell lasting ${longestDry} days`;
-    precipIcon = "🌞";
-  } else if (longestWet >= 5) {
-    precipPhrase = `including a soggy stretch lasting ${longestWet} days`;
-    precipIcon = "🌧️";
-  } else {
-    precipPhrase = "with mixed precipitation patterns";
-    precipIcon = "🌦️";
-  }
-
-  const headline = `${tempIcon} Recent Weather Pattern`;
-  const text = `${tempPhrase}, ${precipPhrase}.`;
-
-  return { headline, text };
-}
 
     /* ----------------------------------------------------
        WEATHER UNDERGROUND (STATION LOOKUP)
@@ -1109,9 +1083,8 @@ function analyzeHistoricalTrends(daily, normals) {
 
           /* 2) Historical trend (60 days) */
           try {
-           const dailyHistory = await getHistoricalDaily(lat, lon);
-const normals = await getClimateNormals(lat, lon);
-const trend = analyzeHistoricalTrends(dailyHistory, normals);
+            const dailyHistory = await getHistoricalDaily(lat, lon);
+            const trend = analyzeHistoricalTrends(dailyHistory);
 
             document.getElementById("trend-headline").textContent = trend.headline;
             document.getElementById("trend-text").textContent = trend.text;
@@ -1157,21 +1130,4 @@ const trend = analyzeHistoricalTrends(dailyHistory, normals);
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
