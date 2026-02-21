@@ -1079,10 +1079,6 @@ export function getForecastAlerts(hourly) {
 
   return alerts;
 }
-
 /* ----------------------------------------------------
    MODULE COMPLETE
    ---------------------------------------------------- */
-
-
-
