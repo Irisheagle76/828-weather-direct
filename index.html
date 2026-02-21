@@ -48,37 +48,32 @@ const LON = -82.5515;
 const TZ = "America/New_York";
 
 /* ----------------------------------------------------
-   GET TOMORROW CALENDAR WINDOW (timezone-safe)
+   TOMORROW WINDOW (calendar-safe)
 ---------------------------------------------------- */
 function getTomorrowWindow(hourly) {
-  if (!hourly.time?.length) return { start: 0, end: 0 };
+  if (!hourly.time?.length) return { start: 24, end: 48 };
 
-  const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setDate(now.getDate() + 1);
-
-  const targetDateStr = tomorrow.toISOString().split("T")[0];
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const target = tomorrow.toISOString().split("T")[0];
 
   let start = null;
   let end = null;
 
   for (let i = 0; i < hourly.time.length; i++) {
-    const dateStr = hourly.time[i].split("T")[0];
-    if (dateStr === targetDateStr) {
+    if (hourly.time[i].split("T")[0] === target) {
       if (start === null) start = i;
       end = i + 1;
     }
   }
 
-  if (start === null) {
-    return { start: 24, end: 48 };
-  }
+  if (start === null) return { start: 24, end: 48 };
 
   return { start, end };
 }
 
 /* ----------------------------------------------------
-   HUMAN ACTION OUTLOOK
+   HUMAN OUTLOOK
 ---------------------------------------------------- */
 function generateHumanActionOutlook(hourly) {
   const { start, end } = getTomorrowWindow(hourly);
@@ -118,7 +113,7 @@ function generateHumanActionOutlook(hourly) {
 }
 
 /* ----------------------------------------------------
-   GET 60-DAY HISTORY
+   60-DAY HISTORY
 ---------------------------------------------------- */
 async function getHistoricalDaily(lat, lon) {
   const end = new Date();
@@ -137,43 +132,58 @@ async function getHistoricalDaily(lat, lon) {
   const res = await fetch(url);
   const data = await res.json();
 
-  const out = [];
+  if (!data.daily) return [];
 
-  for (let i = 0; i < data.daily.time.length; i++) {
-    const tMax = data.daily.temperature_2m_max[i];
-    const tMin = data.daily.temperature_2m_min[i];
-    const precip = data.daily.precipitation_sum[i];
-
-    out.push({
-      date: data.daily.time[i],
-      tMean: (tMax + tMin) / 2,
-      precip: precip ?? 0
-    });
-  }
-
-  return out;
+  return data.daily.time.map((date, i) => ({
+    date,
+    tMean:
+      (data.daily.temperature_2m_max[i] +
+        data.daily.temperature_2m_min[i]) / 2,
+    precip: data.daily.precipitation_sum[i] ?? 0
+  }));
 }
 
 /* ----------------------------------------------------
-   GET CLIMATE NORMALS (1991–2020)
+   CLIMATE NORMALS (SAFE VERSION)
 ---------------------------------------------------- */
 async function getMonthlyNormals(lat, lon) {
-  const url =
-    `https://climate-api.open-meteo.com/v1/climate` +
-    `?latitude=${lat}&longitude=${lon}` +
-    `&start_year=1991&end_year=2020` +
-    `&monthly=temperature_2m_mean` +
-    `&timezone=${TZ}`;
+  try {
+    const url =
+      `https://climate-api.open-meteo.com/v1/climate` +
+      `?latitude=${lat}&longitude=${lon}` +
+      `&start_year=1991&end_year=2020` +
+      `&monthly=temperature_2m_mean` +
+      `&timezone=${TZ}`;
 
-  const res = await fetch(url);
-  const data = await res.json();
-  return data.monthly.temperature_2m_mean;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (!data.monthly?.temperature_2m_mean) {
+      throw new Error("Normals unavailable");
+    }
+
+    return data.monthly.temperature_2m_mean;
+  } catch {
+    console.warn("Using fallback Asheville normals.");
+
+    return [
+      39, 42, 50, 59, 67, 74,
+      78, 77, 71, 60, 49, 41
+    ];
+  }
 }
 
 /* ----------------------------------------------------
-   ANALYZE TRENDS (vs real normals)
+   TREND ANALYSIS
 ---------------------------------------------------- */
 function analyzeHistoricalTrends(daily, normals) {
+  if (!daily.length) {
+    return {
+      headline: "Trend Unavailable",
+      text: "Historical data unavailable."
+    };
+  }
+
   const last7 = daily.slice(-7);
 
   let anomalySum = 0;
@@ -187,12 +197,21 @@ function analyzeHistoricalTrends(daily, normals) {
   const anomaly = anomalySum / last7.length;
 
   if (anomaly > 5)
-    return { headline: "Recent Warm Spell", text: `Past week ~${anomaly.toFixed(1)}° above normal.` };
+    return {
+      headline: "Recent Warm Spell",
+      text: `Past week about ${anomaly.toFixed(1)}° above normal.`
+    };
 
   if (anomaly < -5)
-    return { headline: "Recent Cold Spell", text: `Past week ~${anomaly.toFixed(1)}° below normal.` };
+    return {
+      headline: "Recent Cold Spell",
+      text: `Past week about ${anomaly.toFixed(1)}° below normal.`
+    };
 
-  return { headline: "Near Normal Pattern", text: "Temperatures close to seasonal averages." };
+  return {
+    headline: "Near Seasonal Pattern",
+    text: "Temperatures close to average for this time of year."
+  };
 }
 
 /* ----------------------------------------------------
@@ -209,6 +228,10 @@ async function loadWeather() {
 
     const forecastRes = await fetch(forecastURL);
     const forecastData = await forecastRes.json();
+
+    if (!forecastData.hourly) {
+      throw new Error("Forecast data unavailable");
+    }
 
     const outlook = generateHumanActionOutlook(forecastData.hourly);
 
@@ -232,7 +255,9 @@ async function loadWeather() {
     `;
   } catch (err) {
     document.getElementById("content").innerHTML =
-      "<div class='card alert'><h2>Error Loading Forecast</h2><p>" + err.message + "</p></div>";
+      "<div class='card alert'><h2>Error Loading Forecast</h2><p>" +
+      err.message +
+      "</p></div>";
   }
 }
 
