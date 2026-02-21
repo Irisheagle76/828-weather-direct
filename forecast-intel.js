@@ -635,12 +635,6 @@ function analyzeThermalProfile(hourly, start, end) {
    PART 4 — HUMAN‑ACTION OUTLOOK (STRUCTURED OUTPUT)
    ---------------------------------------------------- */
 
-/* ---------------- DAY NAME HELPER ---------------- */
-function dayName(date) {
-  if (!date) return "";
-  return date.toLocaleDateString(undefined, { weekday: "long" });
-}
-
 /* ---------------- TIME OF DAY HELPER ---------------- */
 function describeTimeOfDay(date) {
   if (!date) return null;
