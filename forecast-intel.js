@@ -632,192 +632,277 @@ function analyzeThermalProfile(hourly, start, end) {
   };
 }
 /* ----------------------------------------------------
-   PART 4 — HUMAN‑ACTION OUTLOOK 2.0
+   PART 4 — HUMAN‑ACTION OUTLOOK (STRUCTURED OUTPUT)
    ---------------------------------------------------- */
 
-/**
- * Generate a human‑friendly outlook for tomorrow using:
- * - QPF analysis (rain/snow categories, convective, NW‑flow)
- * - Thermal profile (rain/snow/mix, CAD, freezing drizzle)
- * - Wind gusts
- * - Dewpoint (humidity)
- * - UV index
- */
-function buildHumanActionOutlook(qpf, thermal, wind, dew, uv) {
-  const { rain, snow, convective, stratiform, nwFlowSnow, rainTotal, snowTotal } = qpf;
-  const { precipType, freezingDrizzle, cad, minTemp, maxTemp, wetBulbMin } = thermal;
-  const { maxGust } = wind;
-  const { maxDew } = dew;
-  const maxUV = uv;
-
-  /* ----------------------------------------------------
-     1) SNOW‑RELATED OUTLOOKS
-     ---------------------------------------------------- */
-  if (snow.severity >= 3) {
-    // Light accumulation or more
-    return {
-      emoji: "❄️",
-      headline: snow.label,
-      text: `Expect around ${snowTotal.toFixed(1)}" of snow. Roads may become slick, especially early.`
-    };
-  }
-
-  if (nwFlowSnow && snowTotal < 1.0) {
-    return {
-      emoji: "🌨️",
-      headline: "NW‑flow snow showers",
-      text: "Light, intermittent snow showers possible — classic Asheville upslope pattern."
-    };
-  }
-
-  if (snow.severity === 2) {
-    return {
-      emoji: "🌨️",
-      headline: "Dusting possible",
-      text: "A light coating on grassy surfaces is possible, especially in the morning."
-    };
-  }
-
-  if (freezingDrizzle) {
-    return {
-      emoji: "🧊",
-      headline: "Freezing drizzle possible",
-      text: "Light icing may occur on elevated surfaces. Use caution on bridges and overpasses."
-    };
-  }
-
-  /* ----------------------------------------------------
-     2) RAIN‑RELATED OUTLOOKS
-     ---------------------------------------------------- */
-  if (rain.severity >= 4) {
-    return {
-      emoji: "🌧️",
-      headline: rain.label,
-      text: `Around ${rainTotal.toFixed(2)}" of rain expected. Roads may be wet all day.`
-    };
-  }
-
-  if (convective) {
-    return {
-      emoji: "⛈️",
-      headline: "Downpours possible",
-      text: "A few heavier showers or thunderstorms may develop in the afternoon."
-    };
-  }
-
-  if (rain.severity === 3) {
-    return {
-      emoji: "🌦️",
-      headline: "Light rain expected",
-      text: "On‑and‑off light rain. A jacket or umbrella will help."
-    };
-  }
-
-  if (rain.severity === 2) {
-    return {
-      emoji: "🌤️",
-      headline: "Spotty showers",
-      text: "Most of the day stays dry, but a brief shower is possible."
-    };
-  }
-
-  /* ----------------------------------------------------
-     3) WIND‑RELATED OUTLOOKS (Asheville‑tuned)
-     ---------------------------------------------------- */
-  if (maxGust >= 40) {
-    return {
-      emoji: "🌬️",
-      headline: "Strong winds",
-      text: "Secure outdoor items. Gusts may exceed 40 mph."
-    };
-  }
-
-  if (maxGust >= 30) {
-    return {
-      emoji: "💨",
-      headline: "Gusty conditions",
-      text: "Expect noticeable wind throughout the day."
-    };
-  }
-
-  if (maxGust >= 20) {
-    return {
-      emoji: "🌬️",
-      headline: "Breezy at times",
-      text: "Light jackets recommended, especially in the morning."
-    };
-  }
-
-  /* ----------------------------------------------------
-     4) HEAT / HUMIDITY / UV
-     ---------------------------------------------------- */
-  if (maxTemp >= 88 && maxDew >= 68) {
-    return {
-      emoji: "🥵",
-      headline: "Hot and humid",
-      text: "Hydrate and avoid prolonged sun exposure."
-    };
-  }
-
-  if (maxUV >= 7 && rainTotal < 0.05) {
-    return {
-      emoji: "🌞",
-      headline: "High UV index",
-      text: "Sunscreen recommended, especially midday."
-    };
-  }
-
-  /* ----------------------------------------------------
-     5) COLD / CAD / CHILL
-     ---------------------------------------------------- */
-  if (cad && precipType !== "snow") {
-    return {
-      emoji: "🧊",
-      headline: "Cold‑air damming",
-      text: "Expect chilly, damp conditions with a raw feel."
-    };
-  }
-
-  if (minTemp <= 32 && rainTotal < 0.05) {
-    return {
-      emoji: "🥶",
-      headline: "Cold morning",
-      text: "Frost possible early. Dress warmly."
-    };
-  }
-
-  /* ----------------------------------------------------
-     6) GOLDILOCKS DAY (Asheville’s favorite)
-     ---------------------------------------------------- */
-  if (
-    maxTemp >= 65 &&
-    maxTemp <= 75 &&
-    maxDew >= 45 &&
-    maxDew <= 55 &&
-    rainTotal < 0.05 &&
-    maxGust < 15
-  ) {
-    return {
-      emoji: "🌟",
-      headline: "Goldilocks Day!",
-      text: "Mild temps, low humidity, light winds — a perfect Asheville day."
-    };
-  }
-
-  /* ----------------------------------------------------
-     7) DEFAULT MILD DAY
-     ---------------------------------------------------- */
-  return {
-    emoji: "🙂",
-    headline: "A mild, uneventful day",
-    text: "Comfortable weather with no special prep needed."
-  };
+/* ---------------- DAY NAME HELPER ---------------- */
+function dayName(date) {
+  if (!date) return "";
+  return date.toLocaleDateString(undefined, { weekday: "long" });
 }
 
-/**
- * Public function used by index.html
- * This wraps all the analysis into one call.
- */
+/* ---------------- TIME OF DAY HELPER ---------------- */
+function describeTimeOfDay(date) {
+  if (!date) return null;
+  const hour = date.getHours();
+
+  if (hour < 6) return "overnight";
+  if (hour < 10) return "early morning";
+  if (hour < 12) return "late morning";
+  if (hour < 15) return "early afternoon";
+  if (hour < 18) return "late afternoon";
+  if (hour < 21) return "evening";
+  return "late evening";
+}
+
+/* ---------------- TIMING PHRASE BUILDER ---------------- */
+function timingPhrase(timing) {
+  if (!timing.firstHour) return "";
+
+  const startDay = dayName(timing.firstHour);
+  const endDay = dayName(timing.lastHour);
+
+  const startPhrase = describeTimeOfDay(timing.firstHour);
+  const endPhrase = describeTimeOfDay(timing.lastHour);
+
+  if (startDay === endDay && startPhrase === endPhrase) {
+    return ` ${startDay} ${startPhrase}`;
+  }
+
+  if (startDay === endDay) {
+    return ` ${startDay} from ${startPhrase} into ${endPhrase}`;
+  }
+
+  return ` from ${startDay} ${startPhrase} into ${endDay} ${endPhrase}`;
+}
+
+/* ----------------------------------------------------
+   ACTION RECOMMENDATIONS
+   ---------------------------------------------------- */
+function buildActionList({ qpf, thermal, wind, dew, uv, micro }) {
+  const actions = [];
+
+  /* ---------------- RAIN PREP ---------------- */
+  if (qpf.rainTotal >= 0.10) {
+    actions.push("carry an umbrella");
+    actions.push("wear waterproof shoes or a rain jacket");
+  }
+
+  /* ---------------- SNOW PREP ---------------- */
+  if (qpf.snowTotal >= 0.1) {
+    actions.push("allow extra travel time");
+    actions.push("use caution on bridges and overpasses");
+    actions.push("dress warmly");
+  }
+
+  /* ---------------- COLD PREP ---------------- */
+  if (thermal.minTemp != null && thermal.minTemp <= 35) {
+    actions.push("dress in warm layers");
+    actions.push("wear gloves and a hat");
+  }
+
+  /* ---------------- HEAT / HUMIDITY PREP ---------------- */
+  if (thermal.maxTemp != null && thermal.maxTemp >= 82) {
+    actions.push("stay hydrated");
+    actions.push("wear light clothing");
+  }
+  if (dew.maxDew >= 65) {
+    actions.push("take breaks if outdoors");
+  }
+
+  /* ---------------- UV PREP ---------------- */
+  if (uv >= 6) {
+    actions.push("apply sunscreen");
+    actions.push("wear a hat or sunglasses");
+  }
+
+  /* ---------------- WIND PREP ---------------- */
+  if (wind.maxGust >= 30) {
+    actions.push("secure outdoor items");
+    actions.push("avoid loose hats");
+  }
+
+  /* ---------------- LAYERS DAY ---------------- */
+  if (micro.layersDay) {
+    actions.push("dress in layers — big temperature swings expected");
+  }
+
+  /* ---------------- MICROCLIMATE ACTIONS ---------------- */
+  if (micro.nwFlowSnow) {
+    actions.push("watch for slick spots on the Blue Ridge Parkway");
+  }
+
+  if (micro.cad) {
+    actions.push("be alert for freezing drizzle in sheltered valleys");
+  }
+
+  if (micro.ridgeWinds) {
+    actions.push("expect stronger winds on ridgelines");
+  }
+
+  return actions;
+}
+
+/* ----------------------------------------------------
+   MICROCLIMATE DETECTION
+   ---------------------------------------------------- */
+function detectMicroclimates(hourly, start, end) {
+  const micro = {
+    nwFlowSnow: false,
+    cad: false,
+    ridgeWinds: false,
+    layersDay: false
+  };
+
+  const temps = hourly.temperature_2m;
+  const dew = hourly.dewpoint_2m;
+  const windDir = hourly.winddirection_10m;
+  const gusts = hourly.windgusts_10m;
+
+  /* ---------------- NW-FLOW SNOW ---------------- */
+  for (let i = start; i < end; i++) {
+    const dir = windDir?.[i] ?? 0;
+    const temp = temps?.[i] ?? 40;
+    const snow = hourly.snowfall?.[i] ?? 0;
+
+    if (dir >= 290 && dir <= 330 && temp <= 36 && snow > 0.05) {
+      micro.nwFlowSnow = true;
+    }
+  }
+
+  /* ---------------- COLD-AIR DAMMING ---------------- */
+  for (let i = start; i < end; i++) {
+    const dir = windDir?.[i] ?? 0;
+    const temp = temps?.[i] ?? 50;
+    const dewpt = dew?.[i] ?? 40;
+
+    if (dir >= 20 && dir <= 80 && temp <= 45 && Math.abs(temp - dewpt) < 3) {
+      micro.cad = true;
+    }
+  }
+
+  /* ---------------- RIDGE VS VALLEY WINDS ---------------- */
+  for (let i = start; i < end; i++) {
+    if ((gusts?.[i] ?? 0) >= 35) {
+      micro.ridgeWinds = true;
+    }
+  }
+
+  /* ---------------- LAYERS DAY ---------------- */
+  const minT = Math.min(...temps.slice(start, end));
+  const maxT = Math.max(...temps.slice(start, end));
+  if (maxT - minT >= 22) {
+    micro.layersDay = true;
+  }
+
+  return micro;
+}
+
+/* ----------------------------------------------------
+   GOLDILOCKS DETECTION
+   ---------------------------------------------------- */
+function detectGoldilocks(qpf, thermal, wind, dew, micro) {
+  const { maxTemp, minTemp } = thermal;
+
+  const perfectTemp = maxTemp >= 68 && maxTemp <= 74;
+  const perfectDew = dew.maxDew >= 45 && dew.maxDew <= 52;
+  const calmWind = wind.maxGust < 20;
+  const dry = qpf.rainTotal < 0.05 && qpf.snowTotal < 0.05;
+  const lowUV = dew.maxUV < 6;
+
+  if (perfectTemp && perfectDew && calmWind && dry && lowUV) {
+    return "full";
+  }
+
+  if (perfectTemp && dry && wind.maxGust < 25 && minTemp < 45) {
+    return "afternoon";
+  }
+
+  if (perfectTemp && dry && micro.ridgeWinds) {
+    return "valleys";
+  }
+
+  if (perfectTemp && dew.maxDew > 60) {
+    return "earlyMuggyLate";
+  }
+
+  return null;
+}
+
+/* ----------------------------------------------------
+   SUMMARY BUILDER
+   ---------------------------------------------------- */
+function buildSummary(qpf, thermal, wind, dew, micro) {
+  const parts = [];
+
+  if (qpf.rainTotal >= 0.10) {
+    parts.push(`Expect around ${qpf.rainTotal.toFixed(2)}" of rain`);
+  }
+
+  if (qpf.snowTotal >= 0.1) {
+    parts.push(`Light snow with around ${qpf.snowTotal.toFixed(1)}" possible`);
+  }
+
+  if (qpf.convective) {
+    parts.push("A few heavier showers or thunderstorms are possible");
+  }
+
+  if (thermal.maxTemp != null && thermal.minTemp != null) {
+    parts.push(
+      `Temperatures ranging from ${thermal.minTemp.toFixed(
+        0
+      )}°F to ${thermal.maxTemp.toFixed(0)}°F`
+    );
+  }
+
+  if (wind.maxGust >= 30) {
+    parts.push(`Wind gusts up to ${wind.maxGust.toFixed(0)} mph`);
+  }
+
+  if (dew.maxDew >= 65) {
+    parts.push("Muggy conditions at times");
+  }
+
+  if (micro.layersDay) {
+    parts.push("Big temperature swings — dress in layers");
+  }
+
+  if (micro.nwFlowSnow) {
+    parts.push("Classic NW‑flow setup — flurries possible even if radar looks quiet");
+  }
+
+  if (micro.cad) {
+    parts.push("Cold‑air damming may keep temperatures cooler than expected");
+  }
+
+  if (micro.ridgeWinds) {
+    parts.push("Breezy on the ridges, calmer in the valleys");
+  }
+
+  return parts.join(". ") + ".";
+}
+
+/* ----------------------------------------------------
+   GOLDILOCKS HEADLINE BUILDER
+   ---------------------------------------------------- */
+function buildGoldilocksHeadline(type) {
+  switch (type) {
+    case "full":
+      return "✨ Goldilocks Day!";
+    case "afternoon":
+      return "✨ Goldilocks Afternoon!";
+    case "valleys":
+      return "✨ Goldilocks in the Valleys!";
+    case "earlyMuggyLate":
+      return "✨ Goldilocks Early, Muggy Late!";
+    default:
+      return null;
+  }
+}
+
+/* ----------------------------------------------------
+   MAIN HUMAN‑ACTION OUTLOOK EXPORT
+   ---------------------------------------------------- */
 export function getHumanActionOutlook(hourly) {
   const { start, end } = getTomorrowWindow(hourly);
 
@@ -827,7 +912,30 @@ export function getHumanActionOutlook(hourly) {
   const dew = summarizeDewAndUV(hourly, start, end);
   const uv = dew.maxUV;
 
-  return buildHumanActionOutlook(qpf, thermal, wind, dew, uv);
+  const micro = detectMicroclimates(hourly, start, end);
+  const goldilocksType = detectGoldilocks(qpf, thermal, wind, dew, micro);
+
+  const headline = buildGoldilocksHeadline(goldilocksType);
+  const summary = buildSummary(qpf, thermal, wind, dew, micro);
+
+  const actions = buildActionList({ qpf, thermal, wind, dew, uv, micro });
+
+  const actionText =
+    actions.length > 0
+      ? "You may want to " +
+        actions.join(", ").replace(/,([^,]*)$/, " and$1") +
+        "."
+      : "";
+
+  return {
+    headline,
+    summary,
+    actions,
+    fullText:
+      (headline ? headline + "\n" : "") +
+      summary +
+      (actionText ? " " + actionText : "")
+  };
 }
 /* ----------------------------------------------------
    PART 5 — ALERTS 2.0 + EXPORTS
