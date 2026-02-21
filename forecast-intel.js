@@ -743,7 +743,25 @@ function detectMicroclimates(hourly, start, end) {
 
   return micro;
 }
+/* ----------------------------------------------------
+   GOLDILOCKS DETECTION
+   ---------------------------------------------------- */
+function detectGoldilocks(qpf, thermal, wind, dew, micro) {
+  const { maxTemp, minTemp } = thermal;
 
+  const perfectTemp = maxTemp >= 68 && maxTemp <= 74;
+  const perfectDew = dew.maxDew >= 45 && dew.maxDew <= 52;
+  const calmWind = wind.maxGust < 20;
+  const dry = qpf.rainTotal < 0.05 && qpf.snowTotal < 0.05;
+  const lowUV = dew.maxUV < 6;
+
+  if (perfectTemp && perfectDew && calmWind && dry && lowUV) return "full";
+  if (perfectTemp && dry && wind.maxGust < 25 && minTemp < 45) return "afternoon";
+  if (perfectTemp && dry && micro.ridgeWinds) return "valleys";
+  if (perfectTemp && dew.maxDew > 60) return "earlyMuggyLate";
+
+  return null;
+}
 /* ----------------------------------------------------
    TEMPERATURE SWING DETECTOR (NEW)
    ---------------------------------------------------- */
