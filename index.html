@@ -111,7 +111,7 @@
     }
 
     /* ----------------------------------------------------
-       COMFORT MODULE (NOW)
+       COMFORT MODULE
        ---------------------------------------------------- */
     .comfort-module {
       background: rgba(255, 169, 77, 0.10);
@@ -153,7 +153,7 @@
     }
 
     /* ----------------------------------------------------
-       HUMAN-ACTION OUTLOOK (TOMORROW)
+       HUMAN-ACTION OUTLOOK
        ---------------------------------------------------- */
     .action-module {
       background: rgba(120, 180, 255, 0.10);
@@ -482,6 +482,7 @@
 
     /* ----------------------------------------------------
        HISTORICAL DAILY DATA (60 days)
+       (Corrected: includes date for normals matching)
        ---------------------------------------------------- */
     async function getHistoricalDaily(lat, lon) {
       const end = new Date();
@@ -522,7 +523,7 @@
           tMax,
           tMin,
           precip: precip ?? 0,
-          date: data.daily.time[i]
+          date: data.daily.time[i]   // ⭐ REQUIRED for daily normals matching
         });
       }
 
@@ -632,7 +633,6 @@
         precipNorm: data.daily.precipitation_sum_mean
       };
     }
-
     /* ----------------------------------------------------
        GET TOMORROW'S CALENDAR-DAY WINDOW
        ---------------------------------------------------- */
@@ -664,6 +664,7 @@
       }
 
       if (start === null) {
+        // Fallback: use hours 24–48
         return { start: 24, end: 48 };
       }
 
@@ -737,7 +738,7 @@
         };
       }
 
-      /* --- LAYERS --- */
+      /* --- LAYERS DAY --- */
       if (spread >= 30 && rainTotal < 0.10) {
         return {
           emoji: "🏔️",
@@ -880,7 +881,6 @@
 
       return { headline, text };
     }
-
     /* ----------------------------------------------------
        FORECAST ALERT LOGIC (12–48 hours)
        ---------------------------------------------------- */
@@ -1051,7 +1051,6 @@
         stationId: obs.stationID
       };
     }
-
     /* ----------------------------------------------------
        MAIN INITIALIZATION
        ---------------------------------------------------- */
@@ -1068,7 +1067,9 @@
         const lon = pos.coords.longitude;
 
         try {
-          /* 1) Nearest WU station + current conditions */
+          /* ----------------------------------------------------
+             1) WEATHER UNDERGROUND — STATION + CURRENT CONDITIONS
+             ---------------------------------------------------- */
           const nearest = await getNearestWUStation(lat, lon, WU_API_KEY);
           const wu = await getWUCurrentConditions(nearest.stationId, WU_API_KEY);
 
@@ -1106,7 +1107,9 @@
           document.getElementById("wu-station-footer").textContent =
             `Live data from Weather Underground Station ${nearest.stationId}`;
 
-          /* 2) Historical trend (last 7 days vs daily normals) */
+          /* ----------------------------------------------------
+             2) HISTORICAL TREND — 7‑DAY ANOMALY vs DAILY NORMALS
+             ---------------------------------------------------- */
           try {
             const dailyHistory = await getHistoricalDaily(lat, lon);
             const normals = await getDailyNormals(lat, lon);
@@ -1121,15 +1124,19 @@
               "Unable to load recent 7‑day trend details.";
           }
 
-          /* 3) Short‑term forecast: Human‑Action Outlook + Alerts */
+          /* ----------------------------------------------------
+             3) SHORT‑TERM FORECAST — OUTLOOK + ALERTS
+             ---------------------------------------------------- */
           try {
             const hourly = await getShortTermForecast(lat, lon);
 
+            // Human‑Action Outlook
             const outlook = generateHumanActionOutlook(hourly);
             document.getElementById("action-emoji").textContent = outlook.emoji;
             document.getElementById("action-headline").textContent = outlook.headline;
             document.getElementById("action-text").textContent = outlook.text;
 
+            // Alerts
             const alerts = analyzeForecastAlerts(hourly);
             renderForecastIcons(alerts);
           } catch (fcErr) {
@@ -1140,6 +1147,7 @@
             document.getElementById("action-text").textContent =
               "We couldn’t load tomorrow’s forecast data.";
           }
+
         } catch (err) {
           console.error("WU init error:", err);
           setWUStatus("error", "WU Error", "Unable to load Weather Underground data.");
@@ -1156,3 +1164,7 @@
   </script>
 </body>
 </html>
+
+
+
+
