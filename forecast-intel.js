@@ -869,23 +869,34 @@ function buildGoldilocksHeadline(type) {
    HUMAN‑ACTION TEXT BUILDER (NEW)
    ---------------------------------------------------- */
 function buildHumanActionText({ headline, summary, actions }) {
+  // Deduplicate similar actions
   const cleaned = [...new Set(actions)];
 
-  const priority = cleaned.filter(a =>
+  // Merge clothing duplicates
+  const merged = cleaned.map(a => {
+    if (a.includes("dress warmly") || a.includes("dress in layers")) {
+      return "dress warmly in layers";
+    }
+    return a;
+  });
+
+  const deduped = [...new Set(merged)];
+
+  // Prioritize the top 2 actions only
+  const priority = deduped.filter(a =>
     a.includes("travel") ||
     a.includes("secure") ||
-    a.includes("dress warmly") ||
-    a.includes("dress in layers")
+    a.includes("dress warmly")
   );
 
-  const finalActions = priority.length >= 3
-    ? priority.slice(0, 3)
-    : cleaned.slice(0, 3);
+  const finalActions = priority.length >= 2
+    ? priority.slice(0, 2)
+    : deduped.slice(0, 2);
 
   const actionSentence =
     finalActions.length > 0
-      ? "You may want to " +
-        finalActions.join(", ").replace(/,([^,]*)$/, " and$1") +
+      ? "Plan to " +
+        finalActions.join(" and ") +
         "."
       : "";
 
@@ -913,23 +924,49 @@ export function getHumanActionOutlook(hourly) {
 
   const headline = buildGoldilocksHeadline(goldilocksType);
   const swingPhrase = describeTempSwing(hourly, start, end, thermal);
-  const summary = buildSummary(qpf, thermal, wind, dew, micro, swingPhrase);
+function buildSummary(qpf, thermal, wind, dew, micro, swingPhrase) {
+  const parts = [];
 
-  const actions = buildActionList({ qpf, thermal, wind, dew, uv, micro });
+  // Sentence 1: precip + temps + wind
+  const precipPart =
+    qpf.snowTotal >= 0.1
+      ? `Light snow (~${qpf.snowTotal.toFixed(1)}")`
+      : qpf.rainTotal >= 0.10
+      ? `Around ${qpf.rainTotal.toFixed(2)}" of rain`
+      : null;
 
-  const fullText = buildHumanActionText({
-    headline,
-    summary,
-    actions
-  });
+  const tempPart =
+    thermal.minTemp != null && thermal.maxTemp != null
+      ? `temps from ${thermal.minTemp.toFixed(0)}°F to ${thermal.maxTemp.toFixed(0)}°F`
+      : null;
 
-  return {
-    headline,
-    summary,
-    actions,
-    fullText,
-    text: fullText
-  };
+  const windPart =
+    wind.maxGust >= 30
+      ? `gusts up to ${wind.maxGust.toFixed(0)} mph`
+      : null;
+
+  const sentence1 = [precipPart, tempPart, windPart]
+    .filter(Boolean)
+    .join(", ");
+
+  if (sentence1) parts.push(sentence1 + ".");
+
+  // Sentence 2: ONE microclimate note + swing phrase
+  const microNotes = [];
+
+  if (swingPhrase) microNotes.push(swingPhrase);
+  else if (micro.layersDay) microNotes.push("big temperature swings");
+
+  if (micro.ridgeWinds) microNotes.push("breezy on ridges");
+  if (micro.nwFlowSnow) microNotes.push("NW‑flow flurries possible");
+  if (micro.cad) microNotes.push("CAD may keep temps cooler");
+
+  // Only keep the FIRST microclimate note
+  if (microNotes.length > 0) {
+    parts.push(microNotes[0] + ".");
+  }
+
+  return parts.join(" ");
 }
 /* ----------------------------------------------------
    PART 5 — ALERTS 2.0 + EXPORTS
