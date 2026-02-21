@@ -840,6 +840,140 @@ export function getForecastAlerts(hourly) {
 
   const alerts = [];
 
+  // Timing windows
+  const rainTiming = findEventTiming(
+    hourly,
+    start,
+    end,
+    i => (hourly.precipitation?.[i] ?? 0) > 0.02
+  );
+
+  const snowTiming = findEventTiming(
+    hourly,
+    start,
+    end,
+    i => (hourly.snowfall?.[i] ?? 0) > 0.02
+  );
+
+  const windTiming = findEventTiming(
+    hourly,
+    start,
+    end,
+    i => (hourly.windgusts_10m?.[i] ?? 0) >= 30
+  );
+
+  /* ---------------- SNOW ALERTS ---------------- */
+  if (qpf.snow.severity >= 3) {
+    alerts.push({
+      icon: "❄️",
+      id: "snow",
+      title: qpf.snow.label,
+      detail: `Around ${qpf.snowTotal?.toFixed?.(1) ?? qpf.snowTotal}" of snow expected${timingPhrase(
+        snowTiming
+      )}. Roads may become slick.`
+    });
+  }
+
+  if (qpf.nwFlowSnow && qpf.snow.severity <= 2) {
+    alerts.push({
+      icon: "🌨️",
+      id: "nwflow",
+      title: "NW‑flow snow showers",
+      detail: `Light upslope snow showers possible${timingPhrase(
+        snowTiming
+      )} — classic Asheville pattern.`
+    });
+  }
+
+  if (thermal.freezingDrizzle) {
+    alerts.push({
+      icon: "🧊",
+      id: "fzdrizzle",
+      title: "Freezing drizzle possible",
+      detail: "Light icing may occur on elevated surfaces. Use caution on bridges and overpasses."
+    });
+  }
+
+  /* ---------------- RAIN ALERTS ---------------- */
+  if (qpf.rain.severity >= 4) {
+    alerts.push({
+      icon: "🌧️",
+      id: "rain",
+      title: qpf.rain.label,
+      detail: `Around ${qpf.rainTotal?.toFixed?.(2) ?? qpf.rainTotal}" of rain expected${timingPhrase(
+        rainTiming
+      )}. Roads may be wet.`
+    });
+  }
+
+  if (qpf.convective) {
+    alerts.push({
+      icon: "⛈️",
+      id: "tstorms",
+      title: "Downpours or thunderstorms",
+      detail: `A few heavier showers or thunderstorms may develop${timingPhrase(
+        rainTiming
+      )}.`
+    });
+  }
+
+  /* ---------------- WIND ALERTS ---------------- */
+  if (wind.maxGust >= 40) {
+    alerts.push({
+      icon: "🌬️",
+      id: "strongwind",
+      title: "Strong winds",
+      detail: `Gusts may exceed ${wind.maxGust.toFixed(0)} mph${timingPhrase(
+        windTiming
+      )}. Secure outdoor items.`
+    });
+  } else if (wind.maxGust >= 30) {
+    alerts.push({
+      icon: "💨",
+      id: "gusty",
+      title: "Gusty conditions",
+      detail: `Wind gusts up to ${wind.maxGust.toFixed(0)} mph expected${timingPhrase(
+        windTiming
+      )}.`
+    });
+  }
+
+  /* ---------------- HEAT / COLD ---------------- */
+  if (thermal.maxTemp != null && thermal.maxTemp >= 88 && dew.maxDew >= 68) {
+    alerts.push({
+      icon: "🥵",
+      id: "heat",
+      title: "Hot and humid",
+      detail: `Highs near ${thermal.maxTemp.toFixed(
+        0
+      )}°F with muggy conditions. Stay hydrated.`
+    });
+  }
+
+  if (thermal.minTemp != null && thermal.minTemp <= 15) {
+    alerts.push({
+      icon: "🥶",
+      id: "cold",
+      title: "Bitter cold",
+      detail: `Lows may fall to around ${thermal.minTemp.toFixed(
+        0
+      )}°F. Dress warmly.`
+    });
+  }
+
+  /* ---------------- UV ALERT ---------------- */
+  if (maxUV >= 7 && qpf.rainTotal < 0.05) {
+    alerts.push({
+      icon: "🌞",
+      id: "uv",
+      title: "High UV index",
+      detail: "Sunscreen recommended, especially midday."
+    });
+  }
+
+  return alerts;
+}
+
   /* ----------------------------------------------------
      SNOW ALERTS
      ---------------------------------------------------- */
