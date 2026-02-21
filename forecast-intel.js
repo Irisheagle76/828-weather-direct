@@ -618,14 +618,17 @@ function timingPhrase(timing) {
   const startPhrase = describeTimeOfDay(timing.firstHour);
   const endPhrase = describeTimeOfDay(timing.lastHour);
 
+  // Same day, same time-of-day bucket
   if (startDay === endDay && startPhrase === endPhrase) {
     return ` ${startDay} ${startPhrase}`;
   }
 
+  // Same day, different time-of-day buckets
   if (startDay === endDay) {
     return ` ${startDay} from ${startPhrase} into ${endPhrase}`;
   }
 
+  // Crosses midnight into next day
   return ` from ${startDay} ${startPhrase} into ${endDay} ${endPhrase}`;
 }
 
