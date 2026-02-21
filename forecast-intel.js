@@ -768,56 +768,48 @@ function detectGoldilocks(qpf, thermal, wind, dew, micro) {
 /* ----------------------------------------------------
    SUMMARY BUILDER
    ---------------------------------------------------- */
-function buildSummary(qpf, thermal, wind, dew, micro) {
+function buildSummary(qpf, thermal, wind, dew, micro, swingPhrase) {
   const parts = [];
 
-  if (qpf.rainTotal >= 0.10) {
-    parts.push(`Expect around ${qpf.rainTotal.toFixed(2)}" of rain`);
+  // --- Sentence 1: Precip + temps + wind ---
+  const precipPart =
+    qpf.snowTotal >= 0.1
+      ? `Light snow (~${qpf.snowTotal.toFixed(1)}")`
+      : qpf.rainTotal >= 0.10
+      ? `Around ${qpf.rainTotal.toFixed(2)}" of rain`
+      : null;
+
+  const tempPart =
+    thermal.minTemp != null && thermal.maxTemp != null
+      ? `temps from ${thermal.minTemp.toFixed(0)}°F to ${thermal.maxTemp.toFixed(0)}°F`
+      : null;
+
+  const windPart =
+    wind.maxGust >= 30
+      ? `gusts up to ${wind.maxGust.toFixed(0)} mph`
+      : null;
+
+  const sentence1 = [precipPart, tempPart, windPart]
+    .filter(Boolean)
+    .join(", ");
+
+  if (sentence1) parts.push(sentence1 + ".");
+
+  // --- Sentence 2: Temperature direction + microclimates ---
+  const microParts = [];
+
+  if (swingPhrase) microParts.push(swingPhrase);
+  if (micro.layersDay) microParts.push("big temperature swings");
+  if (micro.ridgeWinds) microParts.push("breezy on ridges");
+  if (micro.nwFlowSnow) microParts.push("NW‑flow flurries possible");
+  if (micro.cad) microParts.push("CAD may keep temps cooler");
+
+  if (microParts.length > 0) {
+    parts.push(microParts.join(", ") + ".");
   }
 
-  if (qpf.snowTotal >= 0.1) {
-    parts.push(`Light snow with around ${qpf.snowTotal.toFixed(1)}" possible`);
-  }
-
-  if (qpf.convective) {
-    parts.push("A few heavier showers or thunderstorms are possible");
-  }
-
-  if (thermal.maxTemp != null && thermal.minTemp != null) {
-    parts.push(
-      `Temperatures ranging from ${thermal.minTemp.toFixed(
-        0
-      )}°F to ${thermal.maxTemp.toFixed(0)}°F`
-    );
-  }
-
-  if (wind.maxGust >= 30) {
-    parts.push(`Wind gusts up to ${wind.maxGust.toFixed(0)} mph`);
-  }
-
-  if (dew.maxDew >= 65) {
-    parts.push("Muggy conditions at times");
-  }
-
-  if (micro.layersDay) {
-    parts.push("Big temperature swings — dress in layers");
-  }
-
-  if (micro.nwFlowSnow) {
-    parts.push("Classic NW‑flow setup — flurries possible even if radar looks quiet");
-  }
-
-  if (micro.cad) {
-    parts.push("Cold‑air damming may keep temperatures cooler than expected");
-  }
-
-  if (micro.ridgeWinds) {
-    parts.push("Breezy on the ridges, calmer in the valleys");
-  }
-
-  return parts.join(". ") + ".";
+  return parts.join(" ");
 }
-
 /* ----------------------------------------------------
    GOLDILOCKS HEADLINE BUILDER
    ---------------------------------------------------- */
@@ -880,7 +872,8 @@ export function getHumanActionOutlook(hourly) {
   const goldilocksType = detectGoldilocks(qpf, thermal, wind, dew, micro);
 
   const headline = buildGoldilocksHeadline(goldilocksType);
-  const summary = buildSummary(qpf, thermal, wind, dew, micro);
+ const swingPhrase = describeTempSwing(hourly, start, end, thermal);
+const summary = buildSummary(qpf, thermal, wind, dew, micro, swingPhrase);
 
   const actions = buildActionList({ qpf, thermal, wind, dew, uv, micro });
 
