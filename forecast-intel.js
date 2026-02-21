@@ -421,6 +421,107 @@ function analyzeQPF(hourly, start, end) {
   };
 }
 /* ----------------------------------------------------
+   PART 2.5 — SEASON‑AWARE COMFORT MODULE
+   ---------------------------------------------------- */
+
+/* ----------------------------------------------------
+   SEASONAL NORMALS (Asheville climatology)
+   ---------------------------------------------------- */
+function getSeasonalNormalHigh(month) {
+  const normals = {
+    0: 47,  // Jan
+    1: 51,  // Feb
+    2: 59,  // Mar
+    3: 68,  // Apr
+    4: 75,  // May
+    5: 82,  // Jun
+    6: 85,  // Jul
+    7: 84,  // Aug
+    8: 79,  // Sep
+    9: 69,  // Oct
+    10: 59, // Nov
+    11: 50  // Dec
+  };
+  return normals[month];
+}
+
+/* ----------------------------------------------------
+   SEASONAL ANOMALY CALCULATOR
+   ---------------------------------------------------- */
+function getTempAnomaly(temp, month) {
+  const normal = getSeasonalNormalHigh(month);
+  return temp - normal;   // positive = warmer than normal
+}
+
+/* ----------------------------------------------------
+   SEASON‑AWARE TEMPERATURE FEEL
+   ---------------------------------------------------- */
+function describeSeasonalFeel(temp, month) {
+  const anomaly = getTempAnomaly(temp, month);
+
+  if (anomaly >= 15) return "unseasonably warm";
+  if (anomaly >= 8)  return "mild for this time of year";
+  if (anomaly >= 3)  return "a bit warmer than normal";
+
+  if (anomaly <= -15) return "unseasonably cool";
+  if (anomaly <= -8)  return "cool for this time of year";
+  if (anomaly <= -3)  return "a bit cooler than normal";
+
+  return "seasonable";
+}
+
+/* ----------------------------------------------------
+   ABSOLUTE TEMPERATURE FEEL (baseline)
+   ---------------------------------------------------- */
+function describeAbsoluteFeel(temp) {
+  if (temp >= 90) return "hot";
+  if (temp >= 80) return "warm";
+  if (temp >= 70) return "mild";
+  if (temp >= 60) return "cool";
+  if (temp >= 50) return "chilly";
+  if (temp >= 40) return "cold";
+  return "very cold";
+}
+
+/* ----------------------------------------------------
+   FINAL COMFORT CATEGORY (SEASON + ABSOLUTE)
+   ---------------------------------------------------- */
+export function getComfortCategory(temp, dew, wind, dateObj = new Date()) {
+  const month = dateObj.getMonth();
+
+  const seasonal = describeSeasonalFeel(temp, month);
+  const absolute = describeAbsoluteFeel(temp);
+
+  let blended;
+
+  // Seasonal overrides for big anomalies
+  if (seasonal.includes("unseasonably")) {
+    blended = seasonal;
+
+  // Winter 60–70°F → feels warm/mild
+  } else if (seasonal.includes("mild") && absolute === "cool") {
+    blended = "mild and pleasant";
+
+  // Summer 60–70°F → feels cool
+  } else if (seasonal.includes("cool") && absolute === "mild") {
+    blended = "cool for the season";
+
+  // Normal days
+  } else {
+    blended = seasonal === "seasonable" ? absolute : seasonal;
+  }
+
+  // Humidity nuance
+  if (dew >= 65 && temp >= 75) blended += ", humid";
+  if (dew <= 30 && temp >= 60) blended += ", dry and comfortable";
+
+  // Wind nuance
+  if (wind >= 35) blended += ", windy";
+  else if (wind >= 25) blended += ", breezy";
+
+  return blended.trim();
+}
+/* ----------------------------------------------------
    PART 3 — THERMAL PROFILE ENGINE
    ---------------------------------------------------- */
 
