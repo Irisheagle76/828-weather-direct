@@ -830,7 +830,40 @@ function buildGoldilocksHeadline(type) {
     default: return null;
   }
 }
+/* ----------------------------------------------------
+   HUMAN‑ACTION TEXT BUILDER (NEW)
+   ---------------------------------------------------- */
+function buildHumanActionText({ headline, summary, actions }) {
+  // Deduplicate similar actions
+  const cleaned = [...new Set(actions)];
 
+  // Prioritize the most important actions
+  const priority = cleaned.filter(a =>
+    a.includes("travel") ||
+    a.includes("secure") ||
+    a.includes("dress warmly") ||
+    a.includes("dress in warm layers") ||
+    a.includes("dress in layers")
+  );
+
+  // If priority list is too short, add a few more
+  const finalActions = priority.length >= 3
+    ? priority.slice(0, 3)
+    : cleaned.slice(0, 3);
+
+  const actionSentence =
+    finalActions.length > 0
+      ? "You may want to " +
+        finalActions.join(", ").replace(/,([^,]*)$/, " and$1") +
+        "."
+      : "";
+
+  return (
+    (headline ? headline + "\n" : "") +
+    summary +
+    (actionSentence ? " " + actionSentence : "")
+  );
+}
 /* ----------------------------------------------------
    MAIN HUMAN‑ACTION OUTLOOK EXPORT
    ---------------------------------------------------- */
@@ -858,10 +891,11 @@ export function getHumanActionOutlook(hourly) {
         "."
       : "";
 
-  const fullText =
-    (headline ? headline + "\n" : "") +
-    summary +
-    (actionText ? " " + actionText : "");
+const fullText = buildHumanActionText({
+  headline,
+  summary,
+  actions
+});
 
   return {
     headline,
