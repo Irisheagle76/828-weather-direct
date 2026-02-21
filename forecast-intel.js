@@ -710,45 +710,49 @@ function detectMicroclimates(hourly, start, end) {
     layersDay: false
   };
 
-  const temps = hourly.temperature_2m;
-  const dew = hourly.dewpoint_2m;
-  const windDir = hourly.winddirection_10m;
-  const gusts = hourly.windgusts_10m;
+  const temps = hourly.temperature_2m || [];
+  const dew = hourly.dewpoint_2m || [];
+  const windDir = hourly.winddirection_10m || [];
+  const gusts = hourly.windgusts_10m || [];
+  const snow = hourly.snowfall || [];
 
   /* ---------------- NW-FLOW SNOW ---------------- */
   for (let i = start; i < end; i++) {
-    const dir = windDir?.[i] ?? 0;
-    const temp = temps?.[i] ?? 40;
-    const snow = hourly.snowfall?.[i] ?? 0;
+    const dir = windDir[i] ?? 0;
+    const t = temps[i] ?? 40;
+    const s = snow[i] ?? 0;
 
-    if (dir >= 290 && dir <= 330 && temp <= 36 && snow > 0.05) {
+    if (dir >= 290 && dir <= 330 && t <= 36 && s > 0.05) {
       micro.nwFlowSnow = true;
     }
   }
 
   /* ---------------- COLD-AIR DAMMING ---------------- */
   for (let i = start; i < end; i++) {
-    const dir = windDir?.[i] ?? 0;
-    const temp = temps?.[i] ?? 50;
-    const dewpt = dew?.[i] ?? 40;
+    const dir = windDir[i] ?? 0;
+    const t = temps[i] ?? 50;
+    const d = dew[i] ?? 40;
 
-    if (dir >= 20 && dir <= 80 && temp <= 45 && Math.abs(temp - dewpt) < 3) {
+    if (dir >= 20 && dir <= 80 && t <= 45 && Math.abs(t - d) < 3) {
       micro.cad = true;
     }
   }
 
   /* ---------------- RIDGE VS VALLEY WINDS ---------------- */
   for (let i = start; i < end; i++) {
-    if ((gusts?.[i] ?? 0) >= 35) {
+    if ((gusts[i] ?? 0) >= 35) {
       micro.ridgeWinds = true;
     }
   }
 
   /* ---------------- LAYERS DAY ---------------- */
-  const minT = Math.min(...temps.slice(start, end));
-  const maxT = Math.max(...temps.slice(start, end));
-  if (maxT - minT >= 22) {
-    micro.layersDay = true;
+  const sliceTemps = temps.slice(start, end).filter(t => t != null);
+  if (sliceTemps.length > 0) {
+    const minT = Math.min(...sliceTemps);
+    const maxT = Math.max(...sliceTemps);
+    if (maxT - minT >= 22) {
+      micro.layersDay = true;
+    }
   }
 
   return micro;
