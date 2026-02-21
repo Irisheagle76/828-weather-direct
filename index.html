@@ -431,13 +431,13 @@
     </div>
   </div>
   
-     <script>
+  <script>
     const WU_API_KEY = "eba9581da59d4972a9581da59d497236";
+
     /* ----------------------------------------------------
        STATUS BADGE + ERROR HANDLING
        ---------------------------------------------------- */
     function setWUStatus(state, label, text) {
-      ...
       const dot = document.getElementById("wu-status-dot");
       const lbl = document.getElementById("wu-status-label");
       const desc = document.getElementById("wu-status-text");
@@ -483,11 +483,10 @@
 
     /* ----------------------------------------------------
        HISTORICAL DAILY DATA (60 days)
-       (Corrected: includes date for normals matching)
        ---------------------------------------------------- */
     async function getHistoricalDaily(lat, lon) {
       const end = new Date();
-      end.setDate(end.getDate() - 2); // yesterday‑2 ensures complete archive data
+      end.setDate(end.getDate() - 2);
 
       const start = new Date(end);
       start.setDate(start.getDate() - 60);
@@ -524,7 +523,7 @@
           tMax,
           tMin,
           precip: precip ?? 0,
-          date: data.daily.time[i]   // ⭐ REQUIRED for daily normals matching
+          date: data.daily.time[i]
         });
       }
 
@@ -544,34 +543,6 @@
         35.75 * Math.pow(windMph, 0.16) +
         0.4275 * tempF * Math.pow(windMph, 0.16)
       );
-    }
-
-    /* ----------------------------------------------------
-       CONVECTIVE SIGNATURE DETECTION
-       ---------------------------------------------------- */
-    function detectConvectiveSpike(rainHourly, dewHourly, tempHourly, start, end) {
-      if (!rainHourly) return false;
-
-      let heavyHour = false;
-      for (let i = start; i < end; i++) {
-        const r = rainHourly[i] ?? 0;
-        if (r >= 0.20) {
-          heavyHour = true;
-          break;
-        }
-      }
-
-      let maxDew = -999;
-      let maxTemp = -999;
-
-      for (let i = start; i < end; i++) {
-        const d = dewHourly?.[i];
-        const t = tempHourly?.[i];
-        if (typeof d === "number") maxDew = Math.max(maxDew, d);
-        if (typeof t === "number") maxTemp = Math.max(maxTemp, t);
-      }
-
-      return heavyHour && maxDew >= 65 && maxTemp >= 75;
     }
 
     /* ----------------------------------------------------
@@ -613,7 +584,6 @@
 
     /* ----------------------------------------------------
        DAILY NORMALS (Open‑Meteo)
-       Fetches daily climatological normals for the entire year
        ---------------------------------------------------- */
     async function getDailyNormals(lat, lon) {
       const url =
@@ -634,6 +604,7 @@
         precipNorm: data.daily.precipitation_sum_mean
       };
     }
+
     /* ----------------------------------------------------
        GET TOMORROW'S CALENDAR-DAY WINDOW
        ---------------------------------------------------- */
@@ -665,7 +636,6 @@
       }
 
       if (start === null) {
-        // Fallback: use hours 24–48
         return { start: 24, end: 48 };
       }
 
@@ -712,7 +682,6 @@
 
       const { spread } = computeDiurnalSpread(hourly, start, end);
 
-      /* --- RAIN --- */
       if (rainTotal >= 0.10) {
         return {
           emoji: "💧",
@@ -721,7 +690,6 @@
         };
       }
 
-      /* --- COLD --- */
       if (minTemp <= 35 || (maxGust >= 25 && maxTemp <= 40)) {
         return {
           emoji: "🥶",
@@ -730,7 +698,6 @@
         };
       }
 
-      /* --- HOT + HUMID --- */
       if (maxDew >= 68 && maxTemp >= 82) {
         return {
           emoji: "😅",
@@ -739,7 +706,6 @@
         };
       }
 
-      /* --- LAYERS DAY --- */
       if (spread >= 30 && rainTotal < 0.10) {
         return {
           emoji: "🏔️",
@@ -748,7 +714,6 @@
         };
       }
 
-      /* --- WIND --- */
       if (maxGust >= 30) {
         return {
           emoji: "🌬️",
@@ -757,7 +722,6 @@
         };
       }
 
-      /* --- GOLDILOCKS --- */
       if (
         maxTemp >= 68 &&
         maxTemp <= 74 &&
@@ -773,7 +737,6 @@
         };
       }
 
-      /* --- FALLBACK --- */
       return {
         emoji: "🙂",
         headline: "A mild, uneventful day tomorrow",
@@ -794,10 +757,8 @@
 
       const last7 = dailyHistory.slice(-7);
 
-      // Compute 7-day mean actual temps
       const mean7 = last7.reduce((s, d) => s + d.tMean, 0) / last7.length;
 
-      // Match normals by date
       let normalMeans = [];
       let normalPrecip = [];
 
@@ -823,7 +784,6 @@
 
       const anomaly = mean7 - meanNorm;
 
-      /* ---------------- TEMPERATURE ANOMALY ---------------- */
       let tempIcon = "";
       let tempPhrase = "";
 
@@ -850,28 +810,20 @@
         tempPhrase = "Temperatures have been close to normal";
       }
 
-      /* ---------------- PRECIPITATION ANOMALY ---------------- */
       let precipPhrase = "";
-      let precipIcon = "";
 
       if (precipActualTotal >= precipNormTotal * 2) {
         precipPhrase = "with much wetter-than-normal conditions";
-        precipIcon = "🌧️";
       } else if (precipActualTotal >= precipNormTotal * 1.3) {
         precipPhrase = "with slightly wetter-than-normal conditions";
-        precipIcon = "🌦️";
       } else if (precipActualTotal <= precipNormTotal * 0.3) {
         precipPhrase = "with much drier-than-normal conditions";
-        precipIcon = "🌞";
       } else if (precipActualTotal <= precipNormTotal * 0.7) {
         precipPhrase = "with slightly drier-than-normal conditions";
-        precipIcon = "🌤️";
       } else {
         precipPhrase = "with near-normal precipitation";
-        precipIcon = "🌦️";
       }
 
-      /* ---------------- WARMEST STRETCH SINCE ___ ---------------- */
       let warmestSince = "";
       if (anomaly >= 6) {
         warmestSince = " — the warmest 7‑day stretch in several weeks";
@@ -882,6 +834,7 @@
 
       return { headline, text };
     }
+
     /* ----------------------------------------------------
        FORECAST ALERT LOGIC (12–48 hours)
        ---------------------------------------------------- */
@@ -1052,6 +1005,7 @@
         stationId: obs.stationID
       };
     }
+
     /* ----------------------------------------------------
        MAIN INITIALIZATION
        ---------------------------------------------------- */
@@ -1068,13 +1022,9 @@
         const lon = pos.coords.longitude;
 
         try {
-          /* ----------------------------------------------------
-             1) WEATHER UNDERGROUND — STATION + CURRENT CONDITIONS
-             ---------------------------------------------------- */
           const nearest = await getNearestWUStation(lat, lon, WU_API_KEY);
           const wu = await getWUCurrentConditions(nearest.stationId, WU_API_KEY);
 
-          // Current conditions UI
           document.getElementById("wu-temp").textContent =
             wu.temp != null ? `${wu.temp.toFixed(0)}°F` : "--";
 
@@ -1108,9 +1058,6 @@
           document.getElementById("wu-station-footer").textContent =
             `Live data from Weather Underground Station ${nearest.stationId}`;
 
-          /* ----------------------------------------------------
-             2) HISTORICAL TREND — 7‑DAY ANOMALY vs DAILY NORMALS
-             ---------------------------------------------------- */
           try {
             const dailyHistory = await getHistoricalDaily(lat, lon);
             const normals = await getDailyNormals(lat, lon);
@@ -1125,19 +1072,14 @@
               "Unable to load recent 7‑day trend details.";
           }
 
-          /* ----------------------------------------------------
-             3) SHORT‑TERM FORECAST — OUTLOOK + ALERTS
-             ---------------------------------------------------- */
           try {
             const hourly = await getShortTermForecast(lat, lon);
 
-            // Human‑Action Outlook
             const outlook = generateHumanActionOutlook(hourly);
             document.getElementById("action-emoji").textContent = outlook.emoji;
             document.getElementById("action-headline").textContent = outlook.headline;
             document.getElementById("action-text").textContent = outlook.text;
 
-            // Alerts
             const alerts = analyzeForecastAlerts(hourly);
             renderForecastIcons(alerts);
           } catch (fcErr) {
@@ -1165,6 +1107,7 @@
   </script>
 </body>
 </html>
+
 
 
 
