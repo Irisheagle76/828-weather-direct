@@ -158,18 +158,35 @@ function describeTimeOfDay(date) {
   if (hour < 21) return "evening";
   return "late evening";
 }
-
+function dayName(date) {
+  if (!date) return "";
+  return date.toLocaleDateString(undefined, { weekday: "long" });
+}
 /**
  * Build a short phrase like:
  * " early morning", " from late afternoon into evening"
  */
 function timingPhrase(timing) {
   if (!timing.firstHour) return "";
+
+  const startDay = dayName(timing.firstHour);
+  const endDay = dayName(timing.lastHour);
+
   const startPhrase = describeTimeOfDay(timing.firstHour);
   const endPhrase = describeTimeOfDay(timing.lastHour);
-  if (!startPhrase && !endPhrase) return "";
-  if (startPhrase === endPhrase) return ` ${startPhrase}`;
-  return ` from ${startPhrase} into ${endPhrase}`;
+
+  // Same day, same time-of-day bucket
+  if (startDay === endDay && startPhrase === endPhrase) {
+    return ` ${startDay} ${startPhrase}`;
+  }
+
+  // Same day, different time-of-day buckets
+  if (startDay === endDay) {
+    return ` ${startDay} from ${startPhrase} into ${endPhrase}`;
+  }
+
+  // Crosses midnight into next day
+  return ` from ${startDay} ${startPhrase} into ${endDay} ${endPhrase}`;
 }
 /* ----------------------------------------------------
    PRECIP + TEMP ACCUMULATION HELPERS
