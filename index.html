@@ -882,7 +882,35 @@ function generateHumanActionOutlook(hourly) {
         container.appendChild(iconEl);
       });
     }
+/* ----------------------------------------------------
+   CLIMATE NORMALS (Open-Meteo)
+   Fetches 30-year normals for February
+   ---------------------------------------------------- */
+async function getClimateNormals(lat, lon) {
+  const url =
+    `https://climate-api.open-meteo.com/v1/climate` +
+    `?latitude=${lat}&longitude=${lon}` +
+    `&month=2` +
+    `&temperature_2m_max=mean` +
+    `&temperature_2m_min=mean`;
 
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Climate normals fetch failed: " + res.status);
+
+  const data = await res.json();
+
+  return {
+    febHigh: data.temperature_2m_max?.mean ?? null,
+    febLow: data.temperature_2m_min?.mean ?? null
+  };
+}
+
+/* ----------------------------------------------------
+   60‑DAY TREND ANALYSIS
+   ---------------------------------------------------- */
+function analyzeHistoricalTrends(daily, normals) {
+    ...
+}
    /* ----------------------------------------------------
    60-DAY TREND USING CLIMATE NORMALS
    ---------------------------------------------------- */
@@ -1129,6 +1157,7 @@ const trend = analyzeHistoricalTrends(dailyHistory, normals);
   </script>
 </body>
 </html>
+
 
 
 
