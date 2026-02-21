@@ -162,19 +162,6 @@ function dayName(date) {
   if (!date) return "";
   return date.toLocaleDateString(undefined, { weekday: "long" });
 }
-  // Same day, same time-of-day bucket
-  if (startDay === endDay && startPhrase === endPhrase) {
-    return ` ${startDay} ${startPhrase}`;
-  }
-
-  // Same day, different time-of-day buckets
-  if (startDay === endDay) {
-    return ` ${startDay} from ${startPhrase} into ${endPhrase}`;
-  }
-
-  // Crosses midnight into next day
-  return ` from ${startDay} ${startPhrase} into ${endDay} ${endPhrase}`;
-}
 /* ----------------------------------------------------
    PRECIP + TEMP ACCUMULATION HELPERS
    ---------------------------------------------------- */
