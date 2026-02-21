@@ -634,21 +634,6 @@ function analyzeThermalProfile(hourly, start, end) {
 /* ----------------------------------------------------
    PART 4 — HUMAN‑ACTION OUTLOOK (STRUCTURED OUTPUT)
    ---------------------------------------------------- */
-
-/* ---------------- TIME OF DAY HELPER ---------------- */
-function describeTimeOfDay(date) {
-  if (!date) return null;
-  const hour = date.getHours();
-
-  if (hour < 6) return "overnight";
-  if (hour < 10) return "early morning";
-  if (hour < 12) return "late morning";
-  if (hour < 15) return "early afternoon";
-  if (hour < 18) return "late afternoon";
-  if (hour < 21) return "evening";
-  return "late evening";
-}
-
 /* ---------------- TIMING PHRASE BUILDER ---------------- */
 function timingPhrase(timing) {
   if (!timing.firstHour) return "";
