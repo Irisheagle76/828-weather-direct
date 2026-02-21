@@ -162,19 +162,6 @@ function dayName(date) {
   if (!date) return "";
   return date.toLocaleDateString(undefined, { weekday: "long" });
 }
-/**
- * Build a short phrase like:
- * " early morning", " from late afternoon into evening"
- */
-function timingPhrase(timing) {
-  if (!timing.firstHour) return "";
-
-  const startDay = dayName(timing.firstHour);
-  const endDay = dayName(timing.lastHour);
-
-  const startPhrase = describeTimeOfDay(timing.firstHour);
-  const endPhrase = describeTimeOfDay(timing.lastHour);
-
   // Same day, same time-of-day bucket
   if (startDay === endDay && startPhrase === endPhrase) {
     return ` ${startDay} ${startPhrase}`;
