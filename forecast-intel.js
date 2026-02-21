@@ -608,6 +608,7 @@ function analyzeThermalProfile(hourly, start, end) {
 /* ----------------------------------------------------
    PART 4 — HUMAN‑ACTION OUTLOOK (STRUCTURED OUTPUT)
    ---------------------------------------------------- */
+
 /* ---------------- TIMING PHRASE BUILDER ---------------- */
 function timingPhrase(timing) {
   if (!timing.firstHour) return "";
@@ -618,17 +619,14 @@ function timingPhrase(timing) {
   const startPhrase = describeTimeOfDay(timing.firstHour);
   const endPhrase = describeTimeOfDay(timing.lastHour);
 
-  // Same day, same time-of-day bucket
   if (startDay === endDay && startPhrase === endPhrase) {
     return ` ${startDay} ${startPhrase}`;
   }
 
-  // Same day, different time-of-day buckets
   if (startDay === endDay) {
     return ` ${startDay} from ${startPhrase} into ${endPhrase}`;
   }
 
-  // Crosses midnight into next day
   return ` from ${startDay} ${startPhrase} into ${endDay} ${endPhrase}`;
 }
 
@@ -638,52 +636,45 @@ function timingPhrase(timing) {
 function buildActionList({ qpf, thermal, wind, dew, uv, micro }) {
   const actions = [];
 
-  /* ---------------- RAIN PREP ---------------- */
   if (qpf.rainTotal >= 0.10) {
     actions.push("carry an umbrella");
     actions.push("wear waterproof shoes or a rain jacket");
   }
 
-  /* ---------------- SNOW PREP ---------------- */
   if (qpf.snowTotal >= 0.1) {
     actions.push("allow extra travel time");
     actions.push("use caution on bridges and overpasses");
     actions.push("dress warmly");
   }
 
-  /* ---------------- COLD PREP ---------------- */
   if (thermal.minTemp != null && thermal.minTemp <= 35) {
     actions.push("dress in warm layers");
     actions.push("wear gloves and a hat");
   }
 
-  /* ---------------- HEAT / HUMIDITY PREP ---------------- */
   if (thermal.maxTemp != null && thermal.maxTemp >= 82) {
     actions.push("stay hydrated");
     actions.push("wear light clothing");
   }
+
   if (dew.maxDew >= 65) {
     actions.push("take breaks if outdoors");
   }
 
-  /* ---------------- UV PREP ---------------- */
   if (uv >= 6) {
     actions.push("apply sunscreen");
     actions.push("wear a hat or sunglasses");
   }
 
-  /* ---------------- WIND PREP ---------------- */
   if (wind.maxGust >= 30) {
     actions.push("secure outdoor items");
     actions.push("avoid loose hats");
   }
 
-  /* ---------------- LAYERS DAY ---------------- */
   if (micro.layersDay) {
     actions.push("dress in layers — big temperature swings expected");
   }
 
-  /* ---------------- MICROCLIMATE ACTIONS ---------------- */
   if (micro.nwFlowSnow) {
     actions.push("watch for slick spots on the Blue Ridge Parkway");
   }
@@ -716,7 +707,6 @@ function detectMicroclimates(hourly, start, end) {
   const gusts = hourly.windgusts_10m || [];
   const snow = hourly.snowfall || [];
 
-  /* ---------------- NW-FLOW SNOW ---------------- */
   for (let i = start; i < end; i++) {
     const dir = windDir[i] ?? 0;
     const t = temps[i] ?? 40;
@@ -727,7 +717,6 @@ function detectMicroclimates(hourly, start, end) {
     }
   }
 
-  /* ---------------- COLD-AIR DAMMING ---------------- */
   for (let i = start; i < end; i++) {
     const dir = windDir[i] ?? 0;
     const t = temps[i] ?? 50;
@@ -738,14 +727,12 @@ function detectMicroclimates(hourly, start, end) {
     }
   }
 
-  /* ---------------- RIDGE VS VALLEY WINDS ---------------- */
   for (let i = start; i < end; i++) {
     if ((gusts[i] ?? 0) >= 35) {
       micro.ridgeWinds = true;
     }
   }
 
-  /* ---------------- LAYERS DAY ---------------- */
   const sliceTemps = temps.slice(start, end).filter(t => t != null);
   if (sliceTemps.length > 0) {
     const minT = Math.min(...sliceTemps);
@@ -770,21 +757,10 @@ function detectGoldilocks(qpf, thermal, wind, dew, micro) {
   const dry = qpf.rainTotal < 0.05 && qpf.snowTotal < 0.05;
   const lowUV = dew.maxUV < 6;
 
-  if (perfectTemp && perfectDew && calmWind && dry && lowUV) {
-    return "full";
-  }
-
-  if (perfectTemp && dry && wind.maxGust < 25 && minTemp < 45) {
-    return "afternoon";
-  }
-
-  if (perfectTemp && dry && micro.ridgeWinds) {
-    return "valleys";
-  }
-
-  if (perfectTemp && dew.maxDew > 60) {
-    return "earlyMuggyLate";
-  }
+  if (perfectTemp && perfectDew && calmWind && dry && lowUV) return "full";
+  if (perfectTemp && dry && wind.maxGust < 25 && minTemp < 45) return "afternoon";
+  if (perfectTemp && dry && micro.ridgeWinds) return "valleys";
+  if (perfectTemp && dew.maxDew > 60) return "earlyMuggyLate";
 
   return null;
 }
@@ -847,16 +823,11 @@ function buildSummary(qpf, thermal, wind, dew, micro) {
    ---------------------------------------------------- */
 function buildGoldilocksHeadline(type) {
   switch (type) {
-    case "full":
-      return "✨ Goldilocks Day!";
-    case "afternoon":
-      return "✨ Goldilocks Afternoon!";
-    case "valleys":
-      return "✨ Goldilocks in the Valleys!";
-    case "earlyMuggyLate":
-      return "✨ Goldilocks Early, Muggy Late!";
-    default:
-      return null;
+    case "full": return "✨ Goldilocks Day!";
+    case "afternoon": return "✨ Goldilocks Afternoon!";
+    case "valleys": return "✨ Goldilocks in the Valleys!";
+    case "earlyMuggyLate": return "✨ Goldilocks Early, Muggy Late!";
+    default: return null;
   }
 }
 
@@ -887,14 +858,17 @@ export function getHumanActionOutlook(hourly) {
         "."
       : "";
 
+  const fullText =
+    (headline ? headline + "\n" : "") +
+    summary +
+    (actionText ? " " + actionText : "");
+
   return {
     headline,
     summary,
     actions,
-    fullText:
-      (headline ? headline + "\n" : "") +
-      summary +
-      (actionText ? " " + actionText : "")
+    fullText,
+    text: fullText   // ← BACKWARD‑COMPATIBLE FIX
   };
 }
 /* ----------------------------------------------------
