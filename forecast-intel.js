@@ -648,7 +648,7 @@ function buildActionList({ qpf, thermal, wind, dew, uv, micro }) {
   }
 
   if (thermal.minTemp != null && thermal.minTemp <= 35) {
-    actions.push("dress in warm layers");
+    actions.push("dress warmly in layers");
     actions.push("wear gloves and a hat");
   }
 
@@ -667,8 +667,7 @@ function buildActionList({ qpf, thermal, wind, dew, uv, micro }) {
   }
 
   if (wind.maxGust >= 30) {
-    actions.push("secure outdoor items");
-    actions.push("avoid loose hats");
+    actions.push("secure loose items");
   }
 
   if (micro.layersDay) {
@@ -746,32 +745,57 @@ function detectMicroclimates(hourly, start, end) {
 }
 
 /* ----------------------------------------------------
-   GOLDILOCKS DETECTION
+   TEMPERATURE SWING DETECTOR (NEW)
    ---------------------------------------------------- */
-function detectGoldilocks(qpf, thermal, wind, dew, micro) {
-  const { maxTemp, minTemp } = thermal;
+function describeTempSwing(hourly, start, end, thermal) {
+  const temps = hourly.temperature_2m || [];
+  const slice = temps.slice(start, end).filter(t => t != null);
+  if (slice.length < 4) return null;
 
-  const perfectTemp = maxTemp >= 68 && maxTemp <= 74;
-  const perfectDew = dew.maxDew >= 45 && dew.maxDew <= 52;
-  const calmWind = wind.maxGust < 20;
-  const dry = qpf.rainTotal < 0.05 && qpf.snowTotal < 0.05;
-  const lowUV = dew.maxUV < 6;
+  const morning = slice.slice(0, 6);
+  const afternoon = slice.slice(10, 18);
+  const evening = slice.slice(-6);
 
-  if (perfectTemp && perfectDew && calmWind && dry && lowUV) return "full";
-  if (perfectTemp && dry && wind.maxGust < 25 && minTemp < 45) return "afternoon";
-  if (perfectTemp && dry && micro.ridgeWinds) return "valleys";
-  if (perfectTemp && dew.maxDew > 60) return "earlyMuggyLate";
+  const morningAvg = avg(morning);
+  const afternoonAvg = avg(afternoon);
+  const eveningAvg = avg(evening);
+
+  const rise = afternoonAvg - morningAvg;
+  const drop = afternoonAvg - eveningAvg;
+
+  if (morningAvg > afternoonAvg && afternoonAvg > eveningAvg) {
+    return "temperatures fall steadily through the day";
+  }
+
+  if (morningAvg > afternoonAvg && rise < -8) {
+    return "turning colder through the afternoon";
+  }
+
+  if (drop >= 15 && rise < 5) {
+    return "warm early, dropping sharply after midday";
+  }
+
+  if (rise >= 20 && drop < 10) {
+    return "cold morning, much warmer afternoon";
+  }
+
+  if (rise >= 15 && drop >= 15) {
+    return "big temperature swing — cold early, warm later, then colder again";
+  }
+
+  if (thermal.maxTemp - thermal.minTemp >= 22) {
+    return "big temperature swings";
+  }
 
   return null;
 }
 
 /* ----------------------------------------------------
-   SUMMARY BUILDER
+   SUMMARY BUILDER (COMPRESSED)
    ---------------------------------------------------- */
 function buildSummary(qpf, thermal, wind, dew, micro, swingPhrase) {
   const parts = [];
 
-  // --- Sentence 1: Precip + temps + wind ---
   const precipPart =
     qpf.snowTotal >= 0.1
       ? `Light snow (~${qpf.snowTotal.toFixed(1)}")`
@@ -795,7 +819,6 @@ function buildSummary(qpf, thermal, wind, dew, micro, swingPhrase) {
 
   if (sentence1) parts.push(sentence1 + ".");
 
-  // --- Sentence 2: Temperature direction + microclimates ---
   const microParts = [];
 
   if (swingPhrase) microParts.push(swingPhrase);
@@ -810,6 +833,7 @@ function buildSummary(qpf, thermal, wind, dew, micro, swingPhrase) {
 
   return parts.join(" ");
 }
+
 /* ----------------------------------------------------
    GOLDILOCKS HEADLINE BUILDER
    ---------------------------------------------------- */
@@ -822,23 +846,20 @@ function buildGoldilocksHeadline(type) {
     default: return null;
   }
 }
+
 /* ----------------------------------------------------
    HUMAN‑ACTION TEXT BUILDER (NEW)
    ---------------------------------------------------- */
 function buildHumanActionText({ headline, summary, actions }) {
-  // Deduplicate similar actions
   const cleaned = [...new Set(actions)];
 
-  // Prioritize the most important actions
   const priority = cleaned.filter(a =>
     a.includes("travel") ||
     a.includes("secure") ||
     a.includes("dress warmly") ||
-    a.includes("dress in warm layers") ||
     a.includes("dress in layers")
   );
 
-  // If priority list is too short, add a few more
   const finalActions = priority.length >= 3
     ? priority.slice(0, 3)
     : cleaned.slice(0, 3);
@@ -856,6 +877,7 @@ function buildHumanActionText({ headline, summary, actions }) {
     (actionSentence ? " " + actionSentence : "")
   );
 }
+
 /* ----------------------------------------------------
    MAIN HUMAN‑ACTION OUTLOOK EXPORT
    ---------------------------------------------------- */
@@ -872,30 +894,23 @@ export function getHumanActionOutlook(hourly) {
   const goldilocksType = detectGoldilocks(qpf, thermal, wind, dew, micro);
 
   const headline = buildGoldilocksHeadline(goldilocksType);
- const swingPhrase = describeTempSwing(hourly, start, end, thermal);
-const summary = buildSummary(qpf, thermal, wind, dew, micro, swingPhrase);
+  const swingPhrase = describeTempSwing(hourly, start, end, thermal);
+  const summary = buildSummary(qpf, thermal, wind, dew, micro, swingPhrase);
 
   const actions = buildActionList({ qpf, thermal, wind, dew, uv, micro });
 
-  const actionText =
-    actions.length > 0
-      ? "You may want to " +
-        actions.join(", ").replace(/,([^,]*)$/, " and$1") +
-        "."
-      : "";
-
-const fullText = buildHumanActionText({
-  headline,
-  summary,
-  actions
-});
+  const fullText = buildHumanActionText({
+    headline,
+    summary,
+    actions
+  });
 
   return {
     headline,
     summary,
     actions,
     fullText,
-    text: fullText   // ← BACKWARD‑COMPATIBLE FIX
+    text: fullText
   };
 }
 /* ----------------------------------------------------
