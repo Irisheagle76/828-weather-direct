@@ -1,16 +1,42 @@
 // forecast-intel.js
-// Temporary working version: simple logic so the app runs cleanly.
-// We can upgrade this later to the full meteorologist-grade engine.
-
 /* ----------------------------------------------------
-   BASIC HELPERS
+   PART 1 — CORE HELPERS + HOURLY WINDOW TOOLS
    ---------------------------------------------------- */
+
+/**
+ * Safely get a numeric value from an array, or null if missing/invalid.
+ */
 function safeNum(arr, i) {
   if (!arr || i < 0 || i >= arr.length) return null;
   const v = arr[i];
   return typeof v === "number" && !Number.isNaN(v) ? v : null;
 }
 
+/**
+ * Clamp a number between min and max.
+ */
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+/**
+ * Simple average of an array of numbers (ignores null/undefined).
+ */
+function avg(values) {
+  let sum = 0;
+  let count = 0;
+  for (const v of values) {
+    if (typeof v === "number" && !Number.isNaN(v)) {
+      sum += v;
+      count++;
+    }
+  }
+  return count > 0 ? sum / count : null;
+}
+
+/**
+ * Sum of an array of numbers (ignores null/undefined).
+ */
 function sum(values) {
   let total = 0;
   for (const v of values) {
@@ -22,42 +48,172 @@ function sum(values) {
 }
 
 /* ----------------------------------------------------
-   SIMPLE TOMORROW WINDOW (same idea as before)
+   TIME + HOURLY WINDOW HELPERS
    ---------------------------------------------------- */
-function getTomorrowWindow(hourly) {
-  if (!hourly.time || hourly.time.length === 0) {
-    return { start: 0, end: 0 };
+
+/**
+ * Given an Open-Meteo hourly object, return an array of Date objects.
+ */
+function getHourlyDates(hourly) {
+  const times = hourly?.time || [];
+  return times.map(t => new Date(t));
+}
+
+/**
+ * Get the [start, end) indices for a given calendar date (local).
+ */
+function getCalendarDayWindow(hourly, targetDate) {
+  const times = hourly?.time || [];
+  if (!times.length) return { start: 0, end: 0 };
+
+  const yyyy = targetDate.getFullYear();
+  const mm = String(targetDate.getMonth() + 1).padStart(2, "0");
+  const dd = String(targetDate.getDate()).padStart(2, "0");
+  const targetStr = `${yyyy}-${mm}-${dd}`;
+
+  let start = null;
+  let end = null;
+
+  for (let i = 0; i < times.length; i++) {
+    const dateStr = times[i].slice(0, 10);
+    if (dateStr === targetStr) {
+      if (start === null) start = i;
+      end = i + 1;
+    }
   }
 
+  if (start === null) return { start: 0, end: 0 };
+  return { start, end };
+}
+
+/**
+ * Get tomorrow's calendar-day window.
+ */
+function getTomorrowWindow(hourly) {
   const now = new Date();
   now.setHours(0, 0, 0, 0);
 
   const tomorrow = new Date(now);
   tomorrow.setDate(now.getDate() + 1);
 
-  const yyyy = tomorrow.getFullYear();
-  const mm = String(tomorrow.getMonth() + 1).padStart(2, "0");
-  const dd = String(tomorrow.getDate()).padStart(2, "0");
-  const targetDate = `${yyyy}-${mm}-${dd}`;
+  const { start, end } = getCalendarDayWindow(hourly, tomorrow);
 
-  let start = null;
-  let end = null;
-
-  for (let i = 0; i < hourly.time.length; i++) {
-    const dateStr = hourly.time[i].slice(0, 10);
-    if (dateStr === targetDate) {
-      if (start === null) start = i;
-      end = i + 1;
-    }
-  }
-
-  if (start === null) {
-    return { start: 24, end: 48 };
+  if (start === 0 && end === 0) {
+    const len = hourly?.time?.length || 0;
+    const s = Math.min(24, Math.max(0, len - 24));
+    const e = Math.min(48, len);
+    return { start: s, end: e };
   }
 
   return { start, end };
 }
 
+/**
+ * Get a generic window from +offsetStart to +offsetEnd hours.
+ */
+function getRelativeWindow(hourly, offsetStartHours, offsetEndHours) {
+  const len = hourly?.time?.length || 0;
+  const start = clamp(offsetStartHours, 0, len);
+  const end = clamp(offsetEndHours, 0, len);
+  return { start, end: Math.max(start, end) };
+}
+
+/* ----------------------------------------------------
+   PRECIP + TEMP ACCUMULATION HELPERS
+   ---------------------------------------------------- */
+
+function accumulatePrecip(hourly, start, end) {
+  const rainArr = hourly?.precipitation || [];
+  const snowArr = hourly?.snowfall || [];
+
+  let rainTotal = 0;
+  let snowTotal = 0;
+
+  for (let i = start; i < end; i++) {
+    const r = safeNum(rainArr, i) ?? 0;
+    const s = safeNum(snowArr, i) ?? 0;
+    rainTotal += r;
+    snowTotal += s;
+  }
+
+  return { rainTotal, snowTotal };
+}
+
+function summarizeTemps(hourly, start, end) {
+  const tempArr = hourly?.temperature_2m || [];
+  let minTemp = Infinity;
+  let maxTemp = -Infinity;
+  const temps = [];
+
+  for (let i = start; i < end; i++) {
+    const t = safeNum(tempArr, i);
+    if (t != null) {
+      temps.push(t);
+      if (t < minTemp) minTemp = t;
+      if (t > maxTemp) maxTemp = t;
+    }
+  }
+
+  if (!temps.length) {
+    return { minTemp: null, maxTemp: null, avgTemp: null, count: 0 };
+  }
+
+  return {
+    minTemp,
+    maxTemp,
+    avgTemp: avg(temps),
+    count: temps.length
+  };
+}
+
+function computeDiurnalSpread(hourly, start, end) {
+  const { minTemp, maxTemp } = summarizeTemps(hourly, start, end);
+  if (minTemp == null || maxTemp == null) {
+    return { minT: null, maxT: null, spread: null };
+  }
+  return { minT: minTemp, maxT: maxTemp, spread: maxTemp - minTemp };
+}
+
+function summarizeWindGusts(hourly, start, end) {
+  const gustArr = hourly?.windgusts_10m || [];
+  let maxGust = 0;
+
+  for (let i = start; i < end; i++) {
+    const g = safeNum(gustArr, i);
+    if (g != null && g > maxGust) {
+      maxGust = g;
+    }
+  }
+
+  return { maxGust };
+}
+
+function summarizeDewAndUV(hourly, start, end) {
+  const dewArr = hourly?.dewpoint_2m || [];
+  const uvArr = hourly?.uv_index || [];
+
+  let maxDew = -Infinity;
+  let maxUV = 0;
+  let dewSeen = false;
+
+  for (let i = start; i < end; i++) {
+    const d = safeNum(dewArr, i);
+    if (d != null) {
+      dewSeen = true;
+      if (d > maxDew) maxDew = d;
+    }
+
+    const uv = safeNum(uvArr, i);
+    if (uv != null && uv > maxUV) {
+      maxUV = uv;
+    }
+  }
+
+  return {
+    maxDew: dewSeen ? maxDew : null,
+    maxUV
+  };
+}
 /* ----------------------------------------------------
    PART 2 — ASHEVILLE‑TUNED QPF INTERPRETER
    ---------------------------------------------------- */
