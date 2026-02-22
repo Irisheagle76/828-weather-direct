@@ -1,6 +1,6 @@
 // forecast-intel.js
-// 828 Weather Direct — Core forecast intelligence
-// Part 1 — Core helpers + hourly window tools
+// 828 Weather Direct — Forecast Intelligence Engine
+// PART 1 — Core helpers + hourly window tools
 
 // ---------------- CORE HELPERS ----------------
 
@@ -84,55 +84,93 @@ function getDaypartWindow(hourly, targetDate, startHour, endHour) {
   }
   return indices;
 }
-// Part 2 — Stats + derived metrics
+// forecast-intel.js
+// 828 Weather Direct — Forecast Intelligence Engine
+// PART 1 — Core helpers + hourly window tools
 
-function basicStats(arr) {
-  if (!arr || !arr.length) {
-    return { min: null, max: null, avg: null };
+// ---------------- CORE HELPERS ----------------
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function avg(arr) {
+  if (!arr || !arr.length) return null;
+  return arr.reduce((a, b) => a + b, 0) / arr.length;
+}
+
+function toLocalDate(isoString) {
+  return new Date(isoString);
+}
+
+function sameCalendarDay(a, b) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
+// ---------------- HOURLY WINDOW TOOLS ----------------
+
+// Given Open-Meteo hourly object and a target Date (local),
+// return indices that fall on that calendar day.
+function getHourlyWindowForDay(hourly, targetDate) {
+  const times = hourly.time || [];
+  const indices = [];
+
+  const start = new Date(targetDate);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(targetDate);
+  end.setHours(23, 59, 59, 999);
+
+  for (let i = 0; i < times.length; i++) {
+    const t = toLocalDate(times[i]);
+    if (t >= start && t <= end) {
+      indices.push(i);
+    }
   }
-  let min = arr[0];
-  let max = arr[0];
-  let sum = 0;
-  for (const v of arr) {
-    if (v < min) min = v;
-    if (v > max) max = v;
-    sum += v;
+  return indices;
+}
+
+// Tomorrow’s calendar-day window (local)
+function getTomorrowWindow(hourly) {
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(now.getDate() + 1);
+  return getHourlyWindowForDay(hourly, tomorrow);
+}
+
+// Slice an hourly object down to a set of indices
+function sliceHourly(hourly, indices) {
+  const result = {};
+  for (const key of Object.keys(hourly)) {
+    const arr = hourly[key];
+    if (!Array.isArray(arr)) continue;
+    result[key] = indices.map(i => arr[i]);
   }
-  return {
-    min,
-    max,
-    avg: sum / arr.length
-  };
+  return result;
 }
 
-function getTempStats(windowed) {
-  return basicStats(windowed.temperature_2m || []);
-}
+// Daypart window (e.g., 8–18 local)
+function getDaypartWindow(hourly, targetDate, startHour, endHour) {
+  const times = hourly.time || [];
+  const indices = [];
 
-function getDewStats(windowed) {
-  return basicStats(windowed.dewpoint_2m || []);
-}
+  const start = new Date(targetDate);
+  start.setHours(startHour, 0, 0, 0);
+  const end = new Date(targetDate);
+  end.setHours(endHour, 59, 59, 999);
 
-function getWindGustStats(windowed) {
-  return basicStats(windowed.windgusts_10m || []);
+  for (let i = 0; i < times.length; i++) {
+    const t = toLocalDate(times[i]);
+    if (t >= start && t <= end) {
+      indices.push(i);
+    }
+  }
+  return indices;
 }
-
-function getUVStats(windowed) {
-  return basicStats(windowed.uv_index || []);
-}
-
-function getPrecipTotal(windowed) {
-  const arr = windowed.precipitation || [];
-  if (!arr.length) return 0;
-  return arr.reduce((a, b) => a + b, 0);
-}
-
-function getSnowTotal(windowed) {
-  const arr = windowed.snowfall || [];
-  if (!arr.length) return 0;
-  return arr.reduce((a, b) => a + b, 0);
-}
-// Part 3 — Descriptors + simple impact helpers
+// PART 3 — Descriptors + simple impact helpers
 
 function describePrecip(precipTotal, snowTotal) {
   if (snowTotal > 0.05) {
@@ -167,18 +205,7 @@ function describeTempRange(stats) {
   if (max <= 82) return "a warm day overall";
   return "a hot day overall";
 }
-// Part 4 — Human-Action Outlook (Option A style)
-// Uses tomorrow’s full-day window + comfort + simple impacts
-
-// Exposed:
-//   export function getHumanActionOutlook(hourly)
-// Returns:
-//   {
-//     badge: { text, class },
-//     emoji,
-//     headline,
-//     text
-//   }
+// PART 4 — Human-Action Outlook (Option A style)
 
 export function getHumanActionOutlook(hourly) {
   const indices = getTomorrowWindow(hourly);
@@ -195,7 +222,6 @@ export function getHumanActionOutlook(hourly) {
   const tempStats = getTempStats(win);
   const dewStats = getDewStats(win);
   const windStats = getWindGustStats(win);
-  const uvStats = getUVStats(win);
   const precipTotal = getPrecipTotal(win);
   const snowTotal = getSnowTotal(win);
 
@@ -211,14 +237,12 @@ export function getHumanActionOutlook(hourly) {
   const windDesc = describeWind(gustMax);
   const tempDesc = describeTempRange(tempStats);
 
-  // ---------------- BADGE LOGIC (Option A) ----------------
   let badgeText = "Easy Day";
   let badgeClass = "badge-easy";
   let emoji = "🙂";
   let headline = "A fairly straightforward day ahead.";
   let detail = `${tempDesc}. Expect ${precipDesc} with ${windDesc}. ${comfort.text}`;
 
-  // Goldilocks detection via comfort text
   const isGoldilocks = comfort.text.startsWith("Goldilocks");
   if (isGoldilocks) {
     badgeText = "Goldilocks Day";
@@ -252,7 +276,6 @@ export function getHumanActionOutlook(hourly) {
     detail = `${windDesc}. ${precipDesc}. ${comfort.text}`;
   }
 
-  // Mild, low-impact day
   if (
     !isGoldilocks &&
     precipTotal < 0.10 &&
@@ -270,32 +293,23 @@ export function getHumanActionOutlook(hourly) {
   }
 
   return {
-    badge: {
-      text: badgeText,
-      class: badgeClass
-    },
+    badge: { text: badgeText, class: badgeClass },
     emoji,
     headline,
     text: detail
   };
 }
-// Part 5 — Comfort Module 2.1 (Goldilocks) + alerts + exports
+// PART 5 — Comfort Module 2.3 (Personality Edition) + alerts + exports
 
-// ---------------- CLIMATOLOGY ----------------
+// ---------------- NORMALS ----------------
+const NORMAL_HIGHS = {
+  0: 47, 1: 51, 2: 59, 3: 68, 4: 75, 5: 82,
+  6: 85, 7: 84, 8: 78, 9: 69, 10: 59, 11: 50
+};
 
-const ASHEVILLE_NORMALS = {
-  0: 47,  // Jan
-  1: 51,  // Feb
-  2: 59,  // Mar
-  3: 68,  // Apr
-  4: 75,  // May
-  5: 82,  // Jun
-  6: 85,  // Jul
-  7: 84,  // Aug
-  8: 78,  // Sep
-  9: 69,  // Oct
-  10: 59, // Nov
-  11: 50  // Dec
+const NORMAL_LOWS = {
+  0: 28, 1: 31, 2: 36, 3: 43, 4: 52, 5: 60,
+  6: 64, 7: 63, 8: 57, 9: 46, 10: 37, 11: 31
 };
 
 function monthName(i) {
@@ -305,11 +319,12 @@ function monthName(i) {
   ][i];
 }
 
-// ---------------- COMFORT MODULE 2.1 (with Goldilocks) ----------------
-// temp: °F, dew: °F, gust: mph, precip: inches (optional)
+// ---------------- COMFORT MODULE 2.3 — Personality Edition ----------------
+
 export function getComfortCategory(temp, dew, gust, precip = 0) {
-  const month = new Date().getMonth();
-  const normal = ASHEVILLE_NORMALS[month];
+  const now = new Date();
+  const hour = now.getHours();
+  const month = now.getMonth();
 
   // GOLDILOCKS OVERRIDE
   const isGoldilocks =
@@ -327,58 +342,113 @@ export function getComfortCategory(temp, dew, gust, precip = 0) {
 
   // ABSOLUTE FEEL
   let feel;
-  if (temp <= 40) feel = "Cold";
-  else if (temp <= 59) feel = "Cool";
-  else if (temp <= 72) feel = "Mild";
-  else if (temp <= 82) feel = "Warm";
-  else feel = "Hot";
+  if (temp <= 25) feel = "biting";
+  else if (temp <= 40) feel = "cold";
+  else if (temp <= 48) feel = "chilly";
+  else if (temp <= 58) feel = "cool";
+  else if (temp <= 70) feel = "mild";
+  else if (temp <= 82) feel = "warm";
+  else feel = "hot";
 
-  // HUMIDITY / WIND NUANCE
+  // NUANCE
   let nuance = "";
-  if (dew < 40) nuance = "crisp";
-  else if (dew >= 65) nuance = "humid";
+  if (dew >= 65) nuance = "humid";
+  else if (dew < 40) nuance = "crisp";
 
   if (gust >= 30) nuance = "windy";
   else if (gust >= 20) nuance = "breezy";
 
-  // SEASONAL CONTEXT
-  const diff = temp - normal;
-  let seasonal;
+  const personality = getPersonalityPhrase(feel, nuance);
 
-  if (Math.abs(diff) <= 3) {
-    seasonal = `seasonable for ${monthName(month)}`;
-  } else if (diff > 3 && diff <= 9) {
-    seasonal = `mild for ${monthName(month)}`;
-  } else if (diff >= 10) {
-    seasonal = `unusually warm for ${monthName(month)}`;
-  } else if (diff < -3 && diff >= -9) {
-    seasonal = `cooler than normal for ${monthName(month)}`;
-  } else {
-    seasonal = `much colder than normal for ${monthName(month)}`;
+  // NORMALS (morning/evening = low, afternoon = high)
+  const normal = (hour < 11 || hour >= 18)
+    ? NORMAL_LOWS[month]
+    : NORMAL_HIGHS[month];
+
+  const diff = temp - normal;
+  const absDiff = Math.abs(diff);
+
+  // SEASONAL CONTEXT ONLY IF ANOMALY > 10°F
+  if (absDiff > 10) {
+    const seasonal =
+      diff > 10
+        ? `unusually warm for ${monthName(month)}`
+        : `much colder than normal for ${monthName(month)}`;
+
+    return {
+      text: `${personality} — ${seasonal}`,
+      emoji: comfortEmoji(feel)
+    };
   }
 
-  const nuancePart = nuance ? ` and ${nuance}` : "";
-  const phrase = `${feel}${nuancePart} — ${seasonal}`;
-
   return {
-    text: phrase,
+    text: personality,
     emoji: comfortEmoji(feel)
   };
 }
 
+// ---------------- PERSONALITY PHRASES ----------------
+
+function getPersonalityPhrase(feel, nuance) {
+  if (feel === "biting") {
+    if (nuance === "windy") return "Biting cold — the kind that wakes you up whether you want it to or not";
+    return "Biting cold — bundle up, friend";
+  }
+
+  if (feel === "cold") {
+    if (nuance === "breezy") return "Cold with a side of breeze — nature’s way of saying ‘layer up, friend.’";
+    if (nuance === "crisp") return "Cold and crisp — classic mountain morning chill";
+    return "Cold — definitely jacket weather";
+  }
+
+  if (feel === "chilly") {
+    return "Chilly but manageable — jacket weather, not misery weather";
+  }
+
+  if (feel === "cool") {
+    if (nuance === "breezy") return "Cool and breezy — a light jacket and a good attitude";
+    if (nuance === "crisp") return "Cool and crisp — clean, refreshing, no nonsense";
+    if (nuance === "humid") return "Cool but muggy — a strange combo, but here we are";
+    return "Cool — refreshing and easygoing";
+  }
+
+  if (feel === "mild") {
+    if (nuance === "breezy") return "Mild with a breeze — windows‑down weather";
+    if (nuance === "humid") return "Mild but muggy — a little clingy, but still friendly";
+    return "Mild and calm — easygoing, like Asheville on a Sunday";
+  }
+
+  if (feel === "warm") {
+    if (nuance === "breezy") return "Warm with a breeze — nature’s version of air‑conditioning";
+    if (nuance === "humid") return "Yuck! Air you can wear";
+    return "Warm and pleasant — Asheville at its friendliest";
+  }
+
+  if (feel === "hot") {
+    if (nuance === "humid") return "Tropical jungle heat — welcome to the steam room";
+    if (nuance === "breezy") return "Hot with a breeze — still hot, but at least it’s trying";
+    return "Hot and dry — sun‑baked and sharp";
+  }
+
+  return "Comfort unknown";
+}
+
+// ---------------- EMOJI MAPPER ----------------
+
 function comfortEmoji(feel) {
   switch (feel) {
-    case "Cold": return "🥶";
-    case "Cool": return "🧥";
-    case "Mild": return "🙂";
-    case "Warm": return "🌤️";
-    case "Hot": return "🔥";
+    case "biting": return "🥶";
+    case "cold": return "❄️";
+    case "chilly": return "🧥";
+    case "cool": return "🍃";
+    case "mild": return "🙂";
+    case "warm": return "🌤️";
+    case "hot": return "🔥";
     default: return "🌡️";
   }
 }
 
-// ---------------- FORECAST ALERT ICONS (Option A style) ----------------
-// Returns array of { id, icon, title, detail }
+// ---------------- FORECAST ALERTS ----------------
 
 export function getForecastAlerts(hourly) {
   const indices = getTomorrowWindow(hourly);
