@@ -48,7 +48,7 @@ function getCalendarDayWindow(hourly, targetDate) {
   const times = hourly?.time || [];
   if (!times.length) return { start: 0, end: 0 };
 
-  const yyyy = targetDate.getFullFullYear();
+  const yyyy = targetDate.getFullYear();
   const mm = String(targetDate.getMonth() + 1).padStart(2, "0");
   const dd = String(targetDate.getDate()).padStart(2, "0");
   const targetStr = `${yyyy}-${mm}-${dd}`;
