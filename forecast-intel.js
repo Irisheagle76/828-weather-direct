@@ -1,8 +1,10 @@
 // forecast-intel.js
 // 828 Weather Direct — Forecast Intelligence Engine
-// PART 1 — Core helpers + hourly window tools
+// COMPLETE, CLEAN, DEDUPED VERSION
 
-// ---------------- CORE HELPERS ----------------
+// ----------------------------------------------------
+// PART 1 — Core Helpers + Hourly Window Tools
+// ----------------------------------------------------
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -25,8 +27,6 @@ function sameCalendarDay(a, b) {
   );
 }
 
-// ---------------- HOURLY WINDOW TOOLS ----------------
-
 function getHourlyWindowForDay(hourly, targetDate) {
   const times = hourly.time || [];
   const indices = [];
@@ -75,60 +75,53 @@ function getDaypartWindow(hourly, targetDate, startHour, endHour) {
   }
   return indices;
 }
-// forecast-intel.js
-// 828 Weather Direct — Forecast Intelligence Engine
-// PART 1 — Core helpers + hourly window tools
-// ---------------- HOURLY WINDOW TOOLS ----------------
 
-function getHourlyWindowForDay(hourly, targetDate) {
-  const times = hourly.time || [];
-  const indices = [];
+// ----------------------------------------------------
+// PART 2 — Stats + Derived Metrics
+// ----------------------------------------------------
 
-  const start = new Date(targetDate);
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(targetDate);
-  end.setHours(23, 59, 59, 999);
-
-  for (let i = 0; i < times.length; i++) {
-    const t = toLocalDate(times[i]);
-    if (t >= start && t <= end) indices.push(i);
+function basicStats(arr) {
+  if (!arr || !arr.length) return { min: null, max: null, avg: null };
+  let min = arr[0];
+  let max = arr[0];
+  let sum = 0;
+  for (const v of arr) {
+    if (v < min) min = v;
+    if (v > max) max = v;
+    sum += v;
   }
-  return indices;
+  return { min, max, avg: sum / arr.length };
 }
 
-function getTomorrowWindow(hourly) {
-  const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setDate(now.getDate() + 1);
-  return getHourlyWindowForDay(hourly, tomorrow);
+function getTempStats(windowed) {
+  return basicStats(windowed.temperature_2m || []);
 }
 
-function sliceHourly(hourly, indices) {
-  const result = {};
-  for (const key of Object.keys(hourly)) {
-    const arr = hourly[key];
-    if (!Array.isArray(arr)) continue;
-    result[key] = indices.map(i => arr[i]);
-  }
-  return result;
+function getDewStats(windowed) {
+  return basicStats(windowed.dewpoint_2m || []);
 }
 
-function getDaypartWindow(hourly, targetDate, startHour, endHour) {
-  const times = hourly.time || [];
-  const indices = [];
-
-  const start = new Date(targetDate);
-  start.setHours(startHour, 0, 0, 0);
-  const end = new Date(targetDate);
-  end.setHours(endHour, 59, 59, 999);
-
-  for (let i = 0; i < times.length; i++) {
-    const t = toLocalDate(times[i]);
-    if (t >= start && t <= end) indices.push(i);
-  }
-  return indices;
+function getWindGustStats(windowed) {
+  return basicStats(windowed.windgusts_10m || []);
 }
-// PART 3 — Descriptors + simple impact helpers
+
+function getUVStats(windowed) {
+  return basicStats(windowed.uv_index || []);
+}
+
+function getPrecipTotal(windowed) {
+  const arr = windowed.precipitation || [];
+  return arr.length ? arr.reduce((a, b) => a + b, 0) : 0;
+}
+
+function getSnowTotal(windowed) {
+  const arr = windowed.snowfall || [];
+  return arr.length ? arr.reduce((a, b) => a + b, 0) : 0;
+}
+
+// ----------------------------------------------------
+// PART 3 — Descriptors + Simple Impact Helpers
+// ----------------------------------------------------
 
 function describePrecip(precipTotal, snowTotal) {
   if (snowTotal > 0.05) {
@@ -163,7 +156,10 @@ function describeTempRange(stats) {
   if (max <= 82) return "a warm day overall";
   return "a hot day overall";
 }
-// PART 4 — Human-Action Outlook (Option A style)
+
+// ----------------------------------------------------
+// PART 4 — Human‑Action Outlook (Option A)
+// ----------------------------------------------------
 
 export function getHumanActionOutlook(hourly) {
   const indices = getTomorrowWindow(hourly);
@@ -257,9 +253,11 @@ export function getHumanActionOutlook(hourly) {
     text: detail
   };
 }
-// PART 5 — Comfort Module 2.3 (Personality Edition) + alerts + exports
 
-// ---------------- NORMALS ----------------
+// ----------------------------------------------------
+// PART 5 — Comfort Module 2.3 (Personality Edition)
+// ----------------------------------------------------
+
 const NORMAL_HIGHS = {
   0: 47, 1: 51, 2: 59, 3: 68, 4: 75, 5: 82,
   6: 85, 7: 84, 8: 78, 9: 69, 10: 59, 11: 50
@@ -277,14 +275,11 @@ function monthName(i) {
   ][i];
 }
 
-// ---------------- COMFORT MODULE 2.3 — Personality Edition ----------------
-
 export function getComfortCategory(temp, dew, gust, precip = 0) {
   const now = new Date();
   const hour = now.getHours();
   const month = now.getMonth();
 
-  // GOLDILOCKS OVERRIDE
   const isGoldilocks =
     temp >= 68 && temp <= 74 &&
     dew >= 45 && dew <= 52 &&
@@ -292,13 +287,9 @@ export function getComfortCategory(temp, dew, gust, precip = 0) {
     precip < 0.02;
 
   if (isGoldilocks) {
-    return {
-      text: "Goldilocks — just right.",
-      emoji: "🌟"
-    };
+    return { text: "Goldilocks — just right.", emoji: "🌟" };
   }
 
-  // ABSOLUTE FEEL
   let feel;
   if (temp <= 25) feel = "biting";
   else if (temp <= 40) feel = "cold";
@@ -308,7 +299,6 @@ export function getComfortCategory(temp, dew, gust, precip = 0) {
   else if (temp <= 82) feel = "warm";
   else feel = "hot";
 
-  // NUANCE
   let nuance = "";
   if (dew >= 65) nuance = "humid";
   else if (dew < 40) nuance = "crisp";
@@ -318,7 +308,6 @@ export function getComfortCategory(temp, dew, gust, precip = 0) {
 
   const personality = getPersonalityPhrase(feel, nuance);
 
-  // NORMALS (morning/evening = low, afternoon = high)
   const normal = (hour < 11 || hour >= 18)
     ? NORMAL_LOWS[month]
     : NORMAL_HIGHS[month];
@@ -326,7 +315,6 @@ export function getComfortCategory(temp, dew, gust, precip = 0) {
   const diff = temp - normal;
   const absDiff = Math.abs(diff);
 
-  // SEASONAL CONTEXT ONLY IF ANOMALY > 10°F
   if (absDiff > 10) {
     const seasonal =
       diff > 10
@@ -344,8 +332,6 @@ export function getComfortCategory(temp, dew, gust, precip = 0) {
     emoji: comfortEmoji(feel)
   };
 }
-
-// ---------------- PERSONALITY PHRASES ----------------
 
 function getPersonalityPhrase(feel, nuance) {
   if (feel === "biting") {
@@ -391,8 +377,6 @@ function getPersonalityPhrase(feel, nuance) {
   return "Comfort unknown";
 }
 
-// ---------------- EMOJI MAPPER ----------------
-
 function comfortEmoji(feel) {
   switch (feel) {
     case "biting": return "🥶";
@@ -406,7 +390,9 @@ function comfortEmoji(feel) {
   }
 }
 
-// ---------------- FORECAST ALERTS ----------------
+// ----------------------------------------------------
+// PART 6 — Forecast Alerts
+// ----------------------------------------------------
 
 export function getForecastAlerts(hourly) {
   const indices = getTomorrowWindow(hourly);
@@ -472,7 +458,9 @@ export function getForecastAlerts(hourly) {
   return alerts;
 }
 
-// ---------------- DEFAULT EXPORT BUNDLE ----------------
+// ----------------------------------------------------
+// PART 7 — Default Export Bundle
+// ----------------------------------------------------
 
 export default {
   getHumanActionOutlook,
