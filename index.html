@@ -679,10 +679,21 @@
         try {
           const hourly = await getShortTermForecast(lat, lon);
 
-          const outlook = getHumanActionOutlook(hourly);
-          document.getElementById("action-emoji").textContent = outlook.emoji;
-          document.getElementById("action-headline").textContent = outlook.headline;
-          document.getElementById("action-text").textContent = outlook.text;
+     const outlook = getHumanActionOutlook(hourly);
+
+// Badge (line 1)
+const badgeEl = document.getElementById("action-badge");
+badgeEl.textContent = outlook.badge.text;
+badgeEl.className = "action-badge " + outlook.badge.class;
+
+// Emoji (line 2)
+document.getElementById("action-emoji").textContent = outlook.emoji;
+
+// Headline (line 1)
+document.getElementById("action-headline").textContent = outlook.headline;
+
+// Detail text (line 2)
+document.getElementById("action-text").textContent = outlook.text;
 
           const alerts = getForecastAlerts(hourly);
           renderForecastIcons(alerts);
@@ -712,6 +723,7 @@
 </script>
 </body>
 </html>
+
 
 
 
