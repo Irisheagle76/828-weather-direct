@@ -1,27 +1,18 @@
 // forecast-intel.js
 /* ----------------------------------------------------
    PART 1 — CORE HELPERS + HOURLY WINDOW TOOLS
-   ---------------------------------------------------- */
+---------------------------------------------------- */
 
-/**
- * Safely get a numeric value from an array, or null if missing/invalid.
- */
 function safeNum(arr, i) {
   if (!arr || i < 0 || i >= arr.length) return null;
   const v = arr[i];
   return typeof v === "number" && !Number.isNaN(v) ? v : null;
 }
 
-/**
- * Clamp a number between min and max.
- */
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
-/**
- * Simple average of an array of numbers (ignores null/undefined).
- */
 function avg(values) {
   let sum = 0;
   let count = 0;
@@ -34,9 +25,6 @@ function avg(values) {
   return count > 0 ? sum / count : null;
 }
 
-/**
- * Sum of an array of numbers (ignores null/undefined).
- */
 function sum(values) {
   let total = 0;
   for (const v of values) {
@@ -49,24 +37,18 @@ function sum(values) {
 
 /* ----------------------------------------------------
    TIME + HOURLY WINDOW HELPERS
-   ---------------------------------------------------- */
+---------------------------------------------------- */
 
-/**
- * Given an Open-Meteo hourly object, return an array of Date objects.
- */
 function getHourlyDates(hourly) {
   const times = hourly?.time || [];
   return times.map(t => new Date(t));
 }
 
-/**
- * Get the [start, end) indices for a given calendar date (local).
- */
 function getCalendarDayWindow(hourly, targetDate) {
   const times = hourly?.time || [];
   if (!times.length) return { start: 0, end: 0 };
 
-  const yyyy = targetDate.getFullYear();
+  const yyyy = targetDate.getFullFullYear();
   const mm = String(targetDate.getMonth() + 1).padStart(2, "0");
   const dd = String(targetDate.getDate()).padStart(2, "0");
   const targetStr = `${yyyy}-${mm}-${dd}`;
@@ -86,9 +68,6 @@ function getCalendarDayWindow(hourly, targetDate) {
   return { start, end };
 }
 
-/**
- * Get tomorrow's calendar-day window.
- */
 function getTomorrowWindow(hourly) {
   const now = new Date();
   now.setHours(0, 0, 0, 0);
@@ -98,7 +77,6 @@ function getTomorrowWindow(hourly) {
 
   const { start, end } = getCalendarDayWindow(hourly, tomorrow);
 
-  // Fallback if tomorrow isn't fully present in the dataset
   if (start === 0 && end === 0) {
     const len = hourly?.time?.length || 0;
     const s = Math.min(24, Math.max(0, len - 24));
@@ -109,9 +87,6 @@ function getTomorrowWindow(hourly) {
   return { start, end };
 }
 
-/**
- * Get a generic window from +offsetStart to +offsetEnd hours.
- */
 function getRelativeWindow(hourly, offsetStartHours, offsetEndHours) {
   const len = hourly?.time?.length || 0;
   const start = clamp(offsetStartHours, 0, len);
@@ -119,10 +94,6 @@ function getRelativeWindow(hourly, offsetStartHours, offsetEndHours) {
   return { start, end: Math.max(start, end) };
 }
 
-/**
- * Find the first and last hour where a condition is true.
- * Returns { firstHour, lastHour } as Date objects.
- */
 function findEventTiming(hourly, start, end, predicate) {
   const times = hourly.time || [];
   let first = null;
@@ -145,9 +116,6 @@ function findEventTiming(hourly, start, end, predicate) {
   };
 }
 
-/**
- * Turn a Date into a friendly time‑of‑day phrase.
- */
 function describeTimeOfDay(date) {
   if (!date) return null;
   const hour = date.getHours();
@@ -168,7 +136,7 @@ function dayName(date) {
 
 /* ----------------------------------------------------
    PRECIP + TEMP ACCUMULATION HELPERS
-   ---------------------------------------------------- */
+---------------------------------------------------- */
 
 function accumulatePrecip(hourly, start, end) {
   const rainArr = hourly?.precipitation || [];
@@ -265,7 +233,7 @@ function summarizeDewAndUV(hourly, start, end) {
 
 /* ----------------------------------------------------
    PART 2 — ASHEVILLE‑TUNED QPF INTERPRETER
-   ---------------------------------------------------- */
+---------------------------------------------------- */
 
 function classifyRain(rainTotal) {
   if (rainTotal < 0.01) return { type: "none", label: "No rain", severity: 0 };
@@ -370,12 +338,10 @@ function analyzeQPF(hourly, start, end) {
   };
 }
 /* ----------------------------------------------------
-   PART 2.5 — SEASON‑AWARE COMFORT MODULE
-   ---------------------------------------------------- */
+   PART 2 — SEASON‑AWARE COMFORT MODULE
+---------------------------------------------------- */
 
-/* ----------------------------------------------------
-   SEASONAL NORMALS (Asheville climatology)
-   ---------------------------------------------------- */
+/* ---------------- SEASONAL NORMALS (Asheville) ---------------- */
 function getSeasonalNormalHigh(month) {
   const normals = {
     0: 47,  // Jan
@@ -394,17 +360,13 @@ function getSeasonalNormalHigh(month) {
   return normals[month];
 }
 
-/* ----------------------------------------------------
-   SEASONAL ANOMALY CALCULATOR
-   ---------------------------------------------------- */
+/* ---------------- SEASONAL ANOMALY ---------------- */
 function getTempAnomaly(temp, month) {
   const normal = getSeasonalNormalHigh(month);
-  return temp - normal;   // positive = warmer than normal
+  return temp - normal;
 }
 
-/* ----------------------------------------------------
-   SEASON‑AWARE TEMPERATURE FEEL
-   ---------------------------------------------------- */
+/* ---------------- SEASONAL FEEL ---------------- */
 function describeSeasonalFeel(temp, month) {
   const anomaly = getTempAnomaly(temp, month);
 
@@ -419,9 +381,7 @@ function describeSeasonalFeel(temp, month) {
   return "seasonable";
 }
 
-/* ----------------------------------------------------
-   ABSOLUTE TEMPERATURE FEEL (baseline)
-   ---------------------------------------------------- */
+/* ---------------- ABSOLUTE FEEL ---------------- */
 function describeAbsoluteFeel(temp) {
   if (temp >= 90) return "hot";
   if (temp >= 80) return "warm";
@@ -432,9 +392,7 @@ function describeAbsoluteFeel(temp) {
   return "very cold";
 }
 
-/* ----------------------------------------------------
-   FINAL COMFORT CATEGORY (SEASON + ABSOLUTE)
-   ---------------------------------------------------- */
+/* ---------------- FINAL COMFORT CATEGORY ---------------- */
 export function getComfortCategory(temp, dew, wind, dateObj = new Date()) {
   const month = dateObj.getMonth();
 
@@ -443,28 +401,19 @@ export function getComfortCategory(temp, dew, wind, dateObj = new Date()) {
 
   let blended;
 
-  // Seasonal overrides for big anomalies
   if (seasonal.includes("unseasonably")) {
     blended = seasonal;
-
-  // Winter 60–70°F → feels warm/mild
   } else if (seasonal.includes("mild") && absolute === "cool") {
     blended = "mild and pleasant";
-
-  // Summer 60–70°F → feels cool
   } else if (seasonal.includes("cool") && absolute === "mild") {
     blended = "cool for the season";
-
-  // Normal days
   } else {
     blended = seasonal === "seasonable" ? absolute : seasonal;
   }
 
-  // Humidity nuance
   if (dew >= 65 && temp >= 75) blended += ", humid";
   if (dew <= 30 && temp >= 60) blended += ", dry and comfortable";
 
-  // Wind nuance
   if (wind >= 35) blended += ", windy";
   else if (wind >= 25) blended += ", breezy";
 
@@ -473,39 +422,23 @@ export function getComfortCategory(temp, dew, wind, dateObj = new Date()) {
 
 /* ----------------------------------------------------
    PART 3 — THERMAL PROFILE ENGINE
-   ---------------------------------------------------- */
+---------------------------------------------------- */
 
-/**
- * Approximate wet‑bulb temperature using a simple, stable formula.
- * This is not a full psychrometric calculation, but it is accurate
- * enough for precip‑type decisions in mountain climates.
- */
+/* ---------------- WET‑BULB TEMPERATURE ---------------- */
 function computeWetBulb(tempF, dewF) {
   if (tempF == null || dewF == null) return null;
 
   const spread = tempF - dewF;
 
-  // If dewpoint is close to temp, wet‑bulb ≈ temp.
   if (spread <= 2) return tempF - 0.5;
-
-  // If dewpoint is far below temp, wet‑bulb drops significantly.
   if (spread >= 15) return tempF - 8;
 
-  // Linear interpolation for mid‑range spreads.
   return tempF - (spread * 0.5);
 }
 
-/**
- * Determine precip type for a single hour based on:
- * - Temperature
- * - Dewpoint
- * - Wet‑bulb temperature
- * - Snowfall amount
- */
+/* ---------------- HOURLY PRECIP‑TYPE CLASSIFIER ---------------- */
 function classifyHourlyPrecipType(tempF, dewF, snowIn) {
-  if (snowIn != null && snowIn > 0.05) {
-    return "snow";
-  }
+  if (snowIn != null && snowIn > 0.05) return "snow";
 
   const tw = computeWetBulb(tempF, dewF);
   if (tw == null) return "unknown";
@@ -515,9 +448,7 @@ function classifyHourlyPrecipType(tempF, dewF, snowIn) {
   return "rain";
 }
 
-/**
- * Detect Cold‑Air Damming (CAD) signatures.
- */
+/* ---------------- CAD DETECTION ---------------- */
 function detectCAD(hourly, start, end) {
   const tempArr = hourly.temperature_2m || [];
   const dewArr = hourly.dewpoint_2m || [];
@@ -534,26 +465,15 @@ function detectCAD(hourly, start, end) {
     const dCurr = safeNum(dewArr, i);
     const g = safeNum(gustArr, i);
 
-    if (tPrev != null && tCurr != null && tCurr < tPrev) {
-      fallingTemps = true;
-    }
-
-    if (dPrev != null && dCurr != null && dCurr > dPrev) {
-      risingDew = true;
-    }
-
-    // CAD wind signature: gusty but not NW‑flow gusty
-    if (g != null && g >= 10 && g <= 25) {
-      cadWind = true;
-    }
+    if (tPrev != null && tCurr != null && tCurr < tPrev) fallingTemps = true;
+    if (dPrev != null && dCurr != null && dCurr > dPrev) risingDew = true;
+    if (g != null && g >= 10 && g <= 25) cadWind = true;
   }
 
   return fallingTemps && risingDew && cadWind;
 }
 
-/**
- * Detect freezing drizzle potential.
- */
+/* ---------------- FREEZING DRIZZLE DETECTION ---------------- */
 function detectFreezingDrizzle(hourly, start, end) {
   const tempArr = hourly.temperature_2m || [];
   const dewArr = hourly.dewpoint_2m || [];
@@ -578,9 +498,7 @@ function detectFreezingDrizzle(hourly, start, end) {
   return possible;
 }
 
-/**
- * Summarize thermal profile for tomorrow.
- */
+/* ---------------- THERMAL PROFILE SUMMARY ---------------- */
 function analyzeThermalProfile(hourly, start, end) {
   const tempArr = hourly.temperature_2m || [];
   const dewArr = hourly.dewpoint_2m || [];
@@ -636,92 +554,10 @@ function analyzeThermalProfile(hourly, start, end) {
   };
 }
 /* ----------------------------------------------------
-   PART 4 — HUMAN‑ACTION OUTLOOK (STRUCTURED OUTPUT)
-   ---------------------------------------------------- */
+   PART 4 — MICROCLIMATE + HUMAN‑ACTION INTELLIGENCE
+---------------------------------------------------- */
 
-/* ---------------- TIMING PHRASE BUILDER ---------------- */
-function timingPhrase(timing) {
-  if (!timing.firstHour) return "";
-
-  const startDay = dayName(timing.firstHour);
-  const endDay = dayName(timing.lastHour);
-
-  const startPhrase = describeTimeOfDay(timing.firstHour);
-  const endPhrase = describeTimeOfDay(timing.lastHour);
-
-  if (startDay === endDay && startPhrase === endPhrase) {
-    return ` ${startDay} ${startPhrase}`;
-  }
-
-  if (startDay === endDay) {
-    return ` ${startDay} from ${startPhrase} into ${endPhrase}`;
-  }
-
-  return ` from ${startDay} ${startPhrase} into ${endDay} ${endPhrase}`;
-}
-
-/* ----------------------------------------------------
-   ACTION RECOMMENDATIONS
-   ---------------------------------------------------- */
-function buildActionList({ qpf, thermal, wind, dew, uv, micro }) {
-  const actions = [];
-
-  if (qpf.rainTotal >= 0.10) {
-    actions.push("carry an umbrella");
-    actions.push("wear waterproof shoes or a rain jacket");
-  }
-
-  if (qpf.snowTotal >= 0.1) {
-    actions.push("allow extra travel time");
-    actions.push("use caution on bridges and overpasses");
-    actions.push("dress warmly");
-  }
-
-  if (thermal.minTemp != null && thermal.minTemp <= 35) {
-    actions.push("dress warmly in layers");
-    actions.push("wear gloves and a hat");
-  }
-
-  if (thermal.maxTemp != null && thermal.maxTemp >= 82) {
-    actions.push("stay hydrated");
-    actions.push("wear light clothing");
-  }
-
-  if (dew.maxDew >= 65) {
-    actions.push("take breaks if outdoors");
-  }
-
-  if (uv >= 6) {
-    actions.push("apply sunscreen");
-    actions.push("wear a hat or sunglasses");
-  }
-
-  if (wind.maxGust >= 30) {
-    actions.push("secure loose items");
-  }
-
-  if (micro.layersDay) {
-    actions.push("dress in layers — big temperature swings expected");
-  }
-
-  if (micro.nwFlowSnow) {
-    actions.push("watch for slick spots on the Blue Ridge Parkway");
-  }
-
-  if (micro.cad) {
-    actions.push("be alert for freezing drizzle in sheltered valleys");
-  }
-
-  if (micro.ridgeWinds) {
-    actions.push("expect stronger winds on ridgelines");
-  }
-
-  return actions;
-}
-
-/* ----------------------------------------------------
-   MICROCLIMATE DETECTION
-   ---------------------------------------------------- */
+/* ---------------- MICROCLIMATE DETECTION ---------------- */
 function detectMicroclimates(hourly, start, end) {
   const micro = {
     nwFlowSnow: false,
@@ -778,9 +614,7 @@ function detectMicroclimates(hourly, start, end) {
   return micro;
 }
 
-/* ----------------------------------------------------
-   GOLDILOCKS DETECTION
-   ---------------------------------------------------- */
+/* ---------------- GOLDILOCKS DETECTION ---------------- */
 function detectGoldilocks(qpf, thermal, wind, dew, micro) {
   const { maxTemp, minTemp } = thermal;
 
@@ -798,13 +632,11 @@ function detectGoldilocks(qpf, thermal, wind, dew, micro) {
   return null;
 }
 
-/* ----------------------------------------------------
-   TEMPERATURE SWING DETECTOR
-   ---------------------------------------------------- */
+/* ---------------- TEMPERATURE SWING DETECTOR ---------------- */
 function describeTempSwing(hourly, start, end, thermal) {
   const temps = hourly.temperature_2m || [];
   const slice = temps.slice(start, end).filter(t => t != null);
- 	if (slice.length < 4) return null;
+  if (slice.length < 4) return null;
 
   const morning = slice.slice(0, 6);
   const afternoon = slice.slice(10, 18);
@@ -844,9 +676,7 @@ function describeTempSwing(hourly, start, end, thermal) {
   return null;
 }
 
-/* ----------------------------------------------------
-   SUMMARY BUILDER (COMPRESSED)
-   ---------------------------------------------------- */
+/* ---------------- SUMMARY BUILDER ---------------- */
 function buildSummary(qpf, thermal, wind, dew, micro, swingPhrase) {
   const parts = [];
 
@@ -889,22 +719,64 @@ function buildSummary(qpf, thermal, wind, dew, micro, swingPhrase) {
   return parts.join(" ");
 }
 
-/* ----------------------------------------------------
-   GOLDILOCKS HEADLINE BUILDER
-   ---------------------------------------------------- */
-function buildGoldilocksHeadline(type) {
-  switch (type) {
-    case "full": return "✨ Goldilocks Day!";
-    case "afternoon": return "✨ Goldilocks Afternoon!";
-    case "valleys": return "✨ Goldilocks in the Valleys!";
-    case "earlyMuggyLate": return "✨ Goldilocks Early, Muggy Late!";
-    default: return null;
+/* ---------------- ACTION RECOMMENDATIONS ---------------- */
+function buildActionList({ qpf, thermal, wind, dew, uv, micro }) {
+  const actions = [];
+
+  if (qpf.rainTotal >= 0.10) {
+    actions.push("carry an umbrella");
+    actions.push("wear waterproof shoes or a rain jacket");
   }
+
+  if (qpf.snowTotal >= 0.1) {
+    actions.push("allow extra travel time");
+    actions.push("use caution on bridges and overpasses");
+    actions.push("dress warmly");
+  }
+
+  if (thermal.minTemp != null && thermal.minTemp <= 35) {
+    actions.push("dress warmly in layers");
+    actions.push("wear gloves and a hat");
+  }
+
+  if (thermal.maxTemp != null && thermal.maxTemp >= 82) {
+    actions.push("stay hydrated");
+    actions.push("wear light clothing");
+  }
+
+  if (dew.maxDew >= 65) {
+    actions.push("take breaks if outdoors");
+  }
+
+  if (uv >= 6) {
+    actions.push("apply sunscreen");
+    actions.push("wear a hat or sunglasses");
+  }
+
+  if (wind.maxGust >= 30) {
+    actions.push("secure loose items");
+  }
+
+  if (micro.layersDay) {
+    actions.push("dress in layers — big temperature swings expected");
+  }
+
+  if (micro.nwFlowSnow) {
+    actions.push("watch for slick spots on the Blue Ridge Parkway");
+  }
+
+  if (micro.cad) {
+    actions.push("be alert for freezing drizzle in sheltered valleys");
+  }
+
+  if (micro.ridgeWinds) {
+    actions.push("expect stronger winds on ridgelines");
+  }
+
+  return actions;
 }
 
-/* ----------------------------------------------------
-   HUMAN‑ACTION TEXT BUILDER (FINAL)
-   ---------------------------------------------------- */
+/* ---------------- HUMAN‑ACTION TEXT BUILDER ---------------- */
 function buildHumanActionText({ headline, summary, actions }) {
   const cleaned = [...new Set(actions)];
 
@@ -939,53 +811,41 @@ function buildHumanActionText({ headline, summary, actions }) {
   );
 }
 /* ----------------------------------------------------
-   HUMAN-ACTION ICON ENGINE
-   ---------------------------------------------------- */
-export function getActionIcon(flags) {
-  if (flags.goldilocks) return "✨";
+   PART 5 — ICON ENGINE + CATEGORY ENGINE
+---------------------------------------------------- */
 
-  if (flags.stormy) return "⛈️";
+function getActionIcon(flags) {
+  if (flags.snowy) return "❄️";
+  if (flags.mixed) return "🌨️";
   if (flags.rainy) return "🌧️";
-  if (flags.mixed) return "🌦️";
-  if (flags.snowy) return "🌨️";
-
+  if (flags.stormy) return "⛈️";
   if (flags.windy) return "💨";
-
   if (flags.hot) return "🔥";
-  if (flags.cold) return "❄️";
-
-  if (flags.dry) return "🌤️";
-
+  if (flags.cold) return "🥶";
+  if (flags.goldilocks) return "🌤️";
   return "🌡️";
 }
 
-/* ----------------------------------------------------
-   HUMAN-ACTION BADGE ENGINE
-   ---------------------------------------------------- */
-export function getActionBadge(flags) {
-  if (flags.goldilocks) return { text: "Goldilocks", class: "badge-goldilocks" };
-
-  if (flags.stormy) return { text: "Stormy", class: "badge-stormy" };
-  if (flags.rainy) return { text: "Rainy", class: "badge-rainy" };
-  if (flags.mixed) return { text: "Mixed", class: "badge-mixed" };
-  if (flags.snowy) return { text: "Snowy", class: "badge-snowy" };
-
-  if (flags.windy) return { text: "Windy", class: "badge-windy" };
-
-  if (flags.hot) return { text: "Hot", class: "badge-hot" };
-  if (flags.cold) return { text: "Cold", class: "badge-cold" };
-
-  if (flags.dry) return { text: "Dry", class: "badge-dry" };
-
-  return { text: "Outlook", class: "badge-neutral" };
+function getActionBadge(flags) {
+  if (flags.snowy) return { text: "Snowy", color: "#7bb4ff" };
+  if (flags.mixed) return { text: "Wintry Mix", color: "#9bb0ff" };
+  if (flags.rainy) return { text: "Rainy", color: "#6fa8ff" };
+  if (flags.stormy) return { text: "Stormy", color: "#ff8b5c" };
+  if (flags.windy) return { text: "Windy", color: "#b0d4ff" };
+  if (flags.hot) return { text: "Hot", color: "#ffb36b" };
+  if (flags.cold) return { text: "Cold", color: "#9ed0ff" };
+  if (flags.goldilocks) return { text: "Goldilocks", color: "#ffe28a" };
+  return { text: "Typical", color: "#ddd" };
 }
 
 /* ----------------------------------------------------
-   MAIN HUMAN‑ACTION OUTLOOK EXPORT (Option A, FIXED)
-   ---------------------------------------------------- */
+   PART 6 — HUMAN‑ACTION OUTLOOK (OPTION B)
+---------------------------------------------------- */
+
 export function getHumanActionOutlook(hourly) {
   const { start, end } = getTomorrowWindow(hourly);
 
+  // Core analyses
   const qpf = analyzeQPF(hourly, start, end);
   const thermal = analyzeThermalProfile(hourly, start, end);
   const wind = summarizeWindGusts(hourly, start, end);
@@ -995,12 +855,14 @@ export function getHumanActionOutlook(hourly) {
   const micro = detectMicroclimates(hourly, start, end);
   const goldilocksType = detectGoldilocks(qpf, thermal, wind, dew, micro);
 
-  // Build pieces
+  // Temperature swing phrase
   const swingPhrase = describeTempSwing(hourly, start, end, thermal);
+
+  // Summary + actions
   const summary = buildSummary(qpf, thermal, wind, dew, micro, swingPhrase);
   const actions = buildActionList({ qpf, thermal, wind, dew, uv, micro });
 
-  // Pick the top action sentence
+  // Deduplicate + prioritize actions
   const cleaned = [...new Set(actions)];
   const merged = cleaned.map(a =>
     a.includes("dress warmly") || a.includes("dress in layers")
@@ -1015,13 +877,14 @@ export function getHumanActionOutlook(hourly) {
     a.includes("dress warmly")
   );
 
-  const topAction = priority.length >= 2
-    ? "Plan to " + priority.slice(0, 2).join(" and ") + "."
-    : deduped.length > 0
-    ? "Plan to " + deduped[0] + "."
-    : "";
+  const topAction =
+    priority.length >= 2
+      ? "Plan to " + priority.slice(0, 2).join(" and ") + "."
+      : deduped.length > 0
+      ? "Plan to " + deduped[0] + "."
+      : "";
 
-  // Category label (Snowy, Rainy, etc.)
+  // Category flags
   const flags = {
     goldilocks: !!goldilocksType,
 
@@ -1038,9 +901,8 @@ export function getHumanActionOutlook(hourly) {
     dry: qpf.rainTotal < 0.02 && qpf.snowTotal < 0.02
   };
 
-  // Convert flags → category label
   const badge = getActionBadge(flags);
-  const category = badge.text; // e.g., "Snowy"
+  const category = badge.text;
 
   return {
     headline: "Tomorrow’s Human‑Action Outlook",
@@ -1051,163 +913,26 @@ export function getHumanActionOutlook(hourly) {
   };
 }
 /* ----------------------------------------------------
-   PART 5 — ALERTS 2.0 + EXPORTS
-   ---------------------------------------------------- */
+   PART 7 — FINAL EXPORTS
+---------------------------------------------------- */
 
-/**
- * Build a list of forecast alerts for the next 12–48 hours.
- */
-export function getForecastAlerts(hourly) {
-  if (!hourly || !hourly.time) return [];
+export {
+  getTomorrowWindow,
+  analyzeQPF,
+  analyzeThermalProfile,
+  summarizeWindGusts,
+  summarizeDewAndUV,
+  detectMicroclimates,
+  detectGoldilocks,
+  describeTempSwing,
+  buildSummary,
+  buildActionList,
+  buildHumanActionText
+};
 
-  const len = hourly.time.length;
-  const start = Math.min(12, len - 1);
-  const end = Math.min(48, len);
-
-  const qpf = analyzeQPF(hourly, start, end);
-  const thermal = analyzeThermalProfile(hourly, start, end);
-  const wind = summarizeWindGusts(hourly, start, end);
-  const dew = summarizeDewAndUV(hourly, start, end);
-  const maxUV = dew.maxUV;
-
-  const alerts = [];
-
-  const rainTiming = findEventTiming(
-    hourly,
-    start,
-    end,
-    i => (hourly.precipitation?.[i] ?? 0) > 0.02
-  );
-
-  const snowTiming = findEventTiming(
-    hourly,
-    start,
-    end,
-    i => (hourly.snowfall?.[i] ?? 0) > 0.02
-  );
-
-  const windTiming = findEventTiming(
-    hourly,
-    start,
-    end,
-    i => (hourly.windgusts_10m?.[i] ?? 0) >= 30
-  );
-
-  /* ---------------- SNOW ALERTS ---------------- */
-  if (qpf.snow.severity >= 3) {
-    alerts.push({
-      icon: "❄️",
-      id: "snow",
-      title: qpf.snow.label,
-      detail: `Around ${qpf.snowTotal?.toFixed?.(1) ?? qpf.snowTotal}" of snow expected${timingPhrase(
-        snowTiming
-      )}. Roads may become slick.`
-    });
-  }
-
-  if (qpf.nwFlowSnow && qpf.snow.severity <= 2) {
-    alerts.push({
-      icon: "🌨️",
-      id: "nwflow",
-      title: "NW‑flow snow showers",
-      detail: `Light upslope snow showers possible${timingPhrase(
-        snowTiming
-      )} — classic Asheville pattern.`
-    });
-  }
-
-  if (thermal.freezingDrizzle) {
-    alerts.push({
-      icon: "🧊",
-      id: "fzdrizzle",
-      title: "Freezing drizzle possible",
-      detail: "Light icing may occur on elevated surfaces. Use caution on bridges and overpasses."
-    });
-  }
-
-  /* ---------------- RAIN ALERTS ---------------- */
-  if (qpf.rain.severity >= 4) {
-    alerts.push({
-      icon: "🌧️",
-      id: "rain",
-      title: qpf.rain.label,
-      detail: `Around ${qpf.rainTotal?.toFixed?.(2) ?? qpf.rainTotal}" of rain expected${timingPhrase(
-        rainTiming
-      )}. Roads may be wet.`
-    });
-  }
-
-  if (qpf.convective) {
-    alerts.push({
-      icon: "⛈️",
-      id: "tstorms",
-      title: "Downpours or thunderstorms",
-      detail: `A few heavier showers or thunderstorms may develop${timingPhrase(
-        rainTiming
-      )}.`
-    });
-  }
-
-  /* ---------------- WIND ALERTS ---------------- */
-  if (wind.maxGust >= 40) {
-    alerts.push({
-      icon: "🌬️",
-      id: "strongwind",
-      title: "Strong winds",
-      detail: `Gusts may exceed ${wind.maxGust.toFixed(0)} mph${timingPhrase(
-        windTiming
-      )}. Secure outdoor items.`
-    });
-  } else if (wind.maxGust >= 30) {
-    alerts.push({
-      icon: "💨",
-      id: "gusty",
-      title: "Gusty conditions",
-      detail: `Wind gusts up to ${wind.maxGust.toFixed(0)} mph expected${timingPhrase(
-        windTiming
-      )}.`
-    });
-  }
-
-  /* ---------------- HEAT / COLD ---------------- */
-  if (thermal.maxTemp != null && thermal.maxTemp >= 88 && dew.maxDew >= 68) {
-    alerts.push({
-      icon: "🥵",
-      id: "heat",
-      title: "Hot and humid",
-      detail: `Highs near ${thermal.maxTemp.toFixed(
-        0
-      )}°F with muggy conditions. Stay hydrated.`
-    });
-  }
-
-  if (thermal.minTemp != null && thermal.minTemp <= 15) {
-    alerts.push({
-      icon: "🥶",
-      id: "cold",
-      title: "Bitter cold",
-      detail: `Lows may fall to around ${thermal.minTemp.toFixed(
-        0
-      )}°F. Dress warmly.`
-    });
-  }
-
-  /* ---------------- UV ALERT ---------------- */
-  if (maxUV >= 7 && qpf.rainTotal < 0.05) {
-    alerts.push({
-      icon: "🌞",
-      id: "uv",
-      title: "High UV index",
-      detail: "Sunscreen recommended, especially midday."
-    });
-  }
-
-  return alerts;
-}
-
-/* ----------------------------------------------------
-   MODULE COMPLETE
-   ---------------------------------------------------- */
-
+/* The primary export your UI calls */
+export default {
+  getHumanActionOutlook
+};
 
 
