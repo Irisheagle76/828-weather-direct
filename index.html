@@ -2,728 +2,297 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>828 Weather Direct – WU Powered</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>828 Weather Direct</title>
 
   <style>
     /* ----------------------------------------------------
-       GLOBAL + SMART MOBILE SPACING
-       ---------------------------------------------------- */
-    :root {
-      --card-padding: 1.5rem;
-      --module-padding: 1rem 1.2rem;
-      --module-radius: 22px;
-      --gap: 1.4rem;
-    }
-
-    @media (max-height: 700px), (max-width: 420px) {
-      :root {
-        --card-padding: 1rem;
-        --module-padding: 0.85rem 1rem;
-        --module-radius: 18px;
-        --gap: 1rem;
-      }
-    }
-
+       GLOBAL
+    ---------------------------------------------------- */
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #0a0f1c;
-      color: #f5f5f5;
       margin: 0;
-      padding: var(--card-padding);
+      padding: 0;
+      font-family: "Inter", sans-serif;
+      background: #f7f7f9;
+      color: #222;
     }
 
-    .card {
-      max-width: 720px;
-      margin: 0 auto;
-      background: #141a2a;
-      border-radius: var(--module-radius);
-      padding: var(--card-padding);
-      box-shadow: 0 18px 40px rgba(0,0,0,0.45);
-      border: 1px solid rgba(255,255,255,0.05);
+    .section {
+      padding: 1.4rem 1.2rem;
+      border-bottom: 1px solid #e3e3e8;
     }
 
-    h1 {
-      margin: 0 0 0.4rem;
-      font-size: 1.6rem;
-      letter-spacing: 0.03em;
-    }
-
-    .subtitle {
-      font-size: 0.9rem;
-      color: #9aa3c2;
-      margin-bottom: var(--gap);
-    }
-
-    /* ----------------------------------------------------
-       STATUS BADGE
-       ---------------------------------------------------- */
-    .status-row {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 0.75rem;
-      margin-bottom: var(--gap);
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.3rem 0.7rem;
-      border-radius: 999px;
-      font-size: 0.78rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.04);
-    }
-
-    .badge-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: #f5c84c;
-    }
-
-    .badge-dot.ok { background: #ffa94d; }
-    .badge-dot.error { background: #fb7185; }
-
-    .status-text {
-      font-size: 0.85rem;
-      color: #c4c9e5;
-    }
-
-    /* ----------------------------------------------------
-       NOW vs TOMORROW LAYOUT
-       ---------------------------------------------------- */
-    .now-tomorrow-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--gap);
-      margin-bottom: var(--gap);
-    }
-
-    .now-col,
-    .tomorrow-col {
-      flex: 1 1 260px;
-      min-width: 0;
-    }
-
-    /* ----------------------------------------------------
-       COMFORT MODULE
-       ---------------------------------------------------- */
-    .comfort-module {
-      background: rgba(255, 169, 77, 0.10);
-      border: 1px solid rgba(255, 169, 77, 0.35);
-      border-radius: var(--module-radius);
-      padding: var(--module-padding);
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-    }
-
-    .comfort-emoji {
-      font-size: 2rem;
-      flex-shrink: 0;
-    }
-
-    .comfort-label {
-      font-size: 0.78rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #f0b777;
-      margin-bottom: 0.15rem;
-      white-space: nowrap;
-    }
-
-    .comfort-text {
-      font-size: 1.02rem;
+    .section-title {
+      font-size: 1.15rem;
       font-weight: 600;
-      color: #ffa94d;
-      letter-spacing: 0.02em;
-      line-height: 1.25;
-      word-wrap: break-word;
-    }
-
-    .comfort-sub {
-      font-size: 0.78rem;
-      color: #9aa3c2;
-      margin-top: 0.15rem;
+      margin-bottom: 0.8rem;
+      color: #333;
     }
 
     /* ----------------------------------------------------
-       HUMAN-ACTION OUTLOOK (POLISHED FOR MOBILE)
-       ---------------------------------------------------- */
+       HEADER
+    ---------------------------------------------------- */
+    .header {
+      padding: 1.6rem 1.2rem 1.2rem;
+      background: #ffffff;
+      border-bottom: 1px solid #e3e3e8;
+    }
+
+    .header-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+    }
+
+    .header-subtitle {
+      font-size: 0.95rem;
+      color: #666;
+      margin-top: 0.25rem;
+    }
+
+    /* ----------------------------------------------------
+       CURRENT CONDITIONS
+    ---------------------------------------------------- */
+    .current-container {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+
+    .current-temp {
+      font-size: 3.2rem;
+      font-weight: 600;
+    }
+
+    .current-details {
+      font-size: 0.95rem;
+      line-height: 1.35rem;
+      color: #444;
+    }
+
+    /* ----------------------------------------------------
+       FORECAST BLOCKS
+    ---------------------------------------------------- */
+    .forecast-container {
+      font-size: 0.95rem;
+      line-height: 1.4rem;
+      color: #444;
+    }
+
+    .forecast-container div {
+      margin-bottom: 0.25rem;
+    }
+        /* ----------------------------------------------------
+       HUMAN‑ACTION OUTLOOK (UPDATED)
+    ---------------------------------------------------- */
     .action-module {
-      background: rgba(120, 180, 255, 0.10);
-      border: 1px solid rgba(120, 180, 255, 0.35);
-      border-radius: var(--module-radius);
-      padding: var(--module-padding);
       display: flex;
       align-items: flex-start;
-      gap: 0.9rem;
-      min-width: 0;
+      gap: 1.1rem;
+      padding: 1rem 1rem 1.2rem;
+      background: #ffffff;
+      border-radius: 10px;
+      border: 1px solid #e3e3e8;
     }
 
     .action-emoji {
-      font-size: 1.9rem;
-      flex-shrink: 0;
-    }
-
-    .action-label {
-      font-size: 0.78rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #8fb7ff;
-      margin-bottom: 0.2rem;
-    }
-
-    .action-headline {
-      font-size: 1.05rem;
-      font-weight: 600;
-      color: #e0ecff;
-      margin-bottom: 0.2rem;
-      line-height: 1.35;
-      overflow-wrap: anywhere;
-    }
-
-    .action-text {
-      font-size: 0.86rem;
-      color: #c4d4ff;
-      line-height: 1.4;
-      overflow-wrap: anywhere;
-    }
-
-    /* ----------------------------------------------------
-       METRICS GRID
-       ---------------------------------------------------- */
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: var(--gap);
-      margin-top: 0.5rem;
-    }
-
-    .metric {
-      background: rgba(255,255,255,0.03);
-      border-radius: var(--module-radius);
-      padding: 0.75rem 0.9rem;
-      border: 1px solid rgba(255,255,255,0.05);
-    }
-
-    .metric-label {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #f0b777;
-      margin-bottom: 0.25rem;
-    }
-
-    .metric-value {
-      font-size: 1.2rem;
-      font-weight: 600;
-    }
-
-    .metric-sub {
-      font-size: 0.8rem;
-      color: #9aa3c2;
+      font-size: 2.4rem;
+      line-height: 2.4rem;
       margin-top: 0.15rem;
     }
 
-    /* ----------------------------------------------------
-       FORECAST ALERTS
-       ---------------------------------------------------- */
-    .forecast-module {
-      margin-top: var(--gap);
-      background: rgba(255, 169, 77, 0.10);
-      border: 1px solid rgba(255, 169, 77, 0.25);
-      border-radius: var(--module-radius);
-      padding: var(--module-padding);
-    }
-
-    .forecast-title {
+    .action-label {
       font-size: 0.95rem;
       font-weight: 600;
-      color: #ffa94d;
-      margin-bottom: 0.6rem;
-      letter-spacing: 0.03em;
+      color: #666;
+      margin-bottom: 0.25rem;
     }
 
-    .forecast-icons {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-      font-size: 2rem;
-      cursor: pointer;
+    .action-headline {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.45rem;
+      color: #222;
     }
 
-    .forecast-icon {
-      transition: transform 0.15s ease;
-    }
-
-    .forecast-icon:hover {
-      transform: scale(1.2);
-    }
-
-    .forecast-detail {
-      margin-top: 0.9rem;
-      padding: 0.8rem 1rem;
-      background: rgba(255,255,255,0.05);
-      border-radius: var(--module-radius);
-      border: 1px solid rgba(255,255,255,0.08);
-      display: none;
-    }
-
-    .detail-title {
+    .action-text {
       font-size: 0.95rem;
+      line-height: 1.35rem;
+      color: #333;
+    }
+
+    /* ----------------------------------------------------
+       ALERTS
+    ---------------------------------------------------- */
+    .alerts-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+
+    .alert-card {
+      background: #ffffff;
+      border: 1px solid #e3e3e8;
+      border-radius: 10px;
+      padding: 0.9rem 1rem;
+      display: flex;
+      gap: 0.9rem;
+    }
+
+    .alert-icon {
+      font-size: 1.6rem;
+    }
+
+    .alert-title {
       font-weight: 600;
       margin-bottom: 0.25rem;
-      color: #ffa94d;
     }
 
-    .detail-text {
+    .alert-detail {
+      font-size: 0.9rem;
+      color: #444;
+      line-height: 1.3rem;
+    }
+
+    /* ----------------------------------------------------
+       TIMELINE
+    ---------------------------------------------------- */
+    .timeline-container {
+      display: flex;
+      overflow-x: auto;
+      gap: 0.8rem;
+      padding-bottom: 0.4rem;
+    }
+
+    .timeline-card {
+      min-width: 70px;
+      background: #ffffff;
+      border: 1px solid #e3e3e8;
+      border-radius: 10px;
+      padding: 0.6rem;
+      text-align: center;
       font-size: 0.85rem;
-      color: #d8d8e0;
-      line-height: 1.35;
+    }
+
+    .timeline-temp {
+      font-weight: 600;
+      margin-top: 0.25rem;
     }
 
     /* ----------------------------------------------------
        FOOTER
-       ---------------------------------------------------- */
-    .footer-note {
-      margin-top: var(--gap);
-      font-size: 0.78rem;
-      color: #e0b27a;
+    ---------------------------------------------------- */
+    .footer {
+      padding: 1.2rem;
       text-align: center;
-    }
-
-    .error-text {
-      color: #fb7185;
       font-size: 0.85rem;
-      margin-top: 0.5rem;
+      color: #777;
     }
   </style>
 </head>
 
 <body>
-<div class="card">
-  <h1>828 Weather Direct</h1>
-  <div class="subtitle">Hyper‑local conditions via Weather Underground PWS network</div>
+  <div id="app">
+        <!-- HEADER -->
+    <header class="header">
+      <div class="header-title">828 Weather Direct</div>
+      <div class="header-subtitle">Asheville’s Hyper‑Local Forecast</div>
+    </header>
 
-  <div class="status-row">
-    <div class="badge" id="wu-status-badge">
-      <span class="badge-dot" id="wu-status-dot"></span>
-      <span id="wu-status-label">Detecting location…</span>
-    </div>
-    <div class="status-text" id="wu-status-text">
-      Waiting for browser location permission.
-    </div>
-  </div>
+    <!-- CURRENT CONDITIONS -->
+    <section id="current-section" class="section">
+      <div class="section-title">Current Conditions</div>
 
-  <div class="now-tomorrow-row">
-    <div class="now-col">
-      <div id="comfort-module" class="comfort-module">
-        <div id="comfort-emoji" class="comfort-emoji">--</div>
-        <div>
-          <div class="comfort-label">Right now comfort</div>
-          <div id="comfort-text" class="comfort-text">Comfort loading…</div>
-          <div class="comfort-sub">Based on current conditions</div>
+      <div id="current-container" class="current-container">
+        <div class="current-temp" id="current-temp">--°</div>
+
+        <div class="current-details">
+          <div id="current-description">Loading...</div>
+          <div id="current-wind">Wind: --</div>
+          <div id="current-humidity">Humidity: --</div>
+          <div id="current-dewpoint">Dewpoint: --</div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <div class="tomorrow-col">
+    <!-- TODAY FORECAST -->
+    <section id="today-section" class="section">
+      <div class="section-title">Today’s Forecast</div>
+
+      <div id="today-container" class="forecast-container">
+        <div id="today-high">High: --°</div>
+        <div id="today-low">Low: --°</div>
+        <div id="today-summary">Loading...</div>
+      </div>
+    </section>
+
+    <!-- TOMORROW FORECAST -->
+    <section id="tomorrow-section" class="section">
+      <div class="section-title">Tomorrow’s Forecast</div>
+
+      <div id="tomorrow-container" class="forecast-container">
+        <div id="tomorrow-high">High: --°</div>
+        <div id="tomorrow-low">Low: --°</div>
+        <div id="tomorrow-summary">Loading...</div>
+      </div>
+    </section>
+
+    <!-- HUMAN‑ACTION OUTLOOK (UPDATED) -->
+    <section id="action-section" class="section">
+      <div class="section-title">Human‑Action Outlook</div>
+
       <div id="action-module" class="action-module">
-        <div id="action-emoji" class="action-emoji">--</div>
-        <div>
-          <!-- ⭐ NEW BADGE ELEMENT (Option C1) -->
-          <div id="action-badge" class="action-badge"></div>
 
-          <div class="action-label">Tomorrow’s human‑action outlook</div>
-          <div id="action-headline" class="action-headline">Analyzing tomorrow’s setup…</div>
+        <!-- Icon -->
+        <div id="action-emoji" class="action-emoji">--</div>
+
+        <div>
+          <!-- Main headline -->
+          <div id="action-headline" class="action-label">
+            Tomorrow’s Human‑Action Outlook
+          </div>
+
+          <!-- Category -->
+          <div id="action-category" class="action-headline">
+            Loading…
+          </div>
+
+          <!-- Action sentence -->
           <div id="action-text" class="action-text">
-            We’ll highlight what you’ll actually need tomorrow — layers, rain gear, hydration, or nothing special.
+            Preparing recommendations…
+          </div>
+
+          <!-- Summary -->
+          <div id="action-summary" class="action-text" style="margin-top: 0.35rem;">
+            Gathering tomorrow’s weather details…
           </div>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- Metrics Grid -->
-  <div class="grid">
-    <div class="metric">
-      <div class="metric-label">Temperature</div>
-      <div class="metric-value" id="wu-temp">--</div>
-      <div class="metric-sub" id="wu-feels">Feels like --</div>
-    </div>
-
-    <div class="metric">
-      <div class="metric-label">Dew Point & Humidity</div>
-      <div class="metric-value" id="wu-dew">--</div>
-      <div class="metric-sub" id="wu-humidity">Humidity --</div>
-    </div>
-
-    <div class="metric">
-      <div class="metric-label">Wind</div>
-      <div class="metric-value" id="wu-wind">--</div>
-      <div class="metric-sub" id="wu-wind-gust">Gusts --</div>
-    </div>
-
-    <div class="metric">
-      <div class="metric-label">UV & Solar</div>
-      <div class="metric-value" id="wu-uv">--</div>
-      <div class="metric-sub" id="wu-solar">Solar --</div>
-    </div>
-  </div>
-
-  <div class="error-text" id="wu-error" style="display:none;"></div>
-
-  <!-- Forecast Alerts -->
-  <div id="forecast-module" class="forecast-module">
-    <div class="forecast-title">Upcoming Weather Alerts</div>
-    <div id="forecast-icons" class="forecast-icons"></div>
-    <div id="forecast-detail" class="forecast-detail"></div>
-  </div>
-
-  <!-- Station Footer -->
-  <div class="footer-note" id="wu-station-footer">
-    Live data from Weather Underground Station --
-  </div>
-</div> <!-- end .card -->
-<script type="module">
-  import {
-    getHumanActionOutlook,
-    getForecastAlerts,
-    getComfortCategory as computeComfort
-  } from './forecast-intel.js';
-
-  const WU_API_KEY = "eba9581da59d4972a9581da59d497236";
-
-  function setWUStatus(state, label, text) {
-    const dot = document.getElementById("wu-status-dot");
-    const lbl = document.getElementById("wu-status-label");
-    const desc = document.getElementById("wu-status-text");
-
-    lbl.textContent = label;
-    desc.textContent = text;
-
-    dot.classList.remove("ok", "error");
-    if (state === "ok") dot.classList.add("ok");
-    if (state === "error") dot.classList.add("error");
-  }
-
-  function showWUError(msg) {
-    const el = document.getElementById("wu-error");
-    el.textContent = msg;
-    el.style.display = "block";
-  }
-
-  // UI-facing comfort wrapper + emoji
-  function getComfortCategory(tempF, dewF, windF = 0) {
-    if (tempF == null || dewF == null) {
-      return { text: "Comfort data unavailable", emoji: "❓" };
-    }
-    const text = computeComfort(tempF, dewF, windF);
-    const emoji = pickComfortEmoji(text);
-    return { text, emoji };
-  }
-
-  function pickComfortEmoji(text) {
-    if (text.includes("hot")) return "🔥";
-    if (text.includes("unseasonably warm")) return "☀️";
-    if (text.includes("warm")) return "🌤️";
-    if (text.includes("mild")) return "🙂";
-    if (text.includes("seasonable")) return "🌿";
-    if (text.includes("unseasonably cool")) return "🌬️";
-    if (text.includes("cool")) return "🍃";
-    if (text.includes("chilly")) return "🧥";
-    if (text.includes("very cold")) return "🧊";
-    if (text.includes("cold")) return "❄️";
-    return "🌡️";
-  }
-
-  /* ----------------------------------------------------
-     COMFORT BADGE UI — SEASON‑AWARE
-     ---------------------------------------------------- */
-  function updateComfortBadge(text) {
-    const badge = document.getElementById("comfort-badge");
-    if (!badge) return;
-
-    badge.className = "comfort-badge";
-
-    if (text.includes("unseasonably warm")) {
-      badge.classList.add("badge-warm");
-      badge.innerText = "WARM";
-
-    } else if (text.includes("mild for this time of year") ||
-               text.includes("mild and pleasant")) {
-      badge.classList.add("badge-mild");
-      badge.innerText = "MILD";
-
-    } else if (text.includes("a bit warmer than normal")) {
-      badge.classList.add("badge-mild");
-      badge.innerText = "MILD";
-
-    } else if (text.includes("seasonable")) {
-      badge.classList.add("badge-seasonal");
-      badge.innerText = "SEASONABLE";
-
-    } else if (text.includes("unseasonably cool")) {
-      badge.classList.add("badge-cool");
-      badge.innerText = "COOL";
-
-    } else if (text.includes("cool for the season") ||
-               text.includes("a bit cooler than normal")) {
-      badge.classList.add("badge-cool");
-      badge.innerText = "COOL";
-
-    } else if (text.includes("cool")) {
-      badge.classList.add("badge-cool");
-      badge.innerText = "COOL";
-
-    } else if (text.includes("chilly")) {
-      badge.classList.add("badge-chilly");
-      badge.innerText = "CHILLY";
-
-    } else if (text.includes("cold") || text.includes("very cold")) {
-      badge.classList.add("badge-cold");
-      badge.innerText = "COLD";
-
-    } else if (text.includes("warm")) {
-      badge.classList.add("badge-warm");
-      badge.innerText = "WARM";
-
-    } else if (text.includes("hot")) {
-      badge.classList.add("badge-hot");
-      badge.innerText = "HOT";
-
-    } else {
-      badge.classList.add("badge-neutral");
-      badge.innerText = "COMFORT";
-    }
-  }
-
-  /* ----------------------------------------------------
-     COMFORT PREVIEW PANEL (debug)
-     ---------------------------------------------------- */
-  function getSeasonalNormalHighLocal(month) {
-    const normals = {
-      0: 47, 1: 51, 2: 59, 3: 68,
-      4: 75, 5: 82, 6: 85, 7: 84,
-      8: 79, 9: 69, 10: 59, 11: 50
-    };
-    return normals[month];
-  }
-
-  function updateComfortPreview(temp, dew, wind) {
-    const panel = document.getElementById("comfort-preview");
-    if (!panel || temp == null) return;
-
-    const month = new Date().getMonth();
-    const normal = getSeasonalNormalHighLocal(month);
-    const anomaly = temp - normal;
-    const blended = computeComfort(temp, dew, wind);
-
-    panel.innerHTML = `
-      <div><strong>Temp:</strong> ${temp.toFixed(0)}°F</div>
-      <div><strong>Normal high:</strong> ${normal}°F</div>
-      <div><strong>Anomaly:</strong> ${anomaly >= 0 ? "+" : ""}${anomaly.toFixed(1)}°</div>
-      <div><strong>Comfort:</strong> ${blended}</div>
-    `;
-  }
-
-  async function getNearestWUStation(lat, lon, apiKey) {
-    const url =
-      `https://api.weather.com/v3/location/near?geocode=${lat},${lon}` +
-      `&product=pws&format=json&apiKey=${apiKey}`;
-
-    const res = await fetch(url);
-    if (!res.ok) throw new Error("WU station lookup failed: " + res.status);
-
-    const data = await res.json();
-    return {
-      stationId: data.location.stationId[0],
-      distance: data.location.distance?.[0] ?? null
-    };
-  }
-
-  async function getWUCurrentConditions(stationId, apiKey) {
-    const url =
-      `https://api.weather.com/v2/pws/observations/current?stationId=${stationId}` +
-      `&format=json&units=e&apiKey=${apiKey}`;
-
-    const res = await fetch(url);
-    if (!res.ok) throw new Error("WU current conditions failed: " + res.status);
-
-    const data = await res.json();
-    const obs = data.observations[0];
-
-    return {
-      temp: obs.imperial?.temp ?? null,
-      dewPoint: obs.imperial?.dewpt ?? null,
-      humidity: obs.humidity ?? null,
-      windSpeed: obs.imperial?.windSpeed ?? null,
-      windGust: obs.imperial?.windGust ?? null,
-      pressure: obs.imperial?.pressure ?? null,
-      rainRate: obs.imperial?.precipRate ?? null,
-      rainToday: obs.imperial?.precipTotal ?? null,
-      solarRadiation: obs.solarRadiation ?? null,
-      uv: obs.uv ?? null,
-      stationId: obs.stationID
-    };
-  }
-
-  async function getShortTermForecast(lat, lon) {
-    const url =
-      `https://api.open-meteo.com/v1/forecast` +
-      `?latitude=${lat}&longitude=${lon}` +
-      `&hourly=temperature_2m,dewpoint_2m,precipitation,snowfall,windgusts_10m,uv_index` +
-      `&forecast_days=3&timezone=America/New_York` +
-      `&temperature_unit=fahrenheit` +
-      `&dewpoint_unit=fahrenheit` +
-      `&wind_speed_unit=mph` +
-      `&precipitation_unit=inch`;
-
-    const res = await fetch(url);
-    if (!res.ok) throw new Error("Short-term forecast fetch failed: " + res.status);
-
-    return (await res.json()).hourly;
-  }
-
-  function renderForecastIcons(alerts) {
-    const container = document.getElementById("forecast-icons");
-    const detailBox = document.getElementById("forecast-detail");
-
-    container.innerHTML = "";
-    detailBox.innerHTML = "";
-    detailBox.style.display = "none";
-    detailBox.dataset.open = "";
-
-    alerts.forEach(alert => {
-      const iconEl = document.createElement("span");
-      iconEl.className = "forecast-icon";
-      iconEl.textContent = alert.icon;
-      iconEl.dataset.alertId = alert.id;
-
-      iconEl.addEventListener("click", () => {
-        if (detailBox.dataset.open === alert.id) {
-          detailBox.style.display = "none";
-          detailBox.dataset.open = "";
-          return;
-        }
-
-        detailBox.innerHTML = `
-          <div class="detail-title">${alert.icon} ${alert.title}</div>
-          <div class="detail-text">${alert.detail}</div>
-        `;
-        detailBox.style.display = "block";
-        detailBox.dataset.open = alert.id;
-      });
-
-      container.appendChild(iconEl);
-    });
-  }
-
-  async function initWUWeather() {
-    if (!navigator.geolocation) {
-      showWUError("Geolocation is not supported by this browser.");
-      return;
-    }
-
-    setWUStatus("pending", "Requesting Location", "Waiting for permission…");
-
-    navigator.geolocation.getCurrentPosition(async (pos) => {
-      const lat = pos.coords.latitude;
-      const lon = pos.coords.longitude;
-
-      try {
-        const nearest = await getNearestWUStation(lat, lon, WU_API_KEY);
-        const wu = await getWUCurrentConditions(nearest.stationId, WU_API_KEY);
-
-        document.getElementById("wu-temp").textContent =
-          wu.temp != null ? `${wu.temp.toFixed(0)}°F` : "--";
-
-        document.getElementById("wu-feels").textContent =
-          wu.temp != null ? `Feels like ${wu.temp.toFixed(0)}°F` : "Feels like --";
-
-        const comfort = getComfortCategory(wu.temp, wu.dewPoint, wu.windGust ?? 0);
-        document.getElementById("comfort-text").textContent = comfort.text;
-        document.getElementById("comfort-emoji").textContent = comfort.emoji;
-        updateComfortBadge(comfort.text);
-        updateComfortPreview(wu.temp, wu.dewPoint, wu.windGust ?? 0);
-
-        document.getElementById("wu-dew").textContent =
-          wu.dewPoint != null ? `${wu.dewPoint.toFixed(0)}°F` : "--";
-
-        document.getElementById("wu-humidity").textContent =
-          wu.humidity != null ? `Humidity ${wu.humidity}%` : "Humidity --";
-
-        document.getElementById("wu-wind").textContent =
-          wu.windSpeed != null ? `${wu.windSpeed.toFixed(0)} mph` : "--";
-
-        document.getElementById("wu-wind-gust").textContent =
-          wu.windGust != null ? `Gusts ${wu.windGust.toFixed(0)} mph` : "Gusts --";
-
-        document.getElementById("wu-uv").textContent =
-          wu.uv != null ? `UV ${wu.uv.toFixed(1)}` : "--";
-
-        document.getElementById("wu-solar").textContent =
-          wu.solarRadiation != null ? `${wu.solarRadiation.toFixed(0)} W/m²` : "Solar --";
-
-        setWUStatus("ok", "WU Connected", "Weather Underground data loaded.");
-
-        document.getElementById("wu-station-footer").textContent =
-          `Live data from Weather Underground Station ${nearest.stationId}`;
-
-        try {
-          const hourly = await getShortTermForecast(lat, lon);
-
-     const outlook = getHumanActionOutlook(hourly);
-
-// Badge (line 1)
-const badgeEl = document.getElementById("action-badge");
-badgeEl.textContent = outlook.badge.text;
-badgeEl.className = "action-badge " + outlook.badge.class;
-
-// Emoji (line 2)
-document.getElementById("action-emoji").textContent = outlook.emoji;
-
-// Headline (line 1)
-document.getElementById("action-headline").textContent = outlook.headline;
-
-// Detail text (line 2)
-document.getElementById("action-text").textContent = outlook.text;
-
-          const alerts = getForecastAlerts(hourly);
-          renderForecastIcons(alerts);
-
-        } catch (fcErr) {
-          console.error("Forecast error:", fcErr);
-          document.getElementById("action-emoji").textContent = "❓";
-          document.getElementById("action-headline").textContent =
-            "Tomorrow’s outlook unavailable";
-          document.getElementById("action-text").textContent =
-            "We couldn’t load tomorrow’s forecast data.";
-        }
-
-      } catch (err) {
-        console.error("WU init error:", err);
-        setWUStatus("error", "WU Error", "Unable to load Weather Underground data.");
-        showWUError("Unable to load local station data. Please try again later.");
-      }
-    }, (err) => {
-      console.error("Geolocation error:", err);
-      setWUStatus("error", "Location Error", "Location permission denied or unavailable.");
-      showWUError("We couldn’t access your location. Please enable location services and reload.");
-    });
-  }
-
-  document.addEventListener("DOMContentLoaded", initWUWeather);
-</script>
+    </section>
+        <!-- ALERTS -->
+    <section id="alerts-section" class="section">
+      <div class="section-title">Weather Alerts</div>
+      <div id="alerts-container" class="alerts-container">
+        <!-- Alerts injected here -->
+      </div>
+    </section>
+
+    <!-- 48‑HOUR TIMELINE -->
+    <section id="timeline-section" class="section">
+      <div class="section-title">48‑Hour Timeline</div>
+      <div id="timeline-container" class="timeline-container">
+        <!-- Hourly cards injected here -->
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div>Data from Open‑Meteo • Designed for Asheville</div>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script src="forecast-intel.js" type="module"></script>
+    <script src="app.js" type="module"></script>
+
+  </div> <!-- end #app -->
 </body>
 </html>
-
-
-
-
