@@ -995,21 +995,33 @@ export function getHumanActionOutlook(hourly) {
   const micro = detectMicroclimates(hourly, start, end);
   const goldilocksType = detectGoldilocks(qpf, thermal, wind, dew, micro);
 
-  const headline = buildGoldilocksHeadline(goldilocksType);
+  // Build pieces
   const swingPhrase = describeTempSwing(hourly, start, end, thermal);
   const summary = buildSummary(qpf, thermal, wind, dew, micro, swingPhrase);
-
   const actions = buildActionList({ qpf, thermal, wind, dew, uv, micro });
 
-  const text = buildHumanActionText({
-    headline,
-    summary,
-    actions
-  });
+  // Pick the top action sentence
+  const cleaned = [...new Set(actions)];
+  const merged = cleaned.map(a =>
+    a.includes("dress warmly") || a.includes("dress in layers")
+      ? "dress warmly in layers"
+      : a
+  );
+  const deduped = [...new Set(merged)];
 
-  /* ----------------------------------------------------
-     FIXED FLAGS BLOCK (required for badge + icon engines)
-     ---------------------------------------------------- */
+  const priority = deduped.filter(a =>
+    a.includes("travel") ||
+    a.includes("secure") ||
+    a.includes("dress warmly")
+  );
+
+  const topAction = priority.length >= 2
+    ? "Plan to " + priority.slice(0, 2).join(" and ") + "."
+    : deduped.length > 0
+    ? "Plan to " + deduped[0] + "."
+    : "";
+
+  // Category label (Snowy, Rainy, etc.)
   const flags = {
     goldilocks: !!goldilocksType,
 
@@ -1026,14 +1038,18 @@ export function getHumanActionOutlook(hourly) {
     dry: qpf.rainTotal < 0.02 && qpf.snowTotal < 0.02
   };
 
+  // Convert flags → category label
+  const badge = getActionBadge(flags);
+  const category = badge.text; // e.g., "Snowy"
+
   return {
+    headline: "Tomorrow’s Human‑Action Outlook",
+    category,
     emoji: getActionIcon(flags),
-    badge: getActionBadge(flags),
-    headline,
-    text
+    action: topAction,
+    summary
   };
 }
-
 /* ----------------------------------------------------
    PART 5 — ALERTS 2.0 + EXPORTS
    ---------------------------------------------------- */
