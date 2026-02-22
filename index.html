@@ -309,64 +309,46 @@
 <body>
 <div class="card">
   <h1>828 Weather Direct</h1>
-<div class="subtitle">Hyper‑local conditions via Weather Underground PWS network</div>
+  <div class="subtitle">Hyper‑local conditions via Weather Underground PWS network</div>
 
-<div class="status-row">
-  <div class="badge" id="wu-status-badge">
-    <span class="badge-dot" id="wu-status-dot"></span>
-    <span id="wu-status-label">Detecting location…</span>
-  </div>
-  <div class="status-text" id="wu-status-text">
-    Waiting for browser location permission.
-  </div>
-</div>
-
-<div class="now-tomorrow-row">
-  <div class="now-col">
-    <div id="comfort-module" class="comfort-module">
-      <div id="comfort-emoji" class="comfort-emoji">--</div>
-      <div>
-        <div class="comfort-label">Right now comfort</div>
-        <div id="comfort-text" class="comfort-text">Comfort loading…</div>
-        <div class="comfort-sub">Based on current conditions</div>
-      </div>
+  <div class="status-row">
+    <div class="badge" id="wu-status-badge">
+      <span class="badge-dot" id="wu-status-dot"></span>
+      <span id="wu-status-label">Detecting location…</span>
+    </div>
+    <div class="status-text" id="wu-status-text">
+      Waiting for browser location permission.
     </div>
   </div>
 
-  <div class="tomorrow-col">
-
-    <!-- ⭐ UPDATED HUMAN‑ACTION OUTLOOK MODULE -->
-    <div id="action-module" class="action-module">
-
-      <!-- Icon -->
-      <div id="action-emoji" class="action-emoji">--</div>
-
-      <div>
-        <!-- Main headline -->
-        <div id="action-headline" class="action-label">
-          Tomorrow’s Human‑Action Outlook
-        </div>
-
-        <!-- Category -->
-        <div id="action-category" class="action-headline">
-          Loading…
-        </div>
-
-        <!-- Action sentence -->
-        <div id="action-text" class="action-text">
-          Preparing recommendations…
-        </div>
-
-        <!-- Summary -->
-        <div id="action-summary" class="action-text" style="margin-top: 0.35rem;">
-          Gathering tomorrow’s weather details…
+  <div class="now-tomorrow-row">
+    <div class="now-col">
+      <div id="comfort-module" class="comfort-module">
+        <div id="comfort-emoji" class="comfort-emoji">--</div>
+        <div>
+          <div class="comfort-label">Right now comfort</div>
+          <div id="comfort-text" class="comfort-text">Comfort loading…</div>
+          <div class="comfort-sub">Based on current conditions</div>
         </div>
       </div>
     </div>
-    <!-- ⭐ END UPDATED MODULE -->
 
+    <div class="tomorrow-col">
+      <div id="action-module" class="action-module">
+        <div id="action-emoji" class="action-emoji">--</div>
+        <div>
+          <!-- ⭐ NEW BADGE ELEMENT (Option C1) -->
+          <div id="action-badge" class="action-badge"></div>
+
+          <div class="action-label">Tomorrow’s human‑action outlook</div>
+          <div id="action-headline" class="action-headline">Analyzing tomorrow’s setup…</div>
+          <div id="action-text" class="action-text">
+            We’ll highlight what you’ll actually need tomorrow — layers, rain gear, hydration, or nothing special.
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
 
   <!-- Metrics Grid -->
   <div class="grid">
@@ -410,10 +392,11 @@
   </div>
 </div> <!-- end .card -->
 <script type="module">
-import {
+  import {
     getHumanActionOutlook,
+    getForecastAlerts,
     getComfortCategory as computeComfort
-} from './forecast-intel.js';
+  } from './forecast-intel.js';
 
   const WU_API_KEY = "eba9581da59d4972a9581da59d497236";
 
@@ -740,8 +723,5 @@ document.getElementById("action-text").textContent = outlook.text;
 </script>
 </body>
 </html>
-
-
-
 
 
