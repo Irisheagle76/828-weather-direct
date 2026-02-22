@@ -6,9 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
-    /* ----------------------------------------------------
-       GLOBAL + SMART MOBILE SPACING
-       ---------------------------------------------------- */
     :root {
       --card-padding: 1.5rem;
       --module-padding: 1rem 1.2rem;
@@ -55,9 +52,6 @@
       margin-bottom: var(--gap);
     }
 
-    /* ----------------------------------------------------
-       STATUS BADGE
-       ---------------------------------------------------- */
     .status-row {
       display: flex;
       flex-wrap: wrap;
@@ -93,11 +87,7 @@
       font-size: 0.85rem;
       color: #c4c9e5;
     }
-
-    /* ----------------------------------------------------
-       NOW vs TOMORROW LAYOUT
-       ---------------------------------------------------- */
-    .now-tomorrow-row {
+        .now-tomorrow-row {
       display: flex;
       flex-wrap: wrap;
       gap: var(--gap);
@@ -110,9 +100,6 @@
       min-width: 0;
     }
 
-    /* ----------------------------------------------------
-       COMFORT MODULE
-       ---------------------------------------------------- */
     .comfort-module {
       background: rgba(255, 169, 77, 0.10);
       border: 1px solid rgba(255, 169, 77, 0.35);
@@ -152,9 +139,6 @@
       margin-top: 0.15rem;
     }
 
-    /* ----------------------------------------------------
-       HUMAN-ACTION OUTLOOK (POLISHED FOR MOBILE)
-       ---------------------------------------------------- */
     .action-module {
       background: rgba(120, 180, 255, 0.10);
       border: 1px solid rgba(120, 180, 255, 0.35);
@@ -195,9 +179,6 @@
       overflow-wrap: anywhere;
     }
 
-    /* ----------------------------------------------------
-       METRICS GRID
-       ---------------------------------------------------- */
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -231,9 +212,6 @@
       margin-top: 0.15rem;
     }
 
-    /* ----------------------------------------------------
-       FORECAST ALERTS
-       ---------------------------------------------------- */
     .forecast-module {
       margin-top: var(--gap);
       background: rgba(255, 169, 77, 0.10);
@@ -256,10 +234,6 @@
       flex-wrap: wrap;
       font-size: 2rem;
       cursor: pointer;
-    }
-
-    .forecast-icon {
-      transition: transform 0.15s ease;
     }
 
     .forecast-icon:hover {
@@ -288,9 +262,6 @@
       line-height: 1.35;
     }
 
-    /* ----------------------------------------------------
-       FOOTER
-       ---------------------------------------------------- */
     .footer-note {
       margin-top: var(--gap);
       font-size: 0.78rem;
@@ -305,7 +276,6 @@
     }
   </style>
 </head>
-
 <body>
 <div class="card">
   <h1>828 Weather Direct</h1>
@@ -337,9 +307,7 @@
       <div id="action-module" class="action-module">
         <div id="action-emoji" class="action-emoji">--</div>
         <div>
-          <!-- ⭐ NEW BADGE ELEMENT (Option C1) -->
           <div id="action-badge" class="action-badge"></div>
-
           <div class="action-label">Tomorrow’s human‑action outlook</div>
           <div id="action-headline" class="action-headline">Analyzing tomorrow’s setup…</div>
           <div id="action-text" class="action-text">
@@ -350,7 +318,6 @@
     </div>
   </div>
 
-  <!-- Metrics Grid -->
   <div class="grid">
     <div class="metric">
       <div class="metric-label">Temperature</div>
@@ -379,18 +346,16 @@
 
   <div class="error-text" id="wu-error" style="display:none;"></div>
 
-  <!-- Forecast Alerts -->
   <div id="forecast-module" class="forecast-module">
     <div class="forecast-title">Upcoming Weather Alerts</div>
     <div id="forecast-icons" class="forecast-icons"></div>
     <div id="forecast-detail" class="forecast-detail"></div>
   </div>
 
-  <!-- Station Footer -->
   <div class="footer-note" id="wu-station-footer">
     Live data from Weather Underground Station --
   </div>
-</div> <!-- end .card -->
+</div>
 <script type="module">
   import {
     getHumanActionOutlook,
@@ -419,121 +384,19 @@
     el.style.display = "block";
   }
 
-  // UI-facing comfort wrapper + emoji
-  function getComfortCategory(tempF, dewF, windF = 0) {
-    if (tempF == null || dewF == null) {
-      return { text: "Comfort data unavailable", emoji: "❓" };
-    }
-    const text = computeComfort(tempF, dewF, windF);
-    const emoji = pickComfortEmoji(text);
-    return { text, emoji };
+  function getComfortCategory(tempF, dewF, windF = 0, precip = 0) {
+    return computeComfort(tempF, dewF, windF, precip);
   }
 
-  function pickComfortEmoji(text) {
-    if (text.includes("hot")) return "🔥";
-    if (text.includes("unseasonably warm")) return "☀️";
-    if (text.includes("warm")) return "🌤️";
-    if (text.includes("mild")) return "🙂";
-    if (text.includes("seasonable")) return "🌿";
-    if (text.includes("unseasonably cool")) return "🌬️";
-    if (text.includes("cool")) return "🍃";
-    if (text.includes("chilly")) return "🧥";
-    if (text.includes("very cold")) return "🧊";
-    if (text.includes("cold")) return "❄️";
-    return "🌡️";
-  }
-
-  /* ----------------------------------------------------
-     COMFORT BADGE UI — SEASON‑AWARE
-     ---------------------------------------------------- */
   function updateComfortBadge(text) {
     const badge = document.getElementById("comfort-badge");
     if (!badge) return;
-
     badge.className = "comfort-badge";
-
-    if (text.includes("unseasonably warm")) {
-      badge.classList.add("badge-warm");
-      badge.innerText = "WARM";
-
-    } else if (text.includes("mild for this time of year") ||
-               text.includes("mild and pleasant")) {
-      badge.classList.add("badge-mild");
-      badge.innerText = "MILD";
-
-    } else if (text.includes("a bit warmer than normal")) {
-      badge.classList.add("badge-mild");
-      badge.innerText = "MILD";
-
-    } else if (text.includes("seasonable")) {
-      badge.classList.add("badge-seasonal");
-      badge.innerText = "SEASONABLE";
-
-    } else if (text.includes("unseasonably cool")) {
-      badge.classList.add("badge-cool");
-      badge.innerText = "COOL";
-
-    } else if (text.includes("cool for the season") ||
-               text.includes("a bit cooler than normal")) {
-      badge.classList.add("badge-cool");
-      badge.innerText = "COOL";
-
-    } else if (text.includes("cool")) {
-      badge.classList.add("badge-cool");
-      badge.innerText = "COOL";
-
-    } else if (text.includes("chilly")) {
-      badge.classList.add("badge-chilly");
-      badge.innerText = "CHILLY";
-
-    } else if (text.includes("cold") || text.includes("very cold")) {
-      badge.classList.add("badge-cold");
-      badge.innerText = "COLD";
-
-    } else if (text.includes("warm")) {
-      badge.classList.add("badge-warm");
-      badge.innerText = "WARM";
-
-    } else if (text.includes("hot")) {
-      badge.classList.add("badge-hot");
-      badge.innerText = "HOT";
-
-    } else {
-      badge.classList.add("badge-neutral");
-      badge.innerText = "COMFORT";
-    }
+    badge.innerText = "COMFORT";
   }
 
-  /* ----------------------------------------------------
-     COMFORT PREVIEW PANEL (debug)
-     ---------------------------------------------------- */
-  function getSeasonalNormalHighLocal(month) {
-    const normals = {
-      0: 47, 1: 51, 2: 59, 3: 68,
-      4: 75, 5: 82, 6: 85, 7: 84,
-      8: 79, 9: 69, 10: 59, 11: 50
-    };
-    return normals[month];
-  }
-
-  function updateComfortPreview(temp, dew, wind) {
-    const panel = document.getElementById("comfort-preview");
-    if (!panel || temp == null) return;
-
-    const month = new Date().getMonth();
-    const normal = getSeasonalNormalHighLocal(month);
-    const anomaly = temp - normal;
-    const blended = computeComfort(temp, dew, wind);
-
-    panel.innerHTML = `
-      <div><strong>Temp:</strong> ${temp.toFixed(0)}°F</div>
-      <div><strong>Normal high:</strong> ${normal}°F</div>
-      <div><strong>Anomaly:</strong> ${anomaly >= 0 ? "+" : ""}${anomaly.toFixed(1)}°</div>
-      <div><strong>Comfort:</strong> ${blended}</div>
-    `;
-  }
-
-  async function getNearestWUStation(lat, lon, apiKey) {
+  function updateComfortPreview() {}
+     async function getNearestWUStation(lat, lon, apiKey) {
     const url =
       `https://api.weather.com/v3/location/near?geocode=${lat},${lon}` +
       `&product=pws&format=json&apiKey=${apiKey}`;
@@ -565,9 +428,6 @@
       humidity: obs.humidity ?? null,
       windSpeed: obs.imperial?.windSpeed ?? null,
       windGust: obs.imperial?.windGust ?? null,
-      pressure: obs.imperial?.pressure ?? null,
-      rainRate: obs.imperial?.precipRate ?? null,
-      rainToday: obs.imperial?.precipTotal ?? null,
       solarRadiation: obs.solarRadiation ?? null,
       uv: obs.uv ?? null,
       stationId: obs.stationID
@@ -650,8 +510,6 @@
         const comfort = getComfortCategory(wu.temp, wu.dewPoint, wu.windGust ?? 0);
         document.getElementById("comfort-text").textContent = comfort.text;
         document.getElementById("comfort-emoji").textContent = comfort.emoji;
-        updateComfortBadge(comfort.text);
-        updateComfortPreview(wu.temp, wu.dewPoint, wu.windGust ?? 0);
 
         document.getElementById("wu-dew").textContent =
           wu.dewPoint != null ? `${wu.dewPoint.toFixed(0)}°F` : "--";
@@ -679,21 +537,15 @@
         try {
           const hourly = await getShortTermForecast(lat, lon);
 
-     const outlook = getHumanActionOutlook(hourly);
+          const outlook = getHumanActionOutlook(hourly);
 
-// Badge (line 1)
-const badgeEl = document.getElementById("action-badge");
-badgeEl.textContent = outlook.badge.text;
-badgeEl.className = "action-badge " + outlook.badge.class;
+          const badgeEl = document.getElementById("action-badge");
+          badgeEl.textContent = outlook.badge.text;
+          badgeEl.className = "action-badge " + outlook.badge.class;
 
-// Emoji (line 2)
-document.getElementById("action-emoji").textContent = outlook.emoji;
-
-// Headline (line 1)
-document.getElementById("action-headline").textContent = outlook.headline;
-
-// Detail text (line 2)
-document.getElementById("action-text").textContent = outlook.text;
+          document.getElementById("action-emoji").textContent = outlook.emoji;
+          document.getElementById("action-headline").textContent = outlook.headline;
+          document.getElementById("action-text").textContent = outlook.text;
 
           const alerts = getForecastAlerts(hourly);
           renderForecastIcons(alerts);
@@ -723,5 +575,3 @@ document.getElementById("action-text").textContent = outlook.text;
 </script>
 </body>
 </html>
-
-
