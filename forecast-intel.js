@@ -995,33 +995,21 @@ export function getHumanActionOutlook(hourly) {
   const micro = detectMicroclimates(hourly, start, end);
   const goldilocksType = detectGoldilocks(qpf, thermal, wind, dew, micro);
 
-  // Build pieces
+  const headline = buildGoldilocksHeadline(goldilocksType);
   const swingPhrase = describeTempSwing(hourly, start, end, thermal);
   const summary = buildSummary(qpf, thermal, wind, dew, micro, swingPhrase);
+
   const actions = buildActionList({ qpf, thermal, wind, dew, uv, micro });
 
-  // Pick the top action sentence
-  const cleaned = [...new Set(actions)];
-  const merged = cleaned.map(a =>
-    a.includes("dress warmly") || a.includes("dress in layers")
-      ? "dress warmly in layers"
-      : a
-  );
-  const deduped = [...new Set(merged)];
+  const text = buildHumanActionText({
+    headline,
+    summary,
+    actions
+  });
 
-  const priority = deduped.filter(a =>
-    a.includes("travel") ||
-    a.includes("secure") ||
-    a.includes("dress warmly")
-  );
-
-  const topAction = priority.length >= 2
-    ? "Plan to " + priority.slice(0, 2).join(" and ") + "."
-    : deduped.length > 0
-    ? "Plan to " + deduped[0] + "."
-    : "";
-
-  // Category label (Snowy, Rainy, etc.)
+  /* ----------------------------------------------------
+     FIXED FLAGS BLOCK (required for badge + icon engines)
+     ---------------------------------------------------- */
   const flags = {
     goldilocks: !!goldilocksType,
 
@@ -1038,16 +1026,11 @@ export function getHumanActionOutlook(hourly) {
     dry: qpf.rainTotal < 0.02 && qpf.snowTotal < 0.02
   };
 
-  // Convert flags → category label
-  const badge = getActionBadge(flags);
-  const category = badge.text; // e.g., "Snowy"
-
   return {
-    headline: "Tomorrow’s Human‑Action Outlook",
-    category,
     emoji: getActionIcon(flags),
-    action: topAction,
-    summary
+    badge: getActionBadge(flags),
+    headline,
+    text
   };
 }
 
@@ -1209,7 +1192,6 @@ export function getForecastAlerts(hourly) {
 /* ----------------------------------------------------
    MODULE COMPLETE
    ---------------------------------------------------- */
-
 
 
 
