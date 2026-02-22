@@ -1005,7 +1005,47 @@ function buildHumanActionText({ headline, summary, actions }) {
     (actionSentence ? " " + actionSentence : "")
   );
 }
+/* ----------------------------------------------------
+   HUMAN-ACTION ICON ENGINE
+   ---------------------------------------------------- */
+export function getActionIcon(flags) {
+  if (flags.goldilocks) return "✨";
 
+  if (flags.stormy) return "⛈️";
+  if (flags.rainy) return "🌧️";
+  if (flags.mixed) return "🌦️";
+  if (flags.snowy) return "🌨️";
+
+  if (flags.windy) return "💨";
+
+  if (flags.hot) return "🔥";
+  if (flags.cold) return "❄️";
+
+  if (flags.dry) return "🌤️";
+
+  return "🌡️";
+}
+
+/* ----------------------------------------------------
+   HUMAN-ACTION BADGE ENGINE
+   ---------------------------------------------------- */
+export function getActionBadge(flags) {
+  if (flags.goldilocks) return { text: "Goldilocks", class: "badge-goldilocks" };
+
+  if (flags.stormy) return { text: "Stormy", class: "badge-stormy" };
+  if (flags.rainy) return { text: "Rainy", class: "badge-rainy" };
+  if (flags.mixed) return { text: "Mixed", class: "badge-mixed" };
+  if (flags.snowy) return { text: "Snowy", class: "badge-snowy" };
+
+  if (flags.windy) return { text: "Windy", class: "badge-windy" };
+
+  if (flags.hot) return { text: "Hot", class: "badge-hot" };
+  if (flags.cold) return { text: "Cold", class: "badge-cold" };
+
+  if (flags.dry) return { text: "Dry", class: "badge-dry" };
+
+  return { text: "Outlook", class: "badge-neutral" };
+}
 /* ----------------------------------------------------
    MAIN HUMAN‑ACTION OUTLOOK EXPORT
    ---------------------------------------------------- */
@@ -1033,13 +1073,12 @@ export function getHumanActionOutlook(hourly) {
     actions
   });
 
-  return {
-    headline,
-    summary,
-    actions,
-    fullText,
-    text: fullText
-  };
+return {
+  emoji: getActionIcon(flags),
+  badge: getActionBadge(flags),
+  headline,
+  text
+};
 }
 
 
