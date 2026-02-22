@@ -1,6 +1,6 @@
 // forecast-intel.js
 // 828 Weather Direct — Forecast Intelligence Engine
-// COMPLETE, CLEAN, DEDUPED VERSION
+// COMPLETE, CLEAN, DEDUPED, TIME-CORRECTED VERSION
 
 // ----------------------------------------------------
 // PART 1 — Core Helpers + Hourly Window Tools
@@ -277,7 +277,16 @@ function monthName(i) {
 
 export function getComfortCategory(temp, dew, gust, precip = 0) {
   const now = new Date();
-  const hour = now.getHours();
+
+  // ⭐ FIXED: Always use Asheville local time
+  const hour = Number(
+    new Intl.DateTimeFormat("en-US", {
+      hour: "numeric",
+      hour12: false,
+      timeZone: "America/New_York"
+    }).format(now)
+  );
+
   const month = now.getMonth();
 
   const isGoldilocks =
@@ -467,3 +476,4 @@ export default {
   getComfortCategory,
   getForecastAlerts
 };
+
