@@ -78,30 +78,6 @@ function getDaypartWindow(hourly, targetDate, startHour, endHour) {
 // forecast-intel.js
 // 828 Weather Direct — Forecast Intelligence Engine
 // PART 1 — Core helpers + hourly window tools
-
-// ---------------- CORE HELPERS ----------------
-
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
-}
-
-function avg(arr) {
-  if (!arr || !arr.length) return null;
-  return arr.reduce((a, b) => a + b, 0) / arr.length;
-}
-
-function toLocalDate(isoString) {
-  return new Date(isoString);
-}
-
-function sameCalendarDay(a, b) {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
-}
-
 // ---------------- HOURLY WINDOW TOOLS ----------------
 
 function getHourlyWindowForDay(hourly, targetDate) {
