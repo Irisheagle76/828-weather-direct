@@ -350,7 +350,7 @@ function getPersonalityPhrase(feel, nuance) {
 
   if (feel === "cold") {
     if (nuance === "breezy") return "Cold with a side of breeze — nature’s way of saying ‘layer up, friend.’";
-    if (nuance === "crisp") return "Cold and crisp — classic mountain morning chill";
+    if (nuance === "crisp") return "Cold and crisp — that clean mountain chill";
     return "Cold — definitely jacket weather";
   }
 
