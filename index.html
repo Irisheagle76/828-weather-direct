@@ -307,86 +307,90 @@
 </head>
 
 <body>
-  <div class="card">
-    <h1>828 Weather Direct</h1>
-    <div class="subtitle">Hyper‑local conditions via Weather Underground PWS network</div>
+<div class="card">
+  <h1>828 Weather Direct</h1>
+  <div class="subtitle">Hyper‑local conditions via Weather Underground PWS network</div>
 
-    <div class="status-row">
-      <div class="badge" id="wu-status-badge">
-        <span class="badge-dot" id="wu-status-dot"></span>
-        <span id="wu-status-label">Detecting location…</span>
-      </div>
-      <div class="status-text" id="wu-status-text">
-        Waiting for browser location permission.
-      </div>
+  <div class="status-row">
+    <div class="badge" id="wu-status-badge">
+      <span class="badge-dot" id="wu-status-dot"></span>
+      <span id="wu-status-label">Detecting location…</span>
     </div>
+    <div class="status-text" id="wu-status-text">
+      Waiting for browser location permission.
+    </div>
+  </div>
 
-    <div class="now-tomorrow-row">
-      <div class="now-col">
-        <div id="comfort-module" class="comfort-module">
-          <div id="comfort-emoji" class="comfort-emoji">--</div>
-          <div>
-            <div class="comfort-label">Right now comfort</div>
-            <div id="comfort-text" class="comfort-text">Comfort loading…</div>
-            <div class="comfort-sub">Based on current conditions</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="tomorrow-col">
-        <div id="action-module" class="action-module">
-          <div id="action-emoji" class="action-emoji">--</div>
-          <div>
-            <div class="action-label">Tomorrow’s human‑action outlook</div>
-            <div id="action-headline" class="action-headline">Analyzing tomorrow’s setup…</div>
-            <div id="action-text" class="action-text">
-              We’ll highlight what you’ll actually need tomorrow — layers, rain gear, hydration, or nothing special.
-            </div>
-          </div>
+  <div class="now-tomorrow-row">
+    <div class="now-col">
+      <div id="comfort-module" class="comfort-module">
+        <div id="comfort-emoji" class="comfort-emoji">--</div>
+        <div>
+          <div class="comfort-label">Right now comfort</div>
+          <div id="comfort-text" class="comfort-text">Comfort loading…</div>
+          <div class="comfort-sub">Based on current conditions</div>
         </div>
       </div>
     </div>
-    <!-- Metrics Grid -->
-    <div class="grid">
-      <div class="metric">
-        <div class="metric-label">Temperature</div>
-        <div class="metric-value" id="wu-temp">--</div>
-        <div class="metric-sub" id="wu-feels">Feels like --</div>
-      </div>
 
-      <div class="metric">
-        <div class="metric-label">Dew Point & Humidity</div>
-        <div class="metric-value" id="wu-dew">--</div>
-        <div class="metric-sub" id="wu-humidity">Humidity --</div>
-      </div>
+    <div class="tomorrow-col">
+      <div id="action-module" class="action-module">
+        <div id="action-emoji" class="action-emoji">--</div>
+        <div>
+          <!-- ⭐ NEW BADGE ELEMENT (Option C1) -->
+          <div id="action-badge" class="action-badge"></div>
 
-      <div class="metric">
-        <div class="metric-label">Wind</div>
-        <div class="metric-value" id="wu-wind">--</div>
-        <div class="metric-sub" id="wu-wind-gust">Gusts --</div>
-      </div>
-
-      <div class="metric">
-        <div class="metric-label">UV & Solar</div>
-        <div class="metric-value" id="wu-uv">--</div>
-        <div class="metric-sub" id="wu-solar">Solar --</div>
+          <div class="action-label">Tomorrow’s human‑action outlook</div>
+          <div id="action-headline" class="action-headline">Analyzing tomorrow’s setup…</div>
+          <div id="action-text" class="action-text">
+            We’ll highlight what you’ll actually need tomorrow — layers, rain gear, hydration, or nothing special.
+          </div>
+        </div>
       </div>
     </div>
+  </div>
 
-    <div class="error-text" id="wu-error" style="display:none;"></div>
-
-    <!-- Forecast Alerts -->
-    <div id="forecast-module" class="forecast-module">
-      <div class="forecast-title">Upcoming Weather Alerts</div>
-      <div id="forecast-icons" class="forecast-icons"></div>
-      <div id="forecast-detail" class="forecast-detail"></div>
+  <!-- Metrics Grid -->
+  <div class="grid">
+    <div class="metric">
+      <div class="metric-label">Temperature</div>
+      <div class="metric-value" id="wu-temp">--</div>
+      <div class="metric-sub" id="wu-feels">Feels like --</div>
     </div>
 
-    <!-- Station Footer -->
-    <div class="footer-note" id="wu-station-footer">
-      Live data from Weather Underground Station --
+    <div class="metric">
+      <div class="metric-label">Dew Point & Humidity</div>
+      <div class="metric-value" id="wu-dew">--</div>
+      <div class="metric-sub" id="wu-humidity">Humidity --</div>
     </div>
-  </div> <!-- end .card -->
+
+    <div class="metric">
+      <div class="metric-label">Wind</div>
+      <div class="metric-value" id="wu-wind">--</div>
+      <div class="metric-sub" id="wu-wind-gust">Gusts --</div>
+    </div>
+
+    <div class="metric">
+      <div class="metric-label">UV & Solar</div>
+      <div class="metric-value" id="wu-uv">--</div>
+      <div class="metric-sub" id="wu-solar">Solar --</div>
+    </div>
+  </div>
+
+  <div class="error-text" id="wu-error" style="display:none;"></div>
+
+  <!-- Forecast Alerts -->
+  <div id="forecast-module" class="forecast-module">
+    <div class="forecast-title">Upcoming Weather Alerts</div>
+    <div id="forecast-icons" class="forecast-icons"></div>
+    <div id="forecast-detail" class="forecast-detail"></div>
+  </div>
+
+  <!-- Station Footer -->
+  <div class="footer-note" id="wu-station-footer">
+    Live data from Weather Underground Station --
+  </div>
+</div> <!-- end .card -->
 <script type="module">
   import {
     getHumanActionOutlook,
@@ -708,5 +712,6 @@
 </script>
 </body>
 </html>
+
 
 
