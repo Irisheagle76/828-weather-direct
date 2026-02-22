@@ -75,89 +75,117 @@ function getDaypartWindow(hourly, targetDate, startHour, endHour) {
   }
   return indices;
 }
-// PART 2 — Stats + derived metrics
+// forecast-intel.js
+// 828 Weather Direct — Forecast Intelligence Engine
+// PART 1 — Core helpers + hourly window tools
 
-function basicStats(arr) {
-  if (!arr || !arr.length) {
-    return { min: null, max: null, avg: null };
+// ---------------- CORE HELPERS ----------------
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function avg(arr) {
+  if (!arr || !arr.length) return null;
+  return arr.reduce((a, b) => a + b, 0) / arr.length;
+}
+
+function toLocalDate(isoString) {
+  return new Date(isoString);
+}
+
+function sameCalendarDay(a, b) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
+// ---------------- HOURLY WINDOW TOOLS ----------------
+
+function getHourlyWindowForDay(hourly, targetDate) {
+  const times = hourly.time || [];
+  const indices = [];
+
+  const start = new Date(targetDate);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(targetDate);
+  end.setHours(23, 59, 59, 999);
+
+  for (let i = 0; i < times.length; i++) {
+    const t = toLocalDate(times[i]);
+    if (t >= start && t <= end) indices.push(i);
   }
-  let min = arr[0];
-  let max = arr[0];
-  let sum = 0;
-  for (const v of arr) {
-    if (v < min) min = v;
-    if (v > max) max = v;
-    sum += v;
+  return indices;
+}
+
+function getTomorrowWindow(hourly) {
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(now.getDate() + 1);
+  return getHourlyWindowForDay(hourly, tomorrow);
+}
+
+function sliceHourly(hourly, indices) {
+  const result = {};
+  for (const key of Object.keys(hourly)) {
+    const arr = hourly[key];
+    if (!Array.isArray(arr)) continue;
+    result[key] = indices.map(i => arr[i]);
   }
-  return { min, max, avg: sum / arr.length };
+  return result;
 }
 
-function getTempStats(windowed) {
-  return basicStats(windowed.temperature_2m || []);
-}
+function getDaypartWindow(hourly, targetDate, startHour, endHour) {
+  const times = hourly.time || [];
+  const indices = [];
 
-function getDewStats(windowed) {
-  return basicStats(windowed.dewpoint_2m || []);
-}
+  const start = new Date(targetDate);
+  start.setHours(startHour, 0, 0, 0);
+  const end = new Date(targetDate);
+  end.setHours(endHour, 59, 59, 999);
 
-function getWindGustStats(windowed) {
-  return basicStats(windowed.windgusts_10m || []);
-}
-
-function getUVStats(windowed) {
-  return basicStats(windowed.uv_index || []);
-}
-
-function getPrecipTotal(windowed) {
-  const arr = windowed.precipitation || [];
-  return arr.length ? arr.reduce((a, b) => a + b, 0) : 0;
-}
-
-function getSnowTotal(windowed) {
-  const arr = windowed.snowfall || [];
-  return arr.length ? arr.reduce((a, b) => a + b, 0) : 0;
-}
-// PART 2 — Stats + derived metrics
-
-function basicStats(arr) {
-  if (!arr || !arr.length) {
-    return { min: null, max: null, avg: null };
+  for (let i = 0; i < times.length; i++) {
+    const t = toLocalDate(times[i]);
+    if (t >= start && t <= end) indices.push(i);
   }
-  let min = arr[0];
-  let max = arr[0];
-  let sum = 0;
-  for (const v of arr) {
-    if (v < min) min = v;
-    if (v > max) max = v;
-    sum += v;
+  return indices;
+}
+// PART 3 — Descriptors + simple impact helpers
+
+function describePrecip(precipTotal, snowTotal) {
+  if (snowTotal > 0.05) {
+    if (snowTotal >= 2) return "notable snow";
+    if (snowTotal >= 0.5) return "light accumulating snow";
+    return "flurries or very light snow";
   }
-  return { min, max, avg: sum / arr.length };
+
+  if (precipTotal < 0.02) return "mainly dry";
+  if (precipTotal < 0.10) return "a few light showers";
+  if (precipTotal < 0.25) return "on-and-off showers";
+  if (precipTotal < 0.75) return "a soaking rain at times";
+  return "periods of heavy rain";
 }
 
-function getTempStats(windowed) {
-  return basicStats(windowed.temperature_2m || []);
+function describeWind(gustMax) {
+  if (gustMax >= 40) return "very windy";
+  if (gustMax >= 30) return "quite gusty";
+  if (gustMax >= 20) return "breezy at times";
+  if (gustMax >= 10) return "a light breeze";
+  return "generally light wind";
 }
 
-function getDewStats(windowed) {
-  return basicStats(windowed.dewpoint_2m || []);
-}
-
-function getWindGustStats(windowed) {
-  return basicStats(windowed.windgusts_10m || []);
-}
-
-function getUVStats(windowed) {
-  return basicStats(windowed.uv_index || []);
-}
-
-function getPrecipTotal(windowed) {
-  const arr = windowed.precipitation || [];
-  return arr.length ? arr.reduce((a, b) => a + b, 0) : 0;
-}
-
-function getSnowTotal(windowed) {
-  const arr = windowed.snowfall || [];
-  return arr.length ? arr.reduce((a, b) => a + b, 0) : 0;
+function describeTempRange(stats) {
+  if (!stats || stats.min == null || stats.max == null) {
+    return "temperature details unavailable";
+  }
+  const { min, max } = stats;
+  if (max <= 40) return "a cold day overall";
+  if (max <= 55) return "a cool day overall";
+  if (max <= 72) return "a mild day overall";
+  if (max <= 82) return "a warm day overall";
+  return "a hot day overall";
 }
 // PART 4 — Human-Action Outlook (Option A style)
 
