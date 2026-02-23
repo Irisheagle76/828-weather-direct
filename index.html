@@ -140,21 +140,35 @@
     }
 
     .action-module {
-      background: rgba(120, 180, 255, 0.10);
-      border: 1px solid rgba(120, 180, 255, 0.35);
-      border-radius: var(--module-radius);
-      padding: var(--module-padding);
+    background: rgba(120, 180, 255, 0.10);
+  border: 1px solid rgba(120, 180, 255, 0.35);
+  border-radius: var(--module-radius);
+  padding: var(--module-padding);
       display: flex;
       align-items: flex-start;
       gap: 0.9rem;
       min-width: 0;
     }
+    .action-alert-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.4rem;
+    }
 
-   .action-emoji {
-  font-size: 1.9rem;
-  margin-top: 2px;
-}
-
+    .action-badge {
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      letter-spacing: 0.04em;
+    }
+    .action-emoji {
+      font-size: 1.2rem;
+      line-height: 1;
+    }  
   .action-label {
   font-size: 0.72rem;
   text-transform: uppercase;
@@ -301,16 +315,22 @@
     </div>
 
     <div class="tomorrow-col">
-      <div id="action-module" class="action-module">
-        <div id="action-emoji" class="action-emoji">--</div>
-        <div>
-          <div id="action-badge" class="action-badge"></div>
-          <div class="action-label">Tomorrow’s human‑action outlook</div>
-          <div id="action-headline" class="action-headline">Analyzing tomorrow’s setup…</div>
-          <div id="action-text" class="action-text">
-            We’ll highlight what you’ll actually need tomorrow — layers, rain gear, hydration, or nothing special.
-          </div>
-        </div>
+   <div>
+  <div class="action-label">Tomorrow’s Human-Action Outlook</div>
+
+  <div class="action-alert-row">
+    <div id="action-badge" class="action-badge"></div>
+    <div id="action-emoji" class="action-emoji">--</div>
+  </div>
+
+  <div id="action-headline" class="action-headline">
+    Analyzing tomorrow’s setup…
+  </div>
+
+  <div id="action-text" class="action-text">
+    We’ll highlight what you’ll actually need tomorrow — layers, rain gear, hydration, or nothing special.
+  </div>
+</div>
       </div>
     </div>
   </div>
@@ -572,3 +592,4 @@
 </script>
 </body>
 </html>
+
