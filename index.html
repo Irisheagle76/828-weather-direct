@@ -5,7 +5,7 @@
   <title>828 Weather Direct – WU Powered</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <style>
+    <style>
     :root {
       --card-padding: 1.5rem;
       --module-padding: 1rem 1.2rem;
@@ -87,19 +87,19 @@
       font-size: 0.85rem;
       color: #c4c9e5;
     }
-        .now-tomorrow-row {
-    display: flex;
-  flex-wrap: wrap;
-  gap: var(--gap);
-  margin-bottom: var(--gap);
-  align-items: stretch;   /* ADD THIS */
+
+    .now-tomorrow-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--gap);
+      margin-bottom: var(--gap);
     }
 
-   .now-col,
-.tomorrow-col {
-  flex: 1 1 260px;
-  min-width: 0;
-  }
+    .now-col,
+    .tomorrow-col {
+      flex: 1 1 260px;
+      min-width: 0;
+    }
 
     .comfort-module {
       background: rgba(255, 169, 77, 0.10);
@@ -131,7 +131,6 @@
       color: #ffa94d;
       letter-spacing: 0.02em;
       line-height: 1.25;
-      word-wrap: break-word;
     }
 
     .comfort-sub {
@@ -140,17 +139,24 @@
       margin-top: 0.15rem;
     }
 
-   .action-module {
-   background: rgba(120, 180, 255, 0.18);   /* slightly stronger tint */
-  border: 1px solid rgba(120, 180, 255, 0.45);  /* stronger border */
-  border-radius: var(--module-radius);
-  padding: var(--module-padding);
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);   /* subtle lift */
+    /* UPDATED ACTION MODULE */
+
+    .action-module {
+      background: rgba(120, 180, 255, 0.10);
+      border: 1px solid rgba(120, 180, 255, 0.35);
+      border-radius: var(--module-radius);
+      padding: var(--module-padding);
     }
-    .action-module,
-.comfort-module {
-  width: 100%;
-}
+
+    .action-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #8fb7ff;
+      margin-bottom: 0.35rem;
+      white-space: nowrap;
+    }
+
     .action-alert-row {
       display: inline-flex;
       align-items: center;
@@ -167,126 +173,26 @@
       border: 1px solid rgba(255,255,255,0.15);
       letter-spacing: 0.04em;
     }
+
     .action-emoji {
       font-size: 1.2rem;
       line-height: 1;
-    }  
-  .action-label {
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #8fb7ff;
-  margin-bottom: 0.25rem;
-  white-space: nowrap;
-}
-   .action-headline {
-  font-size: 1.25rem;      /* bigger */
-  font-weight: 700;        /* stronger */
-  color: #ffffff;          /* more contrast */
-  margin-bottom: 0.3rem;
-  line-height: 1.2;
-}
-   .action-text {
-  font-size: 0.82rem;      /* slightly smaller */
-  color: #b9c7f5;          /* softer than headline */
-  line-height: 1.4;
-}
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: var(--gap);
-      margin-top: 0.5rem;
     }
 
-    .metric {
-      background: rgba(255,255,255,0.03);
-      border-radius: var(--module-radius);
-      padding: 0.75rem 0.9rem;
-      border: 1px solid rgba(255,255,255,0.05);
+    .action-headline {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 0.3rem;
+      line-height: 1.2;
     }
 
-    .metric-label {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #f0b777;
-      margin-bottom: 0.25rem;
+    .action-text {
+      font-size: 0.82rem;
+      color: #b9c7f5;
+      line-height: 1.4;
     }
 
-    .metric-value {
-      font-size: 1.2rem;
-      font-weight: 600;
-    }
-
-    .metric-sub {
-      font-size: 0.8rem;
-      color: #9aa3c2;
-      margin-top: 0.15rem;
-    }
-
-    .forecast-module {
-      margin-top: var(--gap);
-      background: rgba(255, 169, 77, 0.10);
-      border: 1px solid rgba(255, 169, 77, 0.25);
-      border-radius: var(--module-radius);
-      padding: var(--module-padding);
-    }
-
-    .forecast-title {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: #ffa94d;
-      margin-bottom: 0.6rem;
-      letter-spacing: 0.03em;
-    }
-
-    .forecast-icons {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-      font-size: 2rem;
-      cursor: pointer;
-    }
-
-    .forecast-icon:hover {
-      transform: scale(1.2);
-    }
-
-    .forecast-detail {
-      margin-top: 0.9rem;
-      padding: 0.8rem 1rem;
-      background: rgba(255,255,255,0.05);
-      border-radius: var(--module-radius);
-      border: 1px solid rgba(255,255,255,0.08);
-      display: none;
-    }
-
-    .detail-title {
-      font-size: 0.95rem;
-      font-weight: 600;
-      margin-bottom: 0.25rem;
-      color: #ffa94d;
-    }
-
-    .detail-text {
-      font-size: 0.85rem;
-      color: #d8d8e0;
-      line-height: 1.35;
-    }
-
-    .footer-note {
-      margin-top: var(--gap);
-      font-size: 0.78rem;
-      color: #e0b27a;
-      text-align: center;
-    }
-
-    .error-text {
-      color: #fb7185;
-      font-size: 0.85rem;
-      margin-top: 0.5rem;
-    }
   </style>
 </head>
 <body>
@@ -317,22 +223,16 @@
     </div>
 
     <div class="tomorrow-col">
-   <div id="action-module" class="action-module">
-  <div class="action-label">Tomorrow’s Human-Action Outlook</div>
-
-  <div class="action-alert-row">
-    <div id="action-badge" class="action-badge"></div>
-    <div id="action-emoji" class="action-emoji">--</div>
-  </div>
-
-  <div id="action-headline" class="action-headline">
-    Analyzing tomorrow’s setup…
-  </div>
-
-  <div id="action-text" class="action-text">
-    We’ll highlight what you’ll actually need tomorrow — layers, rain gear, hydration, or nothing special.
-  </div>
-</div>
+      <div id="action-module" class="action-module">
+        <div id="action-emoji" class="action-emoji">--</div>
+        <div>
+          <div id="action-badge" class="action-badge"></div>
+          <div class="action-label">Tomorrow’s human‑action outlook</div>
+          <div id="action-headline" class="action-headline">Analyzing tomorrow’s setup…</div>
+          <div id="action-text" class="action-text">
+            We’ll highlight what you’ll actually need tomorrow — layers, rain gear, hydration, or nothing special.
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -594,9 +494,4 @@
 </script>
 </body>
 </html>
-
-
-
-
-
 
