@@ -88,18 +88,18 @@
       color: #c4c9e5;
     }
         .now-tomorrow-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--gap);
-      margin-bottom: var(--gap);
+    display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap);
+  margin-bottom: var(--gap);
+  align-items: stretch;   /* ADD THIS */
     }
 
    .now-col,
 .tomorrow-col {
   flex: 1 1 260px;
   min-width: 0;
-  display: flex;          /* ADD THIS */
-}
+  }
 
     .comfort-module {
       background: rgba(255, 169, 77, 0.10);
@@ -596,6 +596,7 @@
 </script>
 </body>
 </html>
+
 
 
 
