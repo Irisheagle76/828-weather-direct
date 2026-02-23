@@ -158,16 +158,16 @@ function describeTempRange(stats) {
 }
 
 // ----------------------------------------------------
-// PART 4 — Human‑Action Outlook (Option A)
+// PART 4 — Human‑Action Outlook
 // ----------------------------------------------------
-
 export function getHumanActionOutlook(hourly) {
   const indices = getTomorrowWindow(hourly);
+
   if (!indices.length) {
     return {
       badge: { text: "No data", class: "badge-neutral" },
       emoji: "❓",
-      headline: "Tomorrow’s outlook is unavailable",
+      headline: "Check back later.",
       text: "We couldn’t find a usable forecast window for tomorrow."
     };
   }
@@ -180,77 +180,152 @@ export function getHumanActionOutlook(hourly) {
   const snowTotal = getSnowTotal(win);
 
   const avgTemp = tempStats.avg ?? tempStats.max ?? tempStats.min ?? null;
-  const avgDew = dewStats.avg ?? avgTemp ?? 50;
   const gustMax = windStats.max ?? 0;
-
-  const comfort = avgTemp != null
-    ? getComfortCategory(avgTemp, avgDew, gustMax, precipTotal)
-    : { text: "Comfort unknown", emoji: "❓" };
 
   const precipDesc = describePrecip(precipTotal, snowTotal);
   const windDesc = describeWind(gustMax);
   const tempDesc = describeTempRange(tempStats);
 
+  /* ----------------------------------------------------
+     IMPACT SCORING
+  ---------------------------------------------------- */
+
+  const drivers = [];
+
+  // Snow
+  if (snowTotal > 0.05) {
+    drivers.push({
+      type: "snow",
+      score: 80 + snowTotal * 10
+    });
+  }
+
+  // Heavy rain
+  if (precipTotal >= 0.25 && snowTotal === 0) {
+    drivers.push({
+      type: "rain",
+      score: 60 + precipTotal * 20
+    });
+  }
+
+  // Wind
+  if (gustMax >= 25) {
+    drivers.push({
+      type: "wind",
+      score: 50 + gustMax
+    });
+  }
+
+  // Heat
+  if (avgTemp != null && avgTemp >= 88) {
+    drivers.push({
+      type: "heat",
+      score: 55 + (avgTemp - 88) * 2
+    });
+  }
+
+  // Cold
+  if (avgTemp != null && avgTemp <= 35) {
+    drivers.push({
+      type: "cold",
+      score: 55 + (35 - avgTemp) * 2
+    });
+  }
+
+  // Goldilocks
+  if (
+    precipTotal < 0.05 &&
+    snowTotal === 0 &&
+    gustMax < 15 &&
+    avgTemp != null &&
+    avgTemp >= 60 &&
+    avgTemp <= 75
+  ) {
+    drivers.push({
+      type: "goldilocks",
+      score: 40
+    });
+  }
+
+  // Default if nothing significant
+  if (!drivers.length) {
+    drivers.push({ type: "easy", score: 10 });
+  }
+
+  // Select highest impact
+  drivers.sort((a, b) => b.score - a.score);
+  const dominant = drivers[0].type;
+
+  /* ----------------------------------------------------
+     ACTION MAPPING
+  ---------------------------------------------------- */
+
   let badgeText = "Easy Day";
   let badgeClass = "badge-easy";
   let emoji = "🙂";
-  let headline = "A fairly straightforward day ahead.";
-  let detail = `${tempDesc}. Expect ${precipDesc} with ${windDesc}. ${comfort.text}`;
+  let action = "Go about your day as usual.";
+  let reason = `${tempDesc}. Expect ${precipDesc} with ${windDesc}.`;
 
-  const isGoldilocks = comfort.text.startsWith("Goldilocks");
-  if (isGoldilocks) {
-    badgeText = "Goldilocks Day";
-    badgeClass = "badge-goldilocks";
-    emoji = "🌟";
-    headline = "Just right — a Goldilocks kind of day.";
-    detail = `${comfort.text} ${precipDesc !== "mainly dry" ? `Also, ${precipDesc}.` : ""}`.trim();
-  }
+  switch (dominant) {
 
-  if (!isGoldilocks && precipTotal >= 0.25 && snowTotal === 0) {
-    badgeText = "Rain Gear";
-    badgeClass = "badge-rain";
-    emoji = "🌧️";
-    headline = "Have rain gear handy tomorrow.";
-    detail = `${precipDesc}. ${windDesc}. ${comfort.text}`;
-  }
+    case "snow":
+      badgeText = "Snow Impact";
+      badgeClass = "badge-snow";
+      emoji = "❄️";
+      action = "Allow extra travel time.";
+      reason = `${precipDesc}. Roads could become slick. ${windDesc}.`;
+      break;
 
-  if (!isGoldilocks && snowTotal > 0.05) {
-    badgeText = "Snow Impact";
-    badgeClass = "badge-snow";
-    emoji = "❄️";
-    headline = "Snow may impact your plans.";
-    detail = `${precipDesc}. ${windDesc}. ${comfort.text}`;
-  }
+    case "rain":
+      badgeText = "Rain Gear";
+      badgeClass = "badge-rain";
+      emoji = "🌧️";
+      action = "Bring a rain jacket.";
+      reason = `${precipDesc}. ${windDesc}.`;
+      break;
 
-  if (!isGoldilocks && gustMax >= 30) {
-    badgeText = "Wind Alert";
-    badgeClass = "badge-wind";
-    emoji = "💨";
-    headline = "It will be quite windy at times.";
-    detail = `${windDesc}. ${precipDesc}. ${comfort.text}`;
-  }
+    case "wind":
+      badgeText = "Wind Alert";
+      badgeClass = "badge-wind";
+      emoji = "💨";
+      action = "Secure loose outdoor items.";
+      reason = `${windDesc}. ${tempDesc}.`;
+      break;
 
-  if (
-    !isGoldilocks &&
-    precipTotal < 0.10 &&
-    snowTotal === 0 &&
-    gustMax < 20 &&
-    avgTemp != null &&
-    avgTemp >= 55 &&
-    avgTemp <= 78
-  ) {
-    badgeText = "Easy Outdoor Day";
-    badgeClass = "badge-easy";
-    emoji = "🌤️";
-    headline = "A great day to be outside.";
-    detail = `${tempDesc}. ${comfort.text}`;
+    case "heat":
+      badgeText = "Heat Caution";
+      badgeClass = "badge-heat";
+      emoji = "🥵";
+      action = "Stay hydrated.";
+      reason = `${tempDesc}. Heat index may rise during the afternoon.`;
+      break;
+
+    case "cold":
+      badgeText = "Cold Prep";
+      badgeClass = "badge-cold";
+      emoji = "🥶";
+      action = "Dress in warm layers.";
+      reason = `${tempDesc}. Wind may make it feel colder.`;
+      break;
+
+    case "goldilocks":
+      badgeText = "Goldilocks Day";
+      badgeClass = "badge-goldilocks";
+      emoji = "🌟";
+      action = "Make outdoor plans.";
+      reason = `${tempDesc}. Dry conditions with light winds.`;
+      break;
+
+    case "easy":
+    default:
+      break;
   }
 
   return {
     badge: { text: badgeText, class: badgeClass },
     emoji,
-    headline,
-    text: detail
+    headline: action,
+    text: reason
   };
 }
 
