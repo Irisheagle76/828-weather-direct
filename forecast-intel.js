@@ -473,9 +473,7 @@ function comfortEmoji(feel) {
     default: return "🌡️";
   }
 }
-console.log(hourly.windgusts_10m);
-console.log(getTomorrowWindow(hourly));
-console.log(sliceHourly(hourly, getTomorrowWindow(hourly)).windgusts_10m)
+
 // ----------------------------------------------------
 // PART 6 — Forecast Alerts
 // ----------------------------------------------------
