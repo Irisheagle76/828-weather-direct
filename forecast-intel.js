@@ -387,8 +387,8 @@ export function getComfortCategory(temp, dew, gust, precip = 0) {
   if (dew >= 65) nuance = "humid";
   else if (dew < 40) nuance = "crisp";
 
-  if (gust >= 30) nuance = "windy";
-  else if (gust >= 20) nuance = "breezy";
+  if (gust >= 40) nuance = "windy";
+  else if (gust >= 30) nuance = "breezy";
 
   const personality = getPersonalityPhrase(feel, nuance);
 
