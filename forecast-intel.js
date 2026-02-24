@@ -139,9 +139,9 @@ function describePrecip(precipTotal, snowTotal) {
 
 function describeWind(gustMax) {
   if (gustMax >= 45) return "very windy";
-  if (gustMax >= 35) return "quite gusty";
-  if (gustMax >= 25) return "breezy at times";
-  if (gustMax >= 20) return "a light breeze";
+  if (gustMax >= 40) return "quite gusty";
+  if (gustMax >= 35) return "breezy at times";
+  if (gustMax >= 25) return "a light breeze";
   return "generally light wind";
 }
 
@@ -236,7 +236,7 @@ export function getHumanActionOutlook(hourly) {
   if (
     precipTotal < 0.05 &&
     snowTotal === 0 &&
-    gustMax < 15 &&
+    gustMax < 21 &&
     avgTemp != null &&
     avgTemp >= 60 &&
     avgTemp <= 75
