@@ -367,7 +367,7 @@ export function getComfortCategory(temp, dew, gust, precip = 0) {
   const isGoldilocks =
     temp >= 68 && temp <= 74 &&
     dew >= 45 && dew <= 52 &&
-    gust < 15 &&
+    gust < 25 &&
     precip < 0.02;
 
   if (isGoldilocks) {
@@ -473,7 +473,9 @@ function comfortEmoji(feel) {
     default: return "🌡️";
   }
 }
-
+console.log(hourly.windgusts_10m);
+console.log(getTomorrowWindow(hourly));
+console.log(sliceHourly(hourly, getTomorrowWindow(hourly)).windgusts_10m)
 // ----------------------------------------------------
 // PART 6 — Forecast Alerts
 // ----------------------------------------------------
