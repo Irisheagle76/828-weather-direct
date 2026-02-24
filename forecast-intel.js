@@ -1,6 +1,6 @@
 // forecast-intel.js
 // 828 Weather Direct — Forecast Intelligence Engine
-// COMPLETE, CLEAN, DEDUPED, TIME-CORRECTED VERSION
+// COMPLETE, CLEAN, UPDATED FOR NEW HUMAN-ACTION OUTLOOK STRUCTURE
 
 // ----------------------------------------------------
 // PART 1 — Core Helpers + Hourly Window Tools
@@ -158,8 +158,9 @@ function describeTempRange(stats) {
 }
 
 // ----------------------------------------------------
-// PART 4 — Human‑Action Outlook
+// PART 4 — Human‑Action Outlook (UPDATED STRUCTURE)
 // ----------------------------------------------------
+
 export function getHumanActionOutlook(hourly) {
   const indices = getTomorrowWindow(hourly);
 
@@ -168,7 +169,8 @@ export function getHumanActionOutlook(hourly) {
       badge: { text: "No data", class: "badge-neutral" },
       emoji: "❓",
       headline: "Check back later.",
-      text: "We couldn’t find a usable forecast window for tomorrow."
+      action: "No forecast available.",
+      reasoning: "We couldn’t find a usable forecast window for tomorrow."
     };
   }
 
@@ -324,8 +326,9 @@ export function getHumanActionOutlook(hourly) {
   return {
     badge: { text: badgeText, class: badgeClass },
     emoji,
-    headline: action,
-    text: reason
+    headline: badgeText,
+    action,
+    reasoning: reason
   };
 }
 
@@ -541,7 +544,6 @@ export function getForecastAlerts(hourly) {
 
   return alerts;
 }
-
 // ----------------------------------------------------
 // PART 7 — Default Export Bundle
 // ----------------------------------------------------
@@ -551,4 +553,3 @@ export default {
   getComfortCategory,
   getForecastAlerts
 };
-
