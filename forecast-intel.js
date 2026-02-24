@@ -138,10 +138,10 @@ function describePrecip(precipTotal, snowTotal) {
 }
 
 function describeWind(gustMax) {
-  if (gustMax >= 40) return "very windy";
-  if (gustMax >= 30) return "quite gusty";
-  if (gustMax >= 20) return "breezy at times";
-  if (gustMax >= 10) return "a light breeze";
+  if (gustMax >= 45) return "very windy";
+  if (gustMax >= 35) return "quite gusty";
+  if (gustMax >= 25) return "breezy at times";
+  if (gustMax >= 20) return "a light breeze";
   return "generally light wind";
 }
 
