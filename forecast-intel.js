@@ -446,6 +446,25 @@ export function getComfortCategory(temp, dew, gust, precip = 0) {
     emoji: comfortEmoji(feel)
   };
 }
+ // -----------------------------
+  // 4. Seasonal anomaly phrasing
+  // (Patched: only trigger when dramatic)
+  // -----------------------------
+  let anomalyNote = "";
+
+  // Warm anomalies
+  if (anomaly >= 20) {
+    anomalyNote = ` — warmer than usual for ${getMonthName(month)} at this time of day`;
+  } else if (anomaly >= 12) {
+    anomalyNote = ` — a bit warmer than normal at this hour`;
+  }
+
+  // Cold anomalies
+  if (anomaly <= -20) {
+    anomalyNote = ` — colder than usual for ${getMonthName(month)} at this time of day`;
+  } else if (anomaly <= -12) {
+    anomalyNote = ` — a bit colder than normal at this hour`;
+  }
 
 function getPersonalityPhrase(feel, nuance) {
   if (feel === "biting") {
