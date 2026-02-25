@@ -433,9 +433,7 @@ export function getComfortCategory(temp, dew, gust, precip = 0) {
     anomalyNote = ` — warmer than usual for ${monthName(month)} at this time of day`;
   } else if (diff >= 12) {
     anomalyNote = ` — a bit warmer than normal at this hour`;
-  }
-
-  if (diff <= -20) {
+  } else if (diff <= -20) {
     anomalyNote = ` — colder than usual for ${monthName(month)} at this time of day`;
   } else if (diff <= -12) {
     anomalyNote = ` — a bit colder than normal at this hour`;
