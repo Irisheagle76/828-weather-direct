@@ -219,12 +219,29 @@ console.log("Precip total:", precipTotal);
     });
   }
 
-  // Heavy rain
-// Rain impact: heavy OR persistent light rain
-if ((precipTotal >= 0.25 || precipHours >= 6) && snowTotal === 0) {
+ // -----------------------------
+// RAIN IMPACT LOGIC (patched)
+// -----------------------------
+
+// Count hours with measurable precip (drizzle threshold lowered)
+const precipArr = win.precipitation || [];
+const precipHours = precipArr.filter(p => p >= 0.01).length;
+
+// Determine rain impact
+// Three pathways:
+// 1. Heavy rain (>= 0.25")
+// 2. Persistent light rain (>= 4 hours of drizzle/light rain)
+// 3. Wet day (>= 0.10" AND >= 4 hours)
+if (
+  snowTotal === 0 && (
+    precipTotal >= 0.25 ||               // heavy rain
+    precipHours >= 4 ||                  // persistent light rain
+    (precipTotal >= 0.10 && precipHours >= 4)  // wet day combo
+  )
+) {
   drivers.push({
     type: "rain",
-    score: 60 + precipTotal * 20 + precipHours
+    score: 55 + (precipTotal * 20) + (precipHours * 2)
   });
 }
 
