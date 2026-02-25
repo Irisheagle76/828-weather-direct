@@ -383,7 +383,6 @@ function monthName(i) {
 export function getComfortCategory(temp, dew, gust, precip = 0) {
   const now = new Date();
 
-  // ⭐ FIXED: Always use Asheville local time
   const hour = Number(
     new Intl.DateTimeFormat("en-US", {
       hour: "numeric",
@@ -425,10 +424,24 @@ export function getComfortCategory(temp, dew, gust, precip = 0) {
   const normal = (hour < 11 || hour >= 18)
     ? NORMAL_LOWS[month]
     : NORMAL_HIGHS[month];
+
+  const diff = temp - normal;
+  let anomalyNote = "";
+
+  if (diff >= 20) {
+    anomalyNote = ` — warmer than usual for ${monthName(month)} at this time of day`;
+  } else if (diff >= 12) {
+    anomalyNote = ` — a bit warmer than normal at this hour`;
+  }
+
+  if (diff <= -20) {
+    anomalyNote = ` — colder than usual for ${monthName(month)} at this time of day`;
+  } else if (diff <= -12) {
+    anomalyNote = ` — a bit colder than normal at this hour`;
   }
 
   return {
-    text: personality,
+    text: personality + anomalyNote,
     emoji: comfortEmoji(feel)
   };
 }
