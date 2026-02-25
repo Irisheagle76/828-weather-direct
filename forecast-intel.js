@@ -11,7 +11,7 @@ function clamp(value, min, max) {
 }
 
 function avg(arr) {
-  if (!arr || !arr.length) return null;
+  if (!arr || !arr.length) return null
   return arr.reduce((a, b) => a + b, 0) / arr.length;
 }
 
@@ -190,13 +190,6 @@ export function getHumanActionOutlook(hourly) {
   const windStats = getWindGustStats(win);
   const precipTotal = getPrecipTotal(win);
   const snowTotal = getSnowTotal(win);
-  // Count hours with measurable precip
-const precipArr = win.precipitation || [];
-const precipHours = precipArr.filter(p => p >= 0.02).length;
-   console.log("Tomorrow precip hours:", precipHours);
-console.log("Tomorrow precip array:", precipArr);
-console.log("Tomorrow indices:", indices);
-console.log("Precip total:", precipTotal);
 
   const avgTemp = tempStats.avg ?? tempStats.max ?? tempStats.min ?? null;
   const gustMax = windStats.max ?? 0;
