@@ -425,20 +425,6 @@ export function getComfortCategory(temp, dew, gust, precip = 0) {
   const normal = (hour < 11 || hour >= 18)
     ? NORMAL_LOWS[month]
     : NORMAL_HIGHS[month];
-
-  const diff = temp - normal;
-  const absDiff = Math.abs(diff);
-
-  if (absDiff > 15) {
-    const seasonal =
-      diff > 15
-        ? `unusually warm for ${monthName(month)}`
-        : `much colder than normal for ${monthName(month)}`;
-
-    return {
-      text: `${personality} — ${seasonal}`,
-      emoji: comfortEmoji(feel)
-    };
   }
 
   return {
@@ -450,6 +436,12 @@ export function getComfortCategory(temp, dew, gust, precip = 0) {
   // 4. Seasonal anomaly phrasing
   // (Patched: only trigger when dramatic)
   // -----------------------------
+
+    const normal = (hour < 11 || hour >= 18)
+    ? NORMAL_LOWS[month]
+    : NORMAL_HIGHS[month];
+
+  const diff = temp - normal;
   let anomalyNote = "";
 
   // Warm anomalies
