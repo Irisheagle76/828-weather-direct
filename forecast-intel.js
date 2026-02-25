@@ -193,6 +193,10 @@ export function getHumanActionOutlook(hourly) {
   // Count hours with measurable precip
 const precipArr = win.precipitation || [];
 const precipHours = precipArr.filter(p => p >= 0.02).length;
+   console.log("Tomorrow precip hours:", precipHours);
+console.log("Tomorrow precip array:", precipArr);
+console.log("Tomorrow indices:", indices);
+console.log("Precip total:", precipTotal);
 
   const avgTemp = tempStats.avg ?? tempStats.max ?? tempStats.min ?? null;
   const gustMax = windStats.max ?? 0;
