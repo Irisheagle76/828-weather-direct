@@ -190,6 +190,9 @@ export function getHumanActionOutlook(hourly) {
   const windStats = getWindGustStats(win);
   const precipTotal = getPrecipTotal(win);
   const snowTotal = getSnowTotal(win);
+  // Count hours with measurable precip
+const precipArr = win.precipitation || [];
+const precipHours = precipArr.filter(p => p >= 0.02).length;
 
   const avgTemp = tempStats.avg ?? tempStats.max ?? tempStats.min ?? null;
   const gustMax = windStats.max ?? 0;
@@ -213,12 +216,13 @@ export function getHumanActionOutlook(hourly) {
   }
 
   // Heavy rain
-  if (precipTotal >= 0.25 && snowTotal === 0) {
-    drivers.push({
-      type: "rain",
-      score: 60 + precipTotal * 20
-    });
-  }
+// Rain impact: heavy OR persistent light rain
+if ((precipTotal >= 0.25 || precipHours >= 6) && snowTotal === 0) {
+  drivers.push({
+    type: "rain",
+    score: 60 + precipTotal * 20 + precipHours
+  });
+}
 
   // Wind
   if (gustMax >= 40) {
