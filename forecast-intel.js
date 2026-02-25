@@ -429,9 +429,9 @@ export function getComfortCategory(temp, dew, gust, precip = 0) {
   const diff = temp - normal;
   const absDiff = Math.abs(diff);
 
-  if (absDiff > 10) {
+  if (absDiff > 15) {
     const seasonal =
-      diff > 10
+      diff > 15
         ? `unusually warm for ${monthName(month)}`
         : `much colder than normal for ${monthName(month)}`;
 
@@ -453,16 +453,16 @@ export function getComfortCategory(temp, dew, gust, precip = 0) {
   let anomalyNote = "";
 
   // Warm anomalies
-  if (anomaly >= 20) {
+  if (diff >= 20) {
     anomalyNote = ` — warmer than usual for ${getMonthName(month)} at this time of day`;
-  } else if (anomaly >= 12) {
+  } else if (diff >= 12) {
     anomalyNote = ` — a bit warmer than normal at this hour`;
   }
 
   // Cold anomalies
-  if (anomaly <= -20) {
+  if (diff <= -20) {
     anomalyNote = ` — colder than usual for ${getMonthName(month)} at this time of day`;
-  } else if (anomaly <= -12) {
+  } else if (diff <= -12) {
     anomalyNote = ` — a bit colder than normal at this hour`;
   }
 
