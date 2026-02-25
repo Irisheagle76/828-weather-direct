@@ -453,11 +453,10 @@ export function getComfortCategory(temp, dew, gust, precip = 0) {
     ? NORMAL_LOWS[month]
     : NORMAL_HIGHS[month];
 
-  const diff = temp - normal;
   let anomalyNote = "";
 
   // Warm anomalies
-const diff = temp - normal;
+
   if (diff >= 20) {
     anomalyNote = ` — warmer than usual for ${getMonthName(month)} at this time of day`;
   } else if (diff >= 12) {
