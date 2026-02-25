@@ -45,9 +45,21 @@ function getHourlyWindowForDay(hourly, targetDate) {
 
 function getTomorrowWindow(hourly) {
   const now = new Date();
+
+  // Define tomorrow's calendar date
   const tomorrow = new Date(now);
   tomorrow.setDate(now.getDate() + 1);
-  return getHourlyWindowForDay(hourly, tomorrow);
+
+  // Get all hourly indices for tomorrow (00:00–23:59)
+  const indices = getHourlyWindowForDay(hourly, tomorrow);
+
+  // ⭐ NEW RULE: Require at least 6 hours of tomorrow before computing
+  // This prevents bad forecasts when only 1–2 hours are available
+  if (indices.length < 6) {
+    return [];
+  }
+
+  return indices;
 }
 
 function sliceHourly(hourly, indices) {
