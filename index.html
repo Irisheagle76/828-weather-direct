@@ -100,31 +100,37 @@
     }
 
     /* Smaller, lighter metric cards */
-    .metric {
-      background: rgba(255,255,255,0.03);
-      border-radius: 14px;
-      padding: 0.55rem 0.7rem;
-      border: 1px solid rgba(255,255,255,0.05);
-    }
+   .metric {
+  background: rgba(255,255,255,0.03);
+  border-radius: 12px;
+  padding: 0.45rem 0.6rem;   /* smaller */
+  border: 1px solid rgba(255,255,255,0.05);
+  min-height: 70px;          /* keeps all 4 cards aligned */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;   /* vertically centers content */
+}
 
-    .metric-label {
-      font-size: 0.68rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #f0b777;
-      margin-bottom: 0.2rem;
-    }
+.metric-label {
+  font-size: 0.62rem;         /* smaller */
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #f0b777;
+  margin-bottom: 0.15rem;
+}
 
-    .metric-value {
-      font-size: 1rem;
-      font-weight: 600;
-    }
+.metric-value {
+  font-size: 0.92rem;         /* smaller */
+  font-weight: 600;
+  line-height: 1.1;
+}
 
-    .metric-sub {
-      font-size: 0.72rem;
-      color: #9aa3c2;
-      margin-top: 0.15rem;
-    }
+.metric-sub {
+  font-size: 0.68rem;         /* smaller */
+  color: #9aa3c2;
+  margin-top: 0.1rem;
+  line-height: 1.1;
+}
 
     /* ⭐ Comfort row */
     .comfort-row {
@@ -321,7 +327,7 @@
       <div class="metric">
         <div class="metric-label">Wind</div>
         <div class="metric-value" id="wu-wind">--</div>
-        <div class="metric-sub" id="wu-wwind-gust">Gusts --</div>
+        <div class="metric-sub" id="wu-wind-gust">Gusts --</div>
       </div>
 
       <div class="metric">
@@ -611,3 +617,4 @@
 </script>
 </body>
 </html>
+
