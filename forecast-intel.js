@@ -119,10 +119,17 @@ function getDaypartWindow(hourly, targetDate, startHour, endHour) {
   return indices;
 }
 // ----------------------------------------------------
-// TIMING HELPERS — find event windows + dayparts
+// TIMING HELPERS — index-based, human-friendly
 // ----------------------------------------------------
 
-function describeTimeOfDay(hour) {
+// Convert an hour index (0–47) to a local hour-of-day (0–23)
+function hourIndexToLocalHour(index) {
+  return index % 24;
+}
+
+function describeTimeOfDay(hourIndex) {
+  const hour = hourIndexToLocalHour(hourIndex);
+
   if (hour >= 5 && hour < 9) return "early morning";
   if (hour >= 9 && hour < 12) return "late morning";
   if (hour >= 12 && hour < 15) return "early afternoon";
@@ -136,7 +143,7 @@ function findEventTiming(hourly, start, end, conditionFn) {
   let last = null;
 
   for (let i = start; i <= end; i++) {
-    if (conditionFn(i)) {
+    if (conditionFn(i, hourly)) {
       if (first === null) first = i;
       last = i;
     }
@@ -147,12 +154,10 @@ function findEventTiming(hourly, start, end, conditionFn) {
     lastHour: last
   };
 }
-// ----------------------------------------------------
-// SMART TIMING PHRASE — avoids ambiguous wording
-// ----------------------------------------------------
 
+// Smarter, less ambiguous timing phrase
 function timingPhrase(timing, isTomorrow) {
-  if (!timing.firstHour) return "";
+  if (timing.firstHour === null || timing.lastHour === null) return "";
 
   const start = timing.firstHour;
   const end = timing.lastHour;
@@ -163,19 +168,21 @@ function timingPhrase(timing, isTomorrow) {
 
   const dayLabel = isTomorrow ? " tomorrow" : "";
 
-  // RULE 1 — All-day or nearly all-day event
+  // All-day or nearly all-day event
   if (duration >= 8 || (startPart === "early morning" && endPart === "evening")) {
     return ` throughout the day${dayLabel}`;
   }
 
-  // RULE 2 — Multi-daypart event
+  // Multi-daypart event
   const dayparts = new Set([startPart, endPart]);
   if (dayparts.size >= 3) {
     return ` most of the day${dayLabel}`;
   }
 
-  // RULE 3 — True overnight event (late night only)
-  if (start >= 22 || end <= 6) {
+  // True overnight event (late night only)
+  const startHourLocal = hourIndexToLocalHour(start);
+  const endHourLocal = hourIndexToLocalHour(end);
+  if (startHourLocal >= 22 || endHourLocal <= 6) {
     return ` overnight${dayLabel}`;
   }
 
@@ -195,8 +202,9 @@ function isRain(i, hourly) {
   return (hourly.precipitation[i] ?? 0) > 0.02;
 }
 
+// Only treat snow as alert-worthy when meaningful
 function isSnow(i, hourly) {
-  return (hourly.snowfall[i] ?? 0) > 0.25;
+  return (hourly.snowfall[i] ?? 0) >= 0.3;  // prevents flurry alerts
 }
 
 function isWind(i, hourly) {
@@ -776,6 +784,9 @@ function comfortEmoji(feel) {
 export function getForecastAlerts(hourly) {
   const alerts = [];
 
+  // Index-only windows:
+  // Today:    0–23
+  // Tomorrow: 24–47
   const todayStart = 0;
   const todayEnd = 23;
 
@@ -785,8 +796,8 @@ export function getForecastAlerts(hourly) {
   // ----------------------------------------------------
   // RAIN
   // ----------------------------------------------------
-  const rainToday = findEventTiming(hourly, todayStart, todayEnd, i => isRain(i, hourly));
-  const rainTomorrow = findEventTiming(hourly, tomorrowStart, tomorrowEnd, i => isRain(i, hourly));
+  const rainToday = findEventTiming(hourly, todayStart, todayEnd, isRain);
+  const rainTomorrow = findEventTiming(hourly, tomorrowStart, tomorrowEnd, isRain);
 
   if (rainToday.firstHour !== null) {
     alerts.push({
@@ -809,8 +820,8 @@ export function getForecastAlerts(hourly) {
   // ----------------------------------------------------
   // SNOW
   // ----------------------------------------------------
-  const snowToday = findEventTiming(hourly, todayStart, todayEnd, i => isSnow(i, hourly));
-  const snowTomorrow = findEventTiming(hourly, tomorrowStart, tomorrowEnd, i => isSnow(i, hourly));
+  const snowToday = findEventTiming(hourly, todayStart, todayEnd, isSnow);
+  const snowTomorrow = findEventTiming(hourly, tomorrowStart, tomorrowEnd, isSnow);
 
   if (snowToday.firstHour !== null) {
     alerts.push({
@@ -826,15 +837,15 @@ export function getForecastAlerts(hourly) {
       id: "snow-tomorrow",
       icon: "❄️",
       title: "Snow Tomorrow",
-      detail: `Snowfall expected${timingPhrase(snowTomorrow, true)}. Allow extra travel time.``
+      detail: `Snowfall expected${timingPhrase(snowTomorrow, true)}. Allow extra travel time.`
     });
   }
 
   // ----------------------------------------------------
   // WIND
   // ----------------------------------------------------
-  const windToday = findEventTiming(hourly, todayStart, todayEnd, i => isWind(i, hourly));
-  const windTomorrow = findEventTiming(hourly, tomorrowStart, tomorrowEnd, i => isWind(i, hourly));
+  const windToday = findEventTiming(hourly, todayStart, todayEnd, isWind);
+  const windTomorrow = findEventTiming(hourly, tomorrowStart, tomorrowEnd, isWind);
 
   if (windToday.firstHour !== null) {
     alerts.push({
@@ -857,11 +868,11 @@ export function getForecastAlerts(hourly) {
   // ----------------------------------------------------
   // FREEZE / HARD FREEZE
   // ----------------------------------------------------
-  const freezeToday = findEventTiming(hourly, todayStart, todayEnd, i => isFreeze(i, hourly));
-  const freezeTomorrow = findEventTiming(hourly, tomorrowStart, tomorrowEnd, i => isFreeze(i, hourly));
+  const freezeToday = findEventTiming(hourly, todayStart, todayEnd, isFreeze);
+  const freezeTomorrow = findEventTiming(hourly, tomorrowStart, tomorrowEnd, isFreeze);
 
-  const hardFreezeToday = findEventTiming(hourly, todayStart, todayEnd, i => isHardFreeze(i, hourly));
-  const hardFreezeTomorrow = findEventTiming(hourly, tomorrowStart, tomorrowEnd, i => isHardFreeze(i, hourly));
+  const hardFreezeToday = findEventTiming(hourly, todayStart, todayEnd, isHardFreeze);
+  const hardFreezeTomorrow = findEventTiming(hourly, tomorrowStart, tomorrowEnd, isHardFreeze);
 
   if (hardFreezeToday.firstHour !== null) {
     alerts.push({
@@ -898,8 +909,8 @@ export function getForecastAlerts(hourly) {
   // ----------------------------------------------------
   // HEAT / HUMIDITY
   // ----------------------------------------------------
-  const heatToday = findEventTiming(hourly, todayStart, todayEnd, i => isHeat(i, hourly));
-  const heatTomorrow = findEventTiming(hourly, tomorrowStart, tomorrowEnd, i => isHeat(i, hourly));
+  const heatToday = findEventTiming(hourly, todayStart, todayEnd, isHeat);
+  const heatTomorrow = findEventTiming(hourly, tomorrowStart, tomorrowEnd, isHeat);
 
   if (heatToday.firstHour !== null) {
     alerts.push({
