@@ -24,7 +24,29 @@ function sameCalendarDay(a, b) {
     a.getDate() === b.getDate()
   );
 }
-
++// ============================================================
++// Helper: Find tomorrow's 2 PM forecast index
++// ============================================================
++function getTomorrow2pmIndex(hourly) {
++  const now = new Date();
++  const target = new Date(now);
++  target.setDate(now.getDate() + 1);
++  target.setHours(14, 0, 0, 0); // 2 PM tomorrow
++
++  let bestIndex = 0;
++  let bestDiff = Infinity;
++
++  hourly.time.forEach((t, i) => {
++    const d = new Date(t);
++    const diff = Math.abs(d - target);
++    if (diff < bestDiff) {
++      bestDiff = diff;
++      bestIndex = i;
++    }
++  });
++
++  return bestIndex;
++}
 // Core window selector for any calendar day
 function getHourlyWindowForDay(hourly, targetDate) {
   const times = hourly.time || [];
@@ -434,7 +456,42 @@ export function getHumanActionOutlook(hourly) {
 
   drivers.sort((a, b) => b.score - a.score);
   const dominant = drivers[0].type;
+ // ============================================================
+ // ⭐ Temperature Swing Add‑On
+ // Today’s high → Tomorrow’s 2 PM temperature
+// ============================================================
+ try {
+  // 1. Compute today's high using today's remaining window
+   const todayIndices = getTodayRemainingWindow(hourly);
+   const todayWin = sliceHourly(hourly, todayIndices);
+  const todayTempStats = getTempStats(todayWin);
+ const todayHigh = todayTempStats.max ?? todayTempStats.avg ?? null;
 
+   // 2. Find tomorrow's 2 PM temperature
+  const idx2pm = getTomorrow2pmIndex(hourly);
+   const tomorrow2pmTemp = hourly.temperature_2m[idx2pm];
+
+  // 3. Compute swing
+  const swing = tomorrow2pmTemp - todayHigh;
+
+  let swingPhrase = "";
+   if (swing >= 15) {
+    swingPhrase = ⬆️ Big warm‑up by tomorrow afternoon (+${swing.toFixed(0)}° around 2 PM).;
+   } else if (swing <= -15) {
+    swingPhrase = ⬇️ Sharp cooldown by tomorrow afternoon (${swing.toFixed(0)}° around 2 PM).;
+   }
+
+   // 4. If meaningful, append swing phrase to the final text
+  if (swingPhrase) {
+    const base = mapActionOutcome(dominant, tempDesc, precipDesc, windDesc);
+    return {
+      ...base,
+      text: ${base.text} ${swingPhrase}
+    };
+   }
+ } catch (err) {
+   console.warn("Temp swing calculation failed:", err);
+ }
   // -----------------------------
   // ACTION MAPPING
   // -----------------------------
