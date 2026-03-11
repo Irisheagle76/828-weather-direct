@@ -87,7 +87,34 @@ function getDaypartWindow(hourly, targetDate, startHour, endHour) {
   }
   return indices;
 }
+// ----------------------------------------------------
+// TODAY WINDOW — Now → Midnight (Safe, Additive)
+// ----------------------------------------------------
+function getTodayRemainingWindow(hourly) {
+  const times = hourly.time || [];
+  const indices = [];
 
+  const now = new Date();
+
+  // Start = right now
+  const start = now;
+
+  // End = today at 23:59:59
+  const end = new Date(now);
+  end.setHours(23, 59, 59, 999);
+
+  for (let i = 0; i < times.length; i++) {
+    const t = new Date(times[i]);
+    if (t >= start && t <= end) {
+      indices.push(i);
+    }
+  }
+
+  // Require at least 3 hours to avoid garbage output
+  if (indices.length < 3) return [];
+
+  return indices;
+}
 // ----------------------------------------------------
 // PART 2 — Stats + Derived Metrics
 // ----------------------------------------------------
@@ -285,7 +312,182 @@ if (
   // Select highest impact
   drivers.sort((a, b) => b.score - a.score);
   const dominant = drivers[0].type;
+// ----------------------------------------------------
+// TODAY — Human‑Action Outlook (Now → Midnight)
+// ----------------------------------------------------
+export function getTodayActionOutlook(hourly) {
+  const indices = getTodayRemainingWindow(hourly);
 
+  if (!indices.length) {
+    return {
+      badge: { text: "No data", class: "badge-neutral" },
+      emoji: "❓",
+      headline: "Check back later.",
+      text: "We couldn’t find a usable forecast window for today."
+    };
+  }
+
+  const win = sliceHourly(hourly, indices);
+  const tempStats = getTempStats(win);
+  const dewStats = getDewStats(win);
+  const windStats = getWindGustStats(win);
+  const precipTotal = getPrecipTotal(win);
+  const snowTotal = getSnowTotal(win);
+
+  const avgTemp = tempStats.avg ?? tempStats.max ?? tempStats.min ?? null;
+  const gustMax = windStats.max ?? 0;
+
+  const precipDesc = describePrecip(precipTotal, snowTotal);
+  const windDesc = describeWind(gustMax);
+  const tempDesc = describeTempRange(tempStats);
+
+  // -----------------------------
+  // IMPACT SCORING (same as Tomorrow)
+  // -----------------------------
+  const drivers = [];
+
+  // Snow
+  if (snowTotal > 0.05) {
+    drivers.push({
+      type: "snow",
+      score: 80 + snowTotal * 10
+    });
+  }
+
+  // Rain (patched logic)
+  const precipArr = win.precipitation || [];
+  const precipHours = precipArr.filter(p => p >= 0.01).length;
+
+  if (
+    snowTotal === 0 && (
+      precipTotal >= 0.25 ||
+      precipHours >= 4 ||
+      (precipTotal >= 0.10 && precipHours >= 4)
+    )
+  ) {
+    drivers.push({
+      type: "rain",
+      score: 55 + (precipTotal * 20) + (precipHours * 2)
+    });
+  }
+
+  // Wind
+  if (gustMax >= 40) {
+    drivers.push({
+      type: "wind",
+      score: 50 + gustMax
+    });
+  }
+
+  // Heat
+  if (avgTemp != null && avgTemp >= 88) {
+    drivers.push({
+      type: "heat",
+      score: 55 + (avgTemp - 88) * 2
+    });
+  }
+
+  // Cold
+  if (avgTemp != null && avgTemp <= 35) {
+    drivers.push({
+      type: "cold",
+      score: 55 + (35 - avgTemp) * 2
+    });
+  }
+
+  // Goldilocks
+  if (
+    precipTotal < 0.05 &&
+    snowTotal === 0 &&
+    gustMax < 26 &&
+    avgTemp != null &&
+    avgTemp >= 60 &&
+    avgTemp <= 75
+  ) {
+    drivers.push({
+      type: "goldilocks",
+      score: 40
+    });
+  }
+
+  // Default
+  if (!drivers.length) {
+    drivers.push({ type: "easy", score: 10 });
+  }
+
+  drivers.sort((a, b) => b.score - a.score);
+  const dominant = drivers[0].type;
+
+  // -----------------------------
+  // ACTION MAPPING (same as Tomorrow)
+  // -----------------------------
+  let badgeText = "Easy Day";
+  let badgeClass = "badge-easy";
+  let emoji = "🙂";
+  let action = "Go about your day as usual.";
+  let reason = `${tempDesc}. Expect ${precipDesc} with ${windDesc}.`;
+
+  switch (dominant) {
+    case "snow":
+      badgeText = "Snow Impact";
+      badgeClass = "badge-snow";
+      emoji = "❄️";
+      action = "Allow extra travel time.";
+      reason = `${precipDesc}. Roads could become slick. ${windDesc}.`;
+      break;
+
+    case "rain":
+      badgeText = "Rain Gear";
+      badgeClass = "badge-rain";
+      emoji = "🌧️";
+      action = "Bring a rain jacket.";
+      reason = `${precipDesc}. ${windDesc}.`;
+      break;
+
+    case "wind":
+      badgeText = "Wind Alert";
+      badgeClass = "badge-wind";
+      emoji = "💨";
+      action = "Secure loose outdoor items.";
+      reason = `${windDesc}. ${tempDesc}.`;
+      break;
+
+    case "heat":
+      badgeText = "Heat Caution";
+      badgeClass = "badge-heat";
+      emoji = "🥵";
+      action = "Stay hydrated.";
+      reason = `${tempDesc}. Heat index may rise during the afternoon.`;
+      break;
+
+    case "cold":
+      badgeText = "Cold Prep";
+      badgeClass = "badge-cold";
+      emoji = "🥶";
+      action = "Dress in warm layers.";
+      reason = `${tempDesc}. Wind may make it feel colder.`;
+      break;
+
+    case "goldilocks":
+      badgeText = "Goldilocks Day";
+      badgeClass = "badge-goldilocks";
+      emoji = "🌟";
+      action = "Make outdoor plans.";
+      reason = `${tempDesc}. Dry conditions with light winds.`;
+      break;
+
+    case "easy":
+    default:
+      break;
+  }
+
+  return {
+    badge: { text: badgeText, class: badgeClass },
+    emoji,
+    headline: action,
+    text: reason
+  };
+}
   /* ----------------------------------------------------
      ACTION MAPPING
   ---------------------------------------------------- */
