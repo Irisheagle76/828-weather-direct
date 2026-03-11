@@ -482,6 +482,26 @@
 
     return (await res.json()).hourly;
   }
+function getReliableUV(obs, fallbackUV, solarRadiation) {
+  // 1. Use WU UV if valid
+  if (obs?.uv != null && obs.uv >= 0 && obs.uv <= 15) {
+    return obs.uv;
+  }
+
+  // 2. Use fallback UV from Open-Meteo
+  if (fallbackUV != null && fallbackUV >= 0 && fallbackUV <= 15) {
+    return fallbackUV;
+  }
+
+  // 3. Estimate UV from solar radiation (W/m²)
+  if (solarRadiation != null && solarRadiation > 0) {
+    const estimated = solarRadiation / 200;
+    return Math.min(estimated, 15);
+  }
+
+  // 4. No UV available
+  return null;
+}
 
   function renderForecastIcons(alerts) {
     const container = document.getElementById("forecast-icons");
@@ -617,5 +637,6 @@
 </script>
 </body>
 </html>
+
 
 
