@@ -832,14 +832,14 @@ export function getForecastAlerts(hourly) {
     });
   }
 
-  if (snowTomorrow.firstHour !== null) {
-    alerts.push({
-      id: "snow-tomorrow",
-      icon: "❄️",
-      title: "Snow Tomorrow",
-      detail: `Snowfall expected${timingPhrase(snowTomorrow, true)}. Allow extra travel time.`
-    });
-  }
+if (snowTomorrow.firstHour !== null) {
+  alerts.push({
+    id: "snow-tomorrow",
+    icon: "❄️",
+    title: "Snow Tomorrow",
+    detail: `Snowfall expected${timingPhrase(snowTomorrow, true)}. Allow extra travel time.`
+  });
+}
 
   // ----------------------------------------------------
   // WIND
