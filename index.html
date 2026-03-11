@@ -552,8 +552,6 @@ function getReliableUV(obs, fallbackUV, solarRadiation) {
       try {
         const nearest = await getNearestWUStation(lat, lon, WU_API_KEY);
         const wu = await getWUCurrentConditions(nearest.stationId, WU_API_KEY);
-document.getElementById("wu-uv").textContent =
-  wu.uv != null ? `UV ${wu.uv.toFixed(1)}` : "--";
         
         // ⭐ METRICS (top row)
         document.getElementById("wu-temp").textContent =
@@ -647,6 +645,7 @@ document.getElementById("wu-uv").textContent =
 </script>
 </body>
 </html>
+
 
 
 
