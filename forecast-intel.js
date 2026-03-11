@@ -119,6 +119,50 @@ function getDaypartWindow(hourly, targetDate, startHour, endHour) {
   return indices;
 }
 // ----------------------------------------------------
+// TIMING HELPERS — describe time of day + event windows
+// ----------------------------------------------------
+
+function describeTimeOfDay(hour) {
+  if (hour >= 5 && hour < 9) return "early morning";
+  if (hour >= 9 && hour < 12) return "late morning";
+  if (hour >= 12 && hour < 15) return "early afternoon";
+  if (hour >= 15 && hour < 18) return "late afternoon";
+  if (hour >= 18 && hour < 22) return "evening";
+  return "overnight";
+}
+
+function findEventTiming(hourly, start, end, conditionFn) {
+  let first = null;
+  let last = null;
+
+  for (let i = start; i <= end; i++) {
+    if (conditionFn(i)) {
+      if (first === null) first = i;
+      last = i;
+    }
+  }
+
+  return {
+    firstHour: first,
+    lastHour: last
+  };
+}
+
+function timingPhrase(timing, isTomorrow) {
+  if (!timing.firstHour) return "";
+
+  const start = describeTimeOfDay(timing.firstHour);
+  const end = describeTimeOfDay(timing.lastHour);
+
+  const dayLabel = isTomorrow ? " tomorrow" : "";
+
+  if (start === end) {
+    return ` ${start}${dayLabel}`;
+  }
+
+  return ` from ${start}${dayLabel} into ${end}${dayLabel}`;
+}
+// ----------------------------------------------------
 // PART 2 — Stats + Derived Metrics
 // ----------------------------------------------------
 
@@ -673,68 +717,223 @@ function comfortEmoji(feel) {
 // ----------------------------------------------------
 
 export function getForecastAlerts(hourly) {
-  const indices = getTomorrowWindow(hourly);
-  if (!indices.length) return [];
-
-  const win = sliceHourly(hourly, indices);
-  const tempStats = getTempStats(win);
-  const windStats = getWindGustStats(win);
-  const precipTotal = getPrecipTotal(win);
-  const snowTotal = getSnowTotal(win);
-
   const alerts = [];
-  let idCounter = 1;
 
-  // Rain alert
-  if (precipTotal >= 0.25 && snowTotal === 0) {
+  const hours = hourly.time.length;
+
+  // Today = hours 0–23
+  const todayStart = 0;
+  const todayEnd = 23;
+
+  // Tomorrow = hours 24–47
+  const tomorrowStart = 24;
+  const tomorrowEnd = 47;
+
+  // ----------------------------------------------------
+  // RAIN
+  // ----------------------------------------------------
+  const rainToday = findEventTiming(
+    hourly,
+    todayStart,
+    todayEnd,
+    i => (hourly.precipitation[i] ?? 0) > 0.02
+  );
+
+  const rainTomorrow = findEventTiming(
+    hourly,
+    tomorrowStart,
+    tomorrowEnd,
+    i => (hourly.precipitation[i] ?? 0) > 0.02
+  );
+
+  if (rainToday.firstHour !== null) {
     alerts.push({
-      id: `rain-${idCounter++}`,
+      id: "rain-today",
       icon: "🌧️",
-      title: "Rain likely",
-      detail: "Rain is expected at times tomorrow. Have an umbrella or rain jacket handy."
+      title: "Rain Expected Today",
+      detail: `Rain likely${timingPhrase(rainToday, false)}. Roads may become wet and visibility reduced.`
     });
   }
 
-  // Snow alert
-  if (snowTotal > 0.05) {
+  if (rainTomorrow.firstHour !== null) {
     alerts.push({
-      id: `snow-${idCounter++}`,
+      id: "rain-tomorrow",
+      icon: "🌧️",
+      title: "Rain Expected Tomorrow",
+      detail: `Rain likely${timingPhrase(rainTomorrow, true)}. Plan for wet conditions and slower travel.`
+    });
+  }
+
+  // ----------------------------------------------------
+  // SNOW
+  // ----------------------------------------------------
+  const snowToday = findEventTiming(
+    hourly,
+    todayStart,
+    todayEnd,
+    i => (hourly.snowfall[i] ?? 0) > 0.02
+  );
+
+  const snowTomorrow = findEventTiming(
+    hourly,
+    tomorrowStart,
+    tomorrowEnd,
+    i => (hourly.snowfall[i] ?? 0) > 0.02
+  );
+
+  if (snowToday.firstHour !== null) {
+    alerts.push({
+      id: "snow-today",
       icon: "❄️",
-      title: "Snow potential",
-      detail: "Snow is in the forecast. Roads and travel may be impacted."
+      title: "Snow Today",
+      detail: `Snowfall expected${timingPhrase(snowToday, false)}. Roads may become slick.`
     });
   }
 
-  // Wind alert
-  const gustMax = windStats.max ?? 0;
-  if (gustMax >= 30) {
+  if (snowTomorrow.firstHour !== null) {
     alerts.push({
-      id: `wind-${idCounter++}`,
+      id: "snow-tomorrow",
+      icon: "❄️",
+      title: "Snow Tomorrow",
+      detail: `Snowfall expected${timingPhrase(snowTomorrow, true)}. Allow extra travel time.`
+    });
+  }
+
+  // ----------------------------------------------------
+  // WIND
+  // ----------------------------------------------------
+  const windToday = findEventTiming(
+    hourly,
+    todayStart,
+    todayEnd,
+    i => (hourly.windgusts_10m[i] ?? 0) >= 30
+  );
+
+  const windTomorrow = findEventTiming(
+    hourly,
+    tomorrowStart,
+    tomorrowEnd,
+    i => (hourly.windgusts_10m[i] ?? 0) >= 30
+  );
+
+  if (windToday.firstHour !== null) {
+    alerts.push({
+      id: "wind-today",
       icon: "💨",
-      title: "Gusty winds",
-      detail: "Stronger gusts may affect outdoor plans and make it feel colder."
+      title: "Windy Today",
+      detail: `Gusty winds expected${timingPhrase(windToday, false)}. Secure loose outdoor items.`
     });
   }
 
-  // Heat alert
-  const maxTemp = tempStats.max;
-  if (maxTemp != null && maxTemp >= 85) {
+  if (windTomorrow.firstHour !== null) {
     alerts.push({
-      id: `heat-${idCounter++}`,
-      icon: "🔥",
-      title: "Hot afternoon",
-      detail: "Afternoon temperatures may feel hot. Hydration and shade are a good idea."
+      id: "wind-tomorrow",
+      icon: "💨",
+      title: "Windy Tomorrow",
+      detail: `Strong winds expected${timingPhrase(windTomorrow, true)}. Outdoor items may blow around.`
     });
   }
 
-  // Freeze alert
-  const minTemp = tempStats.min;
-  if (minTemp != null && minTemp <= 28) {
+  // ----------------------------------------------------
+  // FREEZE / HARD FREEZE
+  // ----------------------------------------------------
+  const freezeToday = findEventTiming(
+    hourly,
+    todayStart,
+    todayEnd,
+    i => (hourly.temperature_2m[i] ?? 999) <= 32
+  );
+
+  const freezeTomorrow = findEventTiming(
+    hourly,
+    tomorrowStart,
+    tomorrowEnd,
+    i => (hourly.temperature_2m[i] ?? 999) <= 32
+  );
+
+  const hardFreezeToday = findEventTiming(
+    hourly,
+    todayStart,
+    todayEnd,
+    i => (hourly.temperature_2m[i] ?? 999) <= 28
+  );
+
+  const hardFreezeTomorrow = findEventTiming(
+    hourly,
+    tomorrowStart,
+    tomorrowEnd,
+    i => (hourly.temperature_2m[i] ?? 999) <= 28
+  );
+
+  // Hard freeze takes priority
+  if (hardFreezeToday.firstHour !== null) {
     alerts.push({
-      id: `freeze-${idCounter++}`,
-      icon: "🧊",
-      title: "Freeze risk",
-      detail: "Overnight temperatures may dip below freezing. Sensitive plants and pipes could be at risk."
+      id: "hardfreeze-today",
+      icon: "🥶",
+      title: "Hard Freeze Today",
+      detail: `Temperatures may fall below 28°F${timingPhrase(hardFreezeToday, false)}. Protect pipes and sensitive plants.`
+    });
+  } else if (freezeToday.firstHour !== null) {
+    alerts.push({
+      id: "freeze-today",
+      icon: "❄️",
+      title: "Freeze Today",
+      detail: `Temperatures may fall to freezing${timingPhrase(freezeToday, false)}. Cover plants and bring pets indoors.`
+    });
+  }
+
+  if (hardFreezeTomorrow.firstHour !== null) {
+    alerts.push({
+      id: "hardfreeze-tomorrow",
+      icon: "🥶",
+      title: "Hard Freeze Tomorrow",
+      detail: `Temperatures may fall below 28°F${timingPhrase(hardFreezeTomorrow, true)}. Protect pipes and sensitive plants.`
+    });
+  } else if (freezeTomorrow.firstHour !== null) {
+    alerts.push({
+      id: "freeze-tomorrow",
+      icon: "❄️",
+      title: "Freeze Tomorrow",
+      detail: `Temperatures may fall to freezing${timingPhrase(freezeTomorrow, true)}. Cover plants and bring pets indoors.`
+    });
+  }
+
+  // ----------------------------------------------------
+  // HEAT / HUMIDITY
+  // ----------------------------------------------------
+  const heatToday = findEventTiming(
+    hourly,
+    todayStart,
+    todayEnd,
+    i =>
+      (hourly.temperature_2m[i] ?? 0) >= 88 &&
+      (hourly.dewpoint_2m[i] ?? 0) >= 68
+  );
+
+  const heatTomorrow = findEventTiming(
+    hourly,
+    tomorrowStart,
+    tomorrowEnd,
+    i =>
+      (hourly.temperature_2m[i] ?? 0) >= 88 &&
+      (hourly.dewpoint_2m[i] ?? 0) >= 68
+  );
+
+  if (heatToday.firstHour !== null) {
+    alerts.push({
+      id: "heat-today",
+      icon: "🥵",
+      title: "Hot & Humid Today",
+      detail: `Heat and humidity expected${timingPhrase(heatToday, false)}. Stay hydrated and limit strenuous activity.`
+    });
+  }
+
+  if (heatTomorrow.firstHour !== null) {
+    alerts.push({
+      id: "heat-tomorrow",
+      icon: "🥵",
+      title: "Hot & Humid Tomorrow",
+      detail: `Heat and humidity expected${timingPhrase(heatTomorrow, true)}. Plan for hydration and shade.`
     });
   }
 
