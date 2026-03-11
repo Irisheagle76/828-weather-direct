@@ -88,6 +88,12 @@
       color: #c4c9e5;
     }
 
+    /* NEW: Comfort gets its own row */
+    .comfort-row {
+      margin-bottom: var(--gap);
+    }
+
+    /* Today + Tomorrow row */
     .now-tomorrow-row {
       display: flex;
       flex-wrap: wrap;
@@ -291,22 +297,23 @@
     </div>
   </div>
 
+  <!-- ROW 1 — Comfort (full width) -->
+  <div class="comfort-row">
+    <div id="comfort-module" class="comfort-module">
+      <div id="comfort-emoji" class="comfort-emoji">--</div>
+      <div>
+        <div class="comfort-label">Right now comfort</div>
+        <div id="comfort-text" class="comfort-text">Comfort loading…</div>
+        <div class="comfort-sub">Based on current conditions</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 2 — Today + Tomorrow -->
   <div class="now-tomorrow-row">
 
-    <!-- LEFT COLUMN -->
+    <!-- TODAY (left column) -->
     <div class="now-col">
-
-      <!-- COMFORT MODULE -->
-      <div id="comfort-module" class="comfort-module">
-        <div id="comfort-emoji" class="comfort-emoji">--</div>
-        <div>
-          <div class="comfort-label">Right now comfort</div>
-          <div id="comfort-text" class="comfort-text">Comfort loading…</div>
-          <div class="comfort-sub">Based on current conditions</div>
-        </div>
-      </div>
-
-      <!-- TODAY — Human‑Action Outlook -->
       <div class="today-module action-module">
         <div id="today-emoji" class="action-emoji">--</div>
         <div>
@@ -317,10 +324,9 @@
           </div>
         </div>
       </div>
-
     </div>
 
-    <!-- RIGHT COLUMN -->
+    <!-- TOMORROW (right column) -->
     <div class="tomorrow-col">
       <div id="action-module" class="action-module">
         <div id="action-emoji" class="action-emoji">--</div>
@@ -374,7 +380,7 @@
     Live data from Weather Underground Station --
   </div>
 </div> <!-- end .card -->
-  <script type="module">
+<script type="module">
   import {
     getHumanActionOutlook,
     getTodayActionOutlook,
