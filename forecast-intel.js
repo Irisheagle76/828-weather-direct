@@ -488,7 +488,7 @@ export function getHumanActionOutlook(hourly) {
     const base = mapActionOutcome(dominant, tempDesc, precipDesc, windDesc);
     return {
       ...base,
-      text: '${base.text} ${swingPhrase}'
+      text: `${base.text} ${swingPhrase}`
     };
    }
  } catch (err) {
