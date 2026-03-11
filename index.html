@@ -483,19 +483,29 @@
     return (await res.json()).hourly;
   }
 function getReliableUV(obs, fallbackUV, solarRadiation) {
-  // 1. Use WU UV if valid
+  const sr = solarRadiation ?? 0;
+
+  // 1. Use WU UV if valid and not a bogus daytime zero
   if (obs?.uv != null && obs.uv >= 0 && obs.uv <= 15) {
-    return obs.uv;
+    if (obs.uv === 0 && sr > 50) {
+      // Likely bogus: sun is up but UV is 0
+    } else {
+      return obs.uv;
+    }
   }
 
-  // 2. Use fallback UV from Open-Meteo
+  // 2. Use fallback UV from Open-Meteo if valid and not a bogus daytime zero
   if (fallbackUV != null && fallbackUV >= 0 && fallbackUV <= 15) {
-    return fallbackUV;
+    if (fallbackUV === 0 && sr > 50) {
+      // Same logic: ignore 0 when solar radiation says sun is up
+    } else {
+      return fallbackUV;
+    }
   }
 
   // 3. Estimate UV from solar radiation (W/m²)
-  if (solarRadiation != null && solarRadiation > 0) {
-    const estimated = solarRadiation / 200;
+  if (sr > 0) {
+    const estimated = sr / 200;
     return Math.min(estimated, 15);
   }
 
@@ -589,13 +599,36 @@ function getReliableUV(obs, fallbackUV, solarRadiation) {
         try {
           const hourly = await getShortTermForecast(lat, lon);
 // ⭐ Compute reliable UV using WU obs + Open-Meteo fallback
-const fallbackUV = hourly.uv_index?.[0] ?? null;
+const hourly = await getShortTermForecast(lat, lon);
+
+const idx = findNearestHourIndex(hourly);
+const fallbackUV = hourly.uv_index?.[idx] ?? null;
+
 const reliableUV = getReliableUV(
-  wu,                     // WU observation
-  fallbackUV,             // Open-Meteo fallback
-  wu.solarRadiation       // optional solar radiation
+  wu,
+  fallbackUV,
+  wu.solarRadiation
 );
 
+document.getElementById("wu-uv").textContent =
+  reliableUV != null ? `UV ${reliableUV.toFixed(1)}` : "--";
+          
+function findNearestHourIndex(hourly) {
+  const now = new Date();
+  let bestIndex = 0;
+  let bestDiff = Infinity;
+
+  hourly.time.forEach((t, i) => {
+    const d = new Date(t);
+    const diff = Math.abs(d - now);
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      bestIndex = i;
+    }
+  });
+
+  return bestIndex;
+}
 // Update UV display
 document.getElementById("wu-uv").textContent =
   reliableUV != null ? `UV ${reliableUV.toFixed(1)}` : "--";
@@ -645,6 +678,7 @@ document.getElementById("wu-uv").textContent =
 </script>
 </body>
 </html>
+
 
 
 
