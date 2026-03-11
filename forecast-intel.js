@@ -196,7 +196,7 @@ function isRain(i, hourly) {
 }
 
 function isSnow(i, hourly) {
-  return (hourly.snowfall[i] ?? 0) > 0.02;
+  return (hourly.snowfall[i] ?? 0) > 0.25;
 }
 
 function isWind(i, hourly) {
@@ -826,7 +826,7 @@ export function getForecastAlerts(hourly) {
       id: "snow-tomorrow",
       icon: "❄️",
       title: "Snow Tomorrow",
-      detail: `Snowfall expected${timingPhrase(snowTomorrow, true)}. Allow extra travel time.`
+      detail: `Snowfall expected${timingPhrase(snowTomorrow, true)}. Allow extra travel time.``
     });
   }
 
