@@ -1,20 +1,18 @@
-// forecast-intel.js
-// 828 Weather Direct — Forecast Intelligence Engine
-// COMPLETE, CLEAN, DEDUPED, TIME-CORRECTED VERSION
-
 // ----------------------------------------------------
 // PART 1 — Core Helpers + Hourly Window Tools
 // ----------------------------------------------------
 
+// Basic math helpers
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
 function avg(arr) {
-  if (!arr || !arr.length) return null
+  if (!arr || !arr.length) return null;
   return arr.reduce((a, b) => a + b, 0) / arr.length;
 }
 
+// Time helpers
 function toLocalDate(isoString) {
   return new Date(isoString);
 }
@@ -27,12 +25,14 @@ function sameCalendarDay(a, b) {
   );
 }
 
+// Core window selector for any calendar day
 function getHourlyWindowForDay(hourly, targetDate) {
   const times = hourly.time || [];
   const indices = [];
 
   const start = new Date(targetDate);
   start.setHours(0, 0, 0, 0);
+
   const end = new Date(targetDate);
   end.setHours(23, 59, 59, 999);
 
@@ -40,28 +40,54 @@ function getHourlyWindowForDay(hourly, targetDate) {
     const t = toLocalDate(times[i]);
     if (t >= start && t <= end) indices.push(i);
   }
+
   return indices;
 }
 
+// ----------------------------------------------------
+// TOMORROW WINDOW — 00:00 → 23:59 (requires 6 hours)
+// ----------------------------------------------------
 function getTomorrowWindow(hourly) {
   const now = new Date();
 
-  // Define tomorrow's calendar date
   const tomorrow = new Date(now);
   tomorrow.setDate(now.getDate() + 1);
 
-  // Get all hourly indices for tomorrow (00:00–23:59)
   const indices = getHourlyWindowForDay(hourly, tomorrow);
 
-  // ⭐ NEW RULE: Require at least 6 hours of tomorrow before computing
-  // This prevents bad forecasts when only 1–2 hours are available
-  if (indices.length < 6) {
-    return [];
-  }
+  // Require at least 6 hours to avoid garbage output
+  if (indices.length < 6) return [];
 
   return indices;
 }
 
+// ----------------------------------------------------
+// TODAY WINDOW — Now → Midnight (requires 3 hours)
+// ----------------------------------------------------
+function getTodayRemainingWindow(hourly) {
+  const times = hourly.time || [];
+  const indices = [];
+
+  const now = new Date();
+  const start = now;
+
+  const end = new Date(now);
+  end.setHours(23, 59, 59, 999);
+
+  for (let i = 0; i < times.length; i++) {
+    const t = new Date(times[i]);
+    if (t >= start && t <= end) indices.push(i);
+  }
+
+  // Require at least 3 hours to avoid unstable output
+  if (indices.length < 3) return [];
+
+  return indices;
+}
+
+// ----------------------------------------------------
+// Slice helper — extracts only the selected hours
+// ----------------------------------------------------
 function sliceHourly(hourly, indices) {
   const result = {};
   for (const key of Object.keys(hourly)) {
@@ -72,12 +98,16 @@ function sliceHourly(hourly, indices) {
   return result;
 }
 
+// ----------------------------------------------------
+// Daypart window (morning, afternoon, evening, etc.)
+// ----------------------------------------------------
 function getDaypartWindow(hourly, targetDate, startHour, endHour) {
   const times = hourly.time || [];
   const indices = [];
 
   const start = new Date(targetDate);
   start.setHours(startHour, 0, 0, 0);
+
   const end = new Date(targetDate);
   end.setHours(endHour, 59, 59, 999);
 
@@ -85,33 +115,6 @@ function getDaypartWindow(hourly, targetDate, startHour, endHour) {
     const t = toLocalDate(times[i]);
     if (t >= start && t <= end) indices.push(i);
   }
-  return indices;
-}
-// ----------------------------------------------------
-// TODAY WINDOW — Now → Midnight (Safe, Additive)
-// ----------------------------------------------------
-function getTodayRemainingWindow(hourly) {
-  const times = hourly.time || [];
-  const indices = [];
-
-  const now = new Date();
-
-  // Start = right now
-  const start = now;
-
-  // End = today at 23:59:59
-  const end = new Date(now);
-  end.setHours(23, 59, 59, 999);
-
-  for (let i = 0; i < times.length; i++) {
-    const t = new Date(times[i]);
-    if (t >= start && t <= end) {
-      indices.push(i);
-    }
-  }
-
-  // Require at least 3 hours to avoid garbage output
-  if (indices.length < 3) return [];
 
   return indices;
 }
@@ -119,56 +122,74 @@ function getTodayRemainingWindow(hourly) {
 // PART 2 — Stats + Derived Metrics
 // ----------------------------------------------------
 
+// Generic stats helper
 function basicStats(arr) {
-  if (!arr || !arr.length) return { min: null, max: null, avg: null };
+  if (!arr || !arr.length) {
+    return { min: null, max: null, avg: null };
+  }
+
   let min = arr[0];
   let max = arr[0];
   let sum = 0;
+
   for (const v of arr) {
     if (v < min) min = v;
     if (v > max) max = v;
     sum += v;
   }
-  return { min, max, avg: sum / arr.length };
+
+  return {
+    min,
+    max,
+    avg: sum / arr.length
+  };
 }
 
+// Temperature stats
 function getTempStats(windowed) {
   return basicStats(windowed.temperature_2m || []);
 }
 
+// Dewpoint stats
 function getDewStats(windowed) {
   return basicStats(windowed.dewpoint_2m || []);
 }
 
+// Wind gust stats
 function getWindGustStats(windowed) {
   return basicStats(windowed.windgusts_10m || []);
 }
 
+// UV index stats
 function getUVStats(windowed) {
   return basicStats(windowed.uv_index || []);
 }
 
+// Total precipitation (liquid)
 function getPrecipTotal(windowed) {
   const arr = windowed.precipitation || [];
   return arr.length ? arr.reduce((a, b) => a + b, 0) : 0;
 }
 
+// Total snowfall
 function getSnowTotal(windowed) {
   const arr = windowed.snowfall || [];
   return arr.length ? arr.reduce((a, b) => a + b, 0) : 0;
 }
-
 // ----------------------------------------------------
 // PART 3 — Descriptors + Simple Impact Helpers
 // ----------------------------------------------------
 
+// Precipitation descriptor (rain + snow)
 function describePrecip(precipTotal, snowTotal) {
+  // Snow logic
   if (snowTotal > 0.05) {
     if (snowTotal >= 2) return "notable snow";
     if (snowTotal >= 0.5) return "light accumulating snow";
     return "flurries or very light snow";
   }
 
+  // Rain logic
   if (precipTotal < 0.02) return "mainly dry";
   if (precipTotal < 0.10) return "a few light showers";
   if (precipTotal < 0.25) return "on-and-off showers";
@@ -176,6 +197,7 @@ function describePrecip(precipTotal, snowTotal) {
   return "periods of heavy rain";
 }
 
+// Wind descriptor
 function describeWind(gustMax) {
   if (gustMax >= 45) return "very windy";
   if (gustMax >= 40) return "quite gusty";
@@ -184,21 +206,27 @@ function describeWind(gustMax) {
   return "generally light wind";
 }
 
+// Temperature descriptor
 function describeTempRange(stats) {
   if (!stats || stats.min == null || stats.max == null) {
     return "temperature details unavailable";
   }
+
   const { min, max } = stats;
+
   if (max <= 40) return "a cold day overall";
   if (max <= 55) return "a cool day overall";
   if (max <= 72) return "a mild day overall";
   if (max <= 82) return "a warm day overall";
   return "a hot day overall";
 }
-
 // ----------------------------------------------------
 // PART 4 — Human‑Action Outlook
 // ----------------------------------------------------
+
+// ====================================================
+// TOMORROW — Human‑Action Outlook (00:00 → 23:59)
+// ====================================================
 export function getHumanActionOutlook(hourly) {
   const indices = getTomorrowWindow(hourly);
 
@@ -225,10 +253,9 @@ export function getHumanActionOutlook(hourly) {
   const windDesc = describeWind(gustMax);
   const tempDesc = describeTempRange(tempStats);
 
-  /* ----------------------------------------------------
-     IMPACT SCORING
-  ---------------------------------------------------- */
-
+  // -----------------------------
+  // IMPACT SCORING
+  // -----------------------------
   const drivers = [];
 
   // Snow
@@ -239,31 +266,22 @@ export function getHumanActionOutlook(hourly) {
     });
   }
 
- // -----------------------------
-// RAIN IMPACT LOGIC (patched)
-// -----------------------------
+  // Rain (patched logic)
+  const precipArr = win.precipitation || [];
+  const precipHours = precipArr.filter(p => p >= 0.01).length;
 
-// Count hours with measurable precip (drizzle threshold lowered)
-const precipArr = win.precipitation || [];
-const precipHours = precipArr.filter(p => p >= 0.01).length;
-
-// Determine rain impact
-// Three pathways:
-// 1. Heavy rain (>= 0.25")
-// 2. Persistent light rain (>= 4 hours of drizzle/light rain)
-// 3. Wet day (>= 0.10" AND >= 4 hours)
-if (
-  snowTotal === 0 && (
-    precipTotal >= 0.25 ||               // heavy rain
-    precipHours >= 4 ||                  // persistent light rain
-    (precipTotal >= 0.10 && precipHours >= 4)  // wet day combo
-  )
-) {
-  drivers.push({
-    type: "rain",
-    score: 55 + (precipTotal * 20) + (precipHours * 2)
-  });
-}
+  if (
+    snowTotal === 0 && (
+      precipTotal >= 0.25 ||               // heavy rain
+      precipHours >= 4 ||                  // persistent light rain
+      (precipTotal >= 0.10 && precipHours >= 4)  // wet day combo
+    )
+  ) {
+    drivers.push({
+      type: "rain",
+      score: 55 + (precipTotal * 20) + (precipHours * 2)
+    });
+  }
 
   // Wind
   if (gustMax >= 40) {
@@ -304,17 +322,25 @@ if (
     });
   }
 
-  // Default if nothing significant
+  // Default
   if (!drivers.length) {
     drivers.push({ type: "easy", score: 10 });
   }
 
-  // Select highest impact
   drivers.sort((a, b) => b.score - a.score);
   const dominant = drivers[0].type;
-// ----------------------------------------------------
+
+  // -----------------------------
+  // ACTION MAPPING
+  // -----------------------------
+  return mapActionOutcome(dominant, tempDesc, precipDesc, windDesc);
+}
+
+
+
+// ====================================================
 // TODAY — Human‑Action Outlook (Now → Midnight)
-// ----------------------------------------------------
+// ====================================================
 export function getTodayActionOutlook(hourly) {
   const indices = getTodayRemainingWindow(hourly);
 
@@ -419,8 +445,17 @@ export function getTodayActionOutlook(hourly) {
   const dominant = drivers[0].type;
 
   // -----------------------------
-  // ACTION MAPPING (same as Tomorrow)
+  // ACTION MAPPING (shared)
   // -----------------------------
+  return mapActionOutcome(dominant, tempDesc, precipDesc, windDesc);
+}
+
+
+
+// ====================================================
+// SHARED ACTION MAPPING FUNCTION
+// ====================================================
+function mapActionOutcome(dominant, tempDesc, precipDesc, windDesc) {
   let badgeText = "Easy Day";
   let badgeClass = "badge-easy";
   let emoji = "🙂";
@@ -488,79 +523,6 @@ export function getTodayActionOutlook(hourly) {
     text: reason
   };
 }
-  /* ----------------------------------------------------
-     ACTION MAPPING
-  ---------------------------------------------------- */
-
-  let badgeText = "Easy Day";
-  let badgeClass = "badge-easy";
-  let emoji = "🙂";
-  let action = "Go about your day as usual.";
-  let reason = `${tempDesc}. Expect ${precipDesc} with ${windDesc}.`;
-
-  switch (dominant) {
-
-    case "snow":
-      badgeText = "Snow Impact";
-      badgeClass = "badge-snow";
-      emoji = "❄️";
-      action = "Allow extra travel time.";
-      reason = `${precipDesc}. Roads could become slick. ${windDesc}.`;
-      break;
-
-    case "rain":
-      badgeText = "Rain Gear";
-      badgeClass = "badge-rain";
-      emoji = "🌧️";
-      action = "Bring a rain jacket.";
-      reason = `${precipDesc}. ${windDesc}.`;
-      break;
-
-    case "wind":
-      badgeText = "Wind Alert";
-      badgeClass = "badge-wind";
-      emoji = "💨";
-      action = "Secure loose outdoor items.";
-      reason = `${windDesc}. ${tempDesc}.`;
-      break;
-
-    case "heat":
-      badgeText = "Heat Caution";
-      badgeClass = "badge-heat";
-      emoji = "🥵";
-      action = "Stay hydrated.";
-      reason = `${tempDesc}. Heat index may rise during the afternoon.`;
-      break;
-
-    case "cold":
-      badgeText = "Cold Prep";
-      badgeClass = "badge-cold";
-      emoji = "🥶";
-      action = "Dress in warm layers.";
-      reason = `${tempDesc}. Wind may make it feel colder.`;
-      break;
-
-    case "goldilocks":
-      badgeText = "Goldilocks Day";
-      badgeClass = "badge-goldilocks";
-      emoji = "🌟";
-      action = "Make outdoor plans.";
-      reason = `${tempDesc}. Dry conditions with light winds.`;
-      break;
-
-    case "easy":
-    default:
-      break;
-  }
-
-  return {
-    badge: { text: badgeText, class: badgeClass },
-    emoji,
-    headline: action,
-    text: reason
-  };
-}
-
 // ----------------------------------------------------
 // PART 5 — Comfort Module 2.3 (Personality Edition)
 // ----------------------------------------------------
@@ -595,6 +557,7 @@ export function getComfortCategory(temp, dew, gust, precip = 0) {
 
   const month = now.getMonth();
 
+  // Goldilocks check
   const isGoldilocks =
     temp >= 68 && temp <= 74 &&
     dew >= 45 && dew <= 52 &&
@@ -605,6 +568,7 @@ export function getComfortCategory(temp, dew, gust, precip = 0) {
     return { text: "Goldilocks — just right.", emoji: "🌟" };
   }
 
+  // Temperature feel
   let feel;
   if (temp <= 25) feel = "biting";
   else if (temp <= 40) feel = "cold";
@@ -614,6 +578,7 @@ export function getComfortCategory(temp, dew, gust, precip = 0) {
   else if (temp <= 82) feel = "warm";
   else feel = "hot";
 
+  // Nuance (dewpoint + wind)
   let nuance = "";
   if (dew >= 65) nuance = "humid";
   else if (dew < 40) nuance = "crisp";
@@ -623,6 +588,7 @@ export function getComfortCategory(temp, dew, gust, precip = 0) {
 
   const personality = getPersonalityPhrase(feel, nuance);
 
+  // Compare to climatological normals
   const normal = (hour < 11 || hour >= 18)
     ? NORMAL_LOWS[month]
     : NORMAL_HIGHS[month];
@@ -630,7 +596,6 @@ export function getComfortCategory(temp, dew, gust, precip = 0) {
   const diff = temp - normal;
 
   let anomalyNote = "";
-
   if (diff >= 20) {
     anomalyNote = ` — warmer than usual for ${monthName(month)} at this time of day`;
   } else if (diff >= 12) {
@@ -703,7 +668,6 @@ function comfortEmoji(feel) {
     default: return "🌡️";
   }
 }
-
 // ----------------------------------------------------
 // PART 6 — Forecast Alerts
 // ----------------------------------------------------
@@ -721,6 +685,7 @@ export function getForecastAlerts(hourly) {
   const alerts = [];
   let idCounter = 1;
 
+  // Rain alert
   if (precipTotal >= 0.25 && snowTotal === 0) {
     alerts.push({
       id: `rain-${idCounter++}`,
@@ -730,6 +695,7 @@ export function getForecastAlerts(hourly) {
     });
   }
 
+  // Snow alert
   if (snowTotal > 0.05) {
     alerts.push({
       id: `snow-${idCounter++}`,
@@ -739,6 +705,7 @@ export function getForecastAlerts(hourly) {
     });
   }
 
+  // Wind alert
   const gustMax = windStats.max ?? 0;
   if (gustMax >= 30) {
     alerts.push({
@@ -749,6 +716,7 @@ export function getForecastAlerts(hourly) {
     });
   }
 
+  // Heat alert
   const maxTemp = tempStats.max;
   if (maxTemp != null && maxTemp >= 85) {
     alerts.push({
@@ -759,6 +727,7 @@ export function getForecastAlerts(hourly) {
     });
   }
 
+  // Freeze alert
   const minTemp = tempStats.min;
   if (minTemp != null && minTemp <= 28) {
     alerts.push({
@@ -771,13 +740,13 @@ export function getForecastAlerts(hourly) {
 
   return alerts;
 }
-
 // ----------------------------------------------------
 // PART 7 — Default Export Bundle
 // ----------------------------------------------------
 
 export default {
-  getHumanActionOutlook,
-  getComfortCategory,
-  getForecastAlerts
+  getHumanActionOutlook,   // Tomorrow
+  getTodayActionOutlook,   // Today (Now → Midnight)
+  getComfortCategory,      // Right Now Comfort
+  getForecastAlerts        // Tomorrow Alerts
 };
