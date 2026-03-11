@@ -87,7 +87,8 @@
       font-size: 0.85rem;
       color: #c4c9e5;
     }
-        .now-tomorrow-row {
+
+    .now-tomorrow-row {
       display: flex;
       flex-wrap: wrap;
       gap: var(--gap);
@@ -140,7 +141,6 @@
     }
 
     .action-module {
-      align-items: center;   /* instead of flex-start */
       background: rgba(120, 180, 255, 0.10);
       border: 1px solid rgba(120, 180, 255, 0.35);
       border-radius: var(--module-radius);
@@ -151,31 +151,33 @@
       min-width: 0;
     }
 
-   .action-emoji {
-  font-size: 1.9rem;
-  margin-top: 20px;
-}
+    .action-emoji {
+      font-size: 1.9rem;
+      margin-top: 20px;
+    }
 
-  .action-label {
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #8fb7ff;
-  margin-bottom: 0.25rem;
-  white-space: nowrap;
-}
-   .action-headline {
-  font-size: 1.25rem;      /* bigger */
-  font-weight: 700;        /* stronger */
-  color: #ffffff;          /* more contrast */
-  margin-bottom: 0.3rem;
-  line-height: 1.2;
-}
-   .action-text {
-  font-size: 0.82rem;      /* slightly smaller */
-  color: #b9c7f5;          /* softer than headline */
-  line-height: 1.4;
-}
+    .action-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #8fb7ff;
+      margin-bottom: 0.25rem;
+      white-space: nowrap;
+    }
+
+    .action-headline {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 0.3rem;
+      line-height: 1.2;
+    }
+
+    .action-text {
+      font-size: 0.82rem;
+      color: #b9c7f5;
+      line-height: 1.4;
+    }
 
     .grid {
       display: grid;
@@ -290,7 +292,11 @@
   </div>
 
   <div class="now-tomorrow-row">
+
+    <!-- LEFT COLUMN -->
     <div class="now-col">
+
+      <!-- COMFORT MODULE -->
       <div id="comfort-module" class="comfort-module">
         <div id="comfort-emoji" class="comfort-emoji">--</div>
         <div>
@@ -299,39 +305,38 @@
           <div class="comfort-sub">Based on current conditions</div>
         </div>
       </div>
-    </div>
-<!-- TODAY — Human‑Action Outlook -->
-<div class="today-module action-module">
-  <div id="today-emoji" class="action-emoji">--</div>
 
-  <div>
-    <div class="action-label">Today’s Human‑Action Outlook</div>
+      <!-- TODAY — Human‑Action Outlook -->
+      <div class="today-module action-module">
+        <div id="today-emoji" class="action-emoji">--</div>
+        <div>
+          <div class="action-label">Today’s Human‑Action Outlook</div>
+          <div id="today-headline" class="action-headline">Loading…</div>
+          <div id="today-text" class="action-text">
+            Checking today’s weather impacts…
+          </div>
+        </div>
+      </div>
 
-    <div id="today-headline" class="action-headline">
-      Loading…
     </div>
 
-    <div id="today-text" class="action-text">
-      Checking today’s weather impacts…
-    </div>
-  </div>
-</div>
+    <!-- RIGHT COLUMN -->
     <div class="tomorrow-col">
       <div id="action-module" class="action-module">
         <div id="action-emoji" class="action-emoji">--</div>
         <div>
           <div class="action-label">Tomorrow’s human‑action outlook</div>
           <div id="action-badge" class="action-badge"></div>
-           <div id="action-headline" class="action-headline">Analyzing tomorrow’s setup…</div>
+          <div id="action-headline" class="action-headline">Analyzing tomorrow’s setup…</div>
           <div id="action-text" class="action-text">
             We’ll highlight what you’ll actually need tomorrow — layers, rain gear, hydration, or nothing special.
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <div class="grid">
+  </div>
+    <div class="grid">
     <div class="metric">
       <div class="metric-label">Temperature</div>
       <div class="metric-value" id="wu-temp">--</div>
@@ -368,10 +373,11 @@
   <div class="footer-note" id="wu-station-footer">
     Live data from Weather Underground Station --
   </div>
-</div>
-<script type="module">
+</div> <!-- end .card -->
+  <script type="module">
   import {
     getHumanActionOutlook,
+    getTodayActionOutlook,
     getForecastAlerts,
     getComfortCategory as computeComfort
   } from './forecast-intel.js';
@@ -401,15 +407,7 @@
     return computeComfort(tempF, dewF, windF, precip);
   }
 
-  function updateComfortBadge(text) {
-    const badge = document.getElementById("comfort-badge");
-    if (!badge) return;
-    badge.className = "comfort-badge";
-    badge.innerText = "COMFORT";
-  }
-
-  function updateComfortPreview() {}
-     async function getNearestWUStation(lat, lon, apiKey) {
+  async function getNearestWUStation(lat, lon, apiKey) {
     const url =
       `https://api.weather.com/v3/location/near?geocode=${lat},${lon}` +
       `&product=pws&format=json&apiKey=${apiKey}`;
@@ -514,6 +512,9 @@
         const nearest = await getNearestWUStation(lat, lon, WU_API_KEY);
         const wu = await getWUCurrentConditions(nearest.stationId, WU_API_KEY);
 
+        // -----------------------------
+        // RIGHT NOW — Comfort Module
+        // -----------------------------
         document.getElementById("wu-temp").textContent =
           wu.temp != null ? `${wu.temp.toFixed(0)}°F` : "--";
 
@@ -547,19 +548,29 @@
         document.getElementById("wu-station-footer").textContent =
           `Live data from Weather Underground Station ${nearest.stationId}`;
 
+        // -----------------------------
+        // FORECAST — Today + Tomorrow
+        // -----------------------------
         try {
           const hourly = await getShortTermForecast(lat, lon);
 
+          // TOMORROW
           const outlook = getHumanActionOutlook(hourly);
-
-          const badgeEl = document.getElementById("action-badge");
-          badgeEl.textContent = outlook.badge.text;
-          badgeEl.className = "action-badge " + outlook.badge.class;
+          document.getElementById("action-badge").textContent = outlook.badge.text;
+          document.getElementById("action-badge").className =
+            "action-badge " + outlook.badge.class;
 
           document.getElementById("action-emoji").textContent = outlook.emoji;
           document.getElementById("action-headline").textContent = outlook.headline;
           document.getElementById("action-text").textContent = outlook.text;
 
+          // TODAY
+          const today = getTodayActionOutlook(hourly);
+          document.getElementById("today-emoji").textContent = today.emoji;
+          document.getElementById("today-headline").textContent = today.headline;
+          document.getElementById("today-text").textContent = today.text;
+
+          // ALERTS
           const alerts = getForecastAlerts(hourly);
           renderForecastIcons(alerts);
 
@@ -588,9 +599,3 @@
 </script>
 </body>
 </html>
-
-
-
-
-
-
