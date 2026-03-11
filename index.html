@@ -88,23 +88,41 @@
       color: #c4c9e5;
     }
 
-    /* NEW: Comfort gets its own row */
+    /* NEW: Metrics row at top */
+    .metrics-row {
+      margin-bottom: var(--gap);
+    }
+
+    /* Smaller metric cards */
+    .metric {
+      background: rgba(255,255,255,0.03);
+      border-radius: 14px;
+      padding: 0.55rem 0.7rem;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .metric-label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #f0b777;
+      margin-bottom: 0.2rem;
+    }
+
+    .metric-value {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .metric-sub {
+      font-size: 0.72rem;
+      color: #9aa3c2;
+      margin-top: 0.15rem;
+    }
+
+    /* Comfort row (full width) */
     .comfort-row {
       margin-bottom: var(--gap);
-    }
-
-    /* Today + Tomorrow row */
-    .now-tomorrow-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--gap);
-      margin-bottom: var(--gap);
-    }
-
-    .now-col,
-    .tomorrow-col {
-      flex: 1 1 260px;
-      min-width: 0;
     }
 
     .comfort-module {
@@ -146,6 +164,20 @@
       margin-top: 0.15rem;
     }
 
+    /* Today + Tomorrow row */
+    .now-tomorrow-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--gap);
+      margin-bottom: var(--gap);
+    }
+
+    .now-col,
+    .tomorrow-col {
+      flex: 1 1 260px;
+      min-width: 0;
+    }
+
     .action-module {
       background: rgba(120, 180, 255, 0.10);
       border: 1px solid rgba(120, 180, 255, 0.35);
@@ -183,39 +215,6 @@
       font-size: 0.82rem;
       color: #b9c7f5;
       line-height: 1.4;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: var(--gap);
-      margin-top: 0.5rem;
-    }
-
-    .metric {
-      background: rgba(255,255,255,0.03);
-      border-radius: var(--module-radius);
-      padding: 0.75rem 0.9rem;
-      border: 1px solid rgba(255,255,255,0.05);
-    }
-
-    .metric-label {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #f0b777;
-      margin-bottom: 0.25rem;
-    }
-
-    .metric-value {
-      font-size: 1.2rem;
-      font-weight: 600;
-    }
-
-    .metric-sub {
-      font-size: 0.8rem;
-      color: #9aa3c2;
-      margin-top: 0.15rem;
     }
 
     .forecast-module {
@@ -297,7 +296,36 @@
     </div>
   </div>
 
-  <!-- ROW 1 — Comfort (full width) -->
+  <!-- ROW 1 — Metrics (top of page) -->
+  <div class="metrics-row">
+    <div class="grid">
+      <div class="metric">
+        <div class="metric-label">Temperature</div>
+        <div class="metric-value" id="wu-temp">--</div>
+        <div class="metric-sub" id="wu-feels">Feels like --</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">Dew Point & Humidity</div>
+        <div class="metric-value" id="wu-dew">--</div>
+        <div class="metric-sub" id="wu-humidity">Humidity --</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">Wind</div>
+        <div class="metric-value" id="wu-wind">--</div>
+        <div class="metric-sub" id="wu-wind-gust">Gusts --</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">UV & Solar</div>
+        <div class="metric-value" id="wu-uv">--</div>
+        <div class="metric-sub" id="wu-solar">Solar --</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 2 — Comfort (full width) -->
   <div class="comfort-row">
     <div id="comfort-module" class="comfort-module">
       <div id="comfort-emoji" class="comfort-emoji">--</div>
@@ -309,7 +337,7 @@
     </div>
   </div>
 
-  <!-- ROW 2 — Today + Tomorrow -->
+  <!-- ROW 3 — Today + Tomorrow -->
   <div class="now-tomorrow-row">
 
     <!-- TODAY (left column) -->
@@ -342,33 +370,7 @@
     </div>
 
   </div>
-    <div class="grid">
-    <div class="metric">
-      <div class="metric-label">Temperature</div>
-      <div class="metric-value" id="wu-temp">--</div>
-      <div class="metric-sub" id="wu-feels">Feels like --</div>
-    </div>
-
-    <div class="metric">
-      <div class="metric-label">Dew Point & Humidity</div>
-      <div class="metric-value" id="wu-dew">--</div>
-      <div class="metric-sub" id="wu-humidity">Humidity --</div>
-    </div>
-
-    <div class="metric">
-      <div class="metric-label">Wind</div>
-      <div class="metric-value" id="wu-wind">--</div>
-      <div class="metric-sub" id="wu-wind-gust">Gusts --</div>
-    </div>
-
-    <div class="metric">
-      <div class="metric-label">UV & Solar</div>
-      <div class="metric-value" id="wu-uv">--</div>
-      <div class="metric-sub" id="wu-solar">Solar --</div>
-    </div>
-  </div>
-
-  <div class="error-text" id="wu-error" style="display:none;"></div>
+    <div class="error-text" id="wu-error" style="display:none;"></div>
 
   <div id="forecast-module" class="forecast-module">
     <div class="forecast-title">Upcoming Weather Alerts</div>
@@ -380,7 +382,7 @@
     Live data from Weather Underground Station --
   </div>
 </div> <!-- end .card -->
-<script type="module">
+  <script type="module">
   import {
     getHumanActionOutlook,
     getTodayActionOutlook,
@@ -519,17 +521,13 @@
         const wu = await getWUCurrentConditions(nearest.stationId, WU_API_KEY);
 
         // -----------------------------
-        // RIGHT NOW — Comfort Module
+        // METRICS (top row)
         // -----------------------------
         document.getElementById("wu-temp").textContent =
           wu.temp != null ? `${wu.temp.toFixed(0)}°F` : "--";
 
         document.getElementById("wu-feels").textContent =
           wu.temp != null ? `Feels like ${wu.temp.toFixed(0)}°F` : "Feels like --";
-
-        const comfort = getComfortCategory(wu.temp, wu.dewPoint, wu.windGust ?? 0);
-        document.getElementById("comfort-text").textContent = comfort.text;
-        document.getElementById("comfort-emoji").textContent = comfort.emoji;
 
         document.getElementById("wu-dew").textContent =
           wu.dewPoint != null ? `${wu.dewPoint.toFixed(0)}°F` : "--";
@@ -548,6 +546,13 @@
 
         document.getElementById("wu-solar").textContent =
           wu.solarRadiation != null ? `${wu.solarRadiation.toFixed(0)} W/m²` : "Solar --";
+
+        // -----------------------------
+        // COMFORT (full-width row)
+        // -----------------------------
+        const comfort = getComfortCategory(wu.temp, wu.dewPoint, wu.windGust ?? 0);
+        document.getElementById("comfort-text").textContent = comfort.text;
+        document.getElementById("comfort-emoji").textContent = comfort.emoji;
 
         setWUStatus("ok", "WU Connected", "Weather Underground data loaded.");
 
