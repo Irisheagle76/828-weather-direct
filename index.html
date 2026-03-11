@@ -552,7 +552,9 @@ function getReliableUV(obs, fallbackUV, solarRadiation) {
       try {
         const nearest = await getNearestWUStation(lat, lon, WU_API_KEY);
         const wu = await getWUCurrentConditions(nearest.stationId, WU_API_KEY);
-
+document.getElementById("wu-uv").textContent =
+  wu.uv != null ? `UV ${wu.uv.toFixed(1)}` : "--";
+        
         // ⭐ METRICS (top row)
         document.getElementById("wu-temp").textContent =
           wu.temp != null ? `${wu.temp.toFixed(0)}°F` : "--";
@@ -572,9 +574,6 @@ function getReliableUV(obs, fallbackUV, solarRadiation) {
         document.getElementById("wu-wind-gust").textContent =
           wu.windGust != null ? `Gusts ${wu.windGust.toFixed(0)} mph` : "Gusts --";
 
-        document.getElementById("wu-uv").textContent =
-          wu.uv != null ? `UV ${wu.uv.toFixed(1)}` : "--";
-
         document.getElementById("wu-solar").textContent =
           wu.solarRadiation != null ? `${wu.solarRadiation.toFixed(0)} W/m²` : "Solar --";
 
@@ -591,7 +590,18 @@ function getReliableUV(obs, fallbackUV, solarRadiation) {
         // ⭐ FORECAST — Today + Tomorrow
         try {
           const hourly = await getShortTermForecast(lat, lon);
+// ⭐ Compute reliable UV using WU obs + Open-Meteo fallback
+const fallbackUV = hourly.uv_index?.[0] ?? null;
+const reliableUV = getReliableUV(
+  wu,                     // WU observation
+  fallbackUV,             // Open-Meteo fallback
+  wu.solarRadiation       // optional solar radiation
+);
 
+// Update UV display
+document.getElementById("wu-uv").textContent =
+  reliableUV != null ? `UV ${reliableUV.toFixed(1)}` : "--";
+          
           // TOMORROW
           const outlook = getHumanActionOutlook(hourly);
           document.getElementById("action-badge").textContent = outlook.badge.text;
@@ -637,6 +647,7 @@ function getReliableUV(obs, fallbackUV, solarRadiation) {
 </script>
 </body>
 </html>
+
 
 
 
