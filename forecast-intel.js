@@ -119,50 +119,6 @@ function getDaypartWindow(hourly, targetDate, startHour, endHour) {
   return indices;
 }
 // ----------------------------------------------------
-// TIMING HELPERS — describe time of day + event windows
-// ----------------------------------------------------
-
-function describeTimeOfDay(hour) {
-  if (hour >= 5 && hour < 9) return "early morning";
-  if (hour >= 9 && hour < 12) return "late morning";
-  if (hour >= 12 && hour < 15) return "early afternoon";
-  if (hour >= 15 && hour < 18) return "late afternoon";
-  if (hour >= 18 && hour < 22) return "evening";
-  return "overnight";
-}
-
-function findEventTiming(hourly, start, end, conditionFn) {
-  let first = null;
-  let last = null;
-
-  for (let i = start; i <= end; i++) {
-    if (conditionFn(i)) {
-      if (first === null) first = i;
-      last = i;
-    }
-  }
-
-  return {
-    firstHour: first,
-    lastHour: last
-  };
-}
-
-function timingPhrase(timing, isTomorrow) {
-  if (!timing.firstHour) return "";
-
-  const start = describeTimeOfDay(timing.firstHour);
-  const end = describeTimeOfDay(timing.lastHour);
-
-  const dayLabel = isTomorrow ? " tomorrow" : "";
-
-  if (start === end) {
-    return ` ${start}${dayLabel}`;
-  }
-
-  return ` from ${start}${dayLabel} into ${end}${dayLabel}`;
-}
-// ----------------------------------------------------
 // TIMING HELPERS — find event windows + dayparts
 // ----------------------------------------------------
 
