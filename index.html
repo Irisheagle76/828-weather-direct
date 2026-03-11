@@ -563,6 +563,7 @@ function getReliableUV(obs, fallbackUV, solarRadiation) {
         const nearest = await getNearestWUStation(lat, lon, WU_API_KEY);
         const wu = await getWUCurrentConditions(nearest.stationId, WU_API_KEY);
         
+        
         // ⭐ METRICS (top row)
         document.getElementById("wu-temp").textContent =
           wu.temp != null ? `${wu.temp.toFixed(0)}°F` : "--";
@@ -596,23 +597,12 @@ function getReliableUV(obs, fallbackUV, solarRadiation) {
           `Live data from Weather Underground Station ${nearest.stationId}`;
 
         // ⭐ FORECAST — Today + Tomorrow
-        try {
-          const hourly = await getShortTermForecast(lat, lon);
-// ⭐ Compute reliable UV using WU obs + Open-Meteo fallback
-const hourly = await getShortTermForecast(lat, lon);
+try {
+  const hourly = await getShortTermForecast(lat, lon);
 
-const idx = findNearestHourIndex(hourly);
-const fallbackUV = hourly.uv_index?.[idx] ?? null;
-
-const reliableUV = getReliableUV(
-  wu,
-  fallbackUV,
-  wu.solarRadiation
-);
-
-document.getElementById("wu-uv").textContent =
-  reliableUV != null ? `UV ${reliableUV.toFixed(1)}` : "--";
-          
+  // ⭐ Find nearest hour index for UV fallback
+  const idx = findNearestHourIndex(hourly);
+  const fallbackUV = hourly.uv_index?.[idx] ?? null;
 function findNearestHourIndex(hourly) {
   const now = new Date();
   let bestIndex = 0;
@@ -629,39 +619,45 @@ function findNearestHourIndex(hourly) {
 
   return bestIndex;
 }
-// Update UV display
-document.getElementById("wu-uv").textContent =
-  reliableUV != null ? `UV ${reliableUV.toFixed(1)}` : "--";
-          
-          // TOMORROW
-          const outlook = getHumanActionOutlook(hourly);
-          document.getElementById("action-badge").textContent = outlook.badge.text;
-          document.getElementById("action-badge").className =
-            "action-badge " + outlook.badge.class;
+  // ⭐ Compute reliable UV
+  const reliableUV = getReliableUV(
+    wu,
+    fallbackUV,
+    wu.solarRadiation
+  );
 
-          document.getElementById("action-emoji").textContent = outlook.emoji;
-          document.getElementById("action-headline").textContent = outlook.headline;
-          document.getElementById("action-text").textContent = outlook.text;
+  // ⭐ Update UV display
+  document.getElementById("wu-uv").textContent =
+    reliableUV != null ? `UV ${reliableUV.toFixed(1)}` : "--";
 
-          // TODAY
-          const today = getTodayActionOutlook(hourly);
-          document.getElementById("today-emoji").textContent = today.emoji;
-          document.getElementById("today-headline").textContent = today.headline;
-          document.getElementById("today-text").textContent = today.text;
+  // TOMORROW
+  const outlook = getHumanActionOutlook(hourly);
+  document.getElementById("action-badge").textContent = outlook.badge.text;
+  document.getElementById("action-badge").className =
+    "action-badge " + outlook.badge.class;
 
-          // ALERTS
-          const alerts = getForecastAlerts(hourly);
-          renderForecastIcons(alerts);
+  document.getElementById("action-emoji").textContent = outlook.emoji;
+  document.getElementById("action-headline").textContent = outlook.headline;
+  document.getElementById("action-text").textContent = outlook.text;
 
-        } catch (fcErr) {
-          console.error("Forecast error:", fcErr);
-          document.getElementById("action-emoji").textContent = "❓";
-          document.getElementById("action-headline").textContent =
-            "Tomorrow’s outlook unavailable";
-          document.getElementById("action-text").textContent =
-            "We couldn’t load tomorrow’s forecast data.";
-        }
+  // TODAY
+  const today = getTodayActionOutlook(hourly);
+  document.getElementById("today-emoji").textContent = today.emoji;
+  document.getElementById("today-headline").textContent = today.headline;
+  document.getElementById("today-text").textContent = today.text;
 
+  // ALERTS
+  const alerts = getForecastAlerts(hourly);
+  renderForecastIcons(alerts);
+
+} catch (fcErr) {
+  console.error("Forecast error:", fcErr);
+  document.getElementById("action-emoji").textContent = "❓";
+  document.getElementById("action-headline").textContent =
+    "Tomorrow’s outlook unavailable";
+  document.getElementById("action-text").textContent =
+    "We couldn’t load tomorrow’s forecast data.";
+}
       } catch (err) {
         console.error("WU init error:", err);
         setWUStatus("error", "WU Error", "Unable to load Weather Underground data.");
@@ -678,6 +674,7 @@ document.getElementById("wu-uv").textContent =
 </script>
 </body>
 </html>
+
 
 
 
