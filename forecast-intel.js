@@ -470,65 +470,67 @@ if (snowTotal >= 0.5) {
 
   drivers.sort((a, b) => b.score - a.score);
   const dominant = drivers[0].type;
- // ============================================================
- // ⭐ Temperature Swing Add‑On
- // Today’s high → Tomorrow’s 2 PM temperature
 // ============================================================
- try {
- // 1. Compute today's true high using the full calendar day
-const todayIndices = getTodayFullWindow(hourly);
-const todayWin = sliceHourly(hourly, todayIndices);
-const todayTempStats = getTempStats(todayWin);
-const todayHigh = todayTempStats.max ?? todayTempStats.avg ?? null;
+// ⭐ Temperature Swing Add‑On
+// Today’s high → Tomorrow’s 2 PM temperature
+// ============================================================
+let finalTempDesc = tempDesc;  // declare BEFORE the try block
 
-   // 2. Find tomorrow's 2 PM temperature
+try {
+  // 1. Compute today's true high using the full calendar day
+  const todayIndices = getTodayFullWindow(hourly);
+  const todayWin = sliceHourly(hourly, todayIndices);
+  const todayTempStats = getTempStats(todayWin);
+  const todayHigh = todayTempStats.max ?? todayTempStats.avg ?? null;
+
+  // 2. Find tomorrow's 2 PM temperature
   const idx2pm = getTomorrow2pmIndex(hourly);
-   const tomorrow2pmTemp = hourly.temperature_2m[idx2pm];
+  const tomorrow2pmTemp = hourly.temperature_2m[idx2pm];
 
   // 3. Compute swing
   const swing = tomorrow2pmTemp - todayHigh;
 
+  // 4. Human‑friendly swing phrasing (no numbers)
   let swingPhrase = "";
 
-if (swing >= 15) {
-  swingPhrase = "Much warmer than today — a noticeable warm‑up.";
-} else if (swing >= 8) {
-  swingPhrase = "A warmer day ahead — feels more comfortable.";
-} else if (swing >= 4) {
-  swingPhrase = "A slight warm‑up.";
-} else if (swing <= -15) {
-  swingPhrase = "A big temperature drop — much colder than today.";
-} else if (swing <= -8) {
-  swingPhrase = "Noticeably cooler than today.";
-} else if (swing <= -4) {
-  swingPhrase = "A slight cooldown.";
-} else {
-  swingPhrase = "Temperatures stay about the same.";
-}
+  if (swing >= 15) {
+    swingPhrase = "Much warmer than today — a noticeable warm‑up.";
+  } else if (swing >= 8) {
+    swingPhrase = "A warmer day ahead — feels more comfortable.";
+  } else if (swing >= 4) {
+    swingPhrase = "A slight warm‑up.";
+  } else if (swing <= -15) {
+    swingPhrase = "A big temperature drop — much colder than today.";
+  } else if (swing <= -8) {
+    swingPhrase = "Noticeably cooler than today.";
+  } else if (swing <= -4) {
+    swingPhrase = "A slight cooldown.";
+  } else {
+    swingPhrase = "Temperatures stay about the same.";
+  }
 
-// 4. If meaningful, append swing phrase to the final text
-if (swingPhrase) {
-  const base = mapActionOutcome(dominant, finalTempDesc, precipDesc, windDesc);
-  return {
-    ...base,
-    text: `${base.text} ${swingPhrase}`
-  };
-}
+  // 5. Suppress temperature descriptor if swing is major
+  if (shouldSuppressTempDesc(swing)) {
+    finalTempDesc = "";
+  }
+
+  // 6. If meaningful, append swing phrase to the final text
+  if (swingPhrase) {
+    const base = mapActionOutcome(dominant, finalTempDesc, precipDesc, windDesc);
+    return {
+      ...base,
+      text: `${base.text} ${swingPhrase}`
+    };
+  }
+
 } catch (err) {
   console.warn("Temp swing calculation failed:", err);
-}
-  let finalTempDesc = tempDesc;
-
-if (shouldSuppressTempDesc(swing)) {
-  finalTempDesc = "";   // remove the descriptor entirely
 }
   // -----------------------------
   // ACTION MAPPING
   // -----------------------------
   return mapActionOutcome(dominant, tempDesc, precipDesc, windDesc);
 }
-
-
 
 // ====================================================
 // TODAY — Human‑Action Outlook (Now → Midnight)
@@ -639,7 +641,7 @@ export function getTodayActionOutlook(hourly) {
   // -----------------------------
   // ACTION MAPPING (shared)
   // -----------------------------
-  return mapActionOutcome(dominant, tempDesc, precipDesc, windDesc);
+ return mapActionOutcome(dominant, finalTempDesc, precipDesc, windDesc);
 }
 
 
