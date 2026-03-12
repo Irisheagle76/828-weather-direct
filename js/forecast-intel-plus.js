@@ -11,7 +11,7 @@ import {
   findNearestHourIndex,
   getReliableUV
 } from './weather-utils.js';
-
+import { getMicroAdvice } from './micro-advice.js';
 /**
  * Build a unified weather intelligence object.
  * Combines:
@@ -29,7 +29,11 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
     fallbackUV,
     wuCurrent.solarRadiation
   );
-
+const microAdvice = getMicroAdvice({
+  wu: wuCurrent,
+  today,
+  comfort
+});
   // ⭐ 2. Comfort
   const comfort = computeComfort(
     wuCurrent.temp,
@@ -55,12 +59,13 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
 
   // ⭐ 6. Return unified intel object
   return {
-    wu: wuCurrent,
-    uv: reliableUV,
-    comfort,
-    today,
-    tomorrow,
-    alerts,
-    precipSignal
+  wu: wuCurrent,
+  uv: reliableUV,
+  comfort,
+  today,
+  tomorrow,
+  alerts,
+  precipSignal,
+  microAdvice
   };
 }
