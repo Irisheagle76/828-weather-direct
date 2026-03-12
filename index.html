@@ -376,7 +376,8 @@
 
         // ⭐ FETCH HOURLY + MRMS
         const hourly = await getShortTermForecast(lat, lon);
-        const mrmsPixel = await getMRMSPixel(lat, lon);
+       // const mrmsPixel = await getMRMSPixel(lat, lon);
+const mrmsPixel = { rate: 0, type: "none", intensity: "none" };
 
         // ⭐ BUILD UNIFIED INTELLIGENCE
         const intel = buildWeatherIntel({
@@ -469,3 +470,4 @@
 </script>
 </body>
 </html>
+
