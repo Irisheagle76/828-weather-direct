@@ -517,11 +517,12 @@ try {
   // 6. If meaningful, append swing phrase to the final text
   if (swingPhrase) {
     return mapActionOutcome(dominant, finalTempDesc, precipDesc, windDesc);
-   return {
+return {
   ...base,
   text: base.text
-    .replace(/\.$/, "") +  // remove trailing period safely
-    `. ${swingPhrase}`
+    .replace(/\.$/, "")        // remove trailing period
+    .replace(/,$/, "")         // remove trailing comma if present
+    + ` with ${swingPhrase.charAt(0).toLowerCase() + swingPhrase.slice(1)}`
 };
   }
 
