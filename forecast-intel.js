@@ -224,9 +224,17 @@ function isRain(i, hourly) {
   return (hourly.precipitation[i] ?? 0) > 0.02;
 }
 
-// Only treat snow as alert-worthy when meaningful
 function isSnow(i, hourly) {
-  return (hourly.snowfall[i] ?? 0) >= 0.5;  // prevents flurry alerts
+  const amt = hourly.snowfall[i] ?? 0;
+
+  // Ignore flurries and model noise
+  if (amt < 0.2) return false;     // < 0.2" = flurries
+
+  // Light snow but not impactful unless it lasts
+  if (amt < 0.5) return false;     // 0.2–0.5" = light, non-impactful
+
+  // Meaningful accumulation
+  return true;                     // ≥ 0.5" = real snow
 }
 
 function isWind(i, hourly) {
@@ -309,12 +317,11 @@ function getSnowTotal(windowed) {
 
 // Precipitation descriptor (rain + snow)
 function describePrecip(precipTotal, snowTotal) {
-  // Snow logic
-  if (snowTotal > 0.05) {
-    if (snowTotal >= 2) return "notable snow";
-    if (snowTotal >= 0.5) return "light accumulating snow";
-    return "flurries or very light snow";
-  }
+// Snow logic
+if (snowTotal >= 1.0) return "accumulating snow";
+if (snowTotal >= 0.5) return "light accumulating snow";
+if (snowTotal >= 0.2) return "a few flurries";
+if (snowTotal > 0)   return "a stray flake or two";
 
   // Rain logic
   if (precipTotal < 0.02) return "mainly dry";
@@ -385,13 +392,13 @@ export function getHumanActionOutlook(hourly) {
   // -----------------------------
   const drivers = [];
 
-  // Snow
-  if (snowTotal > 0.05) {
-    drivers.push({
-      type: "snow",
-      score: 80 + snowTotal * 10
-    });
-  }
+// Snow (impact only for real accumulation)
+if (snowTotal >= 0.5) {
+  drivers.push({
+    type: "snow",
+    score: 80 + snowTotal * 10
+  });
+}
 
   // Rain (patched logic)
   const precipArr = win.precipitation || [];
@@ -889,7 +896,7 @@ export function getForecastAlerts(hourly) {
     });
   }
 
-if (snowTomorrow.firstHour !== null) {
+if (snowTomorrow.firstHour !== null && getSnowTotal(sliceHourly(hourly, getTomorrowWindow(hourly))) >= 0.5) {
   alerts.push({
     id: "snow-tomorrow",
     icon: "❄️",
