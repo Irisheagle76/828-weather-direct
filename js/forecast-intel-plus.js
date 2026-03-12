@@ -29,11 +29,7 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
     fallbackUV,
     wuCurrent.solarRadiation
   );
-const microAdvice = getMicroAdvice({
-  wu: wuCurrent,
-  today,
-  comfort
-});
+
   // ⭐ 2. Comfort
   const comfort = computeComfort(
     wuCurrent.temp,
@@ -56,8 +52,13 @@ const microAdvice = getMicroAdvice({
     intensity: mrmsPixel.intensity,
     source: "placeholder"
   };
-
-  // ⭐ 6. Return unified intel object
+  // ⭐ 6. Micro‑advice 
+const microAdvice = getMicroAdvice({
+  wu: wuCurrent,
+  today,
+  comfort
+});
+  // ⭐ 7. Return unified intel object
   return {
   wu: wuCurrent,
   uv: reliableUV,
