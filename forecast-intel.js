@@ -24,6 +24,10 @@ function sameCalendarDay(a, b) {
     a.getDate() === b.getDate()
   );
 }
+function getTodayFullWindow(hourly) {
+  const now = new Date();
+  return getHourlyWindowForDay(hourly, now);
+}
 // ============================================================
 // Helper: Find tomorrow's 2 PM forecast index
 // ============================================================
@@ -468,11 +472,11 @@ if (snowTotal >= 0.5) {
  // Today’s high → Tomorrow’s 2 PM temperature
 // ============================================================
  try {
-  // 1. Compute today's high using today's remaining window
-   const todayIndices = getTodayRemainingWindow(hourly);
-   const todayWin = sliceHourly(hourly, todayIndices);
-  const todayTempStats = getTempStats(todayWin);
- const todayHigh = todayTempStats.max ?? todayTempStats.avg ?? null;
+ // 1. Compute today's true high using the full calendar day
+const todayIndices = getTodayFullWindow(hourly);
+const todayWin = sliceHourly(hourly, todayIndices);
+const todayTempStats = getTempStats(todayWin);
+const todayHigh = todayTempStats.max ?? todayTempStats.avg ?? null;
 
    // 2. Find tomorrow's 2 PM temperature
   const idx2pm = getTomorrow2pmIndex(hourly);
@@ -482,11 +486,22 @@ if (snowTotal >= 0.5) {
   const swing = tomorrow2pmTemp - todayHigh;
 
   let swingPhrase = "";
-   if (swing >= 15) {
-    swingPhrase = `⬆️ Big warm‑up by tomorrow afternoon (+${swing.toFixed(0)}° around 2 PM).`;
-   } else if (swing <= -15) {
-  swingPhrase = `⬇️ Sharp cooldown by tomorrow afternoon (${swing.toFixed(0)}° around 2 PM).`;
-   }
+
+if (swing >= 15) {
+  swingPhrase = "Much warmer than today — a noticeable warm‑up.";
+} else if (swing >= 8) {
+  swingPhrase = "A warmer day ahead — feels more comfortable.";
+} else if (swing >= 4) {
+  swingPhrase = "A slight warm‑up.";
+} else if (swing <= -15) {
+  swingPhrase = "A big temperature drop — much colder than today.";
+} else if (swing <= -8) {
+  swingPhrase = "Noticeably cooler than today.";
+} else if (swing <= -4) {
+  swingPhrase = "A slight cooldown.";
+} else {
+  swingPhrase = "Temperatures stay about the same.";
+}
 
 // 4. If meaningful, append swing phrase to the final text
 if (swingPhrase) {
