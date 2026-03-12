@@ -491,6 +491,7 @@ if (swingPhrase) {
     text: `${base.text} ${swingPhrase}`
   };
 }
+
  catch (err) {
    console.warn("Temp swing calculation failed:", err);
  }
