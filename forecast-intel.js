@@ -474,7 +474,7 @@ if (snowTotal >= 0.5) {
 // ⭐ Temperature Swing Add‑On
 // Today’s high → Tomorrow’s 2 PM temperature
 // ============================================================
-let finalTempDesc = tempDesc;  // declare BEFORE the try block
+let finalTempDesc = tempDesc;
 
 try {
   // 1. Compute today's true high using the full calendar day
@@ -514,25 +514,26 @@ try {
     finalTempDesc = "";
   }
 
-  // 6. If meaningful, append swing phrase to the final text
+  // 6. If meaningful, merge swing phrase into the reason text
   if (swingPhrase) {
-    return mapActionOutcome(dominant, finalTempDesc, precipDesc, windDesc);
-return {
-  ...base,
-  text: base.text
-    .replace(/\.$/, "")        // remove trailing period
-    .replace(/,$/, "")         // remove trailing comma if present
-    + ` with ${swingPhrase.charAt(0).toLowerCase() + swingPhrase.slice(1)}`
-};
+    const base = mapActionOutcome(dominant, finalTempDesc, precipDesc, windDesc);
+    return {
+      ...base,
+      text: base.text
+        .replace(/\.$/, "")        // remove trailing period
+        .replace(/,$/, "")         // remove trailing comma if present
+        + ` with ${swingPhrase.charAt(0).toLowerCase() + swingPhrase.slice(1)}`
+    };
   }
 
 } catch (err) {
   console.warn("Temp swing calculation failed:", err);
 }
-  // -----------------------------
-  // ACTION MAPPING
-  // -----------------------------
-  return mapActionOutcome(dominant, tempDesc, precipDesc, windDesc);
+
+// -----------------------------
+// ACTION MAPPING
+// -----------------------------
+return mapActionOutcome(dominant, finalTempDesc, precipDesc, windDesc);
 }
 
 // ====================================================
@@ -644,7 +645,7 @@ export function getTodayActionOutlook(hourly) {
   // -----------------------------
   // ACTION MAPPING (shared)
   // -----------------------------
- return mapActionOutcome(dominant, finalTempDesc, precipDesc, windDesc);
+return mapActionOutcome(dominant, tempDesc, precipDesc, windDesc);
 }
 
 
