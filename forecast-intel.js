@@ -31,6 +31,35 @@ function getTodayFullWindow(hourly) {
 function shouldSuppressTempDesc(swing) {
   return swing >= 15 || swing <= -15;
 }
+function getFallingPrecipSignal(wu, mrms) {
+  // wu: { precipRate, precip1hr, conditionIcon, gust }
+  // mrms: { rate, type, intensity } // type: "rain" | "snow" | "mix" | "hail"
+
+  const fromWU = wu && wu.precipRate > 0;
+  const fromMRMS = mrms && mrms.rate > 0;
+
+  if (!fromWU && !fromMRMS) {
+    return { isFalling: false, type: "none", intensity: "none", source: "none" };
+  }
+
+  // Prefer MRMS for type/intensity if available
+  if (fromMRMS) {
+    return {
+      isFalling: true,
+      type: mrms.type,          // "rain" | "snow" | "mix" | "hail"
+      intensity: mrms.intensity, // "light" | "moderate" | "heavy"
+      source: fromWU ? "both" : "mrms"
+    };
+  }
+
+  // Fallback: WU only
+  return {
+    isFalling: true,
+    type: "rain",               // best assumption if only WU rate
+    intensity: wu.precipRate > 0.2 ? "moderate" : "light",
+    source: "wu"
+  };
+}
 // ============================================================
 // Helper: Find tomorrow's 2 PM forecast index
 // ============================================================
