@@ -28,6 +28,9 @@ function getTodayFullWindow(hourly) {
   const now = new Date();
   return getHourlyWindowForDay(hourly, now);
 }
+function shouldSuppressTempDesc(swing) {
+  return swing >= 15 || swing <= -15;
+}
 // ============================================================
 // Helper: Find tomorrow's 2 PM forecast index
 // ============================================================
@@ -505,7 +508,7 @@ if (swing >= 15) {
 
 // 4. If meaningful, append swing phrase to the final text
 if (swingPhrase) {
-  const base = mapActionOutcome(dominant, tempDesc, precipDesc, windDesc);
+  const base = mapActionOutcome(dominant, finalTempDesc, precipDesc, windDesc);
   return {
     ...base,
     text: `${base.text} ${swingPhrase}`
@@ -513,6 +516,11 @@ if (swingPhrase) {
 }
 } catch (err) {
   console.warn("Temp swing calculation failed:", err);
+}
+  let finalTempDesc = tempDesc;
+
+if (shouldSuppressTempDesc(swing)) {
+  finalTempDesc = "";   // remove the descriptor entirely
 }
   // -----------------------------
   // ACTION MAPPING
