@@ -514,14 +514,14 @@ try {
     finalTempDesc = "";
   }
 
-  // 6. If meaningful, merge swing phrase into the reason text
+  // 6. Merge swing phrase into the reason text
   if (swingPhrase) {
-    const base = mapActionOutcome(dominant, finalTempDesc, precipDesc, windDesc);
+  return mapActionOutcome(dominant, finalTempDesc, precipDesc, windDesc);
     return {
       ...base,
       text: base.text
         .replace(/\.$/, "")        // remove trailing period
-        .replace(/,$/, "")         // remove trailing comma if present
+        .replace(/,$/, "")         // remove trailing comma
         + ` with ${swingPhrase.charAt(0).toLowerCase() + swingPhrase.slice(1)}`
     };
   }
@@ -533,7 +533,7 @@ try {
 // -----------------------------
 // ACTION MAPPING
 // -----------------------------
-return mapActionOutcome(dominant, finalTempDesc, precipDesc, windDesc);
+return mapActionOutcome(dominant, tempDesc, precipDesc, windDesc);
 }
 
 // ====================================================
