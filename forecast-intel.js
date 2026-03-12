@@ -476,11 +476,9 @@ export function getHumanActionOutlook(hourly) {
 
   let swingPhrase = "";
    if (swing >= 15) {
--    swingPhrase = ⬆️ Big warm‑up by tomorrow afternoon (+${swing.toFixed(0)}° around 2 PM).;
-+    swingPhrase = `⬆️ Big warm‑up by tomorrow afternoon (+${swing.toFixed(0)}° around 2 PM).`;
+    swingPhrase = `⬆️ Big warm‑up by tomorrow afternoon (+${swing.toFixed(0)}° around 2 PM).`;
    } else if (swing <= -15) {
--    swingPhrase = ⬇️ Sharp cooldown by tomorrow afternoon (${swing.toFixed(0)}° around 2 PM).;
-+    swingPhrase = `⬇️ Sharp cooldown by tomorrow afternoon (${swing.toFixed(0)}° around 2 PM).`;
+  swingPhrase = `⬇️ Sharp cooldown by tomorrow afternoon (${swing.toFixed(0)}° around 2 PM).`;
    }
 
 // 4. If meaningful, append swing phrase to the final text
