@@ -24,29 +24,29 @@ function sameCalendarDay(a, b) {
     a.getDate() === b.getDate()
   );
 }
-+// ============================================================
-+// Helper: Find tomorrow's 2 PM forecast index
-+// ============================================================
-+function getTomorrow2pmIndex(hourly) {
-+  const now = new Date();
-+  const target = new Date(now);
-+  target.setDate(now.getDate() + 1);
-+  target.setHours(14, 0, 0, 0); // 2 PM tomorrow
-+
-+  let bestIndex = 0;
-+  let bestDiff = Infinity;
-+
-+  hourly.time.forEach((t, i) => {
-+    const d = new Date(t);
-+    const diff = Math.abs(d - target);
-+    if (diff < bestDiff) {
-+      bestDiff = diff;
-+      bestIndex = i;
-+    }
-+  });
-+
-+  return bestIndex;
-+}
+// ============================================================
+// Helper: Find tomorrow's 2 PM forecast index
+// ============================================================
+function getTomorrow2pmIndex(hourly) {
+  const now = new Date();
+  const target = new Date(now);
+  target.setDate(now.getDate() + 1);
+  target.setHours(14, 0, 0, 0); // 2 PM tomorrow
+
+  let bestIndex = 0;
+  let bestDiff = Infinity;
+
+  hourly.time.forEach((t, i) => {
+    const d = new Date(t);
+    const diff = Math.abs(d - target);
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      bestIndex = i;
+    }
+  });
+
+  return bestIndex;
+}
 // Core window selector for any calendar day
 function getHourlyWindowForDay(hourly, targetDate) {
   const times = hourly.time || [];
