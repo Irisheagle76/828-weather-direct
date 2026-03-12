@@ -908,24 +908,28 @@ function comfortEmoji(feel) {
   }
 }
 // ----------------------------------------------------
-// PART 6 — Forecast Alerts
-// ----------------------------------------------------
-
-// ----------------------------------------------------
-// MAIN ALERT BUILDER — rain, snow, wind, freeze, heat
+// PART 6 — Forecast Alerts (with past‑event filtering)
 // ----------------------------------------------------
 
 export function getForecastAlerts(hourly) {
   const alerts = [];
 
   // Index-only windows:
-  // Today:    0–23
-  // Tomorrow: 24–47
   const todayStart = 0;
   const todayEnd = 23;
-
   const tomorrowStart = 24;
   const tomorrowEnd = 47;
+
+  // ----------------------------------------------------
+  // Helper: determine if an event is already over
+  // ----------------------------------------------------
+  function isEventObsolete(timing) {
+    if (timing.firstHour === null || timing.lastHour === null) return true;
+
+    const eventEnd = new Date(hourly.time[timing.lastHour]).getTime();
+    const now = Date.now();
+    return eventEnd < now;
+  }
 
   // ----------------------------------------------------
   // RAIN
@@ -933,7 +937,7 @@ export function getForecastAlerts(hourly) {
   const rainToday = findEventTiming(hourly, todayStart, todayEnd, isRain);
   const rainTomorrow = findEventTiming(hourly, tomorrowStart, tomorrowEnd, isRain);
 
-  if (rainToday.firstHour !== null) {
+  if (rainToday.firstHour !== null && !isEventObsolete(rainToday)) {
     alerts.push({
       id: "rain-today",
       icon: "🌧️",
@@ -942,7 +946,7 @@ export function getForecastAlerts(hourly) {
     });
   }
 
-  if (rainTomorrow.firstHour !== null) {
+  if (rainTomorrow.firstHour !== null && !isEventObsolete(rainTomorrow)) {
     alerts.push({
       id: "rain-tomorrow",
       icon: "🌧️",
@@ -957,7 +961,7 @@ export function getForecastAlerts(hourly) {
   const snowToday = findEventTiming(hourly, todayStart, todayEnd, isSnow);
   const snowTomorrow = findEventTiming(hourly, tomorrowStart, tomorrowEnd, isSnow);
 
-  if (snowToday.firstHour !== null) {
+  if (snowToday.firstHour !== null && !isEventObsolete(snowToday)) {
     alerts.push({
       id: "snow-today",
       icon: "❄️",
@@ -966,14 +970,18 @@ export function getForecastAlerts(hourly) {
     });
   }
 
-if (snowTomorrow.firstHour !== null && getSnowTotal(sliceHourly(hourly, getTomorrowWindow(hourly))) >= 0.5) {
-  alerts.push({
-    id: "snow-tomorrow",
-    icon: "❄️",
-    title: "Snow Tomorrow",
-    detail: `Snowfall expected${timingPhrase(snowTomorrow, true)}. Allow extra travel time.`
-  });
-}
+  if (
+    snowTomorrow.firstHour !== null &&
+    !isEventObsolete(snowTomorrow) &&
+    getSnowTotal(sliceHourly(hourly, getTomorrowWindow(hourly))) >= 0.5
+  ) {
+    alerts.push({
+      id: "snow-tomorrow",
+      icon: "❄️",
+      title: "Snow Tomorrow",
+      detail: `Snowfall expected${timingPhrase(snowTomorrow, true)}. Allow extra travel time.`
+    });
+  }
 
   // ----------------------------------------------------
   // WIND
@@ -981,7 +989,7 @@ if (snowTomorrow.firstHour !== null && getSnowTotal(sliceHourly(hourly, getTomor
   const windToday = findEventTiming(hourly, todayStart, todayEnd, isWind);
   const windTomorrow = findEventTiming(hourly, tomorrowStart, tomorrowEnd, isWind);
 
-  if (windToday.firstHour !== null) {
+  if (windToday.firstHour !== null && !isEventObsolete(windToday)) {
     alerts.push({
       id: "wind-today",
       icon: "💨",
@@ -990,7 +998,7 @@ if (snowTomorrow.firstHour !== null && getSnowTotal(sliceHourly(hourly, getTomor
     });
   }
 
-  if (windTomorrow.firstHour !== null) {
+  if (windTomorrow.firstHour !== null && !isEventObsolete(windTomorrow)) {
     alerts.push({
       id: "wind-tomorrow",
       icon: "💨",
@@ -1008,14 +1016,14 @@ if (snowTomorrow.firstHour !== null && getSnowTotal(sliceHourly(hourly, getTomor
   const hardFreezeToday = findEventTiming(hourly, todayStart, todayEnd, isHardFreeze);
   const hardFreezeTomorrow = findEventTiming(hourly, tomorrowStart, tomorrowEnd, isHardFreeze);
 
-  if (hardFreezeToday.firstHour !== null) {
+  if (hardFreezeToday.firstHour !== null && !isEventObsolete(hardFreezeToday)) {
     alerts.push({
       id: "hardfreeze-today",
       icon: "🥶",
       title: "Hard Freeze Today",
       detail: `Temperatures may fall below 28°F${timingPhrase(hardFreezeToday, false)}. Protect pipes and sensitive plants.`
     });
-  } else if (freezeToday.firstHour !== null) {
+  } else if (freezeToday.firstHour !== null && !isEventObsolete(freezeToday)) {
     alerts.push({
       id: "freeze-today",
       icon: "❄️",
@@ -1024,14 +1032,14 @@ if (snowTomorrow.firstHour !== null && getSnowTotal(sliceHourly(hourly, getTomor
     });
   }
 
-  if (hardFreezeTomorrow.firstHour !== null) {
+  if (hardFreezeTomorrow.firstHour !== null && !isEventObsolete(hardFreezeTomorrow)) {
     alerts.push({
       id: "hardfreeze-tomorrow",
       icon: "🥶",
       title: "Hard Freeze Tomorrow",
       detail: `Temperatures may fall below 28°F${timingPhrase(hardFreezeTomorrow, true)}. Protect pipes and sensitive plants.`
     });
-  } else if (freezeTomorrow.firstHour !== null) {
+  } else if (freezeTomorrow.firstHour !== null && !isEventObsolete(freezeTomorrow)) {
     alerts.push({
       id: "freeze-tomorrow",
       icon: "❄️",
@@ -1046,21 +1054,21 @@ if (snowTomorrow.firstHour !== null && getSnowTotal(sliceHourly(hourly, getTomor
   const heatToday = findEventTiming(hourly, todayStart, todayEnd, isHeat);
   const heatTomorrow = findEventTiming(hourly, tomorrowStart, tomorrowEnd, isHeat);
 
-  if (heatToday.firstHour !== null) {
+  if (heatToday.firstHour !== null && !isEventObsolete(heatToday)) {
     alerts.push({
       id: "heat-today",
       icon: "🥵",
-      title: "Hot & Humid Today",
-      detail: `Heat and humidity expected${timingPhrase(heatToday, false)}. Stay hydrated and limit strenuous activity.`
+      title: "Heat & Humidity Today",
+      detail: `Hot and humid conditions${timingPhrase(heatToday, false)}. Stay hydrated and limit strenuous activity during peak heat.`
     });
   }
 
-  if (heatTomorrow.firstHour !== null) {
+  if (heatTomorrow.firstHour !== null && !isEventObsolete(heatTomorrow)) {
     alerts.push({
       id: "heat-tomorrow",
       icon: "🥵",
-      title: "Hot & Humid Tomorrow",
-      detail: `Heat and humidity expected${timingPhrase(heatTomorrow, true)}. Plan for hydration and shade.`
+      title: "Heat & Humidity Tomorrow",
+      detail: `Hot and humid conditions${timingPhrase(heatTomorrow, true)}. Plan for extra water and shade if you’ll be outside.`
     });
   }
 
