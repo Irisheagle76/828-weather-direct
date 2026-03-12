@@ -106,8 +106,7 @@ export function updateToday(today) {
   document.getElementById("today-emoji").textContent = today.emoji;
   document.getElementById("today-headline").textContent = today.headline;
   document.getElementById("today-text").textContent = today.text;
-  document.getElementById("micro-advice").textContent = intel.microAdvice;
-}
+  }
 
 /**
  * Update tomorrow's human‑action outlook.
@@ -141,4 +140,5 @@ export function updateUI(intel) {
   updateTomorrow(intel.tomorrow);
   renderForecastIcons(intel.alerts);
   updateStationFooter(intel.wu.stationId);
+  document.getElementById("micro-advice").textContent = intel.microAdvice;
 }
