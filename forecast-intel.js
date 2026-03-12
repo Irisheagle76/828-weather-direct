@@ -518,15 +518,21 @@ try {
   if (swingPhrase) {
 const base = mapActionOutcome(dominant, finalTempDesc, precipDesc, windDesc);
 
-// Lowercase the first letter of the wind phrase for smoother flow
-const windLower = base.text
+// Clean + lowercase wind phrase
+let windLower = base.text
   .trim()
   .replace(/\.*\s*$/, "")        // remove trailing periods + spaces
   .replace(/^([A-Z])/, m => m.toLowerCase());  // lowercase first letter
 
+// Build final merged sentence
+let merged = windLower + ` with ${swingPhrase.charAt(0).toLowerCase() + swingPhrase.slice(1)}`;
+
+// Capitalize the final output
+merged = merged.charAt(0).toUpperCase() + merged.slice(1);
+
 return {
   ...base,
-  text: windLower + ` with ${swingPhrase.charAt(0).toLowerCase() + swingPhrase.slice(1)}`
+  text: merged
 };
   }
 
