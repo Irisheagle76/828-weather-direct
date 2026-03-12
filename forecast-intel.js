@@ -516,14 +516,13 @@ try {
 
   // 6. Merge swing phrase into the reason text
   if (swingPhrase) {
- const base = mapActionOutcome(dominant, finalTempDesc, precipDesc, windDesc);
+const base = mapActionOutcome(dominant, finalTempDesc, precipDesc, windDesc);
 
 return {
   ...base,
   text: base.text
     .trim()                      // remove trailing spaces
-    .replace(/\.*$/, "")         // remove ALL trailing periods
-    .replace(/\s+$/, "")         // remove trailing whitespace after punctuation
+    .replace(/\.*\s*$/, "")      // remove trailing periods AND spaces
     + ` with ${swingPhrase.charAt(0).toLowerCase() + swingPhrase.slice(1)}`
 };
   }
