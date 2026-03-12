@@ -516,7 +516,7 @@ try {
 
   // 6. Merge swing phrase into the reason text
   if (swingPhrase) {
-  return mapActionOutcome(dominant, finalTempDesc, precipDesc, windDesc);
+    const base = mapActionOutcome(dominant, finalTempDesc, precipDesc, windDesc);
     return {
       ...base,
       text: base.text
@@ -533,7 +533,7 @@ try {
 // -----------------------------
 // ACTION MAPPING
 // -----------------------------
-return mapActionOutcome(dominant, tempDesc, precipDesc, windDesc);
+return mapActionOutcome(dominant, finalTempDesc, precipDesc, windDesc);
 }
 
 // ====================================================
