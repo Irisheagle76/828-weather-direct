@@ -340,11 +340,11 @@ if (snowTotal > 0)   return "a stray flake or two";
 
 // Wind descriptor
 function describeWind(gustMax) {
-  if (gustMax >= 45) return "very windy";
-  if (gustMax >= 40) return "quite gusty";
-  if (gustMax >= 35) return "breezy at times";
-  if (gustMax >= 30) return "a light breeze";
-  return "generally light wind";
+  if (gustMax >= 45) return "Very windy";
+  if (gustMax >= 40) return "Quite gusty";
+  if (gustMax >= 35) return "Breezy at times";
+  if (gustMax >= 30) return "A light breeze";
+  return "Generally light wind";
 }
 
 // Temperature descriptor
@@ -654,7 +654,9 @@ function mapActionOutcome(dominant, tempDesc, precipDesc, windDesc) {
   let badgeClass = "badge-easy";
   let emoji = "🙂";
   let action = "Go about your day as usual.";
-  let reason = `${tempDesc}. Expect ${precipDesc} with ${windDesc}.`;
+ let reason = tempDesc
+  ? `${tempDesc}. Expect ${precipDesc} with ${windDesc}.`
+  : `Expect ${precipDesc} with ${windDesc}.`;
 
   switch (dominant) {
     case "snow":
