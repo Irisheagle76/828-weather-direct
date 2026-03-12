@@ -518,12 +518,15 @@ try {
   if (swingPhrase) {
 const base = mapActionOutcome(dominant, finalTempDesc, precipDesc, windDesc);
 
+// Lowercase the first letter of the wind phrase for smoother flow
+const windLower = base.text
+  .trim()
+  .replace(/\.*\s*$/, "")        // remove trailing periods + spaces
+  .replace(/^([A-Z])/, m => m.toLowerCase());  // lowercase first letter
+
 return {
   ...base,
-  text: base.text
-    .trim()                      // remove trailing spaces
-    .replace(/\.*\s*$/, "")      // remove trailing periods AND spaces
-    + ` with ${swingPhrase.charAt(0).toLowerCase() + swingPhrase.slice(1)}`
+  text: windLower + ` with ${swingPhrase.charAt(0).toLowerCase() + swingPhrase.slice(1)}`
 };
   }
 
