@@ -483,15 +483,15 @@ export function getHumanActionOutlook(hourly) {
 +    swingPhrase = `⬇️ Sharp cooldown by tomorrow afternoon (${swing.toFixed(0)}° around 2 PM).`;
    }
 
-   // 4. If meaningful, append swing phrase to the final text
-  if (swingPhrase) {
-    const base = mapActionOutcome(dominant, tempDesc, precipDesc, windDesc);
-    return {
-      ...base,
-      text: `${base.text} ${swingPhrase}`
-    };
-   }
- } catch (err) {
+   // 4. If meaningful, append swing phrase to the final textif   
+if (swingPhrase) {
+  const base = mapActionOutcome(dominant, tempDesc, precipDesc, windDesc);
+  return {
+    ...base,
+    text: `${base.text} ${swingPhrase}`
+  };
+}
+ catchatch (err) {
    console.warn("Temp swing calculation failed:", err);
  }
   // -----------------------------
