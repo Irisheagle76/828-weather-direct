@@ -106,6 +106,7 @@ export function updateToday(today) {
   document.getElementById("today-emoji").textContent = today.emoji;
   document.getElementById("today-headline").textContent = today.headline;
   document.getElementById("today-text").textContent = today.text;
+  document.getElementById("micro-advice").textContent = intel.microAdvice;
 }
 
 /**
