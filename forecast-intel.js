@@ -516,7 +516,7 @@ try {
 
   // 6. If meaningful, append swing phrase to the final text
   if (swingPhrase) {
-    const base = mapActionOutcome(dominant, finalTempDesc, precipDesc, windDesc);
+    return mapActionOutcome(dominant, finalTempDesc, precipDesc, windDesc);
     return {
       ...base,
       text: `${base.text} ${swingPhrase}`
