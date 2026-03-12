@@ -226,7 +226,7 @@ function isRain(i, hourly) {
 
 // Only treat snow as alert-worthy when meaningful
 function isSnow(i, hourly) {
-  return (hourly.snowfall[i] ?? 0) >= 0.3;  // prevents flurry alerts
+  return (hourly.snowfall[i] ?? 0) >= 0.5;  // prevents flurry alerts
 }
 
 function isWind(i, hourly) {
