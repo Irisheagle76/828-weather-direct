@@ -102,8 +102,15 @@ document.getElementById("wu-wind").textContent =
   document.getElementById("wu-wind-gust").textContent =
     wu.windGust != null ? `Gusts ${wu.windGust.toFixed(0)} mph` : "Gusts --";
 
-  document.getElementById("wu-uv").textContent =
-    reliableUV != null ? `UV ${reliableUV.toFixed(1)}` : "--";
+const uvEl = document.getElementById("wu-uv");
+
+uvEl.textContent = wu.uv != null ? wu.uv.toFixed(1) : "--";
+
+/* Remove old classes */
+uvEl.classList.remove("uv-low", "uv-mod", "uv-high", "uv-very", "uv-extreme");
+
+/* Add new color class */
+uvEl.classList.add(getUVClass(wu.uv));
 }
 
 /**
