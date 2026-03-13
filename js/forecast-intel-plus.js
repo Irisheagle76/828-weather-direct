@@ -113,7 +113,25 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
   function buildReasoning() {
     return "A stable pattern with consistent model agreement supports this forecast.";
   }
+   // Search for UV PEAK Hours
+function buildPeakUV(hourly, indices) {
+  const uvPoints = indices.map(i => ({
+    hour: new Date(hourly.time[i]).getHours(),
+    value: hourly.uv_index?.[i] ?? 0
+  }));
 
+  const maxUV = Math.max(...uvPoints.map(p => p.value));
+
+  if (maxUV <= 2) {
+    return { max: maxUV, hours: [] }; // treat as “low all day”
+  }
+
+  const peakHours = uvPoints
+    .filter(p => p.value === maxUV)
+    .map(p => p.hour);
+
+  return { max: maxUV, hours: peakHours };
+}
   // ⭐ Build windows
   const todayIndices = getTodayRemainingWindow(hourly);
   const tomorrowIndices = getTomorrowWindow(hourly);
