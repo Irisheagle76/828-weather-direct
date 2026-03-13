@@ -73,7 +73,16 @@ export function getUVClass(uv) {
   if (uv < 11) return "uv-very";
   return "uv-extreme";
 }
-
+/* -----------------------------------
+   LOCAL TIME HELPERS
+----------------------------------- */
+function formatHourLocal(isoString) {
+  const d = new Date(isoString);
+  return d.toLocaleTimeString([], {
+    hour: "numeric",
+    minute: undefined
+  });
+}
 /* -----------------------------------
    WIND + DIRECTION HELPERS
 ----------------------------------- */
@@ -297,9 +306,9 @@ export function toggleForecastExpanded(which, intel) {
   document.getElementById("fx-hilo").textContent =
     `${detail.high}° / ${detail.low}°`;
 
-  document.getElementById("fx-hourly").innerHTML = detail.hourly
-    .map(h => `<div>${h.time} — ${h.temp}°, ${h.wind}, ${h.precip}%</div>`)
-    .join("");
+ document.getElementById("fx-hourly").innerHTML = detail.hourly
+  .map(h => `<div>${formatHourLocal(h.time)} — ${h.temp}°, ${h.wind}, ${h.precip}%</div>`)
+  .join("");
 
   document.getElementById("fx-precip").textContent = detail.precipWindow;
   document.getElementById("fx-windshifts").textContent = detail.windShifts;
