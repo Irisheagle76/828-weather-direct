@@ -119,8 +119,8 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
   const tomorrowIndices = getTomorrowWindow(hourly);
 
   const todayDetail = {
-    high: Math.max(...todayIndices.map(i => hourly.temperature_2m[i])),
-    low: Math.min(...todayIndices.map(i => hourly.temperature_2m[i])),
+    high: Math.round(Math.max(...todayIndices.map(i => hourly.temperature_2m[i]))),
+low: Math.round(Math.min(...todayIndices.map(i => hourly.temperature_2m[i]))),
     hourly: buildHourlySnapshot(hourly, todayIndices),
     precipWindow: buildPrecipWindow(hourly, todayIndices),
     windShifts: buildWindShifts(hourly, todayIndices),
@@ -130,8 +130,8 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
   };
 
   const tomorrowDetail = {
-    high: Math.max(...tomorrowIndices.map(i => hourly.temperature_2m[i])),
-    low: Math.min(...tomorrowIndices.map(i => hourly.temperature_2m[i])),
+    high: Math.round(Math.max(...tomorrowIndices.map(i => hourly.temperature_2m[i]))),
+low: Math.round(Math.min(...tomorrowIndices.map(i => hourly.temperature_2m[i]))),
     hourly: buildHourlySnapshot(hourly, tomorrowIndices),
     precipWindow: buildPrecipWindow(hourly, tomorrowIndices),
     windShifts: buildWindShifts(hourly, tomorrowIndices),
