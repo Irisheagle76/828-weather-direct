@@ -373,10 +373,66 @@
   <!-- ⭐ ROW 3 — Today + Tomorrow -->
   <div class="now-tomorrow-row">
 
-    <div class="now-col">
-     <div class="today-module action-module">
-  <div id="today-emoji" class="action-emoji">--</div>
-  <div>
+ <div class="now-col">
+
+  <div class="today-module action-module">
+    <div id="today-emoji" class="action-emoji">--</div>
+    <div>
+      <div class="action-label">Today’s Human‑Action Outlook</div>
+      <div id="today-headline" class="action-headline">Loading…</div>
+
+      <!-- Today’s main text -->
+      <div id="today-text" class="action-text">
+        Checking today’s weather impacts…
+      </div>
+
+      <!-- ⭐ Micro‑advice must live OUTSIDE today-text -->
+      <div id="micro-advice" class="action-text" style="margin-top: 0.4rem;"></div>
+    </div>
+  </div>
+
+  <!-- ⭐ INSERT THE EXPANDED FORECAST PANEL HERE -->
+  <div id="forecast-expanded" class="forecast-expanded" style="display:none;">
+
+    <div class="fx-section">
+      <div class="fx-label">High / Low</div>
+      <div id="fx-hilo" class="fx-value"></div>
+    </div>
+
+    <div class="fx-section">
+      <div class="fx-label">Hour‑by‑Hour</div>
+      <div id="fx-hourly" class="fx-value fx-hourly"></div>
+    </div>
+
+    <div class="fx-section">
+      <div class="fx-label">Precipitation Window</div>
+      <div id="fx-precip" class="fx-value"></div>
+    </div>
+
+    <div class="fx-section">
+      <div class="fx-label">Wind Shifts</div>
+      <div id="fx-windshifts" class="fx-value"></div>
+    </div>
+
+    <div class="fx-section">
+      <div class="fx-label">UV Timeline</div>
+      <div id="fx-uv" class="fx-value"></div>
+    </div>
+
+    <div class="fx-section">
+      <div class="fx-label">Forecast Confidence</div>
+      <div id="fx-confidence" class="fx-value"></div>
+    </div>
+
+    <div class="fx-section">
+      <div class="fx-label">Why This Forecast</div>
+      <div id="fx-reasoning" class="fx-value"></div>
+    </div>
+
+  </div>
+  <!-- ⭐ END INSERT -->
+
+</div>
     <div class="action-label">Today’s Human‑Action Outlook</div>
     <div id="today-headline" class="action-headline">Loading…</div>
 
@@ -425,6 +481,7 @@
 
 </body>
 </html>
+
 
 
 
