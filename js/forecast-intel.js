@@ -720,7 +720,14 @@ if (!indices.length) {
   // -----------------------------
   // ACTION MAPPING (shared)
   // -----------------------------
-return mapActionOutcome(dominant, tempDesc, precipDesc, windDesc);
+return mapActionOutcome(
+  dominant,
+  tempDesc,
+  precipDesc,
+  windDesc,
+  tempHighF,
+  isGoldilocks
+);
 }
 
 // ====================================================
@@ -764,12 +771,11 @@ function mergePhrases(...parts) {
   return first + " with " + rest.join(" and ");
 }
 
-function mapActionOutcome(dominant, tempDesc, precipDesc, windDesc) {
+function mapActionOutcome(dominant, tempDesc, precipDesc, windDesc, tempHighF, isGoldilocks) {
   let badgeText = "No Hazards";
   let badgeClass = "badge-easy";
   let emoji = "🙂";
-  let action = getLowImpactPhrase(tempHighF, isGoldilocks);
-
+ 
   // Default merged reason
   let reason = mergePhrases(tempDesc, precipDesc, windDesc);
   reason = reason.charAt(0).toUpperCase() + reason.slice(1) + ".";
@@ -843,9 +849,10 @@ function mapActionOutcome(dominant, tempDesc, precipDesc, windDesc) {
       reason = reason.charAt(0).toUpperCase() + reason.slice(1) + ".";
       break;
 
-    case "easy":
-    default:
-      break;
+   case "easy":
+default:
+  action = getLowImpactPhrase(tempHighF, isGoldilocks);
+  break;
   }
 
   return {
