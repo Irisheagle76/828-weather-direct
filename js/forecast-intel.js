@@ -909,6 +909,37 @@ function mapActionOutcome(
     text: reason
   };
 }
+function buildTomorrowText({ tempDesc, precipDesc, windDesc, tempHighF, isGoldilocks }) {
+  const phrases = [];
+
+  // 1. Goldilocks override
+  if (isGoldilocks) {
+    phrases.push("A comfortable, easygoing day with ideal temperatures.");
+  } else {
+    // 2. Temperature descriptor
+    if (tempDesc) phrases.push(tempDesc);
+  }
+
+  // 3. Precipitation descriptor
+  if (precipDesc && precipDesc !== "dry") {
+    phrases.push(precipDesc);
+  }
+
+  // 4. Wind descriptor
+  if (windDesc && windDesc !== "light winds") {
+    phrases.push(windDesc);
+  }
+
+  // 5. Merge into a single clean sentence
+  const merged = mergePhrases(phrases);
+
+  // 6. Add a closing guidance line
+  const guidance = isGoldilocks
+    ? "Nothing special needed — just enjoy the weather."
+    : "Plan for simple, practical comfort based on conditions.";
+
+  return `${merged}. ${guidance}`;
+}
 // ----------------------------------------------------
 // PART 5 — Comfort Module 2.3 (Personality Edition)
 // ----------------------------------------------------
