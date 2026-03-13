@@ -211,7 +211,11 @@ export function updateUI(intel) {
 
   const micro = document.getElementById("micro-advice");
   micro.textContent = intel.today.suppressMicroAdvice ? "" : intel.microAdvice;
-  // ===============================
+}   // ✅ updateUI ends cleanly here
+
+
+
+// ===============================
 // Expand / Collapse Forecast Panel
 // ===============================
 
@@ -233,13 +237,11 @@ export function toggleForecastExpanded(which, intel) {
   expandedOpen = true;
   expandedFor = which;
 
-  // Populate the panel with the correct day's intel
   const detail = which === "today" ? intel.todayDetail : intel.tomorrowDetail;
 
   document.getElementById("fx-hilo").textContent =
     `${detail.high}° / ${detail.low}°`;
 
-  // Hourly (4 lines)
   document.getElementById("fx-hourly").innerHTML = detail.hourly
     .map(h => `<div>${h.time} — ${h.temp}°, ${h.wind}, ${h.precip}%</div>`)
     .join("");
@@ -247,7 +249,6 @@ export function toggleForecastExpanded(which, intel) {
   document.getElementById("fx-precip").textContent = detail.precipWindow;
   document.getElementById("fx-windshifts").textContent = detail.windShifts;
 
-  // UV timeline (3 points)
   document.getElementById("fx-uv").innerHTML = detail.uvTimeline
     .map(u => `${u.time}: ${u.label} (${u.value})`)
     .join(" • ");
@@ -256,5 +257,4 @@ export function toggleForecastExpanded(which, intel) {
   document.getElementById("fx-reasoning").textContent = detail.reasoning;
 
   panel.style.display = "block";
-}
 }
