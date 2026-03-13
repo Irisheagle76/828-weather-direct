@@ -1227,8 +1227,7 @@ export function getForecastAlerts(hourly) {
 
 export {
   getHumanActionOutlook,
-  getTodayActionOutlook,
-   getTodayRemainingWindow,
+     getTodayRemainingWindow,
   getTomorrowWindow
 };
 
