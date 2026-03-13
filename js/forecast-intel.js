@@ -1225,7 +1225,7 @@ export function getForecastAlerts(hourly) {
 // PART 7 — Default Export Bundle
 // ----------------------------------------------------
 
-export default {
+export {
   getHumanActionOutlook,
   getTodayActionOutlook,
   getForecastAlerts,
