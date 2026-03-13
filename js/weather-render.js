@@ -198,7 +198,7 @@ export function updateStationFooter(stationId) {
     `Live data from Weather Underground Station ${stationId}`;
 }
 
-/**
+/** 
  * High‑level UI update entry point.
  */
 export function updateUI(intel) {
@@ -211,7 +211,7 @@ export function updateUI(intel) {
 
   const micro = document.getElementById("micro-advice");
   micro.textContent = intel.today.suppressMicroAdvice ? "" : intel.microAdvice;
-}   // ✅ updateUI ends cleanly here
+}   // ← updateUI ends cleanly here
 
 
 
