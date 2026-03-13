@@ -189,13 +189,10 @@ export function updateTomorrow(outlook) {
   document.getElementById("action-headline").textContent = outlook.headline;
   document.getElementById("action-text").textContent = outlook.text;
 }
-
-/**
- * Update the footer station ID.
- */
-const updatedFooter = document.getElementById("wu-station-footer");
-updatedFooter.textContent =
-  `Live data from Weather Underground Station ${intel.wu.stationID} — ${formatUpdatedTime(intel.updatedAt)}`;
+export function updateStationFooter(stationId, updatedAt) {
+  const el = document.getElementById("wu-station-footer");
+  el.textContent =
+    `Live data from Weather Underground Station ${stationId} — ${formatUpdatedTime(updatedAt)}`;
 }
 // Format "Updated X seconds/minutes/hours ago"
 function formatUpdatedTime(updatedAt) {
@@ -265,7 +262,7 @@ export function updateUI(intel) {
   updateToday(intel.today);
   updateTomorrow(intel.tomorrow);
   renderForecastIcons(intel.alerts);
-  updateStationFooter(intel.wu.stationID);
+ updateStationFooter(intel.wu.stationId, intel.updatedAt);
 
   const micro = document.getElementById("micro-advice");
   micro.textContent = intel.today.suppressMicroAdvice ? "" : intel.microAdvice;
