@@ -62,7 +62,9 @@ export function renderForecastIcons(alerts) {
   });
 }
 
-/* ⭐ UV CLASSIFIER — must be top‑level */
+/* -----------------------------------
+   UV CLASSIFIER — top‑level export
+----------------------------------- */
 export function getUVClass(uv) {
   if (uv == null) return "";
   if (uv < 3) return "uv-low";
@@ -71,15 +73,19 @@ export function getUVClass(uv) {
   if (uv < 11) return "uv-very";
   return "uv-extreme";
 }
-// -----------------------------
-// WIND + DIRECTION HELPERS
-// -----------------------------
+
+/* -----------------------------------
+   WIND + DIRECTION HELPERS
+----------------------------------- */
 export function degToCompass(deg) {
   if (deg == null) return "";
-  const dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE",
-                "S","SSW","SW","WSW","W","WNW","NW","NNW"];
+  const dirs = [
+    "N","NNE","NE","ENE","E","ESE","SE","SSE",
+    "S","SSW","SW","WSW","W","WNW","NW","NNW"
+  ];
   return dirs[Math.round(deg / 22.5) % 16];
 }
+
 /**
  * Update the top metrics row (temp, dew, wind, UV, etc.)
  */
@@ -96,23 +102,27 @@ export function updateMetrics(wu, reliableUV) {
   document.getElementById("wu-humidity").textContent =
     wu.humidity != null ? `Humidity ${wu.humidity}%` : "Humidity --";
 
-document.getElementById("wu-wind").textContent =
-  wu.windSpeed != null
-    ? `${degToCompass(wu.windDir)} ${wu.windSpeed.toFixed(0)} mph`
-    : "--";
-  
+  document.getElementById("wu-wind").textContent =
+    wu.windSpeed != null
+      ? `${degToCompass(wu.windDir)} ${wu.windSpeed.toFixed(0)} mph`
+      : "--";
+
   document.getElementById("wu-wind-gust").textContent =
     wu.windGust != null ? `Gusts ${wu.windGust.toFixed(0)} mph` : "Gusts --";
 
-const uvEl = document.getElementById("wu-uv");
+  // ⭐ UV handling
+  const uvEl = document.getElementById("wu-uv");
 
-uvEl.textContent = wu.uv != null ? wu.uv.toFixed(1) : "--";
+  uvEl.textContent = wu.uv != null ? wu.uv.toFixed(1) : "--";
 
-/* Remove old classes */
-uvEl.classList.remove("uv-low", "uv-mod", "uv-high", "uv-very", "uv-extreme");
+  // Remove old classes
+  uvEl.classList.remove("uv-low", "uv-mod", "uv-high", "uv-very", "uv-extreme");
 
-/* Add new color class */
-uvEl.classList.add(getUVClass(wu.uv));
+  // Add new class ONLY if valid (prevents DOMTokenList errors)
+  const uvClass = getUVClass(wu.uv);
+  if (uvClass) {
+    uvEl.classList.add(uvClass);
+  }
 }
 
 /**
@@ -129,22 +139,21 @@ export function updateComfort(comfort) {
 export function updateToday(today) {
   const now = new Date();
   const hour = now.getHours();
-  const isAfter7pm = hour >= 19; // 7 PM local time
+  const isAfter7pm = hour >= 19;
 
   const todayModule = document.querySelector(".today-module");
 
-  // If it's after 7 PM OR intel says the day is done,
-  // override the content with the end-of-day message.
   if (today.isEndOfDay || isAfter7pm) {
     document.getElementById("today-emoji").textContent = "🌙";
-    document.getElementById("today-headline").textContent = "The day is winding down.";
-    document.getElementById("today-text").textContent = "Fresh forecast updates arrive tomorrow morning.";
+    document.getElementById("today-headline").textContent =
+      "The day is winding down.";
+    document.getElementById("today-text").textContent =
+      "Fresh forecast updates arrive tomorrow morning.";
 
     todayModule.classList.add("fade-out");
     return;
   }
 
-  // Otherwise, show the normal intel-driven content
   document.getElementById("today-emoji").textContent = today.emoji;
   document.getElementById("today-headline").textContent = today.headline;
   document.getElementById("today-text").textContent = today.text;
@@ -175,7 +184,6 @@ export function updateStationFooter(stationId) {
 
 /**
  * High‑level UI update entry point.
- * This will be used once forecast-intel-plus.js is integrated.
  */
 export function updateUI(intel) {
   updateMetrics(intel.wu, intel.uv);
@@ -184,11 +192,7 @@ export function updateUI(intel) {
   updateTomorrow(intel.tomorrow);
   renderForecastIcons(intel.alerts);
   updateStationFooter(intel.wu.stationId);
-const micro = document.getElementById("micro-advice");
 
-if (intel.today.suppressMicroAdvice) {
-  micro.textContent = "";
-} else {
-  micro.textContent = intel.microAdvice;
-}
+  const micro = document.getElementById("micro-advice");
+  micro.textContent = intel.today.suppressMicroAdvice ? "" : intel.microAdvice;
 }
