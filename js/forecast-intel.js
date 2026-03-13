@@ -799,7 +799,7 @@ function mapActionOutcome(dominant, tempDesc, precipDesc, windDesc) {
   let badgeText = "No Hazards";
   let badgeClass = "badge-easy";
   let emoji = "🙂";
-  let action = getLowImpactPhrase();
+  let action = getLowImpactPhrase(tempHighF, isGoldilocks);
 
   // Default merged reason
   let reason = mergePhrases(tempDesc, precipDesc, windDesc);
