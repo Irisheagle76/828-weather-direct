@@ -402,85 +402,52 @@
     </div>
   </div>
 
-  <!-- ROW 3 — Today + Tomorrow -->
-  <div class="now-tomorrow-row">
+<!-- ROW 3 — Today + Tomorrow -->
+<div class="now-tomorrow-row">
 
-    <!-- TODAY COLUMN -->
-    <div class="now-col">
+  <!-- TODAY COLUMN -->
+  <div class="now-col">
 
-      <div class="today-module action-module" id="today-module">
-        <div id="today-emoji" class="action-emoji">--</div>
-        <div>
-          <div class="action-label">Today’s Human‑Action Outlook</div>
-          <div id="today-headline" class="action-headline">Loading…</div>
+    <div class="today-module action-module" id="today-module" onclick="toggleForecastExpanded('today')">
+      <div id="today-emoji" class="action-emoji">--</div>
+      <div>
+        <div class="action-label">Today’s Human‑Action Outlook</div>
+        <div id="today-headline" class="action-headline">Loading…</div>
 
-          <div id="today-text" class="action-text">
-            Checking today’s weather impacts…
-          </div>
+        <div id="today-text" class="action-text">
+          Checking today’s weather impacts…
+        </div>
 
-          <div id="micro-advice" class="action-text" style="margin-top: 0.4rem;"></div>
+        <div id="micro-advice" class="action-text" style="margin-top: 0.4rem;"></div>
+      </div>
+    </div>
+
+    <!-- TODAY EXPANDED PANEL (NEW) -->
+    <div class="expanded-panel" id="expanded-today" style="display:none;"></div>
+
+  </div> <!-- end now-col -->
+
+  <!-- TOMORROW COLUMN -->
+  <div class="tomorrow-col">
+
+    <div class="tomorrow-module action-module" id="tomorrow-module" onclick="toggleForecastExpanded('tomorrow')">
+      <div id="action-emoji" class="action-emoji">--</div>
+      <div>
+        <div class="action-label">Tomorrow’s Human‑Action Outlook</div>
+        <div id="action-badge" class="action-badge"></div>
+        <div id="action-headline" class="action-headline">Analyzing tomorrow’s setup…</div>
+        <div id="action-text" class="action-text">
+          We’ll highlight what you’ll actually need tomorrow — layers, rain gear, hydration, or nothing special.
         </div>
       </div>
+    </div>
 
-      <!-- EXPANDED FORECAST PANEL -->
-      <div id="forecast-expanded" class="forecast-expanded" style="display:none;">
+    <!-- TOMORROW EXPANDED PANEL (NEW) -->
+    <div class="expanded-panel" id="expanded-tomorrow" style="display:none;"></div>
 
-        <div class="fx-section">
-          <div class="fx-label">High / Low</div>
-          <div id="fx-hilo" class="fx-value"></div>
-        </div>
+  </div> <!-- end tomorrow-col -->
 
-        <div class="fx-section">
-          <div class="fx-label">Hour‑by‑Hour</div>
-          <div id="fx-hourly" class="fx-value fx-hourly"></div>
-        </div>
-
-        <div class="fx-section">
-          <div class="fx-label">Precipitation Window</div>
-          <div id="fx-precip" class="fx-value"></div>
-        </div>
-
-        <div class="fx-section">
-          <div class="fx-label">Wind Shifts</div>
-          <div id="fx-windshifts" class="fx-value"></div>
-        </div>
-
-        <div class="fx-section">
-          <div class="fx-label">UV Timeline</div>
-          <div id="fx-uv" class="fx-value"></div>
-        </div>
-
-        <div class="fx-section">
-          <div class="fx-label">Forecast Confidence</div>
-          <div id="fx-confidence" class="fx-value"></div>
-        </div>
-
-        <div class="fx-section">
-          <div class="fx-label">Why This Forecast</div>
-          <div id="fx-reasoning" class="fx-value"></div>
-        </div>
-
-      </div>
-      <!-- END EXPANDED PANEL -->
-
-    </div> <!-- end now-col -->
-
-    <!-- TOMORROW COLUMN -->
-    <div class="tomorrow-col">
-      <div id="action-module" class="action-module">
-        <div id="action-emoji" class="action-emoji">--</div>
-        <div>
-          <div class="action-label">Tomorrow’s human‑action outlook</div>
-          <div id="action-badge" class="action-badge"></div>
-          <div id="action-headline" class="action-headline">Analyzing tomorrow’s setup…</div>
-          <div id="action-text" class="action-text">
-            We’ll highlight what you’ll actually need tomorrow — layers, rain gear, hydration, or nothing special.
-          </div>
-        </div>
-      </div>
-    </div> <!-- end tomorrow-col -->
-
-  </div> <!-- end now-tomorrow-row -->
+</div> <!-- end now-tomorrow-row -->
 
    <!-- ALERTS MODULE -->
   <div id="forecast-module" class="forecast-module">
