@@ -15,7 +15,7 @@ import {
   updateUI
 } from './weather-render.js';
 
-import { degToCompass } from "./js/weather-render.js";
+import { degToCompass } from "/js/weather-render.js";
 
 // ⭐ Entry point
 document.addEventListener("DOMContentLoaded", initApp);
