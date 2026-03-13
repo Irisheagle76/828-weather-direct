@@ -591,7 +591,14 @@ try {
 
   // 6. Merge swing phrase into the reason text
   if (swingPhrase) {
-const base = mapActionOutcome(dominant, finalTempDesc, precipDesc, windDesc);
+const base = mapActionOutcome(
+  dominant,
+  finalTempDesc,
+  precipDesc,
+  windDesc,
+  tempHighF,
+  isGoldilocks
+);
 
 // Clean + lowercase wind phrase
 let windLower = base.text
