@@ -1229,7 +1229,6 @@ export {
   getHumanActionOutlook,
   getTodayActionOutlook,
   getForecastAlerts,
-  getComfortCategory,
   getTodayRemainingWindow,
   getTomorrowWindow
 };
