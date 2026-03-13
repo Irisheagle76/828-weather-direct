@@ -15,13 +15,13 @@ import {
   updateUI
 } from './weather-render.js';
 
-import { degToCompass } from "./weather-render.js";
-import { getUVClass } from "./weather-render.js";
 import { toggleForecastExpanded } from "./weather-render.js";
+
+// ⭐ Make toggleForecastExpanded available to HTML + listeners
+window.toggleForecastExpanded = toggleForecastExpanded;
 
 // ⭐ Entry point
 document.addEventListener("DOMContentLoaded", initApp);
-
 
 async function initApp() {
   if (!navigator.geolocation) {
@@ -49,17 +49,18 @@ async function initApp() {
         // ⭐ 3. MRMS Radar Pixel
         const mrmsPixel = await getMRMSPixel(lat, lon);
 
-      // ⭐ 4. Build Unified Intelligence
-const intel = buildWeatherIntel({
-  wuCurrent,
-  hourly,
-  mrmsPixel
-});
+        // ⭐ 4. Build Unified Intelligence
+        const intel = buildWeatherIntel({
+          wuCurrent,
+          hourly,
+          mrmsPixel
+        });
 
-window._intel = intel;   
-        
-// ⭐ 5. Update UI
-updateUI(intel);
+        // Make intel globally accessible for expansion panels
+        window._intel = intel;
+
+        // ⭐ 5. Update UI
+        updateUI(intel);
 
       } catch (err) {
         console.error("Weather init error:", err);
@@ -75,13 +76,14 @@ updateUI(intel);
     }
   );
 }
+
 // ===============================
 // Click listeners for expansion
 // ===============================
 
 document.addEventListener("DOMContentLoaded", () => {
   const todayModule = document.getElementById("today-module");
-  const tomorrowModule = document.getElementById("action-module");
+  const tomorrowModule = document.getElementById("tomorrow-module");
 
   if (todayModule) {
     todayModule.addEventListener("click", () => {
