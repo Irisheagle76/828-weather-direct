@@ -68,7 +68,6 @@ export function renderForecastIcons(alerts) {
   if (uv < 11) return "uv-very";
   return "uv-extreme";
 }
-}
 // -----------------------------
 // WIND + DIRECTION HELPERS
 // -----------------------------
