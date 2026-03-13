@@ -4,7 +4,9 @@ import {
   getHumanActionOutlook,
   getTodayActionOutlook,
   getForecastAlerts,
-  getComfortCategory as computeComfort
+  getComfortCategory as computeComfort,
+  getTodayRemainingWindow,
+  getTomorrowWindow
 } from './forecast-intel.js';
 
 import {
@@ -16,9 +18,6 @@ import { getMicroAdvice } from './micro-advice.js';
 import { degToCompass } from "./weather-render.js";
 import { getUVClass } from "./weather-render.js";
 
-/**
- * Build a unified weather intelligence object.
- */
 export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
 
   // ⭐ 1. UV
@@ -39,7 +38,7 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
     mrmsPixel.rate ?? 0
   );
 
-  // ⭐ 3. Today + Tomorrow
+  // ⭐ 3. Today + Tomorrow (core outlooks)
   const today = getTodayActionOutlook(hourly);
   const tomorrow = getHumanActionOutlook(hourly);
 
@@ -62,74 +61,49 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
   });
 
   // ============================================================
-  // ⭐ 7. Expanded Forecast Detail Builder (FIXED)
+  // ⭐ 7. Expanded Forecast Detail Builder (CORRECTED)
   // ============================================================
 
-  // Helper: compute high/low from full hourly dataset
-  function computeHighLow(hourly) {
-    const temps = hourly.temperature_2m || [];
-    return {
-      high: Math.max(...temps),
-      low: Math.min(...temps)
-    };
+  function to12Hour(hour) {
+    const h = hour % 12 || 12;
+    const suffix = hour >= 12 ? "PM" : "AM";
+    return `${h} ${suffix}`;
   }
 
-  // Helper: pick 4 key hours using real timestamps
-  function buildHourlySnapshot(hourly) {
-    const targetHours = [12, 14, 16, 18]; // local hours
-
-    return targetHours.map(targetHour => {
-      const idx = hourly.time.findIndex(t => {
-        const d = new Date(t);
-        return d.getHours() === targetHour;
-      });
-
-      if (idx === -1) return null;
-
-      return {
-        time: hourly.time[idx], // full ISO timestamp
-        temp: Math.round(hourly.temperature_2m[idx]),
-        wind: `${degToCompass(hourly.windgusts_10m?.[idx] ?? 0)} ${Math.round(hourly.windgusts_10m?.[idx] ?? 0)} mph`,
-        precip: Math.round((hourly.precipitation[idx] ?? 0) * 100)
-      };
-    }).filter(Boolean);
+  function buildHourlySnapshot(hourly, indices) {
+    return indices.slice(0, 4).map(i => ({
+      time: hourly.time[i],
+      temp: Math.round(hourly.temperature_2m[i]),
+      wind: `${degToCompass(hourly.windgusts_10m?.[i] ?? 0)} ${Math.round(hourly.windgusts_10m?.[i] ?? 0)} mph`,
+      precip: Math.round((hourly.precipitation[i] ?? 0) * 100)
+    }));
   }
 
-  // Helper: simple precip window logic
-  function buildPrecipWindow(hourly) {
-    const precipHours = [];
-
-    for (let i = 0; i < 24; i++) {
-      if ((hourly.precipitation[i] ?? 0) > 0.02) {
-        precipHours.push(i);
-      }
-    }
-
+  function buildPrecipWindow(hourly, indices) {
+    const precipHours = indices.filter(i => (hourly.precipitation[i] ?? 0) > 0.02);
     if (precipHours.length === 0) return "Dry all day.";
 
-    const start = precipHours[0];
-    const end = precipHours[precipHours.length - 1];
+    const start = new Date(hourly.time[precipHours[0]]).getHours();
+    const end = new Date(hourly.time[precipHours.at(-1)]).getHours();
 
-    return `Possible showers ${start}:00–${end}:00.`;
+    return `Possible showers ${to12Hour(start)}–${to12Hour(end)}.`;
   }
 
-  // Helper: wind shift summary
-  function buildWindShifts(hourly) {
-    const noon = degToCompass(hourly.windgusts_10m?.[12] ?? 0);
-    const afternoon = degToCompass(hourly.windgusts_10m?.[15] ?? 0);
-    const evening = degToCompass(hourly.windgusts_10m?.[18] ?? 0);
-
-    return `${noon} → ${afternoon} → ${evening}`;
+  function buildWindShifts(hourly, indices) {
+    const sample = indices.slice(0, 3);
+    const dirs = sample.map(i => degToCompass(hourly.windgusts_10m?.[i] ?? 0));
+    return dirs.join(" → ");
   }
 
-  // Helper: UV timeline
-  function buildUVTimeline(hourly) {
-    const times = [12, 14, 16];
-    return times.map(h => ({
-      time: `${h} PM`,
-      value: Math.round(hourly.uv_index?.[h] ?? 0),
-      label: getUVClass(hourly.uv_index?.[h] ?? 0).replace("uv-", "")
-    }));
+  function buildUVTimeline(hourly, indices) {
+    return indices.slice(0, 3).map(i => {
+      const hour = new Date(hourly.time[i]).getHours();
+      return {
+        time: to12Hour(hour),
+        value: Math.round(hourly.uv_index?.[i] ?? 0),
+        label: getUVClass(hourly.uv_index?.[i] ?? 0).replace("uv-", "")
+      };
+    });
   }
 
   function buildConfidence() {
@@ -140,29 +114,28 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
     return "A stable pattern with consistent model agreement supports this forecast.";
   }
 
-  // Compute highs/lows
-  const { high: todayHigh, low: todayLow } = computeHighLow(hourly);
-  const { high: tomorrowHigh, low: tomorrowLow } = computeHighLow(hourly);
+  // ⭐ Build windows
+  const todayIndices = getTodayRemainingWindow(hourly);
+  const tomorrowIndices = getTomorrowWindow(hourly);
 
-  // Attach to intel object
   const todayDetail = {
-    high: todayHigh,
-    low: todayLow,
-    hourly: buildHourlySnapshot(hourly),
-    precipWindow: buildPrecipWindow(hourly),
-    windShifts: buildWindShifts(hourly),
-    uvTimeline: buildUVTimeline(hourly),
+    high: Math.max(...todayIndices.map(i => hourly.temperature_2m[i])),
+    low: Math.min(...todayIndices.map(i => hourly.temperature_2m[i])),
+    hourly: buildHourlySnapshot(hourly, todayIndices),
+    precipWindow: buildPrecipWindow(hourly, todayIndices),
+    windShifts: buildWindShifts(hourly, todayIndices),
+    uvTimeline: buildUVTimeline(hourly, todayIndices),
     confidence: buildConfidence(),
     reasoning: buildReasoning()
   };
 
   const tomorrowDetail = {
-    high: tomorrowHigh,
-    low: tomorrowLow,
-    hourly: buildHourlySnapshot(hourly),
-    precipWindow: buildPrecipWindow(hourly),
-    windShifts: buildWindShifts(hourly),
-    uvTimeline: buildUVTimeline(hourly),
+    high: Math.max(...tomorrowIndices.map(i => hourly.temperature_2m[i])),
+    low: Math.min(...tomorrowIndices.map(i => hourly.temperature_2m[i])),
+    hourly: buildHourlySnapshot(hourly, tomorrowIndices),
+    precipWindow: buildPrecipWindow(hourly, tomorrowIndices),
+    windShifts: buildWindShifts(hourly, tomorrowIndices),
+    uvTimeline: buildUVTimeline(hourly, tomorrowIndices),
     confidence: buildConfidence(),
     reasoning: buildReasoning()
   };
