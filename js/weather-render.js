@@ -60,6 +60,14 @@ export function renderForecastIcons(alerts) {
 
     container.appendChild(iconEl);
   });
+  export function getUVClass(uv) {
+  if (uv == null) return "";
+  if (uv < 3) return "uv-low";
+  if (uv < 6) return "uv-mod";
+  if (uv < 8) return "uv-high";
+  if (uv < 11) return "uv-very";
+  return "uv-extreme";
+}
 }
 // -----------------------------
 // WIND + DIRECTION HELPERS
