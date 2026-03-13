@@ -428,7 +428,6 @@ function describeTempRange(stats) {
 // ----------------------------------------------------
 // PART 4 — Human‑Action Outlook
 // ----------------------------------------------------
-
 // ====================================================
 // TOMORROW — Human‑Action Outlook (00:00 → 23:59)
 // ====================================================
@@ -457,6 +456,18 @@ export function getHumanActionOutlook(hourly) {
   const precipDesc = describePrecip(precipTotal, snowTotal);
   const windDesc = describeWind(gustMax);
   const tempDesc = describeTempRange(tempStats);
+
+  // NEW — compute high temp for warm/cool phrasing
+const tempHighF = tempStats.max ?? tempStats.avg ?? null;
+
+// NEW — compute Goldilocks flag for phrase override
+const isGoldilocks =
+  precipTotal < 0.05 &&
+  snowTotal === 0 &&
+  gustMax < 26 &&
+  avgTemp != null &&
+  avgTemp >= 60 &&
+  avgTemp <= 75;
 
   // -----------------------------
   // IMPACT SCORING
@@ -607,7 +618,14 @@ return {
 // -----------------------------
 // ACTION MAPPING
 // -----------------------------
-return mapActionOutcome(dominant, finalTempDesc, precipDesc, windDesc);
+return mapActionOutcome(
+  dominant,
+  finalTempDesc,
+  precipDesc,
+  windDesc,
+  tempHighF,
+  isGoldilocks
+);
 }
 
 // ====================================================
@@ -639,6 +657,18 @@ if (!indices.length) {
   const precipDesc = describePrecip(precipTotal, snowTotal);
   const windDesc = describeWind(gustMax);
   const tempDesc = describeTempRange(tempStats);
+  
+// NEW — compute high temp for warm/cool phrasing
+const tempHighF = tempStats.max ?? tempStats.avg ?? null;
+
+// NEW — compute Goldilocks flag for phrase override
+const isGoldilocks =
+  precipTotal < 0.05 &&
+  snowTotal === 0 &&
+  gustMax < 26 &&
+  avgTemp != null &&
+  avgTemp >= 60 &&
+  avgTemp <= 75;
 
   // -----------------------------
   // IMPACT SCORING (same as Tomorrow)
