@@ -687,8 +687,6 @@ export function getTodayActionOutlook(hourly) {
 return mapActionOutcome(dominant, tempDesc, precipDesc, windDesc);
 }
 
-
-
 // ====================================================
 // SHARED ACTION MAPPING FUNCTION
 // ====================================================
@@ -731,10 +729,10 @@ function mergePhrases(...parts) {
 }
 
 function mapActionOutcome(dominant, tempDesc, precipDesc, windDesc) {
-  let badgeText = "Easy Day";
+  let badgeText = "No Hazards";
   let badgeClass = "badge-easy";
   let emoji = "🙂";
-  let action = "Go about your day as usual.";
+  let action = "Mild and seemingly uneventful.";
 
   // Default merged reason
   let reason = mergePhrases(tempDesc, precipDesc, windDesc);
