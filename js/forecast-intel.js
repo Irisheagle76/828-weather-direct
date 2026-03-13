@@ -1230,4 +1230,7 @@ export default {
   getTodayActionOutlook,   // Today (Now → Midnight)
   getComfortCategory,      // Right Now Comfort
   getForecastAlerts        // Tomorrow Alerts
+  getTodayRemainingWindow,
+  getTomorrowWindow
+
 };
