@@ -106,7 +106,16 @@ export function updateToday(today) {
   document.getElementById("today-emoji").textContent = today.emoji;
   document.getElementById("today-headline").textContent = today.headline;
   document.getElementById("today-text").textContent = today.text;
+
+  // Fade-out logic for end-of-day state
+  const todayModule = document.querySelector(".today-module");
+
+  if (today.isEndOfDay) {
+    todayModule.classList.add("fade-out");
+  } else {
+    todayModule.classList.remove("fade-out");
   }
+}
 
 /**
  * Update tomorrow's human‑action outlook.
@@ -140,5 +149,11 @@ export function updateUI(intel) {
   updateTomorrow(intel.tomorrow);
   renderForecastIcons(intel.alerts);
   updateStationFooter(intel.wu.stationId);
-  document.getElementById("micro-advice").textContent = intel.microAdvice;
+const micro = document.getElementById("micro-advice");
+
+if (intel.today.suppressMicroAdvice) {
+  micro.textContent = "";
+} else {
+  micro.textContent = intel.microAdvice;
+}
 }
