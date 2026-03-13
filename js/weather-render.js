@@ -312,14 +312,16 @@ export function toggleForecastExpanded(which, intel) {
       <div class="fx-value">${detail.high}° / ${detail.low}°</div>
     </div>
 
-    <div class="fx-section">
-      <div class="fx-label">Hour‑by‑Hour</div>
-      <div class="fx-value fx-hourly">
-        ${detail.hourly.map(h => `
-          <div>${formatHourLocal(h.time)} — ${h.temp}°, ${h.wind}, ${h.precip}%</div>
-        `).join("")}
-      </div>
+ ${which === "today" ? `
+  <div class="fx-section">
+    <div class="fx-label">Hour‑by‑Hour</div>
+    <div class="fx-value fx-hourly">
+      ${detail.hourly.map(h => `
+        <div>${formatHourLocal(h.time)} — ${h.temp}°, ${h.wind}, ${h.precip}%</div>
+      `).join("")}
     </div>
+  </div>
+` : ""}
 
     <div class="fx-section">
       <div class="fx-label">Precipitation Window</div>
