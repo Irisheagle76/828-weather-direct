@@ -17,6 +17,8 @@ import {
 
 import { degToCompass } from "./weather-render.js";
 import { getUVClass } from "./weather-render.js";
+import { toggleForecastExpanded } from "./weather-render.js";
+
 // ⭐ Entry point
 document.addEventListener("DOMContentLoaded", initApp);
 
@@ -47,15 +49,17 @@ async function initApp() {
         // ⭐ 3. MRMS Radar Pixel
         const mrmsPixel = await getMRMSPixel(lat, lon);
 
-        // ⭐ 4. Build Unified Intelligence
-        const intel = buildWeatherIntel({
-          wuCurrent,
-          hourly,
-          mrmsPixel
-        });
+      // ⭐ 4. Build Unified Intelligence
+const intel = buildWeatherIntel({
+  wuCurrent,
+  hourly,
+  mrmsPixel
+});
 
-        // ⭐ 5. Update UI
-        updateUI(intel);
+window._intel = intel;   
+        
+// ⭐ 5. Update UI
+updateUI(intel);
 
       } catch (err) {
         console.error("Weather init error:", err);
@@ -71,3 +75,23 @@ async function initApp() {
     }
   );
 }
+// ===============================
+// Click listeners for expansion
+// ===============================
+
+document.addEventListener("DOMContentLoaded", () => {
+  const todayModule = document.getElementById("today-module");
+  const tomorrowModule = document.getElementById("action-module");
+
+  if (todayModule) {
+    todayModule.addEventListener("click", () => {
+      toggleForecastExpanded("today", window._intel);
+    });
+  }
+
+  if (tomorrowModule) {
+    tomorrowModule.addEventListener("click", () => {
+      toggleForecastExpanded("tomorrow", window._intel);
+    });
+  }
+});
