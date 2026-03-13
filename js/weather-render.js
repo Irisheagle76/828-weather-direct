@@ -202,6 +202,7 @@ export function updateStationFooter(stationId) {
  * High‑level UI update entry point.
  */
 export function updateUI(intel) {
+  console.log("WU object:", intel.wu);
   updateMetrics(intel.wu, intel.uv);
   updateComfort(intel.comfort);
   updateToday(intel.today);
