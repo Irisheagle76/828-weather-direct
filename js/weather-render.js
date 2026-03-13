@@ -102,10 +102,26 @@ export function updateMetrics(wu, reliableUV) {
   document.getElementById("wu-humidity").textContent =
     wu.humidity != null ? `Humidity ${wu.humidity}%` : "Humidity --";
 
-  document.getElementById("wu-wind").textContent =
-    wu.windSpeed != null
-      ? `${degToCompass(wu.windDir)} ${wu.windSpeed.toFixed(0)} mph`
-      : "--";
+// ⭐ WIND HANDLING WITH CALM + VARIABLE
+let windText = "--";
+
+if (wu.windSpeed != null) {
+  const speed = wu.windSpeed;
+  const dir = wu.windDir;
+
+  if (speed < 1) {
+    // Calm conditions
+    windText = "Calm";
+  } else if (dir == null) {
+    // Wind blowing but direction unavailable
+    windText = `${speed.toFixed(0)} mph (variable)`;
+  } else {
+    // Normal case with direction
+    windText = `${degToCompass(dir)} ${speed.toFixed(0)} mph`;
+  }
+}
+
+document.getElementById("wu-wind").textContent = windText;
 
   document.getElementById("wu-wind-gust").textContent =
     wu.windGust != null ? `Gusts ${wu.windGust.toFixed(0)} mph` : "Gusts --";
