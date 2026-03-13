@@ -150,10 +150,8 @@ low: Math.round(Math.min(...todayIndices.map(i => hourly.temperature_2m[i]))),
 const tomorrowDetail = {
   high: Math.round(Math.max(...tomorrowIndices.map(i => hourly.temperature_2m[i]))),
   low: Math.round(Math.min(...tomorrowIndices.map(i => hourly.temperature_2m[i]))),
-  // No hourly breakdown for tomorrow
   precipWindow: buildPrecipWindow(hourly, tomorrowIndices),
-  windShifts: buildWindShifts(hourly, tomorrowIndices),
-  uvTimeline: buildUVTimeline(hourly, tomorrowIndices),
+  peakUV: buildPeakUV(hourly, tomorrowIndices),
   confidence: buildConfidence(),
   reasoning: buildReasoning()
 };
