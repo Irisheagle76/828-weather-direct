@@ -172,161 +172,280 @@
       color: #9aa3c2;
       margin-top: 0.15rem;
     }
-      <div class="card">
-    <h1>828 Weather Direct</h1>
-    <div class="subtitle">Hyper‑local conditions via Weather Underground PWS network</div>
 
-    <!-- ⭐ STATUS BLOCK -->
-    <div class="status-row">
-      <div class="badge" id="wu-status-badge">
-        <span class="badge-dot" id="wu-status-dot"></span>
-        <span id="wu-status-label">Detecting location…</span>
+    .now-tomorrow-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--gap);
+      margin-bottom: var(--gap);
+    }
+
+    .now-col,
+    .tomorrow-col {
+      flex: 1 1 260px;
+      min-width: 0;
+    }
+
+    .action-module {
+      background: rgba(120, 180, 255, 0.10);
+      border: 2px solid rgba(120, 180, 255, 0.18);
+      border-radius: var(--module-radius);
+      padding: var(--module-padding);
+      display: flex;
+      align-items: flex-start;
+      gap: 0.9rem;
+      min-width: 0;
+    }
+
+    .action-emoji {
+      font-size: 1.9rem;
+      margin-top: 20px;
+    }
+
+    .action-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #8fb7ff;
+      margin-bottom: 0.25rem;
+      white-space: nowrap;
+    }
+
+    .action-headline {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 0.3rem;
+      line-height: 1.2;
+    }
+
+    .action-text {
+      font-size: 0.82rem;
+      color: #b9c7f5;
+      line-height: 1.4;
+    }
+
+    /* ===============================
+       Expanded Forecast Panel
+       =============================== */
+
+    #forecast-expanded {
+      margin-top: 0.8rem;
+      padding: 1rem 1.2rem;
+      background: rgba(255, 255, 255, 0.65);
+      border-radius: 12px;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      transition: all 0.25s ease;
+      line-height: 1.35;
+    }
+
+    #forecast-expanded .fx-section {
+      margin-bottom: 0.9rem;
+    }
+
+    #forecast-expanded .fx-section:last-child {
+      margin-bottom: 0;
+    }
+
+    #forecast-expanded .fx-label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 0.25rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    #forecast-expanded .fx-value {
+      font-size: 0.95rem;
+      color: #222;
+    }
+
+    #forecast-expanded .fx-hourly div {
+      margin-bottom: 0.25rem;
+    }
+
+    #forecast-expanded .fx-hourly div:last-child {
+      margin-bottom: 0;
+    }
+
+    /* UV card enhancements */
+    .metric .metric-value#wu-uv {
+      font-size: 1.9rem;
+      font-weight: 600;
+      text-align: center;
+      margin-top: 4px;
+    }
+
+    /* UV color scale */
+    .uv-low    { color: #4CAF50; }
+    .uv-mod    { color: #FFC107; }
+    .uv-high   { color: #FF5722; }
+    .uv-very   { color: #D32F2F; }
+    .uv-extreme{ color: #6A1B9A; }
+
+  </style>
+</head>
+
+<body>
+
+<div class="card">
+  <h1>828 Weather Direct</h1>
+  <div class="subtitle">Hyper‑local conditions via Weather Underground PWS network</div>
+
+  <!-- STATUS BLOCK -->
+  <div class="status-row">
+    <div class="badge" id="wu-status-badge">
+      <span class="badge-dot" id="wu-status-dot"></span>
+      <span id="wu-status-label">Detecting location…</span>
+    </div>
+    <div class="status-text" id="wu-status-text">
+      Waiting for browser location permission.
+    </div>
+  </div>
+
+  <!-- ROW 1 — Current Observations -->
+  <div class="metrics-row">
+    <div class="grid">
+      <div class="metric">
+        <div class="metric-label">Temperature</div>
+        <div class="metric-value" id="wu-temp">--</div>
+        <div class="metric-sub" id="wu-feels">Feels like --</div>
       </div>
-      <div class="status-text" id="wu-status-text">
-        Waiting for browser location permission.
+
+      <div class="metric">
+        <div class="metric-label">Dew Point & Humidity</div>
+        <div class="metric-value" id="wu-dew">--</div>
+        <div class="metric-sub" id="wu-humidity">Humidity --</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">Wind</div>
+        <div class="metric-value" id="wu-wind">--</div>
+        <div class="metric-sub" id="wu-wind-gust">Gusts --</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">UV Index</div>
+        <div class="metric-value" id="wu-uv">--</div>
+        <div class="metric-sub" id="wu-solar">Solar --</div>
       </div>
     </div>
+  </div>
 
-    <!-- ⭐ ROW 1 — Current Observations -->
-    <div class="metrics-row">
-      <div class="grid">
-        <div class="metric">
-          <div class="metric-label">Temperature</div>
-          <div class="metric-value" id="wu-temp">--</div>
-          <div class="metric-sub" id="wu-feels">Feels like --</div>
-        </div>
-
-        <div class="metric">
-          <div class="metric-label">Dew Point & Humidity</div>
-          <div class="metric-value" id="wu-dew">--</div>
-          <div class="metric-sub" id="wu-humidity">Humidity --</div>
-        </div>
-
-        <div class="metric">
-          <div class="metric-label">Wind</div>
-          <div class="metric-value" id="wu-wind">--</div>
-          <div class="metric-sub" id="wu-wind-gust">Gusts --</div>
-        </div>
-
-        <div class="metric">
-          <div class="metric-label">UV Index</div>
-          <div class="metric-value" id="wu-uv">--</div>
-          <div class="metric-sub" id="wu-solar">Solar --</div>
-        </div>
+  <!-- ROW 2 — Comfort -->
+  <div class="comfort-row">
+    <div id="comfort-module" class="comfort-module">
+      <div id="comfort-emoji" class="comfort-emoji">--</div>
+      <div>
+        <div class="comfort-label">Right now comfort</div>
+        <div id="comfort-text" class="comfort-text">Comfort loading…</div>
+        <div class="comfort-sub">Based on current conditions</div>
       </div>
     </div>
+  </div>
 
-    <!-- ⭐ ROW 2 — Comfort -->
-    <div class="comfort-row">
-      <div id="comfort-module" class="comfort-module">
-        <div id="comfort-emoji" class="comfort-emoji">--</div>
+  <!-- ROW 3 — Today + Tomorrow -->
+  <div class="now-tomorrow-row">
+
+    <!-- TODAY COLUMN -->
+    <div class="now-col">
+
+      <div class="today-module action-module" id="today-module">
+        <div id="today-emoji" class="action-emoji">--</div>
         <div>
-          <div class="comfort-label">Right now comfort</div>
-          <div id="comfort-text" class="comfort-text">Comfort loading…</div>
-          <div class="comfort-sub">Based on current conditions</div>
+          <div class="action-label">Today’s Human‑Action Outlook</div>
+          <div id="today-headline" class="action-headline">Loading…</div>
+
+          <div id="today-text" class="action-text">
+            Checking today’s weather impacts…
+          </div>
+
+          <div id="micro-advice" class="action-text" style="margin-top: 0.4rem;"></div>
         </div>
       </div>
-    </div>
 
-    <!-- ⭐ ROW 3 — Today + Tomorrow -->
-    <div class="now-tomorrow-row">
+      <!-- EXPANDED FORECAST PANEL -->
+      <div id="forecast-expanded" class="forecast-expanded" style="display:none;">
 
-      <!-- ⭐ TODAY COLUMN -->
-      <div class="now-col">
-
-        <div class="today-module action-module" id="today-module">
-          <div id="today-emoji" class="action-emoji">--</div>
-          <div>
-            <div class="action-label">Today’s Human‑Action Outlook</div>
-            <div id="today-headline" class="action-headline">Loading…</div>
-
-            <div id="today-text" class="action-text">
-              Checking today’s weather impacts…
-            </div>
-
-            <div id="micro-advice" class="action-text" style="margin-top: 0.4rem;"></div>
-          </div>
+        <div class="fx-section">
+          <div class="fx-label">High / Low</div>
+          <div id="fx-hilo" class="fx-value"></div>
         </div>
 
-        <!-- ⭐ EXPANDED FORECAST PANEL -->
-        <div id="forecast-expanded" class="forecast-expanded" style="display:none;">
-
-          <div class="fx-section">
-            <div class="fx-label">High / Low</div>
-            <div id="fx-hilo" class="fx-value"></div>
-          </div>
-
-          <div class="fx-section">
-            <div class="fx-label">Hour‑by‑Hour</div>
-            <div id="fx-hourly" class="fx-value fx-hourly"></div>
-          </div>
-
-          <div class="fx-section">
-            <div class="fx-label">Precipitation Window</div>
-            <div id="fx-precip" class="fx-value"></div>
-          </div>
-
-          <div class="fx-section">
-            <div class="fx-label">Wind Shifts</div>
-            <div id="fx-windshifts" class="fx-value"></div>
-          </div>
-
-          <div class="fx-section">
-            <div class="fx-label">UV Timeline</div>
-            <div id="fx-uv" class="fx-value"></div>
-          </div>
-
-          <div class="fx-section">
-            <div class="fx-label">Forecast Confidence</div>
-            <div id="fx-confidence" class="fx-value"></div>
-          </div>
-
-          <div class="fx-section">
-            <div class="fx-label">Why This Forecast</div>
-            <div id="fx-reasoning" class="fx-value"></div>
-          </div>
-
+        <div class="fx-section">
+          <div class="fx-label">Hour‑by‑Hour</div>
+          <div id="fx-hourly" class="fx-value fx-hourly"></div>
         </div>
-        <!-- ⭐ END EXPANDED PANEL -->
 
-      </div> <!-- end now-col -->
+        <div class="fx-section">
+          <div class="fx-label">Precipitation Window</div>
+          <div id="fx-precip" class="fx-value"></div>
+        </div>
 
-      <!-- ⭐ TOMORROW COLUMN -->
-      <div class="tomorrow-col">
-        <div id="action-module" class="action-module">
-          <div id="action-emoji" class="action-emoji">--</div>
-          <div>
-            <div class="action-label">Tomorrow’s human‑action outlook</div>
-            <div id="action-badge" class="action-badge"></div>
-            <div id="action-headline" class="action-headline">Analyzing tomorrow’s setup…</div>
-            <div id="action-text" class="action-text">
-              We’ll highlight what you’ll actually need tomorrow — layers, rain gear, hydration, or nothing special.
-            </div>
+        <div class="fx-section">
+          <div class="fx-label">Wind Shifts</div>
+          <div id="fx-windshifts" class="fx-value"></div>
+        </div>
+
+        <div class="fx-section">
+          <div class="fx-label">UV Timeline</div>
+          <div id="fx-uv" class="fx-value"></div>
+        </div>
+
+        <div class="fx-section">
+          <div class="fx-label">Forecast Confidence</div>
+          <div id="fx-confidence" class="fx-value"></div>
+        </div>
+
+        <div class="fx-section">
+          <div class="fx-label">Why This Forecast</div>
+          <div id="fx-reasoning" class="fx-value"></div>
+        </div>
+
+      </div>
+      <!-- END EXPANDED PANEL -->
+
+    </div> <!-- end now-col -->
+
+    <!-- TOMORROW COLUMN -->
+    <div class="tomorrow-col">
+      <div id="action-module" class="action-module">
+        <div id="action-emoji" class="action-emoji">--</div>
+        <div>
+          <div class="action-label">Tomorrow’s human‑action outlook</div>
+          <div id="action-badge" class="action-badge"></div>
+          <div id="action-headline" class="action-headline">Analyzing tomorrow’s setup…</div>
+          <div id="action-text" class="action-text">
+            We’ll highlight what you’ll actually need tomorrow — layers, rain gear, hydration, or nothing special.
           </div>
         </div>
-      </div> <!-- end tomorrow-col -->
+      </div>
+    </div> <!-- end tomorrow-col -->
 
-    </div> <!-- end now-tomorrow-row -->
-        <!-- ⭐ ALERTS MODULE -->
-    <div id="forecast-module" class="forecast-module">
-      <div class="forecast-title">Upcoming Weather Alerts</div>
-      <div id="forecast-icons" class="forecast-icons"></div>
-      <div id="forecast-detail" class="forecast-detail"></div>
-    </div>
+  </div> <!-- end now-tomorrow-row -->
 
-    <!-- ⭐ FOOTER -->
-    <div class="footer-note" id="wu-station-footer">
-      Live data from Weather Underground Station --
-    </div>
+  <!-- ALERTS MODULE -->
+  <div id="forecast-module" class="forecast-module">
+    <div class="forecast-title">Upcoming Weather Alerts</div>
+    <div id="forecast-icons" class="forecast-icons"></div>
+    <div id="forecast-detail" class="forecast-detail"></div>
+  </div>
 
-  </div> <!-- end .card -->
-      <!-- ⭐ ERROR TEXT (hidden by default) -->
+  <!-- FOOTER -->
+  <div class="footer-note" id="wu-station-footer">
+    Live data from Weather Underground Station --
+  </div>
+
+  <!-- ERROR TEXT -->
   <div class="error-text" id="wu-error" style="display:none;"></div>
 
 </div> <!-- end .card -->
 
-<!-- ⭐ ENTRY POINT SCRIPT -->
+<!-- ENTRY POINT SCRIPT -->
 <script type="module" src="/js/app.js"></script>
 
 </body>
 </html>
+
