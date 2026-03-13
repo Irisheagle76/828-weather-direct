@@ -208,7 +208,7 @@ export function updateUI(intel) {
   updateToday(intel.today);
   updateTomorrow(intel.tomorrow);
   renderForecastIcons(intel.alerts);
-  updateStationFooter(intel.wu.stationId);
+  updateStationFooter(intel.wu.stationID);
 
   const micro = document.getElementById("micro-advice");
   micro.textContent = intel.today.suppressMicroAdvice ? "" : intel.microAdvice;
