@@ -103,18 +103,29 @@ export function updateComfort(comfort) {
  * Update today's human‑action outlook.
  */
 export function updateToday(today) {
+  const now = new Date();
+  const hour = now.getHours();
+  const isAfter7pm = hour >= 19; // 7 PM local time
+
+  const todayModule = document.querySelector(".today-module");
+
+  // If it's after 7 PM OR intel says the day is done,
+  // override the content with the end-of-day message.
+  if (today.isEndOfDay || isAfter7pm) {
+    document.getElementById("today-emoji").textContent = "🌙";
+    document.getElementById("today-headline").textContent = "The day is winding down.";
+    document.getElementById("today-text").textContent = "Fresh forecast updates arrive tomorrow morning.";
+
+    todayModule.classList.add("fade-out");
+    return;
+  }
+
+  // Otherwise, show the normal intel-driven content
   document.getElementById("today-emoji").textContent = today.emoji;
   document.getElementById("today-headline").textContent = today.headline;
   document.getElementById("today-text").textContent = today.text;
 
-  // Fade-out logic for end-of-day state
-  const todayModule = document.querySelector(".today-module");
-
-  if (today.isEndOfDay) {
-    todayModule.classList.add("fade-out");
-  } else {
-    todayModule.classList.remove("fade-out");
-  }
+  todayModule.classList.remove("fade-out");
 }
 
 /**
