@@ -129,16 +129,16 @@ low: Math.round(Math.min(...todayIndices.map(i => hourly.temperature_2m[i]))),
     reasoning: buildReasoning()
   };
 
-  const tomorrowDetail = {
-    high: Math.round(Math.max(...tomorrowIndices.map(i => hourly.temperature_2m[i]))),
-low: Math.round(Math.min(...tomorrowIndices.map(i => hourly.temperature_2m[i]))),
-    hourly: buildHourlySnapshot(hourly, tomorrowIndices),
-    precipWindow: buildPrecipWindow(hourly, tomorrowIndices),
-    windShifts: buildWindShifts(hourly, tomorrowIndices),
-    uvTimeline: buildUVTimeline(hourly, tomorrowIndices),
-    confidence: buildConfidence(),
-    reasoning: buildReasoning()
-  };
+const tomorrowDetail = {
+  high: Math.round(Math.max(...tomorrowIndices.map(i => hourly.temperature_2m[i]))),
+  low: Math.round(Math.min(...tomorrowIndices.map(i => hourly.temperature_2m[i]))),
+  // No hourly breakdown for tomorrow
+  precipWindow: buildPrecipWindow(hourly, tomorrowIndices),
+  windShifts: buildWindShifts(hourly, tomorrowIndices),
+  uvTimeline: buildUVTimeline(hourly, tomorrowIndices),
+  confidence: buildConfidence(),
+  reasoning: buildReasoning()
+};
 
   // ⭐ 8. Return unified intel object
   return {
