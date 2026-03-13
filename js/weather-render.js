@@ -60,7 +60,10 @@ export function renderForecastIcons(alerts) {
 
     container.appendChild(iconEl);
   });
-  export function getUVClass(uv) {
+}
+
+/* ⭐ UV CLASSIFIER — must be top‑level */
+export function getUVClass(uv) {
   if (uv == null) return "";
   if (uv < 3) return "uv-low";
   if (uv < 6) return "uv-mod";
