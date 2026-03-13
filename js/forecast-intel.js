@@ -692,14 +692,53 @@ return mapActionOutcome(dominant, tempDesc, precipDesc, windDesc);
 // ====================================================
 // SHARED ACTION MAPPING FUNCTION
 // ====================================================
+function mergePhrases(...parts) {
+  const cleaned = parts
+    .filter(Boolean)
+    .map((p, i) => {
+      let s = p.trim();
+
+      // Remove trailing punctuation
+      s = s.replace(/[.,]+$/, "");
+
+      // Remove leading "Expect"
+      s = s.replace(/^Expect\s+/i, "");
+
+      // Add missing nouns for dryness
+      if (/^mainly dry$/i.test(s)) s = "mainly dry conditions";
+
+      // Normalize wind phrasing
+      s = s.replace(/light wind$/i, "light winds")
+           .replace(/generally light wind$/i, "generally light winds")
+           .replace(/quite gusty$/i, "quite gusty winds")
+           .replace(/very windy$/i, "very windy conditions");
+
+      // Lowercase first letter of secondary phrases
+      if (i > 0) {
+        s = s.charAt(0).toLowerCase() + s.slice(1);
+      }
+
+      return s;
+    });
+
+  if (cleaned.length === 0) return "";
+
+  const [first, ...rest] = cleaned;
+
+  if (rest.length === 0) return first;
+
+  return first + " with " + rest.join(" and ");
+}
+
 function mapActionOutcome(dominant, tempDesc, precipDesc, windDesc) {
   let badgeText = "Easy Day";
   let badgeClass = "badge-easy";
   let emoji = "🙂";
   let action = "Go about your day as usual.";
- let reason = tempDesc
-  ? `${tempDesc}. Expect ${precipDesc} with ${windDesc}.`
-  : `Expect ${precipDesc} with ${windDesc}.`;
+
+  // Default merged reason
+  let reason = mergePhrases(tempDesc, precipDesc, windDesc);
+  reason = reason.charAt(0).toUpperCase() + reason.slice(1) + ".";
 
   switch (dominant) {
     case "snow":
@@ -707,7 +746,12 @@ function mapActionOutcome(dominant, tempDesc, precipDesc, windDesc) {
       badgeClass = "badge-snow";
       emoji = "❄️";
       action = "Allow extra travel time.";
-      reason = `${precipDesc}. Roads could become slick. ${windDesc}.`;
+      reason = mergePhrases(
+        precipDesc,
+        "roads could become slick",
+        windDesc
+      );
+      reason = reason.charAt(0).toUpperCase() + reason.slice(1) + ".";
       break;
 
     case "rain":
@@ -715,7 +759,8 @@ function mapActionOutcome(dominant, tempDesc, precipDesc, windDesc) {
       badgeClass = "badge-rain";
       emoji = "🌧️";
       action = "Bring a rain jacket.";
-      reason = `${precipDesc}. ${windDesc}.`;
+      reason = mergePhrases(precipDesc, windDesc);
+      reason = reason.charAt(0).toUpperCase() + reason.slice(1) + ".";
       break;
 
     case "wind":
@@ -723,7 +768,8 @@ function mapActionOutcome(dominant, tempDesc, precipDesc, windDesc) {
       badgeClass = "badge-wind";
       emoji = "💨";
       action = "Secure loose outdoor items.";
-      reason = `${windDesc}. ${tempDesc}.`;
+      reason = mergePhrases(windDesc, tempDesc);
+      reason = reason.charAt(0).toUpperCase() + reason.slice(1) + ".";
       break;
 
     case "heat":
@@ -731,7 +777,11 @@ function mapActionOutcome(dominant, tempDesc, precipDesc, windDesc) {
       badgeClass = "badge-heat";
       emoji = "🥵";
       action = "Stay hydrated.";
-      reason = `${tempDesc}. Heat index may rise during the afternoon.`;
+      reason = mergePhrases(
+        tempDesc,
+        "heat index may rise during the afternoon"
+      );
+      reason = reason.charAt(0).toUpperCase() + reason.slice(1) + ".";
       break;
 
     case "cold":
@@ -739,7 +789,11 @@ function mapActionOutcome(dominant, tempDesc, precipDesc, windDesc) {
       badgeClass = "badge-cold";
       emoji = "🥶";
       action = "Dress in warm layers.";
-      reason = `${tempDesc}. Wind may make it feel colder.`;
+      reason = mergePhrases(
+        tempDesc,
+        "wind may make it feel colder"
+      );
+      reason = reason.charAt(0).toUpperCase() + reason.slice(1) + ".";
       break;
 
     case "goldilocks":
@@ -747,7 +801,12 @@ function mapActionOutcome(dominant, tempDesc, precipDesc, windDesc) {
       badgeClass = "badge-goldilocks";
       emoji = "🌟";
       action = "Make outdoor plans.";
-      reason = `${tempDesc}. Dry conditions with light winds.`;
+      reason = mergePhrases(
+        tempDesc,
+        "dry conditions",
+        "light winds"
+      );
+      reason = reason.charAt(0).toUpperCase() + reason.slice(1) + ".";
       break;
 
     case "easy":
