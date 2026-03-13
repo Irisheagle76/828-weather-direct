@@ -580,15 +580,16 @@ return mapActionOutcome(dominant, finalTempDesc, precipDesc, windDesc);
 // ====================================================
 export function getTodayActionOutlook(hourly) {
   const indices = getTodayRemainingWindow(hourly);
-
-  if (!indices.length) {
-    return {
-      badge: { text: "No data", class: "badge-neutral" },
-      emoji: "❓",
-      headline: "Check back later.",
-      text: "We couldn’t find a usable forecast window for today."
-    };
-  }
+if (!indices.length) {
+  return {
+    badge: { text: "No Hazards", class: "badge-easy" },
+    emoji: "🌙",
+    headline: "The day is winding down.",
+    text: "No more meaningful weather impacts expected tonight.",
+    suppressMicroAdvice: true,
+    isEndOfDay: true
+  };
+}
 
   const win = sliceHourly(hourly, indices);
   const tempStats = getTempStats(win);
