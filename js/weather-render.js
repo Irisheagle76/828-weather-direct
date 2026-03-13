@@ -283,42 +283,72 @@ export function updateUI(intel) {
 // Expand / Collapse Forecast Panel
 // ===============================
 
-let expandedOpen = false;   // tracks open/closed state
-let expandedFor = null;     // "today" or "tomorrow"
+let expandedFor = null;
 
 export function toggleForecastExpanded(which, intel) {
-  const panel = document.getElementById("forecast-expanded");
+  const panel = document.getElementById(`expanded-${which}`);
+  const isOpen = panel.classList.contains("open");
 
-  // If clicking the same module → collapse it
-  if (expandedOpen && expandedFor === which) {
-    panel.style.display = "none";
-    expandedOpen = false;
+  // Close all panels
+  document.querySelectorAll(".expanded-panel").forEach(p => {
+    p.classList.remove("open");
+    p.style.display = "none";
+  });
+
+  // If clicking the same module → collapse
+  if (isOpen) {
     expandedFor = null;
     return;
   }
 
   // Otherwise → open and populate
-  expandedOpen = true;
   expandedFor = which;
 
   const detail = which === "today" ? intel.todayDetail : intel.tomorrowDetail;
 
-  document.getElementById("fx-hilo").textContent =
-    `${detail.high}° / ${detail.low}°`;
+  panel.innerHTML = `
+    <div class="fx-section">
+      <div class="fx-label">High / Low</div>
+      <div class="fx-value">${detail.high}° / ${detail.low}°</div>
+    </div>
 
- document.getElementById("fx-hourly").innerHTML = detail.hourly
-  .map(h => `<div>${formatHourLocal(h.time)} — ${h.temp}°, ${h.wind}, ${h.precip}%</div>`)
-  .join("");
+    <div class="fx-section">
+      <div class="fx-label">Hour‑by‑Hour</div>
+      <div class="fx-value fx-hourly">
+        ${detail.hourly.map(h => `
+          <div>${formatHourLocal(h.time)} — ${h.temp}°, ${h.wind}, ${h.precip}%</div>
+        `).join("")}
+      </div>
+    </div>
 
-  document.getElementById("fx-precip").textContent = detail.precipWindow;
-  document.getElementById("fx-windshifts").textContent = detail.windShifts;
+    <div class="fx-section">
+      <div class="fx-label">Precipitation Window</div>
+      <div class="fx-value">${detail.precipWindow}</div>
+    </div>
 
-  document.getElementById("fx-uv").innerHTML = detail.uvTimeline
-    .map(u => `${u.time}: ${u.label} (${u.value})`)
-    .join(" • ");
+    <div class="fx-section">
+      <div class="fx-label">Wind Shifts</div>
+      <div class="fx-value">${detail.windShifts}</div>
+    </div>
 
-  document.getElementById("fx-confidence").textContent = detail.confidence;
-  document.getElementById("fx-reasoning").textContent = detail.reasoning;
+    <div class="fx-section">
+      <div class="fx-label">UV Timeline</div>
+      <div class="fx-value">
+        ${detail.uvTimeline.map(u => `${u.time}: ${u.label} (${u.value})`).join(" • ")}
+      </div>
+    </div>
+
+    <div class="fx-section">
+      <div class="fx-label">Forecast Confidence</div>
+      <div class="fx-value">${detail.confidence}</div>
+    </div>
+
+    <div class="fx-section">
+      <div class="fx-label">Why This Forecast</div>
+      <div class="fx-value">${detail.reasoning}</div>
+    </div>
+  `;
 
   panel.style.display = "block";
+  panel.classList.add("open");
 }
