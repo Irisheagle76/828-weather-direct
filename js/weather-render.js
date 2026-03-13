@@ -193,11 +193,68 @@ export function updateTomorrow(outlook) {
 /**
  * Update the footer station ID.
  */
-export function updateStationFooter(stationId) {
-  document.getElementById("wu-station-footer").textContent =
-    `Live data from Weather Underground Station ${stationId}`;
+const updatedFooter = document.getElementById("wu-station-footer");
+updatedFooter.textContent =
+  `Live data from Weather Underground Station ${intel.wu.stationID} — ${formatUpdatedTime(intel.updatedAt)}`;
 }
+// Format "Updated X seconds/minutes/hours ago"
+function formatUpdatedTime(updatedAt) {
+  if (!updatedAt) return "Updated recently";
 
+  const now = Date.now();
+  const ts = new Date(updatedAt).getTime();
+  const diffMs = now - ts;
+
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHr  = Math.floor(diffMin / 60);
+
+  if (diffSec < 60) {
+    return diffSec <= 1
+      ? "Updated just now"
+      : `Updated ${diffSec} seconds ago`;
+  }
+
+  if (diffMin < 60) {
+    return diffMin === 1
+      ? "Updated 1 minute ago"
+      : `Updated ${diffMin} minutes ago`;
+  }
+
+  if (diffHr < 24) {
+    return diffHr === 1
+      ? "Updated 1 hour ago"
+      : `Updated ${diffHr} hours ago`;
+  }
+
+  const updatedDate = new Date(updatedAt);
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const isYesterday =
+    updatedDate.getDate() === yesterday.getDate() &&
+    updatedDate.getMonth() === yesterday.getMonth() &&
+    updatedDate.getFullYear() === yesterday.getFullYear();
+
+  if (isYesterday) {
+    const time = updatedDate.toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit"
+    });
+    return `Updated yesterday at ${time}`;
+  }
+
+  const dateStr = updatedDate.toLocaleDateString([], {
+    month: "short",
+    day: "numeric"
+  });
+  const timeStr = updatedDate.toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit"
+  });
+
+  return `Updated ${dateStr} at ${timeStr}`;
+}
 /** 
  * High‑level UI update entry point.
  */
