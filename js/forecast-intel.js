@@ -136,28 +136,7 @@ function getHourlyWindowForDay(hourly, targetDate) {
 
   return indices;
 }
-// Store the last-used phrase so we don't repeat it
-let lastLowImpactPhrase = null;
 
-export function getLowImpactPhrase() {
-  const phrases = [
-    "Mild and seemingly uneventful.",
-    "Nothing demanding on the weather front.",
-    "Quiet and comfortably straightforward.",
-    "A gentle, low‑impact kind of day.",
-    "Calm and easygoing overall."
-  ];
-  // Filter out the last-used phrase to avoid repetition
-  const options = phrases.filter(p => p !== lastLowImpactPhrase);
-
-  // Pick a new phrase at random
-  const choice = options[Math.floor(Math.random() * options.length)];
-
-  // Store it for next time
-  lastLowImpactPhrase = choice;
-
-  return choice;
-}
 // ----------------------------------------------------
 // TOMORROW WINDOW — 00:00 → 23:59 (requires 6 hours)
 // ----------------------------------------------------
