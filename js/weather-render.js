@@ -94,9 +94,6 @@ document.getElementById("wu-wind").textContent =
   document.getElementById("wu-wind-gust").textContent =
     wu.windGust != null ? `Gusts ${wu.windGust.toFixed(0)} mph` : "Gusts --";
 
-  document.getElementById("wu-solar").textContent =
-    wu.solarRadiation != null ? `${wu.solarRadiation.toFixed(0)} W/m²` : "Solar --";
-
   document.getElementById("wu-uv").textContent =
     reliableUV != null ? `UV ${reliableUV.toFixed(1)}` : "--";
 }
