@@ -112,7 +112,51 @@ export function getLowImpactPhrase() {
     "A gentle, low‑impact kind of day.",
     "Calm and easygoing overall."
   ];
+// Track last-used phrase to avoid repetition
+let lastLowImpactPhrase = null;
 
+export function getLowImpactPhrase(tempHighF, isGoldilocks) {
+  // If it's a Goldilocks day, always return the Goldilocks phrase
+  if (isGoldilocks) {
+    return "Goldilocks! Just right!";
+  }
+
+  // Define cool vs warm pools
+  const coolPhrases = [
+    "Mild and seemingly uneventful.",
+    "Quiet and comfortably straightforward.",
+    "A gentle, low‑impact kind of day."
+  ];
+
+  const warmPhrases = [
+    "Calm and easygoing overall.",
+    "Nothing demanding on the weather front.",
+    "A simple, low‑stress kind of day."
+  ];
+
+  // Decide which pool to use based on temperature
+  let pool;
+  if (tempHighF >= 68) {
+    pool = warmPhrases;
+  } else if (tempHighF <= 55) {
+    pool = coolPhrases;
+  } else {
+    // Middle band: Goldilocks already handled above,
+    // so use both pools for non-Goldilocks mild days
+    pool = [...coolPhrases, ...warmPhrases];
+  }
+
+  // Avoid repeating the last-used phrase
+  const options = pool.filter(p => p !== lastLowImpactPhrase);
+
+  // Pick a new phrase
+  const choice = options[Math.floor(Math.random() * options.length)];
+
+  // Store for next time
+  lastLowImpactPhrase = choice;
+
+  return choice;
+}
   // Filter out the last-used phrase to avoid repetition
   const options = phrases.filter(p => p !== lastLowImpactPhrase);
 
