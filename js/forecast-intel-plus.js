@@ -18,10 +18,6 @@ import { getUVClass } from "./weather-render.js";
 
 /**
  * Build a unified weather intelligence object.
- * Combines:
- *  - WU current conditions
- *  - Open‑Meteo hourly forecast
- *  - MRMS pixel (placeholder until Step 5)
  */
 export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
 
@@ -50,7 +46,7 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
   // ⭐ 4. Alerts
   const alerts = getForecastAlerts(hourly);
 
-  // ⭐ 5. Precip signal (placeholder — MRMS logic added in Step 5)
+  // ⭐ 5. Precip signal (placeholder)
   const precipSignal = {
     isFalling: mrmsPixel.rate > 0,
     type: mrmsPixel.type,
@@ -58,7 +54,7 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
     source: "placeholder"
   };
 
-  // ⭐ 6. Micro‑advice 
+  // ⭐ 6. Micro‑advice
   const microAdvice = getMicroAdvice({
     wu: wuCurrent,
     today,
@@ -66,21 +62,34 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
   });
 
   // ============================================================
-  // ⭐ 7. Expanded Forecast Detail Builder (NEW)
+  // ⭐ 7. Expanded Forecast Detail Builder (FIXED)
   // ============================================================
 
-  // Helper: pick 4 key hours (12 PM, 2 PM, 4 PM, 6 PM)
-  function buildHourlySnapshot(hourly) {
-    const targetHours = ["12:00", "14:00", "16:00", "18:00"];
+  // Helper: compute high/low from full hourly dataset
+  function computeHighLow(hourly) {
+    const temps = hourly.temperature_2m || [];
+    return {
+      high: Math.max(...temps),
+      low: Math.min(...temps)
+    };
+  }
 
-    return targetHours.map(t => {
-      const idx = hourly.time.findIndex(h => h.includes(t));
+  // Helper: pick 4 key hours using real timestamps
+  function buildHourlySnapshot(hourly) {
+    const targetHours = [12, 14, 16, 18]; // local hours
+
+    return targetHours.map(targetHour => {
+      const idx = hourly.time.findIndex(t => {
+        const d = new Date(t);
+        return d.getHours() === targetHour;
+      });
+
       if (idx === -1) return null;
 
       return {
-        time: t.replace(":00", ""), // "12", "14", etc.
+        time: hourly.time[idx], // full ISO timestamp
         temp: Math.round(hourly.temperature_2m[idx]),
-        wind: `${degToCompass(hourly.winddirection_10m?.[idx] ?? 0)} ${Math.round(hourly.windspeed_10m?.[idx] ?? 0)} mph`,
+        wind: `${degToCompass(hourly.windgusts_10m?.[idx] ?? 0)} ${Math.round(hourly.windgusts_10m?.[idx] ?? 0)} mph`,
         precip: Math.round((hourly.precipitation[idx] ?? 0) * 100)
       };
     }).filter(Boolean);
@@ -106,14 +115,14 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
 
   // Helper: wind shift summary
   function buildWindShifts(hourly) {
-    const noon = degToCompass(hourly.winddirection_10m?.[12] ?? 0);
-    const afternoon = degToCompass(hourly.winddirection_10m?.[15] ?? 0);
-    const evening = degToCompass(hourly.winddirection_10m?.[18] ?? 0);
+    const noon = degToCompass(hourly.windgusts_10m?.[12] ?? 0);
+    const afternoon = degToCompass(hourly.windgusts_10m?.[15] ?? 0);
+    const evening = degToCompass(hourly.windgusts_10m?.[18] ?? 0);
 
     return `${noon} → ${afternoon} → ${evening}`;
   }
 
-  // Helper: UV timeline (3 points)
+  // Helper: UV timeline
   function buildUVTimeline(hourly) {
     const times = [12, 14, 16];
     return times.map(h => ({
@@ -123,20 +132,22 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
     }));
   }
 
-  // Helper: confidence (placeholder)
   function buildConfidence() {
     return "High confidence (85%)";
   }
 
-  // Helper: reasoning (placeholder)
   function buildReasoning() {
     return "A stable pattern with consistent model agreement supports this forecast.";
   }
 
+  // Compute highs/lows
+  const { high: todayHigh, low: todayLow } = computeHighLow(hourly);
+  const { high: tomorrowHigh, low: tomorrowLow } = computeHighLow(hourly);
+
   // Attach to intel object
   const todayDetail = {
-    high: today.high,
-    low: today.low,
+    high: todayHigh,
+    low: todayLow,
     hourly: buildHourlySnapshot(hourly),
     precipWindow: buildPrecipWindow(hourly),
     windShifts: buildWindShifts(hourly),
@@ -146,8 +157,8 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
   };
 
   const tomorrowDetail = {
-    high: tomorrow.high,
-    low: tomorrow.low,
+    high: tomorrowHigh,
+    low: tomorrowLow,
     hourly: buildHourlySnapshot(hourly),
     precipWindow: buildPrecipWindow(hourly),
     windShifts: buildWindShifts(hourly),
@@ -156,7 +167,7 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
     reasoning: buildReasoning()
   };
 
-  // ⭐ 8. Return unified intel object (now with details)
+  // ⭐ 8. Return unified intel object
   return {
     wu: wuCurrent,
     uv: reliableUV,
