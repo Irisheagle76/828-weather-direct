@@ -61,7 +61,15 @@ export function renderForecastIcons(alerts) {
     container.appendChild(iconEl);
   });
 }
-
+// -----------------------------
+// WIND + DIRECTION HELPERS
+// -----------------------------
+export function degToCompass(deg) {
+  if (deg == null) return "";
+  const dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE",
+                "S","SSW","SW","WSW","W","WNW","NW","NNW"];
+  return dirs[Math.round(deg / 22.5) % 16];
+}
 /**
  * Update the top metrics row (temp, dew, wind, UV, etc.)
  */
@@ -78,9 +86,11 @@ export function updateMetrics(wu, reliableUV) {
   document.getElementById("wu-humidity").textContent =
     wu.humidity != null ? `Humidity ${wu.humidity}%` : "Humidity --";
 
-  document.getElementById("wu-wind").textContent =
-    wu.windSpeed != null ? `${wu.windSpeed.toFixed(0)} mph` : "--";
-
+document.getElementById("wu-wind").textContent =
+  wu.windSpeed != null
+    ? `${degToCompass(wu.windDir)} ${wu.windSpeed.toFixed(0)} mph`
+    : "--";
+  
   document.getElementById("wu-wind-gust").textContent =
     wu.windGust != null ? `Gusts ${wu.windGust.toFixed(0)} mph` : "Gusts --";
 
