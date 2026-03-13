@@ -808,11 +808,21 @@ function mergePhrases(...parts) {
   return first + " with " + rest.join(" and ");
 }
 
-function mapActionOutcome(dominant, tempDesc, precipDesc, windDesc, tempHighF, isGoldilocks) {
+function mapActionOutcome(
+  dominant,
+  tempDesc,
+  precipDesc,
+  windDesc,
+  tempHighF,
+  isGoldilocks
+) {
   let badgeText = "No Hazards";
   let badgeClass = "badge-easy";
   let emoji = "🙂";
- 
+
+  // Start with a low‑impact default; override in hazard cases
+  let action = getLowImpactPhrase(tempHighF, isGoldilocks);
+
   // Default merged reason
   let reason = mergePhrases(tempDesc, precipDesc, windDesc);
   reason = reason.charAt(0).toUpperCase() + reason.slice(1) + ".";
@@ -886,10 +896,10 @@ function mapActionOutcome(dominant, tempDesc, precipDesc, windDesc, tempHighF, i
       reason = reason.charAt(0).toUpperCase() + reason.slice(1) + ".";
       break;
 
-   case "easy":
-default:
-  action = getLowImpactPhrase(tempHighF, isGoldilocks);
-  break;
+    case "easy":
+    default:
+      // keep the low‑impact rotated phrase
+      break;
   }
 
   return {
