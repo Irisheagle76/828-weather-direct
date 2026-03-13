@@ -44,7 +44,7 @@ export async function getWUCurrentConditions(stationId) {
     windDir: obs.winddir ?? null,
     solarRadiation: obs.solarRadiation ?? null,
     uv: obs.uv ?? null,
-    stationId: obs.stationId
+    stationId: obs.stationID
   };
 }
 
