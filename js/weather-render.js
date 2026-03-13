@@ -158,6 +158,11 @@ export function updateComfort(comfort) {
   document.getElementById("comfort-emoji").textContent = comfort.emoji;
 }
 
+function to12Hour(h) {
+  const suffix = h >= 12 ? "PM" : "AM";
+  const hour = ((h + 11) % 12) + 1;
+  return `${hour} ${suffix}`;
+}
 /**
  * Update today's human‑action outlook.
  */
@@ -328,18 +333,31 @@ export function toggleForecastExpanded(which, intel) {
       <div class="fx-value">${detail.precipWindow}</div>
     </div>
 
-    <div class="fx-section">
-      <div class="fx-label">Wind Shifts</div>
-      <div class="fx-value">${detail.windShifts}</div>
-    </div>
+${which === "today" ? `
+  <div class="fx-section">
+    <div class="fx-label">Wind Shifts</div>
+    <div class="fx-value">${detail.windShifts}</div>
+  </div>
 
-    <div class="fx-section">
-      <div class="fx-label">UV Timeline</div>
-      <div class="fx-value">
-        ${detail.uvTimeline.map(u => `${u.time}: ${u.label} (${u.value})`).join(" • ")}
-      </div>
+  <div class="fx-section">
+    <div class="fx-label">UV Timeline</div>
+    <div class="fx-value">
+      ${detail.uvTimeline.map(u => `${u.time}: ${u.label} (${u.value})`).join(" • ")}
     </div>
-
+  </div>
+` : ""}
+${which === "tomorrow" ? `
+  <div class="fx-section">
+    <div class="fx-label">Highest UV</div>
+    <div class="fx-value">
+      ${
+        detail.peakUV.hours.length === 0
+          ? `Low all day (max ${detail.peakUV.max})`
+          : `${detail.peakUV.hours.map(h => to12Hour(h)).join(" • ")} (UV ${detail.peakUV.max})`
+      }
+    </div>
+  </div>
+` : ""}
     <div class="fx-section">
       <div class="fx-label">Forecast Confidence</div>
       <div class="fx-value">${detail.confidence}</div>
