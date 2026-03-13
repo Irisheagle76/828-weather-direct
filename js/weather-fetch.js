@@ -40,6 +40,7 @@ export async function getWUCurrentConditions(stationId) {
     humidity: obs.humidity ?? null,
     windSpeed: obs.imperial?.windSpeed ?? null,
     windGust: obs.imperial?.windGust ?? null,
+    windDir: obs.winddir ?? null,
     solarRadiation: obs.solarRadiation ?? null,
     uv: obs.uv ?? null,
     stationId: obs.stationID
