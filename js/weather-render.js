@@ -110,19 +110,19 @@ export function updateMetrics(wu, reliableUV) {
   document.getElementById("wu-wind-gust").textContent =
     wu.windGust != null ? `Gusts ${wu.windGust.toFixed(0)} mph` : "Gusts --";
 
-  // ⭐ UV handling
-  const uvEl = document.getElementById("wu-uv");
+ // ⭐ UV handling
+const uvEl = document.getElementById("wu-uv");
 
-  uvEl.textContent = wu.uv != null ? wu.uv.toFixed(1) : "--";
+uvEl.textContent = reliableUV != null ? reliableUV.toFixed(1) : "--";
 
-  // Remove old classes
-  uvEl.classList.remove("uv-low", "uv-mod", "uv-high", "uv-very", "uv-extreme");
+// Remove old classes
+uvEl.classList.remove("uv-low", "uv-mod", "uv-high", "uv-very", "uv-extreme");
 
-  // Add new class ONLY if valid (prevents DOMTokenList errors)
-  const uvClass = getUVClass(wu.uv);
-  if (uvClass) {
-    uvEl.classList.add(uvClass);
-  }
+// Add new class ONLY if valid
+const uvClass = getUVClass(reliableUV);
+if (uvClass) {
+  uvEl.classList.add(uvClass);
+}
 }
 
 /**
