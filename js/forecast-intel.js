@@ -634,7 +634,14 @@ return mapActionOutcome(
   isGoldilocks
 );
 }
-
+// NEW — Clothing guidance
+const clothingAdvice = buildClothingAdvice({
+  tempStats,
+  precipDesc,
+  windDesc,
+  avgTemp,
+  gustMax
+});
 // ====================================================
 // TODAY — Human‑Action Outlook (Now → Midnight)
 // ====================================================
@@ -645,7 +652,13 @@ if (!indices.length) {
     badge: { text: "No Hazards", class: "badge-easy" },
     emoji: "🌙",
     headline: "The day is winding down.",
-    text: "No more meaningful weather impacts expected tonight.",
+    text: buildTodayText({
+  tempDesc,
+  precipDesc,
+  windDesc,
+  clothing: clothingAdvice,
+  isGoldilocks
+}),
     suppressMicroAdvice: true,
     isEndOfDay: true
   };
@@ -766,7 +779,31 @@ return mapActionOutcome(
   isGoldilocks
 );
 }
+function buildClothingAdvice({ tempStats, precipDesc, windDesc, avgTemp, gustMax }) {
+  const actions = [];
 
+  // Cold logic
+  if (avgTemp <= 45) actions.push("A jacket will feel good");
+  if (avgTemp <= 32) actions.push("Bundle up — it’ll feel cold");
+
+  // Warm logic
+  if (avgTemp >= 78) actions.push("Hydration important");
+  if (avgTemp >= 85) actions.push("Light, breathable clothing recommended");
+
+  // Rain logic
+  if (precipDesc && precipDesc.includes("rain")) {
+    actions.push("Rain gear recommended");
+  }
+
+  // Wind logic
+  if (gustMax >= 25) actions.push("A windbreaker will help");
+
+  // If nothing triggered
+  if (!actions.length) return "";
+
+  // Return the first most relevant action
+  return actions[0];
+}
 // ====================================================
 // SHARED ACTION MAPPING FUNCTION
 // ====================================================
