@@ -5,7 +5,7 @@
   <title>828 Weather Direct – WU Powered</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
- <style>
+<style>
   :root {
     --card-padding: 1.5rem;
     --module-padding: 1rem 1.2rem;
@@ -225,52 +225,52 @@
     line-height: 1.4;
   }
 
-/* ===============================
-   Expanded Forecast Panel (New)
-   =============================== */
+  /* ===============================
+     Expanded Forecast Panel (NEW)
+     =============================== */
 
-#forecast-expanded {
-  margin-top: 1rem;
-  padding: 1.2rem 1.4rem;
-  background: rgba(20, 26, 42, 0.88);
-  border: 1px solid rgba(255,255,255,0.10);
-  border-radius: 18px;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
-  color: #e8eaf6;
-  line-height: 1.45;
-  transition: all 0.25s ease;
-}
+  .expanded-panel {
+    margin-top: 1rem;
+    padding: 1.2rem 1.4rem;
+    background: rgba(20, 26, 42, 0.88);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 18px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+    color: #e8eaf6;
+    line-height: 1.45;
+    transition: all 0.25s ease;
+  }
 
-#forecast-expanded .fx-section {
-  margin-bottom: 1.1rem;
-}
+  .expanded-panel .fx-section {
+    margin-bottom: 1.1rem;
+  }
 
-#forecast-expanded .fx-section:last-child {
-  margin-bottom: 0;
-}
+  .expanded-panel .fx-section:last-child {
+    margin-bottom: 0;
+  }
 
-#forecast-expanded .fx-label {
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #f0b777;
-  margin-bottom: 0.25rem;
-}
+  .expanded-panel .fx-label {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #f0b777;
+    margin-bottom: 0.25rem;
+  }
 
-#forecast-expanded .fx-value {
-  font-size: 0.95rem;
-  color: #d8dff7;
-}
+  .expanded-panel .fx-value {
+    font-size: 0.95rem;
+    color: #d8dff7;
+  }
 
-#forecast-expanded .fx-hourly div {
-  padding: 0.25rem 0;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-}
+  .expanded-panel .fx-hourly div {
+    padding: 0.25rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
 
-#forecast-expanded .fx-hourly div:last-child {
-  border-bottom: none;
-}
+  .expanded-panel .fx-hourly div:last-child {
+    border-bottom: none;
+  }
 
   /* UV card enhancements */
   .metric .metric-value#wu-uv {
@@ -286,49 +286,50 @@
   .uv-high   { color: #FF5722; }
   .uv-very   { color: #D32F2F; }
   .uv-extreme{ color: #6A1B9A; }
-   
-/* ===============================
-   Forecast Alerts Module
-   =============================== */
 
-.forecast-module {
-  margin-top: var(--gap);
-  padding: var(--module-padding);
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: var(--module-radius);
-}
+  /* ===============================
+     Forecast Alerts Module
+     =============================== */
 
-.forecast-title {
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #f0b777;
-  margin-bottom: 0.6rem;
-}
+  .forecast-module {
+    margin-top: var(--gap);
+    padding: var(--module-padding);
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--module-radius);
+  }
 
-.forecast-icons {
-  display: flex;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-  margin-bottom: 0.6rem;
-}
+  .forecast-title {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #f0b777;
+    margin-bottom: 0.6rem;
+  }
 
-.forecast-icon {
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.12);
-  padding: 0.45rem 0.65rem;
-  border-radius: 10px;
-  font-size: 0.78rem;
-  color: #ffd28a;
-}
+  .forecast-icons {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.6rem;
+  }
 
-.forecast-detail {
-  font-size: 0.82rem;
-  color: #c4c9e5;
-  line-height: 1.35;
-  margin-top: 0.4rem;
-}
+  .forecast-icon {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    padding: 0.45rem 0.65rem;
+    border-radius: 10px;
+    font-size: 0.78rem;
+    color: #ffd28a;
+  }
+
+  .forecast-detail {
+    font-size: 0.82rem;
+    color: #c4c9e5;
+    line-height: 1.35;
+    margin-top: 0.4rem;
+  }
+
   /* ===============================
      FOOTER STYLE (NEW)
      =============================== */
@@ -386,7 +387,7 @@
       <div class="metric">
         <div class="metric-label">UV Index</div>
         <div class="metric-value" id="wu-uv">--</div>
-             </div>
+      </div>
     </div>
   </div>
 
@@ -402,79 +403,77 @@
     </div>
   </div>
 
-<!-- ROW 3 — Today + Tomorrow -->
-<div class="now-tomorrow-row">
+  <!-- ROW 3 — Today + Tomorrow -->
+  <div class="now-tomorrow-row">
 
-  <!-- TODAY COLUMN -->
-  <div class="now-col">
+    <!-- TODAY COLUMN -->
+    <div class="now-col">
 
-    <div class="today-module action-module" id="today-module" onclick="toggleForecastExpanded('today')">
-      <div id="today-emoji" class="action-emoji">--</div>
-      <div>
-        <div class="action-label">Today’s Human‑Action Outlook</div>
-        <div id="today-headline" class="action-headline">Loading…</div>
+      <div class="today-module action-module" id="today-module">
+        <div id="today-emoji" class="action-emoji">--</div>
+        <div>
+          <div class="action-label">Today’s Human‑Action Outlook</div>
+          <div id="today-headline" class="action-headline">Loading…</div>
 
-        <div id="today-text" class="action-text">
-          Checking today’s weather impacts…
+          <div id="today-text" class="action-text">
+            Checking today’s weather impacts…
+          </div>
+
+          <div id="micro-advice" class="action-text" style="margin-top: 0.4rem;"></div>
         </div>
-
-        <div id="micro-advice" class="action-text" style="margin-top: 0.4rem;"></div>
       </div>
-    </div>
 
-    <!-- TODAY EXPANDED PANEL (NEW) -->
-    <div class="expanded-panel" id="expanded-today" style="display:none;"></div>
+      <!-- TODAY EXPANDED PANEL -->
+      <div class="expanded-panel" id="expanded-today" style="display:none;"></div>
 
-  </div> <!-- end now-col -->
+    </div> <!-- end now-col -->
 
-  <!-- TOMORROW COLUMN -->
-  <div class="tomorrow-col">
+    <!-- TOMORROW COLUMN -->
+    <div class="tomorrow-col">
 
-    <div class="tomorrow-module action-module" id="tomorrow-module" onclick="toggleForecastExpanded('tomorrow')">
-      <div id="action-emoji" class="action-emoji">--</div>
-      <div>
-        <div class="action-label">Tomorrow’s Human‑Action Outlook</div>
-        <div id="action-badge" class="action-badge"></div>
-        <div id="action-headline" class="action-headline">Analyzing tomorrow’s setup…</div>
+      <div class="tomorrow-module action-module" id="tomorrow-module">
+        <div id="action-emoji" class="action-emoji">--</div>
+        <div>
+          <div class="action-label">Tomorrow’s human‑action outlook</div>
+          <div id="action-badge" class="action-badge"></div>
+          <div id="action-headline" class="action-headline">Analyzing tomorrow’s setup…</div>
+          <div id="action-text" class="action-text">
+            We’ll highlight what you’ll actually need tomorrow — layers, rain gear, hydration, or nothing special.
+        </div>
         <div id="action-text" class="action-text">
-          We’ll highlight what you’ll actually need tomorrow — layers, rain gear, hydration, or nothing special.
+            We’ll highlight what you’ll actually need tomorrow — layers, rain gear, hydration, or nothing special.
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- TOMORROW EXPANDED PANEL (NEW) -->
-    <div class="expanded-panel" id="expanded-tomorrow" style="display:none;"></div>
+      <!-- TOMORROW EXPANDED PANEL -->
+      <div class="expanded-panel" id="expanded-tomorrow" style="display:none;"></div>
 
-  </div> <!-- end tomorrow-col -->
+    </div> <!-- end tomorrow-col -->
 
-</div> <!-- end now-tomorrow-row -->
+  </div> <!-- end now-tomorrow-row -->
 
-   <!-- ALERTS MODULE -->
+  <!-- ALERTS MODULE -->
   <div id="forecast-module" class="forecast-module">
     <div class="forecast-title">Upcoming Weather Alerts</div>
     <div id="forecast-icons" class="forecast-icons"></div>
     <div id="forecast-detail" class="forecast-detail"></div>
   </div>
 
-<!-- ===========================
-     FOOTER — STATION INFO
-     =========================== -->
-<div class="footer-note" id="wu-station-footer">
-  Live data from Weather Underground Station --
-</div>
+  <!-- ===========================
+       FOOTER — STATION INFO
+       =========================== -->
+  <div class="footer-note" id="wu-station-footer">
+    Live data from Weather Underground Station --
+  </div>
 
   <!-- ERROR TEXT -->
   <div class="error-text" id="wu-error" style="display:none;"></div>
 
 </div> <!-- end .card -->
-  
+
 <!-- ENTRY POINT SCRIPT -->
 <script type="module" src="/js/app.js"></script>
 
 </body>
 </html>
-
-
-
-
-
