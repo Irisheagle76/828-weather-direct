@@ -1226,11 +1226,11 @@ export function getForecastAlerts(hourly) {
 // ----------------------------------------------------
 
 export default {
-  getHumanActionOutlook,   // Tomorrow
-  getTodayActionOutlook,   // Today (Now → Midnight)
-  getComfortCategory,      // Right Now Comfort
-  getForecastAlerts,       // Tomorrow Alerts
+  getHumanActionOutlook,
+  getTodayActionOutlook,
+  getForecastAlerts,
+  getComfortCategory,
   getTodayRemainingWindow,
   getTomorrowWindow
-
 };
+
