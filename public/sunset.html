@@ -27,12 +27,12 @@ color: orange;
 <h1>Asheville Sunset Vibrance Index</h1>
 
 <div class="score" id="score">Loading...</div>
-
+<div id="alert"></div>
 <script>
 
 async function loadSunset() {
 
-const response = await fetch("/api/sunsetIndex");
+const response = await fetch("/api/sunsetAlert");
 const data = await response.json();
 
 let label = "";
@@ -46,6 +46,15 @@ else label = "☁️ Poor";
 
 document.getElementById("score").innerText =
 data.sunsetIndex + " — " + label;
+
+if (data.alert) {
+
+document.getElementById("alert").innerHTML =
+"<h2>🌇 Sunset Alert</h2>" +
+"<p>" + data.alert.message + "</p>" +
+"<p>Peak color: " + data.alert.peakColorWindow + "</p>";
+
+}
 
 }
 
