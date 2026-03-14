@@ -106,14 +106,13 @@ function dedupeBullets(bullets) {
   const result = [];
 
   bullets.forEach(b => {
-    // Normalize for comparison
     const key = b
       .toLowerCase()
       .replace(/[^a-z0-9 ]/g, "")   // remove punctuation
       .replace(/\bjacket\b/g, "coat")
       .replace(/\bchilly\b/g, "cold")
       .replace(/\bearly\b/g, "morning")
-      .replace(/\bwindy\b/g, "breezy")
+      .replace(/\bcold morning\b/g, "cold morning")
       .trim();
 
     if (!seen.has(key)) {
