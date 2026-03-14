@@ -123,7 +123,7 @@ function to12Hour(h) {
 }
 
 /**
- * Update today's human‑action outlook.
+ * Update today's human‑action outlook — now with hybrid bullet list.
  */
 export function updateToday(today) {
   const now = new Date();
@@ -132,6 +132,7 @@ export function updateToday(today) {
 
   const todayModule = document.querySelector(".today-module");
 
+  // End-of-day fade
   if (today.isEndOfDay || isAfter7pm) {
     document.getElementById("today-emoji").textContent = "🌙";
     document.getElementById("today-headline").textContent =
@@ -139,15 +140,36 @@ export function updateToday(today) {
     document.getElementById("today-text").textContent =
       "Fresh forecast updates arrive tomorrow morning.";
 
+    // Clear bullets at night
+    const bulletBox = document.getElementById("today-bullets");
+    if (bulletBox) bulletBox.innerHTML = "";
+
     todayModule.classList.add("fade-out");
     return;
   }
 
+  // Normal daytime rendering
   document.getElementById("today-emoji").textContent = today.emoji;
   document.getElementById("today-headline").textContent = today.headline;
   document.getElementById("today-text").textContent = today.text;
 
   todayModule.classList.remove("fade-out");
+
+  // ⭐ BULLET LIST RENDERING (Hybrid style)
+  const bulletBox = document.getElementById("today-bullets");
+  if (bulletBox) {
+    bulletBox.innerHTML = today.bullets
+      .map(b => {
+        // If bullet already starts with an emoji → keep it
+        const hasEmoji = /^[\p{Emoji}]/u.test(b);
+
+        // Otherwise use a clean bullet dot
+        const prefix = hasEmoji ? "" : "• ";
+
+        return `<div class="today-bullet">${prefix}${b}</div>`;
+      })
+      .join("");
+  }
 }
 
 /**
@@ -238,8 +260,6 @@ export function updateUI(intel) {
   updateComfort(intel.comfort);
   updateToday(intel.today);
   updateTomorrow(intel.tomorrow);
-
-  // ⭐ ALERTS REMOVED — no renderForecastIcons()
 
   updateStationFooter(intel.wu.stationId, intel.updatedAt);
 
