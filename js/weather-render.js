@@ -40,6 +40,27 @@ export function renderCurrentObservations(intel) {
     solarEl.textContent = wu.solarRadiation != null ? wu.solarRadiation : "--";
   }
 }
+// Temperature color class
+if (tempEl) {
+  const t = wu.temp;
+  tempEl.className = "";
+  if (t <= 32) tempEl.classList.add("temp-freezing");
+  else if (t <= 45) tempEl.classList.add("temp-cold");
+  else if (t <= 60) tempEl.classList.add("temp-cool");
+  else if (t <= 75) tempEl.classList.add("temp-mild");
+  else if (t <= 85) tempEl.classList.add("temp-warm");
+  else tempEl.classList.add("temp-hot");
+}
+
+// Dew point color class
+if (dewEl) {
+  const d = wu.dewPoint;
+  dewEl.className = "";
+  if (d <= 40) dewEl.classList.add("dew-dry");
+  else if (d <= 55) dewEl.classList.add("dew-comfort");
+  else if (d <= 70) dewEl.classList.add("dew-humid");
+  else dewEl.classList.add("dew-tropical");
+}
 // ------------------------------------------------------------
 // Compass helper (used by intel-plus)
 // ------------------------------------------------------------
