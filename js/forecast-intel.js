@@ -1,8 +1,12 @@
-// ----------------------------------------------------
-// PART 1 — Core Helpers + Hourly Window Tools
-// ----------------------------------------------------
+// ============================================================
+// forecast-intel.js (Option A Edition)
+// Full rewrite — Section 1 of 4
+// Core Helpers + Stats + Descriptors + Dominant Factor
+// ============================================================
 
-// Basic math helpers
+// ------------------------------------------------------------
+// BASIC HELPERS
+// ------------------------------------------------------------
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
@@ -12,95 +16,19 @@ function avg(arr) {
   return arr.reduce((a, b) => a + b, 0) / arr.length;
 }
 
-// ----------------------------------------------------
-// LOW-IMPACT PHRASE ROTATION
-// ----------------------------------------------------
-let lastLowImpactPhrase = null;
-
-export function getLowImpactPhrase(tempHighF, isGoldilocks) {
-  if (isGoldilocks) return "Goldilocks! Just right!";
-
-  const coolPhrases = [
-    "Mild and seemingly uneventful.",
-    "Quiet and comfortably straightforward.",
-    "A gentle, low‑impact kind of day."
-  ];
-
-  const warmPhrases = [
-    "Calm and easygoing overall.",
-    "Nothing demanding on the weather front.",
-    "A simple, low‑stress kind of day."
-  ];
-
-  let pool;
-  if (tempHighF >= 68) pool = warmPhrases;
-  else if (tempHighF <= 55) pool = coolPhrases;
-  else pool = [...coolPhrases, ...warmPhrases];
-
-  const options = pool.filter(p => p !== lastLowImpactPhrase);
-  const choice = options[Math.floor(Math.random() * options.length)];
-  lastLowImpactPhrase = choice;
-  return choice;
-}
-
-// ----------------------------------------------------
-// Time helpers
-// ----------------------------------------------------
 function toLocalDate(isoString) {
   return new Date(isoString);
 }
 
-function sameCalendarDay(a, b) {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
-}
-
 function to12Hour(hour) {
-  const h = hour % 24;
-  const suffix = h >= 12 ? "PM" : "AM";
-  const base = h % 12 === 0 ? 12 : h % 12;
-  return `${base} ${suffix}`;
+  const h = hour % 12 || 12;
+  const suffix = hour >= 12 ? "PM" : "AM";
+  return `${h} ${suffix}`;
 }
 
-function getTodayFullWindow(hourly) {
-  const now = new Date();
-  return getHourlyWindowForDay(hourly, now);
-}
-
-function shouldSuppressTempDesc(swing) {
-  return swing >= 15 || swing <= -15;
-}
-
-// ----------------------------------------------------
-// Helper: Find tomorrow's 2 PM forecast index
-// ----------------------------------------------------
-function getTomorrow2pmIndex(hourly) {
-  const now = new Date();
-  const target = new Date(now);
-  target.setDate(now.getDate() + 1);
-  target.setHours(14, 0, 0, 0);
-
-  let bestIndex = 0;
-  let bestDiff = Infinity;
-
-  hourly.time.forEach((t, i) => {
-    const d = new Date(t);
-    const diff = Math.abs(d - target);
-    if (diff < bestDiff) {
-      bestDiff = diff;
-      bestIndex = i;
-    }
-  });
-
-  return bestIndex;
-}
-
-// ----------------------------------------------------
-// Core window selector for any calendar day
-// ----------------------------------------------------
+// ------------------------------------------------------------
+// TIME + WINDOW HELPERS
+// ------------------------------------------------------------
 function getHourlyWindowForDay(hourly, targetDate) {
   const times = hourly.time || [];
   const indices = [];
@@ -119,22 +47,6 @@ function getHourlyWindowForDay(hourly, targetDate) {
   return indices;
 }
 
-// ----------------------------------------------------
-// TOMORROW WINDOW — 00:00 → 23:59 (requires 6 hours)
-// ----------------------------------------------------
-function getTomorrowWindow(hourly) {
-  const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setDate(now.getDate() + 1);
-
-  const indices = getHourlyWindowForDay(hourly, tomorrow);
-  if (indices.length < 6) return [];
-  return indices;
-}
-
-// ----------------------------------------------------
-// TODAY WINDOW — Now → Midnight (requires 3 hours)
-// ----------------------------------------------------
 function getTodayRemainingWindow(hourly) {
   const times = hourly.time || [];
   const indices = [];
@@ -152,9 +64,16 @@ function getTodayRemainingWindow(hourly) {
   return indices;
 }
 
-// ----------------------------------------------------
-// Slice helper — extracts only the selected hours
-// ----------------------------------------------------
+function getTomorrowWindow(hourly) {
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(now.getDate() + 1);
+
+  const indices = getHourlyWindowForDay(hourly, tomorrow);
+  if (indices.length < 6) return [];
+  return indices;
+}
+
 function sliceHourly(hourly, indices) {
   const result = {};
   for (const key of Object.keys(hourly)) {
@@ -165,130 +84,9 @@ function sliceHourly(hourly, indices) {
   return result;
 }
 
-// ----------------------------------------------------
-// Daypart window (morning, afternoon, evening, etc.)
-// ----------------------------------------------------
-function getDaypartWindow(hourly, targetDate, startHour, endHour) {
-  const times = hourly.time || [];
-  const indices = [];
-
-  const start = new Date(targetDate);
-  start.setHours(startHour, 0, 0, 0);
-
-  const end = new Date(targetDate);
-  end.setHours(endHour, 59, 59, 999);
-
-  for (let i = 0; i < times.length; i++) {
-    const t = toLocalDate(times[i]);
-    if (t >= start && t <= end) indices.push(i);
-  }
-
-  return indices;
-}
-
-// ----------------------------------------------------
-// TIMING HELPERS — index-based, human-friendly
-// ----------------------------------------------------
-function hourIndexToLocalHour(index) {
-  return index % 24;
-}
-
-function describeTimeOfDay(hourIndex) {
-  const hour = hourIndexToLocalHour(hourIndex);
-
-  if (hour >= 5 && hour < 9) return "early morning";
-  if (hour >= 9 && hour < 12) return "late morning";
-  if (hour >= 12 && hour < 15) return "early afternoon";
-  if (hour >= 15 && hour < 18) return "late afternoon";
-  if (hour >= 18 && hour < 22) return "evening";
-  return "overnight";
-}
-
-function findEventTiming(windowed, start, end, conditionFn) {
-  let first = null;
-  let last = null;
-
-  for (let i = start; i <= end; i++) {
-    if (conditionFn(i, windowed)) {
-      if (first === null) first = i;
-      last = i;
-    }
-  }
-
-  return { firstHour: first, lastHour: last };
-}
-
-function timingPhrase(timing, isTomorrow) {
-  if (timing.firstHour === null || timing.lastHour === null) return "";
-
-  const start = timing.firstHour;
-  const end = timing.lastHour;
-  const duration = end - start + 1;
-
-  const startPart = describeTimeOfDay(start);
-  const endPart = describeTimeOfDay(end);
-
-  const dayLabel = isTomorrow ? " tomorrow" : "";
-
-  if (duration >= 8 || (startPart === "early morning" && endPart === "evening")) {
-    return ` throughout the day${dayLabel}`;
-  }
-
-  const dayparts = new Set([startPart, endPart]);
-  if (dayparts.size >= 3) {
-    return ` most of the day${dayLabel}`;
-  }
-
-  const startHourLocal = hourIndexToLocalHour(start);
-  const endHourLocal = hourIndexToLocalHour(end);
-  if (startHourLocal >= 22 || endHourLocal <= 6) {
-    return ` overnight${dayLabel}`;
-  }
-
-  if (startPart === endPart) {
-    return ` ${startPart}${dayLabel}`;
-  }
-
-  return ` from ${startPart}${dayLabel} into ${endPart}${dayLabel}`;
-}
-
-// ----------------------------------------------------
-// EVENT CONDITION HELPERS
-// ----------------------------------------------------
-function isRain(i, windowed) {
-  return (windowed.precipitation[i] ?? 0) > 0.02;
-}
-
-function isSnow(i, windowed) {
-  const amt = windowed.snowfall[i] ?? 0;
-  if (amt < 0.2) return false;
-  if (amt < 0.5) return false;
-  return true;
-}
-
-function isWind(i, windowed) {
-  return (windowed.windgusts_10m[i] ?? 0) >= 30;
-}
-
-function isFreeze(i, windowed) {
-  return (windowed.temperature_2m[i] ?? 999) <= 32;
-}
-
-function isHardFreeze(i, windowed) {
-  return (windowed.temperature_2m[i] ?? 999) <= 28;
-}
-
-function isHeat(i, windowed) {
-  return (
-    (windowed.temperature_2m[i] ?? 0) >= 88 &&
-    (windowed.dewpoint_2m[i] ?? 0) >= 68
-  );
-}
-// ----------------------------------------------------
-// PART 2 — Stats + Derived Metrics
-// ----------------------------------------------------
-
-// Generic stats helper
+// ------------------------------------------------------------
+// STATS HELPERS
+// ------------------------------------------------------------
 function basicStats(arr) {
   if (!arr || !arr.length) {
     return { min: null, max: null, avg: null };
@@ -304,73 +102,55 @@ function basicStats(arr) {
     sum += v;
   }
 
-  return {
-    min,
-    max,
-    avg: sum / arr.length
-  };
+  return { min, max, avg: sum / arr.length };
 }
 
-// Temperature stats
-function getTempStats(windowed) {
-  return basicStats(windowed.temperature_2m || []);
+function getTempStats(win) {
+  return basicStats(win.temperature_2m || []);
 }
 
-// Dewpoint stats
-function getDewStats(windowed) {
-  return basicStats(windowed.dewpoint_2m || []);
+function getDewStats(win) {
+  return basicStats(win.dewpoint_2m || []);
 }
 
-// Wind gust stats
-function getWindGustStats(windowed) {
-  return basicStats(windowed.windgusts_10m || []);
+function getWindStats(win) {
+  return basicStats(win.windgusts_10m || []);
 }
 
-// UV index stats
-function getUVStats(windowed) {
-  return basicStats(windowed.uv_index || []);
-}
-
-// Total precipitation (liquid)
-function getPrecipTotal(windowed) {
-  const arr = windowed.precipitation || [];
+function getPrecipTotal(win) {
+  const arr = win.precipitation || [];
   return arr.length ? arr.reduce((a, b) => a + b, 0) : 0;
 }
 
-// Total snowfall
-function getSnowTotal(windowed) {
-  const arr = windowed.snowfall || [];
+function getSnowTotal(win) {
+  const arr = win.snowfall || [];
   return arr.length ? arr.reduce((a, b) => a + b, 0) : 0;
 }
 
-// ----------------------------------------------------
-// PART 3 — Descriptors + Simple Impact Helpers
-// ----------------------------------------------------
-
-// Precipitation descriptor (rain + snow)
+// ------------------------------------------------------------
+// DESCRIPTORS
+// ------------------------------------------------------------
 function describePrecip(precipTotal, snowTotal) {
   if (snowTotal >= 1.0) return "accumulating snow";
   if (snowTotal >= 0.5) return "light accumulating snow";
   if (snowTotal >= 0.2) return "a few flurries";
   if (snowTotal > 0)   return "a stray flake or two";
 
-  if (precipTotal < 0.02) return "mainly dry";
+  if (precipTotal < 0.02) return "mainly dry conditions";
   if (precipTotal < 0.10) return "a few light showers";
   if (precipTotal < 0.25) return "on-and-off showers";
   if (precipTotal < 0.75) return "a soaking rain at times";
   return "periods of heavy rain";
 }
 
-// Wind descriptor
 function describeWind(gustMax) {
-  if (gustMax >= 45) return "Very windy";
-  if (gustMax >= 40) return "Quite gusty";
-  if (gustMax >= 35) return "Breezy at times";
-  if (gustMax >= 30) return "A light breeze";
-  return "Generally light wind";
+  if (gustMax >= 45) return "very windy conditions";
+  if (gustMax >= 40) return "quite gusty winds";
+  if (gustMax >= 35) return "breezy at times";
+  if (gustMax >= 30) return "a light breeze";
+  return "generally light winds";
 }
 
-// Temperature descriptor (range-based)
 function describeTempRange(stats) {
   if (!stats || stats.min == null || stats.max == null) {
     return "temperature details unavailable";
@@ -385,10 +165,7 @@ function describeTempRange(stats) {
   return "a hot day overall";
 }
 
-// Simple current vs high descriptor for Today
 function describeTemp(tempNow, tempHigh) {
-  if (tempNow == null || tempHigh == null) return "";
-
   if (tempHigh <= 40) return "a cold day overall";
   if (tempHigh <= 55) return "a cool day overall";
   if (tempHigh <= 72) return "a mild day overall";
@@ -396,9 +173,9 @@ function describeTemp(tempNow, tempHigh) {
   return "a hot day overall";
 }
 
-// ----------------------------------------------------
-// SHARED PHRASE MERGER
-// ----------------------------------------------------
+// ------------------------------------------------------------
+// PHRASE MERGER (shared)
+// ------------------------------------------------------------
 function mergePhrases(...parts) {
   const cleaned = parts
     .filter(Boolean)
@@ -430,45 +207,30 @@ function mergePhrases(...parts) {
   return first + " with " + rest.join(" and ");
 }
 
-// ----------------------------------------------------
-// PART 4 — Dominant Factor Scoring
-// ----------------------------------------------------
+// ------------------------------------------------------------
+// DOMINANT FACTOR SCORING
+// ------------------------------------------------------------
 function getDominantFactor(tempHigh, gustMax, precipTotal, snowTotal) {
   const drivers = [];
 
   if (snowTotal >= 0.5) {
-    drivers.push({
-      type: "snow",
-      score: 80 + snowTotal * 10
-    });
+    drivers.push({ type: "snow", score: 80 + snowTotal * 10 });
   }
 
   if (snowTotal === 0 && precipTotal >= 0.10) {
-    drivers.push({
-      type: "rain",
-      score: 55 + precipTotal * 20
-    });
+    drivers.push({ type: "rain", score: 55 + precipTotal * 20 });
   }
 
   if (gustMax >= 40) {
-    drivers.push({
-      type: "wind",
-      score: 50 + gustMax
-    });
+    drivers.push({ type: "wind", score: 50 + gustMax });
   }
 
   if (tempHigh >= 88) {
-    drivers.push({
-      type: "heat",
-      score: 55 + (tempHigh - 88) * 2
-    });
+    drivers.push({ type: "heat", score: 55 + (tempHigh - 88) * 2 });
   }
 
   if (tempHigh <= 35) {
-    drivers.push({
-      type: "cold",
-      score: 55 + (35 - tempHigh) * 2
-    });
+    drivers.push({ type: "cold", score: 55 + (35 - tempHigh) * 2 });
   }
 
   if (
@@ -478,129 +240,43 @@ function getDominantFactor(tempHigh, gustMax, precipTotal, snowTotal) {
     tempHigh >= 60 &&
     tempHigh <= 75
   ) {
-    drivers.push({
-      type: "goldilocks",
-      score: 40
-    });
+    drivers.push({ type: "goldilocks", score: 40 });
   }
 
-  if (!drivers.length) {
-    return "easy";
-  }
+  if (!drivers.length) return "easy";
 
   drivers.sort((a, b) => b.score - a.score);
   return drivers[0].type;
 }
+// ============================================================
+// PART 2 — TODAY — Human‑Action Outlook (Option A)
+// ============================================================
 
-// ----------------------------------------------------
-// SHARED ACTION MAPPING FUNCTION
-// ----------------------------------------------------
-function mapActionOutcome(
-  dominant,
-  tempDesc,
-  precipDesc,
-  windDesc,
-  tempHighF,
-  isGoldilocks
-) {
-  let badgeText = "No Hazards";
-  let badgeClass = "badge-easy";
-  let emoji = "🙂";
+// Clothing helper — returns a short phrase or null
+function getClothingAdviceToday(tempNow, tempHigh, dewNow, gustMax) {
+  const advice = [];
 
-  let action = getLowImpactPhrase(tempHighF, isGoldilocks);
+  if (tempNow <= 32) advice.push("warm layers recommended");
+  else if (tempNow <= 45) advice.push("a jacket helps early");
+  else if (tempHigh >= 75) advice.push("short sleeves feel good");
+  else if (tempHigh - tempNow >= 18) advice.push("layers helpful with the warm‑up");
 
-  let reason = mergePhrases(tempDesc, precipDesc, windDesc);
-  reason = reason.charAt(0).toUpperCase() + reason.slice(1) + ".";
+  if (gustMax >= 30) advice.push("wind‑resistant layers useful");
+  if (dewNow >= 65) advice.push("light, breathable clothing helps");
 
-  switch (dominant) {
-    case "snow":
-      badgeText = "Snow Impact";
-      badgeClass = "badge-snow";
-      emoji = "❄️";
-      action = "Allow extra travel time.";
-      reason = mergePhrases(
-        precipDesc,
-        "roads could become slick",
-        windDesc
-      );
-      reason = reason.charAt(0).toUpperCase() + reason.slice(1) + ".";
-      break;
+  if (!advice.length) return null;
 
-    case "rain":
-      badgeText = "Rain Gear";
-      badgeClass = "badge-rain";
-      emoji = "🌧️";
-      action = "Bring a rain jacket.";
-      reason = mergePhrases(precipDesc, windDesc);
-      reason = reason.charAt(0).toUpperCase() + reason.slice(1) + ".";
-      break;
-
-    case "wind":
-      badgeText = "Wind Alert";
-      badgeClass = "badge-wind";
-      emoji = "💨";
-      action = "Secure loose outdoor items...and your hair.";
-      reason = mergePhrases(windDesc, tempDesc);
-      reason = reason.charAt(0).toUpperCase() + reason.slice(1) + ".";
-      break;
-
-    case "heat":
-      badgeText = "Heat Caution";
-      badgeClass = "badge-heat";
-      emoji = "🥵";
-      action = "Stay hydrated.";
-      reason = mergePhrases(
-        tempDesc,
-        "heat index may rise during the afternoon"
-      );
-      reason = reason.charAt(0).toUpperCase() + reason.slice(1) + ".";
-      break;
-
-    case "cold":
-      badgeText = "Cold Prep";
-      badgeClass = "badge-cold";
-      emoji = "🥶";
-      action = "Dress in warm layers.";
-      reason = mergePhrases(
-        tempDesc,
-        "wind may make it feel colder"
-      );
-      reason = reason.charAt(0).toUpperCase() + reason.slice(1) + ".";
-      break;
-
-    case "goldilocks":
-      badgeText = "Goldilocks Day";
-      badgeClass = "badge-goldilocks";
-      emoji = "🌟";
-      action = "Make outdoor plans.";
-      reason = mergePhrases(
-        tempDesc,
-        "dry conditions",
-        "light winds"
-      );
-      reason = reason.charAt(0).toUpperCase() + reason.slice(1) + ".";
-      break;
-
-    case "easy":
-    default:
-      break;
-  }
-
-  return {
-    badge: { text: badgeText, class: badgeClass },
-    emoji,
-    headline: action,
-    text: reason
-  };
+  // Return a single merged clothing phrase
+  return advice[0];
 }
-// ====================================================
-// PART 5 — TODAY — Human‑Action Outlook (Now → Midnight)
-// (Bullet engine + end‑of‑day override)
-// ====================================================
+
+// ------------------------------------------------------------
+// TODAY ACTION OUTLOOK (Option A)
+// ------------------------------------------------------------
 export function getTodayActionOutlook(hourly) {
   const indices = getTodayRemainingWindow(hourly);
 
-  // END‑OF‑DAY OVERRIDE (Trigger #2)
+  // END‑OF‑DAY OVERRIDE
   if (!indices.length) {
     return {
       badge: { text: "No Hazards", class: "badge-easy" },
@@ -621,7 +297,7 @@ export function getTodayActionOutlook(hourly) {
   const dew = hourly.dewpoint_2m;
   const gusts = hourly.windgusts_10m;
   const precip = hourly.precipitation;
-  const snow = hourly.snowfall;
+  const snow = hourly.snowfall || [];
 
   const tempNow = temps[currentHour];
   const tempHigh = Math.max(...temps.slice(currentHour, currentHour + 12));
@@ -630,22 +306,61 @@ export function getTodayActionOutlook(hourly) {
   const dewNow = dew[currentHour];
   const gustMax = Math.max(...gusts.slice(currentHour, currentHour + 12));
   const precipTotal = precip.slice(currentHour, currentHour + 12).reduce((a, b) => a + b, 0);
-  const snowTotal = snow ? snow.slice(currentHour, currentHour + 12).reduce((a, b) => a + b, 0) : 0;
+  const snowTotal = snow.slice(currentHour, currentHour + 12).reduce((a, b) => a + b, 0);
 
-  // Determine dominant factor
+  // Dominant factor
   const dominant = getDominantFactor(tempHigh, gustMax, precipTotal, snowTotal);
 
-  // Base outcome (emoji, headline, main sentence)
-  const base = mapActionOutcome(
-    dominant,
-    describeTemp(tempNow, tempHigh),
-    describePrecip(precipTotal, snowTotal),
-    describeWind(gustMax),
-    tempHigh,
-    isGoldilocks(tempNow, tempHigh)
-  );
+  // Base descriptors
+  const tempDesc = describeTemp(tempNow, tempHigh);
+  const precipDesc = describePrecip(precipTotal, snowTotal);
+  const windDesc = describeWind(gustMax);
 
-  // Build bullets (warm, human, Asheville‑aware)
+  // Clothing logic (A2)
+  const clothing = getClothingAdviceToday(tempNow, tempHigh, dewNow, gustMax);
+
+  // Build main sentence (Option A)
+  let mainSentence = mergePhrases(tempDesc, precipDesc, windDesc);
+  if (clothing && (dominant === "cold" || dominant === "heat" || dominant === "wind")) {
+    mainSentence = mergePhrases(mainSentence, clothing);
+  }
+  mainSentence = mainSentence.charAt(0).toUpperCase() + mainSentence.slice(1) + ".";
+
+  // Emoji + headline (unchanged)
+  let emoji = "🙂";
+  let headline = "A straightforward day.";
+
+  switch (dominant) {
+    case "snow":
+      emoji = "❄️";
+      headline = "Allow extra travel time.";
+      break;
+    case "rain":
+      emoji = "🌧️";
+      headline = "Bring a rain jacket.";
+      break;
+    case "wind":
+      emoji = "💨";
+      headline = "Secure loose outdoor items.";
+      break;
+    case "heat":
+      emoji = "🥵";
+      headline = "Stay hydrated.";
+      break;
+    case "cold":
+      emoji = "🥶";
+      headline = "Dress in warm layers.";
+      break;
+    case "goldilocks":
+      emoji = "🌟";
+      headline = "Make outdoor plans.";
+      break;
+    default:
+      emoji = "🙂";
+      headline = "A calm, easygoing day.";
+  }
+
+  // Build bullets (Option A — supporting details only)
   const bullets = buildTodayBullets({
     tempNow,
     tempHigh,
@@ -656,20 +371,24 @@ export function getTodayActionOutlook(hourly) {
     precipHours: precip.slice(currentHour, currentHour + 12),
     snowTotal,
     sunrise: hourly.sunrise,
-    sunset: hourly.sunset
+    sunset: hourly.sunset,
+    clothing
   });
 
   return {
-    ...base,
+    badge: { text: "Today", class: "badge-easy" },
+    emoji,
+    headline,
+    text: mainSentence,
     bullets,
     suppressMicroAdvice: false,
     isEndOfDay: false
   };
 }
 
-// ====================================================
-// TODAY BULLET ENGINE — Warm, human, Asheville‑aware
-// ====================================================
+// ------------------------------------------------------------
+// TODAY BULLET ENGINE (Option A)
+// ------------------------------------------------------------
 function buildTodayBullets({
   tempNow,
   tempHigh,
@@ -680,19 +399,20 @@ function buildTodayBullets({
   precipHours,
   snowTotal,
   sunrise,
-  sunset
+  sunset,
+  clothing
 }) {
   const bullets = [];
 
   // 🌡️ Temperature bullets
-  if (tempNow <= 32) bullets.push("Cold start — layers feel good this morning 🧥");
-  else if (tempNow <= 45) bullets.push("Chilly morning air — a light jacket helps.");
+  if (tempNow <= 32) bullets.push("Cold start — layers feel good this morning.");
+  else if (tempNow <= 45) bullets.push("Chilly morning air — a jacket helps.");
   else if (tempNow <= 55) bullets.push("Cool but comfortable — layers work well.");
   else if (tempHigh >= 75) bullets.push("Warm afternoon ahead — short sleeves weather.");
   else if (tempHigh - tempLow >= 18) bullets.push("Big warm‑up from morning to afternoon.");
 
   // 💨 Wind bullets
-  if (gustMax >= 35) bullets.push("Gusty at times — you’ll notice it 💨");
+  if (gustMax >= 35) bullets.push("Gusty at times — you’ll notice it.");
   else if (gustMax >= 22) bullets.push("A bit breezy this afternoon.");
 
   // 🌧️ Rain bullets
@@ -700,7 +420,7 @@ function buildTodayBullets({
     const firstWet = precipHours.findIndex(v => v > 0.02);
     if (firstWet !== -1) {
       const hour = new Date().getHours() + firstWet;
-      bullets.push(`Rain may drift in around ${to12Hour(hour)} 🌧️`);
+      bullets.push(`Rain may drift in around ${to12Hour(hour)}.`);
     } else {
       bullets.push("Spotty showers possible later today.");
     }
@@ -708,12 +428,12 @@ function buildTodayBullets({
 
   // ❄️ Snow bullets
   if (snowTotal > 0.05) {
-    if (snowTotal < 0.5) bullets.push("Light snow possible — nothing major ❄️");
-    else if (snowTotal < 2) bullets.push("Snow showers may coat colder spots ❄️");
-    else bullets.push("Accumulating snow possible — travel may slow down ❄️");
+    if (snowTotal < 0.5) bullets.push("Light snow possible — nothing major.");
+    else if (snowTotal < 2) bullets.push("Snow showers may coat colder spots.");
+    else bullets.push("Accumulating snow possible — travel may slow down.");
   }
 
-  // 💧 Humidity / comfort bullets
+  // 💧 Humidity bullets
   if (dewNow >= 65) bullets.push("Humidity may feel noticeable at times.");
   else if (dewNow <= 25) bullets.push("Dry air — very comfortable outside.");
 
@@ -721,7 +441,7 @@ function buildTodayBullets({
   if (sunrise && sunrise.length > 0) {
     const sunriseHour = new Date(sunrise[0]).getHours();
     if (new Date().getHours() < sunriseHour) {
-      bullets.push(`Sunrise around ${to12Hour(sunriseHour)} — early light.`);
+      bullets.push(`Sunrise around ${to12Hour(sunriseHour)}.`);
     }
   }
 
@@ -734,7 +454,7 @@ function buildTodayBullets({
 
   // 🏔️ Mountain microclimate bullets
   if (gustMax >= 20 && tempHigh <= 55) {
-    bullets.push("Cooler on the ridges — breezy in the higher spots.");
+    bullets.push("Cooler on the ridges — breezy in higher spots.");
   }
 
   if (precipTotal > 0.05 && tempNow <= 40) {
@@ -745,14 +465,40 @@ function buildTodayBullets({
     bullets.push("Warm valley feel — a touch muggy in sheltered spots.");
   }
 
+  // 👕 Clothing bullet (Option A2 — only if not used in main sentence)
+  if (clothing) bullets.push(clothing.charAt(0).toUpperCase() + clothing.slice(1) + ".");
+
   // De‑duplicate + cap at 3
   const unique = [...new Set(bullets)];
   return unique.slice(0, 3);
 }
-// ====================================================
-// PART 6 — TOMORROW — Human‑Action Outlook (00:00 → 23:59)
-// (Planner‑friendly + bullet engine)
-// ====================================================
+// ============================================================
+// PART 3 — TOMORROW — Human‑Action Outlook (Option A)
+// ============================================================
+
+// Clothing helper — returns a short phrase or null
+function getClothingAdviceTomorrow(tempStats, dewStats, windStats) {
+  const advice = [];
+
+  const maxT = tempStats.max;
+  const minT = tempStats.min;
+  const avgDew = dewStats.avg ?? null;
+  const maxGust = windStats.max ?? 0;
+
+  if (maxT <= 40) advice.push("warm layers recommended");
+  else if (maxT <= 55) advice.push("a jacket helps");
+  else if (maxT >= 75) advice.push("short sleeves feel good");
+
+  if (maxGust >= 30) advice.push("wind‑resistant layers useful");
+  if (avgDew >= 65) advice.push("light, breathable clothing helps");
+
+  if (!advice.length) return null;
+  return advice[0];
+}
+
+// ------------------------------------------------------------
+// TOMORROW ACTION OUTLOOK (Option A)
+// ------------------------------------------------------------
 export function getHumanActionOutlook(hourly) {
   const indices = getTomorrowWindow(hourly);
 
@@ -767,9 +513,10 @@ export function getHumanActionOutlook(hourly) {
   }
 
   const win = sliceHourly(hourly, indices);
+
   const tempStats = getTempStats(win);
   const dewStats = getDewStats(win);
-  const windStats = getWindGustStats(win);
+  const windStats = getWindStats(win);
   const precipTotal = getPrecipTotal(win);
   const snowTotal = getSnowTotal(win);
 
@@ -792,40 +539,83 @@ export function getHumanActionOutlook(hourly) {
 
   const dominant = getDominantFactor(tempHighF, gustMax, precipTotal, snowTotal);
 
-  const base = mapActionOutcome(
-    dominant,
-    tempDesc,
-    precipDesc,
-    windDesc,
-    tempHighF,
-    isGoldilocks
-  );
+  // Clothing logic (A2)
+  const clothing = getClothingAdviceTomorrow(tempStats, dewStats, windStats);
 
+  // Build main sentence (Option A)
+  let mainSentence = mergePhrases(tempDesc, precipDesc, windDesc);
+
+  if (clothing && (dominant === "cold" || dominant === "heat" || dominant === "wind")) {
+    mainSentence = mergePhrases(mainSentence, clothing);
+  }
+
+  mainSentence = mainSentence.charAt(0).toUpperCase() + mainSentence.slice(1) + ".";
+
+  // Emoji + headline
+  let emoji = "🙂";
+  let headline = "A straightforward day.";
+
+  switch (dominant) {
+    case "snow":
+      emoji = "❄️";
+      headline = "Allow extra travel time.";
+      break;
+    case "rain":
+      emoji = "🌧️";
+      headline = "Bring a rain jacket.";
+      break;
+    case "wind":
+      emoji = "💨";
+      headline = "Factor in the wind.";
+      break;
+    case "heat":
+      emoji = "🥵";
+      headline = "Stay hydrated.";
+      break;
+    case "cold":
+      emoji = "🥶";
+      headline = "Dress in warm layers.";
+      break;
+    case "goldilocks":
+      emoji = "🌟";
+      headline = "Make outdoor plans.";
+      break;
+    default:
+      emoji = "🙂";
+      headline = "A calm, easygoing day.";
+  }
+
+  // Build bullets (Option A — supporting details only)
   const bullets = buildTomorrowBullets({
     win,
     tempStats,
     dewStats,
     windStats,
     precipTotal,
-    snowTotal
+    snowTotal,
+    clothing
   });
 
   return {
-    ...base,
+    badge: { text: isGoldilocks ? "Goldilocks Day" : "Tomorrow", class: isGoldilocks ? "badge-goldilocks" : "badge-easy" },
+    emoji,
+    headline,
+    text: mainSentence,
     bullets
   };
 }
 
-// ====================================================
-// TOMORROW BULLET ENGINE — Planner‑friendly
-// ====================================================
+// ------------------------------------------------------------
+// TOMORROW BULLET ENGINE (Option A)
+// ------------------------------------------------------------
 function buildTomorrowBullets({
   win,
   tempStats,
   dewStats,
   windStats,
   precipTotal,
-  snowTotal
+  snowTotal,
+  clothing
 }) {
   const bullets = [];
 
@@ -834,10 +624,11 @@ function buildTomorrowBullets({
   const avgT = tempStats.avg;
   const maxGust = windStats.max ?? 0;
   const avgDew = dewStats.avg ?? null;
+
   const precipArr = win.precipitation || [];
   const snowArr = win.snowfall || [];
 
-  // 🌡️ Temperature / planner bullets
+  // 🌡️ Temperature bullets
   if (maxT != null && minT != null) {
     if (maxT <= 40) bullets.push("Plan for a cold day overall.");
     else if (maxT <= 55) bullets.push("Plan for a cool day overall.");
@@ -846,18 +637,19 @@ function buildTomorrowBullets({
     else bullets.push("Plan for a hot afternoon.");
   }
 
-  // 💧 Humidity / comfort
+  // 💧 Humidity bullets
   if (avgDew != null) {
     if (avgDew >= 65) bullets.push("Humidity may feel noticeable at times.");
     else if (avgDew <= 25) bullets.push("Air stays dry and comfortable.");
   }
 
-  // 💨 Wind
+  // 💨 Wind bullets
   if (maxGust >= 35) bullets.push("Gusty at times — factor in wind for outdoor plans.");
   else if (maxGust >= 22) bullets.push("A bit breezy, especially in the afternoon.");
 
-  // 🌧️ Rain timing (planner‑friendly)
-  const rainTiming = findEventTiming(win, 0, (win.time || []).length - 1, isRain);
+  // 🌧️ Rain timing
+  const rainTiming = findEventTiming(win, 0, (win.time || []).length - 1, (i, w) => (w.precipitation[i] ?? 0) > 0.02);
+
   if (precipTotal > 0.05 && rainTiming.firstHour !== null) {
     const phrase = timingPhrase(rainTiming, true);
     bullets.push(`Rain most likely${phrase}.`);
@@ -865,7 +657,7 @@ function buildTomorrowBullets({
     bullets.push("Scattered showers possible at times.");
   }
 
-  // ❄️ Snow
+  // ❄️ Snow bullets
   const snowTotalTomorrow = snowArr.length
     ? snowArr.reduce((a, b) => a + b, 0)
     : snowTotal;
@@ -876,40 +668,25 @@ function buildTomorrowBullets({
     else bullets.push("Accumulating snow could slow travel at times.");
   }
 
-  // 🏔️ Simple mountain microclimate nod
+  // 🏔️ Mountain microclimate
   if (maxGust >= 20 && maxT <= 55) {
     bullets.push("Cooler and breezier on higher ridges.");
   }
+
+  // 👕 Clothing bullet (Option A2 — only if not used in main sentence)
+  if (clothing) bullets.push(clothing.charAt(0).toUpperCase() + clothing.slice(1) + ".");
 
   // De‑duplicate + cap at 3
   const unique = [...new Set(bullets)];
   return unique.slice(0, 3);
 }
-// ----------------------------------------------------
-// PART 7 — Comfort Module 2.3 (Personality Edition)
-// ----------------------------------------------------
+// ============================================================
+// PART 4 — Comfort Module + Seasonal Context + Final Exports
+// ============================================================
 
-const NORMAL_HIGHS = {
-  0: 47, 1: 51, 2: 59, 3: 68, 4: 75, 5: 82,
-  6: 85, 7: 84, 8: 78, 9: 69, 10: 59, 11: 50
-};
-
-const NORMAL_LOWS = {
-  0: 28, 1: 31, 2: 36, 3: 43, 4: 52, 5: 60,
-  6: 64, 7: 63, 8: 57, 9: 46, 10: 37, 11: 31
-};
-
-function monthName(i) {
-  return [
-    "January","February","March","April","May","June",
-    "July","August","September","October","November","December"
-  ][i];
-}
-
-// ----------------------------------------------------
-// Comfort Category — returns:
-// "cold", "cool", "mild", "warm", "hot"
-// ----------------------------------------------------
+// ------------------------------------------------------------
+// Comfort Category
+// ------------------------------------------------------------
 export function getComfortCategory(temp, dew) {
   if (temp == null) return "mild";
 
@@ -920,9 +697,9 @@ export function getComfortCategory(temp, dew) {
   return "hot";
 }
 
-// ----------------------------------------------------
-// Comfort Summary — human‑friendly phrasing
-// ----------------------------------------------------
+// ------------------------------------------------------------
+// Comfort Summary
+// ------------------------------------------------------------
 export function getComfortSummary(temp, dew) {
   const cat = getComfortCategory(temp, dew);
 
@@ -942,9 +719,22 @@ export function getComfortSummary(temp, dew) {
   }
 }
 
-// ----------------------------------------------------
-// Seasonal Context — compares forecast to normals
-// ----------------------------------------------------
+// ------------------------------------------------------------
+// Seasonal Normals
+// ------------------------------------------------------------
+const NORMAL_HIGHS = {
+  0: 47, 1: 51, 2: 59, 3: 68, 4: 75, 5: 82,
+  6: 85, 7: 84, 8: 78, 9: 69, 10: 59, 11: 50
+};
+
+const NORMAL_LOWS = {
+  0: 28, 1: 31, 2: 36, 3: 43, 4: 52, 5: 60,
+  6: 64, 7: 63, 8: 57, 9: 46, 10: 37, 11: 31
+};
+
+// ------------------------------------------------------------
+// Seasonal Context
+// ------------------------------------------------------------
 export function getSeasonalContext(tempHigh, tempLow) {
   const m = new Date().getMonth();
   const normalHigh = NORMAL_HIGHS[m];
@@ -965,11 +755,10 @@ export function getSeasonalContext(tempHigh, tempLow) {
   if (!phrases.length) return "Typical for this time of year.";
   return phrases.join(", ") + ".";
 }
-// ----------------------------------------------------
-// PART 8 — Final Utility Helpers
-// ----------------------------------------------------
 
-// Goldilocks check (shared)
+// ------------------------------------------------------------
+// Goldilocks Check (shared)
+// ------------------------------------------------------------
 function isGoldilocks(tempNow, tempHigh) {
   if (tempNow == null || tempHigh == null) return false;
   return (
@@ -980,20 +769,14 @@ function isGoldilocks(tempNow, tempHigh) {
   );
 }
 
-// Simple fallback for missing arrays
-function safeArray(arr) {
-  return Array.isArray(arr) ? arr : [];
-}
-
-// ----------------------------------------------------
-// EXPORTS (already exported inline where needed)
-// ----------------------------------------------------
-// getLowImpactPhrase
+// ------------------------------------------------------------
+// Final Exports (already exported inline where needed)
+// ------------------------------------------------------------
 // getTodayActionOutlook
 // getHumanActionOutlook
 // getComfortCategory
 // getComfortSummary
 // getSeasonalContext
 
-// Everything else is intentionally kept internal.
-// ----------------------------------------------------
+// Everything else is intentionally internal.
+// ============================================================
