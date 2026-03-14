@@ -775,7 +775,93 @@ export function getTodayActionOutlook(hourly) {
     text: todayText
   };
 }
+// ===============================================
+// TODAY ACTION OUTLOOK (with warm human bullets)
+// ===============================================
+export function getTodayActionOutlook(hourly) {
+  const now = new Date();
+  const currentHour = now.getHours();
 
+  // Pull key stats
+  const temps = hourly.temperature_2m;
+  const gusts = hourly.windgusts_10m;
+  const precip = hourly.precipitation;
+
+  const tempNow = temps[currentHour];
+  const tempHigh = Math.max(...temps.slice(currentHour, currentHour + 12));
+  const tempLow = Math.min(...temps.slice(currentHour, currentHour + 12));
+
+  const gustMax = Math.max(...gusts.slice(currentHour, currentHour + 12));
+  const precipTotal = precip.slice(currentHour, currentHour + 12).reduce((a, b) => a + b, 0);
+
+  // Determine dominant factor (existing logic)
+  const dominant = getDominantFactor(tempHigh, gustMax, precipTotal);
+
+  // Get the base outcome (emoji, headline, text)
+  const base = mapActionOutcome(
+    dominant,
+    describeTemp(tempNow, tempHigh),
+    describePrecip(precipTotal),
+    describeWind(gustMax),
+    tempHigh,
+    isGoldilocks(tempNow, tempHigh)
+  );
+
+  // Build bullets
+  const bullets = buildTodayBullets({
+    tempNow,
+    tempHigh,
+    tempLow,
+    gustMax,
+    precipTotal,
+    precipHours: precip.slice(currentHour, currentHour + 12)
+  });
+
+  return {
+    ...base,
+    bullets,
+    suppressMicroAdvice: false
+  };
+}
+
+// ===============================================
+// BULLET ENGINE — Warm, human, Asheville‑friendly
+// ===============================================
+function buildTodayBullets({ tempNow, tempHigh, tempLow, gustMax, precipTotal, precipHours }) {
+  const bullets = [];
+
+  // 🌡️ Temperature bullets
+  if (tempNow <= 40) bullets.push("Chilly start — a light jacket feels good.");
+  else if (tempNow <= 50) bullets.push("Cool morning air — layers help.");
+  else if (tempHigh >= 75) bullets.push("Warm afternoon ahead — short sleeves weather.");
+
+  // 💨 Wind bullets
+  if (gustMax >= 30) bullets.push("Gusty at times — you’ll notice it 💨");
+  else if (gustMax >= 20) bullets.push("A bit breezy this afternoon.");
+
+  // 🌧️ Rain bullets
+  if (precipTotal > 0.05) {
+    const firstWet = precipHours.findIndex(v => v > 0.02);
+    if (firstWet !== -1) {
+      const hour = new Date().getHours() + firstWet;
+      const label = to12Hour(hour);
+      bullets.push(`Rain may drift in around ${label} 🌧️`);
+    } else {
+      bullets.push("Spotty showers possible later today.");
+    }
+  }
+
+  // 🌡️ Temperature swing
+  if (tempHigh - tempLow >= 18) {
+    bullets.push("Big warm‑up from morning to afternoon.");
+  }
+
+  // Remove duplicates
+  const unique = [...new Set(bullets)];
+
+  // Limit to 3 bullets max
+  return unique.slice(0, 3);
+}
 // ----------------------------------------------------
 // Clothing Logic (shared)
 // ----------------------------------------------------
