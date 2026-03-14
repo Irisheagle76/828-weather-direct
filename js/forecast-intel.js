@@ -1127,15 +1127,3 @@ function comfortEmoji(feel) {
     default: return "🙂";
   }
 }
-function comfortEmoji(feel) {
-  switch (feel) {
-    case "biting": return "🥶";
-    case "cold": return "🧥";
-    case "chilly": return "🧣";
-    case "cool": return "🍃";
-    case "mild": return "🙂";
-    case "warm": return "🌤️";
-    case "hot": return "🥵";
-    default: return "🙂";
-  }
-}
