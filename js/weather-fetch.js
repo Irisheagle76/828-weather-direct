@@ -1,6 +1,6 @@
 // /js/weather-fetch.js
 
-const WU_API_KEY = "1c1033ad619046df9033ad6190f6df02";
+const WU_API_KEY = "09a5bd1deb4948caa5bd1deb4968cab8";
 
 /**
  * Get nearest Weather Underground PWS station for a lat/lon.
