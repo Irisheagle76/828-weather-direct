@@ -83,7 +83,71 @@ function sliceHourly(hourly, indices) {
   }
   return result;
 }
+// ------------------------------------------------------------
+// TIMING HELPERS — index-based, human-friendly
+// ------------------------------------------------------------
+function hourIndexToLocalHour(index) {
+  return index % 24;
+}
 
+function describeTimeOfDay(hourIndex) {
+  const hour = hourIndexToLocalHour(hourIndex);
+
+  if (hour >= 5 && hour < 9) return "early morning";
+  if (hour >= 9 && hour < 12) return "late morning";
+  if (hour >= 12 && hour < 15) return "early afternoon";
+  if (hour >= 15 && hour < 18) return "late afternoon";
+  if (hour >= 18 && hour < 22) return "evening";
+  return "overnight";
+}
+
+function findEventTiming(windowed, start, end, conditionFn) {
+  let first = null;
+  let last = null;
+
+  for (let i = start; i <= end; i++) {
+    if (conditionFn(i, windowed)) {
+      if (first === null) first = i;
+      last = i;
+    }
+  }
+
+  return { firstHour: first, lastHour: last };
+}
+
+function timingPhrase(timing, isTomorrow) {
+  if (timing.firstHour === null || timing.lastHour === null) return "";
+
+  const start = timing.firstHour;
+  const end = timing.lastHour;
+  const duration = end - start + 1;
+
+  const startPart = describeTimeOfDay(start);
+  const endPart = describeTimeOfDay(end);
+
+  const dayLabel = isTomorrow ? " tomorrow" : "";
+
+  if (duration >= 8 || (startPart === "early morning" && endPart === "evening")) {
+    return ` throughout the day${dayLabel}`;
+  }
+
+  const dayparts = new Set([startPart, endPart]);
+  if (dayparts.size >= 3) {
+    return ` most of the day${dayLabel}`;
+  }
+
+  const startHourLocal = hourIndexToLocalHour(start);
+  const endHourLocal = hourIndexToLocalHour(end);
+  if (startHourLocal >= 22 || endHourLocal <= 6) {
+    return ` overnight${dayLabel}`;
+  }
+
+  if (startPart === endPart) {
+    return ` ${startPart}${dayLabel}`;
+  }
+
+  return ` from ${startPart}${dayLabel} into ${endPart}${dayLabel}`;
+}
 // ------------------------------------------------------------
 // STATS HELPERS
 // ------------------------------------------------------------
