@@ -25,43 +25,6 @@ export function showWUError(msg) {
   el.style.display = "block";
 }
 
-/**
- * Render clickable alert icons + detail box.
- */
-export function renderForecastIcons(alerts) {
-  const container = document.getElementById("forecast-icons");
-  const detailBox = document.getElementById("forecast-detail");
-
-  container.innerHTML = "";
-  detailBox.innerHTML = "";
-  detailBox.style.display = "none";
-  detailBox.dataset.open = "";
-
-  alerts.forEach(alert => {
-    const iconEl = document.createElement("span");
-    iconEl.className = "forecast-icon";
-    iconEl.textContent = alert.icon;
-    iconEl.dataset.alertId = alert.id;
-
-    iconEl.addEventListener("click", () => {
-      if (detailBox.dataset.open === alert.id) {
-        detailBox.style.display = "none";
-        detailBox.dataset.open = "";
-        return;
-      }
-
-      detailBox.innerHTML = `
-        <div class="detail-title">${alert.icon} ${alert.title}</div>
-        <div class="detail-text">${alert.detail}</div>
-      `;
-      detailBox.style.display = "block";
-      detailBox.dataset.open = alert.id;
-    });
-
-    container.appendChild(iconEl);
-  });
-}
-
 /* -----------------------------------
    UV CLASSIFIER — top‑level export
 ----------------------------------- */
@@ -73,6 +36,7 @@ export function getUVClass(uv) {
   if (uv < 11) return "uv-very";
   return "uv-extreme";
 }
+
 /* -----------------------------------
    LOCAL TIME HELPERS
 ----------------------------------- */
@@ -83,6 +47,7 @@ function formatHourLocal(isoString) {
     minute: undefined
   });
 }
+
 /* -----------------------------------
    WIND + DIRECTION HELPERS
 ----------------------------------- */
@@ -111,43 +76,36 @@ export function updateMetrics(wu, reliableUV) {
   document.getElementById("wu-humidity").textContent =
     wu.humidity != null ? `Humidity ${wu.humidity}%` : "Humidity --";
 
-// ⭐ WIND HANDLING WITH CALM + VARIABLE
-let windText = "--";
+  // ⭐ WIND HANDLING WITH CALM + VARIABLE
+  let windText = "--";
 
-if (wu.windSpeed != null) {
-  const speed = wu.windSpeed;
-  const dir = wu.windDir;
+  if (wu.windSpeed != null) {
+    const speed = wu.windSpeed;
+    const dir = wu.windDir;
 
-  if (speed < 1) {
-    // Calm conditions
-    windText = "Calm";
-  } else if (dir == null) {
-    // Wind blowing but direction unavailable
-    windText = `${speed.toFixed(0)} mph (variable)`;
-  } else {
-    // Normal case with direction
-    windText = `${degToCompass(dir)} ${speed.toFixed(0)} mph`;
+    if (speed < 1) {
+      windText = "Calm";
+    } else if (dir == null) {
+      windText = `${speed.toFixed(0)} mph (variable)`;
+    } else {
+      windText = `${degToCompass(dir)} ${speed.toFixed(0)} mph`;
+    }
   }
-}
 
-document.getElementById("wu-wind").textContent = windText;
+  document.getElementById("wu-wind").textContent = windText;
 
   document.getElementById("wu-wind-gust").textContent =
     wu.windGust != null ? `Gusts ${wu.windGust.toFixed(0)} mph` : "Gusts --";
 
- // ⭐ UV handling
-const uvEl = document.getElementById("wu-uv");
+  // ⭐ UV handling
+  const uvEl = document.getElementById("wu-uv");
 
-uvEl.textContent = reliableUV != null ? reliableUV.toFixed(1) : "--";
+  uvEl.textContent = reliableUV != null ? reliableUV.toFixed(1) : "--";
 
-// Remove old classes
-uvEl.classList.remove("uv-low", "uv-mod", "uv-high", "uv-very", "uv-extreme");
+  uvEl.classList.remove("uv-low", "uv-mod", "uv-high", "uv-very", "uv-extreme");
 
-// Add new class ONLY if valid
-const uvClass = getUVClass(reliableUV);
-if (uvClass) {
-  uvEl.classList.add(uvClass);
-}
+  const uvClass = getUVClass(reliableUV);
+  if (uvClass) uvEl.classList.add(uvClass);
 }
 
 /**
@@ -163,6 +121,7 @@ function to12Hour(h) {
   const hour = ((h + 11) % 12) + 1;
   return `${hour} ${suffix}`;
 }
+
 /**
  * Update today's human‑action outlook.
  */
@@ -203,11 +162,13 @@ export function updateTomorrow(outlook) {
   document.getElementById("action-headline").textContent = outlook.headline;
   document.getElementById("action-text").textContent = outlook.text;
 }
+
 export function updateStationFooter(stationId, updatedAt) {
   const el = document.getElementById("wu-station-footer");
   el.textContent =
     `Live data from Weather Underground Station ${stationId} — ${formatUpdatedTime(updatedAt)}`;
 }
+
 // Format "Updated X seconds/minutes/hours ago"
 function formatUpdatedTime(updatedAt) {
   if (!updatedAt) return "Updated recently";
@@ -266,23 +227,25 @@ function formatUpdatedTime(updatedAt) {
 
   return `Updated ${dateStr} at ${timeStr}`;
 }
+
 /** 
  * High‑level UI update entry point.
  */
 export function updateUI(intel) {
   console.log("WU object:", intel.wu);
+
   updateMetrics(intel.wu, intel.uv);
   updateComfort(intel.comfort);
   updateToday(intel.today);
   updateTomorrow(intel.tomorrow);
-  renderForecastIcons(intel.alerts);
- updateStationFooter(intel.wu.stationId, intel.updatedAt);
+
+  // ⭐ ALERTS REMOVED — no renderForecastIcons()
+
+  updateStationFooter(intel.wu.stationId, intel.updatedAt);
 
   const micro = document.getElementById("micro-advice");
   micro.textContent = intel.today.suppressMicroAdvice ? "" : intel.microAdvice;
-}   // ← updateUI ends cleanly here
-
-
+}
 
 // ===============================
 // Expand / Collapse Forecast Panel
@@ -300,13 +263,11 @@ export function toggleForecastExpanded(which, intel) {
     p.style.display = "none";
   });
 
-  // If clicking the same module → collapse
   if (isOpen) {
     expandedFor = null;
     return;
   }
 
-  // Otherwise → open and populate
   expandedFor = which;
 
   const detail = which === "today" ? intel.todayDetail : intel.tomorrowDetail;
@@ -317,47 +278,49 @@ export function toggleForecastExpanded(which, intel) {
       <div class="fx-value">${detail.high}° / ${detail.low}°</div>
     </div>
 
- ${which === "today" ? `
-  <div class="fx-section">
-    <div class="fx-label">Hour‑by‑Hour</div>
-    <div class="fx-value fx-hourly">
-      ${detail.hourly.map(h => `
-        <div>${formatHourLocal(h.time)} — ${h.temp}°, ${h.wind}, ${h.precip}%</div>
-      `).join("")}
-    </div>
-  </div>
-` : ""}
+    ${which === "today" ? `
+      <div class="fx-section">
+        <div class="fx-label">Hour‑by‑Hour</div>
+        <div class="fx-value fx-hourly">
+          ${detail.hourly.map(h => `
+            <div>${formatHourLocal(h.time)} — ${h.temp}°, ${h.wind}, ${h.precip}%</div>
+          `).join("")}
+        </div>
+      </div>
+    ` : ""}
 
     <div class="fx-section">
       <div class="fx-label">Precipitation Window</div>
       <div class="fx-value">${detail.precipWindow}</div>
     </div>
 
-${which === "today" ? `
-  <div class="fx-section">
-    <div class="fx-label">Wind Shifts</div>
-    <div class="fx-value">${detail.windShifts}</div>
-  </div>
+    ${which === "today" ? `
+      <div class="fx-section">
+        <div class="fx-label">Wind Shifts</div>
+        <div class="fx-value">${detail.windShifts}</div>
+      </div>
 
-  <div class="fx-section">
-    <div class="fx-label">UV Timeline</div>
-    <div class="fx-value">
-      ${detail.uvTimeline.map(u => `${u.time}: ${u.label} (${u.value})`).join(" • ")}
-    </div>
-  </div>
-` : ""}
-${which === "tomorrow" ? `
-  <div class="fx-section">
-    <div class="fx-label">Highest UV</div>
-    <div class="fx-value">
-      ${
-        detail.peakUV.hours.length === 0
-          ? `Low all day (max ${detail.peakUV.max})`
-          : `${detail.peakUV.hours.map(h => to12Hour(h)).join(" • ")} (UV ${detail.peakUV.max})`
-      }
-    </div>
-  </div>
-` : ""}
+      <div class="fx-section">
+        <div class="fx-label">UV Timeline</div>
+        <div class="fx-value">
+          ${detail.uvTimeline.map(u => `${u.time}: ${u.label} (${u.value})`).join(" • ")}
+        </div>
+      </div>
+    ` : ""}
+
+    ${which === "tomorrow" ? `
+      <div class="fx-section">
+        <div class="fx-label">Highest UV</div>
+        <div class="fx-value">
+          ${
+            detail.peakUV.hours.length === 0
+              ? `Low all day (max ${detail.peakUV.max})`
+              : `${detail.peakUV.hours.map(h => to12Hour(h)).join(" • ")} (UV ${detail.peakUV.max})`
+          }
+        </div>
+      </div>
+    ` : ""}
+
     <div class="fx-section">
       <div class="fx-label">Forecast Confidence</div>
       <div class="fx-value">${detail.confidence}</div>
