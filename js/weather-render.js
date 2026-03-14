@@ -106,14 +106,27 @@ function dedupeBullets(bullets) {
   const result = [];
 
   bullets.forEach(b => {
-    const key = b
-      .toLowerCase()
-      .replace(/[^a-z0-9 ]/g, "")   // remove punctuation
+    let key = b.toLowerCase();
+
+    // Remove punctuation
+    key = key.replace(/[^a-z0-9 ]/g, " ");
+
+    // Normalize synonyms and phrasing
+    key = key
       .replace(/\bjacket\b/g, "coat")
       .replace(/\bchilly\b/g, "cold")
       .replace(/\bearly\b/g, "morning")
-      .replace(/\bcold morning\b/g, "cold morning")
-      .trim();
+      .replace(/\bmorning air\b/g, "morning")
+      .replace(/\bair\b/g, "")
+      .replace(/\bcoat helps\b/g, "coat recommended")
+      .replace(/\bcoat is helpful\b/g, "coat recommended")
+      .replace(/\bcoat recommended\b/g, "coat recommended");
+
+    // Remove filler words
+    key = key.replace(/\b(a|the|is|very|quite|bit|little)\b/g, "");
+
+    // Collapse whitespace
+    key = key.replace(/\s+/g, " ").trim();
 
     if (!seen.has(key)) {
       seen.add(key);
