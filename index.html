@@ -130,6 +130,9 @@
     line-height: 1.1;
   }
 
+  /* ------------------------------
+     COMFORT MODULE
+  ------------------------------ */
   .comfort-row {
     margin-bottom: var(--gap);
   }
@@ -173,6 +176,9 @@
     margin-top: 0.15rem;
   }
 
+  /* ------------------------------
+     TODAY + TOMORROW
+  ------------------------------ */
   .now-tomorrow-row {
     display: flex;
     flex-wrap: wrap;
@@ -224,22 +230,26 @@
     color: #b9c7f5;
     line-height: 1.4;
   }
-.today-bullets {
-  margin-top: 0.35rem;
-  margin-bottom: 0.2rem;
-}
 
-.today-bullet {
-  font-size: 0.82rem;
-  color: #d8dff7;
-  line-height: 1.35;
-  margin-left: 0.2rem;
-  padding-left: 0.2rem;
-}
-  /* ===============================
-     Expanded Forecast Panel
-     =============================== */
+  /* BULLETS */
+  .today-bullets,
+  .tomorrow-bullets {
+    margin-top: 0.35rem;
+    margin-bottom: 0.2rem;
+    padding-left: 1rem;
+  }
 
+  .today-bullets li,
+  .tomorrow-bullets li {
+    font-size: 0.82rem;
+    color: #d8dff7;
+    line-height: 1.35;
+    margin: 0.25rem 0;
+  }
+
+  /* ------------------------------
+     EXPANDED PANELS
+  ------------------------------ */
   .expanded-panel {
     margin-top: 1rem;
     padding: 1.2rem 1.4rem;
@@ -274,33 +284,9 @@
     color: #d8dff7;
   }
 
-  .expanded-panel .fx-hourly div {
-    padding: 0.25rem 0;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-  }
-
-  .expanded-panel .fx-hourly div:last-child {
-    border-bottom: none;
-  }
-
-  /* UV card enhancements */
-  .metric .metric-value#wu-uv {
-    font-size: 1.9rem;
-    font-weight: 600;
-    text-align: center;
-    margin-top: 4px;
-  }
-
-  /* UV color scale */
-  .uv-low    { color: #4CAF50; }
-  .uv-mod    { color: #FFC107; }
-  .uv-high   { color: #FF5722; }
-  .uv-very   { color: #D32F2F; }
-  .uv-extreme{ color: #6A1B9A; }
-
-  /* ===============================
-     FOOTER STYLE
-     =============================== */
+  /* ------------------------------
+     FOOTER
+  ------------------------------ */
   .footer-note {
     margin-top: var(--gap);
     padding-top: 0.8rem;
@@ -386,47 +372,48 @@
           <div id="today-text" class="action-text">
             Checking today’s weather impacts…
           </div>
-<div id="today-bullets" class="today-bullets"></div>
+
+          <ul id="today-bullets" class="today-bullets"></ul>
+
           <div id="micro-advice" class="action-text" style="margin-top: 0.4rem;"></div>
         </div>
       </div>
 
-      <!-- TODAY EXPANDED PANEL -->
       <div class="expanded-panel" id="expanded-today" style="display:none;"></div>
 
-    </div> <!-- end now-col -->
+    </div>
 
     <!-- TOMORROW COLUMN -->
     <div class="tomorrow-col">
 
       <div class="tomorrow-module action-module" id="tomorrow-module">
-        <div id="action-emoji" class="action-emoji">--</div>
+        <div id="tomorrow-emoji" class="action-emoji">--</div>
         <div>
-          <div class="action-label">Tomorrow’s human‑action outlook</div>
-          <div id="action-badge" class="action-badge"></div>
-          <div id="action-headline" class="action-headline">Analyzing tomorrow’s setup…</div>
-          <div id="action-text" class="action-text"></div>
+          <div class="action-label">Tomorrow’s Human‑Action Outlook</div>
+
+          <div id="tomorrow-badge" class="badge"></div>
+
+          <div id="tomorrow-headline" class="action-headline">Analyzing tomorrow’s setup…</div>
+          <div id="tomorrow-text" class="action-text"></div>
+
+          <ul id="tomorrow-bullets" class="tomorrow-bullets"></ul>
         </div>
       </div>
 
-      <!-- TOMORROW EXPANDED PANEL -->
       <div class="expanded-panel" id="expanded-tomorrow" style="display:none;"></div>
 
-    </div> <!-- end tomorrow-col -->
+    </div>
 
-  </div> <!-- end now-tomorrow-row -->
+  </div>
 
-  <!-- FOOTER — STATION INFO -->
   <div class="footer-note" id="wu-station-footer">
     Live data from Weather Underground Station --
   </div>
 
-  <!-- ERROR TEXT -->
   <div class="error-text" id="wu-error" style="display:none;"></div>
 
-</div> <!-- end .card -->
+</div>
 
-<!-- ENTRY POINT SCRIPT -->
 <script type="module" src="/js/app.js"></script>
 
 </body>
