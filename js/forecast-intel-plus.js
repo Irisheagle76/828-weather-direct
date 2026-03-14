@@ -38,7 +38,7 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
   const today = getTodayActionOutlook(hourly);
   const tomorrow = getHumanActionOutlook(hourly);
 
-  // ⭐ 4. Precip signal (placeholder)
+  // ⭐ 4. Precip signal
   const precipSignal = {
     isFalling: mrmsPixel.rate > 0,
     type: mrmsPixel.type,
@@ -107,7 +107,6 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
     return "A stable pattern with consistent model agreement supports this forecast.";
   }
 
-  // ⭐ Peak UV hours
   function buildPeakUV(hourly, indices) {
     const uvPoints = indices.map(i => ({
       hour: new Date(hourly.time[i]).getHours(),
@@ -115,10 +114,7 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
     }));
 
     const maxUV = Math.max(...uvPoints.map(p => p.value));
-
-    if (maxUV <= 2) {
-      return { max: maxUV, hours: [] };
-    }
+    if (maxUV <= 2) return { max: maxUV, hours: [] };
 
     const peakHours = uvPoints
       .filter(p => p.value === maxUV)
@@ -127,19 +123,14 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
     return { max: maxUV, hours: peakHours };
   }
 
-  // ============================================================
-  // ⭐ 7. Build windows (local implementations)
-  // ============================================================
-
+  // ⭐ Build windows (local)
   const now = new Date();
 
-  // TODAY window: now → midnight
   const todayIndices = hourly.time
     .map((t, i) => ({ t: new Date(t), i }))
     .filter(obj => obj.t >= now && obj.t.getDate() === now.getDate())
     .map(obj => obj.i);
 
-  // TOMORROW window: midnight → 23:59 tomorrow
   const tomorrowDate = new Date(now);
   tomorrowDate.setDate(now.getDate() + 1);
 
@@ -151,10 +142,7 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
     )
     .map(obj => obj.i);
 
-  // ============================================================
-  // ⭐ 8. Build detail objects
-  // ============================================================
-
+  // ⭐ Detail objects
   const todayDetail = {
     high: Math.round(Math.max(...todayIndices.map(i => hourly.temperature_2m[i]))),
     low: Math.round(Math.min(...todayIndices.map(i => hourly.temperature_2m[i]))),
@@ -175,10 +163,7 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
     reasoning: buildReasoning()
   };
 
-  // ============================================================
-  // ⭐ 9. Return unified intel object
-  // ============================================================
-
+  // ⭐ Return unified intel object
   return {
     wu: wuCurrent,
     uv: reliableUV,
