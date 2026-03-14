@@ -3,8 +3,7 @@
 import {
   getHumanActionOutlook,
   getTodayActionOutlook,
-  getForecastAlerts,
-  getComfortCategory as computeComfort,
+    getComfortCategory as computeComfort,
   getTodayRemainingWindow,
   getTomorrowWindow
 } from './forecast-intel.js';
