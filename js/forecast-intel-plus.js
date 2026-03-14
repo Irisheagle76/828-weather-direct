@@ -3,8 +3,8 @@
 import {
   getHumanActionOutlook,
   getTodayActionOutlook,
-    getComfortCategory as computeComfort,
-   getTomorrowWindow
+  getComfortCategory as computeComfort,
+  getTomorrowWindow
 } from './forecast-intel.js';
 
 import {
@@ -13,8 +13,7 @@ import {
 } from './weather-utils.js';
 
 import { getMicroAdvice } from './micro-advice.js';
-import { degToCompass } from "./weather-render.js";
-import { getUVClass } from "./weather-render.js";
+import { degToCompass, getUVClass } from "./weather-render.js";
 
 export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
 
@@ -40,10 +39,7 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
   const today = getTodayActionOutlook(hourly);
   const tomorrow = getHumanActionOutlook(hourly);
 
-  // ⭐ 4. Alerts
-  const alerts = getForecastAlerts(hourly);
-
-  // ⭐ 5. Precip signal (placeholder)
+  // ⭐ 4. Precip signal (placeholder)
   const precipSignal = {
     isFalling: mrmsPixel.rate > 0,
     type: mrmsPixel.type,
@@ -51,7 +47,7 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
     source: "placeholder"
   };
 
-  // ⭐ 6. Micro‑advice
+  // ⭐ 5. Micro‑advice
   const microAdvice = getMicroAdvice({
     wu: wuCurrent,
     today,
@@ -59,7 +55,7 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
   });
 
   // ============================================================
-  // ⭐ 7. Expanded Forecast Detail Builder (CORRECTED)
+  // ⭐ 6. Expanded Forecast Detail Builder
   // ============================================================
 
   function to12Hour(hour) {
@@ -111,32 +107,40 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
   function buildReasoning() {
     return "A stable pattern with consistent model agreement supports this forecast.";
   }
-   // Search for UV PEAK Hours
-function buildPeakUV(hourly, indices) {
-  const uvPoints = indices.map(i => ({
-    hour: new Date(hourly.time[i]).getHours(),
-    value: hourly.uv_index?.[i] ?? 0
-  }));
 
-  const maxUV = Math.max(...uvPoints.map(p => p.value));
+  // ⭐ Peak UV hours
+  function buildPeakUV(hourly, indices) {
+    const uvPoints = indices.map(i => ({
+      hour: new Date(hourly.time[i]).getHours(),
+      value: hourly.uv_index?.[i] ?? 0
+    }));
 
-  if (maxUV <= 2) {
-    return { max: maxUV, hours: [] }; // treat as “low all day”
+    const maxUV = Math.max(...uvPoints.map(p => p.value));
+
+    if (maxUV <= 2) {
+      return { max: maxUV, hours: [] };
+    }
+
+    const peakHours = uvPoints
+      .filter(p => p.value === maxUV)
+      .map(p => p.hour);
+
+    return { max: maxUV, hours: peakHours };
   }
 
-  const peakHours = uvPoints
-    .filter(p => p.value === maxUV)
-    .map(p => p.hour);
+  // ⭐ Build windows (no imports needed)
+  const now = new Date();
 
-  return { max: maxUV, hours: peakHours };
-}
-  // ⭐ Build windows
-  const todayIndices = getTodayRemainingWindow(hourly);
+  const todayIndices = hourly.time
+    .map((t, i) => ({ t: new Date(t), i }))
+    .filter(obj => obj.t >= now && obj.t.getDate() === now.getDate())
+    .map(obj => obj.i);
+
   const tomorrowIndices = getTomorrowWindow(hourly);
 
   const todayDetail = {
     high: Math.round(Math.max(...todayIndices.map(i => hourly.temperature_2m[i]))),
-low: Math.round(Math.min(...todayIndices.map(i => hourly.temperature_2m[i]))),
+    low: Math.round(Math.min(...todayIndices.map(i => hourly.temperature_2m[i]))),
     hourly: buildHourlySnapshot(hourly, todayIndices),
     precipWindow: buildPrecipWindow(hourly, todayIndices),
     windShifts: buildWindShifts(hourly, todayIndices),
@@ -145,23 +149,22 @@ low: Math.round(Math.min(...todayIndices.map(i => hourly.temperature_2m[i]))),
     reasoning: buildReasoning()
   };
 
-const tomorrowDetail = {
-  high: Math.round(Math.max(...tomorrowIndices.map(i => hourly.temperature_2m[i]))),
-  low: Math.round(Math.min(...tomorrowIndices.map(i => hourly.temperature_2m[i]))),
-  precipWindow: buildPrecipWindow(hourly, tomorrowIndices),
-  peakUV: buildPeakUV(hourly, tomorrowIndices),
-  confidence: buildConfidence(),
-  reasoning: buildReasoning()
-};
+  const tomorrowDetail = {
+    high: Math.round(Math.max(...tomorrowIndices.map(i => hourly.temperature_2m[i]))),
+    low: Math.round(Math.min(...tomorrowIndices.map(i => hourly.temperature_2m[i]))),
+    precipWindow: buildPrecipWindow(hourly, tomorrowIndices),
+    peakUV: buildPeakUV(hourly, tomorrowIndices),
+    confidence: buildConfidence(),
+    reasoning: buildReasoning()
+  };
 
-  // ⭐ 8. Return unified intel object
+  // ⭐ 7. Return unified intel object
   return {
     wu: wuCurrent,
     uv: reliableUV,
     comfort,
     today,
     tomorrow,
-    alerts,
     precipSignal,
     microAdvice,
     todayDetail,
