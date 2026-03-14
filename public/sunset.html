@@ -1,1 +1,48 @@
 
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Asheville Sunset Index</title>
+<style>
+
+body {
+font-family: Arial;
+background: #0b1a2a;
+color: white;
+text-align: center;
+padding-top: 80px;
+}
+
+.score {
+font-size: 72px;
+color: orange;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>Asheville Sunset Vibrance Index</h1>
+
+<div class="score" id="score">Loading...</div>
+
+<script>
+
+async function loadSunset() {
+
+const response = await fetch("/api/sunsetIndex");
+const data = await response.json();
+
+document.getElementById("score").innerText = data.sunsetIndex;
+
+}
+
+loadSunset();
+
+</script>
+
+</body>
+
+</html>
