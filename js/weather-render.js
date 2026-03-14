@@ -8,8 +8,10 @@
 // ------------------------------------------------------------
 export function degToCompass(deg) {
   if (deg == null) return "";
-  const dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE",
-                "S","SSW","SW","WSW","W","WNW","NW","NNW"];
+  const dirs = [
+    "N","NNE","NE","ENE","E","ESE","SE","SSE",
+    "S","SSW","SW","WSW","W","WNW","NW","NNW"
+  ];
   return dirs[Math.round(deg / 22.5) % 16];
 }
 
@@ -34,11 +36,10 @@ function renderBullets(ul, bullets) {
   bullets.forEach(b => {
     const li = document.createElement("li");
 
-    // If bullet starts with an emoji → use it as-is
+    // Emoji-first bullet
     if (/^[\p{Emoji}]/u.test(b)) {
       li.textContent = b;
     } else {
-      // Otherwise prefix with a dot
       li.textContent = "• " + b;
     }
 
@@ -50,126 +51,165 @@ function renderBullets(ul, bullets) {
 // RENDER RIGHT NOW COMFORT
 // ------------------------------------------------------------
 export function renderRightNowComfort(intel) {
-  const el = document.getElementById("right-now-comfort");
-  if (!el) return;
+  const emojiEl = document.getElementById("comfort-emoji");
+  const textEl = document.getElementById("comfort-text");
 
-  const { category, summary, emoji } = intel.rightNowComfort;
+  if (!emojiEl || !textEl) return;
 
-  el.querySelector(".emoji").textContent = emoji;
-  el.querySelector(".category").textContent = category;
-  el.querySelector(".summary").textContent = summary;
+  const { emoji, summary } = intel.rightNowComfort;
+
+  emojiEl.textContent = emoji;
+  textEl.textContent = summary;
 }
 
 // ------------------------------------------------------------
 // RENDER TODAY OUTLOOK
 // ------------------------------------------------------------
 export function renderTodayOutlook(intel) {
-  const el = document.getElementById("today-outlook");
-  if (!el) return;
+  const emojiEl = document.getElementById("today-emoji");
+  const headlineEl = document.getElementById("today-headline");
+  const textEl = document.getElementById("today-text");
+  const bulletsEl = document.getElementById("today-bullets");
 
-  const { badge, emoji, headline, text, bullets } = intel.today;
+  const { emoji, headline, text, bullets } = intel.today;
 
-  el.querySelector(".badge").textContent = badge.text;
-  el.querySelector(".badge").className = `badge ${badge.class}`;
-  el.querySelector(".emoji").textContent = emoji;
-  el.querySelector(".headline").textContent = headline;
-  el.querySelector(".reason").textContent = text;
+  emojiEl.textContent = emoji;
+  headlineEl.textContent = headline;
+  textEl.textContent = text;
 
-  const ul = el.querySelector(".bullets");
-  renderBullets(ul, bullets);
+  renderBullets(bulletsEl, bullets);
 }
 
 // ------------------------------------------------------------
 // RENDER TOMORROW OUTLOOK
 // ------------------------------------------------------------
 export function renderTomorrowOutlook(intel) {
-  const el = document.getElementById("tomorrow-outlook");
-  if (!el) return;
+  const emojiEl = document.getElementById("tomorrow-emoji");
+  const badgeEl = document.getElementById("tomorrow-badge");
+  const headlineEl = document.getElementById("tomorrow-headline");
+  const textEl = document.getElementById("tomorrow-text");
+  const bulletsEl = document.getElementById("tomorrow-bullets");
 
   const { badge, emoji, headline, text, bullets } = intel.tomorrow;
 
-  el.querySelector(".badge").textContent = badge.text;
-  el.querySelector(".badge").className = `badge ${badge.class}`;
-  el.querySelector(".emoji").textContent = emoji;
-  el.querySelector(".headline").textContent = headline;
-  el.querySelector(".reason").textContent = text;
+  emojiEl.textContent = emoji;
+  badgeEl.textContent = badge.text;
+  badgeEl.className = `badge ${badge.class}`;
+  headlineEl.textContent = headline;
+  textEl.textContent = text;
 
-  const ul = el.querySelector(".bullets");
-  renderBullets(ul, bullets);
+  renderBullets(bulletsEl, bullets);
 }
 
 // ------------------------------------------------------------
-// RENDER UV INDEX (optional)
+// RENDER UV INDEX
 // ------------------------------------------------------------
 export function renderUV(intel) {
-  const el = document.getElementById("uv-box");
-  if (!el) return;
+  const uvEl = document.getElementById("wu-uv");
+  if (!uvEl) return;
 
   const uv = intel.uv ?? 0;
-  el.querySelector(".uv-value").textContent = uv.toFixed(1);
-  el.className = `uv-box ${getUVClass(uv)}`;
+  uvEl.textContent = uv.toFixed(1);
+  uvEl.className = getUVClass(uv);
 }
 
 // ------------------------------------------------------------
-// RENDER TODAY DETAIL (hourly, precip window, etc.)
+// RENDER TODAY DETAIL
 // ------------------------------------------------------------
 export function renderTodayDetail(intel) {
-  const el = document.getElementById("today-detail");
-  if (!el) return;
+  const panel = document.getElementById("expanded-today");
+  if (!panel) return;
 
   const d = intel.todayDetail;
 
-  el.querySelector(".high").textContent = d.high;
-  el.querySelector(".low").textContent = d.low;
-  el.querySelector(".precip-window").textContent = d.precipWindow;
-  el.querySelector(".wind-shifts").textContent = d.windShifts;
-  el.querySelector(".confidence").textContent = d.confidence;
-  el.querySelector(".reasoning").textContent = d.reasoning;
+  panel.innerHTML = `
+    <div class="fx-section">
+      <div class="fx-label">High</div>
+      <div class="fx-value">${d.high}°</div>
+    </div>
 
-  const hourlyEl = el.querySelector(".hourly");
-  hourlyEl.innerHTML = "";
+    <div class="fx-section">
+      <div class="fx-label">Low</div>
+      <div class="fx-value">${d.low}°</div>
+    </div>
 
-  d.hourly.forEach(h => {
-    const div = document.createElement("div");
-    div.className = "hour-block";
-    div.innerHTML = `
-      <div class="time">${new Date(h.time).toLocaleTimeString([], { hour: "numeric" })}</div>
-      <div class="temp">${h.temp}°</div>
-      <div class="wind">${h.wind}</div>
-      <div class="precip">${h.precip}%</div>
-    `;
-    hourlyEl.appendChild(div);
-  });
+    <div class="fx-section">
+      <div class="fx-label">Precip Window</div>
+      <div class="fx-value">${d.precipWindow}</div>
+    </div>
+
+    <div class="fx-section">
+      <div class="fx-label">Wind Shifts</div>
+      <div class="fx-value">${d.windShifts}</div>
+    </div>
+
+    <div class="fx-section">
+      <div class="fx-label">Confidence</div>
+      <div class="fx-value">${d.confidence}</div>
+    </div>
+
+    <div class="fx-section">
+      <div class="fx-label">Reasoning</div>
+      <div class="fx-value">${d.reasoning}</div>
+    </div>
+  `;
 }
 
 // ------------------------------------------------------------
 // RENDER TOMORROW DETAIL
 // ------------------------------------------------------------
 export function renderTomorrowDetail(intel) {
-  const el = document.getElementById("tomorrow-detail");
-  if (!el) return;
+  const panel = document.getElementById("expanded-tomorrow");
+  if (!panel) return;
 
   const d = intel.tomorrowDetail;
 
-  el.querySelector(".high").textContent = d.high;
-  el.querySelector(".low").textContent = d.low;
-  el.querySelector(".precip-window").textContent = d.precipWindow;
-  el.querySelector(".confidence").textContent = d.confidence;
-  el.querySelector(".reasoning").textContent = d.reasoning;
-
   const peak = d.peakUV;
-  const uvEl = el.querySelector(".peak-uv");
+  const peakText =
+    peak.max <= 2
+      ? `Peak UV: ${peak.max} (low)`
+      : `Peak UV: ${peak.max} at ${peak.hours
+          .map(h => {
+            const hr = h % 12 || 12;
+            const suffix = h >= 12 ? "PM" : "AM";
+            return `${hr} ${suffix}`;
+          })
+          .join(", ")}`;
 
-  if (peak.max <= 2) {
-    uvEl.textContent = `Peak UV: ${peak.max} (low)`;
-  } else {
-    uvEl.textContent = `Peak UV: ${peak.max} at ${peak.hours.map(h => {
-      const hr = h % 12 || 12;
-      const suffix = h >= 12 ? "PM" : "AM";
-      return `${hr} ${suffix}`;
-    }).join(", ")}`;
-  }
-  // ------------------------------------------------------------
+  panel.innerHTML = `
+    <div class="fx-section">
+      <div class="fx-label">High</div>
+      <div class="fx-value">${d.high}°</div>
+    </div>
+
+    <div class="fx-section">
+      <div class="fx-label">Low</div>
+      <div class="fx-value">${d.low}°</div>
+    </div>
+
+    <div class="fx-section">
+      <div class="fx-label">Precip Window</div>
+      <div class="fx-value">${d.precipWindow}</div>
+    </div>
+
+    <div class="fx-section">
+      <div class="fx-label">Peak UV</div>
+      <div class="fx-value">${peakText}</div>
+    </div>
+
+    <div class="fx-section">
+      <div class="fx-label">Confidence</div>
+      <div class="fx-value">${d.confidence}</div>
+    </div>
+
+    <div class="fx-section">
+      <div class="fx-label">Reasoning</div>
+      <div class="fx-value">${d.reasoning}</div>
+    </div>
+  `;
+}
+
+// ------------------------------------------------------------
 // EXPANSION PANEL TOGGLER (Today / Tomorrow)
 // ------------------------------------------------------------
 export function toggleForecastExpanded(which, intel) {
