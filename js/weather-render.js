@@ -169,4 +169,25 @@ export function renderTomorrowDetail(intel) {
       return `${hr} ${suffix}`;
     }).join(", ")}`;
   }
+  // ------------------------------------------------------------
+// EXPANSION PANEL TOGGLER (Today / Tomorrow)
+// ------------------------------------------------------------
+export function toggleForecastExpanded(which, intel) {
+  const panelToday = document.getElementById("expanded-today");
+  const panelTomorrow = document.getElementById("expanded-tomorrow");
+
+  if (which === "today") {
+    const isOpen = panelToday.style.display === "block";
+    panelToday.style.display = isOpen ? "none" : "block";
+    panelTomorrow.style.display = "none";
+    return;
+  }
+
+  if (which === "tomorrow") {
+    const isOpen = panelTomorrow.style.display === "block";
+    panelTomorrow.style.display = isOpen ? "none" : "block";
+    panelToday.style.display = "none";
+    return;
+  }
+}
 }
