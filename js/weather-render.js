@@ -40,26 +40,77 @@ export function renderCurrentObservations(intel) {
     solarEl.textContent = wu.solarRadiation != null ? wu.solarRadiation : "--";
   }
 }
-// Temperature color class
-if (tempEl) {
-  const t = wu.temp;
-  tempEl.className = "";
-  if (t <= 32) tempEl.classList.add("temp-freezing");
-  else if (t <= 45) tempEl.classList.add("temp-cold");
-  else if (t <= 60) tempEl.classList.add("temp-cool");
-  else if (t <= 75) tempEl.classList.add("temp-mild");
-  else if (t <= 85) tempEl.classList.add("temp-warm");
-  else tempEl.classList.add("temp-hot");
-}
+// ------------------------------------------------------------
+// RENDER CURRENT OBSERVATIONS (WU)
+// ------------------------------------------------------------
+export function renderCurrentObservations(intel) {
+  const wu = intel.wu;
+  if (!wu) return;
 
-// Dew point color class
-if (dewEl) {
-  const d = wu.dewPoint;
-  dewEl.className = "";
-  if (d <= 40) dewEl.classList.add("dew-dry");
-  else if (d <= 55) dewEl.classList.add("dew-comfort");
-  else if (d <= 70) dewEl.classList.add("dew-humid");
-  else dewEl.classList.add("dew-tropical");
+  const tempEl = document.getElementById("wu-temp");
+  const dewEl = document.getElementById("wu-dew");
+  const humEl = document.getElementById("wu-humidity");
+  const windEl = document.getElementById("wu-wind");
+  const gustEl = document.getElementById("wu-wind-gust");
+  const uvEl = document.getElementById("wu-uv");
+
+  // -----------------------------
+  // Temperature
+  // -----------------------------
+  if (tempEl) {
+    tempEl.textContent = wu.temp != null ? `${wu.temp}°` : "--";
+
+    // Remove old classes
+    tempEl.className = "metric-value";
+
+    const t = wu.temp;
+    if (t <= 32) tempEl.classList.add("temp-freezing");
+    else if (t <= 45) tempEl.classList.add("temp-cold");
+    else if (t <= 60) tempEl.classList.add("temp-cool");
+    else if (t <= 75) tempEl.classList.add("temp-mild");
+    else if (t <= 85) tempEl.classList.add("temp-warm");
+    else tempEl.classList.add("temp-hot");
+  }
+
+  // -----------------------------
+  // Dew Point + Humidity
+  // -----------------------------
+  if (dewEl) {
+    dewEl.textContent = wu.dewPoint != null ? `${wu.dewPoint}°` : "--";
+
+    dewEl.className = "metric-value";
+
+    const d = wu.dewPoint;
+    if (d <= 40) dewEl.classList.add("dew-dry");
+    else if (d <= 55) dewEl.classList.add("dew-comfort");
+    else if (d <= 70) dewEl.classList.add("dew-humid");
+    else dewEl.classList.add("dew-tropical");
+  }
+
+  if (humEl) {
+    humEl.textContent = wu.humidity != null ? `Humidity ${wu.humidity}%` : "Humidity --";
+  }
+
+  // -----------------------------
+  // Wind + Gusts
+  // -----------------------------
+  if (windEl) {
+    const dir = wu.windDir != null ? degToCompass(wu.windDir) : "";
+    const spd = wu.windSpeed != null ? `${wu.windSpeed} mph` : "--";
+    windEl.textContent = dir ? `${dir} ${spd}` : spd;
+  }
+
+  if (gustEl) {
+    gustEl.textContent = wu.windGust != null ? `Gusts ${wu.windGust} mph` : "Gusts --";
+  }
+
+  // -----------------------------
+  // UV (color‑coded)
+  // -----------------------------
+  if (uvEl) {
+    uvEl.textContent = wu.uv != null ? wu.uv : "--";
+    uvEl.className = "metric-value " + getUVClass(wu.uv ?? 0);
+  }
 }
 // ------------------------------------------------------------
 // Compass helper (used by intel-plus)
