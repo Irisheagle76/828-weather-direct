@@ -98,11 +98,39 @@ export function getUVClass(uv) {
   if (uv <= 10) return "uv-very-high";
   return "uv-extreme";
 }
+// ------------------------------------------------------------
+// BULLET DE-DUPLICATOR (semantic-ish)
+// ------------------------------------------------------------
+function dedupeBullets(bullets) {
+  const seen = new Set();
+  const result = [];
 
+  bullets.forEach(b => {
+    // Normalize for comparison
+    const key = b
+      .toLowerCase()
+      .replace(/[^a-z0-9 ]/g, "")   // remove punctuation
+      .replace(/\bjacket\b/g, "coat")
+      .replace(/\bchilly\b/g, "cold")
+      .replace(/\bearly\b/g, "morning")
+      .replace(/\bwindy\b/g, "breezy")
+      .trim();
+
+    if (!seen.has(key)) {
+      seen.add(key);
+      result.push(b);
+    }
+  });
+
+  return result;
+}
 // ------------------------------------------------------------
 // HYBRID BULLET RENDERER
 // ------------------------------------------------------------
 function renderBullets(ul, bullets) {
+  // Remove semantic duplicates
+  bullets = dedupeBullets(bullets);
+
   ul.innerHTML = "";
 
   bullets.forEach(b => {
