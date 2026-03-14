@@ -10,17 +10,72 @@ import {
 import { buildWeatherIntel } from './forecast-intel-plus.js';
 
 import {
-  setWUStatus,
-  showWUError,
-  updateUI
+  renderRightNowComfort,
+  renderTodayOutlook,
+  renderTomorrowOutlook,
+  renderUV,
+  renderTodayDetail,
+  renderTomorrowDetail
 } from './weather-render.js';
 
-import { toggleForecastExpanded } from "./weather-render.js";
+// ------------------------------------------------------------
+// STATUS + ERROR HELPERS (moved here from old renderer)
+// ------------------------------------------------------------
+function setWUStatus(state, label, text) {
+  const badge = document.getElementById("wu-status-badge");
+  const dot = document.getElementById("wu-status-dot");
+  const lbl = document.getElementById("wu-status-label");
+  const txt = document.getElementById("wu-status-text");
 
-// ⭐ Make toggleForecastExpanded available to HTML + listeners
+  lbl.textContent = label;
+  txt.textContent = text;
+
+  dot.classList.remove("ok", "error");
+
+  if (state === "ok") dot.classList.add("ok");
+  if (state === "error") dot.classList.add("error");
+}
+
+function showWUError(msg) {
+  const el = document.getElementById("wu-error");
+  el.style.display = "block";
+  el.textContent = msg;
+}
+
+// ------------------------------------------------------------
+// MASTER UI UPDATE FUNCTION
+// ------------------------------------------------------------
+function updateUI(intel) {
+  // Right Now Comfort
+  renderRightNowComfort(intel);
+
+  // Today + Tomorrow
+  renderTodayOutlook(intel);
+  renderTomorrowOutlook(intel);
+
+  // UV
+  renderUV(intel);
+
+  // Expanded panels
+  renderTodayDetail(intel);
+  renderTomorrowDetail(intel);
+
+  // Station footer
+  const footer = document.getElementById("wu-station-footer");
+  if (intel.wu?.stationId) {
+    footer.textContent = `Live data from Weather Underground Station ${intel.wu.stationId}`;
+  }
+}
+
+// ------------------------------------------------------------
+// MAKE EXPANSION AVAILABLE TO HTML
+// ------------------------------------------------------------
+import { toggleForecastExpanded } from "./weather-render.js";
 window.toggleForecastExpanded = toggleForecastExpanded;
 
-// ⭐ Entry point
+// ------------------------------------------------------------
+// ENTRY POINT
+// ------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", initApp);
 
 async function initApp() {
@@ -77,10 +132,9 @@ async function initApp() {
   );
 }
 
-// ===============================
-// Click listeners for expansion
-// ===============================
-
+// ------------------------------------------------------------
+// CLICK LISTENERS FOR EXPANSION
+// ------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
   const todayModule = document.getElementById("today-module");
   const tomorrowModule = document.getElementById("tomorrow-module");
