@@ -15,7 +15,8 @@ import {
   renderTomorrowOutlook,
   renderUV,
   renderTodayDetail,
-  renderTomorrowDetail
+  renderTomorrowDetail,
+  renderCurrentObservations   // ⭐ ADD THIS
 } from './weather-render.js';
 
 // ------------------------------------------------------------
