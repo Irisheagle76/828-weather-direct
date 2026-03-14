@@ -620,163 +620,8 @@ export function getHumanActionOutlook(hourly) {
     isGoldilocks
   );
 }
-// ====================================================
-// TODAY — Human‑Action Outlook (Now → Midnight)
-// ====================================================
-export function getTodayActionOutlook(hourly) {
-  const indices = getTodayRemainingWindow(hourly);
-
-  // End‑of‑day fallback
-  if (!indices.length) {
-    return {
-      badge: { text: "No Hazards", class: "badge-easy" },
-      emoji: "🌙",
-      headline: "The day is winding down.",
-      text: {
-        main: "No more meaningful weather impacts expected tonight.",
-        actions: []
-      },
-      suppressMicroAdvice: true,
-      isEndOfDay: true
-    };
-  }
-
-  const win = sliceHourly(hourly, indices);
-  const tempStats = getTempStats(win);
-  const dewStats = getDewStats(win);
-  const windStats = getWindGustStats(win);
-  const precipTotal = getPrecipTotal(win);
-  const snowTotal = getSnowTotal(win);
-
-  const avgTemp = tempStats.avg ?? tempStats.max ?? tempStats.min ?? null;
-  const gustMax = windStats.max ?? 0;
-
-  const precipDesc = describePrecip(precipTotal, snowTotal);
-  const windDesc = describeWind(gustMax);
-  const tempDesc = describeTempRange(tempStats);
-
-  // High temp for warm/cool phrasing
-  const tempHighF = tempStats.max ?? tempStats.avg ?? null;
-
-  // Goldilocks override
-  const isGoldilocks =
-    precipTotal < 0.05 &&
-    snowTotal === 0 &&
-    gustMax < 26 &&
-    avgTemp != null &&
-    avgTemp >= 60 &&
-    avgTemp <= 75;
-
-  // ⭐ NEW — Clothing guidance (correct placement)
-  const clothingAdvice = buildClothingAdvice({
-    tempStats,
-    precipDesc,
-    windDesc,
-    avgTemp,
-    gustMax
-  });
-
-  // -----------------------------
-  // IMPACT SCORING (same as Tomorrow)
-  // -----------------------------
-  const drivers = [];
-
-  // Snow
-  if (snowTotal > 0.05) {
-    drivers.push({
-      type: "snow",
-      score: 80 + snowTotal * 10
-    });
-  }
-
-  // Rain (patched logic)
-  const precipArr = win.precipitation || [];
-  const precipHours = precipArr.filter(p => p >= 0.01).length;
-
-  if (
-    snowTotal === 0 &&
-    (
-      precipTotal >= 0.25 ||
-      precipHours >= 4 ||
-      (precipTotal >= 0.10 && precipHours >= 4)
-    )
-  ) {
-    drivers.push({
-      type: "rain",
-      score: 55 + (precipTotal * 20) + (precipHours * 2)
-    });
-  }
-
-  // Wind
-  if (gustMax >= 40) {
-    drivers.push({
-      type: "wind",
-      score: 50 + gustMax
-    });
-  }
-
-  // Heat
-  if (avgTemp != null && avgTemp >= 88) {
-    drivers.push({
-      type: "heat",
-      score: 55 + (avgTemp - 88) * 2
-    });
-  }
-
-  // Cold
-  if (avgTemp != null && avgTemp <= 35) {
-    drivers.push({
-      type: "cold",
-      score: 55 + (35 - avgTemp) * 2
-    });
-  }
-
-  // Goldilocks
-  if (isGoldilocks) {
-    drivers.push({
-      type: "goldilocks",
-      score: 40
-    });
-  }
-
-  // Default
-  if (!drivers.length) {
-    drivers.push({ type: "easy", score: 10 });
-  }
-
-  drivers.sort((a, b) => b.score - a.score);
-  const dominant = drivers[0].type;
-
-  // -----------------------------
-  // ACTION MAPPING (shared)
-  // -----------------------------
-  const base = mapActionOutcome(
-    dominant,
-    tempDesc,
-    precipDesc,
-    windDesc,
-    tempHighF,
-    isGoldilocks
-  );
-
-  // -----------------------------
-  // ⭐ Build Today text (main + bullets)
-  // -----------------------------
-  const todayText = buildTodayText({
-    tempDesc,
-    precipDesc,
-    windDesc,
-    clothing: clothingAdvice,
-    isGoldilocks
-  });
-
-  return {
-    ...base,
-    text: todayText
-  };
-}
 // ===============================================
-// TODAY ACTION OUTLOOK (with warm human bullets)
+// TODAY ACTION OUTLOOK (with full bullet engine)
 // ===============================================
 export function getTodayActionOutlook(hourly) {
   const now = new Date();
@@ -784,18 +629,22 @@ export function getTodayActionOutlook(hourly) {
 
   // Pull key stats
   const temps = hourly.temperature_2m;
+  const dew = hourly.dewpoint_2m;
   const gusts = hourly.windgusts_10m;
   const precip = hourly.precipitation;
+  const snow = hourly.snowfall;
 
   const tempNow = temps[currentHour];
   const tempHigh = Math.max(...temps.slice(currentHour, currentHour + 12));
   const tempLow = Math.min(...temps.slice(currentHour, currentHour + 12));
 
+  const dewNow = dew[currentHour];
   const gustMax = Math.max(...gusts.slice(currentHour, currentHour + 12));
   const precipTotal = precip.slice(currentHour, currentHour + 12).reduce((a, b) => a + b, 0);
+  const snowTotal = snow ? snow.slice(currentHour, currentHour + 12).reduce((a, b) => a + b, 0) : 0;
 
   // Determine dominant factor (existing logic)
-  const dominant = getDominantFactor(tempHigh, gustMax, precipTotal);
+  const dominant = getDominantFactor(tempHigh, gustMax, precipTotal, snowTotal);
 
   // Get the base outcome (emoji, headline, text)
   const base = mapActionOutcome(
@@ -812,9 +661,13 @@ export function getTodayActionOutlook(hourly) {
     tempNow,
     tempHigh,
     tempLow,
+    dewNow,
     gustMax,
     precipTotal,
-    precipHours: precip.slice(currentHour, currentHour + 12)
+    precipHours: precip.slice(currentHour, currentHour + 12),
+    snowTotal,
+    sunrise: hourly.sunrise,
+    sunset: hourly.sunset
   });
 
   return {
@@ -825,35 +678,81 @@ export function getTodayActionOutlook(hourly) {
 }
 
 // ===============================================
-// BULLET ENGINE — Warm, human, Asheville‑friendly
+// BULLET ENGINE — Warm, human, Asheville‑aware
 // ===============================================
-function buildTodayBullets({ tempNow, tempHigh, tempLow, gustMax, precipTotal, precipHours }) {
+function buildTodayBullets({
+  tempNow,
+  tempHigh,
+  tempLow,
+  dewNow,
+  gustMax,
+  precipTotal,
+  precipHours,
+  snowTotal,
+  sunrise,
+  sunset
+}) {
   const bullets = [];
 
   // 🌡️ Temperature bullets
-  if (tempNow <= 40) bullets.push("Chilly start — a light jacket feels good.");
-  else if (tempNow <= 50) bullets.push("Cool morning air — layers help.");
+  if (tempNow <= 32) bullets.push("Cold start — layers feel good this morning 🧥");
+  else if (tempNow <= 45) bullets.push("Chilly morning air — a light jacket helps.");
+  else if (tempNow <= 55) bullets.push("Cool but comfortable — layers work well.");
   else if (tempHigh >= 75) bullets.push("Warm afternoon ahead — short sleeves weather.");
+  else if (tempHigh - tempLow >= 18) bullets.push("Big warm‑up from morning to afternoon.");
 
   // 💨 Wind bullets
-  if (gustMax >= 30) bullets.push("Gusty at times — you’ll notice it 💨");
-  else if (gustMax >= 20) bullets.push("A bit breezy this afternoon.");
+  if (gustMax >= 35) bullets.push("Gusty at times — you’ll notice it 💨");
+  else if (gustMax >= 22) bullets.push("A bit breezy this afternoon.");
 
   // 🌧️ Rain bullets
   if (precipTotal > 0.05) {
     const firstWet = precipHours.findIndex(v => v > 0.02);
     if (firstWet !== -1) {
       const hour = new Date().getHours() + firstWet;
-      const label = to12Hour(hour);
-      bullets.push(`Rain may drift in around ${label} 🌧️`);
+      bullets.push(`Rain may drift in around ${to12Hour(hour)} 🌧️`);
     } else {
       bullets.push("Spotty showers possible later today.");
     }
   }
 
-  // 🌡️ Temperature swing
-  if (tempHigh - tempLow >= 18) {
-    bullets.push("Big warm‑up from morning to afternoon.");
+  // ❄️ Snow bullets
+  if (snowTotal > 0.05) {
+    if (snowTotal < 0.5) bullets.push("Light snow possible — nothing major ❄️");
+    else if (snowTotal < 2) bullets.push("Snow showers may coat colder spots ❄️");
+    else bullets.push("Accumulating snow possible — travel may slow down ❄️");
+  }
+
+  // 💧 Humidity / comfort bullets
+  if (dewNow >= 65) bullets.push("Humid feel at times.");
+  else if (dewNow <= 25) bullets.push("Dry air — very comfortable outside.");
+
+  // 🌄 Sunrise / sunset bullets
+  if (sunrise && sunrise.length > 0) {
+    const sunriseHour = new Date(sunrise[0]).getHours();
+    if (new Date().getHours() < sunriseHour) {
+      bullets.push(`Sunrise around ${to12Hour(sunriseHour)} — early light.`);
+    }
+  }
+
+  if (sunset && sunset.length > 0) {
+    const sunsetHour = new Date(sunset[0]).getHours();
+    if (new Date().getHours() < sunsetHour) {
+      bullets.push(`Sunset near ${to12Hour(sunsetHour)} — cooling after.`);
+    }
+  }
+
+  // 🏔️ Mountain microclimate bullets (Asheville‑aware)
+  if (gustMax >= 20 && tempHigh <= 55) {
+    bullets.push("Cooler on the ridges — breezy in the higher spots.");
+  }
+
+  if (precipTotal > 0.05 && tempNow <= 40) {
+    bullets.push("Colder hollows may see a brief mix early.");
+  }
+
+  if (tempHigh >= 70 && dewNow >= 60) {
+    bullets.push("Warm valley feel — a touch muggy in sheltered spots.");
   }
 
   // Remove duplicates
