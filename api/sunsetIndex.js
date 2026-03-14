@@ -14,7 +14,8 @@ const response = await fetch(
 
 const weather = await response.json();
 
-const hour = new Date().getHours();
+const now = new Date();
+const hour = now.getHours() + 2;
 
 const svi = calculateSVI({
 highCloud: weather.hourly.cloudcover_high[hour],
