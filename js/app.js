@@ -60,6 +60,9 @@ function updateUI(intel) {
   renderTodayDetail(intel);
   renderTomorrowDetail(intel);
 
+  // ⭐ Add this line
+  renderCurrentObservations(intel);
+
   // Station footer
   const footer = document.getElementById("wu-station-footer");
   if (intel.wu?.stationId) {
