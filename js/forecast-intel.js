@@ -620,10 +620,28 @@ export function getHumanActionOutlook(hourly) {
     isGoldilocks
   );
 }
-// ===============================================
-// TODAY ACTION OUTLOOK (with full bullet engine)
-// ===============================================
+// ====================================================
+// TODAY — Human‑Action Outlook (Now → Midnight)
+// (Bullet engine + end‑of‑day override)
+// ====================================================
 export function getTodayActionOutlook(hourly) {
+  const indices = getTodayRemainingWindow(hourly);
+
+  // ⭐ END‑OF‑DAY OVERRIDE (Trigger #2)
+  // If no usable hours remain today → return nighttime message
+  if (!indices.length) {
+    return {
+      badge: { text: "No Hazards", class: "badge-easy" },
+      emoji: "🌙",
+      headline: "The day is winding down.",
+      text: "Fresh forecast updates arrive tomorrow morning.",
+      bullets: [],
+      suppressMicroAdvice: true,
+      isEndOfDay: true
+    };
+  }
+
+  // Normal daytime logic begins here
   const now = new Date();
   const currentHour = now.getHours();
 
@@ -643,20 +661,20 @@ export function getTodayActionOutlook(hourly) {
   const precipTotal = precip.slice(currentHour, currentHour + 12).reduce((a, b) => a + b, 0);
   const snowTotal = snow ? snow.slice(currentHour, currentHour + 12).reduce((a, b) => a + b, 0) : 0;
 
-  // Determine dominant factor (existing logic)
+  // Determine dominant factor
   const dominant = getDominantFactor(tempHigh, gustMax, precipTotal, snowTotal);
 
-  // Get the base outcome (emoji, headline, text)
+  // Base outcome (emoji, headline, main sentence)
   const base = mapActionOutcome(
     dominant,
     describeTemp(tempNow, tempHigh),
-    describePrecip(precipTotal),
+    describePrecip(precipTotal, snowTotal),
     describeWind(gustMax),
     tempHigh,
     isGoldilocks(tempNow, tempHigh)
   );
 
-  // Build bullets
+  // ⭐ Build bullets (warm, human, Asheville‑aware)
   const bullets = buildTodayBullets({
     tempNow,
     tempHigh,
@@ -673,27 +691,10 @@ export function getTodayActionOutlook(hourly) {
   return {
     ...base,
     bullets,
-    suppressMicroAdvice: false
+    suppressMicroAdvice: false,
+    isEndOfDay: false
   };
 }
-
-// ===============================================
-// BULLET ENGINE — Warm, human, Asheville‑aware
-// ===============================================
-function buildTodayBullets({
-  tempNow,
-  tempHigh,
-  tempLow,
-  dewNow,
-  gustMax,
-  precipTotal,
-  precipHours,
-  snowTotal,
-  sunrise,
-  sunset
-}) {
-  const bullets = [];
-
   // 🌡️ Temperature bullets
   if (tempNow <= 32) bullets.push("Cold start — layers feel good this morning 🧥");
   else if (tempNow <= 45) bullets.push("Chilly morning air — a light jacket helps.");
