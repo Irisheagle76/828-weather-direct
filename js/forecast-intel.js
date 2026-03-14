@@ -621,6 +621,74 @@ export function getHumanActionOutlook(hourly) {
   );
 }
 // ====================================================
+// DOMINANT FACTOR — shared scoring logic
+// ====================================================
+function getDominantFactor(tempHigh, gustMax, precipTotal, snowTotal) {
+  const drivers = [];
+
+  // Snow (impact only for real accumulation)
+  if (snowTotal >= 0.5) {
+    drivers.push({
+      type: "snow",
+      score: 80 + snowTotal * 10
+    });
+  }
+
+  // Rain
+  if (snowTotal === 0 && precipTotal >= 0.10) {
+    drivers.push({
+      type: "rain",
+      score: 55 + precipTotal * 20
+    });
+  }
+
+  // Wind
+  if (gustMax >= 40) {
+    drivers.push({
+      type: "wind",
+      score: 50 + gustMax
+    });
+  }
+
+  // Heat
+  if (tempHigh >= 88) {
+    drivers.push({
+      type: "heat",
+      score: 55 + (tempHigh - 88) * 2
+    });
+  }
+
+  // Cold
+  if (tempHigh <= 35) {
+    drivers.push({
+      type: "cold",
+      score: 55 + (35 - tempHigh) * 2
+    });
+  }
+
+  // Goldilocks
+  if (
+    precipTotal < 0.05 &&
+    snowTotal === 0 &&
+    gustMax < 26 &&
+    tempHigh >= 60 &&
+    tempHigh <= 75
+  ) {
+    drivers.push({
+      type: "goldilocks",
+      score: 40
+    });
+  }
+
+  // Default
+  if (!drivers.length) {
+    return "easy";
+  }
+
+  drivers.sort((a, b) => b.score - a.score);
+  return drivers[0].type;
+}
+// ====================================================
 // TODAY — Human‑Action Outlook (Now → Midnight)
 // (Bullet engine + end‑of‑day override)
 // ====================================================
