@@ -128,6 +128,9 @@ function dedupeBullets(bullets) {
     // Collapse whitespace
     key = key.replace(/\s+/g, " ").trim();
 
+    // ⭐ NEW: Sort words alphabetically to unify phrasing
+    key = key.split(" ").sort().join(" ");
+
     if (!seen.has(key)) {
       seen.add(key);
       result.push(b);
