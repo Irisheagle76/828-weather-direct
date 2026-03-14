@@ -3,7 +3,8 @@
 import {
   getHumanActionOutlook,
   getTodayActionOutlook,
-  getComfortCategory as computeComfort
+  getComfortCategory,
+  getComfortSummary
 } from './forecast-intel.js';
 
 import {
@@ -26,13 +27,26 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
     wuCurrent.solarRadiation
   );
 
-  // ⭐ 2. Comfort
-  const comfort = computeComfort(
-    wuCurrent.temp,
-    wuCurrent.dewPoint,
-    wuCurrent.windGust ?? 0,
-    mrmsPixel.rate ?? 0
-  );
+  // ⭐ 2. RIGHT NOW COMFORT (fixed)
+  const tempNow = wuCurrent.temp;
+  const dewNow = wuCurrent.dewPoint;
+
+  const comfortCategory = getComfortCategory(tempNow, dewNow);
+  const comfortSummary = getComfortSummary(tempNow, dewNow);
+
+  const comfortEmojiMap = {
+    cold: "🥶",
+    cool: "🧥",
+    mild: "🙂",
+    warm: "😎",
+    hot: "🥵"
+  };
+
+  const rightNowComfort = {
+    category: comfortCategory,
+    summary: comfortSummary,
+    emoji: comfortEmojiMap[comfortCategory] || "🙂"
+  };
 
   // ⭐ 3. Today + Tomorrow (core outlooks)
   const today = getTodayActionOutlook(hourly);
@@ -43,14 +57,14 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
     isFalling: mrmsPixel.rate > 0,
     type: mrmsPixel.type,
     intensity: mrmsPixel.intensity,
-    source: "placeholder"
+    source: "mrms"
   };
 
   // ⭐ 5. Micro‑advice
   const microAdvice = getMicroAdvice({
     wu: wuCurrent,
     today,
-    comfort
+    comfort: rightNowComfort
   });
 
   // ============================================================
@@ -167,7 +181,7 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
   return {
     wu: wuCurrent,
     uv: reliableUV,
-    comfort,
+    rightNowComfort,
     today,
     tomorrow,
     precipSignal,
