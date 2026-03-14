@@ -4,8 +4,7 @@ import {
   getHumanActionOutlook,
   getTodayActionOutlook,
     getComfortCategory as computeComfort,
-  getTodayRemainingWindow,
-  getTomorrowWindow
+   getTomorrowWindow
 } from './forecast-intel.js';
 
 import {
