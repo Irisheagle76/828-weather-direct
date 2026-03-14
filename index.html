@@ -226,51 +226,51 @@
   }
 
   /* ===============================
-     Expanded Forecast Panel (NEW)
+     Expanded Forecast Panel
      =============================== */
 
   .expanded-panel {
-  margin-top: 1rem;
-  padding: 1.2rem 1.4rem;
-  background: rgba(20, 26, 42, 0.88);
-  border: 1px solid rgba(255,255,255,0.10);
-  border-radius: 18px;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
-  color: #e8eaf6;
-  line-height: 1.45;
-  transition: all 0.25s ease;
-}
+    margin-top: 1rem;
+    padding: 1.2rem 1.4rem;
+    background: rgba(20, 26, 42, 0.88);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 18px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+    color: #e8eaf6;
+    line-height: 1.45;
+    transition: all 0.25s ease;
+  }
 
-.expanded-panel .fx-section {
-  margin-bottom: 1.1rem;
-}
+  .expanded-panel .fx-section {
+    margin-bottom: 1.1rem;
+  }
 
-.expanded-panel .fx-section:last-child {
-  margin-bottom: 0;
-}
+  .expanded-panel .fx-section:last-child {
+    margin-bottom: 0;
+  }
 
-.expanded-panel .fx-label {
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #f0b777;
-  margin-bottom: 0.25rem;
-}
+  .expanded-panel .fx-label {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #f0b777;
+    margin-bottom: 0.25rem;
+  }
 
-.expanded-panel .fx-value {
-  font-size: 0.95rem;
-  color: #d8dff7;
-}
+  .expanded-panel .fx-value {
+    font-size: 0.95rem;
+    color: #d8dff7;
+  }
 
-.expanded-panel .fx-hourly div {
-  padding: 0.25rem 0;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-}
+  .expanded-panel .fx-hourly div {
+    padding: 0.25rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
 
-.expanded-panel .fx-hourly div:last-child {
-  border-bottom: none;
-}
+  .expanded-panel .fx-hourly div:last-child {
+    border-bottom: none;
+  }
 
   /* UV card enhancements */
   .metric .metric-value#wu-uv {
@@ -288,50 +288,7 @@
   .uv-extreme{ color: #6A1B9A; }
 
   /* ===============================
-     Forecast Alerts Module
-     =============================== */
-
-  .forecast-module {
-    margin-top: var(--gap);
-    padding: var(--module-padding);
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: var(--module-radius);
-  }
-
-  .forecast-title {
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #f0b777;
-    margin-bottom: 0.6rem;
-  }
-
-  .forecast-icons {
-    display: flex;
-    gap: 0.6rem;
-    flex-wrap: wrap;
-    margin-bottom: 0.6rem;
-  }
-
-  .forecast-icon {
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.12);
-    padding: 0.45rem 0.65rem;
-    border-radius: 10px;
-    font-size: 0.78rem;
-    color: #ffd28a;
-  }
-
-  .forecast-detail {
-    font-size: 0.82rem;
-    color: #c4c9e5;
-    line-height: 1.35;
-    margin-top: 0.4rem;
-  }
-
-  /* ===============================
-     FOOTER STYLE (NEW)
+     FOOTER STYLE
      =============================== */
   .footer-note {
     margin-top: var(--gap);
@@ -428,36 +385,27 @@
 
     </div> <!-- end now-col -->
 
-<!-- TOMORROW COLUMN -->
-<div class="tomorrow-col">
+    <!-- TOMORROW COLUMN -->
+    <div class="tomorrow-col">
 
-  <div class="tomorrow-module action-module" id="tomorrow-module">
-    <div id="action-emoji" class="action-emoji">--</div>
-    <div>
-      <div class="action-label">Tomorrow’s human‑action outlook</div>
-      <div id="action-badge" class="action-badge"></div>
-      <div id="action-headline" class="action-headline">Analyzing tomorrow’s setup…</div>
-      <div id="action-text" class="action-text"></div>
-    </div>
-  </div>
+      <div class="tomorrow-module action-module" id="tomorrow-module">
+        <div id="action-emoji" class="action-emoji">--</div>
+        <div>
+          <div class="action-label">Tomorrow’s human‑action outlook</div>
+          <div id="action-badge" class="action-badge"></div>
+          <div id="action-headline" class="action-headline">Analyzing tomorrow’s setup…</div>
+          <div id="action-text" class="action-text"></div>
+        </div>
+      </div>
 
-  <!-- TOMORROW EXPANDED PANEL -->
-  <div class="expanded-panel" id="expanded-tomorrow" style="display:none;"></div>
+      <!-- TOMORROW EXPANDED PANEL -->
+      <div class="expanded-panel" id="expanded-tomorrow" style="display:none;"></div>
 
-</div> <!-- end tomorrow-col -->
+    </div> <!-- end tomorrow-col -->
 
   </div> <!-- end now-tomorrow-row -->
 
-  <!-- ALERTS MODULE -->
-  <div id="forecast-module" class="forecast-module">
-    <div class="forecast-title">Upcoming Weather Alerts</div>
-    <div id="forecast-icons" class="forecast-icons"></div>
-    <div id="forecast-detail" class="forecast-detail"></div>
-  </div>
-
-  <!-- ===========================
-       FOOTER — STATION INFO
-       =========================== -->
+  <!-- FOOTER — STATION INFO -->
   <div class="footer-note" id="wu-station-footer">
     Live data from Weather Underground Station --
   </div>
