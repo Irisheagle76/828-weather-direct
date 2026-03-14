@@ -3,8 +3,7 @@
 import {
   getHumanActionOutlook,
   getTodayActionOutlook,
-  getComfortCategory as computeComfort,
-  getTomorrowWindow
+  getComfortCategory as computeComfort
 } from './forecast-intel.js';
 
 import {
@@ -128,15 +127,33 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
     return { max: maxUV, hours: peakHours };
   }
 
-  // ⭐ Build windows (no imports needed)
+  // ============================================================
+  // ⭐ 7. Build windows (local implementations)
+  // ============================================================
+
   const now = new Date();
 
+  // TODAY window: now → midnight
   const todayIndices = hourly.time
     .map((t, i) => ({ t: new Date(t), i }))
     .filter(obj => obj.t >= now && obj.t.getDate() === now.getDate())
     .map(obj => obj.i);
 
-  const tomorrowIndices = getTomorrowWindow(hourly);
+  // TOMORROW window: midnight → 23:59 tomorrow
+  const tomorrowDate = new Date(now);
+  tomorrowDate.setDate(now.getDate() + 1);
+
+  const tomorrowIndices = hourly.time
+    .map((t, i) => ({ t: new Date(t), i }))
+    .filter(obj =>
+      obj.t.getDate() === tomorrowDate.getDate() &&
+      obj.t.getMonth() === tomorrowDate.getMonth()
+    )
+    .map(obj => obj.i);
+
+  // ============================================================
+  // ⭐ 8. Build detail objects
+  // ============================================================
 
   const todayDetail = {
     high: Math.round(Math.max(...todayIndices.map(i => hourly.temperature_2m[i]))),
@@ -158,7 +175,10 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
     reasoning: buildReasoning()
   };
 
-  // ⭐ 7. Return unified intel object
+  // ============================================================
+  // ⭐ 9. Return unified intel object
+  // ============================================================
+
   return {
     wu: wuCurrent,
     uv: reliableUV,
