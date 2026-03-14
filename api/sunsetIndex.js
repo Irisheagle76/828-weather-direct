@@ -17,13 +17,22 @@ const weather = await response.json();
 const now = new Date();
 const hour = now.getHours() + 2;
 
-const svi = calculateSVI({
+let svi = calculateSVI({
 highCloud: weather.hourly.cloudcover_high[hour],
 midCloud: weather.hourly.cloudcover_mid[hour],
 lowCloud: weather.hourly.cloudcover_low[hour],
 humidity: weather.hourly.relativehumidity_2m[hour],
 pm25: 10
 });
+
+const highCloud = weather.hourly.cloudcover_high[hour];
+const lowCloud = weather.hourly.cloudcover_low[hour];
+
+if (highCloud >= 25 && highCloud <= 70 && lowCloud < 20) {
+svi += 8;
+}
+
+if (svi > 100) svi = 100;
 
 res.status(200).json({
 location: "Asheville",
