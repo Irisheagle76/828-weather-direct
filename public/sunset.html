@@ -35,7 +35,17 @@ async function loadSunset() {
 const response = await fetch("/api/sunsetIndex");
 const data = await response.json();
 
-document.getElementById("score").innerText = data.sunsetIndex;
+let label = "";
+
+if (data.sunsetIndex >= 90) label = "🔥 Epic sunset likely";
+else if (data.sunsetIndex >= 80) label = "🌇 Spectacular";
+else if (data.sunsetIndex >= 70) label = "🌄 Very good";
+else if (data.sunsetIndex >= 55) label = "🙂 Decent";
+else if (data.sunsetIndex >= 40) label = "😐 Average";
+else label = "☁️ Poor";
+
+document.getElementById("score").innerText =
+data.sunsetIndex + " — " + label;
 
 }
 
