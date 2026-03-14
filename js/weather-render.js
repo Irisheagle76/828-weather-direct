@@ -190,4 +190,3 @@ export function toggleForecastExpanded(which, intel) {
     return;
   }
 }
-}
