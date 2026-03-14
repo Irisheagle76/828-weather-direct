@@ -2,44 +2,7 @@
 // ============================================================
 // WEATHER RENDERER — Today, Tomorrow, Comfort, UV, Details
 // ============================================================
-// ------------------------------------------------------------
-// RENDER CURRENT OBSERVATIONS (WU)
-// ------------------------------------------------------------
-export function renderCurrentObservations(intel) {
-  const wu = intel.wu;
-  if (!wu) return;
 
-  const tempEl = document.getElementById("wu-temp");
-  const dewEl = document.getElementById("wu-dew");
-  const humEl = document.getElementById("wu-humidity");
-  const windEl = document.getElementById("wu-wind");
-  const gustEl = document.getElementById("wu-gust");
-  const uvEl = document.getElementById("wu-uv");
-  const solarEl = document.getElementById("wu-solar");
-
-  if (tempEl) tempEl.textContent = wu.temp != null ? `${wu.temp}°` : "--";
-  if (dewEl) dewEl.textContent = wu.dewPoint != null ? `${wu.dewPoint}°` : "--";
-  if (humEl) humEl.textContent = wu.humidity != null ? `${wu.humidity}%` : "--";
-
-  if (windEl) {
-    const dir = wu.windDir != null ? degToCompass(wu.windDir) : "";
-    const spd = wu.windSpeed != null ? `${wu.windSpeed} mph` : "--";
-    windEl.textContent = dir ? `${dir} ${spd}` : spd;
-  }
-
-  if (gustEl) {
-    gustEl.textContent = wu.windGust != null ? `${wu.windGust} mph` : "--";
-  }
-
-  if (uvEl) {
-    uvEl.textContent = wu.uv != null ? wu.uv : "--";
-    uvEl.className = getUVClass(wu.uv ?? 0);
-  }
-
-  if (solarEl) {
-    solarEl.textContent = wu.solarRadiation != null ? wu.solarRadiation : "--";
-  }
-}
 // ------------------------------------------------------------
 // RENDER CURRENT OBSERVATIONS (WU)
 // ------------------------------------------------------------
@@ -60,7 +23,6 @@ export function renderCurrentObservations(intel) {
   if (tempEl) {
     tempEl.textContent = wu.temp != null ? `${wu.temp}°` : "--";
 
-    // Remove old classes
     tempEl.className = "metric-value";
 
     const t = wu.temp;
@@ -112,6 +74,7 @@ export function renderCurrentObservations(intel) {
     uvEl.className = "metric-value " + getUVClass(wu.uv ?? 0);
   }
 }
+
 // ------------------------------------------------------------
 // Compass helper (used by intel-plus)
 // ------------------------------------------------------------
@@ -145,7 +108,6 @@ function renderBullets(ul, bullets) {
   bullets.forEach(b => {
     const li = document.createElement("li");
 
-    // Emoji-first bullet
     if (/^[\p{Emoji}]/u.test(b)) {
       li.textContent = b;
     } else {
@@ -211,7 +173,7 @@ export function renderTomorrowOutlook(intel) {
 }
 
 // ------------------------------------------------------------
-// RENDER UV INDEX
+// RENDER UV INDEX (FORECAST)
 // ------------------------------------------------------------
 export function renderUV(intel) {
   const uvEl = document.getElementById("wu-uv");
