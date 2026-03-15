@@ -1011,7 +1011,7 @@ export {
   // Clothing + human action
   getClothingGuidance,
   getActionRecommendations,
-  getPlannerBullets,
+ 
 
   // Helpers (if needed externally)
   getTodayRemainingWindow,
