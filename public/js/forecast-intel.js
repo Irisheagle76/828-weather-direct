@@ -603,18 +603,20 @@ export function getTodayActionOutlook(hourly) {
     snowTotal
   );
 
-  return {
-    emoji: emojiForFactor(dominant),
-    headline: buildHeadline(phases, drivers, trends),
-    text: buildNarrative(phases, drivers, trends),
-    bullets: buildBullets(phases, drivers, trends),
-    meta: {
-      phases,
-      drivers,
-      trends,
-      dominant
-    }
-  };
+const synthesized = synthesizeOutlook({
+  raw: {
+    meta: { phases, drivers, trends, dominant }
+  },
+  comfort: {
+    summary: getComfortSummary(hourly, indices)
+  }
+});
+
+return {
+  emoji: emojiForFactor(dominant),
+  ...synthesized,
+  meta: { phases, drivers, trends, dominant }
+};
 }
 
 export function getHumanActionOutlook(hourly) {
