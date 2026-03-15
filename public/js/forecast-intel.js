@@ -1,319 +1,160 @@
 // ============================================================
-// forecast-intel.js (Option A Edition)
-// Full rewrite — Section 1 of 4
-// Core Helpers + Stats + Descriptors + Dominant Factor
+// MULTI‑PHASE WEATHER ENGINE (NEW)
 // ============================================================
 
+// Analyze a day's hourly slice and detect phases, trends, and drivers
+export function analyzeDay(hours) {
+  const phases = detectPhases(hours);
+  const trends = detectTrends(hours);
+  const drivers = detectDominantDrivers(hours, phases, trends);
+  const snow = detectSnowBehindFront(hours);
+
+  const isEventDay =
+    phases.length > 1 ||
+    drivers.includes("front") ||
+    drivers.includes("temp-drop");
+
+  return {
+    isEventDay,
+    phases,
+    trends,
+    drivers,
+    snow
+  };
+}
+
 // ------------------------------------------------------------
-// BASIC HELPERS
+// PHASE DETECTION
 // ------------------------------------------------------------
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
-}
+function detectPhases(hours) {
+  const phases = [];
 
-function avg(arr) {
-  if (!arr || !arr.length) return null;
-  return arr.reduce((a, b) => a + b, 0) / arr.length;
-}
+  const hasRainEarly = hours.some((h, i) =>
+    i >= 6 && i <= 12 &&
+    h.precip > 0.02 &&
+    h.snow === 0 &&
+    h.temp > 34
+  );
 
-function toLocalDate(isoString) {
-  return new Date(isoString);
-}
+  const hasThunder = hours.some((h, i) =>
+    h.precip > 0.10 &&
+    h.temp >= 55 &&
+    h.gust >= 25
+  );
 
-function to12Hour(hour) {
-  const h = hour % 12 || 12;
-  const suffix = hour >= 12 ? "PM" : "AM";
-  return `${h} ${suffix}`;
+  const hasFrontalPassage = detectFrontalPassage(hours);
+  const hasPostFrontalCold = detectPostFrontalCold(hours);
+  const hasNwSnow = detectSnowBehindFront(hours).nwFlowSnow;
+
+  if (hasRainEarly) phases.push("rain-early");
+  if (hasThunder) phases.push("thunder-embedded");
+  if (hasFrontalPassage) phases.push("frontal-passage");
+  if (hasPostFrontalCold) phases.push("post-frontal-cold");
+  if (hasNwSnow) phases.push("nw-snow");
+
+  return phases;
 }
 
 // ------------------------------------------------------------
-// TIME + WINDOW HELPERS
+// FRONTAL PASSAGE DETECTION
 // ------------------------------------------------------------
-function getHourlyWindowForDay(hourly, targetDate) {
-  const times = hourly.time || [];
-  const indices = [];
+function detectFrontalPassage(hours) {
+  for (let i = 1; i < hours.length; i++) {
+    const prev = hours[i - 1];
+    const curr = hours[i];
 
-  const start = new Date(targetDate);
-  start.setHours(0, 0, 0, 0);
+    const tempDrop = prev.temp - curr.temp >= 4;
+    const gustSpike = curr.gust - prev.gust >= 6;
+    const precipEnds = prev.precip > 0.02 && curr.precip === 0;
 
-  const end = new Date(targetDate);
-  end.setHours(23, 59, 59, 999);
-
-  for (let i = 0; i < times.length; i++) {
-    const t = toLocalDate(times[i]);
-    if (t >= start && t <= end) indices.push(i);
-  }
-
-  return indices;
-}
-
-function getTodayRemainingWindow(hourly) {
-  const times = hourly.time || [];
-  const indices = [];
-
-  const now = new Date();
-  const end = new Date(now);
-  end.setHours(23, 59, 59, 999);
-
-  for (let i = 0; i < times.length; i++) {
-    const t = new Date(times[i]);
-    if (t >= now && t <= end) indices.push(i);
-  }
-
-  if (indices.length < 3) return [];
-  return indices;
-}
-
-function getTomorrowWindow(hourly) {
-  const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setDate(now.getDate() + 1);
-
-  const indices = getHourlyWindowForDay(hourly, tomorrow);
-  if (indices.length < 6) return [];
-  return indices;
-}
-
-function sliceHourly(hourly, indices) {
-  const result = {};
-  for (const key of Object.keys(hourly)) {
-    const arr = hourly[key];
-    if (!Array.isArray(arr)) continue;
-    result[key] = indices.map(i => arr[i]);
-  }
-  return result;
-}
-// ------------------------------------------------------------
-// TIMING HELPERS — index-based, human-friendly
-// ------------------------------------------------------------
-function hourIndexToLocalHour(index) {
-  return index % 24;
-}
-
-function describeTimeOfDay(hourIndex) {
-  const hour = hourIndexToLocalHour(hourIndex);
-
-  if (hour >= 5 && hour < 9) return "early morning";
-  if (hour >= 9 && hour < 12) return "late morning";
-  if (hour >= 12 && hour < 15) return "early afternoon";
-  if (hour >= 15 && hour < 18) return "late afternoon";
-  if (hour >= 18 && hour < 22) return "evening";
-  return "overnight";
-}
-
-function findEventTiming(windowed, start, end, conditionFn) {
-  let first = null;
-  let last = null;
-
-  for (let i = start; i <= end; i++) {
-    if (conditionFn(i, windowed)) {
-      if (first === null) first = i;
-      last = i;
+    if ((tempDrop && gustSpike) || (tempDrop && precipEnds)) {
+      return true;
     }
   }
-
-  return { firstHour: first, lastHour: last };
-}
-
-function timingPhrase(timing, isTomorrow) {
-  if (timing.firstHour === null || timing.lastHour === null) return "";
-
-  const start = timing.firstHour;
-  const end = timing.lastHour;
-  const duration = end - start + 1;
-
-  const startPart = describeTimeOfDay(start);
-  const endPart = describeTimeOfDay(end);
-
-  const dayLabel = isTomorrow ? " tomorrow" : "";
-
-  if (duration >= 8 || (startPart === "early morning" && endPart === "evening")) {
-    return ` throughout the day${dayLabel}`;
-  }
-
-  const dayparts = new Set([startPart, endPart]);
-  if (dayparts.size >= 3) {
-    return ` most of the day${dayLabel}`;
-  }
-
-  const startHourLocal = hourIndexToLocalHour(start);
-  const endHourLocal = hourIndexToLocalHour(end);
-  if (startHourLocal >= 22 || endHourLocal <= 6) {
-    return ` overnight${dayLabel}`;
-  }
-
-  if (startPart === endPart) {
-    return ` ${startPart}${dayLabel}`;
-  }
-
-  return ` from ${startPart}${dayLabel} into ${endPart}${dayLabel}`;
-}
-// ------------------------------------------------------------
-// STATS HELPERS
-// ------------------------------------------------------------
-function basicStats(arr) {
-  if (!arr || !arr.length) {
-    return { min: null, max: null, avg: null };
-  }
-
-  let min = arr[0];
-  let max = arr[0];
-  let sum = 0;
-
-  for (const v of arr) {
-    if (v < min) min = v;
-    if (v > max) max = v;
-    sum += v;
-  }
-
-  return { min, max, avg: sum / arr.length };
-}
-
-function getTempStats(win) {
-  return basicStats(win.temperature_2m || []);
-}
-
-function getDewStats(win) {
-  return basicStats(win.dewpoint_2m || []);
-}
-
-function getWindStats(win) {
-  return basicStats(win.windgusts_10m || []);
-}
-
-function getPrecipTotal(win) {
-  const arr = win.precipitation || [];
-  return arr.length ? arr.reduce((a, b) => a + b, 0) : 0;
-}
-
-function getSnowTotal(win) {
-  const arr = win.snowfall || [];
-  return arr.length ? arr.reduce((a, b) => a + b, 0) : 0;
+  return false;
 }
 
 // ------------------------------------------------------------
-// DESCRIPTORS
+// POST‑FRONTAL COLD DETECTION
 // ------------------------------------------------------------
-function describePrecip(precipTotal, snowTotal) {
-  if (snowTotal >= 1.0) return "accumulating snow";
-  if (snowTotal >= 0.5) return "light accumulating snow";
-  if (snowTotal >= 0.2) return "a few flurries";
-  if (snowTotal > 0)   return "a stray flake or two";
+function detectPostFrontalCold(hours) {
+  const afternoon = hours.slice(12, 18);
+  if (afternoon.length < 2) return false;
 
-  if (precipTotal < 0.02) return "mainly dry conditions";
-  if (precipTotal < 0.10) return "a few light showers";
-  if (precipTotal < 0.25) return "on-and-off showers";
-  if (precipTotal < 0.75) return "a soaking rain at times";
-  return "periods of heavy rain";
-}
+  const start = afternoon[0].temp;
+  const end = afternoon[afternoon.length - 1].temp;
 
-function describeWind(gustMax) {
-  if (gustMax >= 45) return "very windy conditions";
-  if (gustMax >= 40) return "quite gusty winds";
-  if (gustMax >= 35) return "breezy at times";
-  if (gustMax >= 30) return "a light breeze";
-  return "generally light winds";
-}
-
-function describeTempRange(stats) {
-  if (!stats || stats.min == null || stats.max == null) {
-    return "temperature details unavailable";
-  }
-
-  const { min, max } = stats;
-
-  if (max <= 40) return "a cold day overall";
-  if (max <= 55) return "a cool day overall";
-  if (max <= 72) return "a mild day overall";
-  if (max <= 82) return "a warm day overall";
-  return "a hot day overall";
-}
-
-function describeTemp(tempNow, tempHigh) {
-  if (tempHigh <= 40) return "a cold day overall";
-  if (tempHigh <= 55) return "a cool day overall";
-  if (tempHigh <= 72) return "a mild day overall";
-  if (tempHigh <= 82) return "a warm day overall";
-  return "a hot day overall";
+  return end <= start - 6;
 }
 
 // ------------------------------------------------------------
-// PHRASE MERGER (shared)
+// TREND ENGINE
 // ------------------------------------------------------------
-function mergePhrases(...parts) {
-  const cleaned = parts
-    .filter(Boolean)
-    .map((p, i) => {
-      let s = p.trim();
+function detectTrends(hours) {
+  if (!hours.length) return { tempFalling: false, tempRising: false };
 
-      s = s.replace(/[.,]+$/, "");
-      s = s.replace(/^Expect\s+/i, "");
+  const first = hours[0].temp;
+  const last = hours[hours.length - 1].temp;
 
-      if (/^mainly dry$/i.test(s)) s = "mainly dry conditions";
-
-      s = s
-        .replace(/light wind$/i, "light winds")
-        .replace(/generally light wind$/i, "generally light winds")
-        .replace(/quite gusty$/i, "quite gusty winds")
-        .replace(/very windy$/i, "very windy conditions");
-
-      if (i > 0) {
-        s = s.charAt(0).toLowerCase() + s.slice(1);
-      }
-
-      return s;
-    });
-
-  if (cleaned.length === 0) return "";
-  if (cleaned.length === 1) return cleaned[0];
-
-  const [first, ...rest] = cleaned;
-  return first + " with " + rest.join(" and ");
+  return {
+    tempFalling: last <= first - 8,
+    tempRising: last >= first + 8
+  };
 }
 
 // ------------------------------------------------------------
-// DOMINANT FACTOR SCORING
+// DOMINANT DRIVER DETECTION
 // ------------------------------------------------------------
-function getDominantFactor(tempHigh, gustMax, precipTotal, snowTotal) {
+function detectDominantDrivers(hours, phases, trends) {
   const drivers = [];
 
-  if (snowTotal >= 0.5) {
-    drivers.push({ type: "snow", score: 80 + snowTotal * 10 });
-  }
+  const windy = hours.some(h => h.gust >= 25);
+  const rainy = hours.some(h => h.precip > 0.05 && h.snow === 0);
+  const snowy = hours.some(h => h.snow > 0);
 
-  if (snowTotal === 0 && precipTotal >= 0.10) {
-    drivers.push({ type: "rain", score: 55 + precipTotal * 20 });
-  }
+  if (phases.includes("frontal-passage")) drivers.push("front");
+  if (windy) drivers.push("wind");
+  if (rainy) drivers.push("precip");
+  if (snowy) drivers.push("snow");
+  if (trends.tempFalling) drivers.push("temp-drop");
+  if (trends.tempRising) drivers.push("warm-surge");
 
-  if (gustMax >= 40) {
-    drivers.push({ type: "wind", score: 50 + gustMax });
-  }
+  return drivers;
+}
 
-  if (tempHigh >= 88) {
-    drivers.push({ type: "heat", score: 55 + (tempHigh - 88) * 2 });
-  }
+// ------------------------------------------------------------
+// NW‑FLOW SNOW DETECTION (inferred)
+// ------------------------------------------------------------
+function detectSnowBehindFront(hours) {
+  const nwSnow = hours.some(h => {
+    const coldEnough = h.temp <= 36;
+    const precip = h.precip > 0.01;
+    const snow = h.snow > 0;
+    const gusty = h.gust >= 20;
 
-  if (tempHigh <= 35) {
-    drivers.push({ type: "cold", score: 55 + (35 - tempHigh) * 2 });
-  }
+    return coldEnough && (snow || precip) && gusty;
+  });
 
-  if (
-    precipTotal < 0.05 &&
-    snowTotal === 0 &&
-    gustMax < 26 &&
-    tempHigh >= 60 &&
-    tempHigh <= 75
-  ) {
-    drivers.push({ type: "goldilocks", score: 40 });
-  }
+  return { nwFlowSnow: nwSnow };
+}
 
-  if (!drivers.length) return "easy";
-
-  drivers.sort((a, b) => b.score - a.score);
-  return drivers[0].type;
+// ------------------------------------------------------------
+// HOURLY NORMALIZER (NEW)
+// Converts your raw hourly arrays into objects the engine can use
+// ------------------------------------------------------------
+export function normalizeHourly(hourly, indices) {
+  return indices.map(i => ({
+    temp: hourly.temperature_2m[i],
+    dew: hourly.dewpoint_2m[i],
+    gust: hourly.windgusts_10m[i],
+    precip: hourly.precipitation[i],
+    snow: hourly.snowfall[i],
+    uv: hourly.uv_index ? hourly.uv_index[i] : 0,
+    time: hourly.time[i]
+  }));
 }
 // ============================================================
-// PART 2 — TODAY — Human‑Action Outlook (Option A)
+// PART 2 — TODAY — Human‑Action Outlook (Upgraded)
 // ============================================================
 
 // Clothing helper — returns a short phrase or null
@@ -329,13 +170,11 @@ function getClothingAdviceToday(tempNow, tempHigh, dewNow, gustMax) {
   if (dewNow >= 65) advice.push("light, breathable clothing helps");
 
   if (!advice.length) return null;
-
-  // Return a single merged clothing phrase
   return advice[0];
 }
 
 // ------------------------------------------------------------
-// TODAY ACTION OUTLOOK (Option A)
+// TODAY ACTION OUTLOOK (Upgraded)
 // ------------------------------------------------------------
 export function getTodayActionOutlook(hourly) {
   const indices = getTodayRemainingWindow(hourly);
@@ -356,7 +195,7 @@ export function getTodayActionOutlook(hourly) {
   const now = new Date();
   const currentHour = now.getHours();
 
-  // Pull key stats
+  // Pull key stats (next 12 hours)
   const temps = hourly.temperature_2m;
   const dew = hourly.dewpoint_2m;
   const gusts = hourly.windgusts_10m;
@@ -364,15 +203,21 @@ export function getTodayActionOutlook(hourly) {
   const snow = hourly.snowfall || [];
 
   const tempNow = temps[currentHour];
-  const tempHigh = Math.max(...temps.slice(currentHour, currentHour + 12));
-  const tempLow = Math.min(...temps.slice(currentHour, currentHour + 12));
+  const tempSlice = temps.slice(currentHour, currentHour + 12);
+  const tempHigh = Math.max(...tempSlice);
+  const tempLow = Math.min(...tempSlice);
 
   const dewNow = dew[currentHour];
   const gustMax = Math.max(...gusts.slice(currentHour, currentHour + 12));
   const precipTotal = precip.slice(currentHour, currentHour + 12).reduce((a, b) => a + b, 0);
   const snowTotal = snow.slice(currentHour, currentHour + 12).reduce((a, b) => a + b, 0);
 
-  // Dominant factor
+  // Multi‑phase analysis (NEW)
+  const normalized = normalizeHourly(hourly, indices);
+  const analysis = analyzeDay(normalized);
+  const { isEventDay, phases, trends, drivers, snow: snowSig } = analysis;
+
+  // Dominant factor (existing logic still used)
   const dominant = getDominantFactor(tempHigh, gustMax, precipTotal, snowTotal);
 
   // Base descriptors
@@ -380,52 +225,74 @@ export function getTodayActionOutlook(hourly) {
   const precipDesc = describePrecip(precipTotal, snowTotal);
   const windDesc = describeWind(gustMax);
 
-  // Clothing logic (A2)
+  // Clothing logic
   const clothing = getClothingAdviceToday(tempNow, tempHigh, dewNow, gustMax);
 
-  // Build main sentence (Option A)
-  let mainSentence = mergePhrases(tempDesc, precipDesc, windDesc);
-  if (clothing && (dominant === "cold" || dominant === "heat" || dominant === "wind")) {
-    mainSentence = mergePhrases(mainSentence, clothing);
+  // Main sentence — event‑day aware
+  let mainSentence;
+
+  if (isEventDay) {
+    mainSentence = buildTodayEventMainSentence({
+      tempDesc,
+      precipDesc,
+      windDesc,
+      clothing,
+      phases,
+      trends,
+      drivers,
+      snowSig
+    });
+  } else {
+    mainSentence = mergePhrases(tempDesc, precipDesc, windDesc);
+    if (clothing && (dominant === "cold" || dominant === "heat" || dominant === "wind")) {
+      mainSentence = mergePhrases(mainSentence, clothing);
+    }
   }
+
   mainSentence = mainSentence.charAt(0).toUpperCase() + mainSentence.slice(1) + ".";
 
-  // Emoji + headline (unchanged)
+  // Emoji + headline — event‑day aware
   let emoji = "🙂";
   let headline = "A straightforward day.";
 
-  switch (dominant) {
-    case "snow":
-      emoji = "❄️";
-      headline = "Allow extra travel time.";
-      break;
-    case "rain":
-      emoji = "🌧️";
-      headline = "Bring a rain jacket.";
-      break;
-    case "wind":
-      emoji = "💨";
-      headline = "Secure loose outdoor items.";
-      break;
-    case "heat":
-      emoji = "🥵";
-      headline = "Stay hydrated.";
-      break;
-    case "cold":
-      emoji = "🥶";
-      headline = "Dress in warm layers.";
-      break;
-    case "goldilocks":
-      emoji = "🌟";
-      headline = "Make outdoor plans.";
-      break;
-    default:
-      emoji = "🙂";
-      headline = "A calm, easygoing day.";
+  if (isEventDay) {
+    const eventHeadline = buildTodayEventHeadline({ drivers, phases, trends });
+    emoji = eventHeadline.emoji;
+    headline = eventHeadline.headline;
+  } else {
+    switch (dominant) {
+      case "snow":
+        emoji = "❄️";
+        headline = "Allow extra travel time.";
+        break;
+      case "rain":
+        emoji = "🌧️";
+        headline = "Bring a rain jacket.";
+        break;
+      case "wind":
+        emoji = "💨";
+        headline = "Secure loose outdoor items.";
+        break;
+      case "heat":
+        emoji = "🥵";
+        headline = "Stay hydrated.";
+        break;
+      case "cold":
+        emoji = "🥶";
+        headline = "Dress in warm layers.";
+        break;
+      case "goldilocks":
+        emoji = "🌟";
+        headline = "Make outdoor plans.";
+        break;
+      default:
+        emoji = "🙂";
+        headline = "A calm, easygoing day.";
+    }
   }
 
-  // Build bullets (Option A — supporting details only)
-  const bullets = buildTodayBullets({
+  // Bullets — upgraded, event‑day aware
+  const bullets = buildTodayBulletsUpgraded({
     tempNow,
     tempHigh,
     tempLow,
@@ -436,7 +303,8 @@ export function getTodayActionOutlook(hourly) {
     snowTotal,
     sunrise: hourly.sunrise,
     sunset: hourly.sunset,
-    clothing
+    clothing,
+    analysis
   });
 
   return {
@@ -451,9 +319,90 @@ export function getTodayActionOutlook(hourly) {
 }
 
 // ------------------------------------------------------------
-// TODAY BULLET ENGINE (Option A)
+// TODAY EVENT‑DAY MAIN SENTENCE (NEW)
 // ------------------------------------------------------------
-function buildTodayBullets({
+function buildTodayEventMainSentence({
+  tempDesc,
+  precipDesc,
+  windDesc,
+  clothing,
+  phases,
+  trends,
+  drivers,
+  snowSig
+}) {
+  // Prioritize sequence + impact over simple blending
+  const parts = [];
+
+  if (phases.includes("rain-early")) {
+    parts.push("rain moves through early");
+  }
+  if (phases.includes("thunder-embedded")) {
+    parts.push("a few rumbles are possible with the morning rain");
+  }
+  if (phases.includes("frontal-passage")) {
+    parts.push("a strong front brings a sharp change");
+  }
+  if (phases.includes("post-frontal-cold") || trends.tempFalling) {
+    parts.push("it turns noticeably colder later");
+  }
+  if (phases.includes("nw-snow") || snowSig.nwFlowSnow) {
+    parts.push("scattered snow showers may follow behind the front");
+  }
+
+  // If somehow no phase text, fall back to descriptors
+  let sentence;
+  if (parts.length) {
+    sentence = parts.join(", ");
+  } else {
+    sentence = mergePhrases(tempDesc, precipDesc, windDesc);
+  }
+
+  if (clothing && (drivers.includes("wind") || drivers.includes("temp-drop"))) {
+    sentence = mergePhrases(sentence, clothing);
+  }
+
+  return sentence;
+}
+
+// ------------------------------------------------------------
+// TODAY EVENT‑DAY HEADLINE (NEW)
+// ------------------------------------------------------------
+function buildTodayEventHeadline({ drivers, phases, trends }) {
+  let emoji = "🌪️";
+  let headline = "A very active day.";
+
+  if (drivers.includes("front") && drivers.includes("temp-drop")) {
+    emoji = "🌬️";
+    headline = "Rain early, then sharply colder and windy.";
+  } else if (drivers.includes("front")) {
+    emoji = "🌬️";
+    headline = "Front‑driven changes — stay weather‑aware.";
+  } else if (drivers.includes("wind")) {
+    emoji = "💨";
+    headline = "Gusty at times — factor in the wind.";
+  } else if (drivers.includes("snow")) {
+    emoji = "❄️";
+    headline = "Changeable day with snow in the mix.";
+  }
+
+  if (phases.includes("nw-snow")) {
+    emoji = "❄️";
+    headline = "Rain to snow — classic mountain setup.";
+  }
+
+  if (trends.tempFalling && !drivers.includes("front")) {
+    emoji = "🌡️";
+    headline = "Turning colder as the day goes on.";
+  }
+
+  return { emoji, headline };
+}
+
+// ------------------------------------------------------------
+// TODAY BULLET ENGINE (Upgraded)
+// ------------------------------------------------------------
+function buildTodayBulletsUpgraded({
   tempNow,
   tempHigh,
   tempLow,
@@ -464,9 +413,11 @@ function buildTodayBullets({
   snowTotal,
   sunrise,
   sunset,
-  clothing
+  clothing,
+  analysis
 }) {
   const bullets = [];
+  const { phases, trends, snow: snowSig } = analysis;
 
   // 🌡️ Temperature bullets
   if (tempNow <= 32) bullets.push("Cold start — layers feel good this morning.");
@@ -475,25 +426,33 @@ function buildTodayBullets({
   else if (tempHigh >= 75) bullets.push("Warm afternoon ahead — short sleeves weather.");
   else if (tempHigh - tempLow >= 18) bullets.push("Big warm‑up from morning to afternoon.");
 
+  if (trends.tempFalling) {
+    bullets.push("Temperatures fall noticeably later — it won’t stay as mild.");
+  }
+
   // 💨 Wind bullets
   if (gustMax >= 35) bullets.push("Gusty at times — you’ll notice it.");
   else if (gustMax >= 22) bullets.push("A bit breezy this afternoon.");
 
-  // 🌧️ Rain bullets
+  // 🌧️ Rain bullets — event‑day aware
   if (precipTotal > 0.05) {
     const firstWet = precipHours.findIndex(v => v > 0.02);
     if (firstWet !== -1) {
       const hour = new Date().getHours() + firstWet;
-      bullets.push(`Rain may drift in around ${to12Hour(hour)}.`);
+      if (phases.includes("rain-early")) {
+        bullets.push(`Rain moves through in the morning, mainly around ${to12Hour(hour)}.`);
+      } else {
+        bullets.push(`Rain may drift in around ${to12Hour(hour)}.`);
+      }
     } else {
       bullets.push("Spotty showers possible later today.");
     }
   }
 
   // ❄️ Snow bullets
-  if (snowTotal > 0.05) {
-    if (snowTotal < 0.5) bullets.push("Light snow possible — nothing major.");
-    else if (snowTotal < 2) bullets.push("Snow showers may coat colder spots.");
+  if (snowTotal > 0.05 || snowSig.nwFlowSnow) {
+    if (snowTotal < 0.5) bullets.push("Light snow or flurries possible — nothing major.");
+    else if (snowTotal < 2) bullets.push("Snow showers may coat colder spots and slick up roads.");
     else bullets.push("Accumulating snow possible — travel may slow down.");
   }
 
@@ -529,7 +488,7 @@ function buildTodayBullets({
     bullets.push("Warm valley feel — a touch muggy in sheltered spots.");
   }
 
-  // 👕 Clothing bullet (Option A2 — only if not used in main sentence)
+  // 👕 Clothing bullet
   if (clothing) bullets.push(clothing.charAt(0).toUpperCase() + clothing.slice(1) + ".");
 
   // De‑duplicate + cap at 3
@@ -537,7 +496,7 @@ function buildTodayBullets({
   return unique.slice(0, 3);
 }
 // ============================================================
-// PART 3 — TOMORROW — Human‑Action Outlook (Option A)
+// PART 3 — TOMORROW — Human‑Action Outlook (Upgraded)
 // ============================================================
 
 // Clothing helper — returns a short phrase or null
@@ -561,7 +520,7 @@ function getClothingAdviceTomorrow(tempStats, dewStats, windStats) {
 }
 
 // ------------------------------------------------------------
-// TOMORROW ACTION OUTLOOK (Option A)
+// TOMORROW ACTION OUTLOOK (Upgraded)
 // ------------------------------------------------------------
 export function getHumanActionOutlook(hourly) {
   const indices = getTomorrowWindow(hourly);
@@ -587,6 +546,12 @@ export function getHumanActionOutlook(hourly) {
   const avgTemp = tempStats.avg ?? tempStats.max ?? tempStats.min ?? null;
   const gustMax = windStats.max ?? 0;
 
+  // Multi‑phase analysis (NEW)
+  const normalized = normalizeHourly(hourly, indices);
+  const analysis = analyzeDay(normalized);
+  const { isEventDay, phases, trends, drivers, snow: snowSig } = analysis;
+
+  // Base descriptors
   const precipDesc = describePrecip(precipTotal, snowTotal);
   const windDesc = describeWind(gustMax);
   const tempDesc = describeTempRange(tempStats);
@@ -603,61 +568,82 @@ export function getHumanActionOutlook(hourly) {
 
   const dominant = getDominantFactor(tempHighF, gustMax, precipTotal, snowTotal);
 
-  // Clothing logic (A2)
+  // Clothing logic
   const clothing = getClothingAdviceTomorrow(tempStats, dewStats, windStats);
 
-  // Build main sentence (Option A)
-  let mainSentence = mergePhrases(tempDesc, precipDesc, windDesc);
+  // Main sentence — event‑day aware
+  let mainSentence;
 
-  if (clothing && (dominant === "cold" || dominant === "heat" || dominant === "wind")) {
-    mainSentence = mergePhrases(mainSentence, clothing);
+  if (isEventDay) {
+    mainSentence = buildTomorrowEventMainSentence({
+      tempDesc,
+      precipDesc,
+      windDesc,
+      clothing,
+      phases,
+      trends,
+      drivers,
+      snowSig
+    });
+  } else {
+    mainSentence = mergePhrases(tempDesc, precipDesc, windDesc);
+    if (clothing && (dominant === "cold" || dominant === "heat" || dominant === "wind")) {
+      mainSentence = mergePhrases(mainSentence, clothing);
+    }
   }
 
   mainSentence = mainSentence.charAt(0).toUpperCase() + mainSentence.slice(1) + ".";
 
-  // Emoji + headline
+  // Emoji + headline — event‑day aware
   let emoji = "🙂";
   let headline = "A straightforward day.";
 
-  switch (dominant) {
-    case "snow":
-      emoji = "❄️";
-      headline = "Allow extra travel time.";
-      break;
-    case "rain":
-      emoji = "🌧️";
-      headline = "Bring a rain jacket.";
-      break;
-    case "wind":
-      emoji = "💨";
-      headline = "Factor in the wind.";
-      break;
-    case "heat":
-      emoji = "🥵";
-      headline = "Stay hydrated.";
-      break;
-    case "cold":
-      emoji = "🥶";
-      headline = "Dress in warm layers.";
-      break;
-    case "goldilocks":
-      emoji = "🌟";
-      headline = "Make outdoor plans.";
-      break;
-    default:
-      emoji = "🙂";
-      headline = "A calm, easygoing day.";
+  if (isEventDay) {
+    const eventHeadline = buildTomorrowEventHeadline({ drivers, phases, trends });
+    emoji = eventHeadline.emoji;
+    headline = eventHeadline.headline;
+  } else {
+    switch (dominant) {
+      case "snow":
+        emoji = "❄️";
+        headline = "Allow extra travel time.";
+        break;
+      case "rain":
+        emoji = "🌧️";
+        headline = "Bring a rain jacket.";
+        break;
+      case "wind":
+        emoji = "💨";
+        headline = "Factor in the wind.";
+        break;
+      case "heat":
+        emoji = "🥵";
+        headline = "Stay hydrated.";
+        break;
+      case "cold":
+        emoji = "🥶";
+        headline = "Dress in warm layers.";
+        break;
+      case "goldilocks":
+        emoji = "🌟";
+        headline = "Make outdoor plans.";
+        break;
+      default:
+        emoji = "🙂";
+        headline = "A calm, easygoing day.";
+    }
   }
 
-  // Build bullets (Option A — supporting details only)
-  const bullets = buildTomorrowBullets({
+  // Bullets — upgraded, event‑day aware
+  const bullets = buildTomorrowBulletsUpgraded({
     win,
     tempStats,
     dewStats,
     windStats,
     precipTotal,
     snowTotal,
-    clothing
+    clothing,
+    analysis
   });
 
   return {
@@ -670,18 +656,99 @@ export function getHumanActionOutlook(hourly) {
 }
 
 // ------------------------------------------------------------
-// TOMORROW BULLET ENGINE (Option A)
+// TOMORROW EVENT‑DAY MAIN SENTENCE (NEW)
 // ------------------------------------------------------------
-function buildTomorrowBullets({
+function buildTomorrowEventMainSentence({
+  tempDesc,
+  precipDesc,
+  windDesc,
+  clothing,
+  phases,
+  trends,
+  drivers,
+  snowSig
+}) {
+  const parts = [];
+
+  if (phases.includes("rain-early")) {
+    parts.push("rain moves through early");
+  }
+  if (phases.includes("thunder-embedded")) {
+    parts.push("a few rumbles are possible with the morning rain");
+  }
+  if (phases.includes("frontal-passage")) {
+    parts.push("a strong front brings a sharp change");
+  }
+  if (phases.includes("post-frontal-cold") || trends.tempFalling) {
+    parts.push("temperatures fall sharply later");
+  }
+  if (phases.includes("nw-snow") || snowSig.nwFlowSnow) {
+    parts.push("scattered snow showers may follow behind the front");
+  }
+
+  let sentence;
+  if (parts.length) {
+    sentence = parts.join(", ");
+  } else {
+    sentence = mergePhrases(tempDesc, precipDesc, windDesc);
+  }
+
+  if (clothing && (drivers.includes("wind") || drivers.includes("temp-drop"))) {
+    sentence = mergePhrases(sentence, clothing);
+  }
+
+  return sentence;
+}
+
+// ------------------------------------------------------------
+// TOMORROW EVENT‑DAY HEADLINE (NEW)
+// ------------------------------------------------------------
+function buildTomorrowEventHeadline({ drivers, phases, trends }) {
+  let emoji = "🌪️";
+  let headline = "A very active day.";
+
+  if (drivers.includes("front") && drivers.includes("temp-drop")) {
+    emoji = "🌬️";
+    headline = "Rain early, then sharply colder and windy.";
+  } else if (drivers.includes("front")) {
+    emoji = "🌬️";
+    headline = "Front‑driven changes — stay weather‑aware.";
+  } else if (drivers.includes("wind")) {
+    emoji = "💨";
+    headline = "Gusty at times — factor in the wind.";
+  } else if (drivers.includes("snow")) {
+    emoji = "❄️";
+    headline = "Changeable day with snow in the mix.";
+  }
+
+  if (phases.includes("nw-snow")) {
+    emoji = "❄️";
+    headline = "Rain to snow — classic mountain setup.";
+  }
+
+  if (trends.tempFalling && !drivers.includes("front")) {
+    emoji = "🌡️";
+    headline = "Turning colder as the day goes on.";
+  }
+
+  return { emoji, headline };
+}
+
+// ------------------------------------------------------------
+// TOMORROW BULLET ENGINE (Upgraded)
+// ------------------------------------------------------------
+function buildTomorrowBulletsUpgraded({
   win,
   tempStats,
   dewStats,
   windStats,
   precipTotal,
   snowTotal,
-  clothing
+  clothing,
+  analysis
 }) {
   const bullets = [];
+  const { phases, trends, snow: snowSig } = analysis;
 
   const maxT = tempStats.max;
   const minT = tempStats.min;
@@ -701,6 +768,10 @@ function buildTomorrowBullets({
     else bullets.push("Plan for a hot afternoon.");
   }
 
+  if (trends.tempFalling) {
+    bullets.push("Temperatures fall sharply later — a colder feel develops.");
+  }
+
   // 💧 Humidity bullets
   if (avgDew != null) {
     if (avgDew >= 65) bullets.push("Humidity may feel noticeable at times.");
@@ -711,12 +782,17 @@ function buildTomorrowBullets({
   if (maxGust >= 35) bullets.push("Gusty at times — factor in wind for outdoor plans.");
   else if (maxGust >= 22) bullets.push("A bit breezy, especially in the afternoon.");
 
-  // 🌧️ Rain timing
+  // 🌧️ Rain timing — event‑day aware
   const rainTiming = findEventTiming(win, 0, (win.time || []).length - 1, (i, w) => (w.precipitation[i] ?? 0) > 0.02);
 
   if (precipTotal > 0.05 && rainTiming.firstHour !== null) {
     const phrase = timingPhrase(rainTiming, true);
-    bullets.push(`Rain most likely${phrase}.`);
+
+    if (phases.includes("rain-early")) {
+      bullets.push(`Rain moves through${phrase}.`);
+    } else {
+      bullets.push(`Rain most likely${phrase}.`);
+    }
   } else if (precipTotal > 0.05) {
     bullets.push("Scattered showers possible at times.");
   }
@@ -726,7 +802,7 @@ function buildTomorrowBullets({
     ? snowArr.reduce((a, b) => a + b, 0)
     : snowTotal;
 
-  if (snowTotalTomorrow > 0.05) {
+  if (snowTotalTomorrow > 0.05 || snowSig.nwFlowSnow) {
     if (snowTotalTomorrow < 0.5) bullets.push("Light snow or flurries possible.");
     else if (snowTotalTomorrow < 2) bullets.push("Snow showers may create slick spots.");
     else bullets.push("Accumulating snow could slow travel at times.");
@@ -737,7 +813,7 @@ function buildTomorrowBullets({
     bullets.push("Cooler and breezier on higher ridges.");
   }
 
-  // 👕 Clothing bullet (Option A2 — only if not used in main sentence)
+  // 👕 Clothing bullet
   if (clothing) bullets.push(clothing.charAt(0).toUpperCase() + clothing.slice(1) + ".");
 
   // De‑duplicate + cap at 3
