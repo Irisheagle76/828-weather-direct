@@ -686,7 +686,7 @@ export function getComfortCategory(hourly, indices) {
 }
 
 // ============================================================
-// NEW — Polished, Non‑Redundant, Capitalized Comfort Summary
+// NEW — Polished, Non‑Redundant, Natural‑Language Comfort Summary
 // ============================================================
 
 export function getComfortSummary(hourly, indices) {
@@ -708,33 +708,26 @@ export function getComfortSummary(hourly, indices) {
   const d = dewStats.avg;
   const g = windStats.avg;
 
-  // Base feels
   const tempFeel = describeTempFeel(t);
   const humidityFeel = describeHumidity(d);
   const windFeel = describeWindFeel(g);
 
-  const parts = [];
+  // Start with temperature
+  let phrase = tempFeel;
 
-  // Temperature always leads
-  if (tempFeel) parts.push(tempFeel);
-
-  // Humidity only added if meaningful
-  if (humidityFeel && !humidityFeel.includes("comfortable") && !humidityFeel.includes("crisp")) {
-    parts.push(humidityFeel);
-  } else if (humidityFeel === "comfortable humidity") {
-    if (!tempFeel.includes("pleasant") && !tempFeel.includes("comfortable")) {
-      parts.push("comfortable humidity");
-    }
+  // Add humidity with correct connector
+  if (humidityFeel) {
+    const humidityIsNoun = humidityFeel.includes("humidity") || humidityFeel.includes("crisp");
+    phrase += humidityIsNoun ? ` with ${humidityFeel}` : ` and ${humidityFeel}`;
   }
 
-  // Wind added only if meaningful
-  if (windFeel) parts.push(windFeel);
+  // Add wind with correct connector
+  if (windFeel) {
+    const windStartsWithA = windFeel.startsWith("a ");
+    phrase += windStartsWithA ? ` and ${windFeel}` : ` and ${windFeel}`;
+  }
 
-  // Build clean phrase
-  let phrase = parts.join(" with ");
-  phrase = phrase.replace(/ +/g, " ").trim();
-
-  // Capitalize first letter
+  // Capitalize
   return phrase.charAt(0).toUpperCase() + phrase.slice(1);
 }
 
