@@ -16,6 +16,7 @@ import { getClothingGuidance } from './forecast-intel.js';
 // ------------------------------------------------------------
 // MAIN SYNTHESIZER
 // ------------------------------------------------------------
+console.log("SYNTHESIZER v3.1 ACTIVE");
 
 export function synthesizeOutlook({ raw, comfort }) {
   const { phases, drivers, trends, dominant, commute, precipTotal, snowTotal } = raw.meta;
