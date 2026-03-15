@@ -987,14 +987,6 @@ export function getPlannerBullets(hourly, indices) {
 // Final Exports + Public API Surface
 // ============================================================
 
-// ------------------------------------------------------------
-// PUBLIC API
-// These are the functions your UI and other modules call.
-// ------------------------------------------------------------
-
-// ------------------------------------------------------------
-// PUBLIC API — FINAL EXPORT SURFACE
-// ------------------------------------------------------------
 export {
   // Core analysis
   analyzeDay,
