@@ -108,12 +108,17 @@ export function synthesizeOutlook({ raw, comfort }) {
     if (dominant === "goldilocks") bullets.push("A great day for outdoor plans.");
   }
 
-  // ------------------------------------------------------------
-  // CLOTHING GUIDANCE (always last bullet)
-  // ------------------------------------------------------------
-  if (raw.clothing) {
-    bullets.push(`Clothing: ${raw.clothing}`);
+// CLOTHING GUIDANCE (always last bullet)
+if (raw.clothing) {
+  const base = raw.clothing.replace(/\.$/, ""); // remove trailing period if present
+
+  // Add snow-gear phrasing ONLY when snow is in the mix
+  if (snowTotal > 0 || phases.includes("post-frontal-cold") || drivers.includes("snow")) {
+    bullets.push(`Clothing: ${base}, with snow gear kept at the ready.`);
+  } else {
+    bullets.push(`Clothing: ${base}.`);
   }
+}
 
   // ------------------------------------------------------------
   // POLISH (dedupe + trim)
