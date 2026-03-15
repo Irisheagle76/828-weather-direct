@@ -992,6 +992,9 @@ export function getPlannerBullets(hourly, indices) {
 // These are the functions your UI and other modules call.
 // ------------------------------------------------------------
 
+// ------------------------------------------------------------
+// PUBLIC API — FINAL EXPORT SURFACE
+// ------------------------------------------------------------
 export {
   // Core analysis
   analyzeDay,
@@ -1010,13 +1013,14 @@ export {
 
   // Clothing + human action
   getClothingGuidance,
-  getActionRecommendations,
- 
 
-  // Helpers (if needed externally)
+  // Helpers
   getTodayRemainingWindow,
   getTomorrowWindow,
-  getDominantFactor
+  getDominantFactor,
+
+  // Unified intel wrapper
+  buildWeatherIntel
 };
 // ------------------------------------------------------------
 // OLD FORECAST-INTEL-PLUS
