@@ -13,53 +13,6 @@
 import { getClothingGuidance } from './forecast-intel.js';
 
 // ------------------------------------------------------------
-// FADE LOGIC HELPERS
-// ------------------------------------------------------------
-
-// TODAY: Fade out after 7 PM or when no usable hours remain
-export function applyEndOfDayFade(outlook, now = new Date()) {
-  const hour = now.getHours();
-
-  const noUsableHours =
-    !outlook.indices ||
-    outlook.indices.length === 0 ||
-    outlook.indices.every(i => i.hour < hour);
-
-  const afterCutoff = hour >= 19; // 7 PM
-
-  if (afterCutoff || noUsableHours) {
-    return {
-      headline: "The day is winding down.",
-      text: "Fresh forecast updates arrive tomorrow morning.",
-      bullets: [],
-      emoji: "",
-      isEndOfDay: true
-    };
-  }
-
-  return { ...outlook, isEndOfDay: false };
-}
-
-// TOMORROW: Fade in before 5 AM
-export function applyEarlyMorningFade(outlook, now = new Date()) {
-  const hour = now.getHours();
-
-  const beforeReveal = hour < 5; // 5 AM reveal time
-
-  if (beforeReveal) {
-    return {
-      headline: "Forecast updates arriving shortly.",
-      text: "Tomorrow’s details will appear as the morning begins.",
-      bullets: [],
-      emoji: "",
-      isEarlyMorning: true
-    };
-  }
-
-  return { ...outlook, isEarlyMorning: false };
-}
-
-// ------------------------------------------------------------
 // MAIN SYNTHESIZER
 // ------------------------------------------------------------
 
@@ -176,11 +129,47 @@ export function synthesizeOutlook({ raw, comfort }) {
     }
   }
 
+  // ------------------------------------------------------------
+  // FADE LOGIC (Option B — centralized in synthesizer)
+  // ------------------------------------------------------------
+  const now = new Date();
+  const hour = now.getHours();
+
+  // TODAY fade-out (after 7 PM)
+  if (raw?.meta?.dayType === "today") {
+    if (hour >= 19) {
+      return {
+        headline: "The day is winding down.",
+        text: "Fresh forecast updates arrive tomorrow morning.",
+        bullets: [],
+        emoji: "",
+        isEndOfDay: true,
+        isEarlyMorning: false
+      };
+    }
+  }
+
+  // TOMORROW fade-in (before 5 AM)
+  if (raw?.meta?.dayType === "tomorrow") {
+    if (hour < 5) {
+      return {
+        headline: "Forecast updates arriving shortly.",
+        text: "Tomorrow’s details will appear as the morning begins.",
+        bullets: [],
+        emoji: "",
+        isEndOfDay: false,
+        isEarlyMorning: true
+      };
+    }
+  }
+
+  // ------------------------------------------------------------
+  // NORMAL RETURN (no fade)
+  // ------------------------------------------------------------
   return {
     headline,
     text: "",
     bullets: cleanBullets.slice(0, 5),
-    // Flags added here so renderer can fade modules
     isEndOfDay: false,
     isEarlyMorning: false
   };
