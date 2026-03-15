@@ -8,6 +8,7 @@
 // - Clothing guidance as final bullet
 // - Today fade-out (after 7 PM)
 // - Tomorrow fade-in (before 5 AM)
+// - Bullet polishing + wind dedupe + clothing compression
 // ============================================================
 
 import { getClothingGuidance } from './forecast-intel.js';
@@ -79,9 +80,15 @@ export function synthesizeOutlook({ raw, comfort }) {
     bullets.push("Rain may mix with wet snow later.");
   }
 
-  // WIND
+  // WIND (dedupe)
   if (drivers.includes("wind")) {
-    bullets.push("Breezy at times.");
+    const hasWindBullet = bullets.some(b =>
+      b.toLowerCase().includes("breezy") ||
+      b.toLowerCase().includes("wind")
+    );
+    if (!hasWindBullet) {
+      bullets.push("Breezy at times.");
+    }
   }
 
   // ------------------------------------------------------------
@@ -108,30 +115,49 @@ export function synthesizeOutlook({ raw, comfort }) {
     if (dominant === "goldilocks") bullets.push("A great day for outdoor plans.");
   }
 
-// CLOTHING GUIDANCE (always last bullet)
-if (raw.clothing) {
-  const base = raw.clothing.replace(/\.$/, ""); // remove trailing period if present
+  // ------------------------------------------------------------
+  // CLOTHING GUIDANCE (compressed + conditional snow-gear)
+  // ------------------------------------------------------------
+  if (raw.clothing) {
+    const base = raw.clothing
+      .replace(/\s+/g, " ")
+      .replace(/\.+/g, ".")
+      .trim()
+      .replace(/\.$/, "");
 
-  // Add snow-gear phrasing ONLY when snow is in the mix
-  if (snowTotal > 0 || phases.includes("post-frontal-cold") || drivers.includes("snow")) {
-    bullets.push(`Clothing: ${base}, with snow gear kept at the ready.`);
-  } else {
-    bullets.push(`Clothing: ${base}.`);
+    const needsSnowGear =
+      snowTotal > 0 ||
+      phases.includes("post-frontal-cold") ||
+      drivers.includes("snow");
+
+    if (needsSnowGear) {
+      bullets.push(`Clothing: ${base}, with snow gear kept at the ready.`);
+    } else {
+      bullets.push(`Clothing: ${base}.`);
+    }
   }
-}
 
   // ------------------------------------------------------------
-  // POLISH (dedupe + trim)
+  // BULLET POLISHING PASS
   // ------------------------------------------------------------
-  const seen = new Set();
-  const cleanBullets = [];
+  const seenKeys = new Set();
+  const polished = [];
 
   for (const b of bullets) {
-    const key = b.toLowerCase().replace(/[^a-z0-9 ]/g, "").trim();
-    if (!seen.has(key)) {
-      seen.add(key);
-      cleanBullets.push(b);
-    }
+    const key = b.toLowerCase()
+      .replace(/[^a-z0-9 ]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    // Skip duplicates
+    if (seenKeys.has(key)) continue;
+
+    // Skip bullets that repeat headline
+    const headlineKey = headline.toLowerCase().replace(/[^a-z0-9 ]/g, "");
+    if (headlineKey.includes(key) || key.includes(headlineKey)) continue;
+
+    seenKeys.add(key);
+    polished.push(b);
   }
 
   // ------------------------------------------------------------
@@ -174,7 +200,7 @@ if (raw.clothing) {
   return {
     headline,
     text: "",
-    bullets: cleanBullets.slice(0, 5),
+    bullets: polished.slice(0, 5),
     isEndOfDay: false,
     isEarlyMorning: false
   };
