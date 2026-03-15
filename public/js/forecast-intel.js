@@ -482,6 +482,7 @@ export function getTodayActionOutlook(hourly) {
   const windStats = getWindStats(win);
   const precipTotal = getPrecipTotal(win);
   const snowTotal = getSnowTotal(win);
+  const clothing = getClothingGuidance(hourly, indices);
 
   const analysis = analyzeDay(hours);
   const { phases, drivers, trends, commute } = analysis;
@@ -562,19 +563,12 @@ export function getHumanActionOutlook(hourly) {
   const comfortSummary = getComfortSummary(hourly, indices);
 
   const synthesized = synthesizeOutlook({
-    raw: {
-      meta: {
-        phases,
-        drivers,
-        trends,
-        dominant,
-        commute,
-        precipTotal,
-        snowTotal
-      }
-    },
-    comfort: { summary: comfortSummary }
-  });
+  raw: {
+    meta: { phases, drivers, trends, dominant, commute, precipTotal, snowTotal },
+    clothing
+  },
+  comfort: { summary: comfortSummary }
+});
 
   return {
     emoji: emojiForFactor(dominant),
