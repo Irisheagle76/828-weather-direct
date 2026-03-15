@@ -5,6 +5,7 @@
 
 import { findNearestHourIndex, getReliableUV } from './weather-utils.js';
 import { getUnifiedMicroAdvice } from './micro-advice.js';
+import { synthesizeOutlook } from './outlook-synthesizer.js';
 import { degToCompass, getUVClass } from "./weather-render.js";
 
 // ------------------------------------------------------------
@@ -29,7 +30,6 @@ export function mergePhrases(...parts) {
 }
 
 export function to12Hour(timeStr) {
-  // timeStr: "2026-03-16T14:00" or "14:00"
   const raw = timeStr.includes("T") ? timeStr.split("T")[1] : timeStr;
   const [hStr] = raw.split(":");
   let h = parseInt(hStr, 10);
@@ -40,7 +40,7 @@ export function to12Hour(timeStr) {
 }
 
 // ------------------------------------------------------------
-// Descriptors — rebuilt for smoother, meteorologist-grade language
+// Descriptors
 // ------------------------------------------------------------
 export function describeTempRange(tempStats) {
   const maxT = tempStats?.max ?? null;
@@ -247,44 +247,6 @@ export function normalizeHourly(hourly, indices) {
 }
 
 // ------------------------------------------------------------
-// EVENT TIMING HELPERS (used by bullets later)
-// ------------------------------------------------------------
-function findEventTiming(win, startIndex, endIndex, predicate) {
-  const times = win.time || [];
-  let first = null;
-  let last = null;
-
-  for (let i = startIndex; i <= endIndex; i++) {
-    if (!times[i]) continue;
-    if (predicate(i, win)) {
-      if (first === null) first = i;
-      last = i;
-    }
-  }
-
-  return { firstHour: first, lastHour: last };
-}
-
-function timingPhrase(timing, isRain = false) {
-  if (timing.firstHour == null) return "";
-
-  const bucket = idx => {
-    if (idx == null) return "";
-    const h = idx;
-    if (h < 8) return "early in the morning";
-    if (h < 12) return "late morning";
-    if (h < 17) return "in the afternoon";
-    if (h < 21) return "in the evening";
-    return "at night";
-  };
-
-  const phrase = bucket(timing.firstHour);
-  if (!phrase) return "";
-
-  return isRain ? ` ${phrase}` : ` ${phrase}`;
-}
-
-// ------------------------------------------------------------
 // MULTI-PHASE / EVENT-DAY ENGINE
 // ------------------------------------------------------------
 function detectFrontalPassage(hours) {
@@ -455,7 +417,7 @@ function getDominantFactor(tempHigh, gustMax, precipTotal, snowTotal) {
 }
 // ============================================================
 // FORECAST INTEL — PART 2 OF 5
-// Today + Tomorrow Action Outlook (rebuilt)
+// Today + Tomorrow Action Outlook (via synthesizeOutlook)
 // ============================================================
 
 function emojiForFactor(f) {
@@ -470,109 +432,6 @@ function emojiForFactor(f) {
   }
 }
 
-function buildHeadline(phases, drivers, trends) {
-  if (phases.includes("rain-early") && phases.includes("frontal-passage")) {
-    return "Rain early, then sharply colder and windy.";
-  }
-
-  if (phases.includes("nw-snow")) {
-    return "Colder with NW‑flow snow showers.";
-  }
-
-  if (phases.includes("thunder-embedded")) {
-    return "Rain with a few rumbles possible.";
-  }
-
-  if (drivers.includes("wind") && drivers.includes("precip")) {
-    return "Breezy with showers around.";
-  }
-
-  if (drivers.includes("wind")) {
-    return "Breezy at times.";
-  }
-
-  if (drivers.includes("precip")) {
-    return "A few showers around.";
-  }
-
-  if (drivers.includes("temp-drop")) {
-    return "Turning colder later.";
-  }
-
-  if (drivers.includes("temp-rise")) {
-    return "Warming through the day.";
-  }
-
-  return "A quiet day overall.";
-}
-
-function buildNarrative(phases, drivers, trends) {
-  const parts = [];
-
-  if (phases.includes("rain-early")) {
-    parts.push("Rain moves through early");
-  }
-
-  if (phases.includes("thunder-embedded")) {
-    parts.push("a few rumbles possible");
-  }
-
-  if (phases.includes("frontal-passage")) {
-    parts.push("a strong front brings a sharp change");
-  }
-
-  if (trends.tempFalling) {
-    parts.push("temperatures fall sharply later");
-  }
-
-  if (phases.includes("nw-snow")) {
-    parts.push("scattered NW‑flow snow showers may follow behind the front");
-  }
-
-  if (parts.length === 0) {
-    if (drivers.includes("precip")) parts.push("A few showers around");
-    if (drivers.includes("wind")) parts.push("a bit breezy at times");
-    if (drivers.includes("temp-rise")) parts.push("warming through the day");
-    if (drivers.includes("temp-drop")) parts.push("turning colder later");
-  }
-
-  return mergePhrases(parts) + ".";
-}
-
-function buildBullets(phases, drivers, trends) {
-  const bullets = [];
-
-  if (phases.includes("rain-early")) {
-    bullets.push("Rain moves through early in the day.");
-  }
-
-  if (phases.includes("frontal-passage")) {
-    bullets.push("A strong front brings a sharp change.");
-  }
-
-  if (trends.tempFalling) {
-    bullets.push("Temperatures fall noticeably later.");
-  }
-
-  if (phases.includes("nw-snow")) {
-    bullets.push("NW‑flow snow showers may create slick spots.");
-  }
-
-  if (bullets.length < 3 && drivers.includes("wind")) {
-    bullets.push("A bit breezy at times.");
-  }
-
-  if (bullets.length < 3 && drivers.includes("precip")) {
-    bullets.push("A few showers around.");
-  }
-
-  if (bullets.length === 0) {
-    bullets.push("A quiet day overall.");
-  }
-
-  return bullets.slice(0, 3);
-}
-
 export function getTodayActionOutlook(hourly) {
   const indices = getTodayRemainingWindow(hourly);
   if (!indices.length) {
@@ -580,7 +439,13 @@ export function getTodayActionOutlook(hourly) {
       emoji: "🌤️",
       headline: "A quiet rest of the day.",
       text: "No meaningful weather impacts expected.",
-      bullets: ["A quiet evening ahead."]
+      bullets: ["A quiet evening ahead."],
+      meta: {
+        phases: [],
+        drivers: [],
+        trends: { tempFalling: false, tempRising: false },
+        dominant: "easy"
+      }
     };
   }
 
@@ -603,20 +468,25 @@ export function getTodayActionOutlook(hourly) {
     snowTotal
   );
 
-const synthesized = synthesizeOutlook({
-  raw: {
-    meta: { phases, drivers, trends, dominant }
-  },
-  comfort: {
-    summary: getComfortSummary(hourly, indices)
-  }
-});
+  const comfortSummary = getComfortSummary(hourly, indices);
 
-return {
-  emoji: emojiForFactor(dominant),
-  ...synthesized,
-  meta: { phases, drivers, trends, dominant }
-};
+  const synthesized = synthesizeOutlook({
+    raw: {
+      meta: { phases, drivers, trends, dominant }
+    },
+    comfort: { summary: comfortSummary }
+  });
+
+  return {
+    emoji: emojiForFactor(dominant),
+    ...synthesized,
+    meta: {
+      phases,
+      drivers,
+      trends,
+      dominant
+    }
+  };
 }
 
 export function getHumanActionOutlook(hourly) {
@@ -626,7 +496,13 @@ export function getHumanActionOutlook(hourly) {
       emoji: "🌤️",
       headline: "A quiet day tomorrow.",
       text: "No meaningful weather impacts expected.",
-      bullets: ["A quiet day overall."]
+      bullets: ["A quiet day overall."],
+      meta: {
+        phases: [],
+        drivers: [],
+        trends: { tempFalling: false, tempRising: false },
+        dominant: "easy"
+      }
     };
   }
 
@@ -649,11 +525,18 @@ export function getHumanActionOutlook(hourly) {
     snowTotal
   );
 
+  const comfortSummary = getComfortSummary(hourly, indices);
+
+  const synthesized = synthesizeOutlook({
+    raw: {
+      meta: { phases, drivers, trends, dominant }
+    },
+    comfort: { summary: comfortSummary }
+  });
+
   return {
     emoji: emojiForFactor(dominant),
-    headline: buildHeadline(phases, drivers, trends),
-    text: buildNarrative(phases, drivers, trends),
-    bullets: buildBullets(phases, drivers, trends),
+    ...synthesized,
     meta: {
       phases,
       drivers,
@@ -681,7 +564,7 @@ function describeHumidity(dewAvg) {
 function describeTempFeel(tempAvg) {
   if (tempAvg == null) return "";
 
-  if (tempAvg <= 32) return "winter‑cold";
+  if (tempAvg <= 32) return "winter-cold";
   if (tempAvg <= 45) return "chilly";
   if (tempAvg <= 60) return "cool and comfortable";
   if (tempAvg <= 72) return "mild and pleasant";
@@ -730,7 +613,6 @@ export function getComfortCategory(hourly, indices) {
   }
 
   const t = tempStats.avg;
-  const d = dewStats.avg;
 
   if (snowTotal > 0.25) return "wintry";
   if (t <= 40) return "cold";
@@ -780,7 +662,6 @@ export function getClothingGuidance(hourly, indices) {
 
   const win = sliceHourly(hourly, indices);
   const tempStats = getTempStats(win);
-  const dewStats = getDewStats(win);
   const windStats = getWindStats(win);
   const precipTotal = getPrecipTotal(win);
   const snowTotal = getSnowTotal(win);
@@ -814,8 +695,6 @@ export function getActionRecommendations(hourly, indices) {
   const win = sliceHourly(hourly, indices);
   const hours = normalizeHourly(hourly, indices);
 
-  const tempStats = getTempStats(win);
-  const dewStats = getDewStats(win);
   const windStats = getWindStats(win);
   const precipTotal = getPrecipTotal(win);
   const snowTotal = getSnowTotal(win);
@@ -838,7 +717,7 @@ export function getActionRecommendations(hourly, indices) {
   }
 
   if (phases.includes("nw-snow")) {
-    recs.push("NW‑flow snow showers may create slick spots, especially on higher roads.");
+    recs.push("NW-flow snow showers may create slick spots, especially on higher roads.");
   }
 
   if (trends.tempFalling) {
@@ -879,13 +758,11 @@ export function getPlannerBullets(hourly, indices) {
   const hours = normalizeHourly(hourly, indices);
 
   const tempStats = getTempStats(win);
-  const dewStats = getDewStats(win);
   const windStats = getWindStats(win);
   const precipTotal = getPrecipTotal(win);
-  const snowTotal = getSnowTotal(win);
 
   const analysis = analyzeDay(hours);
-  const { phases, drivers, trends } = analysis;
+  const { phases, trends } = analysis;
 
   const bullets = [];
 
@@ -901,7 +778,7 @@ export function getPlannerBullets(hourly, indices) {
   else if (precipTotal >= 0.25) bullets.push("Showers likely at times.");
   else if (precipTotal > 0) bullets.push("A few showers around.");
 
-  if (phases.includes("nw-snow")) bullets.push("NW‑flow snow showers possible.");
+  if (phases.includes("nw-snow")) bullets.push("NW-flow snow showers possible.");
 
   if (!bullets.length) bullets.push("A quiet day overall.");
 
@@ -930,7 +807,10 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
     cool: "🧥",
     mild: "🙂",
     warm: "😎",
-    hot: "🥵"
+    hot: "🥵",
+    goldilocks: "🌤️",
+    wintry: "❄️",
+    unknown: "🙂"
   };
 
   const rightNowComfort = {
@@ -950,16 +830,16 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
   };
 
   const microAdvice = getUnifiedMicroAdvice({
-  wu: wuCurrent,
-  outlook: today,
-  comfort: rightNowComfort
-});
+    wu: wuCurrent,
+    outlook: today,
+    comfort: rightNowComfort
+  });
 
-const tomorrowMicroAdvice = getUnifiedMicroAdvice({
-  wu: wuCurrent,
-  outlook: tomorrow,
-  comfort: rightNowComfort
-});
+  const tomorrowMicroAdvice = getUnifiedMicroAdvice({
+    wu: wuCurrent,
+    outlook: tomorrow,
+    comfort: rightNowComfort
+  });
 
   function localTo12Hour(hour) {
     const h = hour % 12 || 12;
@@ -971,7 +851,7 @@ const tomorrowMicroAdvice = getUnifiedMicroAdvice({
     return indices.slice(0, 4).map(i => ({
       time: hourly.time[i],
       temp: Math.round(hourly.temperature_2m[i]),
-      wind: `${degToCompass(hourly.windgusts_10m?.[i] ?? 0)} ${Math.round(hourly.windgusts_10m?.[i] ?? 0)} mph`,
+      wind: `${degToCompass(hourly.winddirection_10m?.[i] ?? 0)} ${Math.round(hourly.windgusts_10m?.[i] ?? 0)} mph`,
       precip: Math.round((hourly.precipitation[i] ?? 0) * 100)
     }));
   }
@@ -988,7 +868,7 @@ const tomorrowMicroAdvice = getUnifiedMicroAdvice({
 
   function buildWindShifts(hourly, indices) {
     const sample = indices.slice(0, 3);
-    const dirs = sample.map(i => degToCompass(hourly.windgusts_10m?.[i] ?? 0));
+    const dirs = sample.map(i => degToCompass(hourly.winddirection_10m?.[i] ?? 0));
     return dirs.join(" → ");
   }
 
@@ -1066,17 +946,17 @@ const tomorrowMicroAdvice = getUnifiedMicroAdvice({
   };
 
   return {
-  wu: wuCurrent,
-  uv: reliableUV,
-  rightNowComfort,
-  today,
-  tomorrow,
-  precipSignal,
-  microAdvice,
-  tomorrowMicroAdvice,
-  todayDetail,
-  tomorrowDetail
-};
+    wu: wuCurrent,
+    uv: reliableUV,
+    rightNowComfort,
+    today,
+    tomorrow,
+    precipSignal,
+    microAdvice,
+    tomorrowMicroAdvice,
+    todayDetail,
+    tomorrowDetail
+  };
 }
 // ------------------------------------------------------------
 // END OF FILE
