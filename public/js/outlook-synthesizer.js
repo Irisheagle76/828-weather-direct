@@ -78,12 +78,29 @@ export function synthesizeOutlook({ raw, comfort }) {
   if (drivers.includes("wind")) {
     bullets.push("Breezy at times.");
   }
+// ------------------------------------------------------------
+// SUPPRESS COMFORT BULLETS ON ACTIVE WEATHER DAYS
+// ------------------------------------------------------------
+const activeWeather =
+  dominant !== "easy" &&
+  dominant !== "goldilocks" &&
+  (
+    precipTotal > 0.05 ||
+    commute?.commutePrecip > 0.05 ||
+    trends.tempFalling ||
+    drivers.includes("front") ||
+    drivers.includes("wind") ||
+    drivers.includes("snow") ||
+    phases.includes("frontal-passage") ||
+    phases.includes("post-frontal-cold")
+  );
 
-  // SUPPLEMENTAL COMFORT
+if (!activeWeather) {
   const comfortText = comfort.summary.toLowerCase();
   if (comfortText.includes("humid")) bullets.push("Humidity may feel a bit sticky.");
   if (comfortText.includes("crisp")) bullets.push("Air stays crisp and comfortable.");
   if (dominant === "goldilocks") bullets.push("A great day for outdoor plans.");
+}
 
   // ------------------------------------------------------------
   // CLOTHING GUIDANCE (always last bullet)
