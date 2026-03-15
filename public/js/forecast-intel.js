@@ -616,8 +616,8 @@ export function getHumanActionOutlook(hourly) {
 function describeHumidity(dewAvg) {
   if (dewAvg == null) return "";
 
-  if (dewAvg >= 70) return "tropical and muggy";
-  if (dewAvg >= 65) return "very humid";
+  if (dewAvg >= 70) return "very humid";
+  if (dewAvg >= 65) return "humid";
   if (dewAvg >= 60) return "a bit muggy";
   if (dewAvg >= 55) return "moderately humid";
   if (dewAvg >= 45) return "comfortable humidity";
@@ -627,7 +627,7 @@ function describeHumidity(dewAvg) {
 function describeTempFeel(tempAvg) {
   if (tempAvg == null) return "";
 
-  if (tempAvg <= 32) return "winter-cold";
+  if (tempAvg <= 32) return "cold";
   if (tempAvg <= 45) return "chilly";
   if (tempAvg <= 60) return "cool and comfortable";
   if (tempAvg <= 72) return "mild and pleasant";
@@ -640,10 +640,10 @@ function describeWindFeel(gustAvg) {
   if (gustAvg == null) return "";
 
   if (gustAvg >= 40) return "very windy";
-  if (gustAvg >= 30) return "quite breezy";
+  if (gustAvg >= 30) return "windy";
   if (gustAvg >= 20) return "a bit breezy";
   if (gustAvg >= 10) return "a light breeze";
-  return "calm";
+  return "";
 }
 
 function isGoldilocksDay(tempStats, dewStats, windStats, precipTotal, snowTotal) {
@@ -685,6 +685,10 @@ export function getComfortCategory(hourly, indices) {
   return "hot";
 }
 
+// ============================================================
+// NEW — Polished, Non‑Redundant, Capitalized Comfort Summary
+// ============================================================
+
 export function getComfortSummary(hourly, indices) {
   if (!indices?.length) return "Comfort information unavailable.";
 
@@ -695,16 +699,43 @@ export function getComfortSummary(hourly, indices) {
   const precipTotal = getPrecipTotal(win);
   const snowTotal = getSnowTotal(win);
 
+  // Goldilocks override
   if (isGoldilocksDay(tempStats, dewStats, windStats, precipTotal, snowTotal)) {
     return "A classic Goldilocks day — warm sun, low humidity, and a gentle breeze.";
   }
 
-  const tempFeel = describeTempFeel(tempStats.avg);
-  const humidityFeel = describeHumidity(dewStats.avg);
-  const windFeel = describeWindFeel(windStats.avg);
+  const t = tempStats.avg;
+  const d = dewStats.avg;
+  const g = windStats.avg;
 
-  const parts = [tempFeel, humidityFeel, windFeel];
-  return cleanJoin(parts);
+  // Base feels
+  const tempFeel = describeTempFeel(t);
+  const humidityFeel = describeHumidity(d);
+  const windFeel = describeWindFeel(g);
+
+  const parts = [];
+
+  // Temperature always leads
+  if (tempFeel) parts.push(tempFeel);
+
+  // Humidity only added if meaningful
+  if (humidityFeel && !humidityFeel.includes("comfortable") && !humidityFeel.includes("crisp")) {
+    parts.push(humidityFeel);
+  } else if (humidityFeel === "comfortable humidity") {
+    if (!tempFeel.includes("pleasant") && !tempFeel.includes("comfortable")) {
+      parts.push("comfortable humidity");
+    }
+  }
+
+  // Wind added only if meaningful
+  if (windFeel) parts.push(windFeel);
+
+  // Build clean phrase
+  let phrase = parts.join(" with ");
+  phrase = phrase.replace(/ +/g, " ").trim();
+
+  // Capitalize first letter
+  return phrase.charAt(0).toUpperCase() + phrase.slice(1);
 }
 
 export function getSeasonalContext(date = new Date()) {
