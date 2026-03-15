@@ -153,6 +153,53 @@ export function normalizeHourly(hourly, indices) {
     time: hourly.time[i]
   }));
 }
+// ------------------------------------------------------------
+// TIME + WINDOW HELPERS
+// ------------------------------------------------------------
+function getHourlyWindowForDay(hourly, targetDate) {
+  const times = hourly.time || [];
+  const indices = [];
+
+  const start = new Date(targetDate);
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(targetDate);
+  end.setHours(23, 59, 59, 999);
+
+  for (let i = 0; i < times.length; i++) {
+    const t = new Date(times[i]);
+    if (t >= start && t <= end) indices.push(i);
+  }
+
+  return indices;
+}
+
+function getTodayRemainingWindow(hourly) {
+  const times = hourly.time || [];
+  const indices = [];
+
+  const now = new Date();
+  const end = new Date(now);
+  end.setHours(23, 59, 59, 999);
+
+  for (let i = 0; i < times.length; i++) {
+    const t = new Date(times[i]);
+    if (t >= now && t <= end) indices.push(i);
+  }
+
+  if (indices.length < 3) return [];
+  return indices;
+}
+
+function getTomorrowWindow(hourly) {
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(now.getDate() + 1);
+
+  const indices = getHourlyWindowForDay(hourly, tomorrow);
+  if (indices.length < 6) return [];
+  return indices;
+}
 // ============================================================
 // PART 2 — TODAY — Human‑Action Outlook (Upgraded)
 // ============================================================
