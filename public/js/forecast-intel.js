@@ -4,7 +4,7 @@
 // ============================================================
 
 import { findNearestHourIndex, getReliableUV } from './weather-utils.js';
-import { getMicroAdvice } from './micro-advice.js';
+import { getUnifiedMicroAdvice } from './micro-advice.js';
 import { degToCompass, getUVClass } from "./weather-render.js";
 
 // ------------------------------------------------------------
