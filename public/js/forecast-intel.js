@@ -611,8 +611,12 @@ export function getHumanActionOutlook(hourly) {
 // ============================================================
 // FORECAST INTEL — PART 3 OF 5
 // Comfort Module + Seasonal Context + Goldilocks Logic
+// + Seasonal Nuance + Wind-Chill/Heat-Index + Smart Connectors
 // ============================================================
 
+// ------------------------------
+// Base descriptors
+// ------------------------------
 function describeHumidity(dewAvg) {
   if (dewAvg == null) return "";
 
@@ -646,6 +650,48 @@ function describeWindFeel(gustAvg) {
   return "";
 }
 
+// ------------------------------
+// Seasonal nuance
+// ------------------------------
+function seasonalModifier(tempFeel, season) {
+  if (season === "spring" && tempFeel === "cool and comfortable") return "springlike";
+  if (season === "fall" && tempFeel === "dry and crisp") return "autumn-crisp";
+  if (season === "winter" && tempFeel === "mild and pleasant") return "mild for winter";
+  if (season === "summer" && tempFeel === "warm") return "summer-warm";
+  return tempFeel;
+}
+
+// ------------------------------
+// Wind-chill & heat-index
+// ------------------------------
+function applyWindChill(temp, windGust) {
+  if (temp > 50 || windGust < 5) return temp;
+  return (
+    35.74 +
+    0.6215 * temp -
+    35.75 * Math.pow(windGust, 0.16) +
+    0.4275 * temp * Math.pow(windGust, 0.16)
+  );
+}
+
+function applyHeatIndex(temp, dew) {
+  if (temp < 80 || dew < 60) return temp;
+  return (
+    -42.379 +
+    2.04901523 * temp +
+    10.14333127 * dew -
+    0.22475541 * temp * dew -
+    0.00683783 * temp * temp -
+    0.05481717 * dew * dew +
+    0.00122874 * temp * temp * dew +
+    0.00085282 * temp * dew * dew -
+    0.00000199 * temp * temp * dew * dew
+  );
+}
+
+// ------------------------------
+// Goldilocks logic
+// ------------------------------
 function isGoldilocksDay(tempStats, dewStats, windStats, precipTotal, snowTotal) {
   const t = tempStats?.max;
   const d = dewStats?.avg;
@@ -686,7 +732,7 @@ export function getComfortCategory(hourly, indices) {
 }
 
 // ============================================================
-// NEW — Polished, Non‑Redundant, Natural‑Language Comfort Summary
+// Enhanced Comfort Summary (Seasonal + WindChill/HeatIndex + Smart Connectors)
 // ============================================================
 
 export function getComfortSummary(hourly, indices) {
@@ -704,33 +750,54 @@ export function getComfortSummary(hourly, indices) {
     return "A classic Goldilocks day — warm sun, low humidity, and a gentle breeze.";
   }
 
-  const t = tempStats.avg;
-  const d = dewStats.avg;
-  const g = windStats.avg;
+  const season = getSeasonalContext();
 
-  const tempFeel = describeTempFeel(t);
-  const humidityFeel = describeHumidity(d);
-  const windFeel = describeWindFeel(g);
+  // Effective temperature (wind chill / heat index)
+  let effectiveTemp = tempStats.avg;
+  effectiveTemp = applyWindChill(effectiveTemp, windStats.avg);
+  effectiveTemp = applyHeatIndex(effectiveTemp, dewStats.avg);
 
-  // Start with temperature
+  // Base feels
+  let tempFeel = describeTempFeel(effectiveTemp);
+  tempFeel = seasonalModifier(tempFeel, season);
+
+  const humidityFeel = describeHumidity(dewStats.avg);
+  const windFeel = describeWindFeel(windStats.avg);
+
+  // ------------------------------
+  // Redundancy filters
+  // ------------------------------
+  const cleanedHumidity =
+    humidityFeel === "comfortable humidity" &&
+    (tempFeel.includes("comfortable") || tempFeel.includes("pleasant"))
+      ? ""
+      : humidityFeel;
+
+  const cleanedWind = windFeel;
+
+  // ------------------------------
+  // Smart connectors
+  // ------------------------------
   let phrase = tempFeel;
 
-  // Add humidity with correct connector
-  if (humidityFeel) {
-    const humidityIsNoun = humidityFeel.includes("humidity") || humidityFeel.includes("crisp");
-    phrase += humidityIsNoun ? ` with ${humidityFeel}` : ` and ${humidityFeel}`;
+  if (cleanedHumidity) {
+    const humidityIsNoun =
+      cleanedHumidity.includes("humidity") || cleanedHumidity.includes("crisp");
+    phrase += humidityIsNoun ? ` with ${cleanedHumidity}` : ` and ${cleanedHumidity}`;
   }
 
-  // Add wind with correct connector
-  if (windFeel) {
-    const windStartsWithA = windFeel.startsWith("a ");
-    phrase += windStartsWithA ? ` and ${windFeel}` : ` and ${windFeel}`;
+  if (cleanedWind) {
+    const windStartsWithA = cleanedWind.startsWith("a ");
+    phrase += windStartsWithA ? ` and ${cleanedWind}` : ` and ${cleanedWind}`;
   }
 
   // Capitalize
   return phrase.charAt(0).toUpperCase() + phrase.slice(1);
 }
 
+// ------------------------------
+// Seasonal context
+// ------------------------------
 export function getSeasonalContext(date = new Date()) {
   const m = date.getMonth() + 1;
 
