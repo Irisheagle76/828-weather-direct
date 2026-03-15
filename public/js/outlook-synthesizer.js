@@ -1,11 +1,15 @@
 // ============================================================
 // UNIFIED OUTLOOK SYNTHESIZER (Expressive Tone C)
-// Now includes:
+// Headline + Bullets only
+// Includes:
 // - Morning commute awareness (5–9 AM)
 // - Precip intensity tiers
 // - Rain-to-snow transition language
-// - Stronger headline logic
+// - Clothing guidance as final bullet
 // ============================================================
+
+import { getClothingGuidance } from './forecast-intel.js'; 
+// NOTE: If clothing guidance lives elsewhere, adjust this import accordingly.
 
 export function synthesizeOutlook({ raw, comfort }) {
   const { phases, drivers, trends, dominant, commute, precipTotal, snowTotal } = raw.meta;
@@ -15,90 +19,42 @@ export function synthesizeOutlook({ raw, comfort }) {
   // PRECIP INTENSITY HELPER
   // ------------------------------------------------------------
   function describePrecipIntensity(total) {
-    if (total >= 0.25) return "heavier rain at times";
-    if (total >= 0.10) return "steadier rain at times";
-    if (total >= 0.05) return "a few showers around";
-    if (total > 0) return "a stray shower possible";
+    if (total >= 0.25) return "Heavier rain at times.";
+    if (total >= 0.10) return "Steadier rain at times.";
+    if (total >= 0.05) return "A few showers around.";
+    if (total > 0) return "A stray shower possible.";
     return "";
   }
 
   const precipIntensity = describePrecipIntensity(precipTotal);
 
   // ------------------------------------------------------------
-  // HEADLINE (dominant + commute + transitions)
+  // HEADLINE
   // ------------------------------------------------------------
   const headline = (() => {
-    // Strongest case: rainy morning + temp crash
     if (commute?.commuteHeavy && dominant === "rain" && trends.tempFalling) {
       return "Rainy morning, then turning sharply colder.";
     }
 
-    // Rainy morning but not heavy
     if (commute?.commutePrecip >= 0.05 && dominant === "rain") {
       return "Rain early, then cooling later.";
     }
 
-    // Snow transition
     if (dominant === "snow" && phases.includes("post-frontal-cold")) {
       return "Colder air brings snow showers.";
     }
 
-    // Wind-driven day
     if (dominant === "wind") return "Breezy with shifting winds.";
-
-    // Heat / cold / goldilocks
     if (dominant === "heat") return "Warm and a bit intense at times.";
     if (dominant === "cold") return "A colder feel settling in.";
     if (dominant === "goldilocks") return "A pleasant, comfortable day overall.";
-
-    // Rain but not commute-heavy
     if (dominant === "rain") return "Showers drifting through at times.";
 
     return "A quiet day overall.";
   })();
 
   // ------------------------------------------------------------
-  // NARRATIVE (expressive, 1–2 clauses)
-  // ------------------------------------------------------------
-  const narrative = (() => {
-    const parts = [];
-
-    // Commute rain
-    if (commute?.commuteHeavy) {
-      parts.push("Steadier rain moves through early");
-    } else if (commute?.commutePrecip >= 0.05) {
-      parts.push("Rain likely around the morning commute");
-    }
-
-    // Precip intensity
-    if (precipIntensity && !commute?.commuteHeavy) {
-      parts.push(precipIntensity);
-    }
-
-    // Frontal passage
-    if (phases.includes("frontal-passage")) {
-      parts.push("a front ushers in a sharp temperature drop");
-    }
-
-    // Rain-to-snow transition
-    if (snowTotal > 0 && phases.includes("post-frontal-cold")) {
-      parts.push("rain may mix with wet snow later");
-    }
-
-    // Wind
-    if (drivers.includes("wind")) {
-      parts.push("winds pick up at times");
-    }
-
-    if (!parts.length) {
-      return "A quiet day overall.";
-    }
-
-    return parts.join(", ") + ".";
-  })();
-
-  // ------------------------------------------------------------
-  // BULLETS (clothing → action → supplemental)
+  // BULLETS
   // ------------------------------------------------------------
 
   // COMMUTE IMPACTS
@@ -110,7 +66,7 @@ export function synthesizeOutlook({ raw, comfort }) {
 
   // PRECIP INTENSITY
   if (precipIntensity && !commute?.commuteHeavy) {
-    bullets.push(precipIntensity.charAt(0).toUpperCase() + precipIntensity.slice(1) + ".");
+    bullets.push(precipIntensity);
   }
 
   // RAIN → SNOW TRANSITION
@@ -129,9 +85,11 @@ export function synthesizeOutlook({ raw, comfort }) {
   if (comfortText.includes("crisp")) bullets.push("Air stays crisp and comfortable.");
   if (dominant === "goldilocks") bullets.push("A great day for outdoor plans.");
 
-  // Quiet fallback
-  if (bullets.length === 0) {
-    bullets.push("A quiet day overall.");
+  // ------------------------------------------------------------
+  // CLOTHING GUIDANCE (always last bullet)
+  // ------------------------------------------------------------
+  if (raw.clothing) {
+    bullets.push(`Clothing: ${raw.clothing}`);
   }
 
   // ------------------------------------------------------------
@@ -150,7 +108,7 @@ export function synthesizeOutlook({ raw, comfort }) {
 
   return {
     headline,
-    text: narrative,
-    bullets: cleanBullets.slice(0, 4)
+    text: "",            // narrative removed
+    bullets: cleanBullets.slice(0, 5)
   };
 }
