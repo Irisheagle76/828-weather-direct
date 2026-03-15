@@ -482,7 +482,15 @@ export function getTodayActionOutlook(hourly) {
   const windStats = getWindStats(win);
   const precipTotal = getPrecipTotal(win);
   const snowTotal = getSnowTotal(win);
-  const clothing = getClothingGuidance(hourly, indices);
+ const clothing = getClothingGuidance(hourly, indices);
+
+const synthesized = synthesizeOutlook({
+  raw: {
+    meta: { phases, drivers, trends, dominant, commute, precipTotal, snowTotal },
+    clothing
+  },
+  comfort: { summary: comfortSummary }
+});
 
   const analysis = analyzeDay(hours);
   const { phases, drivers, trends, commute } = analysis;
@@ -495,22 +503,6 @@ export function getTodayActionOutlook(hourly) {
   );
 
   const comfortSummary = getComfortSummary(hourly, indices);
-
-  const synthesized = synthesizeOutlook({
-    raw: {
-      meta: {
-        phases,
-        drivers,
-        trends,
-        dominant,
-        commute,
-        precipTotal,
-        snowTotal
-      }
-    },
-    comfort: { summary: comfortSummary }
-  });
-
   return {
     emoji: emojiForFactor(dominant),
     ...synthesized,
@@ -540,7 +532,15 @@ export function getHumanActionOutlook(hourly) {
       }
     };
   }
+const clothing = getClothingGuidance(hourly, indices);
 
+const synthesized = synthesizeOutlook({
+  raw: {
+    meta: { phases, drivers, trends, dominant, commute, precipTotal, snowTotal },
+    clothing
+  },
+  comfort: { summary: comfortSummary }
+});
   const win = sliceHourly(hourly, indices);
   const hours = normalizeHourly(hourly, indices);
 
@@ -561,14 +561,6 @@ export function getHumanActionOutlook(hourly) {
   );
 
   const comfortSummary = getComfortSummary(hourly, indices);
-
-  const synthesized = synthesizeOutlook({
-  raw: {
-    meta: { phases, drivers, trends, dominant, commute, precipTotal, snowTotal },
-    clothing
-  },
-  comfort: { summary: comfortSummary }
-});
 
   return {
     emoji: emojiForFactor(dominant),
