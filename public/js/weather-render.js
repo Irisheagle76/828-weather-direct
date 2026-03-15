@@ -98,6 +98,7 @@ export function getUVClass(uv) {
   if (uv <= 10) return "uv-very-high";
   return "uv-extreme";
 }
+
 // ------------------------------------------------------------
 // BULLET DE-DUPLICATOR (semantic-ish)
 // ------------------------------------------------------------
@@ -139,6 +140,7 @@ function dedupeBullets(bullets) {
 
   return result;
 }
+
 // ------------------------------------------------------------
 // HYBRID BULLET RENDERER
 // ------------------------------------------------------------
@@ -185,13 +187,23 @@ export function renderTodayOutlook(intel) {
   const textEl = document.getElementById("today-text");
   const bulletsEl = document.getElementById("today-bullets");
 
-  const { emoji, headline, text, bullets } = intel.today;
+  const { emoji, headline, text, bullets, isEndOfDay } = intel.today;
 
   emojiEl.textContent = emoji;
   headlineEl.textContent = headline;
   textEl.textContent = text;
 
   renderBullets(bulletsEl, bullets);
+
+  // ⭐ FADE LOGIC FOR TODAY
+  const todayModule = document.getElementById("today-module");
+  if (todayModule) {
+    if (isEndOfDay) {
+      todayModule.classList.add("fade");
+    } else {
+      todayModule.classList.remove("fade");
+    }
+  }
 }
 
 // ------------------------------------------------------------
@@ -202,7 +214,7 @@ export function renderTomorrowOutlook(intel) {
   const textEl = document.getElementById("tomorrow-text");
   const bulletsEl = document.getElementById("tomorrow-bullets");
 
-  const { emoji, headline, text, bullets, meta } = intel.tomorrow;
+  const { emoji, headline, text, bullets, meta, isEarlyMorning } = intel.tomorrow;
 
   // Emoji
   emojiEl.textContent = emoji;
@@ -231,7 +243,18 @@ export function renderTomorrowOutlook(intel) {
 
   // Bullets
   renderBullets(bulletsEl, bullets);
+
+  // ⭐ FADE LOGIC FOR TOMORROW
+  const tomorrowModule = document.getElementById("tomorrow-module");
+  if (tomorrowModule) {
+    if (isEarlyMorning) {
+      tomorrowModule.classList.add("fade");
+    } else {
+      tomorrowModule.classList.remove("fade");
+    }
+  }
 }
+
 // ------------------------------------------------------------
 // RENDER UV INDEX (FORECAST)
 // ------------------------------------------------------------
