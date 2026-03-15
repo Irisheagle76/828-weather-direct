@@ -7,7 +7,7 @@ import {
   getMRMSPixel
 } from './weather-fetch.js';
 
-import { buildWeatherIntel } from './forecast-intel-plus.js';
+import { buildWeatherIntel } from './forecast-intel.js';
 
 import {
   renderRightNowComfort,
