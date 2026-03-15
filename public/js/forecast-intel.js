@@ -947,11 +947,17 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
     source: "mrms"
   };
 
-  const microAdvice = getMicroAdvice({
-    wu: wuCurrent,
-    today,
-    comfort: rightNowComfort
-  });
+  const microAdvice = getUnifiedMicroAdvice({
+  wu: wuCurrent,
+  outlook: today,
+  comfort: rightNowComfort
+});
+
+const tomorrowMicroAdvice = getUnifiedMicroAdvice({
+  wu: wuCurrent,
+  outlook: tomorrow,
+  comfort: rightNowComfort
+});
 
   function localTo12Hour(hour) {
     const h = hour % 12 || 12;
@@ -1058,16 +1064,17 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
   };
 
   return {
-    wu: wuCurrent,
-    uv: reliableUV,
-    rightNowComfort,
-    today,
-    tomorrow,
-    precipSignal,
-    microAdvice,
-    todayDetail,
-    tomorrowDetail
-  };
+  wu: wuCurrent,
+  uv: reliableUV,
+  rightNowComfort,
+  today,
+  tomorrow,
+  precipSignal,
+  microAdvice,
+  tomorrowMicroAdvice,
+  todayDetail,
+  tomorrowDetail
+};
 }
 // ------------------------------------------------------------
 // END OF FILE
