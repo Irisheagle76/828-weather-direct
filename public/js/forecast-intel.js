@@ -507,6 +507,7 @@ export function getTodayActionOutlook(hourly) {
   const synthesized = synthesizeOutlook({
     raw: {
       meta: {
+         dayType: "today",
         phases,
         drivers,
         trends,
@@ -583,6 +584,7 @@ export function getHumanActionOutlook(hourly) {
   const synthesized = synthesizeOutlook({
     raw: {
       meta: {
+         dayType: "tomorrow",
         phases,
         drivers,
         trends,
