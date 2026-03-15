@@ -463,7 +463,7 @@ export function getTodayActionOutlook(hourly) {
     return {
       emoji: "🌤️",
       headline: "A quiet rest of the day.",
-      text: "No meaningful weather impacts expected.",
+      text: "",
       bullets: ["A quiet evening ahead."],
       meta: {
         phases: [],
@@ -474,27 +474,22 @@ export function getTodayActionOutlook(hourly) {
     };
   }
 
+  // Slice + normalize
   const win = sliceHourly(hourly, indices);
   const hours = normalizeHourly(hourly, indices);
 
+  // 1. Stats
   const tempStats = getTempStats(win);
   const dewStats = getDewStats(win);
   const windStats = getWindStats(win);
   const precipTotal = getPrecipTotal(win);
   const snowTotal = getSnowTotal(win);
- const clothing = getClothingGuidance(hourly, indices);
 
-const synthesized = synthesizeOutlook({
-  raw: {
-    meta: { phases, drivers, trends, dominant, commute, precipTotal, snowTotal },
-    clothing
-  },
-  comfort: { summary: comfortSummary }
-});
-
+  // 2. Analysis
   const analysis = analyzeDay(hours);
   const { phases, drivers, trends, commute } = analysis;
 
+  // 3. Dominant factor
   const dominant = getDominantFactor(
     tempStats.max,
     windStats.max,
@@ -502,7 +497,29 @@ const synthesized = synthesizeOutlook({
     snowTotal
   );
 
+  // 4. Comfort summary
   const comfortSummary = getComfortSummary(hourly, indices);
+
+  // 5. Clothing guidance
+  const clothing = getClothingGuidance(hourly, indices);
+
+  // 6. Synthesizer (NOW all variables exist)
+  const synthesized = synthesizeOutlook({
+    raw: {
+      meta: {
+        phases,
+        drivers,
+        trends,
+        dominant,
+        commute,
+        precipTotal,
+        snowTotal
+      },
+      clothing
+    },
+    comfort: { summary: comfortSummary }
+  });
+
   return {
     emoji: emojiForFactor(dominant),
     ...synthesized,
@@ -522,7 +539,7 @@ export function getHumanActionOutlook(hourly) {
     return {
       emoji: "🌤️",
       headline: "A quiet day tomorrow.",
-      text: "No meaningful weather impacts expected.",
+      text: "",
       bullets: ["A quiet day overall."],
       meta: {
         phases: [],
@@ -532,27 +549,23 @@ export function getHumanActionOutlook(hourly) {
       }
     };
   }
-const clothing = getClothingGuidance(hourly, indices);
 
-const synthesized = synthesizeOutlook({
-  raw: {
-    meta: { phases, drivers, trends, dominant, commute, precipTotal, snowTotal },
-    clothing
-  },
-  comfort: { summary: comfortSummary }
-});
+  // Slice + normalize
   const win = sliceHourly(hourly, indices);
   const hours = normalizeHourly(hourly, indices);
 
+  // 1. Stats
   const tempStats = getTempStats(win);
   const dewStats = getDewStats(win);
   const windStats = getWindStats(win);
   const precipTotal = getPrecipTotal(win);
   const snowTotal = getSnowTotal(win);
 
+  // 2. Analysis
   const analysis = analyzeDay(hours);
   const { phases, drivers, trends, commute } = analysis;
 
+  // 3. Dominant factor
   const dominant = getDominantFactor(
     tempStats.max,
     windStats.max,
@@ -560,7 +573,28 @@ const synthesized = synthesizeOutlook({
     snowTotal
   );
 
+  // 4. Comfort summary
   const comfortSummary = getComfortSummary(hourly, indices);
+
+  // 5. Clothing guidance
+  const clothing = getClothingGuidance(hourly, indices);
+
+  // 6. Synthesizer (NOW all variables exist)
+  const synthesized = synthesizeOutlook({
+    raw: {
+      meta: {
+        phases,
+        drivers,
+        trends,
+        dominant,
+        commute,
+        precipTotal,
+        snowTotal
+      },
+      clothing
+    },
+    comfort: { summary: comfortSummary }
+  });
 
   return {
     emoji: emojiForFactor(dominant),
