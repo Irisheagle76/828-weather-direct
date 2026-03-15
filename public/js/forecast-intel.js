@@ -38,31 +38,7 @@ export function to12Hour(timeStr) {
   else if (h > 12) h -= 12;
   return `${h} ${suffix}`;
 }
-// ------------------------------------------------------------
-// Morning Commute specific weather
-// ------------------------------------------------------------
-function scanMorningCommute(hours) {
-  // 5 AM → 9 AM local
-  const commuteHours = hours.filter(h => {
-    const local = new Date(h.time);
-    const hr = local.getHours();
-    return hr >= 5 && hr <= 9;
-  });
 
-  if (!commuteHours.length) {
-    return { commutePrecip: 0, commuteHeavy: false };
-  }
-
-  const commutePrecip = commuteHours.reduce((a, h) => a + (h.precip || 0), 0);
-
-  // Intensity tiers
-  const commuteHeavy = commuteHours.some(h => h.precip >= 0.10);
-
-  return {
-    commutePrecip,
-    commuteHeavy
-  };
-}
 // ------------------------------------------------------------
 // Descriptors
 // ------------------------------------------------------------
@@ -380,6 +356,29 @@ function detectDrivers(hours, phases, trends) {
   return [...new Set(drivers)];
 }
 
+// ------------------------------------------------------------
+// Morning commute scanner (5–9 AM local)
+// ------------------------------------------------------------
+function scanMorningCommute(hours) {
+  const commuteHours = hours.filter(h => {
+    const local = new Date(h.time);
+    const hr = local.getHours();
+    return hr >= 5 && hr <= 9;
+  });
+
+  if (!commuteHours.length) {
+    return { commutePrecip: 0, commuteHeavy: false };
+  }
+
+  const commutePrecip = commuteHours.reduce((a, h) => a + (h.precip || 0), 0);
+  const commuteHeavy = commuteHours.some(h => h.precip >= 0.10);
+
+  return {
+    commutePrecip,
+    commuteHeavy
+  };
+}
+
 export function analyzeDay(hours) {
   const { phases, snow } = detectPhases(hours);
   const trends = detectTrends(hours);
@@ -485,7 +484,7 @@ export function getTodayActionOutlook(hourly) {
   const snowTotal = getSnowTotal(win);
 
   const analysis = analyzeDay(hours);
-  const { phases, drivers, trends } = analysis;
+  const { phases, drivers, trends, commute } = analysis;
 
   const dominant = getDominantFactor(
     tempStats.max,
@@ -498,7 +497,15 @@ export function getTodayActionOutlook(hourly) {
 
   const synthesized = synthesizeOutlook({
     raw: {
-      meta: { phases, drivers, trends, dominant }
+      meta: {
+        phases,
+        drivers,
+        trends,
+        dominant,
+        commute,
+        precipTotal,
+        snowTotal
+      }
     },
     comfort: { summary: comfortSummary }
   });
@@ -510,7 +517,8 @@ export function getTodayActionOutlook(hourly) {
       phases,
       drivers,
       trends,
-      dominant
+      dominant,
+      commute
     }
   };
 }
@@ -542,7 +550,7 @@ export function getHumanActionOutlook(hourly) {
   const snowTotal = getSnowTotal(win);
 
   const analysis = analyzeDay(hours);
-  const { phases, drivers, trends } = analysis;
+  const { phases, drivers, trends, commute } = analysis;
 
   const dominant = getDominantFactor(
     tempStats.max,
@@ -555,7 +563,15 @@ export function getHumanActionOutlook(hourly) {
 
   const synthesized = synthesizeOutlook({
     raw: {
-      meta: { phases, drivers, trends, dominant }
+      meta: {
+        phases,
+        drivers,
+        trends,
+        dominant,
+        commute,
+        precipTotal,
+        snowTotal
+      }
     },
     comfort: { summary: comfortSummary }
   });
@@ -567,7 +583,8 @@ export function getHumanActionOutlook(hourly) {
       phases,
       drivers,
       trends,
-      dominant
+      dominant,
+      commute
     }
   };
 }
@@ -726,9 +743,15 @@ export function getActionRecommendations(hourly, indices) {
   const snowTotal = getSnowTotal(win);
 
   const analysis = analyzeDay(hours);
-  const { phases, drivers, trends } = analysis;
+  const { phases, drivers, trends, commute } = analysis;
 
   const recs = [];
+
+  if (commute.commuteHeavy) {
+    recs.push("Steadier rain for the morning commute — allow extra travel time.");
+  } else if (commute.commutePrecip >= 0.05) {
+    recs.push("Rain likely around the morning commute — roads may be wet.");
+  }
 
   if (phases.includes("rain-early")) {
     recs.push("Plan for rain early — roads may be wet for the morning commute.");
@@ -788,7 +811,7 @@ export function getPlannerBullets(hourly, indices) {
   const precipTotal = getPrecipTotal(win);
 
   const analysis = analyzeDay(hours);
-  const { phases, trends } = analysis;
+  const { phases, trends, commute } = analysis;
 
   const bullets = [];
 
@@ -800,9 +823,17 @@ export function getPlannerBullets(hourly, indices) {
   else if (windStats.max >= 30) bullets.push("Quite breezy.");
   else if (windStats.max >= 20) bullets.push("A bit breezy.");
 
-  if (phases.includes("rain-early")) bullets.push("Rain moves through early.");
-  else if (precipTotal >= 0.25) bullets.push("Showers likely at times.");
-  else if (precipTotal > 0) bullets.push("A few showers around.");
+  if (commute.commuteHeavy) {
+    bullets.push("Steadier rain for the morning commute.");
+  } else if (commute.commutePrecip >= 0.05) {
+    bullets.push("Rain likely early, especially around the commute.");
+  } else if (phases.includes("rain-early")) {
+    bullets.push("Rain moves through early.");
+  } else if (precipTotal >= 0.25) {
+    bullets.push("Showers likely at times.");
+  } else if (precipTotal > 0) {
+    bullets.push("A few showers around.");
+  }
 
   if (phases.includes("nw-snow")) bullets.push("NW-flow snow showers possible.");
 
@@ -923,7 +954,7 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
       value: hourly.uv_index?.[i] ?? 0
     }));
 
-    const maxUV = Math.max(...uvPoints.map(p => p.value));
+    const maxUV = Math.max(...(uvPoints.map(p => p.value) || [0]));
     if (maxUV <= 2) return { max: maxUV, hours: [] };
 
     const peakHours = uvPoints
