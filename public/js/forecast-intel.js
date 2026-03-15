@@ -3,6 +3,10 @@
 // Core helpers + descriptors + windows + multi-phase engine
 // ============================================================
 
+import { findNearestHourIndex, getReliableUV } from './weather-utils.js';
+import { getMicroAdvice } from './micro-advice.js';
+import { degToCompass, getUVClass } from "./weather-render.js";
+
 // ------------------------------------------------------------
 // Basic text helpers
 // ------------------------------------------------------------
@@ -264,11 +268,9 @@ function findEventTiming(win, startIndex, endIndex, predicate) {
 function timingPhrase(timing, isRain = false) {
   if (timing.firstHour == null) return "";
 
-  const times = timing;
-  // Here we only care about broad buckets: morning / afternoon / evening / night
   const bucket = idx => {
     if (idx == null) return "";
-    const h = idx; // we’ll map index to rough hour bucket in Today/Tomorrow context
+    const h = idx;
     if (h < 8) return "early in the morning";
     if (h < 12) return "late morning";
     if (h < 17) return "in the afternoon";
@@ -332,11 +334,9 @@ function detectWedge(hours) {
 function detectPhases(hours) {
   const phases = [];
 
-  // Rain early
   const earlyRain = hours.slice(0, 8).some(h => h.precip > 0.02);
   if (earlyRain) phases.push("rain-early");
 
-  // Thunder embedded (warm-sector, gusty, heavier rain)
   const hasThunder = hours.some(h =>
     h.precip > 0.10 &&
     h.temp >= 55 &&
@@ -347,18 +347,14 @@ function detectPhases(hours) {
   );
   if (hasThunder) phases.push("thunder-embedded");
 
-  // Frontal passage
   if (detectFrontalPassage(hours)) phases.push("frontal-passage");
 
-  // Post-frontal cold (clear temp fall after front)
   const tempFalling = hours.some((h, i) => i > 0 && hours[i - 1].temp - h.temp >= 3);
   if (tempFalling) phases.push("post-frontal-cold");
 
-  // NW-flow snow
   const snowSig = detectSnowBehindFront(hours);
   if (snowSig.nwFlowSnow) phases.push("nw-snow");
 
-  // Wedge
   if (detectWedge(hours)) phases.push("wedge");
 
   return { phases, snow: snowSig };
@@ -419,9 +415,6 @@ export function analyzeDay(hours) {
   };
 }
 
-// ------------------------------------------------------------
-// DOMINANT FACTOR SCORING (used by Today/Tomorrow later)
-// ------------------------------------------------------------
 function getDominantFactor(tempHigh, gustMax, precipTotal, snowTotal) {
   const drivers = [];
 
@@ -465,9 +458,6 @@ function getDominantFactor(tempHigh, gustMax, precipTotal, snowTotal) {
 // Today + Tomorrow Action Outlook (rebuilt)
 // ============================================================
 
-// ------------------------------------------------------------
-// Helper: pick emoji based on dominant factor
-// ------------------------------------------------------------
 function emojiForFactor(f) {
   switch (f) {
     case "snow": return "❄️";
@@ -480,11 +470,7 @@ function emojiForFactor(f) {
   }
 }
 
-// ------------------------------------------------------------
-// Helper: build headline from phases + drivers
-// ------------------------------------------------------------
 function buildHeadline(phases, drivers, trends) {
-  // Event-day style
   if (phases.includes("rain-early") && phases.includes("frontal-passage")) {
     return "Rain early, then sharply colder and windy.";
   }
@@ -520,9 +506,6 @@ function buildHeadline(phases, drivers, trends) {
   return "A quiet day overall.";
 }
 
-// ------------------------------------------------------------
-// Helper: build main narrative sentence
-// ------------------------------------------------------------
 function buildNarrative(phases, drivers, trends) {
   const parts = [];
 
@@ -556,9 +539,6 @@ function buildNarrative(phases, drivers, trends) {
   return mergePhrases(parts) + ".";
 }
 
-// ------------------------------------------------------------
-// Helper: build bullets (max 3)
-// ------------------------------------------------------------
 function buildBullets(phases, drivers, trends) {
   const bullets = [];
 
@@ -593,9 +573,6 @@ function buildBullets(phases, drivers, trends) {
   return bullets.slice(0, 3);
 }
 
-// ------------------------------------------------------------
-// TODAY ACTION OUTLOOK
-// ------------------------------------------------------------
 export function getTodayActionOutlook(hourly) {
   const indices = getTodayRemainingWindow(hourly);
   if (!indices.length) {
@@ -640,9 +617,6 @@ export function getTodayActionOutlook(hourly) {
   };
 }
 
-// ------------------------------------------------------------
-// TOMORROW ACTION OUTLOOK
-// ------------------------------------------------------------
 export function getHumanActionOutlook(hourly) {
   const indices = getTomorrowWindow(hourly);
   if (!indices.length) {
@@ -691,9 +665,6 @@ export function getHumanActionOutlook(hourly) {
 // Comfort Module + Seasonal Context + Goldilocks Logic
 // ============================================================
 
-// ------------------------------------------------------------
-// HUMIDITY / DEWPOINT COMFORT DESCRIPTOR
-// ------------------------------------------------------------
 function describeHumidity(dewAvg) {
   if (dewAvg == null) return "";
 
@@ -705,9 +676,6 @@ function describeHumidity(dewAvg) {
   return "dry and crisp";
 }
 
-// ------------------------------------------------------------
-// TEMPERATURE FEEL DESCRIPTOR
-// ------------------------------------------------------------
 function describeTempFeel(tempAvg) {
   if (tempAvg == null) return "";
 
@@ -720,9 +688,6 @@ function describeTempFeel(tempAvg) {
   return "very hot";
 }
 
-// ------------------------------------------------------------
-// WIND FEEL DESCRIPTOR
-// ------------------------------------------------------------
 function describeWindFeel(gustAvg) {
   if (gustAvg == null) return "";
 
@@ -733,9 +698,6 @@ function describeWindFeel(gustAvg) {
   return "calm";
 }
 
-// ------------------------------------------------------------
-// GOLDILOCKS DETECTION
-// ------------------------------------------------------------
 function isGoldilocksDay(tempStats, dewStats, windStats, precipTotal, snowTotal) {
   const t = tempStats?.max;
   const d = dewStats?.avg;
@@ -751,9 +713,6 @@ function isGoldilocksDay(tempStats, dewStats, windStats, precipTotal, snowTotal)
   return tempOK && dewOK && windOK;
 }
 
-// ------------------------------------------------------------
-// COMFORT CATEGORY (rebuilt, Asheville-aware)
-// ------------------------------------------------------------
 export function getComfortCategory(hourly, indices) {
   if (!indices?.length) return "unknown";
 
@@ -764,14 +723,12 @@ export function getComfortCategory(hourly, indices) {
   const precipTotal = getPrecipTotal(win);
   const snowTotal = getSnowTotal(win);
 
-  // Goldilocks override
   if (isGoldilocksDay(tempStats, dewStats, windStats, precipTotal, snowTotal)) {
     return "goldilocks";
   }
 
   const t = tempStats.avg;
   const d = dewStats.avg;
-  const g = windStats.avg;
 
   if (snowTotal > 0.25) return "wintry";
   if (t <= 40) return "cold";
@@ -781,9 +738,6 @@ export function getComfortCategory(hourly, indices) {
   return "hot";
 }
 
-// ------------------------------------------------------------
-// COMFORT SUMMARY (rebuilt for smoother language)
-// ------------------------------------------------------------
 export function getComfortSummary(hourly, indices) {
   if (!indices?.length) return "Comfort information unavailable.";
 
@@ -794,7 +748,6 @@ export function getComfortSummary(hourly, indices) {
   const precipTotal = getPrecipTotal(win);
   const snowTotal = getSnowTotal(win);
 
-  // Goldilocks override
   if (isGoldilocksDay(tempStats, dewStats, windStats, precipTotal, snowTotal)) {
     return "A classic Goldilocks day — warm sun, low humidity, and a gentle breeze.";
   }
@@ -807,9 +760,6 @@ export function getComfortSummary(hourly, indices) {
   return cleanJoin(parts);
 }
 
-// ------------------------------------------------------------
-// SEASONAL CONTEXT (rebuilt)
-// ------------------------------------------------------------
 export function getSeasonalContext(date = new Date()) {
   const m = date.getMonth() + 1;
 
@@ -823,9 +773,6 @@ export function getSeasonalContext(date = new Date()) {
 // Clothing Guidance + Human-Action Recommendations
 // ============================================================
 
-// ------------------------------------------------------------
-// CLOTHING GUIDANCE
-// ------------------------------------------------------------
 export function getClothingGuidance(hourly, indices) {
   if (!indices?.length) return "Dress comfortably.";
 
@@ -837,12 +784,10 @@ export function getClothingGuidance(hourly, indices) {
   const snowTotal = getSnowTotal(win);
 
   const t = tempStats.avg;
-  const d = dewStats.avg;
   const g = windStats.max;
 
   const parts = [];
 
-  // Temperature layers
   if (t <= 32) parts.push("Bundle up — winter layers needed.");
   else if (t <= 45) parts.push("A jacket or warm layers recommended.");
   else if (t <= 60) parts.push("A light jacket or long sleeves should be fine.");
@@ -850,12 +795,10 @@ export function getClothingGuidance(hourly, indices) {
   else if (t <= 82) parts.push("Short sleeves or breathable clothing.");
   else parts.push("Light, breathable clothing — it’ll feel hot.");
 
-  // Wind
   if (g >= 35) parts.push("Secure loose items and consider a windbreaker.");
   else if (g >= 25) parts.push("A windbreaker may help.");
   else if (g >= 15) parts.push("A bit breezy at times.");
 
-  // Precip
   if (snowTotal > 0.1) parts.push("Winter footwear recommended.");
   else if (precipTotal >= 0.1) parts.push("Bring a rain jacket or umbrella.");
   else if (precipTotal > 0) parts.push("A light rain layer could help.");
@@ -863,9 +806,6 @@ export function getClothingGuidance(hourly, indices) {
   return cleanJoin(parts, " ");
 }
 
-// ------------------------------------------------------------
-// HUMAN-ACTION RECOMMENDATIONS (rebuilt)
-// ------------------------------------------------------------
 export function getActionRecommendations(hourly, indices) {
   if (!indices?.length) return [];
 
@@ -883,27 +823,22 @@ export function getActionRecommendations(hourly, indices) {
 
   const recs = [];
 
-  // Rain early
   if (phases.includes("rain-early")) {
     recs.push("Plan for rain early — roads may be wet for the morning commute.");
   }
 
-  // Thunder
   if (phases.includes("thunder-embedded")) {
     recs.push("A few rumbles possible — consider indoor plans during heavier showers.");
   }
 
-  // Front
   if (phases.includes("frontal-passage")) {
     recs.push("A strong front brings a sharp change — expect shifting winds and falling temps.");
   }
 
-  // NW-flow snow
   if (phases.includes("nw-snow")) {
     recs.push("NW‑flow snow showers may create slick spots, especially on higher roads.");
   }
 
-  // Temperature trends
   if (trends.tempFalling) {
     recs.push("Temperatures fall later — dress in layers.");
   }
@@ -912,26 +847,22 @@ export function getActionRecommendations(hourly, indices) {
     recs.push("Warming through the day — lighter layers later.");
   }
 
-  // Wind
   if (windStats.max >= 35) {
     recs.push("Secure outdoor items — strong gusts possible.");
   } else if (windStats.max >= 25) {
     recs.push("A bit windy — consider a windbreaker.");
   }
 
-  // Precip
   if (precipTotal >= 0.25) {
     recs.push("Keep rain gear handy — showers may be persistent.");
   } else if (precipTotal > 0) {
     recs.push("A few showers around — a light rain layer could help.");
   }
 
-  // Snow
   if (snowTotal > 0.1) {
     recs.push("Winter footwear recommended — surfaces may be slick.");
   }
 
-  // If nothing else
   if (!recs.length) {
     recs.push("A quiet day overall — no major weather impacts expected.");
   }
@@ -939,9 +870,6 @@ export function getActionRecommendations(hourly, indices) {
   return recs.slice(0, 5);
 }
 
-// ------------------------------------------------------------
-// PLANNER-FRIENDLY BULLETS (rebuilt)
-// ------------------------------------------------------------
 export function getPlannerBullets(hourly, indices) {
   if (!indices?.length) return ["No significant weather impacts expected."];
 
@@ -959,75 +887,30 @@ export function getPlannerBullets(hourly, indices) {
 
   const bullets = [];
 
-  // Temperature
   if (trends.tempFalling) bullets.push("Temperatures fall later in the day.");
   else if (trends.tempRising) bullets.push("Temperatures rise through the day.");
   else bullets.push(`High near ${Math.round(tempStats.max)}°.`);
 
-  // Wind
   if (windStats.max >= 40) bullets.push("Very windy at times.");
   else if (windStats.max >= 30) bullets.push("Quite breezy.");
   else if (windStats.max >= 20) bullets.push("A bit breezy.");
 
-  // Precip
   if (phases.includes("rain-early")) bullets.push("Rain moves through early.");
   else if (precipTotal >= 0.25) bullets.push("Showers likely at times.");
   else if (precipTotal > 0) bullets.push("A few showers around.");
 
-  // Snow
   if (phases.includes("nw-snow")) bullets.push("NW‑flow snow showers possible.");
 
-  // If nothing else
   if (!bullets.length) bullets.push("A quiet day overall.");
 
   return bullets.slice(0, 4);
 }
 // ============================================================
 // FORECAST INTEL — PART 5 OF 5
-// Final Exports + Public API Surface
+// Unified Intel Wrapper (buildWeatherIntel)
 // ============================================================
-
-export {
-  // Core analysis
-  analyzeDay,
-  normalizeHourly,
-
-  // Today / Tomorrow
-  getTodayActionOutlook,
-  getHumanActionOutlook,
-
-  // Comfort
-  getComfortCategory,
-  getComfortSummary,
-
-  // Seasonal context
-  getSeasonalContext,
-
-  // Clothing + human action
-  getClothingGuidance,
-
-  // Helpers
-  getTodayRemainingWindow,
-  getTomorrowWindow,
-  getDominantFactor,
-
-  // Unified intel wrapper
-  buildWeatherIntel
-};
-// ------------------------------------------------------------
-// OLD FORECAST-INTEL-PLUS
-// ============================================================
-// ============================================================
-// UNIFIED INTEL WRAPPER (migrated from forecast-intel-plus.js)
-// ============================================================
-
-import { findNearestHourIndex, getReliableUV } from './weather-utils.js';
-import { getMicroAdvice } from './micro-advice.js';
-import { degToCompass, getUVClass } from "./weather-render.js";
 
 export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
-
-  // ⭐ 1. UV
   const idx = findNearestHourIndex(hourly);
   const fallbackUV = hourly.uv_index?.[idx] ?? null;
 
@@ -1036,10 +919,6 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
     fallbackUV,
     wuCurrent.solarRadiation
   );
-
-  // ⭐ 2. RIGHT NOW COMFORT
-  const tempNow = wuCurrent.temp;
-  const dewNow = wuCurrent.dewPoint;
 
   const comfortCategory = getComfortCategory(hourly, [idx]);
   const comfortSummary = getComfortSummary(hourly, [idx]);
@@ -1058,11 +937,9 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
     emoji: comfortEmojiMap[comfortCategory] || "🙂"
   };
 
-  // ⭐ 3. Today + Tomorrow (core outlooks)
   const today = getTodayActionOutlook(hourly);
   const tomorrow = getHumanActionOutlook(hourly);
 
-  // ⭐ 4. Precip signal
   const precipSignal = {
     isFalling: mrmsPixel.rate > 0,
     type: mrmsPixel.type,
@@ -1070,15 +947,13 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
     source: "mrms"
   };
 
-  // ⭐ 5. Micro‑advice
   const microAdvice = getMicroAdvice({
     wu: wuCurrent,
     today,
     comfort: rightNowComfort
   });
 
-  // ⭐ 6. Expanded Forecast Detail Builders
-  function to12Hour(hour) {
+  function localTo12Hour(hour) {
     const h = hour % 12 || 12;
     const suffix = hour >= 12 ? "PM" : "AM";
     return `${h} ${suffix}`;
@@ -1100,7 +975,7 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
     const start = new Date(hourly.time[precipHours[0]]).getHours();
     const end = new Date(hourly.time[precipHours.at(-1)]).getHours();
 
-    return `Possible showers ${to12Hour(start)}–${to12Hour(end)}.`;
+    return `Possible showers ${localTo12Hour(start)}–${localTo12Hour(end)}.`;
   }
 
   function buildWindShifts(hourly, indices) {
@@ -1113,7 +988,7 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
     return indices.slice(0, 3).map(i => {
       const hour = new Date(hourly.time[i]).getHours();
       return {
-        time: to12Hour(hour),
+        time: localTo12Hour(hour),
         value: Math.round(hourly.uv_index?.[i] ?? 0),
         label: getUVClass(hourly.uv_index?.[i] ?? 0).replace("uv-", "")
       };
@@ -1144,7 +1019,6 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
     return { max: maxUV, hours: peakHours };
   }
 
-  // ⭐ Build windows (local)
   const now = new Date();
 
   const todayIndices = hourly.time
@@ -1163,7 +1037,6 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
     )
     .map(obj => obj.i);
 
-  // ⭐ Detail objects
   const todayDetail = {
     high: Math.round(Math.max(...todayIndices.map(i => hourly.temperature_2m[i]))),
     low: Math.round(Math.min(...todayIndices.map(i => hourly.temperature_2m[i]))),
@@ -1184,7 +1057,6 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
     reasoning: buildReasoning()
   };
 
-  // ⭐ Return unified intel object
   return {
     wu: wuCurrent,
     uv: reliableUV,
