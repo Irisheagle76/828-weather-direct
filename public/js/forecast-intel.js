@@ -200,6 +200,47 @@ function getTomorrowWindow(hourly) {
   if (indices.length < 6) return [];
   return indices;
 }
+// ------------------------------------------------------------
+// DOMINANT FACTOR SCORING
+// ------------------------------------------------------------
+function getDominantFactor(tempHigh, gustMax, precipTotal, snowTotal) {
+  const drivers = [];
+
+  if (snowTotal >= 0.5) {
+    drivers.push({ type: "snow", score: 80 + snowTotal * 10 });
+  }
+
+  if (snowTotal === 0 && precipTotal >= 0.10) {
+    drivers.push({ type: "rain", score: 55 + precipTotal * 20 });
+  }
+
+  if (gustMax >= 40) {
+    drivers.push({ type: "wind", score: 50 + gustMax });
+  }
+
+  if (tempHigh >= 88) {
+    drivers.push({ type: "heat", score: 55 + (tempHigh - 88) * 2 });
+  }
+
+  if (tempHigh <= 35) {
+    drivers.push({ type: "cold", score: 55 + (35 - tempHigh) * 2 });
+  }
+
+  if (
+    precipTotal < 0.05 &&
+    snowTotal === 0 &&
+    gustMax < 26 &&
+    tempHigh >= 60 &&
+    tempHigh <= 75
+  ) {
+    drivers.push({ type: "goldilocks", score: 40 });
+  }
+
+  if (!drivers.length) return "easy";
+
+  drivers.sort((a, b) => b.score - a.score);
+  return drivers[0].type;
+}
 // ============================================================
 // PART 2 — TODAY — Human‑Action Outlook (Upgraded)
 // ============================================================
