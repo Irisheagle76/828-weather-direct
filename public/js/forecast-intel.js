@@ -38,7 +38,31 @@ export function to12Hour(timeStr) {
   else if (h > 12) h -= 12;
   return `${h} ${suffix}`;
 }
+// ------------------------------------------------------------
+// Morning Commute specific weather
+// ------------------------------------------------------------
+function scanMorningCommute(hours) {
+  // 5 AM → 9 AM local
+  const commuteHours = hours.filter(h => {
+    const local = new Date(h.time);
+    const hr = local.getHours();
+    return hr >= 5 && hr <= 9;
+  });
 
+  if (!commuteHours.length) {
+    return { commutePrecip: 0, commuteHeavy: false };
+  }
+
+  const commutePrecip = commuteHours.reduce((a, h) => a + (h.precip || 0), 0);
+
+  // Intensity tiers
+  const commuteHeavy = commuteHours.some(h => h.precip >= 0.10);
+
+  return {
+    commutePrecip,
+    commuteHeavy
+  };
+}
 // ------------------------------------------------------------
 // Descriptors
 // ------------------------------------------------------------
@@ -360,6 +384,7 @@ export function analyzeDay(hours) {
   const { phases, snow } = detectPhases(hours);
   const trends = detectTrends(hours);
   const drivers = detectDrivers(hours, phases, trends);
+  const commute = scanMorningCommute(hours);
 
   const isEventDay =
     phases.length > 0 ||
@@ -373,7 +398,8 @@ export function analyzeDay(hours) {
     phases,
     trends,
     drivers,
-    snow
+    snow,
+    commute
   };
 }
 
