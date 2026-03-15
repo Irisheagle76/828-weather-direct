@@ -195,8 +195,6 @@ export function renderTodayOutlook(intel) {
 }
 
 // ------------------------------------------------------------
-// RENDER TOMORROW OUTLOOK
-// ------------------------------------------------------------
 export function renderTomorrowOutlook(intel) {
   const emojiEl = document.getElementById("tomorrow-emoji");
   const badgeEl = document.getElementById("tomorrow-badge");
@@ -204,17 +202,36 @@ export function renderTomorrowOutlook(intel) {
   const textEl = document.getElementById("tomorrow-text");
   const bulletsEl = document.getElementById("tomorrow-bullets");
 
-  const { badge, emoji, headline, text, bullets } = intel.tomorrow;
+  const { emoji, headline, text, bullets, meta } = intel.tomorrow;
 
+  // Emoji
   emojiEl.textContent = emoji;
+
+  // NEW BADGE SYSTEM (derived from dominant driver)
+  const dominant = meta?.dominant ?? "easy";
+
+  const badgeMap = {
+    rain:  { text: "Rain Gear",     class: "badge-rain" },
+    wind:  { text: "Wind Alert",    class: "badge-wind" },
+    snow:  { text: "Snow Impact",   class: "badge-snow" },
+    heat:  { text: "Heat Caution",  class: "badge-heat" },
+    cold:  { text: "Cold Start",    class: "badge-cold" },
+    goldilocks: { text: "Perfect Day", class: "badge-goldilocks" },
+    easy:  { text: "Easy Day",      class: "badge-easy" }
+  };
+
+  const badge = badgeMap[dominant] ?? badgeMap.easy;
+
   badgeEl.textContent = badge.text;
   badgeEl.className = `badge ${badge.class}`;
+
+  // Headline + text
   headlineEl.textContent = headline;
   textEl.textContent = text;
 
+  // Bullets
   renderBullets(bulletsEl, bullets);
 }
-
 // ------------------------------------------------------------
 // RENDER UV INDEX (FORECAST)
 // ------------------------------------------------------------
