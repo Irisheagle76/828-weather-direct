@@ -1,21 +1,13 @@
-// ------------------------------------------------------------
-// MICRO‑ADVICE ENGINE
-// ------------------------------------------------------------
-
 export function getMicroAdvice({ wu, today, comfort }) {
   const temp = wu.temp;
   const dew = wu.dewPoint;
   const gust = wu.windGust ?? 0;
-  const dominant = today.badge.text.toLowerCase(); // "Rain Gear", "Wind Alert", etc.
+
+  // NEW: use the unified intel dominant driver
+  const dominant = today?.meta?.dominant ?? "easy";
 
   // Normalize dominant driver
-  const driver = today.badge.text.toLowerCase().includes("rain") ? "rain" :
-                 today.badge.text.toLowerCase().includes("wind") ? "wind" :
-                 today.badge.text.toLowerCase().includes("heat") ? "heat" :
-                 today.badge.text.toLowerCase().includes("cold") ? "cold" :
-                 today.badge.text.toLowerCase().includes("snow") ? "snow" :
-                 today.badge.text.toLowerCase().includes("goldilocks") ? "goldilocks" :
-                 "easy";
+  const driver = dominant.toLowerCase();
 
   // ------------------------------------------------------------
   // 1. Driver‑based micro advice
@@ -55,15 +47,14 @@ export function getMicroAdvice({ wu, today, comfort }) {
     timeAdvice = "Cool start, warmer later — dress in layers.";
   }
 
-  if (hour >= 14 && wu.temp > 70 && comfort.text.toLowerCase().includes("cool")) {
+  if (hour >= 14 && wu.temp > 70 && comfort.summary.toLowerCase().includes("cool")) {
     timeAdvice = "Warm now, but it cools off tonight — have a hoodie handy.";
   }
 
   // ------------------------------------------------------------
   // Combine all advice into one clean line
   // ------------------------------------------------------------
-  const pieces = [driverAdvice, dewAdvice, windTempAdvice, timeAdvice]
-    .filter(Boolean);
+  const pieces = [driverAdvice, dewAdvice, windTempAdvice, timeAdvice].filter(Boolean);
 
   return pieces.length ? pieces.join(" ") : driverAdvice;
 }
