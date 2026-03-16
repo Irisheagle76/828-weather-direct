@@ -1,6 +1,6 @@
 // /intel/forecast-intel.js
 
-import { buildComfort } from "./comfort.js";
+import { computeComfort } from "./comfort.js";
 import { synthesizeOutlook, differentiateFromToday } from "./synthesizer.js";
 import { computeStats } from "./stats.js";
 import { computeEvents } from "./events.js";
