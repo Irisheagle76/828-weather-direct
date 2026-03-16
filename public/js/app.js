@@ -94,7 +94,7 @@ async function initApp() {
 
         setWUStatus("ok", "WU Connected", "Weather Underground data loaded.");
 
-        // ⭐ 2. Tempest Device Observations (today's high comes from here)
+        // ⭐ 2. Tempest Device Observations (today's high + wind)
         const TEMPEST_DEVICE_ID = "315255";
         const TEMPEST_TOKEN = "838ff386-d14b-4d45-897a-18903e6970a9";
 
@@ -120,12 +120,17 @@ async function initApp() {
         intel.mrms = mrmsPixel;
         intel.tempest = tempest;
 
+        // ⭐ Merge Tempest wind into WU wind (Tempest = primary)
+        intel.wu.windSpeed = tempest?.windSpeed ?? intel.wu.windSpeed;
+        intel.wu.windGust  = tempest?.windGust  ?? intel.wu.windGust;
+        intel.wu.windDir   = tempest?.windDir   ?? intel.wu.windDir;
+
         // ⭐ Attach Tempest high into today's stats
         intel.today = intel.today || {};
         intel.today.stats = intel.today.stats || {};
         intel.today.stats.maxTemp = tempestHigh;
 
-        // ⭐ Compute comfort now that Tempest high is attached
+        // ⭐ Compute comfort now that Tempest high + wind are attached
         intel.comfort = computeComfort(intel);
 
         // Expose for debugging
