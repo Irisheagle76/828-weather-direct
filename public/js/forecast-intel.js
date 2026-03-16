@@ -537,17 +537,9 @@ return {
 }
 
 export function getHumanActionOutlook(hourly) {
-  phases,
-  drivers,
-  trends,
-  dominant,
-  commute,
-  precipTotal,
-  snowTotal,
-  clothing
- });
   const indices = getTomorrowWindow(hourly);
-    if (!indices.length) {
+
+  if (!indices.length) {
     return {
       emoji: "🌤️",
       headline: "A quiet day tomorrow.",
@@ -593,12 +585,23 @@ export function getHumanActionOutlook(hourly) {
 
   // 6. Synthesizer (NOW all variables exist)
   console.log("TOMORROW SYNTHESIZER RUNNING");
-console.log("TOMORROW RAW META:", {
-  const dayType = "tomorrow";
+
+  // ⭐ THIS IS THE CORRECT PLACE FOR THE DIAGNOSTIC LOG ⭐
+  console.log("TOMORROW RAW META:", {
+    phases,
+    drivers,
+    trends,
+    dominant,
+    commute,
+    precipTotal,
+    snowTotal,
+    clothing
+  });
+
   const synthesized = synthesizeOutlook({
     raw: {
       meta: {
-         dayType: "tomorrow",
+        dayType: "tomorrow",
         phases,
         drivers,
         trends,
@@ -611,7 +614,7 @@ console.log("TOMORROW RAW META:", {
     },
     comfort: { summary: comfortSummary }
   });
- console.log("TOMORROW RAW META:", {
+
   return {
     emoji: emojiForFactor(dominant),
     ...synthesized,
