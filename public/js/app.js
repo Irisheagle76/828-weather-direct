@@ -6,9 +6,10 @@
 import {
   getNearestWUStation,
   getWUCurrentConditions,
-  getWUHistory, 
+  getWUHistory,
   getShortTermForecast,
-  getMRMSPixel
+  getMRMSPixel,
+  getTempestStationObs   // ⭐ NEW
 } from './weather-fetch.js';
 
 import { buildWeatherIntel } from './intel/forecast-intel.js';
@@ -96,29 +97,45 @@ async function initApp() {
 
         setWUStatus("ok", "WU Connected", "Weather Underground data loaded.");
 
-        // ⭐ 2. Hourly Forecast
+        // ⭐ 2. Tempest Station Observations (today's high comes from here)
+        const TEMPEST_STATION_ID = "YOUR_STATION_ID_HERE";
+        const TEMPEST_TOKEN = "YOUR_TOKEN_HERE";
+
+        const tempest = await getTempestStationObs(TEMPEST_STATION_ID, TEMPEST_TOKEN);
+
+        // ⭐ Attach Tempest high/low into intel.today.stats
+        // (This replaces ANY WU-based high logic)
+        const tempestHigh = tempest?.tempHighToday ?? null;
+
+        // ⭐ 3. Hourly Forecast
         const hourly = await getShortTermForecast(lat, lon);
 
         // Debug
         window._hourly = hourly;
 
-        // ⭐ 3. MRMS Radar Pixel
+        // ⭐ 4. MRMS Radar Pixel
         const mrmsPixel = await getMRMSPixel(lat, lon);
 
-        // ⭐ 4. Build Unified Intelligence (correct shape)
+        // ⭐ 5. Build Unified Intelligence
         const intel = buildWeatherIntel(hourly);
 
-        // Attach WU + MRMS
+        // Attach WU + MRMS + Tempest
         intel.wu = wuCurrent;
         intel.mrms = mrmsPixel;
+        intel.tempest = tempest;
 
-        // Compute comfort now that WU is attached
+        // Attach Tempest high into today's stats
+        intel.today = intel.today || {};
+        intel.today.stats = intel.today.stats || {};
+        intel.today.stats.maxTemp = tempestHigh;
+
+        // ⭐ Compute comfort now that Tempest high is attached
         intel.comfort = computeComfort(intel);
 
-        // Expose for debugging + expansion panels
+        // Expose for debugging
         window._intel = intel;
 
-        // ⭐ 5. Update UI
+        // ⭐ 6. Update UI
         updateUI(intel);
 
       } catch (err) {
@@ -155,3 +172,4 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
