@@ -11,15 +11,13 @@
 // - Bullet polishing + wind dedupe + clothing compression
 // ============================================================
 
-import { getClothingGuidance } from './forecast-intel.js';
-
 // ------------------------------------------------------------
 // MAIN SYNTHESIZER
 // ------------------------------------------------------------
 export function synthesizeOutlook({ raw, comfort }) {
-  console.log("SYNTHESIZER START", raw?.meta?.dayType);
   const { phases, drivers, trends, dominant, commute, precipTotal, snowTotal } = raw.meta;
   const bullets = [];
+
   // ------------------------------------------------------------
   // PRECIP INTENSITY HELPER
   // ------------------------------------------------------------
@@ -32,8 +30,7 @@ export function synthesizeOutlook({ raw, comfort }) {
   }
 
   const precipIntensity = describePrecipIntensity(precipTotal);
-console.log("LOCAL NOW:", new Date().toString());
-console.log("LOCAL HOUR:", new Date().getHours());
+
   // ------------------------------------------------------------
   // HEADLINE
   // ------------------------------------------------------------
@@ -149,10 +146,8 @@ console.log("LOCAL HOUR:", new Date().getHours());
       .replace(/\s+/g, " ")
       .trim();
 
-    // Skip duplicates
     if (seenKeys.has(key)) continue;
 
-    // Skip bullets that repeat headline
     const headlineKey = headline.toLowerCase().replace(/[^a-z0-9 ]/g, "");
     if (headlineKey.includes(key) || key.includes(headlineKey)) continue;
 
@@ -161,41 +156,37 @@ console.log("LOCAL HOUR:", new Date().getHours());
   }
 
   // ------------------------------------------------------------
-  // FADE LOGIC (Option B — centralized in synthesizer)
+  // FADE LOGIC
   // ------------------------------------------------------------
   const now = new Date();
   const hour = now.getHours();
 
   // TODAY fade-out (after 7 PM)
-  if (raw?.meta?.dayType === "today") {
-    if (hour >= 19) {
-      return {
-        headline: "The day is winding down.",
-        text: "Fresh forecast updates arrive tomorrow morning.",
-        bullets: [],
-        emoji: "",
-        isEndOfDay: true,
-        isEarlyMorning: false
-      };
-    }
+  if (raw?.meta?.dayType === "today" && hour >= 19) {
+    return {
+      headline: "The day is winding down.",
+      text: "Fresh forecast updates arrive tomorrow morning.",
+      bullets: [],
+      emoji: "",
+      isEndOfDay: true,
+      isEarlyMorning: false
+    };
   }
 
   // TOMORROW fade-in (before 5 AM)
-  if (raw?.meta?.dayType === "tomorrow") {
-    if (hour < 5) {
-      return {
-        headline: "Forecast updates arriving shortly.",
-        text: "Tomorrow’s details will appear as the morning begins.",
-        bullets: [],
-        emoji: "",
-        isEndOfDay: false,
-        isEarlyMorning: true
-      };
-    }
+  if (raw?.meta?.dayType === "tomorrow" && hour < 5) {
+    return {
+      headline: "Forecast updates arriving shortly.",
+      text: "Tomorrow’s details will appear as the morning begins.",
+      bullets: [],
+      emoji: "",
+      isEndOfDay: false,
+      isEarlyMorning: true
+    };
   }
 
   // ------------------------------------------------------------
-  // NORMAL RETURN (no fade)
+  // NORMAL RETURN
   // ------------------------------------------------------------
   return {
     headline,
