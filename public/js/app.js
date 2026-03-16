@@ -8,7 +8,7 @@ import {
   getWUCurrentConditions,
   getShortTermForecast,
   getMRMSPixel,
-  getTempestStationObs
+  getTempestDeviceObs   // ⭐ Correct Tempest function
 } from './weather-fetch.js';
 
 import { buildWeatherIntel } from './intel/forecast-intel.js';
@@ -94,13 +94,13 @@ async function initApp() {
 
         setWUStatus("ok", "WU Connected", "Weather Underground data loaded.");
 
-        // ⭐ 2. Tempest Station Observations (today's high comes from here)
-        const TEMPEST_STATION_ID = "315255";
-        const TEMPEST_TOKEN = "838ff386-d14b-4d45-897a-18903e6970a9";
+        // ⭐ 2. Tempest Device Observations (today's high comes from here)
+        const TEMPEST_DEVICE_ID = "315255";
+        const TEMPEST_TOKEN = "YOUR_TEMPEST_TOKEN_HERE";
 
-        const tempest = await getTempestStationObs(TEMPEST_STATION_ID, TEMPEST_TOKEN);
+        const tempest = await getTempestDeviceObs(TEMPEST_DEVICE_ID, TEMPEST_TOKEN);
 
-        // ⭐ Extract Tempest high
+        // ⭐ Extract Tempest high/low
         const tempestHigh = tempest?.tempHighToday ?? null;
 
         // ⭐ 3. Hourly Forecast
@@ -120,7 +120,7 @@ async function initApp() {
         intel.mrms = mrmsPixel;
         intel.tempest = tempest;
 
-        // Attach Tempest high into today's stats
+        // ⭐ Attach Tempest high into today's stats
         intel.today = intel.today || {};
         intel.today.stats = intel.today.stats || {};
         intel.today.stats.maxTemp = tempestHigh;
