@@ -79,13 +79,13 @@ export async function getShortTermForecast(lat, lon) {
     `&hourly=` +
       `temperature_2m,` +
       `dewpoint_2m,` +
-      `rain,` +                     // ✔ correct field
+      `rain,` +
       `snowfall,` +
-      `wind_speed_10m,` +           // ✔ required
-      `wind_gusts_10m,` +           // ✔ required
-      `wind_direction_10m,` +       // ✔ required
-      `cloudcover,` +               // ✔ required
-      `uv_index` +                  // ✔ required
+      `wind_speed_10m,` +        // ✔ correct
+      `wind_gusts_10m,` +        // ✔ correct
+      `wind_direction_10m,` +    // ✔ correct
+      `cloudcover,` +
+      `uv_index` +
     `&forecast_days=3` +
     `&timezone=America/New_York` +
     `&temperature_unit=fahrenheit` +
