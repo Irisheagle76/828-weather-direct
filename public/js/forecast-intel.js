@@ -172,12 +172,19 @@ function getSnowTotal(win) {
 }
 
 // ------------------------------------------------------------
-// TIME + WINDOW HELPERS
+// TIME + WINDOW HELPERS (Unix‑time safe version)
 // ------------------------------------------------------------
+
+// Convert Open‑Meteo unix timestamp → local Date
+function toLocal(ts) {
+  return new Date(ts * 1000);
+}
+
 function getHourlyWindowForDay(hourly, targetDate) {
   const times = hourly.time || [];
   const indices = [];
 
+  // Normalize target day to local midnight
   const start = new Date(targetDate);
   start.setHours(0, 0, 0, 0);
 
@@ -185,7 +192,7 @@ function getHourlyWindowForDay(hourly, targetDate) {
   end.setHours(23, 59, 59, 999);
 
   for (let i = 0; i < times.length; i++) {
-    const t = new Date(times[i]);
+    const t = toLocal(times[i]);   // ⭐ FIX: interpret timestamps correctly
     if (t >= start && t <= end) indices.push(i);
   }
 
@@ -201,7 +208,7 @@ function getTodayRemainingWindow(hourly) {
   end.setHours(23, 59, 59, 999);
 
   for (let i = 0; i < times.length; i++) {
-    const t = new Date(times[i]);
+    const t = toLocal(times[i]);   // ⭐ FIX: correct local interpretation
     if (t >= now && t <= end) indices.push(i);
   }
 
@@ -213,11 +220,11 @@ function getTomorrowWindow(hourly) {
   const now = new Date();
   const tomorrow = new Date(now);
   tomorrow.setDate(now.getDate() + 1);
-  tomorrow.setHours(0, 0, 0, 0);   // ⭐ CRITICAL FIX
+  tomorrow.setHours(0, 0, 0, 0);   // ⭐ ensure midnight boundary
 
   const indices = getHourlyWindowForDay(hourly, tomorrow);
 
-   // ⭐ Require at least 6 hours for stability
+  // Require at least 6 hours for stability
   if (indices.length < 6) return [];
 
   return indices;
