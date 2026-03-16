@@ -180,53 +180,49 @@ export function renderRightNowComfort(intel) {
   textEl.textContent = comfort.summary ?? "";
 }
 
-// ------------------------------------------------------------
-// RENDER TODAY OUTLOOK
-// ------------------------------------------------------------
+// ============================================================
+// RENDER: Human‑Action Outlook (Today)
+// ============================================================
 export function renderTodayOutlook(intel) {
-  const emojiEl = document.getElementById("today-emoji");
-  const headlineEl = document.getElementById("today-headline");
-  const textEl = document.getElementById("today-text");
-  const bulletsEl = document.getElementById("today-bullets");
+  const el = document.getElementById("today-outlook");
+  if (!el) return;
 
-  const today = intel.today;
-  if (!today || !today.available) {
-    headlineEl.textContent = "No data available";
-    textEl.textContent = "";
-    bulletsEl.innerHTML = "";
+  const out = intel.today?.actionOutlook;
+  if (!out) {
+    el.innerHTML = "<p>No outlook available.</p>";
     return;
   }
 
-  emojiEl.textContent = "";
-  headlineEl.textContent = today.headline;
-  textEl.textContent = today.narrative;
-
-  renderBullets(bulletsEl, today.bullets);
-
-  const todayModule = document.getElementById("today-module");
-  if (todayModule) {
-    if (today.isEndOfDay) todayModule.classList.add("fade");
-    else todayModule.classList.remove("fade");
-  }
+  el.innerHTML = `
+    <div class="outlook-headline">${out.headline}</div>
+    <div class="outlook-context">${out.context}</div>
+    <ul class="outlook-bullets">
+      ${out.bullets.map(b => `<li>${b}</li>`).join("")}
+    </ul>
+  `;
 }
 
-// ------------------------------------------------------------
-// RENDER TOMORROW OUTLOOK
-// ------------------------------------------------------------
+// ============================================================
+// RENDER: Human‑Action Outlook (Tomorrow)
+// ============================================================
 export function renderTomorrowOutlook(intel) {
-  const emojiEl = document.getElementById("tomorrow-emoji");
-  const badgeEl = document.getElementById("tomorrow-badge");
-  const headlineEl = document.getElementById("tomorrow-headline");
-  const textEl = document.getElementById("tomorrow-text");
-  const bulletsEl = document.getElementById("tomorrow-bullets");
+  const el = document.getElementById("tomorrow-outlook");
+  if (!el) return;
 
-  const tomorrow = intel.tomorrow;
-  if (!tomorrow || !tomorrow.available) {
-    headlineEl.textContent = "No data available";
-    textEl.textContent = "";
-    bulletsEl.innerHTML = "";
+  const out = intel.tomorrow?.actionOutlook;
+  if (!out) {
+    el.innerHTML = "<p>No outlook available.</p>";
     return;
   }
+
+  el.innerHTML = `
+    <div class="outlook-headline">${out.headline}</div>
+    <div class="outlook-context">${out.context}</div>
+    <ul class="outlook-bullets">
+      ${out.bullets.map(b => `<li>${b}</li>`).join("")}
+    </ul>
+  `;
+}
 
   emojiEl.textContent = "";
 
