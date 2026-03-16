@@ -237,7 +237,51 @@ h1 {
   margin: 0.25rem 0;
   padding-left: 0.15rem;  /* subtle nudge for perfect alignment */
 }
+/* ---------------------------------------
+   BULLET REVEAL ANIMATION
+--------------------------------------- */
+@keyframes bulletReveal {
+  0% {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
 
+.today-bullets li,
+.tomorrow-bullets li {
+  opacity: 0;
+  animation: bulletReveal 0.45s ease forwards;
+}
+
+/* Staggered reveal timing */
+.today-bullets li:nth-child(1),
+.tomorrow-bullets li:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.today-bullets li:nth-child(2),
+.tomorrow-bullets li:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.today-bullets li:nth-child(3),
+.tomorrow-bullets li:nth-child(3) {
+  animation-delay: 0.25s;
+}
+
+.today-bullets li:nth-child(4),
+.tomorrow-bullets li:nth-child(4) {
+  animation-delay: 0.35s;
+}
+
+.today-bullets li:nth-child(5),
+.tomorrow-bullets li:nth-child(5) {
+  animation-delay: 0.45s;
+}
 /* EXPANDED PANELS */
 .expanded-panel {
   margin-top: 1rem;
