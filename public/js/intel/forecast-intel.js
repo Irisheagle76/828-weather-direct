@@ -1,22 +1,32 @@
 // /intel/forecast-intel.js
 // ============================================================
-// FORECAST INTELLIGENCE ENGINE
+// FORECAST INTELLIGENCE ENGINE (HARDENED + SAFE)
 // ============================================================
 
-import { getTodayHumanActionOutlook, getTomorrowHumanActionOutlook }
-  from "./human-action-outlook.js";
+import {
+  getTodayHumanActionOutlook,
+  getTomorrowHumanActionOutlook
+} from "./human-action-outlook.js";
 
 // ------------------------------------------------------------
-// MAIN ENTRY
+// MAIN ENTRY — expects an array of hourly objects
 // ------------------------------------------------------------
-export function buildWeatherIntel(hourly) {
+export function buildWeatherIntel(hours) {
   const intel = {};
+
+  // Safety: ensure hours is a valid array
+  if (!Array.isArray(hours) || hours.length === 0) {
+    console.warn("forecast-intel: hours array missing or empty");
+    intel.today = {};
+    intel.tomorrow = {};
+    return intel;
+  }
 
   // ------------------------------------------------------------
   // TODAY + TOMORROW STATS
   // ------------------------------------------------------------
-  intel.today = computeDayStats(hourly, 0);
-  intel.tomorrow = computeDayStats(hourly, 1);
+  intel.today = computeDayStats(hours, 0);
+  intel.tomorrow = computeDayStats(hours, 1);
 
   // ------------------------------------------------------------
   // HUMAN‑ACTION OUTLOOKS (NEW)
@@ -28,37 +38,92 @@ export function buildWeatherIntel(hourly) {
 }
 
 // ------------------------------------------------------------
-// DAY STATS
+// DAY STATS (safe + defensive)
 // ------------------------------------------------------------
 function computeDayStats(hours, dayOffset) {
+  if (!Array.isArray(hours) || hours.length === 0) {
+    return {
+      stats: {},
+      precipType: null,
+      windSpeed: null,
+      tempTrend: null
+    };
+  }
+
   const start = dayOffset * 24;
   const slice = hours.slice(start, start + 24);
 
-  if (!slice.length) return {};
+  if (!slice || slice.length === 0) {
+    return {
+      stats: {},
+      precipType: null,
+      windSpeed: null,
+      tempTrend: null
+    };
+  }
 
-  const temps = slice.map(h => h.temp);
-  const maxTemp = Math.max(...temps);
-  const minTemp = Math.min(...temps);
+  // Extract temps safely
+  const temps = slice.map(h => safeNum(h.temp));
+  const maxTemp = maxOrNull(temps);
+  const minTemp = minOrNull(temps);
+
+  // UV: pick hour 12 if available, else fallback
+  const uv =
+    slice[12]?.uv ??
+    slice[Math.floor(slice.length / 2)]?.uv ??
+    null;
+
+  // Wind: same fallback logic
+  const windSpeed =
+    slice[12]?.windSpeed ??
+    slice[Math.floor(slice.length / 2)]?.windSpeed ??
+    null;
+
+  // Temperature trend: last - first
+  const tempTrend =
+    temps.length >= 2
+      ? safeNum(temps[temps.length - 1]) - safeNum(temps[0])
+      : null;
 
   return {
     stats: {
       maxTemp,
       minTemp,
-      uv: slice[12]?.uv ?? null
+      uv
     },
     precipType: detectPrecipType(slice),
-    windSpeed: slice[12]?.windSpeed ?? null,
-    tempTrend: temps[temps.length - 1] - temps[0]
+    windSpeed,
+    tempTrend
   };
 }
 
 // ------------------------------------------------------------
-// PRECIP TYPE DETECTION
+// PRECIP TYPE DETECTION (safe)
 // ------------------------------------------------------------
 function detectPrecipType(hours) {
+  if (!Array.isArray(hours)) return null;
+
   for (const h of hours) {
-    if (h.snow > 0) return "snow";
-    if (h.rain > 0) return "rain";
+    if (safeNum(h.snow) > 0) return "snow";
+    if (safeNum(h.rain) > 0) return "rain";
   }
   return null;
+}
+
+// ------------------------------------------------------------
+// SAFE HELPERS
+// ------------------------------------------------------------
+function safeNum(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+function maxOrNull(arr) {
+  const nums = arr.filter(n => Number.isFinite(n));
+  return nums.length ? Math.max(...nums) : null;
+}
+
+function minOrNull(arr) {
+  const nums = arr.filter(n => Number.isFinite(n));
+  return nums.length ? Math.min(...nums) : null;
 }
