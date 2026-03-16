@@ -95,7 +95,7 @@ async function initApp() {
         setWUStatus("ok", "WU Connected", "Weather Underground data loaded.");
 
         // ⭐ 2. Tempest Station Observations (today's high comes from here)
-        const TEMPEST_STATION_ID = "127602";
+        const TEMPEST_STATION_ID = "315255";
         const TEMPEST_TOKEN = "838ff386-d14b-4d45-897a-18903e6970a9";
 
         const tempest = await getTempestStationObs(TEMPEST_STATION_ID, TEMPEST_TOKEN);
