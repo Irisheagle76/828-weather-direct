@@ -22,7 +22,6 @@ function computeSolarElevation(timestamp, lat, lon) {
   const solarTime = time + (lon / 15);
 
   const hourAngle = rad * (15 * (solarTime - 12));
-
   const latRad = lat * rad;
 
   const elevation =
@@ -59,7 +58,7 @@ function humidityFeel(dew) {
 }
 
 // ------------------------------------------------------------
-// SUN ANGLE FEEL
+// SUN ANGLE FEEL (raw phrasing)
 // ------------------------------------------------------------
 function sunAngleFeel(elev) {
   if (elev <= 0) return "Nighttime calm.";
@@ -67,6 +66,25 @@ function sunAngleFeel(elev) {
   if (elev < 30) return "Morning sun gives a mild boost.";
   if (elev < 60) return "Daytime sun adds warmth.";
   return "Strong sun overhead.";
+}
+
+// ------------------------------------------------------------
+// CONTEXT-AWARE SOLAR FILTER
+// ------------------------------------------------------------
+function isSolarHelpful(intel, elev) {
+  const wu = intel.wu;
+  if (!wu) return false;
+
+  const cloud = wu.cloudCover ?? 100;     // default: overcast
+  const windDir = wu.windDir ?? "";       // e.g., "NW"
+  const trend = wu.tempTrend ?? -1;       // default: falling
+
+  return (
+    elev > 15 &&          // sun high enough to matter
+    cloud < 60 &&         // not overcast
+    trend >= 0 &&         // temps steady or rising
+    windDir !== "NW"      // NW wind cancels solar boost
+  );
 }
 
 // ------------------------------------------------------------
@@ -130,7 +148,7 @@ export function computeComfort(intel) {
 
   // 2. Solar elevation
   const elev = computeSolarElevation(timestamp, LOCATION.lat, LOCATION.lon);
-  const sunFeel = sunAngleFeel(elev);
+  const rawSunFeel = sunAngleFeel(elev);
 
   // 3. Wind chill
   const feelsLike = computeWindChill(temp, wind);
@@ -149,17 +167,28 @@ export function computeComfort(intel) {
   // 6. Emoji
   const emoji = pickComfortEmoji(state);
 
-  // 7. Summary (micro‑phrasing)
+  // 7. Summary (clean, Asheville-aware phrasing)
   const summaryParts = [];
 
+  // Temperature backbone
   if (state === "cold") summaryParts.push("Cold with a noticeable chill.");
   else if (state === "cool") summaryParts.push("Cool and manageable.");
   else if (state === "mild") summaryParts.push("Comfortable overall.");
   else if (state === "warm") summaryParts.push("Warm with a gentle edge.");
   else if (state === "hot") summaryParts.push("Hot and energetic.");
 
+  // Humidity
   summaryParts.push(humidFeel);
-  summaryParts.push(sunFeel);
+
+  // Solar (only if actually helpful)
+  if (isSolarHelpful(intel, elev)) {
+    summaryParts.push(rawSunFeel);
+  }
+
+  // Wind nuance
+  if (wind >= 15) {
+    summaryParts.push("A noticeable breeze adds some edge.");
+  }
 
   const summary = summaryParts.filter(Boolean).join(" ");
 
@@ -169,7 +198,7 @@ export function computeComfort(intel) {
     feelsLike,
     windFeel: wind >= 15 ? "A noticeable breeze adds some edge." : "",
     humidityFeel: humidFeel,
-    sunFeel,
+    sunFeel: isSolarHelpful(intel, elev) ? rawSunFeel : "",
     precipFeel: precipOverride?.summary ?? "",
     raw: {
       temp,
