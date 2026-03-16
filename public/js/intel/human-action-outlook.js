@@ -1,123 +1,138 @@
 // /intel/human-action-outlook.js
 // ============================================================
-// Human‑Action Outlook Engine (Today + Tomorrow)
-// Scannable • Warm • Actionable • Asheville‑Aware
+// HUMAN‑ACTION OUTLOOK ENGINE (HARDENED + SAFE)
 // ============================================================
 
+// ------------------------------------------------------------
+// MAIN ENTRY — TODAY
+// ------------------------------------------------------------
 export function getTodayHumanActionOutlook(intel) {
-  const wx = intel.wu;
-  const precip = intel.mrms?.type;
-  const wind = wx.windSpeed ?? 0;
-  const drop = intel.comfort?.summary.includes("drop");
-  const snowing = precip === "snow";
-  const raining = precip === "rain";
-
-  // ------------------------------------------------------------
-  // 1. HEADLINE
-  // ------------------------------------------------------------
-  let headline = "";
-
-  if (snowing) headline = "Cold, wintry, and breezy today.";
-  else if (raining) headline = "Cool, damp, and breezy today.";
-  else if (drop) headline = "Colder and breezy this afternoon.";
-  else if (wind >= 15) headline = "Breezy and cool today.";
-  else headline = "A cool, manageable day overall.";
-
-  // ------------------------------------------------------------
-  // 2. WHY IT MATTERS
-  // ------------------------------------------------------------
-  let context = "";
-
-  if (snowing) context = "Light snow and a steady breeze will make it feel raw at times.";
-  else if (raining) context = "Intermittent rain and a light breeze may add a damp edge.";
-  else if (drop) context = "A noticeable temperature drop will make the afternoon feel colder.";
-  else if (wind >= 15) context = "Gusts will add a bit of edge, especially in open areas.";
-  else context = "Conditions stay steady with no major surprises.";
-
-  // ------------------------------------------------------------
-  // 3. ACTIONABLE BULLETS (2–3 max)
-  // ------------------------------------------------------------
-  const bullets = [];
-
-  if (snowing) {
-    bullets.push("Dress warm and wind‑proof");
-    bullets.push("Watch for slick spots on shaded roads");
-    bullets.push("Give yourself a little extra travel time");
-  } else if (raining) {
-    bullets.push("Carry a light rain layer");
-    bullets.push("Expect damp roads and slower travel");
-  } else if (drop) {
-    bullets.push("Layer up for the colder afternoon");
-    bullets.push("Expect a brisk feel in open areas");
-  } else if (wind >= 15) {
-    bullets.push("Secure loose outdoor items");
-    bullets.push("Expect a cooler feel than the thermometer shows");
-  } else {
-    bullets.push("Light layers work well");
-    bullets.push("No major weather impacts expected");
+  if (!intel || !intel.today || !intel.today.stats) {
+    return fallbackOutlook("A quiet day today.");
   }
 
-  return { headline, context, bullets };
+  return buildOutlook(intel.today, "today");
 }
 
-
-// ============================================================
-// TOMORROW
-// ============================================================
-
+// ------------------------------------------------------------
+// MAIN ENTRY — TOMORROW
+// ------------------------------------------------------------
 export function getTomorrowHumanActionOutlook(intel) {
-  const tmr = intel.tomorrow;
-  const precip = tmr?.precipType;
-  const wind = tmr?.windSpeed ?? 0;
-  const tempTrend = tmr?.tempTrend ?? 0;
+  if (!intel || !intel.tomorrow || !intel.tomorrow.stats) {
+    return fallbackOutlook("A quiet day tomorrow.");
+  }
 
-  const snowing = precip === "snow";
-  const raining = precip === "rain";
+  return buildOutlook(intel.tomorrow, "tomorrow");
+}
+
+// ------------------------------------------------------------
+// OUTLOOK BUILDER (shared for today + tomorrow)
+// ------------------------------------------------------------
+function buildOutlook(day, label) {
+  const stats = day.stats || {};
+  const precip = day.precipType || null;
+  const wind = safeNum(day.windSpeed);
+  const maxTemp = safeNum(stats.maxTemp);
+  const uv = safeNum(stats.uv);
+  const trend = safeNum(day.tempTrend);
 
   // ------------------------------------------------------------
-  // 1. HEADLINE
+  // HEADLINE LOGIC
   // ------------------------------------------------------------
-  let headline = "";
+  let headline = "A quiet day ahead.";
 
-  if (snowing) headline = "A chilly, wintry day ahead.";
-  else if (raining) headline = "A cool, damp day tomorrow.";
-  else if (wind >= 15) headline = "A breezy, cool day ahead.";
-  else if (tempTrend > 0) headline = "A milder day on the way.";
-  else headline = "A steady, seasonable day tomorrow.";
+  if (precip === "rain") headline = "Rain impacts your plans.";
+  if (precip === "snow") headline = "Snow may affect travel.";
+  if (uv >= 7) headline = "High UV exposure expected.";
+  if (wind >= 25) headline = "Gusty winds may affect outdoor plans.";
+  if (maxTemp >= 88) headline = "Hot conditions may slow outdoor activity.";
+  if (maxTemp <= 35) headline = "Cold conditions may require extra layers.";
 
   // ------------------------------------------------------------
-  // 2. WHY IT MATTERS
+  // CONTEXT SENTENCE
   // ------------------------------------------------------------
   let context = "";
 
-  if (snowing) context = "Light snow and a steady breeze may create a raw feel at times.";
-  else if (raining) context = "On‑and‑off rain may slow travel and keep things damp.";
-  else if (wind >= 15) context = "Gusts may add a cooler feel, especially in open areas.";
-  else if (tempTrend > 0) context = "Temperatures trend slightly milder through the afternoon.";
-  else context = "Conditions stay stable with no major weather impacts expected.";
+  if (precip === "rain") {
+    context = "Showers may interrupt outdoor plans at times.";
+  } else if (precip === "snow") {
+    context = "Light snow could create slick spots, especially early or late.";
+  } else if (wind >= 25) {
+    context = "Winds may be noticeable, especially on exposed ridges.";
+  } else if (uv >= 7) {
+    context = "Sun exposure will be strong during peak afternoon hours.";
+  } else if (trend > 6) {
+    context = "Temperatures rise through the day, feeling warmer by afternoon.";
+  } else if (trend < -6) {
+    context = "Temperatures fall through the day, feeling cooler later on.";
+  } else {
+    context = "Weather impacts remain minimal overall.";
+  }
 
   // ------------------------------------------------------------
-  // 3. ACTIONABLE BULLETS
+  // BULLETS (2–3 actionable items)
   // ------------------------------------------------------------
   const bullets = [];
 
-  if (snowing) {
-    bullets.push("Dress warm and wind‑proof");
-    bullets.push("Watch for slick spots early");
-    bullets.push("Plan for slower travel in the morning");
-  } else if (raining) {
-    bullets.push("Carry a rain layer");
-    bullets.push("Expect damp roads and slower commutes");
-  } else if (wind >= 15) {
-    bullets.push("Secure loose outdoor items");
-    bullets.push("Expect a cooler feel than the thermometer shows");
-  } else if (tempTrend > 0) {
-    bullets.push("Light layers should work well");
-    bullets.push("A mild afternoon is likely");
-  } else {
-    bullets.push("Standard layers are fine");
-    bullets.push("No major adjustments needed");
+  // Precip bullets
+  if (precip === "rain") {
+    bullets.push("Keep a light rain layer handy.");
+    bullets.push("Plan outdoor tasks around passing showers.");
   }
 
-  return { headline, context, bullets };
+  if (precip === "snow") {
+    bullets.push("Allow extra time for travel.");
+    bullets.push("Watch for slick spots on untreated surfaces.");
+  }
+
+  // Wind bullets
+  if (wind >= 25) {
+    bullets.push("Secure loose outdoor items.");
+    bullets.push("Use caution on exposed ridges or bridges.");
+  }
+
+  // UV bullets
+  if (uv >= 7) {
+    bullets.push("Use sunscreen for any extended outdoor time.");
+    bullets.push("Midday sun will be the strongest.");
+  }
+
+  // Temperature bullets
+  if (maxTemp >= 88) {
+    bullets.push("Hydrate and take breaks in shade.");
+  }
+
+  if (maxTemp <= 35) {
+    bullets.push("Dress in warm layers for comfort.");
+  }
+
+  // If no bullets were added, provide a default
+  if (bullets.length === 0) {
+    bullets.push("No major weather impacts expected.");
+  }
+
+  return {
+    headline,
+    context,
+    bullets
+  };
+}
+
+// ------------------------------------------------------------
+// FALLBACK OUTLOOK (safe default)
+// ------------------------------------------------------------
+function fallbackOutlook(message) {
+  return {
+    headline: message,
+    context: "",
+    bullets: ["A quiet day overall."]
+  };
+}
+
+// ------------------------------------------------------------
+// SAFE NUMBER HELPER
+// ------------------------------------------------------------
+function safeNum(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
 }
