@@ -6,10 +6,9 @@
 import {
   getNearestWUStation,
   getWUCurrentConditions,
-  getWUHistory,
   getShortTermForecast,
   getMRMSPixel,
-  getTempestStationObs   // ⭐ NEW
+  getTempestStationObs
 } from './weather-fetch.js';
 
 import { buildWeatherIntel } from './intel/forecast-intel.js';
@@ -89,11 +88,9 @@ async function initApp() {
       const lon = pos.coords.longitude;
 
       try {
-        // ⭐ 1. WU Station + Current Conditions
+        // ⭐ 1. WU Station + Current Conditions (NO HISTORY)
         const nearest = await getNearestWUStation(lat, lon);
         const wuCurrent = await getWUCurrentConditions(nearest.stationId);
-        const wuHistory = await getWUHistory(nearest.stationId);
-        wuCurrent.history = wuHistory;
 
         setWUStatus("ok", "WU Connected", "Weather Underground data loaded.");
 
@@ -103,8 +100,7 @@ async function initApp() {
 
         const tempest = await getTempestStationObs(TEMPEST_STATION_ID, TEMPEST_TOKEN);
 
-        // ⭐ Attach Tempest high/low into intel.today.stats
-        // (This replaces ANY WU-based high logic)
+        // ⭐ Extract Tempest high
         const tempestHigh = tempest?.tempHighToday ?? null;
 
         // ⭐ 3. Hourly Forecast
@@ -172,4 +168,3 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
-
