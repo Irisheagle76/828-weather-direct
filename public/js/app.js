@@ -103,10 +103,13 @@ async function initApp() {
         setWUStatus("ok", "WU Connected", "Weather Underground data loaded.");
 
         // ⭐ 2. Hourly Forecast
-        const hourly = await getShortTermForecast(lat, lon);
+const hourly = await getShortTermForecast(lat, lon);
 
-        // ⭐ 3. MRMS Radar Pixel
-        const mrmsPixel = await getMRMSPixel(lat, lon);
+// ⭐ DEBUG: expose hourly to console
+window._hourly = hourly;
+
+// ⭐ 3. MRMS Radar Pixel
+const mrmsPixel = await getMRMSPixel(lat, lon);
 
         // ⭐ 4. Build Unified Intelligence
         const intel = buildWeatherIntel({
