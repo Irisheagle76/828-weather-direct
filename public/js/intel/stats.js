@@ -1,99 +1,54 @@
-// ============================================================
-// STATS + NORMALIZATION
-// Computes temperature, dewpoint, wind, precip, and snow stats
-// for any hourly window. All downstream logic depends on these
-// being stable, complete, and never undefined.
-// ============================================================
+// /intel/stats.js
+// Modern window-aware stats engine
 
-// Safe min/max helpers
-function safeMin(arr) {
-  return arr && arr.length ? Math.min(...arr) : null;
-}
-function safeMax(arr) {
-  return arr && arr.length ? Math.max(...arr) : null;
-}
-function safeAvg(arr) {
-  return arr && arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
-}
+export function computeStats(hourly, windowHours) {
+  if (!windowHours || windowHours.length === 0) {
+    return emptyStats();
+  }
 
-// ------------------------------------------------------------
-// Temperature stats
-// ------------------------------------------------------------
-export function getTempStats(window) {
-  const t = window.temperature_2m || [];
+  const temps = [];
+  const winds = [];
+  const gusts = [];
+  const rains = [];
+  const snows = [];
+  const clouds = [];
+
+  for (const i of windowHours) {
+    temps.push(hourly.temperature_2m[i]);
+    winds.push(hourly.wind_speed_10m[i]);
+    gusts.push(hourly.wind_gusts_10m[i]);
+    rains.push(hourly.rain[i]);
+    snows.push(hourly.snowfall[i]);
+    clouds.push(hourly.cloudcover[i]);
+  }
+
   return {
-    min: safeMin(t),
-    max: safeMax(t),
-    avg: safeAvg(t)
+    tempMin: Math.min(...temps),
+    tempMax: Math.max(...temps),
+    windAvg: avg(winds),
+    windGustMax: Math.max(...gusts),
+    rainTotal: sum(rains),
+    snowTotal: sum(snows),
+    cloudAvg: avg(clouds)
   };
 }
 
-// ------------------------------------------------------------
-// Dewpoint stats
-// ------------------------------------------------------------
-export function getDewStats(window) {
-  const d = window.dewpoint_2m || [];
-  return {
-    min: safeMin(d),
-    max: safeMax(d),
-    avg: safeAvg(d)
-  };
+function avg(arr) {
+  return arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
 }
 
-// ------------------------------------------------------------
-// Wind stats
-// ------------------------------------------------------------
-export function getWindStats(window) {
-  const s = window.wind_speed_10m || [];
-  const g = window.wind_gusts_10m || [];
-  const d = window.wind_direction_10m || [];
-
-  return {
-    min: safeMin(s),
-    max: safeMax(s),
-    avg: safeAvg(s),
-    gustMax: safeMax(g),
-    dirAvg: safeAvg(d)
-  };
+function sum(arr) {
+  return arr.length ? arr.reduce((a, b) => a + b, 0) : 0;
 }
 
-// ------------------------------------------------------------
-// Precipitation totals (rain + snow)
-// ------------------------------------------------------------
-export function getPrecipStats(window) {
-  const rain = window.rain || [];
-  const snow = window.snowfall || [];
-
-  const rainTotal = rain.reduce((a, b) => a + (b || 0), 0);
-  const snowTotal = snow.reduce((a, b) => a + (b || 0), 0);
-
+function emptyStats() {
   return {
-    rainTotal,
-    snowTotal
-  };
-}
-
-// ------------------------------------------------------------
-// Cloud cover stats
-// ------------------------------------------------------------
-export function getCloudStats(window) {
-  const c = window.cloudcover || [];
-  return {
-    min: safeMin(c),
-    max: safeMax(c),
-    avg: safeAvg(c)
-  };
-}
-
-// ------------------------------------------------------------
-// Unified stats bundle
-// ------------------------------------------------------------
-export function getUnifiedStats(window) {
-  return {
-    temp: getTempStats(window),
-    dew: getDewStats(window),
-    wind: getWindStats(window),
-    precip: getPrecipStats(window),
-    clouds: getCloudStats(window)
+    tempMin: null,
+    tempMax: null,
+    windAvg: null,
+    windGustMax: null,
+    rainTotal: null,
+    snowTotal: null,
+    cloudAvg: null
   };
 }
