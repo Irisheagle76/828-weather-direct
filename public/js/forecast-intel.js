@@ -217,6 +217,7 @@ function getTomorrowWindow(hourly) {
   const indices = getHourlyWindowForDay(hourly, tomorrow);
   if (indices.length < 1) return [];
   return indices;
+  console.log("TOMORROW WINDOW:", indices.length, indices.map(i => hourly.time[i]));
 }
 
 function sliceHourly(hourly, indices) {
@@ -536,8 +537,9 @@ return {
 }
 
 export function getHumanActionOutlook(hourly) {
+  console.log("TOMORROW BUILDER START");
   const indices = getTomorrowWindow(hourly);
-  if (!indices.length) {
+    if (!indices.length) {
     return {
       emoji: "🌤️",
       headline: "A quiet day tomorrow.",
@@ -582,6 +584,7 @@ export function getHumanActionOutlook(hourly) {
   const clothing = getClothingGuidance(hourly, indices);
 
   // 6. Synthesizer (NOW all variables exist)
+  console.log("TOMORROW SYNTHESIZER RUNNING");
   const dayType = "tomorrow";
   const synthesized = synthesizeOutlook({
     raw: {
