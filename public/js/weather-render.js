@@ -208,8 +208,7 @@ export function renderTodayOutlook(intel) {
 
 // ------------------------------------------------------------
 export function renderTomorrowOutlook(intel) {
-  console.log("RENDERING TOMORROW OUTLOOK", intel.tomorrow);
-  const emojiEl = document.getElementById("tomorrow-emoji");
+   const emojiEl = document.getElementById("tomorrow-emoji");
   const badgeEl = document.getElementById("tomorrow-badge");
   const headlineEl = document.getElementById("tomorrow-headline");
   const textEl = document.getElementById("tomorrow-text");
