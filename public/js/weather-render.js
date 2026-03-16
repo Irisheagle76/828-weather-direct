@@ -3,6 +3,7 @@
 // RENDERING ENGINE — UI OUTPUT FOR ALL MODULES
 // ============================================================
 
+
 // ------------------------------------------------------------
 // RIGHT NOW COMFORT
 // ------------------------------------------------------------
@@ -20,53 +21,60 @@ export function renderRightNowComfort(intel) {
   textEl.textContent = intel.comfort.summary;
 }
 
+
 // ------------------------------------------------------------
-// TODAY HUMAN‑ACTION OUTLOOK (NEW STRUCTURE)
+// TODAY HUMAN‑ACTION OUTLOOK (UPDATED WITH EMOJI + BULLETS)
 // ------------------------------------------------------------
 export function renderTodayOutlook(intel) {
+  const emojiEl = document.getElementById("today-emoji");
   const headlineEl = document.getElementById("today-headline");
   const textEl = document.getElementById("today-text");
   const bulletsEl = document.getElementById("today-bullets");
 
   const out = intel.today?.actionOutlook;
   if (!out) {
+    emojiEl.textContent = "🌤️";
     headlineEl.textContent = "No outlook available.";
     textEl.textContent = "";
     bulletsEl.innerHTML = "";
     return;
   }
 
+  emojiEl.textContent = out.emoji ?? "🌤️";
   headlineEl.textContent = out.headline;
   textEl.textContent = out.context;
 
-  bulletsEl.innerHTML = out.bullets
-    .map(b => `<li>${b}</li>`)
-    .join("");
+  bulletsEl.innerHTML =
+    "<ul>" + out.bullets.map(b => `<li>${b}</li>`).join("") + "</ul>";
 }
 
+
 // ------------------------------------------------------------
-// TOMORROW HUMAN‑ACTION OUTLOOK (NEW STRUCTURE)
+// TOMORROW HUMAN‑ACTION OUTLOOK (UPDATED WITH EMOJI + BULLETS)
 // ------------------------------------------------------------
 export function renderTomorrowOutlook(intel) {
+  const emojiEl = document.getElementById("tomorrow-emoji");
   const headlineEl = document.getElementById("tomorrow-headline");
   const textEl = document.getElementById("tomorrow-text");
   const bulletsEl = document.getElementById("tomorrow-bullets");
 
   const out = intel.tomorrow?.actionOutlook;
   if (!out) {
+    emojiEl.textContent = "🌤️";
     headlineEl.textContent = "No outlook available.";
     textEl.textContent = "";
     bulletsEl.innerHTML = "";
     return;
   }
 
+  emojiEl.textContent = out.emoji ?? "🌤️";
   headlineEl.textContent = out.headline;
   textEl.textContent = out.context;
 
-  bulletsEl.innerHTML = out.bullets
-    .map(b => `<li>${b}</li>`)
-    .join("");
+  bulletsEl.innerHTML =
+    "<ul>" + out.bullets.map(b => `<li>${b}</li>`).join("") + "</ul>";
 }
+
 
 // ------------------------------------------------------------
 // UV INDEX
@@ -91,6 +99,7 @@ export function renderUV(intel) {
   else el.classList.add("uv-extreme");
 }
 
+
 // ------------------------------------------------------------
 // TODAY DETAIL PANEL
 // ------------------------------------------------------------
@@ -110,6 +119,7 @@ export function renderTodayDetail(intel) {
     </div>
   `;
 }
+
 
 // ------------------------------------------------------------
 // TOMORROW DETAIL PANEL
@@ -131,6 +141,7 @@ export function renderTomorrowDetail(intel) {
   `;
 }
 
+
 // ------------------------------------------------------------
 // CURRENT OBSERVATIONS
 // ------------------------------------------------------------
@@ -144,6 +155,7 @@ export function renderCurrentObservations(intel) {
   document.getElementById("wu-wind").textContent = `${intel.wu.windSpeed} mph`;
   document.getElementById("wu-wind-gust").textContent = `Gusts ${intel.wu.windGust} mph`;
 }
+
 
 // ============================================================
 // EXPAND / COLLAPSE — CLEAN NEW SYSTEM
