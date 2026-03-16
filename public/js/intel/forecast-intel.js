@@ -1,4 +1,5 @@
 // /intel/forecast-intel.js
+
 import { buildComfort } from "./comfort.js";
 import { synthesizeOutlook } from "./synthesizer.js";
 import { computeStats } from "./stats.js";
@@ -6,7 +7,10 @@ import { computeEvents } from "./events.js";
 import { getTodayWindow, getTomorrowWindow } from "./windows.js";
 
 export function buildWeatherIntel(hourly) {
-  const nowIndex = 0; // assume first hour is "now"
+  // -----------------------------
+  // Current hour snapshot
+  // -----------------------------
+  const nowIndex = 0; // first hour = "now"
   const hourlyNow = {
     temperature_2m: hourly.temperature_2m[nowIndex],
     dewpoint_2m: hourly.dewpoint_2m[nowIndex],
@@ -14,21 +18,31 @@ export function buildWeatherIntel(hourly) {
     wind_gusts_10m: hourly.wind_gusts_10m[nowIndex]
   };
 
-  // Windows
+  // -----------------------------
+  // Build Today + Tomorrow windows
+  // -----------------------------
   const todayHours = getTodayWindow(hourly);
   const tomorrowHours = getTomorrowWindow(hourly);
 
+  // -----------------------------
   // Stats + Events
+  // -----------------------------
   const statsToday = computeStats(hourly, todayHours);
   const statsTomorrow = computeStats(hourly, tomorrowHours);
 
   const eventsToday = computeEvents(hourly, todayHours, statsToday);
   const eventsTomorrow = computeEvents(hourly, tomorrowHours, statsTomorrow);
 
+  // -----------------------------
   // Synthesized Outlooks
+  // -----------------------------
   const todayOutlook = synthesizeOutlook(statsToday, eventsToday, todayHours);
   const tomorrowOutlook = synthesizeOutlook(statsTomorrow, eventsTomorrow, tomorrowHours);
 
+  // -----------------------------
+  // Return unified intel object
+  // (comfort + WU + MRMS are attached later in app.js)
+  // -----------------------------
   return {
     today: {
       available: todayHours.length > 0,
