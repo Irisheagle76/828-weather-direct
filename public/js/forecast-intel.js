@@ -507,36 +507,36 @@ export function getTodayActionOutlook(hourly) {
   // 5. Clothing guidance
   const clothing = getClothingGuidance(hourly, indices);
 
-// 6. Synthesizer (NOW all variables exist)
+  // 6. Synthesizer
   const dayType = "today";
-const synthesized = synthesizeOutlook({
-  raw: {
+  const synthesized = synthesizeOutlook({
+    raw: {
+      meta: {
+        dayType,
+        phases,
+        drivers,
+        trends,
+        dominant,
+        commute,
+        precipTotal,
+        snowTotal
+      },
+      clothing
+    },
+    comfort: { summary: comfortSummary }
+  });
+
+  return {
+    emoji: emojiForFactor(dominant),
+    ...synthesized,
     meta: {
-      dayType,        // <-- FIXED: use the actual dayType variable
       phases,
       drivers,
       trends,
       dominant,
-      commute,
-      precipTotal,
-      snowTotal
-    },
-    clothing
-  },
-  comfort: { summary: comfortSummary }
-});
-
-return {
-  emoji: emojiForFactor(dominant),
-  ...synthesized,
-  meta: {
-    phases,
-    drivers,
-    trends,
-    dominant,
-    commute
-  }
-};
+      commute
+    }
+  };
 }
 
 export function getHumanActionOutlook(hourly) {
@@ -586,19 +586,7 @@ export function getHumanActionOutlook(hourly) {
   // 5. Clothing guidance
   const clothing = getClothingGuidance(hourly, indices);
 
-  // 6. Synthesizer (NOW all variables exist)
-
-  // ⭐ THIS IS THE CORRECT PLACE FOR THE DIAGNOSTIC LOG ⭐
-    phases,
-    drivers,
-    trends,
-    dominant,
-    commute,
-    precipTotal,
-    snowTotal,
-    clothing
-  });
-
+  // 6. Synthesizer
   const synthesized = synthesizeOutlook({
     raw: {
       meta: {
