@@ -1,4 +1,7 @@
 // /js/app.js
+// ============================================================
+// APP ENTRY — Fetch Data → Build Intel → Render UI
+// ============================================================
 
 import {
   getNearestWUStation,
@@ -8,7 +11,6 @@ import {
 } from './weather-fetch.js';
 
 import { buildWeatherIntel } from './intel/forecast-intel.js';
-import { buildComfort } from './intel/comfort.js';
 
 import {
   renderRightNowComfort,
@@ -19,6 +21,9 @@ import {
   renderTomorrowDetail,
   renderCurrentObservations
 } from './weather-render.js';
+
+import { toggleForecastExpanded } from "./weather-render.js";
+window.toggleForecastExpanded = toggleForecastExpanded;
 
 // ------------------------------------------------------------
 // STATUS + ERROR HELPERS
@@ -63,12 +68,6 @@ function updateUI(intel) {
 }
 
 // ------------------------------------------------------------
-// MAKE EXPANSION AVAILABLE TO HTML
-// ------------------------------------------------------------
-import { toggleForecastExpanded } from "./weather-render.js";
-window.toggleForecastExpanded = toggleForecastExpanded;
-
-// ------------------------------------------------------------
 // ENTRY POINT
 // ------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", initApp);
@@ -103,14 +102,13 @@ async function initApp() {
         const mrmsPixel = await getMRMSPixel(lat, lon);
 
         // ⭐ 4. Build Unified Intelligence
-        const intel = buildWeatherIntel(hourly);
+        const intel = buildWeatherIntel({
+          wu: wuCurrent,
+          hours: hourly,
+          mrms: mrmsPixel
+        });
 
-        // Attach WU + MRMS + Comfort
-        intel.wu = wuCurrent;
-        intel.mrms = mrmsPixel;
-        intel.comfort = buildComfort(wuCurrent, hourly);
-
-        // Expose for expansion panels
+        // Expose for debugging + expansion panels
         window._intel = intel;
 
         // ⭐ 5. Update UI
