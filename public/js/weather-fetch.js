@@ -76,8 +76,18 @@ export async function getShortTermForecast(lat, lon) {
   const url =
     `https://api.open-meteo.com/v1/forecast` +
     `?latitude=${lat}&longitude=${lon}` +
-    `&hourly=temperature_2m,dewpoint_2m,precipitation,snowfall,windgusts_10m,uv_index` +
-    `&forecast_days=3&timezone=America/New_York` +
+    `&hourly=` +
+      `temperature_2m,` +
+      `dewpoint_2m,` +
+      `rain,` +                     // ✔ correct field
+      `snowfall,` +
+      `wind_speed_10m,` +           // ✔ required
+      `wind_gusts_10m,` +           // ✔ required
+      `wind_direction_10m,` +       // ✔ required
+      `cloudcover,` +               // ✔ required
+      `uv_index` +                  // ✔ required
+    `&forecast_days=3` +
+    `&timezone=America/New_York` +
     `&temperature_unit=fahrenheit` +
     `&dewpoint_unit=fahrenheit` +
     `&wind_speed_unit=mph` +
