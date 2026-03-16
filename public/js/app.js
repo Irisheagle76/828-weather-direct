@@ -111,12 +111,12 @@ window._hourly = hourly;
 // ⭐ 3. MRMS Radar Pixel
 const mrmsPixel = await getMRMSPixel(lat, lon);
 
-        // ⭐ 4. Build Unified Intelligence
-        const intel = buildWeatherIntel({
-          wuCurrent,
-          hourly,
-          mrmsPixel
-        });
+       // ⭐ 4. Build Unified Intelligence
+const intel = buildWeatherIntel(hourly);
+
+// Attach WU + MRMS data
+intel.wu = wuCurrent;
+intel.mrms = mrmsPixel;
 
         // Make intel globally accessible for expansion panels
         window._intel = intel;
