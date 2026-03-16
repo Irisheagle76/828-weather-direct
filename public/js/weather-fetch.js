@@ -50,30 +50,76 @@ export async function getWUCurrentConditions(stationId) {
     };
   }
 
-  // Normalize fields — WU is inconsistent across stations
   const imp = obs.imperial || {};
 
   return {
     temp: imp.temp ?? obs.temperature ?? null,
     dewPoint: imp.dewpt ?? obs.dewpt ?? null,
     humidity: obs.humidity ?? null,
-
-    // wind fields sometimes inside imperial, sometimes top-level
     windSpeed: imp.windSpeed ?? obs.windSpeed ?? null,
     windGust: imp.windGust ?? obs.windGust ?? null,
     windDir: obs.winddir ?? null,
-
     solarRadiation: obs.solarRadiation ?? null,
     uv: obs.uv ?? null,
-
     stationId: obs.stationID ?? stationId
   };
 }
 
 /**
- * Get short‑term hourly forecast from Open‑Meteo.
+ * HRRR via Iowa State IEM, normalized to Open‑Meteo‑like hourly structure.
+ */
+export async function getHRRRForecast(lat, lon) {
+  const url = `https://mesonet.agron.iastate.edu/json/hrrr.php?lat=${lat}&lon=${lon}`;
+  console.log("HRRR REQUEST URL:", url);
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("HRRR fetch failed: " + res.status);
+
+  const data = await res.json();
+  console.log("RAW HRRR RESPONSE:", data);
+
+  const hours = data?.data ?? [];
+
+  const hourly = {
+    time: [],
+    temperature_2m: [],
+    dewpoint_2m: [],
+    precipitation: [],
+    snowfall: [],
+    windgusts_10m: [],
+    uv_index: []
+  };
+
+  for (const h of hours) {
+    hourly.time.push(h.valid);                 // ISO timestamp
+    hourly.temperature_2m.push(h.tmpf ?? null);
+    hourly.dewpoint_2m.push(h.dwpf ?? null);
+    hourly.precipitation.push(h.p01m ?? 0);    // 1‑hr precip
+    hourly.snowfall.push(h.snow ?? 0);         // if present
+    hourly.windgusts_10m.push(h.gust ?? null);
+    hourly.uv_index.push(null);                // HRRR doesn’t provide UV
+  }
+
+  console.log("NORMALIZED HRRR HOURLY:", hourly);
+  return hourly;
+}
+
+/**
+ * Get short‑term hourly forecast.
+ * NOW: HRRR primary, Open‑Meteo as fallback (kept, but commented).
  */
 export async function getShortTermForecast(lat, lon) {
+  try {
+    // Primary: HRRR (IEM)
+    const hourly = await getHRRRForecast(lat, lon);
+    console.log("USING HRRR HOURLY FORECAST");
+    return hourly;
+  } catch (err) {
+    console.error("HRRR failed, falling back to Open‑Meteo:", err);
+  }
+
+  // Fallback: Open‑Meteo (kept for safety)
+  /*
   const url =
     `https://api.open-meteo.com/v1/forecast` +
     `?latitude=${lat}&longitude=${lon}` +
@@ -90,22 +136,26 @@ export async function getShortTermForecast(lat, lon) {
   if (!res.ok) throw new Error("Short-term forecast fetch failed: " + res.status);
 
   const data = await res.json();
-
-  // ⭐ FRESHNESS DIAGNOSTICS ⭐
   console.log("OPEN-METEO RAW RESPONSE:", data);
 
-  // Model run timestamp (in ms)
-  console.log("OPEN-METEO MODEL GENERATION TIME (ms):", data?.generationtime_ms);
-
-  // First and last hourly timestamps
-  const hourly = data?.hourly;
+  const hourly = data.hourly;
   console.log("OPEN-METEO FIRST HOUR:", hourly?.time?.[0]);
   console.log("OPEN-METEO LAST HOUR:", hourly?.time?.slice(-1)?.[0]);
-
-  // Local time for comparison
   console.log("LOCAL NOW:", new Date().toString());
 
   return hourly;
+  */
+
+  // If both fail, return an empty structure so the app doesn’t explode.
+  return {
+    time: [],
+    temperature_2m: [],
+    dewpoint_2m: [],
+    precipitation: [],
+    snowfall: [],
+    windgusts_10m: [],
+    uv_index: []
+  };
 }
 
 /**
