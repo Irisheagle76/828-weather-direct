@@ -537,7 +537,16 @@ return {
 }
 
 export function getHumanActionOutlook(hourly) {
-  console.log("TOMORROW BUILDER START");
+  console.log("TOMORROW RAW META:", {
+  phases,
+  drivers,
+  trends,
+  dominant,
+  commute,
+  precipTotal,
+  snowTotal,
+  clothing
+});
   const indices = getTomorrowWindow(hourly);
     if (!indices.length) {
     return {
