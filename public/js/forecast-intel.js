@@ -232,6 +232,21 @@ function sliceHourly(hourly, indices) {
   return out;
 }
 // ------------------------------------------------------------
+// Console Debug Tomorrow
+// ------------------------------------------------------------
+const todayIndices = getTodayRemainingWindow(hourly);
+const tomorrowIndices = getTomorrowWindow(hourly);
+
+console.log("WINDOW DEBUG:", {
+  now: new Date().toString(),
+  todayCount: todayIndices.length,
+  tomorrowCount: tomorrowIndices.length,
+  firstToday: todayIndices[0],
+  firstTomorrow: tomorrowIndices[0],
+  todayFirstTime: todayIndices[0] != null ? hourly.time[todayIndices[0]] : null,
+  tomorrowFirstTime: tomorrowIndices[0] != null ? hourly.time[tomorrowIndices[0]] : null
+});
+// ------------------------------------------------------------
 // NORMALIZATION (with wind direction)
 // ------------------------------------------------------------
 export function normalizeHourly(hourly, indices) {
