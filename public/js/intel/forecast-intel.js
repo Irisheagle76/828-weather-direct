@@ -1,76 +1,64 @@
 // /intel/forecast-intel.js
+// ============================================================
+// FORECAST INTELLIGENCE ENGINE
+// ============================================================
 
-import { computeComfort } from "./comfort.js";
-import { synthesizeOutlook, differentiateFromToday } from "./synthesizer.js";
-import { computeStats } from "./stats.js";
-import { computeEvents } from "./events.js";
-import { getTodayWindow, getTomorrowWindow } from "./windows.js";
+import { getTodayHumanActionOutlook, getTomorrowHumanActionOutlook }
+  from "./human-action-outlook.js";
 
+// ------------------------------------------------------------
+// MAIN ENTRY
+// ------------------------------------------------------------
 export function buildWeatherIntel(hourly) {
-  // -----------------------------
-  // Current hour snapshot
-  // -----------------------------
-  const nowIndex = 0; // first hour = "now"
-  const hourlyNow = {
-    temperature_2m: hourly.temperature_2m[nowIndex],
-    dewpoint_2m: hourly.dewpoint_2m[nowIndex],
-    wind_speed_10m: hourly.wind_speed_10m[nowIndex],
-    wind_gusts_10m: hourly.wind_gusts_10m[nowIndex]
-  };
+  const intel = {};
 
-  // -----------------------------
-  // Build Today + Tomorrow windows
-  // -----------------------------
-  const todayHours = getTodayWindow(hourly);
-  const tomorrowHours = getTomorrowWindow(hourly);
+  // ------------------------------------------------------------
+  // TODAY + TOMORROW STATS
+  // ------------------------------------------------------------
+  intel.today = computeDayStats(hourly, 0);
+  intel.tomorrow = computeDayStats(hourly, 1);
 
-  // -----------------------------
-  // Stats + Events
-  // -----------------------------
-  const statsToday = computeStats(hourly, todayHours);
-  const statsTomorrow = computeStats(hourly, tomorrowHours);
-
-  const eventsToday = computeEvents(hourly, todayHours, statsToday);
-  const eventsTomorrow = computeEvents(hourly, tomorrowHours, statsTomorrow);
-
-  // -----------------------------
-  // Synthesized Outlooks
-  // -----------------------------
-  const todayOutlook = synthesizeOutlook(statsToday, eventsToday, todayHours);
-  let tomorrowOutlook = synthesizeOutlook(statsTomorrow, eventsTomorrow, tomorrowHours);
-
-  // Anti‑redundancy: ensure Tomorrow doesn't echo Today
-  tomorrowOutlook = differentiateFromToday(todayOutlook, tomorrowOutlook);
-
-  // -----------------------------
-  // Return unified intel object
-  // (WU + MRMS attached later in app.js)
-  // -----------------------------
-  const intel = {
-    today: {
-      available: todayHours.length > 0,
-      ...todayOutlook,
-      stats: statsToday,
-      events: eventsToday
-    },
-    tomorrow: {
-      available: tomorrowHours.length > 0,
-      ...tomorrowOutlook,
-      stats: statsTomorrow,
-      events: eventsTomorrow
-    },
-    comfort: null, // filled below
-    wu: null,
-    mrms: null
-  };
-
-  // -----------------------------
-  // Compute comfort AFTER WU is attached in app.js
-  // -----------------------------
-  // app.js will do:
-  // intel.wu = wuCurrent;
-  // intel.mrms = mrmsPixel;
-  // intel.comfort = computeComfort(intel);
+  // ------------------------------------------------------------
+  // HUMAN‑ACTION OUTLOOKS (NEW)
+  // ------------------------------------------------------------
+  intel.today.actionOutlook = getTodayHumanActionOutlook(intel);
+  intel.tomorrow.actionOutlook = getTomorrowHumanActionOutlook(intel);
 
   return intel;
+}
+
+// ------------------------------------------------------------
+// DAY STATS
+// ------------------------------------------------------------
+function computeDayStats(hours, dayOffset) {
+  const start = dayOffset * 24;
+  const slice = hours.slice(start, start + 24);
+
+  if (!slice.length) return {};
+
+  const temps = slice.map(h => h.temp);
+  const maxTemp = Math.max(...temps);
+  const minTemp = Math.min(...temps);
+
+  return {
+    stats: {
+      maxTemp,
+      minTemp,
+      uv: slice[12]?.uv ?? null
+    },
+    precipType: detectPrecipType(slice),
+    windSpeed: slice[12]?.windSpeed ?? null,
+    tempTrend: temps[temps.length - 1] - temps[0]
+  };
+}
+
+// ------------------------------------------------------------
+// PRECIP TYPE DETECTION
+// ------------------------------------------------------------
+function detectPrecipType(hours) {
+  for (const h of hours) {
+    if (h.snow > 0) return "snow";
+    if (h.rain > 0) return "rain";
+  }
+  return null;
 }
