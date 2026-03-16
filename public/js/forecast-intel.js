@@ -593,6 +593,7 @@ export function getHumanActionOutlook(hourly) {
 
   // 6. Synthesizer (NOW all variables exist)
   console.log("TOMORROW SYNTHESIZER RUNNING");
+console.log("TOMORROW RAW META:", {
   const dayType = "tomorrow";
   const synthesized = synthesizeOutlook({
     raw: {
