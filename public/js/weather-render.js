@@ -190,7 +190,7 @@ export function renderTodayOutlook(intel) {
   const { emoji, headline, text, bullets, isEndOfDay } = intel.today;
 
   emojiEl.textContent = emoji;
-  headlineEl.textContent = headline;
+  headlineEl.textContent = "TODAY TEST " + Date.now();
   textEl.textContent = text;
 
   renderBullets(bulletsEl, bullets);
