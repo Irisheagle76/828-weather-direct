@@ -221,4 +221,73 @@ function reframeNarrative(n) {
     n.replace(/^[A-Z][^.]+\./, "").trim()
   );
 }
+  // ------------------------------------------------------------
+// TREND AWARENESS
+// ------------------------------------------------------------
+function detectTrends(stats) {
+  const trends = [];
+
+  // Temperature trend
+  if (stats.tempMax - stats.tempMin >= 20) {
+    trends.push("bigWarmup");
+  } else if (stats.tempMin - stats.tempMax >= 10) {
+    trends.push("coolingOff");
+  }
+
+  // Wind trend
+  if (stats.windGustMax >= 35) {
+    trends.push("gusty");
+  } else if (stats.windGustMax <= 10) {
+    trends.push("calming");
+  }
+
+  // Moisture trend
+  if (stats.rainTotal >= 0.25 || stats.snowTotal >= 0.25) {
+    trends.push("wetPattern");
+  } else if (stats.rainTotal === 0 && stats.snowTotal === 0) {
+    trends.push("dryingOut");
+  }
+
+  // Cloud trend
+  if (stats.cloudAvg >= 80) {
+    trends.push("cloudy");
+  } else if (stats.cloudAvg <= 40) {
+    trends.push("brightening");
+  }
+
+  return trends;
+}
+  // ------------------------------------------------------------
+// EMOJI VARIATION
+// ------------------------------------------------------------
+function pickEmoji(events, trends) {
+  const d = events?.driver;
+
+  const map = {
+    rain: ["🌧️", "🌦️", "☔"],
+    snow: ["❄️", "🌨️", "☃️"],
+    wind: ["🌬️", "🍃", "💨"],
+    hot: ["🔥", "🌞", "🥵"],
+    cold: ["🥶", "❄️", "🧊"],
+    goldilocks: ["🌤️", "🌿", "😊"],
+    easy: ["🌤️", "🙂", "🍃"]
+  };
+
+  const trendMap = {
+    bigWarmup: ["📈", "🌡️"],
+    coolingOff: ["📉", "🧥"],
+    gusty: ["💨"],
+    calming: ["🍃"],
+    wetPattern: ["☔"],
+    dryingOut: ["🌤️"],
+    cloudy: ["☁️"],
+    brightening: ["🌤️"]
+  };
+
+  const base = map[d] ?? ["🌤️"];
+  const trendEmojis = trends.flatMap(t => trendMap[t] ?? []);
+
+  const combined = [...base, ...trendEmojis];
+  return combined[Math.floor(Math.random() * combined.length)];
+}
 }
