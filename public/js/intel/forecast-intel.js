@@ -38,7 +38,12 @@ export function buildWeatherIntel(hourly) {
   // -----------------------------
   const todayOutlook = synthesizeOutlook(statsToday, eventsToday, todayHours);
   const tomorrowOutlook = synthesizeOutlook(statsTomorrow, eventsTomorrow, tomorrowHours);
+const todayOutlook = synthesizeOutlook(statsToday, eventsToday, todayHours);
+let tomorrowOutlook = synthesizeOutlook(statsTomorrow, eventsTomorrow, tomorrowHours);
 
+// NEW: eliminate redundancy
+tomorrowOutlook = differentiateFromToday(todayOutlook, tomorrowOutlook);
+  
   // -----------------------------
   // Return unified intel object
   // (comfort + WU + MRMS are attached later in app.js)
