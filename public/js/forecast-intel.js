@@ -820,6 +820,32 @@ export function getSeasonalContext(date = new Date()) {
   if (m >= 3 && m <= 5) return "spring";
   if (m >= 6 && m <= 8) return "summer";
   return "fall";
+
+  // ============================================================
+// WEATHER INTEL ENGINE — Today, Tomorrow, Comfort, Trends
+// ============================================================
+
+import { computeComfort } from "./comfort.js";
+
+// ... your existing imports and helpers ...
+
+export async function buildWeatherIntel(raw) {
+  const intel = {};
+
+  // ------------------------------------------------------------
+  // EXISTING INTEL PIPELINE (unchanged)
+  // ------------------------------------------------------------
+  intel.wu = raw.wu ?? null;
+  intel.today = raw.today ?? null;
+  intel.tomorrow = raw.tomorrow ?? null;
+  intel.hours = raw.hours ?? [];
+
+  // ------------------------------------------------------------
+  // NEW: UNIFIED COMFORT ENGINE
+  // ------------------------------------------------------------
+  intel.comfort = computeComfort(intel);
+
+  return intel;
 }
 // ============================================================
 // FORECAST INTEL — PART 4 OF 5
