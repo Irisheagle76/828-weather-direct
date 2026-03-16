@@ -31,7 +31,8 @@ export function synthesizeOutlook({ raw, comfort }) {
   }
 
   const precipIntensity = describePrecipIntensity(precipTotal);
-
+console.log("LOCAL NOW:", new Date().toString());
+console.log("LOCAL HOUR:", new Date().getHours());
   // ------------------------------------------------------------
   // HEADLINE
   // ------------------------------------------------------------
