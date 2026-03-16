@@ -87,6 +87,39 @@ export async function getWUHistory(stationId) {
 }
 
 /**
+ * Get Tempest station observations (includes today's high/low).
+ */
+export async function getTempestStationObs(stationId, token) {
+  const url =
+    `https://swd.weatherflow.com/swd/rest/observations/station/${stationId}` +
+    `?token=${token}`;
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Tempest station obs failed: " + res.status);
+
+  const data = await res.json();
+  const obs = data.obs?.[0];
+
+  if (!obs) return null;
+
+  return {
+    temp: obs.air_temperature ?? null,
+    dewPoint: obs.dew_point ?? null,
+    windSpeed: obs.wind_avg ?? null,
+    windGust: obs.wind_gust ?? null,
+    windDir: obs.wind_direction ?? null,
+    pressure: obs.pressure ?? null,
+    solarRadiation: obs.solar_radiation ?? null,
+
+    // ⭐ These are the values we want for trend detection
+    tempHighToday: obs.air_temperature_hi ?? null,
+    tempLowToday: obs.air_temperature_lo ?? null,
+
+    raw: obs
+  };
+}
+
+/**
  * Get short‑term hourly forecast from Open‑Meteo.
  */
 export async function getShortTermForecast(lat, lon) {
