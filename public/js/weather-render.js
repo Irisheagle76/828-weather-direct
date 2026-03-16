@@ -190,4 +190,127 @@ export function renderTodayOutlook(intel) {
 // ------------------------------------------------------------
 export function renderTomorrowOutlook(intel) {
   const emojiEl = document.getElementById("tomorrow-emoji");
- 
+  const badgeEl = document.getElementById("tomorrow-badge");
+  const headlineEl = document.getElementById("tomorrow-headline");
+  const textEl = document.getElementById("tomorrow-text");
+  const bulletsEl = document.getElementById("tomorrow-bullets");
+
+  const tomorrow = intel.tomorrow;
+  if (!tomorrow || !tomorrow.available) {
+    headlineEl.textContent = "No data available";
+    textEl.textContent = "";
+    bulletsEl.innerHTML = "";
+    return;
+  }
+
+  emojiEl.textContent = ""; // optional: add emoji mapper later
+
+  // Dominant driver → badge
+  const dominant = tomorrow.events?.driver ?? "easy";
+
+  const badgeMap = {
+    rain:  { text: "Rain Gear",     class: "badge-rain" },
+    wind:  { text: "Wind Alert",    class: "badge-wind" },
+    snow:  { text: "Snow Impact",   class: "badge-snow" },
+    hot:   { text: "Heat Caution",  class: "badge-heat" },
+    cold:  { text: "Cold Start",    class: "badge-cold" },
+    goldilocks: { text: "Perfect Day", class: "badge-goldilocks" },
+    easy:  { text: "Easy Day",      class: "badge-easy" }
+  };
+
+  const badge = badgeMap[dominant] ?? badgeMap.easy;
+
+  badgeEl.textContent = badge.text;
+  badgeEl.className = `badge ${badge.class}`;
+
+  headlineEl.textContent = tomorrow.headline;
+  textEl.textContent = tomorrow.narrative;
+
+  renderBullets(bulletsEl, tomorrow.bullets);
+
+  const tomorrowModule = document.getElementById("tomorrow-module");
+  if (tomorrowModule) {
+    if (tomorrow.isEarlyMorning) tomorrowModule.classList.add("fade");
+    else tomorrowModule.classList.remove("fade");
+  }
+}
+
+// ------------------------------------------------------------
+// RENDER UV INDEX (FORECAST)
+// ------------------------------------------------------------
+export function renderUV(intel) {
+  const uvEl = document.getElementById("wu-uv");
+  if (!uvEl) return;
+
+  const uv = intel.wu?.uv ?? 0;
+  uvEl.textContent = uv.toFixed(1);
+  uvEl.className = getUVClass(uv);
+}
+
+// ------------------------------------------------------------
+// RENDER TODAY DETAIL (updated for new intel)
+// ------------------------------------------------------------
+export function renderTodayDetail(intel) {
+  const panel = document.getElementById("expanded-today");
+  if (!panel) return;
+
+  const stats = intel.today?.stats;
+  if (!stats) {
+    panel.innerHTML = "";
+    return;
+  }
+
+  panel.innerHTML = `
+    <div class="fx-section"><div class="fx-label">High</div><div class="fx-value">${Math.round(stats.tempMax)}°</div></div>
+    <div class="fx-section"><div class="fx-label">Low</div><div class="fx-value">${Math.round(stats.tempMin)}°</div></div>
+    <div class="fx-section"><div class="fx-label">Wind</div><div class="fx-value">${Math.round(stats.windAvg)} mph (gusts ${Math.round(stats.windGustMax)} mph)</div></div>
+    <div class="fx-section"><div class="fx-label">Rain</div><div class="fx-value">${stats.rainTotal.toFixed(2)}"</div></div>
+    <div class="fx-section"><div class="fx-label">Snow</div><div class="fx-value">${stats.snowTotal.toFixed(2)}"</div></div>
+    <div class="fx-section"><div class="fx-label">Cloud Cover</div><div class="fx-value">${Math.round(stats.cloudAvg)}%</div></div>
+  `;
+}
+
+// ------------------------------------------------------------
+// RENDER TOMORROW DETAIL (updated for new intel)
+// ------------------------------------------------------------
+export function renderTomorrowDetail(intel) {
+  const panel = document.getElementById("expanded-tomorrow");
+  if (!panel) return;
+
+  const stats = intel.tomorrow?.stats;
+  if (!stats) {
+    panel.innerHTML = "";
+    return;
+  }
+
+  panel.innerHTML = `
+    <div class="fx-section"><div class="fx-label">High</div><div class="fx-value">${Math.round(stats.tempMax)}°</div></div>
+    <div class="fx-section"><div class="fx-label">Low</div><div class="fx-value">${Math.round(stats.tempMin)}°</div></div>
+    <div class="fx-section"><div class="fx-label">Wind</div><div class="fx-value">${Math.round(stats.windAvg)} mph (gusts ${Math.round(stats.windGustMax)} mph)</div></div>
+    <div class="fx-section"><div class="fx-label">Rain</div><div class="fx-value">${stats.rainTotal.toFixed(2)}"</div></div>
+    <div class="fx-section"><div class="fx-label">Snow</div><div class="fx-value">${stats.snowTotal.toFixed(2)}"</div></div>
+    <div class="fx-section"><div class="fx-label">Cloud Cover</div><div class="fx-value">${Math.round(stats.cloudAvg)}%</div></div>
+  `;
+}
+
+// ------------------------------------------------------------
+// EXPANSION PANEL TOGGLER
+// ------------------------------------------------------------
+export function toggleForecastExpanded(which, intel) {
+  const panelToday = document.getElementById("expanded-today");
+  const panelTomorrow = document.getElementById("expanded-tomorrow");
+
+  if (which === "today") {
+    const isOpen = panelToday.style.display === "block";
+    panelToday.style.display = isOpen ? "none" : "block";
+    panelTomorrow.style.display = "none";
+    return;
+  }
+
+  if (which === "tomorrow") {
+    const isOpen = panelTomorrow.style.display === "block";
+    panelTomorrow.style.display = isOpen ? "none" : "block";
+    panelToday.style.display = "none";
+    return;
+  }
+}
