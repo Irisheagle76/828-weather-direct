@@ -9,6 +9,7 @@ import { getUnifiedStats } from "./stats.js";
 import { analyzeEvents } from "./events.js";
 import { getComfortSummary, getClothingGuidance } from "./comfort.js";
 import { synthesizeOutlook } from "./synthesizer.js";
+import { buildTodayDetail, buildTomorrowDetail } from "./details.js";
 
 // ------------------------------------------------------------
 // Build intel for a single window (Today or Tomorrow)
@@ -55,18 +56,26 @@ export function buildWeatherIntel(hourly) {
 
   // TODAY
   const todayIndices = getTodayRemainingWindow(hourly);
+  const windowToday = sliceHourly(hourly, todayIndices);
+  const statsToday = getUnifiedStats(windowToday);
+  const eventsToday = analyzeEvents(windowToday, statsToday, hourly, todayIndices);
   const todayIntel = buildWindowIntel(hourly, todayIndices, now);
 
   // TOMORROW
   const tomorrowIndices = getTomorrowWindow(hourly);
+  const windowTomorrow = sliceHourly(hourly, tomorrowIndices);
+  const statsTomorrow = getUnifiedStats(windowTomorrow);
+  const eventsTomorrow = analyzeEvents(windowTomorrow, statsTomorrow, hourly, tomorrowIndices);
+
   const tomorrowDate = new Date(now);
   tomorrowDate.setDate(now.getDate() + 1);
-
   const tomorrowIntel = buildWindowIntel(hourly, tomorrowIndices, tomorrowDate);
 
   return {
     generatedAt: now.toISOString(),
     today: todayIntel,
-    tomorrow: tomorrowIntel
+    tomorrow: tomorrowIntel,
+    todayDetail: buildTodayDetail(statsToday, eventsToday, windowToday, hourly, todayIndices),
+    tomorrowDetail: buildTomorrowDetail(statsTomorrow, eventsTomorrow, windowTomorrow, hourly, tomorrowIndices)
   };
 }
