@@ -205,7 +205,7 @@ function getTodayRemainingWindow(hourly) {
     if (t >= now && t <= end) indices.push(i);
   }
 
-  if (indices.length < 3) return [];
+  if (indices.length < 1) return [];
   return indices;
 }
 
