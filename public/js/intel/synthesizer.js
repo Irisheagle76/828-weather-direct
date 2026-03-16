@@ -1,69 +1,158 @@
 // /intel/synthesizer.js
-// Window-aware outlook generator (Hybrid H1 tone + emoji)
+// Human‑Action Outlook Generator — Warm + Direct Hybrid Tone
 
-export function synthesizeOutlook(stats, events, windowHours) {
-  const { tempMin, tempMax, windAvg, windGustMax, rainTotal, snowTotal, cloudAvg } = stats;
-
-  // -----------------------------
-  // Headline Logic
-  // -----------------------------
-  let headline = "";
-  let emoji = "🌤️";
-
-  if (snowTotal > 0.5) {
-    headline = "Snowy vibes ahead";
-    emoji = "❄️";
-  } else if (rainTotal > 0.25) {
-    headline = "A soggy stretch on the way";
-    emoji = "🌧️";
-  } else if (windGustMax > 30) {
-    headline = "A breezy, jacket‑friendly day";
-    emoji = "🍃";
-  } else if (tempMax >= 80) {
-    headline = "Warm and sticky at times";
-    emoji = "💦";
-  } else if (tempMax <= 45) {
-    headline = "A crisp, chilly day";
-    emoji = "❄️";
-  } else {
-    headline = "Mild and comfortable overall";
-    emoji = "🌤️";
+export function synthesizeOutlook(stats, events, hours) {
+  if (!stats || hours.length === 0) {
+    return {
+      headline: "No data available",
+      narrative: "",
+      bullets: [],
+      isEndOfDay: false,
+      isEarlyMorning: false
+    };
   }
 
-  // -----------------------------
-  // Narrative (Hybrid H1 tone)
-  // -----------------------------
-  const narrative = [
-    `Temps run ${Math.round(tempMin)}–${Math.round(tempMax)}°F.`,
-    windGustMax > 25
-      ? `Winds stay active with gusts near ${Math.round(windGustMax)} mph.`
-      : `Winds stay manageable with a ${Math.round(windAvg)} mph breeze.`,
-    rainTotal > 0.1 ? `Rain totals reach ${rainTotal.toFixed(2)}".` : "",
-    snowTotal > 0.1 ? `Snow totals reach ${snowTotal.toFixed(2)}".` : "",
-    cloudAvg > 70 ? `Skies trend mostly cloudy.` : `Skies offer some breaks of sun.`
-  ]
+  const headline = generateHeadline(stats, events);
+  const narrative = generateHumanNarrative(stats, events);
+  const bullets = generateHumanBullets(stats, events);
+
+  return {
+    headline,
+    narrative,
+    bullets,
+    isEndOfDay: events?.isEndOfDay ?? false,
+    isEarlyMorning: events?.isEarlyMorning ?? false
+  };
+}
+
+// ------------------------------------------------------------
+// HEADLINE — short, expressive, warm + direct
+// ------------------------------------------------------------
+function generateHeadline(stats, events) {
+  const d = events?.driver;
+
+  const map = {
+    rain: "A damp, drizzly kind of day",
+    snow: "Snowy vibes ahead",
+    wind: "A breezy, lively day",
+    hot: "Warm and energetic",
+    cold: "A chilly, layered kind of day",
+    goldilocks: "A genuinely pleasant day",
+    easy: "A calm, manageable day"
+  };
+
+  return map[d] ?? "A steady, uncomplicated day";
+}
+
+// ------------------------------------------------------------
+// NARRATIVE — 1–2 sentences, warm + direct, no stat dumps
+// ------------------------------------------------------------
+function generateHumanNarrative(stats, events) {
+  const { tempMin, tempMax, windGustMax, rainTotal, snowTotal, cloudAvg } = stats;
+  const d = events?.driver;
+
+  const tempPhrase = buildTempPhrase(tempMin, tempMax);
+  const windPhrase = buildWindPhrase(windGustMax);
+  const precipPhrase = buildPrecipPhrase(rainTotal, snowTotal);
+  const cloudPhrase = buildCloudPhrase(cloudAvg);
+
+  // Build a warm + direct narrative
+  let parts = [];
+
+  // Driver sets the emotional tone
+  switch (d) {
+    case "rain":
+      parts.push("A gray, drizzly stretch — nothing dramatic, but you’ll feel it.");
+      break;
+    case "snow":
+      parts.push("A wintry, unsettled day with a few attitude swings.");
+      break;
+    case "wind":
+      parts.push("A breezy, jacket‑friendly day — lively but manageable.");
+      break;
+    case "hot":
+      parts.push("A warm, energetic day that may feel a bit heavy at times.");
+      break;
+    case "cold":
+      parts.push("A chilly day that rewards layers and a little patience.");
+      break;
+    case "goldilocks":
+      parts.push("A genuinely pleasant day — easy to dress for and easy to enjoy.");
+      break;
+    default:
+      parts.push("A steady, uncomplicated day overall.");
+  }
+
+  // Add supporting phrases (but only if meaningful)
+  const support = [tempPhrase, windPhrase, precipPhrase, cloudPhrase]
     .filter(Boolean)
     .join(" ");
 
-  // -----------------------------
-  // Bullets
-  // -----------------------------
+  return `${parts.join(" ")} ${support}`.trim();
+}
+
+// ------------------------------------------------------------
+// BULLETS — human, actionable, no stat dumps
+// ------------------------------------------------------------
+function generateHumanBullets(stats, events) {
   const bullets = [];
 
-  bullets.push(`Temps: ${Math.round(tempMin)}–${Math.round(tempMax)}°F`);
-  bullets.push(`Wind: ${Math.round(windAvg)} mph, gusts to ${Math.round(windGustMax)} mph`);
-  if (rainTotal > 0.01) bullets.push(`Rain: ${rainTotal.toFixed(2)}" total`);
-  if (snowTotal > 0.01) bullets.push(`Snow: ${snowTotal.toFixed(2)}" total`);
-  bullets.push(`Clouds: ${Math.round(cloudAvg)}% average`);
+  // Clothing
+  if (stats.tempMax <= 40) bullets.push("Dress warm — layers help.");
+  else if (stats.tempMax <= 55) bullets.push("A jacket is a smart move.");
+  else if (stats.tempMax >= 80) bullets.push("Light clothing keeps things comfortable.");
 
-  // Commute logic
-  if (events?.pmCommuteRisk) {
-    bullets.push("PM commute: possible delays");
-  }
+  // Wind
+  if (stats.windGustMax >= 35) bullets.push("Expect a few pushy gusts.");
+  else if (stats.windGustMax >= 20) bullets.push("A breezy afternoon may nudge you around.");
 
-  return {
-    headline: `${headline} ${emoji}`,
-    narrative,
-    bullets
-  };
+  // Precip
+  if (stats.rainTotal >= 0.25) bullets.push("Keep rain gear handy.");
+  else if (stats.rainTotal > 0) bullets.push("A quick shower is possible.");
+
+  if (stats.snowTotal >= 0.5) bullets.push("Watch for slick spots early.");
+  else if (stats.snowTotal > 0) bullets.push("A light coating may linger.");
+
+  // Clouds
+  if (stats.cloudAvg >= 80) bullets.push("Skies stay mostly gray.");
+  else if (stats.cloudAvg <= 40) bullets.push("Some brighter breaks possible.");
+
+  // Commute cues
+  if (events?.pmCommuteImpact) bullets.push("PM commute: possible delays.");
+  if (events?.amCommuteImpact) bullets.push("AM commute: allow a little extra time.");
+
+  return bullets;
+}
+
+// ------------------------------------------------------------
+// PHRASE HELPERS — warm + direct, no raw numbers unless needed
+// ------------------------------------------------------------
+function buildTempPhrase(min, max) {
+  if (max <= 32) return "Cold from start to finish.";
+  if (max <= 45) return "Chilly overall.";
+  if (max <= 60) return "Cool but manageable.";
+  if (max <= 75) return "Comfortable for most of the day.";
+  if (max <= 85) return "Warm but not overbearing.";
+  return "On the hotter side.";
+}
+
+function buildWindPhrase(gust) {
+  if (gust >= 45) return "Winds get feisty at times.";
+  if (gust >= 30) return "A few lively gusts in the mix.";
+  if (gust >= 20) return "A gentle, steady breeze.";
+  return "";
+}
+
+function buildPrecipPhrase(rain, snow) {
+  if (snow >= 1) return "Snow makes a noticeable appearance.";
+  if (snow > 0) return "A touch of snow early.";
+  if (rain >= 0.5) return "Rain is a steady companion.";
+  if (rain > 0) return "A few showers drift through.";
+  return "";
+}
+
+function buildCloudPhrase(cloud) {
+  if (cloud >= 80) return "Skies lean gray and moody.";
+  if (cloud <= 40) return "Some brighter breaks possible.";
+  return "";
 }
