@@ -46,7 +46,7 @@ export async function getWUCurrentConditions(stationId) {
       solarRadiation: null,
       uv: null,
       stationId: stationId,
-      history: [] // ensure consistent shape
+      history: [] // consistent shape
     };
   }
 
@@ -66,13 +66,13 @@ export async function getWUCurrentConditions(stationId) {
 
     stationId: obs.stationID ?? stationId,
 
-    // history will be attached later in app.js
-    history: []
+    history: [] // no longer used, but kept for shape
   };
 }
 
 /**
- * Get last 24 hours of WU observations (for trend detection).
+ * (Deprecated in your app) — WU hourly history.
+ * You are no longer using this for trend detection.
  */
 export async function getWUHistory(stationId) {
   const url =
@@ -87,15 +87,16 @@ export async function getWUHistory(stationId) {
 }
 
 /**
- * Get Tempest station observations (includes today's high/low).
+ * ⭐ NEW — Get Tempest DEVICE observations (ALWAYS includes today's high/low).
+ * This is the correct endpoint for reliable trend detection.
  */
-export async function getTempestStationObs(stationId, token) {
+export async function getTempestDeviceObs(deviceId, token) {
   const url =
-    `https://swd.weatherflow.com/swd/rest/observations/station/${stationId}` +
+    `https://swd.weatherflow.com/swd/rest/observations/device/${deviceId}` +
     `?token=${token}`;
 
   const res = await fetch(url);
-  if (!res.ok) throw new Error("Tempest station obs failed: " + res.status);
+  if (!res.ok) throw new Error("Tempest device obs failed: " + res.status);
 
   const data = await res.json();
   const obs = data.obs?.[0];
@@ -108,10 +109,10 @@ export async function getTempestStationObs(stationId, token) {
     windSpeed: obs.wind_avg ?? null,
     windGust: obs.wind_gust ?? null,
     windDir: obs.wind_direction ?? null,
-    pressure: obs.pressure ?? null,
+    pressure: obs.station_pressure ?? null,
     solarRadiation: obs.solar_radiation ?? null,
 
-    // ⭐ These are the values we want for trend detection
+    // ⭐ Guaranteed on device endpoint
     tempHighToday: obs.air_temperature_hi ?? null,
     tempLowToday: obs.air_temperature_lo ?? null,
 
