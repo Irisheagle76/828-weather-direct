@@ -213,9 +213,13 @@ function getTomorrowWindow(hourly) {
   const now = new Date();
   const tomorrow = new Date(now);
   tomorrow.setDate(now.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0);   // ⭐ CRITICAL FIX
 
   const indices = getHourlyWindowForDay(hourly, tomorrow);
-  if (indices.length < 1) return [];
+
+   // ⭐ Require at least 6 hours for stability
+  if (indices.length < 6) return [];
+
   return indices;
 }
 
