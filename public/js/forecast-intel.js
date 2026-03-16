@@ -215,7 +215,7 @@ function getTomorrowWindow(hourly) {
   tomorrow.setDate(now.getDate() + 1);
 
   const indices = getHourlyWindowForDay(hourly, tomorrow);
-  if (indices.length < 6) return [];
+  if (indices.length < 1) return [];
   return indices;
 }
 
