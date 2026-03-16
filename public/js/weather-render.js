@@ -175,4 +175,4 @@ export function toggleForecastExpanded(which, intel) {
     renderTomorrowDetail(intel);
   }
 }
-}
+
