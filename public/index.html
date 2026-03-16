@@ -237,7 +237,7 @@
     margin-top: 0.35rem;
     margin-bottom: 0.2rem;
     padding-left: 1rem;
-    list-style: none;
+    list-style: disc;
   }
 
   .today-bullets li,
@@ -288,7 +288,6 @@
   /* ------------------------------
      UV INDEX COLOR + EMPHASIS
   ------------------------------ */
-  #wU-uv,
   #wu-uv {
     font-size: 1.45rem;
     font-weight: 700;
@@ -302,24 +301,6 @@
   .uv-extreme { color: #9c27b0; }
 
   /* ------------------------------
-     TEMPERATURE COLOR SCALE
-  ------------------------------ */
-  .temp-freezing { color: #4dabf7; }
-  .temp-cold     { color: #74c0fc; }
-  .temp-cool     { color: #a5d8ff; }
-  .temp-mild     { color: #ffd43b; }
-  .temp-warm     { color: #ffa94d; }
-  .temp-hot      { color: #ff6b6b; }
-
-  /* ------------------------------
-     DEW POINT COMFORT SCALE
-  ------------------------------ */
-  .dew-dry       { color: #74c0fc; }
-  .dew-comfort   { color: #ffd43b; }
-  .dew-humid     { color: #ffa94d; }
-  .dew-tropical  { color: #ff6b6b; }
-
-  /* ------------------------------
      FOOTER
   ------------------------------ */
   .footer-note {
@@ -331,38 +312,6 @@
     text-align: center;
     opacity: 0.9;
     letter-spacing: 0.03em;
-  }
-
-  .action-module.fade {
-    opacity: 0.55;
-    transform: translateY(2px);
-    filter: saturate(0.8);
-    transition: opacity 0.6s ease, transform 0.6s ease, filter 0.6s ease;
-  }
-
-  /* ------------------------------
-     HUMAN‑ACTION OUTLOOK (NEW STRUCTURE)
-  ------------------------------ */
-  .outlook-headline {
-    font-size: 1.05rem;
-    font-weight: 600;
-    margin-bottom: 4px;
-  }
-
-  .outlook-context {
-    font-size: 0.95rem;
-    margin-bottom: 6px;
-    opacity: 0.9;
-  }
-
-  .outlook-bullets {
-    margin: 0;
-    padding-left: 18px;
-  }
-
-  .outlook-bullets li {
-    margin-bottom: 4px;
-    line-height: 1.3;
   }
 
 </style>
@@ -435,6 +384,7 @@
         <div id="today-emoji" class="action-emoji">--</div>
         <div>
           <div class="action-label">Today’s Human‑Action Outlook</div>
+
           <div id="today-headline" class="action-headline">Loading…</div>
 
           <div id="today-text" class="action-text">
@@ -459,9 +409,8 @@
         <div>
           <div class="action-label">Tomorrow’s Human‑Action Outlook</div>
 
-          <div id="tomorrow-badge" class="badge"></div>
-
           <div id="tomorrow-headline" class="action-headline">Analyzing tomorrow’s setup…</div>
+
           <div id="tomorrow-text" class="action-text"></div>
 
           <ul id="tomorrow-bullets" class="tomorrow-bullets"></ul>
@@ -486,3 +435,4 @@
 
 </body>
 </html>
+
