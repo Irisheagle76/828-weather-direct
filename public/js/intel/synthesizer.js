@@ -1,5 +1,6 @@
 // /intel/synthesizer.js
 // Human‑Action Outlook Generator — Warm + Direct Hybrid Tone
+// Includes: Trend Awareness, Emoji Variation, Anti‑Redundancy
 
 export function synthesizeOutlook(stats, events, hours) {
   if (!stats || hours.length === 0) {
@@ -12,8 +13,11 @@ export function synthesizeOutlook(stats, events, hours) {
     };
   }
 
-  const headline = generateHeadline(stats, events);
-  const narrative = generateHumanNarrative(stats, events);
+  const trends = detectTrends(stats);
+  const emoji = pickEmoji(events, trends);
+
+  const headline = generateHeadline(stats, events, trends, emoji);
+  const narrative = generateHumanNarrative(stats, events, trends);
   const bullets = generateHumanBullets(stats, events);
 
   return {
@@ -26,12 +30,12 @@ export function synthesizeOutlook(stats, events, hours) {
 }
 
 // ------------------------------------------------------------
-// HEADLINE — short, expressive, warm + direct
+// HEADLINE — expressive, warm + direct, trend‑aware, emoji‑aware
 // ------------------------------------------------------------
-function generateHeadline(stats, events) {
+function generateHeadline(stats, events, trends, emoji) {
   const d = events?.driver;
 
-  const map = {
+  const baseMap = {
     rain: "A damp, drizzly kind of day",
     snow: "Snowy vibes ahead",
     wind: "A breezy, lively day",
@@ -41,54 +45,46 @@ function generateHeadline(stats, events) {
     easy: "A calm, manageable day"
   };
 
-  return map[d] ?? "A steady, uncomplicated day";
+  let base = baseMap[d] ?? "A steady, uncomplicated day";
+
+  // Trend overrides
+  if (trends.includes("bigWarmup")) base = "A day that warms up nicely";
+  if (trends.includes("coolingOff")) base = "A cooler, more settled day";
+  if (trends.includes("brightening")) base = "A day that tries to brighten";
+  if (trends.includes("cloudy")) base = "A gray, moody kind of day";
+
+  return `${emoji} ${base}`;
 }
 
 // ------------------------------------------------------------
-// NARRATIVE — 1–2 sentences, warm + direct, no stat dumps
+// NARRATIVE — warm + direct, trend‑aware, no stat dumps
 // ------------------------------------------------------------
-function generateHumanNarrative(stats, events) {
+function generateHumanNarrative(stats, events, trends) {
   const { tempMin, tempMax, windGustMax, rainTotal, snowTotal, cloudAvg } = stats;
-  const d = events?.driver;
 
   const tempPhrase = buildTempPhrase(tempMin, tempMax);
   const windPhrase = buildWindPhrase(windGustMax);
   const precipPhrase = buildPrecipPhrase(rainTotal, snowTotal);
   const cloudPhrase = buildCloudPhrase(cloudAvg);
 
-  // Build a warm + direct narrative
-  let parts = [];
+  const trendPhrases = [];
 
-  // Driver sets the emotional tone
-  switch (d) {
-    case "rain":
-      parts.push("A gray, drizzly stretch — nothing dramatic, but you’ll feel it.");
-      break;
-    case "snow":
-      parts.push("A wintry, unsettled day with a few attitude swings.");
-      break;
-    case "wind":
-      parts.push("A breezy, jacket‑friendly day — lively but manageable.");
-      break;
-    case "hot":
-      parts.push("A warm, energetic day that may feel a bit heavy at times.");
-      break;
-    case "cold":
-      parts.push("A chilly day that rewards layers and a little patience.");
-      break;
-    case "goldilocks":
-      parts.push("A genuinely pleasant day — easy to dress for and easy to enjoy.");
-      break;
-    default:
-      parts.push("A steady, uncomplicated day overall.");
-  }
+  if (trends.includes("bigWarmup")) trendPhrases.push("The day warms noticeably as it goes.");
+  if (trends.includes("coolingOff")) trendPhrases.push("Temperatures ease downward into a cooler feel.");
+  if (trends.includes("gusty")) trendPhrases.push("Winds get lively at times.");
+  if (trends.includes("calming")) trendPhrases.push("Winds ease back later on.");
+  if (trends.includes("brightening")) trendPhrases.push("Skies may try to brighten.");
+  if (trends.includes("cloudy")) trendPhrases.push("Clouds hold firm for much of the day.");
 
-  // Add supporting phrases (but only if meaningful)
-  const support = [tempPhrase, windPhrase, precipPhrase, cloudPhrase]
-    .filter(Boolean)
-    .join(" ");
+  const support = [
+    tempPhrase,
+    windPhrase,
+    precipPhrase,
+    cloudPhrase,
+    ...trendPhrases
+  ].filter(Boolean).join(" ");
 
-  return `${parts.join(" ")} ${support}`.trim();
+  return support.trim();
 }
 
 // ------------------------------------------------------------
@@ -125,7 +121,7 @@ function generateHumanBullets(stats, events) {
 }
 
 // ------------------------------------------------------------
-// PHRASE HELPERS — warm + direct, no raw numbers unless needed
+// PHRASE HELPERS — warm + direct
 // ------------------------------------------------------------
 function buildTempPhrase(min, max) {
   if (max <= 32) return "Cold from start to finish.";
@@ -155,109 +151,34 @@ function buildCloudPhrase(cloud) {
   if (cloud >= 80) return "Skies lean gray and moody.";
   if (cloud <= 40) return "Some brighter breaks possible.";
   return "";
-  // ------------------------------------------------------------
-// ANTI-REDUNDANCY — ensures Tomorrow doesn't echo Today
-// ------------------------------------------------------------
-export function differentiateFromToday(todayOutlook, tomorrowOutlook) {
-  if (!todayOutlook || !tomorrowOutlook) return tomorrowOutlook;
-
-  const tdy = todayOutlook;
-  const tmr = { ...tomorrowOutlook };
-
-  // 1. If headlines are too similar → soften Tomorrow's tone
-  if (tdy.headline === tmr.headline) {
-    tmr.headline = transformHeadline(tmr.headline);
-  }
-
-  // 2. If narratives share too many words → reframe Tomorrow
-  const overlap = wordOverlap(tdy.narrative, tmr.narrative);
-  if (overlap > 0.45) {
-    tmr.narrative = reframeNarrative(tmr.narrative);
-  }
-
-  // 3. Remove bullets that duplicate Today’s themes
-  tmr.bullets = tmr.bullets.filter(b => {
-    return !tdy.bullets.some(tb => bulletSimilarity(tb, b) > 0.5);
-  });
-
-  // If bullets become empty, add a fresh forward-looking cue
-  if (tmr.bullets.length === 0) {
-    tmr.bullets.push("A different feel from today.");
-  }
-
-  return tmr;
 }
 
 // ------------------------------------------------------------
-// HELPERS
-// ------------------------------------------------------------
-function wordOverlap(a, b) {
-  const A = new Set(a.toLowerCase().split(/\W+/));
-  const B = new Set(b.toLowerCase().split(/\W+/));
-  const inter = [...A].filter(x => B.has(x));
-  return inter.length / Math.min(A.size, B.size);
-}
-
-function bulletSimilarity(a, b) {
-  const A = a.toLowerCase().split(/\W+/);
-  const B = b.toLowerCase().split(/\W+/);
-  const inter = A.filter(x => B.includes(x));
-  return inter.length / Math.min(A.length, B.length);
-}
-
-function transformHeadline(h) {
-  const variants = [
-    "A different feel tomorrow",
-    "A shift in the pattern",
-    "A new tone to the day",
-    "A change of pace ahead"
-  ];
-  return variants[Math.floor(Math.random() * variants.length)];
-}
-
-function reframeNarrative(n) {
-  return (
-    "Tomorrow brings a slightly different rhythm. " +
-    n.replace(/^[A-Z][^.]+\./, "").trim()
-  );
-}
-  // ------------------------------------------------------------
 // TREND AWARENESS
 // ------------------------------------------------------------
 function detectTrends(stats) {
   const trends = [];
 
   // Temperature trend
-  if (stats.tempMax - stats.tempMin >= 20) {
-    trends.push("bigWarmup");
-  } else if (stats.tempMin - stats.tempMax >= 10) {
-    trends.push("coolingOff");
-  }
+  if (stats.tempMax - stats.tempMin >= 20) trends.push("bigWarmup");
+  else if (stats.tempMin - stats.tempMax >= 10) trends.push("coolingOff");
 
   // Wind trend
-  if (stats.windGustMax >= 35) {
-    trends.push("gusty");
-  } else if (stats.windGustMax <= 10) {
-    trends.push("calming");
-  }
+  if (stats.windGustMax >= 35) trends.push("gusty");
+  else if (stats.windGustMax <= 10) trends.push("calming");
 
   // Moisture trend
-  if (stats.rainTotal >= 0.25 || stats.snowTotal >= 0.25) {
-    trends.push("wetPattern");
-  } else if (stats.rainTotal === 0 && stats.snowTotal === 0) {
-    trends.push("dryingOut");
-  }
+  if (stats.rainTotal >= 0.25 || stats.snowTotal >= 0.25) trends.push("wetPattern");
+  else if (stats.rainTotal === 0 && stats.snowTotal === 0) trends.push("dryingOut");
 
   // Cloud trend
-  if (stats.cloudAvg >= 80) {
-    trends.push("cloudy");
-  } else if (stats.cloudAvg <= 40) {
-    trends.push("brightening");
-  }
+  if (stats.cloudAvg >= 80) trends.push("cloudy");
+  else if (stats.cloudAvg <= 40) trends.push("brightening");
 
   return trends;
 }
-  // ------------------------------------------------------------
+
+// ------------------------------------------------------------
 // EMOJI VARIATION
 // ------------------------------------------------------------
 function pickEmoji(events, trends) {
@@ -290,4 +211,70 @@ function pickEmoji(events, trends) {
   const combined = [...base, ...trendEmojis];
   return combined[Math.floor(Math.random() * combined.length)];
 }
+
+// ------------------------------------------------------------
+// ANTI‑REDUNDANCY — ensures Tomorrow doesn't echo Today
+// ------------------------------------------------------------
+export function differentiateFromToday(todayOutlook, tomorrowOutlook) {
+  if (!todayOutlook || !tomorrowOutlook) return tomorrowOutlook;
+
+  const tdy = todayOutlook;
+  const tmr = { ...tomorrowOutlook };
+
+  // 1. If headlines are too similar → soften Tomorrow's tone
+  if (tdy.headline === tmr.headline) {
+    tmr.headline = transformHeadline(tmr.headline);
+  }
+
+  // 2. If narratives share too many words → reframe Tomorrow
+  const overlap = wordOverlap(tdy.narrative, tmr.narrative);
+  if (overlap > 0.45) {
+    tmr.narrative = reframeNarrative(tmr.narrative);
+  }
+
+  // 3. Remove bullets that duplicate Today’s themes
+  tmr.bullets = tmr.bullets.filter(b => {
+    return !tdy.bullets.some(tb => bulletSimilarity(tb, b) > 0.5);
+  });
+
+  // If bullets become empty, add a fresh forward-looking cue
+  if (tmr.bullets.length === 0) {
+    tmr.bullets.push("A different feel from today.");
+  }
+
+  return tmr;
+}
+
+// ------------------------------------------------------------
+// ANTI‑REDUNDANCY HELPERS
+// ------------------------------------------------------------
+function wordOverlap(a, b) {
+  const A = new Set(a.toLowerCase().split(/\W+/));
+  const B = new Set(b.toLowerCase().split(/\W+/));
+  const inter = [...A].filter(x => B.has(x));
+  return inter.length / Math.min(A.size, B.size);
+}
+
+function bulletSimilarity(a, b) {
+  const A = a.toLowerCase().split(/\W+/);
+  const B = b.toLowerCase().split(/\W+/);
+  const inter = A.filter(x => B.includes(x));
+  return inter.length / Math.min(A.length, B.length);
+}
+
+function transformHeadline(h) {
+  const variants = [
+    "A different feel tomorrow",
+    "A shift in the pattern",
+    "A new tone to the day",
+    "A change of pace ahead"
+  ];
+  return variants[Math.floor(Math.random() * variants.length)];
+}
+
+function reframeNarrative(n) {
+  return (
+    "Tomorrow brings a slightly different rhythm. " +
+    n.replace(/^[A-Z][^.]+\./, "").trim()
+  );
 }
