@@ -84,10 +84,28 @@ export async function getShortTermForecast(lat, lon) {
     `&wind_speed_unit=mph` +
     `&precipitation_unit=inch`;
 
+  console.log("OPEN-METEO REQUEST URL:", url);
+
   const res = await fetch(url);
   if (!res.ok) throw new Error("Short-term forecast fetch failed: " + res.status);
 
-  return (await res.json()).hourly;
+  const data = await res.json();
+
+  // ⭐ FRESHNESS DIAGNOSTICS ⭐
+  console.log("OPEN-METEO RAW RESPONSE:", data);
+
+  // Model run timestamp (in ms)
+  console.log("OPEN-METEO MODEL GENERATION TIME (ms):", data?.generationtime_ms);
+
+  // First and last hourly timestamps
+  const hourly = data?.hourly;
+  console.log("OPEN-METEO FIRST HOUR:", hourly?.time?.[0]);
+  console.log("OPEN-METEO LAST HOUR:", hourly?.time?.slice(-1)?.[0]);
+
+  // Local time for comparison
+  console.log("LOCAL NOW:", new Date().toString());
+
+  return hourly;
 }
 
 /**
