@@ -504,6 +504,7 @@ export function getTodayActionOutlook(hourly) {
   const clothing = getClothingGuidance(hourly, indices);
 
 // 6. Synthesizer (NOW all variables exist)
+  const dayType = "today";
 const synthesized = synthesizeOutlook({
   raw: {
     meta: {
@@ -581,6 +582,7 @@ export function getHumanActionOutlook(hourly) {
   const clothing = getClothingGuidance(hourly, indices);
 
   // 6. Synthesizer (NOW all variables exist)
+  const dayType = "tomorrow";
   const synthesized = synthesizeOutlook({
     raw: {
       meta: {
