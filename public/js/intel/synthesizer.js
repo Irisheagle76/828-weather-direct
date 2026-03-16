@@ -107,7 +107,15 @@ function generateHumanBullets(stats, events) {
   else if (stats.rainTotal > 0) bullets.push("A quick shower is possible.");
 
   if (stats.snowTotal >= 0.5) bullets.push("Watch for slick spots early.");
-  else if (stats.snowTotal > 0) bullets.push("A light coating may linger.");
+  else if (snow > 0) {
+  const options = [
+    "A touch of snow early in the day.",
+    "A light dusting to start things off.",
+    "Snowflakes could make a morning appearance."
+  ];
+  return options[Math.floor(Math.random() * options.length)];
+}
+
 
   // Clouds
   if (stats.cloudAvg >= 80) bullets.push("Skies stay mostly gray.");
