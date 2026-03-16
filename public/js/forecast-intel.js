@@ -965,6 +965,7 @@ export function getPlannerBullets(hourly, indices) {
 // ============================================================
 
 export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
+  console.log("BUILD WEATHER INTEL");
   const idx = findNearestHourIndex(hourly);
   const fallbackUV = hourly.uv_index?.[idx] ?? null;
 
