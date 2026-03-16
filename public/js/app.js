@@ -6,6 +6,7 @@
 import {
   getNearestWUStation,
   getWUCurrentConditions,
+  getWUHistory, 
   getShortTermForecast,
   getMRMSPixel
 } from './weather-fetch.js';
@@ -91,7 +92,7 @@ async function initApp() {
         const nearest = await getNearestWUStation(lat, lon);
         const wuCurrent = await getWUCurrentConditions(nearest.stationId);
         const wuHistory = await getWUHistory(nearest.stationId);
-wuCurrent.history = wuHistory;
+        wuCurrent.history = wuHistory;
 
         setWUStatus("ok", "WU Connected", "Weather Underground data loaded.");
 
