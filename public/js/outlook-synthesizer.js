@@ -34,7 +34,38 @@ export function synthesizeOutlook({ raw, comfort }) {
   }
 
   const precipIntensity = describePrecipIntensity(precipTotal);
+// ------------------------------------------------------------
+// FORECAST STORY BUILDER
+// ------------------------------------------------------------
+function buildStory() {
 
+  const parts = [];
+
+  if (commute?.commutePrecip >= 0.05) {
+    parts.push("Rain arrives early");
+  }
+
+  if (precipTotal >= 0.25) {
+    parts.push("becoming heavier through the day");
+  }
+
+  if (trends?.tempFalling && drivers?.includes("front")) {
+    parts.push("before colder air moves in");
+  }
+
+  if (snowTotal > 0) {
+    parts.push("with rain possibly mixing with wet snow later");
+  }
+
+  if (parts.length === 0) return "";
+
+  if (parts.length === 1) return parts[0] + ".";
+
+  if (parts.length === 2) return `${parts[0]}, then ${parts[1]}.`;
+
+  return `${parts[0]}, ${parts[1]} before ${parts[2]}.`;
+}
+  const story = buildStory();
   // ------------------------------------------------------------
   // HEADLINE
   // ------------------------------------------------------------
@@ -81,16 +112,22 @@ export function synthesizeOutlook({ raw, comfort }) {
     bullets.push("Rain may mix with wet snow later.");
   }
 
-  // WIND (dedupe)
-  if (drivers.includes("wind")) {
-    const hasWindBullet = bullets.some(b =>
-      b.toLowerCase().includes("breezy") ||
-      b.toLowerCase().includes("wind")
-    );
-    if (!hasWindBullet) {
-      bullets.push("Breezy at times.");
-    }
+  // WIND (dedupe headline + bullets)
+if (drivers?.includes("wind")) {
+
+  const headlineMentionsWind =
+    headline.toLowerCase().includes("breezy") ||
+    headline.toLowerCase().includes("wind");
+
+  const hasWindBullet = bullets.some(b =>
+    b.toLowerCase().includes("breezy") ||
+    b.toLowerCase().includes("wind")
+  );
+
+  if (!hasWindBullet && !headlineMentionsWind) {
+    bullets.push("Breezy at times.");
   }
+}
 
   // ------------------------------------------------------------
   // SUPPRESS COMFORT BULLETS ON ACTIVE WEATHER DAYS
@@ -103,10 +140,10 @@ export function synthesizeOutlook({ raw, comfort }) {
       commute?.commutePrecip > 0.05 ||
       trends.tempFalling ||
       drivers.includes("front") ||
-      drivers.includes("wind") ||
+     drivers?.includes("wind") ||
       drivers.includes("snow") ||
       phases.includes("frontal-passage") ||
-      phases.includes("post-frontal-cold")
+      phases?.includes("post-frontal-cold")
     );
 
   if (!activeWeather) {
@@ -117,27 +154,26 @@ export function synthesizeOutlook({ raw, comfort }) {
   }
 
   // ------------------------------------------------------------
-  // CLOTHING GUIDANCE (compressed + conditional snow-gear)
-  // ------------------------------------------------------------
-  if (raw.clothing) {
-    const base = raw.clothing
-      .replace(/\s+/g, " ")
-      .replace(/\.+/g, ".")
-      .trim()
-      .replace(/\.$/, "");
+// CLOTHING GUIDANCE (compressed)
+// ------------------------------------------------------------
+if (raw.clothing) {
 
-    const needsSnowGear =
-      snowTotal > 0 ||
-      phases.includes("post-frontal-cold") ||
-      drivers.includes("snow");
+  const base = raw.clothing
+    .split(".")[0] // keep only first sentence
+    .replace(/\s+/g, " ")
+    .trim();
 
-    if (needsSnowGear) {
-      bullets.push(`Clothing: ${base}, with snow gear kept at the ready.`);
-    } else {
-      bullets.push(`Clothing: ${base}.`);
-    }
+  const needsSnowGear =
+    snowTotal > 0 ||
+    phases?.includes("post-frontal-cold") ||
+    drivers?.includes("snow");
+
+  if (needsSnowGear) {
+    bullets.push(`Clothing: ${base}, with snow gear kept at the ready.`);
+  } else {
+    bullets.push(`Clothing: ${base}.`);
   }
-
+}
   // ------------------------------------------------------------
   // BULLET POLISHING PASS
   // ------------------------------------------------------------
@@ -199,10 +235,10 @@ export function synthesizeOutlook({ raw, comfort }) {
   // NORMAL RETURN (no fade)
   // ------------------------------------------------------------
   return {
-    headline,
-    text: "",
-    bullets: polished.slice(0, 5),
-    isEndOfDay: false,
-    isEarlyMorning: false
-  };
+  headline,
+  text: story,
+  bullets: polished.slice(0, 4),
+  isEndOfDay: false,
+  isEarlyMorning: false
+};
 }
