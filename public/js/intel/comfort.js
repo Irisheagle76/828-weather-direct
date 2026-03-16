@@ -198,12 +198,15 @@ export function computeComfort(intel) {
 
   // Humidity
   summaryParts.push(humidFeel);
-
+// Temperature drop comparison
+const dropFeel = computeTempDropFeel(intel);
+if (dropFeel) summaryParts.push(dropFeel);
+  
   // Solar (only if actually helpful)
   if (isSolarHelpful(intel, elev)) {
     summaryParts.push(rawSunFeel);
   }
-
+  
   // Wind nuance
   if (wind >= 15) {
     summaryParts.push("A noticeable breeze adds some edge.");
