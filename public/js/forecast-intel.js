@@ -537,7 +537,17 @@ export function getTodayActionOutlook(hourly) {
 }
 
 export function getHumanActionOutlook(hourly) {
-  const indices = getTomorrowWindow(hourly);
+  const now = new Date();
+const tomorrowDate = new Date(now);
+tomorrowDate.setDate(now.getDate() + 1);
+
+const indices = hourly.time
+  .map((t, i) => ({ t: new Date(t), i }))
+  .filter(obj =>
+    obj.t.getDate() === tomorrowDate.getDate() &&
+    obj.t.getMonth() === tomorrowDate.getMonth()
+  )
+  .map(obj => obj.i);
 
   if (!indices.length) {
     return {
