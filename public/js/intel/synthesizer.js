@@ -16,14 +16,10 @@ export function synthesizeOutlook(stats, events, hours) {
   const trends = detectTrends(stats);
   const emoji = pickEmoji(events, trends);
 
-  const headline = generateHeadline(stats, events, trends, emoji);
-  const narrative = generateHumanNarrative(stats, events, trends);
-  const bullets = generateHumanBullets(stats, events);
-
   return {
-    headline,
-    narrative,
-    bullets,
+    headline: generateHeadline(stats, events, trends, emoji),
+    narrative: generateHumanNarrative(stats, events, trends),
+    bullets: generateHumanBullets(stats, events),
     isEndOfDay: events?.isEndOfDay ?? false,
     isEarlyMorning: events?.isEarlyMorning ?? false
   };
@@ -62,29 +58,21 @@ function generateHeadline(stats, events, trends, emoji) {
 function generateHumanNarrative(stats, events, trends) {
   const { tempMin, tempMax, windGustMax, rainTotal, snowTotal, cloudAvg } = stats;
 
-  const tempPhrase = buildTempPhrase(tempMin, tempMax);
-  const windPhrase = buildWindPhrase(windGustMax);
-  const precipPhrase = buildPrecipPhrase(rainTotal, snowTotal);
-  const cloudPhrase = buildCloudPhrase(cloudAvg);
+  const parts = [
+    buildTempPhrase(tempMin, tempMax),
+    buildWindPhrase(windGustMax),
+    buildPrecipPhrase(rainTotal, snowTotal),
+    buildCloudPhrase(cloudAvg)
+  ];
 
-  const trendPhrases = [];
+  if (trends.includes("bigWarmup")) parts.push("The day warms noticeably as it goes.");
+  if (trends.includes("coolingOff")) parts.push("Temperatures ease downward into a cooler feel.");
+  if (trends.includes("gusty")) parts.push("Winds get lively at times.");
+  if (trends.includes("calming")) parts.push("Winds ease back later on.");
+  if (trends.includes("brightening")) parts.push("Skies may try to brighten.");
+  if (trends.includes("cloudy")) parts.push("Clouds hold firm for much of the day.");
 
-  if (trends.includes("bigWarmup")) trendPhrases.push("The day warms noticeably as it goes.");
-  if (trends.includes("coolingOff")) trendPhrases.push("Temperatures ease downward into a cooler feel.");
-  if (trends.includes("gusty")) trendPhrases.push("Winds get lively at times.");
-  if (trends.includes("calming")) trendPhrases.push("Winds ease back later on.");
-  if (trends.includes("brightening")) trendPhrases.push("Skies may try to brighten.");
-  if (trends.includes("cloudy")) trendPhrases.push("Clouds hold firm for much of the day.");
-
-  const support = [
-    tempPhrase,
-    windPhrase,
-    precipPhrase,
-    cloudPhrase,
-    ...trendPhrases
-  ].filter(Boolean).join(" ");
-
-  return support.trim();
+  return parts.filter(Boolean).join(" ").trim();
 }
 
 // ------------------------------------------------------------
@@ -102,20 +90,21 @@ function generateHumanBullets(stats, events) {
   if (stats.windGustMax >= 35) bullets.push("Expect a few pushy gusts.");
   else if (stats.windGustMax >= 20) bullets.push("A breezy afternoon may nudge you around.");
 
-  // Precip
-if (stats.rainTotal >= 0.25) bullets.push("Keep rain gear handy.");
-else if (stats.rainTotal > 0) bullets.push("A quick shower is possible.");
+  // Rain
+  if (stats.rainTotal >= 0.25) bullets.push("Keep rain gear handy.");
+  else if (stats.rainTotal > 0) bullets.push("A quick shower is possible.");
 
-if (stats.snowTotal >= 0.5) {
-  bullets.push("Watch for slick spots early.");
-} else if (stats.snowTotal > 0) {
-  const options = [
-    "A touch of snow early in the day.",
-    "A light dusting to start things off.",
-    "Snowflakes could make a morning appearance."
-  ];
-  bullets.push(options[Math.floor(Math.random() * options.length)]);
-}
+  // Snow
+  if (stats.snowTotal >= 0.5) {
+    bullets.push("Watch for slick spots early.");
+  } else if (stats.snowTotal > 0) {
+    const options = [
+      "A touch of snow early in the day.",
+      "A light dusting to start things off.",
+      "Snowflakes could make a morning appearance."
+    ];
+    bullets.push(options[Math.floor(Math.random() * options.length)]);
+  }
 
   // Clouds
   if (stats.cloudAvg >= 80) bullets.push("Skies stay mostly gray.");
@@ -167,19 +156,15 @@ function buildCloudPhrase(cloud) {
 function detectTrends(stats) {
   const trends = [];
 
-  // Temperature trend
   if (stats.tempMax - stats.tempMin >= 20) trends.push("bigWarmup");
   else if (stats.tempMin - stats.tempMax >= 10) trends.push("coolingOff");
 
-  // Wind trend
   if (stats.windGustMax >= 35) trends.push("gusty");
   else if (stats.windGustMax <= 10) trends.push("calming");
 
-  // Moisture trend
   if (stats.rainTotal >= 0.25 || stats.snowTotal >= 0.25) trends.push("wetPattern");
   else if (stats.rainTotal === 0 && stats.snowTotal === 0) trends.push("dryingOut");
 
-  // Cloud trend
   if (stats.cloudAvg >= 80) trends.push("cloudy");
   else if (stats.cloudAvg <= 40) trends.push("brightening");
 
@@ -229,23 +214,19 @@ export function differentiateFromToday(todayOutlook, tomorrowOutlook) {
   const tdy = todayOutlook;
   const tmr = { ...tomorrowOutlook };
 
-  // 1. If headlines are too similar → soften Tomorrow's tone
   if (tdy.headline === tmr.headline) {
     tmr.headline = transformHeadline(tmr.headline);
   }
 
-  // 2. If narratives share too many words → reframe Tomorrow
   const overlap = wordOverlap(tdy.narrative, tmr.narrative);
   if (overlap > 0.45) {
     tmr.narrative = reframeNarrative(tmr.narrative);
   }
 
-  // 3. Remove bullets that duplicate Today’s themes
   tmr.bullets = tmr.bullets.filter(b => {
     return !tdy.bullets.some(tb => bulletSimilarity(tb, b) > 0.5);
   });
 
-  // If bullets become empty, add a fresh forward-looking cue
   if (tmr.bullets.length === 0) {
     tmr.bullets.push("A different feel from today.");
   }
