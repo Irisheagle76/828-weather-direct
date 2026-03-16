@@ -230,21 +230,6 @@ function sliceHourly(hourly, indices) {
     out[k] = indices.map(i => arr[i]);
   }
   return out;
-  // ------------------------------------------------------------
-// Console Debug Tomorrow
-// ------------------------------------------------------------
-const todayIndices = getTodayRemainingWindow(hourly);
-const tomorrowIndices = getTomorrowWindow(hourly);
-
-console.log("WINDOW DEBUG:", {
-  now: new Date().toString(),
-  todayCount: todayIndices.length,
-  tomorrowCount: tomorrowIndices.length,
-  firstToday: todayIndices[0],
-  firstTomorrow: tomorrowIndices[0],
-  todayFirstTime: todayIndices[0] != null ? hourly.time[todayIndices[0]] : null,
-  tomorrowFirstTime: tomorrowIndices[0] != null ? hourly.time[tomorrowIndices[0]] : null
-});
 }
 // ------------------------------------------------------------
 // NORMALIZATION (with wind direction)
@@ -1112,7 +1097,18 @@ export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
       obj.t.getMonth() === tomorrowDate.getMonth()
     )
     .map(obj => obj.i);
-
+// ============================================================
+// CONSOLE BUG FINDING TOMORROW PROBLEM
+// ============================================================
+console.log("WINDOW DEBUG:", {
+  now: new Date().toString(),
+  todayCount: todayIndices.length,
+  tomorrowCount: tomorrowIndices.length,
+  firstToday: todayIndices[0],
+  firstTomorrow: tomorrowIndices[0],
+  todayFirstTime: todayIndices[0] != null ? hourly.time[todayIndices[0]] : null,
+  tomorrowFirstTime: tomorrowIndices[0] != null ? hourly.time[tomorrowIndices[0]] : null
+});
   const todayDetail = {
     high: Math.round(Math.max(...todayIndices.map(i => hourly.temperature_2m[i]))),
     low: Math.round(Math.min(...todayIndices.map(i => hourly.temperature_2m[i]))),
