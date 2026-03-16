@@ -8,6 +8,7 @@ import {
 } from './weather-fetch.js';
 
 import { buildWeatherIntel } from './intel/forecast-intel.js';
+import { buildComfort } from './intel/comfort.js';
 
 import {
   renderRightNowComfort,
@@ -16,11 +17,11 @@ import {
   renderUV,
   renderTodayDetail,
   renderTomorrowDetail,
-  renderCurrentObservations   // ⭐ ADD THIS
+  renderCurrentObservations
 } from './weather-render.js';
 
 // ------------------------------------------------------------
-// STATUS + ERROR HELPERS (moved here from old renderer)
+// STATUS + ERROR HELPERS
 // ------------------------------------------------------------
 function setWUStatus(state, label, text) {
   const badge = document.getElementById("wu-status-badge");
@@ -47,24 +48,14 @@ function showWUError(msg) {
 // MASTER UI UPDATE FUNCTION
 // ------------------------------------------------------------
 function updateUI(intel) {
-  // Right Now Comfort
   renderRightNowComfort(intel);
-
-  // Today + Tomorrow
   renderTodayOutlook(intel);
   renderTomorrowOutlook(intel);
-
-  // UV
   renderUV(intel);
-
-  // Expanded panels
   renderTodayDetail(intel);
   renderTomorrowDetail(intel);
-
-  // ⭐ Add this line
   renderCurrentObservations(intel);
 
-  // Station footer
   const footer = document.getElementById("wu-station-footer");
   if (intel.wu?.stationId) {
     footer.textContent = `Live data from Weather Underground Station ${intel.wu.stationId}`;
@@ -103,22 +94,23 @@ async function initApp() {
         setWUStatus("ok", "WU Connected", "Weather Underground data loaded.");
 
         // ⭐ 2. Hourly Forecast
-const hourly = await getShortTermForecast(lat, lon);
+        const hourly = await getShortTermForecast(lat, lon);
 
-// ⭐ DEBUG: expose hourly to console
-window._hourly = hourly;
+        // Debug
+        window._hourly = hourly;
 
-// ⭐ 3. MRMS Radar Pixel
-const mrmsPixel = await getMRMSPixel(lat, lon);
+        // ⭐ 3. MRMS Radar Pixel
+        const mrmsPixel = await getMRMSPixel(lat, lon);
 
-       // ⭐ 4. Build Unified Intelligence
-const intel = buildWeatherIntel(hourly);
+        // ⭐ 4. Build Unified Intelligence
+        const intel = buildWeatherIntel(hourly);
 
-intel.wu = wuCurrent;
-intel.mrms = mrmsPixel;
-intel.comfort = buildComfort(wuCurrent, hourly);
+        // Attach WU + MRMS + Comfort
+        intel.wu = wuCurrent;
+        intel.mrms = mrmsPixel;
+        intel.comfort = buildComfort(wuCurrent, hourly);
 
-        // Make intel globally accessible for expansion panels
+        // Expose for expansion panels
         window._intel = intel;
 
         // ⭐ 5. Update UI
