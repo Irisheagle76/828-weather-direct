@@ -1,81 +1,49 @@
-// ============================================================
-// UNIFIED FORECAST INTEL WRAPPER
-// This module ties together all other intel modules and produces
-// the final Today + Tomorrow outlooks used by your UI.
-// ============================================================
-
-import { getTodayRemainingWindow, getTomorrowWindow, sliceHourly } from "./windows.js";
-import { getUnifiedStats } from "./stats.js";
-import { analyzeEvents } from "./events.js";
-import { getComfortSummary, getClothingGuidance } from "./comfort.js";
+// /intel/forecast-intel.js
+import { buildComfort } from "./comfort.js";
 import { synthesizeOutlook } from "./synthesizer.js";
-import { buildTodayDetail, buildTomorrowDetail } from "./details.js";
+import { computeStats } from "./stats.js";
+import { computeEvents } from "./events.js";
+import { getTodayWindow, getTomorrowWindow } from "./windows.js";
 
-// ------------------------------------------------------------
-// Build intel for a single window (Today or Tomorrow)
-// ------------------------------------------------------------
-function buildWindowIntel(hourly, indices, date) {
-  if (!indices || indices.length === 0) {
-    return {
-      available: false,
-      headline: "No data available",
-      narrative: "",
-      bullets: [],
-      microAdvice: [],
-      comfort: null,
-      clothing: []
-    };
-  }
-
-  const window = sliceHourly(hourly, indices);
-  const stats = getUnifiedStats(window);
-  const events = analyzeEvents(window, stats, hourly, indices);
-  const comfort = getComfortSummary(stats, date);
-  const clothing = getClothingGuidance(
-    comfort.tempFeel,
-    comfort.windFeel,
-    comfort.humidityFeel,
-    stats
-  );
-
-  const outlook = synthesizeOutlook(events, comfort, stats, window, hourly, indices);
-
-  return {
-    available: true,
-    ...outlook,
-    comfort,
-    clothing
-  };
-}
-
-// ------------------------------------------------------------
-// MAIN EXPORT — Build full weather intel
-// ------------------------------------------------------------
 export function buildWeatherIntel(hourly) {
-  const now = new Date();
+  const nowIndex = 0; // assume first hour is "now"
+  const hourlyNow = {
+    temperature_2m: hourly.temperature_2m[nowIndex],
+    dewpoint_2m: hourly.dewpoint_2m[nowIndex],
+    wind_speed_10m: hourly.wind_speed_10m[nowIndex],
+    wind_gusts_10m: hourly.wind_gusts_10m[nowIndex]
+  };
 
-  // TODAY
-  const todayIndices = getTodayRemainingWindow(hourly);
-  const windowToday = sliceHourly(hourly, todayIndices);
-  const statsToday = getUnifiedStats(windowToday);
-  const eventsToday = analyzeEvents(windowToday, statsToday, hourly, todayIndices);
-  const todayIntel = buildWindowIntel(hourly, todayIndices, now);
+  // Windows
+  const todayHours = getTodayWindow(hourly);
+  const tomorrowHours = getTomorrowWindow(hourly);
 
-  // TOMORROW
-  const tomorrowIndices = getTomorrowWindow(hourly);
-  const windowTomorrow = sliceHourly(hourly, tomorrowIndices);
-  const statsTomorrow = getUnifiedStats(windowTomorrow);
-  const eventsTomorrow = analyzeEvents(windowTomorrow, statsTomorrow, hourly, tomorrowIndices);
+  // Stats + Events
+  const statsToday = computeStats(hourly, todayHours);
+  const statsTomorrow = computeStats(hourly, tomorrowHours);
 
-  const tomorrowDate = new Date(now);
-  tomorrowDate.setDate(now.getDate() + 1);
-  const tomorrowIntel = buildWindowIntel(hourly, tomorrowIndices, tomorrowDate);
+  const eventsToday = computeEvents(hourly, todayHours, statsToday);
+  const eventsTomorrow = computeEvents(hourly, tomorrowHours, statsTomorrow);
+
+  // Synthesized Outlooks
+  const todayOutlook = synthesizeOutlook(statsToday, eventsToday, todayHours);
+  const tomorrowOutlook = synthesizeOutlook(statsTomorrow, eventsTomorrow, tomorrowHours);
 
   return {
-    generatedAt: now.toISOString(),
-    today: todayIntel,
-    tomorrow: tomorrowIntel,
-    todayDetail: buildTodayDetail(statsToday, eventsToday, windowToday, hourly, todayIndices),
-    tomorrowDetail: buildTomorrowDetail(statsTomorrow, eventsTomorrow, windowTomorrow, hourly, tomorrowIndices)
+    today: {
+      available: todayHours.length > 0,
+      ...todayOutlook,
+      stats: statsToday,
+      events: eventsToday
+    },
+    tomorrow: {
+      available: tomorrowHours.length > 0,
+      ...tomorrowOutlook,
+      stats: statsTomorrow,
+      events: eventsTomorrow
+    },
+    comfort: null, // filled in by app.js after WU data arrives
+    wu: null,
+    mrms: null
   };
 }
