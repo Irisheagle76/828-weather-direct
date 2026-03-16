@@ -220,11 +220,12 @@ h1 {
   line-height: 1.4;
 }
 
-/* BULLETS */
+/* BULLETS — tightened indentation */
 .today-bullets,
 .tomorrow-bullets {
   margin-top: 0.35rem;
-  padding-left: 1rem;
+  margin-bottom: 0.2rem;
+  padding-left: 0.6rem;   /* was 1rem — now tighter */
   list-style: disc;
 }
 
@@ -234,6 +235,7 @@ h1 {
   color: #d8dff7;
   line-height: 1.35;
   margin: 0.25rem 0;
+  padding-left: 0.15rem;  /* subtle nudge for perfect alignment */
 }
 
 /* EXPANDED PANELS */
