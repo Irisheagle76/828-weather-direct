@@ -75,7 +75,17 @@ export async function getHRRRForecast(lat, lon) {
   const res = await fetch(url);
   if (!res.ok) throw new Error("HRRR fetch failed: " + res.status);
 
-  const data = await res.json();
+  // Read raw text first
+  const raw = await res.text();
+
+  // If it starts with "<", it's HTML (error page)
+  if (raw.trim().startsWith("<")) {
+    console.error("HRRR returned HTML instead of JSON:", raw.slice(0, 200));
+    throw new Error("HRRR returned HTML (likely server error or rate limit)");
+  }
+
+  // Now safely parse JSON
+  const data = JSON.parse(raw);
   console.log("RAW HRRR RESPONSE:", data);
 
   const hours = data?.data ?? [];
@@ -91,13 +101,13 @@ export async function getHRRRForecast(lat, lon) {
   };
 
   for (const h of hours) {
-    hourly.time.push(h.valid);                 // ISO timestamp
+    hourly.time.push(h.valid);
     hourly.temperature_2m.push(h.tmpf ?? null);
     hourly.dewpoint_2m.push(h.dwpf ?? null);
-    hourly.precipitation.push(h.p01m ?? 0);    // 1‑hr precip
-    hourly.snowfall.push(h.snow ?? 0);         // if present
+    hourly.precipitation.push(h.p01m ?? 0);
+    hourly.snowfall.push(h.snow ?? 0);
     hourly.windgusts_10m.push(h.gust ?? null);
-    hourly.uv_index.push(null);                // HRRR doesn’t provide UV
+    hourly.uv_index.push(null);
   }
 
   console.log("NORMALIZED HRRR HOURLY:", hourly);
