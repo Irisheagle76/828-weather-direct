@@ -4,7 +4,7 @@
 // ============================================================
 
 // ------------------------------------------------------------
-// PRECIPITATION RANGE HELPERS (NEW)
+// PRECIPITATION RANGE HELPERS
 // ------------------------------------------------------------
 function formatRainAmount(amount) {
   if (amount === 0) return "Dry";
@@ -26,6 +26,34 @@ function formatSnowAmount(amount) {
   if (amount < 6) return "Several inches possible — Fairly likely";
   if (amount < 10) return "Half a foot or more — High confidence";
   return "Significant accumulation possible — High confidence";
+}
+
+// ------------------------------------------------------------
+// FALLING PRECIP COMFORT OVERRIDE (NEW)
+// ------------------------------------------------------------
+function getFallingPrecipComfort(intel) {
+  const rate = intel.wu?.precipRate ?? 0;
+  const type = intel.wu?.precipType ?? "";
+
+  if (rate <= 0) return null;
+
+  // Snow
+  if (type === "snow" && rate < 0.1) {
+    return { emoji: "❄️", summary: "Light snow falling — a wintry feel." };
+  }
+  if (type === "snow") {
+    return { emoji: "🌨️", summary: "Steady snow falling — bundle up out there." };
+  }
+
+  // Rain
+  if (type === "rain" && rate < 0.05) {
+    return { emoji: "🌦️", summary: "Light rain falling — a damp, cool feel." };
+  }
+  if (type === "rain") {
+    return { emoji: "🌧️", summary: "Rain falling — a noticeably damp feel." };
+  }
+
+  return null;
 }
 
 // ------------------------------------------------------------
@@ -162,13 +190,22 @@ function renderBullets(ul, bullets) {
 }
 
 // ------------------------------------------------------------
-// RENDER RIGHT NOW COMFORT
+// RENDER RIGHT NOW COMFORT (UPDATED WITH FALLING PRECIP)
 // ------------------------------------------------------------
 export function renderRightNowComfort(intel) {
   const emojiEl = document.getElementById("comfort-emoji");
   const textEl = document.getElementById("comfort-text");
   if (!emojiEl || !textEl) return;
 
+  // NEW: falling precipitation override
+  const precipComfort = getFallingPrecipComfort(intel);
+  if (precipComfort) {
+    emojiEl.textContent = precipComfort.emoji;
+    textEl.textContent = precipComfort.summary;
+    return;
+  }
+
+  // Existing comfort logic
   const comfort = intel.comfort;
   if (!comfort) {
     emojiEl.textContent = "";
@@ -272,7 +309,7 @@ export function renderUV(intel) {
 }
 
 // ------------------------------------------------------------
-// RENDER TODAY DETAIL (UPDATED WITH PRECIP RANGES)
+// RENDER TODAY DETAIL
 // ------------------------------------------------------------
 export function renderTodayDetail(intel) {
   const panel = document.getElementById("expanded-today");
@@ -295,7 +332,7 @@ export function renderTodayDetail(intel) {
 }
 
 // ------------------------------------------------------------
-// RENDER TOMORROW DETAIL (UPDATED WITH PRECIP RANGES)
+// RENDER TOMORROW DETAIL
 // ------------------------------------------------------------
 export function renderTomorrowDetail(intel) {
   const panel = document.getElementById("expanded-tomorrow");
