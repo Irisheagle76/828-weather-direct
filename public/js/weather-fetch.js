@@ -73,12 +73,13 @@ export async function getWUCurrentConditions(stationId) {
  * Get short‑term hourly forecast from Open‑Meteo.
  */
 export async function getShortTermForecast(lat, lon) {
- const url =
+const url =
   `https://api.open-meteo.com/v1/forecast` +
   `?latitude=${lat}&longitude=${lon}` +
+  `&timeformat=unixtime` +                     // ⭐ MUST COME FIRST
+  `&timezone=America/New_York` +               // ⭐ MUST COME BEFORE HOURLY
+  `&forecast_days=3` +
   `&hourly=temperature_2m,dewpoint_2m,precipitation,snowfall,windgusts_10m,uv_index` +
-  `&forecast_days=3&timezone=America/New_York` +
-  `&timeformat=unixtime` +                // ⭐ ADD THIS
   `&temperature_unit=fahrenheit` +
   `&dewpoint_unit=fahrenheit` +
   `&wind_speed_unit=mph` +
