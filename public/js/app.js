@@ -90,6 +90,8 @@ async function initApp() {
         // ⭐ 1. WU Station + Current Conditions
         const nearest = await getNearestWUStation(lat, lon);
         const wuCurrent = await getWUCurrentConditions(nearest.stationId);
+        const wuHistory = await getWUHistory(nearest.stationId);
+wuCurrent.history = wuHistory;
 
         setWUStatus("ok", "WU Connected", "Weather Underground data loaded.");
 
