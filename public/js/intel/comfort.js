@@ -110,7 +110,26 @@ function fallingPrecipFeel(intel) {
 
   return null;
 }
+// ------------------------------------------------------------
+// TEMPERATURE TREND CHECK
+// ------------------------------------------------------------
+function computeTempDropFeel(intel) {
+  const wu = intel.wu;
+  if (!wu) return null;
 
+  const current = wu.temp ?? null;
+  const morningHigh = intel.today?.stats?.maxTemp ?? null;
+
+  if (current == null || morningHigh == null) return null;
+
+  const drop = morningHigh - current;
+
+  if (drop >= 20) return "Much colder than earlier — a sharp drop today.";
+  if (drop >= 12) return "Noticeably colder than earlier.";
+  if (drop >= 6) return "A cooler turn compared to this morning.";
+
+  return null;
+}
 // ------------------------------------------------------------
 // EMOJI VARIATION
 // ------------------------------------------------------------
