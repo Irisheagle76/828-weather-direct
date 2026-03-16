@@ -217,7 +217,6 @@ function getTomorrowWindow(hourly) {
   const indices = getHourlyWindowForDay(hourly, tomorrow);
   if (indices.length < 1) return [];
   return indices;
-  console.log("TOMORROW WINDOW:", indices.length, indices.map(i => hourly.time[i]));
 }
 
 function sliceHourly(hourly, indices) {
@@ -584,10 +583,8 @@ export function getHumanActionOutlook(hourly) {
   const clothing = getClothingGuidance(hourly, indices);
 
   // 6. Synthesizer (NOW all variables exist)
-  console.log("TOMORROW SYNTHESIZER RUNNING");
 
   // ⭐ THIS IS THE CORRECT PLACE FOR THE DIAGNOSTIC LOG ⭐
-  console.log("TOMORROW RAW META:", {
     phases,
     drivers,
     trends,
@@ -977,8 +974,7 @@ export function getPlannerBullets(hourly, indices) {
 // ============================================================
 
 export function buildWeatherIntel({ wuCurrent, hourly, mrmsPixel }) {
-  console.log("BUILD WEATHER INTEL");
-  const idx = findNearestHourIndex(hourly);
+   const idx = findNearestHourIndex(hourly);
   const fallbackUV = hourly.uv_index?.[idx] ?? null;
 
   const reliableUV = getReliableUV(
