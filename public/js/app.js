@@ -101,11 +101,15 @@ async function initApp() {
         // ⭐ 3. MRMS Radar Pixel
         const mrmsPixel = await getMRMSPixel(lat, lon);
 
-        // ⭐ 4. Build Unified Intelligence
-        const intel = buildWeatherIntel({
-          wu: wuCurrent,
-          hours: hourly,
-          mrms: mrmsPixel
+    // ⭐ 4. Build Unified Intelligence
+const intel = buildWeatherIntel(hourly);
+
+// Attach WU + MRMS
+intel.wu = wuCurrent;
+intel.mrms = mrmsPixel;
+
+// Compute comfort now that WU is attached
+intel.comfort = computeComfort(intel);
         });
 
         // Expose for debugging + expansion panels
