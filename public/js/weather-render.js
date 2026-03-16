@@ -4,6 +4,31 @@
 // ============================================================
 
 // ------------------------------------------------------------
+// PRECIPITATION RANGE HELPERS (NEW)
+// ------------------------------------------------------------
+function formatRainAmount(amount) {
+  if (amount === 0) return "Dry";
+  if (amount < 0.05) return "A few sprinkles — Low confidence";
+  if (amount < 0.25) return "Light rain — Moderate confidence";
+  if (amount < 0.5) return "A decent rainfall — Moderate confidence";
+  if (amount < 1) return "A soaking rain — Fairly likely";
+  if (amount < 2) return "Heavy rain — Fairly likely";
+  return "Very heavy rain. Localized flooding possible. — High confidence";
+}
+
+function formatSnowAmount(amount) {
+  if (amount === 0) return "No accumulation expected";
+  if (amount < 0.1) return "Trace — Low confidence";
+  if (amount < 0.5) return "A coating — Low confidence";
+  if (amount < 1) return "Upwards of an inch possible — Moderate confidence";
+  if (amount < 2) return "1–2 inches possible — Moderate confidence";
+  if (amount < 4) return "A few inches possible — Fairly likely";
+  if (amount < 6) return "Several inches possible — Fairly likely";
+  if (amount < 10) return "Half a foot or more — High confidence";
+  return "Significant accumulation possible — High confidence";
+}
+
+// ------------------------------------------------------------
 // RENDER CURRENT OBSERVATIONS (WU)
 // ------------------------------------------------------------
 export function renderCurrentObservations(intel) {
@@ -137,7 +162,7 @@ function renderBullets(ul, bullets) {
 }
 
 // ------------------------------------------------------------
-// RENDER RIGHT NOW COMFORT (updated for new intel)
+// RENDER RIGHT NOW COMFORT
 // ------------------------------------------------------------
 export function renderRightNowComfort(intel) {
   const emojiEl = document.getElementById("comfort-emoji");
@@ -156,7 +181,7 @@ export function renderRightNowComfort(intel) {
 }
 
 // ------------------------------------------------------------
-// RENDER TODAY OUTLOOK (updated for new intel)
+// RENDER TODAY OUTLOOK
 // ------------------------------------------------------------
 export function renderTodayOutlook(intel) {
   const emojiEl = document.getElementById("today-emoji");
@@ -172,7 +197,7 @@ export function renderTodayOutlook(intel) {
     return;
   }
 
-  emojiEl.textContent = ""; // optional: add emoji mapper later
+  emojiEl.textContent = "";
   headlineEl.textContent = today.headline;
   textEl.textContent = today.narrative;
 
@@ -186,7 +211,7 @@ export function renderTodayOutlook(intel) {
 }
 
 // ------------------------------------------------------------
-// RENDER TOMORROW OUTLOOK (updated for new intel)
+// RENDER TOMORROW OUTLOOK
 // ------------------------------------------------------------
 export function renderTomorrowOutlook(intel) {
   const emojiEl = document.getElementById("tomorrow-emoji");
@@ -203,9 +228,8 @@ export function renderTomorrowOutlook(intel) {
     return;
   }
 
-  emojiEl.textContent = ""; // optional: add emoji mapper later
+  emojiEl.textContent = "";
 
-  // Dominant driver → badge
   const dominant = tomorrow.events?.driver ?? "easy";
 
   const badgeMap = {
@@ -248,7 +272,7 @@ export function renderUV(intel) {
 }
 
 // ------------------------------------------------------------
-// RENDER TODAY DETAIL (updated for new intel)
+// RENDER TODAY DETAIL (UPDATED WITH PRECIP RANGES)
 // ------------------------------------------------------------
 export function renderTodayDetail(intel) {
   const panel = document.getElementById("expanded-today");
@@ -264,14 +288,14 @@ export function renderTodayDetail(intel) {
     <div class="fx-section"><div class="fx-label">High</div><div class="fx-value">${Math.round(stats.tempMax)}°</div></div>
     <div class="fx-section"><div class="fx-label">Low</div><div class="fx-value">${Math.round(stats.tempMin)}°</div></div>
     <div class="fx-section"><div class="fx-label">Wind</div><div class="fx-value">${Math.round(stats.windAvg)} mph (gusts ${Math.round(stats.windGustMax)} mph)</div></div>
-    <div class="fx-section"><div class="fx-label">Rain</div><div class="fx-value">${stats.rainTotal.toFixed(2)}"</div></div>
-    <div class="fx-section"><div class="fx-label">Snow</div><div class="fx-value">${stats.snowTotal.toFixed(2)}"</div></div>
+    <div class="fx-section"><div class="fx-label">Rain</div><div class="fx-value">${formatRainAmount(stats.rainTotal)}</div></div>
+    <div class="fx-section"><div class="fx-label">Snow</div><div class="fx-value">${formatSnowAmount(stats.snowTotal)}</div></div>
     <div class="fx-section"><div class="fx-label">Cloud Cover</div><div class="fx-value">${Math.round(stats.cloudAvg)}%</div></div>
   `;
 }
 
 // ------------------------------------------------------------
-// RENDER TOMORROW DETAIL (updated for new intel)
+// RENDER TOMORROW DETAIL (UPDATED WITH PRECIP RANGES)
 // ------------------------------------------------------------
 export function renderTomorrowDetail(intel) {
   const panel = document.getElementById("expanded-tomorrow");
@@ -287,8 +311,8 @@ export function renderTomorrowDetail(intel) {
     <div class="fx-section"><div class="fx-label">High</div><div class="fx-value">${Math.round(stats.tempMax)}°</div></div>
     <div class="fx-section"><div class="fx-label">Low</div><div class="fx-value">${Math.round(stats.tempMin)}°</div></div>
     <div class="fx-section"><div class="fx-label">Wind</div><div class="fx-value">${Math.round(stats.windAvg)} mph (gusts ${Math.round(stats.windGustMax)} mph)</div></div>
-    <div class="fx-section"><div class="fx-label">Rain</div><div class="fx-value">${stats.rainTotal.toFixed(2)}"</div></div>
-    <div class="fx-section"><div class="fx-label">Snow</div><div class="fx-value">${stats.snowTotal.toFixed(2)}"</div></div>
+    <div class="fx-section"><div class="fx-label">Rain</div><div class="fx-value">${formatRainAmount(stats.rainTotal)}</div></div>
+    <div class="fx-section"><div class="fx-label">Snow</div><div class="fx-value">${formatSnowAmount(stats.snowTotal)}</div></div>
     <div class="fx-section"><div class="fx-label">Cloud Cover</div><div class="fx-value">${Math.round(stats.cloudAvg)}%</div></div>
   `;
 }
