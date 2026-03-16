@@ -50,201 +50,44 @@ export async function getWUCurrentConditions(stationId) {
     };
   }
 
+  // Normalize fields — WU is inconsistent across stations
   const imp = obs.imperial || {};
 
   return {
     temp: imp.temp ?? obs.temperature ?? null,
     dewPoint: imp.dewpt ?? obs.dewpt ?? null,
     humidity: obs.humidity ?? null,
+
+    // wind fields sometimes inside imperial, sometimes top-level
     windSpeed: imp.windSpeed ?? obs.windSpeed ?? null,
     windGust: imp.windGust ?? obs.windGust ?? null,
     windDir: obs.winddir ?? null,
+
     solarRadiation: obs.solarRadiation ?? null,
     uv: obs.uv ?? null,
+
     stationId: obs.stationID ?? stationId
   };
 }
 
 /**
- * HRRR via Iowa State IEM, normalized to Open‑Meteo‑like hourly structure.
- */
-export async function getHRRRForecast(lat, lon) {
-  const url = `https://mesonet.agron.iastate.edu/json/hrrr.php?lat=${lat}&lon=${lon}`;
-  console.log("HRRR REQUEST URL:", url);
-
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("HRRR fetch failed: " + res.status);
-
-  // Read raw text first
-  const raw = await res.text();
-
-  // If it starts with "<", it's HTML (error page)
-  if (raw.trim().startsWith("<")) {
-    console.error("HRRR returned HTML instead of JSON:", raw.slice(0, 200));
-    throw new Error("HRRR returned HTML (likely server error or rate limit)");
-  }
-
-  // Now safely parse JSON
-  const data = JSON.parse(raw);
-  console.log("RAW HRRR RESPONSE:", data);
-
-  const hours = data?.data ?? [];
-
-  const hourly = {
-    time: [],
-    temperature_2m: [],
-    dewpoint_2m: [],
-    precipitation: [],
-    snowfall: [],
-    windgusts_10m: [],
-    uv_index: []
-  };
-
-  for (const h of hours) {
-    hourly.time.push(h.valid);
-    hourly.temperature_2m.push(h.tmpf ?? null);
-    hourly.dewpoint_2m.push(h.dwpf ?? null);
-    hourly.precipitation.push(h.p01m ?? 0);
-    hourly.snowfall.push(h.snow ?? 0);
-    hourly.windgusts_10m.push(h.gust ?? null);
-    hourly.uv_index.push(null);
-  }
-
-  console.log("NORMALIZED HRRR HOURLY:", hourly);
-  return hourly;
-}
-
-/**
- * Short‑term forecast:
- * 1. Primary: Open‑Meteo HRRR
- * 2. Fallback: IEM HRRR (if JSON is valid)
- * 3. Fallback: Open‑Meteo global (commented but preserved)
+ * Get short‑term hourly forecast from Open‑Meteo.
  */
 export async function getShortTermForecast(lat, lon) {
-  //
-  // 1. PRIMARY — OPEN‑METEO HRRR
-  //
-  try {
-    const url =
-      `https://api.open-meteo.com/v1/forecast` +
-      `?latitude=${lat}&longitude=${lon}` +
-      `&hourly=temperature_2m,dewpoint_2m,precipitation,snowfall,windgusts_10m,uv_index` +
-      `&forecast_days=3&timezone=America/New_York` +
-      `&temperature_unit=fahrenheit` +
-      `&dewpoint_unit=fahrenheit` +
-      `&wind_speed_unit=mph` +
-      `&precipitation_unit=inch` +
-      `&models=hrrr`;   // ⭐ FORCE HRRR MODEL
+  const url =
+    `https://api.open-meteo.com/v1/forecast` +
+    `?latitude=${lat}&longitude=${lon}` +
+    `&hourly=temperature_2m,dewpoint_2m,precipitation,snowfall,windgusts_10m,uv_index` +
+    `&forecast_days=3&timezone=America/New_York` +
+    `&temperature_unit=fahrenheit` +
+    `&dewpoint_unit=fahrenheit` +
+    `&wind_speed_unit=mph` +
+    `&precipitation_unit=inch`;
 
-    console.log("OPEN-METEO HRRR REQUEST URL:", url);
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Short-term forecast fetch failed: " + res.status);
 
-    const res = await fetch(url);
-    if (!res.ok) throw new Error("Open‑Meteo HRRR fetch failed: " + res.status);
-
-    const data = await res.json();
-    console.log("OPEN-METEO HRRR RAW RESPONSE:", data);
-
-    const hourly = data.hourly;
-
-    console.log("OPEN-METEO HRRR FIRST HOUR:", hourly?.time?.[0]);
-    console.log("OPEN-METEO HRRR LAST HOUR:", hourly?.time?.slice(-1)?.[0]);
-    console.log("LOCAL NOW:", new Date().toString());
-
-    console.log("USING OPEN-METEO HRRR FORECAST");
-    return hourly;
-  } catch (err) {
-    console.error("Open‑Meteo HRRR failed:", err);
-  }
-
-  //
-  // 2. SECONDARY — IEM HRRR (only if JSON is valid)
-  //
-  try {
-    const url = `https://mesonet.agron.iastate.edu/json/hrrr.php?lat=${lat}&lon=${lon}`;
-    console.log("IEM HRRR REQUEST URL:", url);
-
-    const res = await fetch(url);
-    if (!res.ok) throw new Error("IEM HRRR fetch failed: " + res.status);
-
-    const raw = await res.text();
-
-    if (raw.trim().startsWith("<")) {
-      console.error("IEM HRRR returned HTML:", raw.slice(0, 200));
-      throw new Error("IEM HRRR returned HTML");
-    }
-
-    const data = JSON.parse(raw);
-    console.log("IEM HRRR RAW RESPONSE:", data);
-
-    const hours = data?.data ?? [];
-
-    const hourly = {
-      time: [],
-      temperature_2m: [],
-      dewpoint_2m: [],
-      precipitation: [],
-      snowfall: [],
-      windgusts_10m: [],
-      uv_index: []
-    };
-
-    for (const h of hours) {
-      hourly.time.push(h.valid);
-      hourly.temperature_2m.push(h.tmpf ?? null);
-      hourly.dewpoint_2m.push(h.dwpf ?? null);
-      hourly.precipitation.push(h.p01m ?? 0);
-      hourly.snowfall.push(h.snow ?? 0);
-      hourly.windgusts_10m.push(h.gust ?? null);
-      hourly.uv_index.push(null);
-    }
-
-    console.log("USING IEM HRRR FORECAST");
-    return hourly;
-  } catch (err) {
-    console.error("IEM HRRR failed:", err);
-  }
-
-  //
-  // 3. TERTIARY — OPEN‑METEO GLOBAL (kept but commented)
-  //
-  /*
-  try {
-    const url =
-      `https://api.open-meteo.com/v1/forecast` +
-      `?latitude=${lat}&longitude=${lon}` +
-      `&hourly=temperature_2m,dewpoint_2m,precipitation,snowfall,windgusts_10m,uv_index` +
-      `&forecast_days=3&timezone=America/New_York` +
-      `&temperature_unit=fahrenheit` +
-      `&dewpoint_unit=fahrenheit` +
-      `&wind_speed_unit=mph` +
-      `&precipitation_unit=inch`;
-
-    console.log("OPEN-METEO GLOBAL REQUEST URL:", url);
-
-    const res = await fetch(url);
-    if (!res.ok) throw new Error("Open‑Meteo global fetch failed: " + res.status);
-
-    const data = await res.json();
-    console.log("OPEN-METEO GLOBAL RAW RESPONSE:", data);
-
-    return data.hourly;
-  } catch (err) {
-    console.error("Open‑Meteo global failed:", err);
-  }
-  */
-
-  //
-  // 4. SAFETY — return empty structure
-  //
-  return {
-    time: [],
-    temperature_2m: [],
-    dewpoint_2m: [],
-    precipitation: [],
-    snowfall: [],
-    windgusts_10m: [],
-    uv_index: []
-  };
+  return (await res.json()).hourly;
 }
 
 /**
