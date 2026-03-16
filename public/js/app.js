@@ -88,32 +88,43 @@ async function initApp() {
       const lon = pos.coords.longitude;
 
       try {
-        // ⭐ 1. WU Station + Current Conditions (NO HISTORY)
+        // ⭐ 1. WU Station + Current Conditions
         const nearest = await getNearestWUStation(lat, lon);
         const wuCurrent = await getWUCurrentConditions(nearest.stationId);
 
         setWUStatus("ok", "WU Connected", "Weather Underground data loaded.");
 
-        // ⭐ 2. Tempest Device Observations (today's high + wind)
+        // ⭐ 2. Tempest Device Observations
         const TEMPEST_DEVICE_ID = "315255";
         const TEMPEST_TOKEN = "838ff386-d14b-4d45-897a-18903e6970a9";
 
         const tempest = await getTempestDeviceObs(TEMPEST_DEVICE_ID, TEMPEST_TOKEN);
-
-        // ⭐ Extract Tempest high/low
         const tempestHigh = tempest?.tempHighToday ?? null;
 
-        // ⭐ 3. Hourly Forecast
+        // ⭐ 3. Hourly Forecast (Open-Meteo format)
         const hourly = await getShortTermForecast(lat, lon);
 
+        // ⭐ Convert Open-Meteo column format → array of hourly objects
+        const hours = hourly.time.map((t, i) => ({
+          time: t,
+          temp: hourly.temperature_2m[i],
+          dewpoint: hourly.dewpoint_2m[i],
+          rain: hourly.rain[i],
+          snow: hourly.snowfall[i],
+          windSpeed: hourly.wind_speed_10m[i],
+          windGust: hourly.wind_gusts_10m[i],
+          uv: hourly.uv_index[i],
+          cloud: hourly.cloudcover?.[i] ?? null
+        }));
+
         // Debug
-        window._hourly = hourly;
+        window._hourly = hours;
 
         // ⭐ 4. MRMS Radar Pixel
         const mrmsPixel = await getMRMSPixel(lat, lon);
 
         // ⭐ 5. Build Unified Intelligence
-        const intel = buildWeatherIntel(hourly.hours);
+        const intel = buildWeatherIntel(hours);
 
         // Attach WU + MRMS + Tempest
         intel.wu = wuCurrent;
@@ -133,7 +144,7 @@ async function initApp() {
         // ⭐ Compute comfort now that Tempest high + wind are attached
         intel.comfort = computeComfort(intel);
 
-        // Expose for debugging
+        // Debug
         window._intel = intel;
 
         // ⭐ 6. Update UI
