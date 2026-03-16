@@ -1,5 +1,5 @@
 // /intel/comfort.js
-// Unified Comfort Engine — Wind, Humidity, Sun Angle, Precip, Feels‑Like, Emoji Variation
+// Unified Comfort Engine — Wind, Humidity, Sun Angle, Precip, Feels‑Like, Trend Logic
 
 import { LOCATION } from "../config/location.js";
 
@@ -30,7 +30,7 @@ function computeSolarElevation(timestamp, lat, lon) {
       Math.cos(latRad) * Math.cos(decl) * Math.cos(hourAngle)
     );
 
-  return elevation * (180 / Math.PI); // degrees
+  return elevation * (180 / Math.PI);
 }
 
 // ------------------------------------------------------------
@@ -75,16 +75,45 @@ function isSolarHelpful(intel, elev) {
   const wu = intel.wu;
   if (!wu) return false;
 
-  const cloud = wu.cloudCover ?? 100;     // default: overcast
-  const windDir = wu.windDir ?? "";       // e.g., "NW"
-  const trend = wu.tempTrend ?? -1;       // default: falling
+  const cloud = wu.cloudCover ?? 100;
+  const windDir = wu.windDir ?? "";
+  const trend = wu.tempTrend ?? -1;
 
   return (
-    elev > 15 &&          // sun high enough to matter
-    cloud < 60 &&         // not overcast
-    trend >= 0 &&         // temps steady or rising
-    windDir !== "NW"      // NW wind cancels solar boost
+    elev > 15 &&
+    cloud < 60 &&
+    trend >= 0 &&
+    windDir !== "NW"
   );
+}
+
+// ------------------------------------------------------------
+// OBSERVED MORNING HIGH (WU-based)
+// ------------------------------------------------------------
+function computeObservedMorningHigh(wu) {
+  // If WU provides a daily high, use it; otherwise fallback to current temp
+  return wu.maxTempToday ?? wu.temp ?? null;
+}
+
+// ------------------------------------------------------------
+// TEMPERATURE DROP FEEL (comparison logic)
+// ------------------------------------------------------------
+function computeTempDropFeel(intel) {
+  const wu = intel.wu;
+  if (!wu) return null;
+
+  const current = wu.temp ?? null;
+  const morningHigh = computeObservedMorningHigh(wu);
+
+  if (current == null || morningHigh == null) return null;
+
+  const drop = morningHigh - current;
+
+  if (drop >= 20) return "Much colder than earlier — a sharp drop today.";
+  if (drop >= 12) return "Noticeably colder than earlier.";
+  if (drop >= 6) return "A cooler turn compared to this morning.";
+
+  return null;
 }
 
 // ------------------------------------------------------------
@@ -110,26 +139,7 @@ function fallingPrecipFeel(intel) {
 
   return null;
 }
-// ------------------------------------------------------------
-// TEMPERATURE TREND CHECK
-// ------------------------------------------------------------
-function computeTempDropFeel(intel) {
-  const wu = intel.wu;
-  if (!wu) return null;
 
-  const current = wu.temp ?? null;
-  const morningHigh = intel.today?.stats?.maxTemp ?? null;
-
-  if (current == null || morningHigh == null) return null;
-
-  const drop = morningHigh - current;
-
-  if (drop >= 20) return "Much colder than earlier — a sharp drop today.";
-  if (drop >= 12) return "Noticeably colder than earlier.";
-  if (drop >= 6) return "A cooler turn compared to this morning.";
-
-  return null;
-}
 // ------------------------------------------------------------
 // EMOJI VARIATION
 // ------------------------------------------------------------
@@ -198,15 +208,16 @@ export function computeComfort(intel) {
 
   // Humidity
   summaryParts.push(humidFeel);
-// Temperature drop comparison
-const dropFeel = computeTempDropFeel(intel);
-if (dropFeel) summaryParts.push(dropFeel);
-  
+
+  // Temperature drop comparison
+  const dropFeel = computeTempDropFeel(intel);
+  if (dropFeel) summaryParts.push(dropFeel);
+
   // Solar (only if actually helpful)
   if (isSolarHelpful(intel, elev)) {
     summaryParts.push(rawSunFeel);
   }
-  
+
   // Wind nuance
   if (wind >= 15) {
     summaryParts.push("A noticeable breeze adds some edge.");
