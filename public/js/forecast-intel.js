@@ -537,7 +537,7 @@ return {
 }
 
 export function getHumanActionOutlook(hourly) {
-    phases,
+  phases,
   drivers,
   trends,
   dominant,
@@ -545,8 +545,7 @@ export function getHumanActionOutlook(hourly) {
   precipTotal,
   snowTotal,
   clothing
-  console.log("TOMORROW RAW META:", {
-});
+ });
   const indices = getTomorrowWindow(hourly);
     if (!indices.length) {
     return {
@@ -611,7 +610,7 @@ export function getHumanActionOutlook(hourly) {
     },
     comfort: { summary: comfortSummary }
   });
-
+ console.log("TOMORROW RAW META:", {
   return {
     emoji: emojiForFactor(dominant),
     ...synthesized,
