@@ -44,9 +44,9 @@ export function buildWeatherIntel(hourly) {
 
   // -----------------------------
   // Return unified intel object
-  // (comfort + WU + MRMS are attached later in app.js)
+  // (WU + MRMS attached later in app.js)
   // -----------------------------
-  return {
+  const intel = {
     today: {
       available: todayHours.length > 0,
       ...todayOutlook,
@@ -59,8 +59,18 @@ export function buildWeatherIntel(hourly) {
       stats: statsTomorrow,
       events: eventsTomorrow
     },
-    comfort: null, // filled in by app.js after WU data arrives
+    comfort: null, // filled below
     wu: null,
     mrms: null
   };
+
+  // -----------------------------
+  // Compute comfort AFTER WU is attached in app.js
+  // -----------------------------
+  // app.js will do:
+  // intel.wu = wuCurrent;
+  // intel.mrms = mrmsPixel;
+  // intel.comfort = computeComfort(intel);
+
+  return intel;
 }
