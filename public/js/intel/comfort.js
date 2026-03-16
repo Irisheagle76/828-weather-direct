@@ -1,5 +1,6 @@
 // /intel/comfort.js
 // Unified Comfort Engine — Wind, Humidity, Sun Angle, Precip, Feels‑Like, Trend Logic
+// Tempest-integrated version (Tempest provides today's high)
 
 import { LOCATION } from "../config/location.js";
 
@@ -77,7 +78,7 @@ function isSolarHelpful(intel, elev) {
 
   const cloud = wu.cloudCover ?? 100;
   const windDir = wu.windDir ?? "";
-  const trend = wu.tempTrend ?? -1;
+  const trend = intel.tempTrend ?? 0;
 
   return (
     elev > 15 &&
@@ -88,21 +89,15 @@ function isSolarHelpful(intel, elev) {
 }
 
 // ------------------------------------------------------------
-// MORNING HIGH FROM WU HISTORY
+// TEMPEST-BASED MORNING HIGH
 // ------------------------------------------------------------
-function computeObservedMorningHigh(wu) {
-  if (wu.maxTempToday != null) return wu.maxTempToday;
+function computeObservedMorningHigh(intel) {
+  // ⭐ Tempest is the single source of truth
+  const tempestHigh = intel?.today?.stats?.maxTemp;
+  if (tempestHigh != null) return tempestHigh;
 
-  const history = wu.history ?? [];
-  if (!Array.isArray(history) || history.length === 0) return wu.temp ?? null;
-
-  const temps = history
-    .filter(h => h.temp != null)
-    .map(h => h.temp);
-
-  if (temps.length === 0) return wu.temp ?? null;
-
-  return Math.max(...temps);
+  // Fallback to WU current temp (rare)
+  return intel?.wu?.temp ?? null;
 }
 
 // ------------------------------------------------------------
@@ -113,7 +108,7 @@ function computeTempDropFeel(intel) {
   if (!wu) return null;
 
   const current = wu.temp ?? null;
-  const morningHigh = computeObservedMorningHigh(wu);
+  const morningHigh = computeObservedMorningHigh(intel);
 
   if (current == null || morningHigh == null) return null;
 
@@ -234,7 +229,6 @@ export function computeComfort(intel) {
     emoji,
     summary,
     feelsLike,
-    windFeel: wind >= 15 ? "A noticeable breeze adds some edge." : "",
     humidityFeel: humidFeel,
     sunFeel: isSolarHelpful(intel, elev) ? rawSunFeel : "",
     precipFeel: precipOverride?.summary ?? "",
