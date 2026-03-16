@@ -1,79 +1,51 @@
-// ============================================================
-// WINDOWING + TIME LOGIC
-// Defines how we slice Today and Tomorrow into usable hourly windows.
-// This module is CRITICAL for preventing stale or frozen outlooks.
-// ============================================================
+// /intel/windows.js
+// Modern time-window engine for Today + Tomorrow
 
-// Return all hourly indices for a specific calendar day
-export function getHourlyWindowForDay(hourly, targetDate) {
-  const times = hourly.time || [];
-  const indices = [];
-
-  const start = new Date(targetDate);
-  start.setHours(0, 0, 0, 0);
-
-  const end = new Date(targetDate);
-  end.setHours(23, 59, 59, 999);
-
-  for (let i = 0; i < times.length; i++) {
-    const t = new Date(times[i]);
-    if (t >= start && t <= end) indices.push(i);
-  }
-
-  return indices;
-}
-
-// ------------------------------------------------------------
-// TODAY WINDOW — Remaining hours from "now" to midnight
-// Requires at least 3 hours to produce a meaningful outlook.
-// ------------------------------------------------------------
-export function getTodayRemainingWindow(hourly) {
-  const times = hourly.time || [];
-  const indices = [];
+export function getTodayWindow(hourly) {
+  if (!hourly?.time?.length) return [];
 
   const now = new Date();
-  const end = new Date(now);
-  end.setHours(23, 59, 59, 999);
+  const today = now.getDate();
+  const month = now.getMonth();
+  const year = now.getFullYear();
 
-  for (let i = 0; i < times.length; i++) {
-    const t = new Date(times[i]);
-    if (t >= now && t <= end) indices.push(i);
+  const start = new Date(year, month, today, 0, 0, 0);
+  const end = new Date(year, month, today, 23, 59, 59);
+
+  const indices = [];
+
+  for (let i = 0; i < hourly.time.length; i++) {
+    const t = new Date(hourly.time[i]);
+    if (t >= start && t <= end) {
+      indices.push(i);
+    }
   }
 
-  // Require at least 3 hours to avoid unstable or misleading output
-  if (indices.length < 3) return [];
   return indices;
 }
 
-// ------------------------------------------------------------
-// TOMORROW WINDOW — Full calendar day after today
-// Requires at least 6 hours to avoid the "frozen tomorrow" bug.
-// ------------------------------------------------------------
 export function getTomorrowWindow(hourly) {
+  if (!hourly?.time?.length) return [];
+
   const now = new Date();
   const tomorrow = new Date(now);
   tomorrow.setDate(now.getDate() + 1);
 
-  const indices = getHourlyWindowForDay(hourly, tomorrow);
+  const day = tomorrow.getDate();
+  const month = tomorrow.getMonth();
+  const year = tomorrow.getFullYear();
 
-  // Require at least 6 hours to ensure meaningful synthesis
-  if (indices.length < 6) return [];
-  return indices;
-}
+  const start = new Date(year, month, day, 0, 0, 0);
+  const end = new Date(year, month, day, 23, 59, 59);
 
-// ------------------------------------------------------------
-// Slice hourly data by index list
-// Produces a clean "window" object with arrays trimmed to the window.
-// ------------------------------------------------------------
-export function sliceHourly(hourly, indices) {
-  const keys = Object.keys(hourly || {});
-  const out = {};
+  const indices = [];
 
-  for (const k of keys) {
-    const arr = hourly[k];
-    if (!Array.isArray(arr)) continue;
-    out[k] = indices.map(i => arr[i]);
+  for (let i = 0; i < hourly.time.length; i++) {
+    const t = new Date(hourly.time[i]);
+    if (t >= start && t <= end) {
+      indices.push(i);
+    }
   }
 
-  return out;
+  return indices;
 }
