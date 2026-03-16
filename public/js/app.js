@@ -114,9 +114,9 @@ const mrmsPixel = await getMRMSPixel(lat, lon);
        // ⭐ 4. Build Unified Intelligence
 const intel = buildWeatherIntel(hourly);
 
-// Attach WU + MRMS data
 intel.wu = wuCurrent;
 intel.mrms = mrmsPixel;
+intel.comfort = buildComfort(wuCurrent, hourly);
 
         // Make intel globally accessible for expansion panels
         window._intel = intel;
