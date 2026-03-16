@@ -17,6 +17,7 @@ import { getClothingGuidance } from './forecast-intel.js';
 // MAIN SYNTHESIZER
 // ------------------------------------------------------------
 export function synthesizeOutlook({ raw, comfort }) {
+  console.log("SYNTHESIZER START", raw?.meta?.dayType);
   const { phases, drivers, trends, dominant, commute, precipTotal, snowTotal } = raw.meta;
   const bullets = [];
   // ------------------------------------------------------------
