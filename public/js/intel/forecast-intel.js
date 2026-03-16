@@ -1,7 +1,7 @@
 // /intel/forecast-intel.js
 
 import { buildComfort } from "./comfort.js";
-import { synthesizeOutlook } from "./synthesizer.js";
+import { synthesizeOutlook, differentiateFromToday } from "./synthesizer.js";
 import { computeStats } from "./stats.js";
 import { computeEvents } from "./events.js";
 import { getTodayWindow, getTomorrowWindow } from "./windows.js";
@@ -37,13 +37,11 @@ export function buildWeatherIntel(hourly) {
   // Synthesized Outlooks
   // -----------------------------
   const todayOutlook = synthesizeOutlook(statsToday, eventsToday, todayHours);
-  const tomorrowOutlook = synthesizeOutlook(statsTomorrow, eventsTomorrow, tomorrowHours);
-const todayOutlook = synthesizeOutlook(statsToday, eventsToday, todayHours);
-let tomorrowOutlook = synthesizeOutlook(statsTomorrow, eventsTomorrow, tomorrowHours);
+  let tomorrowOutlook = synthesizeOutlook(statsTomorrow, eventsTomorrow, tomorrowHours);
 
-// NEW: eliminate redundancy
-tomorrowOutlook = differentiateFromToday(todayOutlook, tomorrowOutlook);
-  
+  // Anti‑redundancy: ensure Tomorrow doesn't echo Today
+  tomorrowOutlook = differentiateFromToday(todayOutlook, tomorrowOutlook);
+
   // -----------------------------
   // Return unified intel object
   // (comfort + WU + MRMS are attached later in app.js)
