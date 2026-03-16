@@ -155,4 +155,70 @@ function buildCloudPhrase(cloud) {
   if (cloud >= 80) return "Skies lean gray and moody.";
   if (cloud <= 40) return "Some brighter breaks possible.";
   return "";
+  // ------------------------------------------------------------
+// ANTI-REDUNDANCY — ensures Tomorrow doesn't echo Today
+// ------------------------------------------------------------
+export function differentiateFromToday(todayOutlook, tomorrowOutlook) {
+  if (!todayOutlook || !tomorrowOutlook) return tomorrowOutlook;
+
+  const tdy = todayOutlook;
+  const tmr = { ...tomorrowOutlook };
+
+  // 1. If headlines are too similar → soften Tomorrow's tone
+  if (tdy.headline === tmr.headline) {
+    tmr.headline = transformHeadline(tmr.headline);
+  }
+
+  // 2. If narratives share too many words → reframe Tomorrow
+  const overlap = wordOverlap(tdy.narrative, tmr.narrative);
+  if (overlap > 0.45) {
+    tmr.narrative = reframeNarrative(tmr.narrative);
+  }
+
+  // 3. Remove bullets that duplicate Today’s themes
+  tmr.bullets = tmr.bullets.filter(b => {
+    return !tdy.bullets.some(tb => bulletSimilarity(tb, b) > 0.5);
+  });
+
+  // If bullets become empty, add a fresh forward-looking cue
+  if (tmr.bullets.length === 0) {
+    tmr.bullets.push("A different feel from today.");
+  }
+
+  return tmr;
+}
+
+// ------------------------------------------------------------
+// HELPERS
+// ------------------------------------------------------------
+function wordOverlap(a, b) {
+  const A = new Set(a.toLowerCase().split(/\W+/));
+  const B = new Set(b.toLowerCase().split(/\W+/));
+  const inter = [...A].filter(x => B.has(x));
+  return inter.length / Math.min(A.size, B.size);
+}
+
+function bulletSimilarity(a, b) {
+  const A = a.toLowerCase().split(/\W+/);
+  const B = b.toLowerCase().split(/\W+/);
+  const inter = A.filter(x => B.includes(x));
+  return inter.length / Math.min(A.length, B.length);
+}
+
+function transformHeadline(h) {
+  const variants = [
+    "A different feel tomorrow",
+    "A shift in the pattern",
+    "A new tone to the day",
+    "A change of pace ahead"
+  ];
+  return variants[Math.floor(Math.random() * variants.length)];
+}
+
+function reframeNarrative(n) {
+  return (
+    "Tomorrow brings a slightly different rhythm. " +
+    n.replace(/^[A-Z][^.]+\./, "").trim()
+  );
+}
 }
