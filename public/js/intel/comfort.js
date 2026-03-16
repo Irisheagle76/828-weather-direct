@@ -92,11 +92,9 @@ function isSolarHelpful(intel, elev) {
 // TEMPEST-BASED MORNING HIGH
 // ------------------------------------------------------------
 function computeObservedMorningHigh(intel) {
-  // ⭐ Tempest is the single source of truth
   const tempestHigh = intel?.today?.stats?.maxTemp;
   if (tempestHigh != null) return tempestHigh;
 
-  // Fallback to WU current temp (rare)
   return intel?.wu?.temp ?? null;
 }
 
@@ -114,9 +112,9 @@ function computeTempDropFeel(intel) {
 
   const drop = morningHigh - current;
 
-  if (drop >= 20) return "Much colder than earlier — a sharp drop today.";
-  if (drop >= 12) return "Noticeably colder than earlier.";
-  if (drop >= 6) return "A cooler turn compared to this morning.";
+  if (drop >= 20) return "a sharp drop compared to earlier today";
+  if (drop >= 12) return "noticeably colder than earlier";
+  if (drop >= 6) return "a cooler turn compared to this morning";
 
   return null;
 }
@@ -201,24 +199,31 @@ export function computeComfort(intel) {
   // 6. Emoji
   const emoji = pickComfortEmoji(state);
 
-  // 7. Summary
-  const summaryParts = [];
-
-  if (state === "cold") summaryParts.push("Cold with a noticeable chill.");
-  else if (state === "cool") summaryParts.push("Cool and manageable.");
-  else if (state === "mild") summaryParts.push("Comfortable overall.");
-  else if (state === "warm") summaryParts.push("Warm with a gentle edge.");
-  else if (state === "hot") summaryParts.push("Hot and energetic.");
-
-  summaryParts.push(humidFeel);
+  // 7. TREND-AWARE FIRST SENTENCE
+  let baseFeel = "";
+  if (state === "cold") baseFeel = "Cold with a noticeable chill";
+  else if (state === "cool") baseFeel = "Cool and manageable";
+  else if (state === "mild") baseFeel = "Comfortable overall";
+  else if (state === "warm") baseFeel = "Warm with a gentle edge";
+  else if (state === "hot") baseFeel = "Hot and energetic";
 
   const dropFeel = computeTempDropFeel(intel);
-  if (dropFeel) summaryParts.push(dropFeel);
 
+  const firstSentence = dropFeel
+    ? `${baseFeel} — ${dropFeel}.`
+    : `${baseFeel}.`;
+
+  const summaryParts = [firstSentence];
+
+  // 8. Humidity
+  summaryParts.push(humidFeel);
+
+  // 9. Solar boost
   if (isSolarHelpful(intel, elev)) {
     summaryParts.push(rawSunFeel);
   }
 
+  // 10. Wind
   if (wind >= 15) {
     summaryParts.push("A noticeable breeze adds some edge.");
   }
