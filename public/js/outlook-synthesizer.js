@@ -21,6 +21,7 @@ console.log("SYNTHESIZER v3.1 ACTIVE");
 export function synthesizeOutlook({ raw, comfort }) {
   const { phases, drivers, trends, dominant, commute, precipTotal, snowTotal } = raw.meta;
   const bullets = [];
+console.log("DAY TYPE:", raw?.meta?.dayType);
 
   // ------------------------------------------------------------
   // PRECIP INTENSITY HELPER
