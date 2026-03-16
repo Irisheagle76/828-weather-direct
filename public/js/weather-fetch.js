@@ -34,8 +34,7 @@ export async function getWUCurrentConditions(stationId) {
 
   const data = await res.json();
   const obs = data.observations?.[0];
-  console.log("RAW WU OBS:", obs);
-
+ 
   if (!obs) {
     return {
       temp: null,
