@@ -11,6 +11,7 @@ import {
 } from './weather-fetch.js';
 
 import { buildWeatherIntel } from './intel/forecast-intel.js';
+import { computeComfort } from './intel/comfort.js';
 
 import {
   renderRightNowComfort,
@@ -101,16 +102,15 @@ async function initApp() {
         // ⭐ 3. MRMS Radar Pixel
         const mrmsPixel = await getMRMSPixel(lat, lon);
 
-    // ⭐ 4. Build Unified Intelligence
-const intel = buildWeatherIntel(hourly);
+        // ⭐ 4. Build Unified Intelligence (correct shape)
+        const intel = buildWeatherIntel(hourly);
 
-// Attach WU + MRMS
-intel.wu = wuCurrent;
-intel.mrms = mrmsPixel;
+        // Attach WU + MRMS
+        intel.wu = wuCurrent;
+        intel.mrms = mrmsPixel;
 
-// Compute comfort now that WU is attached
-intel.comfort = computeComfort(intel);
-        });
+        // Compute comfort now that WU is attached
+        intel.comfort = computeComfort(intel);
 
         // Expose for debugging + expansion panels
         window._intel = intel;
