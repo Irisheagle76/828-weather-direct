@@ -8,7 +8,7 @@ import {
   getWUCurrentConditions,
   getShortTermForecast,
   getMRMSPixel,
-  getTempestDeviceObs   // ⭐ Correct Tempest function
+  getTempestDeviceObs
 } from './weather-fetch.js';
 
 import { buildWeatherIntel } from './intel/forecast-intel.js';
