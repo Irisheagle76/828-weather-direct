@@ -17,12 +17,9 @@ export function renderCurrentObservations(intel) {
   const gustEl = document.getElementById("wu-wind-gust");
   const uvEl = document.getElementById("wu-uv");
 
-  // -----------------------------
   // Temperature
-  // -----------------------------
   if (tempEl) {
     tempEl.textContent = wu.temp != null ? `${wu.temp}°` : "--";
-
     tempEl.className = "metric-value";
 
     const t = wu.temp;
@@ -34,12 +31,9 @@ export function renderCurrentObservations(intel) {
     else tempEl.classList.add("temp-hot");
   }
 
-  // -----------------------------
-  // Dew Point + Humidity
-  // -----------------------------
+  // Dew Point
   if (dewEl) {
     dewEl.textContent = wu.dewPoint != null ? `${wu.dewPoint}°` : "--";
-
     dewEl.className = "metric-value";
 
     const d = wu.dewPoint;
@@ -53,9 +47,7 @@ export function renderCurrentObservations(intel) {
     humEl.textContent = wu.humidity != null ? `Humidity ${wu.humidity}%` : "Humidity --";
   }
 
-  // -----------------------------
-  // Wind + Gusts
-  // -----------------------------
+  // Wind
   if (windEl) {
     const dir = wu.windDir != null ? degToCompass(wu.windDir) : "";
     const spd = wu.windSpeed != null ? `${wu.windSpeed} mph` : "--";
@@ -66,9 +58,7 @@ export function renderCurrentObservations(intel) {
     gustEl.textContent = wu.windGust != null ? `Gusts ${wu.windGust} mph` : "Gusts --";
   }
 
-  // -----------------------------
-  // UV (color‑coded)
-  // -----------------------------
+  // UV
   if (uvEl) {
     uvEl.textContent = wu.uv != null ? wu.uv : "--";
     uvEl.className = "metric-value " + getUVClass(wu.uv ?? 0);
@@ -76,7 +66,7 @@ export function renderCurrentObservations(intel) {
 }
 
 // ------------------------------------------------------------
-// Compass helper (used by intel-plus)
+// Compass helper
 // ------------------------------------------------------------
 export function degToCompass(deg) {
   if (deg == null) return "";
@@ -88,7 +78,7 @@ export function degToCompass(deg) {
 }
 
 // ------------------------------------------------------------
-// UV class helper (used by intel-plus)
+// UV class helper
 // ------------------------------------------------------------
 export function getUVClass(uv) {
   if (uv == null) return "uv-0";
@@ -100,7 +90,7 @@ export function getUVClass(uv) {
 }
 
 // ------------------------------------------------------------
-// BULLET DE-DUPLICATOR (semantic-ish)
+// BULLET DE-DUPLICATOR
 // ------------------------------------------------------------
 function dedupeBullets(bullets) {
   const seen = new Set();
@@ -108,11 +98,7 @@ function dedupeBullets(bullets) {
 
   bullets.forEach(b => {
     let key = b.toLowerCase();
-
-    // Remove punctuation
     key = key.replace(/[^a-z0-9 ]/g, " ");
-
-    // Normalize synonyms and phrasing
     key = key
       .replace(/\bjacket\b/g, "coat")
       .replace(/\bchilly\b/g, "cold")
@@ -123,13 +109,8 @@ function dedupeBullets(bullets) {
       .replace(/\bcoat is helpful\b/g, "coat recommended")
       .replace(/\bcoat recommended\b/g, "coat recommended");
 
-    // Remove filler words
     key = key.replace(/\b(a|the|is|very|quite|bit|little)\b/g, "");
-
-    // Collapse whitespace
     key = key.replace(/\s+/g, " ").trim();
-
-    // ⭐ NEW: Sort words alphabetically to unify phrasing
     key = key.split(" ").sort().join(" ");
 
     if (!seen.has(key)) {
@@ -145,20 +126,16 @@ function dedupeBullets(bullets) {
 // HYBRID BULLET RENDERER
 // ------------------------------------------------------------
 function renderBullets(ul, bullets) {
-  // Remove semantic duplicates
   bullets = dedupeBullets(bullets);
-
   ul.innerHTML = "";
 
   bullets.forEach(b => {
     const li = document.createElement("li");
-
     if (/^[\p{Emoji}]/u.test(b)) {
       li.textContent = b;
     } else {
       li.textContent = "• " + b;
     }
-
     ul.appendChild(li);
   });
 }
@@ -169,11 +146,9 @@ function renderBullets(ul, bullets) {
 export function renderRightNowComfort(intel) {
   const emojiEl = document.getElementById("comfort-emoji");
   const textEl = document.getElementById("comfort-text");
-
   if (!emojiEl || !textEl) return;
 
   const { emoji, summary } = intel.rightNowComfort;
-
   emojiEl.textContent = emoji;
   textEl.textContent = summary;
 }
@@ -190,25 +165,23 @@ export function renderTodayOutlook(intel) {
   const { emoji, headline, text, bullets, isEndOfDay } = intel.today;
 
   emojiEl.textContent = emoji;
-headlineEl.textContent = today.headline;
+  headlineEl.textContent = headline;   // ✅ FIXED
   textEl.textContent = text;
 
   renderBullets(bulletsEl, bullets);
 
-  // ⭐ FADE LOGIC FOR TODAY
   const todayModule = document.getElementById("today-module");
   if (todayModule) {
-    if (isEndOfDay) {
-      todayModule.classList.add("fade");
-    } else {
-      todayModule.classList.remove("fade");
-    }
+    if (isEndOfDay) todayModule.classList.add("fade");
+    else todayModule.classList.remove("fade");
   }
 }
 
 // ------------------------------------------------------------
+// RENDER TOMORROW OUTLOOK
+// ------------------------------------------------------------
 export function renderTomorrowOutlook(intel) {
-   const emojiEl = document.getElementById("tomorrow-emoji");
+  const emojiEl = document.getElementById("tomorrow-emoji");
   const badgeEl = document.getElementById("tomorrow-badge");
   const headlineEl = document.getElementById("tomorrow-headline");
   const textEl = document.getElementById("tomorrow-text");
@@ -216,12 +189,9 @@ export function renderTomorrowOutlook(intel) {
 
   const { emoji, headline, text, bullets, meta, isEarlyMorning } = intel.tomorrow;
 
-  // Emoji
   emojiEl.textContent = emoji;
 
-  // NEW BADGE SYSTEM (derived from dominant driver)
   const dominant = meta?.dominant ?? "easy";
-
   const badgeMap = {
     rain:  { text: "Rain Gear",     class: "badge-rain" },
     wind:  { text: "Wind Alert",    class: "badge-wind" },
@@ -237,21 +207,15 @@ export function renderTomorrowOutlook(intel) {
   badgeEl.textContent = badge.text;
   badgeEl.className = `badge ${badge.class}`;
 
-  // Headline + text
   headlineEl.textContent = headline;
   textEl.textContent = text;
 
-  // Bullets
   renderBullets(bulletsEl, bullets);
 
-  // ⭐ FADE LOGIC FOR TOMORROW
   const tomorrowModule = document.getElementById("tomorrow-module");
   if (tomorrowModule) {
-    if (isEarlyMorning) {
-      tomorrowModule.classList.add("fade");
-    } else {
-      tomorrowModule.classList.remove("fade");
-    }
+    if (isEarlyMorning) tomorrowModule.classList.add("fade");
+    else tomorrowModule.classList.remove("fade");
   }
 }
 
@@ -364,7 +328,7 @@ export function renderTomorrowDetail(intel) {
 }
 
 // ------------------------------------------------------------
-// EXPANSION PANEL TOGGLER (Today / Tomorrow)
+// EXPANSION PANEL TOGGLER
 // ------------------------------------------------------------
 export function toggleForecastExpanded(which, intel) {
   const panelToday = document.getElementById("expanded-today");
