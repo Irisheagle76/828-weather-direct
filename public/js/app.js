@@ -113,7 +113,7 @@ async function initApp() {
         const mrmsPixel = await getMRMSPixel(lat, lon);
 
         // ⭐ 5. Build Unified Intelligence
-        const intel = buildWeatherIntel(hourly);
+        const intel = buildWeatherIntel(hourly.hours);
 
         // Attach WU + MRMS + Tempest
         intel.wu = wuCurrent;
