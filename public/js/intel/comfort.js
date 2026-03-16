@@ -47,7 +47,7 @@ function computeWindChill(tempF, windMph) {
 }
 
 // ------------------------------------------------------------
-// HUMIDITY FEEL (dewpoint-based)
+// HUMIDITY FEEL
 // ------------------------------------------------------------
 function humidityFeel(dew) {
   if (dew <= 40) return "Dry and comfortable.";
@@ -58,7 +58,7 @@ function humidityFeel(dew) {
 }
 
 // ------------------------------------------------------------
-// SUN ANGLE FEEL (raw phrasing)
+// SUN ANGLE FEEL
 // ------------------------------------------------------------
 function sunAngleFeel(elev) {
   if (elev <= 0) return "Nighttime calm.";
@@ -88,15 +88,25 @@ function isSolarHelpful(intel, elev) {
 }
 
 // ------------------------------------------------------------
-// OBSERVED MORNING HIGH (WU-based)
+// MORNING HIGH FROM WU HISTORY
 // ------------------------------------------------------------
 function computeObservedMorningHigh(wu) {
-  // If WU provides a daily high, use it; otherwise fallback to current temp
-  return wu.maxTempToday ?? wu.temp ?? null;
+  if (wu.maxTempToday != null) return wu.maxTempToday;
+
+  const history = wu.history ?? [];
+  if (!Array.isArray(history) || history.length === 0) return wu.temp ?? null;
+
+  const temps = history
+    .filter(h => h.temp != null)
+    .map(h => h.temp);
+
+  if (temps.length === 0) return wu.temp ?? null;
+
+  return Math.max(...temps);
 }
 
 // ------------------------------------------------------------
-// TEMPERATURE DROP FEEL (comparison logic)
+// TEMPERATURE DROP FEEL
 // ------------------------------------------------------------
 function computeTempDropFeel(intel) {
   const wu = intel.wu;
@@ -196,29 +206,24 @@ export function computeComfort(intel) {
   // 6. Emoji
   const emoji = pickComfortEmoji(state);
 
-  // 7. Summary (clean, Asheville-aware phrasing)
+  // 7. Summary
   const summaryParts = [];
 
-  // Temperature backbone
   if (state === "cold") summaryParts.push("Cold with a noticeable chill.");
   else if (state === "cool") summaryParts.push("Cool and manageable.");
   else if (state === "mild") summaryParts.push("Comfortable overall.");
   else if (state === "warm") summaryParts.push("Warm with a gentle edge.");
   else if (state === "hot") summaryParts.push("Hot and energetic.");
 
-  // Humidity
   summaryParts.push(humidFeel);
 
-  // Temperature drop comparison
   const dropFeel = computeTempDropFeel(intel);
   if (dropFeel) summaryParts.push(dropFeel);
 
-  // Solar (only if actually helpful)
   if (isSolarHelpful(intel, elev)) {
     summaryParts.push(rawSunFeel);
   }
 
-  // Wind nuance
   if (wind >= 15) {
     summaryParts.push("A noticeable breeze adds some edge.");
   }
