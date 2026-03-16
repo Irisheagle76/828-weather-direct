@@ -143,28 +143,33 @@ export function renderCurrentObservations(intel) {
 
   document.getElementById("wu-wind").textContent = `${intel.wu.windSpeed} mph`;
   document.getElementById("wu-wind-gust").textContent = `Gusts ${intel.wu.windGust} mph`;
-  // ============================================================
+}
+
+// ============================================================
 // EXPAND / COLLAPSE — CLEAN NEW SYSTEM
 // ============================================================
-
 export function toggleForecastExpanded(which, intel) {
   const isToday = which === "today";
 
-  const moduleEl = document.getElementById(isToday ? "today-module" : "tomorrow-module");
-  const panelEl  = document.getElementById(isToday ? "expanded-today" : "expanded-tomorrow");
+  const moduleEl = document.getElementById(
+    isToday ? "today-module" : "tomorrow-module"
+  );
+  const panelEl = document.getElementById(
+    isToday ? "expanded-today" : "expanded-tomorrow"
+  );
 
   if (!moduleEl || !panelEl) return;
 
   const isOpen = panelEl.style.display === "block";
 
-  // Close
+  // CLOSE
   if (isOpen) {
     panelEl.style.display = "none";
     moduleEl.classList.remove("fade");
     return;
   }
 
-  // Open
+  // OPEN
   moduleEl.classList.add("fade");
   panelEl.style.display = "block";
 
@@ -175,4 +180,3 @@ export function toggleForecastExpanded(which, intel) {
     renderTomorrowDetail(intel);
   }
 }
-
