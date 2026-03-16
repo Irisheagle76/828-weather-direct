@@ -34,7 +34,7 @@ export async function getWUCurrentConditions(stationId) {
 
   const data = await res.json();
   const obs = data.observations?.[0];
- 
+
   if (!obs) {
     return {
       temp: null,
@@ -45,11 +45,11 @@ export async function getWUCurrentConditions(stationId) {
       windDir: null,
       solarRadiation: null,
       uv: null,
-      stationId: stationId
+      stationId: stationId,
+      history: [] // ensure consistent shape
     };
   }
 
-  // Normalize fields — WU is inconsistent across stations
   const imp = obs.imperial || {};
 
   return {
@@ -57,7 +57,6 @@ export async function getWUCurrentConditions(stationId) {
     dewPoint: imp.dewpt ?? obs.dewpt ?? null,
     humidity: obs.humidity ?? null,
 
-    // wind fields sometimes inside imperial, sometimes top-level
     windSpeed: imp.windSpeed ?? obs.windSpeed ?? null,
     windGust: imp.windGust ?? obs.windGust ?? null,
     windDir: obs.winddir ?? null,
@@ -65,8 +64,26 @@ export async function getWUCurrentConditions(stationId) {
     solarRadiation: obs.solarRadiation ?? null,
     uv: obs.uv ?? null,
 
-    stationId: obs.stationID ?? stationId
+    stationId: obs.stationID ?? stationId,
+
+    // history will be attached later in app.js
+    history: []
   };
+}
+
+/**
+ * Get last 24 hours of WU observations (for trend detection).
+ */
+export async function getWUHistory(stationId) {
+  const url =
+    `https://api.weather.com/v2/pws/observations/hourly?stationId=${stationId}` +
+    `&format=json&units=e&apiKey=${WU_API_KEY}`;
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("WU history fetch failed: " + res.status);
+
+  const data = await res.json();
+  return data.observations ?? [];
 }
 
 /**
@@ -81,9 +98,9 @@ export async function getShortTermForecast(lat, lon) {
       `dewpoint_2m,` +
       `rain,` +
       `snowfall,` +
-      `wind_speed_10m,` +        // ✔ correct
-      `wind_gusts_10m,` +        // ✔ correct
-      `wind_direction_10m,` +    // ✔ correct
+      `wind_speed_10m,` +
+      `wind_gusts_10m,` +
+      `wind_direction_10m,` +
       `cloudcover,` +
       `uv_index` +
     `&forecast_days=3` +
@@ -101,7 +118,6 @@ export async function getShortTermForecast(lat, lon) {
 
 /**
  * Placeholder for MRMS fetch – will be wired to /api/mrms later.
- * For now, returns "no precip" so nothing breaks.
  */
 export async function getMRMSPixel(lat, lon) {
   return { rate: 0, type: "none", intensity: "none" };
