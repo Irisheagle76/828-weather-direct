@@ -29,34 +29,6 @@ function formatSnowAmount(amount) {
 }
 
 // ------------------------------------------------------------
-// FALLING PRECIP COMFORT OVERRIDE (NEW)
-// ------------------------------------------------------------
-function getFallingPrecipComfort(intel) {
-  const rate = intel.wu?.precipRate ?? 0;
-  const type = intel.wu?.precipType ?? "";
-
-  if (rate <= 0) return null;
-
-  // Snow
-  if (type === "snow" && rate < 0.1) {
-    return { emoji: "❄️", summary: "Light snow falling — a wintry feel." };
-  }
-  if (type === "snow") {
-    return { emoji: "🌨️", summary: "Steady snow falling — bundle up out there." };
-  }
-
-  // Rain
-  if (type === "rain" && rate < 0.05) {
-    return { emoji: "🌦️", summary: "Light rain falling — a damp, cool feel." };
-  }
-  if (type === "rain") {
-    return { emoji: "🌧️", summary: "Rain falling — a noticeably damp feel." };
-  }
-
-  return null;
-}
-
-// ------------------------------------------------------------
 // RENDER CURRENT OBSERVATIONS (WU)
 // ------------------------------------------------------------
 export function renderCurrentObservations(intel) {
@@ -190,22 +162,13 @@ function renderBullets(ul, bullets) {
 }
 
 // ------------------------------------------------------------
-// RENDER RIGHT NOW COMFORT (UPDATED WITH FALLING PRECIP)
+// RENDER RIGHT NOW COMFORT (Unified Comfort Engine)
 // ------------------------------------------------------------
 export function renderRightNowComfort(intel) {
   const emojiEl = document.getElementById("comfort-emoji");
   const textEl = document.getElementById("comfort-text");
   if (!emojiEl || !textEl) return;
 
-  // NEW: falling precipitation override
-  const precipComfort = getFallingPrecipComfort(intel);
-  if (precipComfort) {
-    emojiEl.textContent = precipComfort.emoji;
-    textEl.textContent = precipComfort.summary;
-    return;
-  }
-
-  // Existing comfort logic
   const comfort = intel.comfort;
   if (!comfort) {
     emojiEl.textContent = "";
