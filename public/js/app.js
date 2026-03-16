@@ -96,7 +96,7 @@ async function initApp() {
 
         // ⭐ 2. Tempest Device Observations (today's high comes from here)
         const TEMPEST_DEVICE_ID = "315255";
-        const TEMPEST_TOKEN = "YOUR_TEMPEST_TOKEN_HERE";
+        const TEMPEST_TOKEN = "838ff386-d14b-4d45-897a-18903e6970a9";
 
         const tempest = await getTempestDeviceObs(TEMPEST_DEVICE_ID, TEMPEST_TOKEN);
 
