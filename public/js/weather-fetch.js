@@ -46,7 +46,7 @@ export async function getWUCurrentConditions(stationId) {
       solarRadiation: null,
       uv: null,
       stationId: stationId,
-      history: [] // consistent shape
+      history: []
     };
   }
 
@@ -65,14 +65,12 @@ export async function getWUCurrentConditions(stationId) {
     uv: obs.uv ?? null,
 
     stationId: obs.stationID ?? stationId,
-
-    history: [] // no longer used, but kept for shape
+    history: []
   };
 }
 
 /**
- * (Deprecated in your app) — WU hourly history.
- * You are no longer using this for trend detection.
+ * (Deprecated) — WU hourly history.
  */
 export async function getWUHistory(stationId) {
   const url =
@@ -87,8 +85,8 @@ export async function getWUHistory(stationId) {
 }
 
 /**
- * ⭐ NEW — Get Tempest DEVICE observations (ALWAYS includes today's high/low).
- * This is the correct endpoint for reliable trend detection.
+ * ⭐ NEW — Get Tempest DEVICE observations (decoded + Fahrenheit).
+ * This endpoint ALWAYS includes today's high/low.
  */
 export async function getTempestDeviceObs(deviceId, token) {
   const url =
@@ -99,24 +97,37 @@ export async function getTempestDeviceObs(deviceId, token) {
   if (!res.ok) throw new Error("Tempest device obs failed: " + res.status);
 
   const data = await res.json();
-  const obs = data.obs?.[0];
+  const arr = data.obs?.[0];
 
-  if (!obs) return null;
+  if (!arr) return null;
+
+  // Tempest sends temps in Celsius → convert to Fahrenheit
+  const cToF = c => (c * 9) / 5 + 32;
 
   return {
-    temp: obs.air_temperature ?? null,
-    dewPoint: obs.dew_point ?? null,
-    windSpeed: obs.wind_avg ?? null,
-    windGust: obs.wind_gust ?? null,
-    windDir: obs.wind_direction ?? null,
-    pressure: obs.station_pressure ?? null,
-    solarRadiation: obs.solar_radiation ?? null,
+    timestamp: arr[0],
+    windLull: arr[1],
+    windSpeed: arr[2],
+    windGust: arr[3],
+    windDir: arr[4],
+    stationPressure: arr[6],
 
-    // ⭐ Guaranteed on device endpoint
-    tempHighToday: obs.air_temperature_hi ?? null,
-    tempLowToday: obs.air_temperature_lo ?? null,
+    temp: arr[7] != null ? cToF(arr[7]) : null,
+    humidity: arr[8],
+    illuminance: arr[9],
+    uv: arr[10],
+    solarRadiation: arr[11],
+    rainAccum: arr[12],
+    precipType: arr[13],
+    lightningDist: arr[14],
+    lightningCount: arr[15],
+    battery: arr[16],
 
-    raw: obs
+    // ⭐ These are the values your comfort engine uses
+    tempHighToday: arr[18] != null ? cToF(arr[18]) : null,
+    tempLowToday: arr[19] != null ? cToF(arr[19]) : null,
+
+    raw: arr
   };
 }
 
