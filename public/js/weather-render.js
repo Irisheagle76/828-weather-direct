@@ -108,7 +108,6 @@ function dedupeBullets(bullets) {
       .replace(/\bcoat helps\b/g, "coat recommended")
       .replace(/\bcoat is helpful\b/g, "coat recommended")
       .replace(/\bcoat recommended\b/g, "coat recommended");
-
     key = key.replace(/\b(a|the|is|very|quite|bit|little)\b/g, "");
     key = key.replace(/\s+/g, " ").trim();
     key = key.split(" ").sort().join(" ");
@@ -131,30 +130,39 @@ function renderBullets(ul, bullets) {
 
   bullets.forEach(b => {
     const li = document.createElement("li");
-    if (/^[\p{Emoji}]/u.test(b)) {
-      li.textContent = b;
-    } else {
-      li.textContent = "• " + b;
-    }
+    if (/^[\p{Emoji}]/u.test(b)) li.textContent = b;
+    else li.textContent = "• " + b;
     ul.appendChild(li);
   });
 }
 
 // ------------------------------------------------------------
-// RENDER RIGHT NOW COMFORT
+// RENDER RIGHT NOW COMFORT (updated for new intel)
 // ------------------------------------------------------------
 export function renderRightNowComfort(intel) {
   const emojiEl = document.getElementById("comfort-emoji");
   const textEl = document.getElementById("comfort-text");
   if (!emojiEl || !textEl) return;
 
-  const { emoji, summary } = intel.rightNowComfort;
-  emojiEl.textContent = emoji;
+  const comfort = intel.today?.comfort;
+  if (!comfort) {
+    emojiEl.textContent = "";
+    textEl.textContent = "";
+    return;
+  }
+
+  const summary = [
+    comfort.tempFeel,
+    comfort.humidityFeel,
+    comfort.windFeel
+  ].filter(Boolean).join(", ");
+
+  emojiEl.textContent = ""; // optional: add emoji mapper later
   textEl.textContent = summary;
 }
 
 // ------------------------------------------------------------
-// RENDER TODAY OUTLOOK
+// RENDER TODAY OUTLOOK (updated for new intel)
 // ------------------------------------------------------------
 export function renderTodayOutlook(intel) {
   const emojiEl = document.getElementById("today-emoji");
@@ -162,23 +170,29 @@ export function renderTodayOutlook(intel) {
   const textEl = document.getElementById("today-text");
   const bulletsEl = document.getElementById("today-bullets");
 
-  const { emoji, headline, text, bullets, isEndOfDay } = intel.today;
+  const today = intel.today;
+  if (!today || !today.available) {
+    headlineEl.textContent = "No data available";
+    textEl.textContent = "";
+    bulletsEl.innerHTML = "";
+    return;
+  }
 
-  emojiEl.textContent = emoji;
-  headlineEl.textContent = headline;   // ✅ FIXED
-  textEl.textContent = text;
+  emojiEl.textContent = ""; // optional: add emoji mapper later
+  headlineEl.textContent = today.headline;
+  textEl.textContent = today.narrative;
 
-  renderBullets(bulletsEl, bullets);
+  renderBullets(bulletsEl, today.bullets);
 
   const todayModule = document.getElementById("today-module");
   if (todayModule) {
-    if (isEndOfDay) todayModule.classList.add("fade");
+    if (today.isEndOfDay) todayModule.classList.add("fade");
     else todayModule.classList.remove("fade");
   }
 }
 
 // ------------------------------------------------------------
-// RENDER TOMORROW OUTLOOK
+// RENDER TOMORROW OUTLOOK (updated for new intel)
 // ------------------------------------------------------------
 export function renderTomorrowOutlook(intel) {
   const emojiEl = document.getElementById("tomorrow-emoji");
@@ -187,16 +201,24 @@ export function renderTomorrowOutlook(intel) {
   const textEl = document.getElementById("tomorrow-text");
   const bulletsEl = document.getElementById("tomorrow-bullets");
 
-  const { emoji, headline, text, bullets, meta, isEarlyMorning } = intel.tomorrow;
+  const tomorrow = intel.tomorrow;
+  if (!tomorrow || !tomorrow.available) {
+    headlineEl.textContent = "No data available";
+    textEl.textContent = "";
+    bulletsEl.innerHTML = "";
+    return;
+  }
 
-  emojiEl.textContent = emoji;
+  emojiEl.textContent = ""; // optional: add emoji mapper later
 
-  const dominant = meta?.dominant ?? "easy";
+  // Dominant driver → badge
+  const dominant = tomorrow.events?.driver ?? "easy";
+
   const badgeMap = {
     rain:  { text: "Rain Gear",     class: "badge-rain" },
     wind:  { text: "Wind Alert",    class: "badge-wind" },
     snow:  { text: "Snow Impact",   class: "badge-snow" },
-    heat:  { text: "Heat Caution",  class: "badge-heat" },
+    hot:   { text: "Heat Caution",  class: "badge-heat" },
     cold:  { text: "Cold Start",    class: "badge-cold" },
     goldilocks: { text: "Perfect Day", class: "badge-goldilocks" },
     easy:  { text: "Easy Day",      class: "badge-easy" }
@@ -207,14 +229,14 @@ export function renderTomorrowOutlook(intel) {
   badgeEl.textContent = badge.text;
   badgeEl.className = `badge ${badge.class}`;
 
-  headlineEl.textContent = headline;
-  textEl.textContent = text;
+  headlineEl.textContent = tomorrow.headline;
+  textEl.textContent = tomorrow.narrative;
 
-  renderBullets(bulletsEl, bullets);
+  renderBullets(bulletsEl, tomorrow.bullets);
 
   const tomorrowModule = document.getElementById("tomorrow-module");
   if (tomorrowModule) {
-    if (isEarlyMorning) tomorrowModule.classList.add("fade");
+    if (tomorrow.isEarlyMorning) tomorrowModule.classList.add("fade");
     else tomorrowModule.classList.remove("fade");
   }
 }
@@ -232,7 +254,7 @@ export function renderUV(intel) {
 }
 
 // ------------------------------------------------------------
-// RENDER TODAY DETAIL
+// RENDER TODAY DETAIL (unchanged)
 // ------------------------------------------------------------
 export function renderTodayDetail(intel) {
   const panel = document.getElementById("expanded-today");
@@ -274,7 +296,7 @@ export function renderTodayDetail(intel) {
 }
 
 // ------------------------------------------------------------
-// RENDER TOMORROW DETAIL
+// RENDER TOMORROW DETAIL (unchanged)
 // ------------------------------------------------------------
 export function renderTomorrowDetail(intel) {
   const panel = document.getElementById("expanded-tomorrow");
