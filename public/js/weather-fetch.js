@@ -35,54 +35,20 @@ export async function getWUCurrentConditions(stationId) {
 
 
 // ------------------------------------------------------------
-// 3. OPEN-METEO — SMART MODEL SELECTION + FALLBACK
+// 3. OPEN-METEO — SHORT TERM HOURLY FORECAST (STABLE VERSION)
 // ------------------------------------------------------------
-
-/*
-  Smart model engine:
-  - Try HRRR first (best for US, high resolution)
-  - If HRRR returns no hourly block → fallback to GFS
-  - If GFS also fails → fallback to ICON
-  - Always return:
-      { data, modelUsed }
-*/
-
 export async function getShortTermForecast(lat, lon) {
-  const modelsToTry = ["hrrr", "gfs", "icon"];
-  let lastError = null;
+  const url =
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+    `&hourly=temperature_2m,dewpoint_2m,rain,snowfall,wind_speed_10m,wind_gusts_10m,uv_index,cloudcover` +
+    `&forecast_days=2&timezone=auto`;
 
-  for (const model of modelsToTry) {
-    const url =
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
-      `&hourly=temperature_2m,dewpoint_2m,rain,snowfall,wind_speed_10m,wind_gusts_10m,uv_index,cloudcover` +
-      `&forecast_days=2&timezone=auto&models=${model}`;
+  console.log("Open-Meteo URL:", url);
 
-    console.log(`Trying Open-Meteo model: ${model}`);
-    console.log("Open-Meteo URL:", url);
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Open-Meteo hourly forecast failed");
 
-    try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`Model ${model} fetch failed`);
-
-      const data = await res.json();
-
-      // Check if hourly block exists
-      if (data?.hourly?.time && Array.isArray(data.hourly.time)) {
-        console.log(`✔ Using model: ${model}`);
-        return { data, modelUsed: model };
-      }
-
-      console.warn(`Model ${model} returned no hourly data. Trying next model…`);
-      lastError = new Error(`Model ${model} missing hourly block`);
-
-    } catch (err) {
-      console.warn(`Model ${model} failed:`, err);
-      lastError = err;
-    }
-  }
-
-  // If all models fail:
-  throw lastError ?? new Error("All Open-Meteo models failed");
+  return await res.json();
 }
 
 
