@@ -2,60 +2,52 @@ export default async function handler(req, res) {
   const FEED_URL = "https://timothyballisty.substack.com/feed";
 
   try {
-    // ⭐ THIS is where the browser‑header fetch goes
-    const response = await fetch(FEED_URL, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0",
-        "Accept":
-          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.5",
-        "Cache-Control": "no-cache",
-        "Pragma": "no-cache",
-        "Sec-Fetch-Dest": "document",
-        "Sec-Fetch-Mode": "navigate",
-        "Sec-Fetch-Site": "none",
-        "Sec-Fetch-User": "?1"
-      }
-    });
-
-    if (!response.ok) {
-      console.error("Substack status:", response.status, response.statusText);
-      throw new Error("Substack Articles RSS error");
-    }
+    const response = await fetch(FEED_URL);
+    if (!response.ok) throw new Error("Substack RSS error");
 
     const xml = await response.text();
 
-    const items = Array.from(xml.matchAll(/<item>([\s\S]*?)<\/item>/g)).map(
-      (match) => {
-        const itemXml = match[1];
+    // Extract first <item>
+    const match = xml.match(/<item>([\s\S]*?)<\/item>/);
+    if (!match) {
+      return res.status(200).json({ success: true, article: null });
+    }
 
-        const getTag = (tag) => {
-          const m = itemXml.match(
-            new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`)
-          );
-          return m ? m[1].trim() : "";
-        };
+    const itemXml = match[1];
 
-        return {
-          title: getTag("title"),
-          link: getTag("link"),
-          pubDate: getTag("pubDate"),
-          description: getTag("description"),
-        };
-      }
-    );
+    // Helper that extracts CDATA OR plain text
+    const getTag = (tag) => {
+      // CDATA version
+      const cdata = itemXml.match(
+        new RegExp(`<${tag}><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>`)
+      );
+      if (cdata) return cdata[1].trim();
 
-    res.status(200).json({
-      success: true,
-      article: items[0] || null,
-    });
+      // Plain version
+      const plain = itemXml.match(
+        new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`)
+      );
+      return plain ? plain[1].trim() : "";
+    };
+
+    // Substack sometimes uses <content:encoded>
+    const description =
+      getTag("description") || getTag("content:encoded") || "";
+
+    const article = {
+      title: getTag("title"),
+      link: getTag("link"),
+      pubDate: getTag("pubDate"),
+      description
+    };
+
+    res.status(200).json({ success: true, article });
 
   } catch (err) {
     console.error("Error fetching Substack Articles:", err);
     res.status(500).json({
       success: false,
-      error: "Failed to fetch Substack Articles.",
+      error: "Failed to fetch Substack Articles."
     });
   }
 }
