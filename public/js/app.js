@@ -13,6 +13,7 @@ import {
 
 import { buildWeatherIntel } from './intel/forecast-intel.js';
 import { computeComfort } from './intel/comfort.js';
+import { getReliableUV } from './intel/uv.js';   // ⭐ NEW — unified UV pipeline
 
 import {
   renderRightNowComfort,
@@ -58,7 +59,7 @@ function updateUI(intel) {
   renderRightNowComfort(intel);
   renderTodayOutlook(intel);
   renderTomorrowOutlook(intel);
-  renderUV(intel);
+  renderUV(intel);                     // ⭐ Now uses intel.uv
   renderTodayDetail(intel);
   renderTomorrowDetail(intel);
   renderCurrentObservations(intel);
@@ -94,7 +95,7 @@ async function initApp() {
 
         setWUStatus("ok", "WU Connected", "Weather Underground data loaded.");
 
-        // ⭐ 2. Tempest Device Observations (today's high comes from here)
+        // ⭐ 2. Tempest Device Observations
         const TEMPEST_DEVICE_ID = "315255";
         const TEMPEST_TOKEN = "838ff386-d14b-4d45-897a-18903e6970a9";
 
@@ -103,7 +104,7 @@ async function initApp() {
         // ⭐ Extract Tempest high/low
         const tempestHigh = tempest?.tempHighToday ?? null;
 
-        // ⭐ 3. Hourly Forecast
+        // ⭐ 3. Hourly Forecast (Open-Meteo)
         const hourly = await getShortTermForecast(lat, lon);
 
         // Debug
@@ -119,6 +120,7 @@ async function initApp() {
         intel.wu = wuCurrent;
         intel.mrms = mrmsPixel;
         intel.tempest = tempest;
+        intel.hourly = hourly;   // ⭐ Needed for UV fallback alignment
 
         // ⭐ Attach Tempest high into today's stats
         intel.today = intel.today || {};
@@ -128,7 +130,10 @@ async function initApp() {
         // ⭐ Compute comfort now that Tempest high is attached
         intel.comfort = computeComfort(intel);
 
-        // Expose for debugging
+        // ⭐ Compute unified UV (Tempest → WU → OM → solar)
+        intel.uv = getReliableUV(intel);
+
+        // Debug
         window._intel = intel;
 
         // ⭐ 6. Update UI
