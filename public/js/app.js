@@ -120,10 +120,10 @@ async function initApp() {
         const tempestHigh = tempest?.tempHighToday ?? null;
 
 // ⭐ 3. Hourly Forecast (Open-Meteo format)
-const { data: hourly, modelUsed } = await getShortTermForecast(lat, lon);
+const hourly = await getShortTermForecast(lat, lon);
 
-// Debug overlay
-window._forecastModel = modelUsed;
+// Debug overlay — no model engine yet
+window._forecastModel = "default";
 
 // Validate structure
 if (!hourly?.hourly?.time || !Array.isArray(hourly.hourly.time)) {
@@ -142,7 +142,6 @@ const hours = hourly.hourly.time.map((t, i) => ({
   uv: hourly.hourly.uv_index?.[i] ?? null,
   cloud: hourly.hourly.cloudcover?.[i] ?? null
 }));
-
         window._hourly = hours;
 
         // ⭐ 4. MRMS Radar Pixel
