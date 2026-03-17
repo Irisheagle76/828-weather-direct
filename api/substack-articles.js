@@ -8,7 +8,7 @@ export default async function handler(req, res) {
     const xml = await response.text();
 
     // Extract first <item>
-    const match = xml.match(/<item>([\s\\S]*?)<\\/item>/);
+    const match = xml.match(/<item>([\s\S]*?)<\/item>/);
     if (!match) {
       return res.status(200).json({ success: true, article: null });
     }
@@ -42,7 +42,7 @@ export default async function handler(req, res) {
     };
 
     // ------------------------------------------------------------
-    // ⭐ Fetch OG image (with safe base URL)
+    // ⭐ Fetch OG image (safe base URL)
     // ------------------------------------------------------------
     let ogImage = null;
 
