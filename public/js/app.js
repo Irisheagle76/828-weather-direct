@@ -94,34 +94,35 @@ async function initApp() {
 
         setWUStatus("ok", "WU Connected", "Weather Underground data loaded.");
 
-        // ⭐ Normalize Weather Underground current conditions
-        const obs = wuCurrentRaw?.observations?.[0] ?? {};
-        const imp = obs.imperial ?? {};
+  // ⭐ Normalize Weather Underground current conditions
+const obs = wuCurrentRaw?.observations?.[0] ?? {};
+const imp = obs.imperial ?? {};
 
-        const wuCurrent = {
-          stationId: nearest.stationId,
+const wuCurrent = {
+  stationId: nearest.stationId,
 
-          // Temperature
-          temp: imp.temp ?? null,
+  // Temperature
+  temp: imp.temp ?? null,
 
-          // Feels like (heatIndex OR windChill OR temp)
-          feelsLike:
-            imp.heatIndex ??
-            imp.windChill ??
-            imp.temp ??
-            null,
+  // Feels like (heatIndex OR windChill OR temp)
+  feelsLike:
+    (imp.heatIndex !== null && imp.heatIndex !== undefined)
+      ? imp.heatIndex
+      : (imp.windChill !== null && imp.windChill !== undefined)
+        ? imp.windChill
+        : imp.temp ?? null,
 
-          // Dew point
-          dew: imp.dewpt ?? null,
+  // Dew point
+  dew: imp.dewpt ?? null,
 
-          // Humidity
-          humidity: obs.humidity ?? null,
+  // Humidity
+  humidity: obs.humidity ?? null,
 
-          // Wind
-          windSpeed: obs.windSpeed ?? null,
-          windGust: obs.windGust ?? null,
-          windDir: obs.winddir ?? null
-        };
+  // Wind
+  windSpeed: obs.windSpeed ?? null,
+  windGust: obs.windGust ?? null,
+  windDir: obs.winddir ?? null
+};
 
         // ⭐ 2. Tempest Device Observations
         const TEMPEST_DEVICE_ID = "315255";
@@ -195,4 +196,19 @@ async function initApp() {
 // ------------------------------------------------------------
 // CLICK LISTENERS FOR EXPANSION
 // ------------------------------------------------------------
-document.addEventListener("DOMContentLoaded
+document.addEventListener("DOMContentLoaded", () => {
+  const todayModule = document.getElementById("today-module");
+  const tomorrowModule = document.getElementById("tomorrow-module");
+
+  if (todayModule) {
+    todayModule.addEventListener("click", () => {
+      toggleForecastExpanded("today", window._intel);
+    });
+  }
+
+  if (tomorrowModule) {
+    tomorrowModule.addEventListener("click", () => {
+      toggleForecastExpanded("tomorrow", window._intel);
+    });
+  }
+});
