@@ -1,99 +1,169 @@
 // /js/weather-fetch.js
-// ============================================================
-// FETCH HELPERS — Weather Underground, Open-Meteo, Tempest, MRMS
-// ============================================================
 
-// ------------------------------------------------------------
-// 1. WEATHER UNDERGROUND — NEAREST STATION
-// ------------------------------------------------------------
+const WU_API_KEY = "09a5bd1deb4948caa5bd1deb4968cab8";
+
+/**
+ * Get nearest Weather Underground PWS station for a lat/lon.
+ */
 export async function getNearestWUStation(lat, lon) {
-  const url = `https://api.weather.com/v3/location/near?geocode=${lat},${lon}&product=pws&format=json&apiKey=09a5bd1deb4948caa5bd1deb4968cab8`;
+  const url =
+    `https://api.weather.com/v3/location/near?geocode=${lat},${lon}` +
+    `&product=pws&format=json&apiKey=${WU_API_KEY}`;
 
   const res = await fetch(url);
-  if (!res.ok) throw new Error("WU nearest station lookup failed");
+  if (!res.ok) throw new Error("WU station lookup failed: " + res.status);
 
   const data = await res.json();
-  const stationId = data.location?.stationId?.[0] ?? null;
-
-  if (!stationId) throw new Error("No nearby WU station found");
-
-  return { stationId };
+  return {
+    stationId: data.location.stationId[0],
+    distance: data.location.distance?.[0] ?? null
+  };
 }
 
-
-// ------------------------------------------------------------
-// 2. WEATHER UNDERGROUND — CURRENT CONDITIONS
-// ------------------------------------------------------------
+/**
+ * Get current conditions from a specific WU PWS station.
+ * (Normalized so your app always receives consistent fields.)
+ */
 export async function getWUCurrentConditions(stationId) {
-  const url = `https://api.weather.com/v2/pws/observations/current?stationId=${stationId}&format=json&units=e&apiKey=09a5bd1deb4948caa5bd1deb4968cab8`;
-
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("WU current conditions fetch failed");
-
-  return await res.json();
-}
-
-
-// ------------------------------------------------------------
-// 3. OPEN-METEO — SHORT TERM HOURLY FORECAST (STABLE VERSION)
-// ------------------------------------------------------------
-export async function getShortTermForecast(lat, lon) {
   const url =
-    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
-    `&hourly=temperature_2m,dewpoint_2m,rain,snowfall,wind_speed_10m,wind_gusts_10m,uv_index,cloudcover` +
-    `&forecast_days=2&timezone=auto`;
-
-  console.log("Open-Meteo URL:", url);
+    `https://api.weather.com/v2/pws/observations/current?stationId=${stationId}` +
+    `&format=json&units=e&apiKey=${WU_API_KEY}`;
 
   const res = await fetch(url);
-  if (!res.ok) throw new Error("Open-Meteo hourly forecast failed");
-
-  return await res.json();
-}
-
-
-// ------------------------------------------------------------
-// 4. MRMS RADAR PIXEL
-// ------------------------------------------------------------
-export async function getMRMSPixel(lat, lon) {
-  const url =
-    `https://api.weather.com/v3/TileServer/tile/radar?` +
-    `lat=${lat}&lon=${lon}&apiKey=09a5bd1deb4948caa5bd1deb4968cab8`;
-
-  const res = await fetch(url);
-  if (!res.ok) {
-    console.warn("MRMS pixel fetch failed");
-    return null;
-  }
-
-  return await res.json();
-}
-
-
-// ------------------------------------------------------------
-// 5. TEMPEST — DEVICE OBSERVATIONS
-// ------------------------------------------------------------
-export async function getTempestDeviceObs(deviceId, token) {
-  const url = `https://swd.weatherflow.com/swd/rest/observations/device/${deviceId}?token=${token}`;
-
-  const res = await fetch(url);
-  if (!res.ok) {
-    console.warn("Tempest fetch failed");
-    return null;
-  }
+  if (!res.ok) throw new Error("WU current conditions failed: " + res.status);
 
   const data = await res.json();
-  const obs = data?.obs?.[0] ?? null;
-  if (!obs) return null;
+  const obs = data.observations?.[0];
+
+  if (!obs) {
+    return {
+      temp: null,
+      dewPoint: null,
+      humidity: null,
+      windSpeed: null,
+      windGust: null,
+      windDir: null,
+      solarRadiation: null,
+      uv: null,
+      stationId: stationId,
+      history: []
+    };
+  }
+
+  const imp = obs.imperial || {};
 
   return {
-    temp: obs[7] ?? null,
-    humidity: obs[8] ?? null,
-    windSpeed: obs[2] ?? null,
-    windGust: obs[3] ?? null,
-    windDir: obs[4] ?? null,
-    uv: obs[10] ?? null,
-    solar: obs[11] ?? null,
-    tempHighToday: data?.summary?.temp?.max ?? null
+    temp: imp.temp ?? obs.temperature ?? null,
+    dewPoint: imp.dewpt ?? obs.dewpt ?? null,
+    humidity: obs.humidity ?? null,
+
+    windSpeed: imp.windSpeed ?? obs.windSpeed ?? null,
+    windGust: imp.windGust ?? obs.windGust ?? null,
+    windDir: obs.winddir ?? null,
+
+    solarRadiation: obs.solarRadiation ?? null,
+    uv: obs.uv ?? null,
+
+    stationId: obs.stationID ?? stationId,
+    history: []
   };
+}
+
+/**
+ * (Deprecated) — WU hourly history.
+ */
+export async function getWUHistory(stationId) {
+  const url =
+    `https://api.weather.com/v2/pws/observations/hourly?stationId=${stationId}` +
+    `&format=json&units=e&apiKey=${WU_API_KEY}`;
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("WU history fetch failed: " + res.status);
+
+  const data = await res.json();
+  return data.observations ?? [];
+}
+
+/**
+ * ⭐ NEW — Get Tempest DEVICE observations (decoded + Fahrenheit).
+ * This endpoint ALWAYS includes today's high/low.
+ */
+export async function getTempestDeviceObs(deviceId, token) {
+  const url =
+    `https://swd.weatherflow.com/swd/rest/observations/device/${deviceId}` +
+    `?token=${token}`;
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Tempest device obs failed: " + res.status);
+
+  const data = await res.json();
+  const arr = data.obs?.[0];
+
+  if (!arr) return null;
+
+  // Tempest sends temps in Celsius → convert to Fahrenheit
+  const cToF = c => (c * 9) / 5 + 32;
+
+  return {
+    timestamp: arr[0],
+    windLull: arr[1],
+    windSpeed: arr[2],
+    windGust: arr[3],
+    windDir: arr[4],
+    stationPressure: arr[6],
+
+    temp: arr[7] != null ? cToF(arr[7]) : null,
+    humidity: arr[8],
+    illuminance: arr[9],
+    uv: arr[10],
+    solarRadiation: arr[11],
+    rainAccum: arr[12],
+    precipType: arr[13],
+    lightningDist: arr[14],
+    lightningCount: arr[15],
+    battery: arr[16],
+
+    // ⭐ These are the values your comfort engine uses
+    tempHighToday: arr[18] != null ? cToF(arr[18]) : null,
+    tempLowToday: arr[19] != null ? cToF(arr[19]) : null,
+
+    raw: arr
+  };
+}
+
+/**
+ * Get short‑term hourly forecast from Open‑Meteo.
+ */
+export async function getShortTermForecast(lat, lon) {
+  const url =
+    `https://api.open-meteo.com/v1/forecast` +
+    `?latitude=${lat}&longitude=${lon}` +
+    `&hourly=` +
+      `temperature_2m,` +
+      `dewpoint_2m,` +
+      `rain,` +
+      `snowfall,` +
+      `wind_speed_10m,` +
+      `wind_gusts_10m,` +
+      `wind_direction_10m,` +
+      `cloudcover,` +
+      `uv_index` +
+    `&forecast_days=3` +
+    `&timezone=America/New_York` +
+    `&temperature_unit=fahrenheit` +
+    `&dewpoint_unit=fahrenheit` +
+    `&wind_speed_unit=mph` +
+    `&precipitation_unit=inch`;
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Short-term forecast fetch failed: " + res.status);
+
+  return (await res.json()).hourly;
+}
+
+/**
+ * Placeholder for MRMS fetch – will be wired to /api/mrms later.
+ */
+export async function getMRMSPixel(lat, lon) {
+  return { rate: 0, type: "none", intensity: "none" };
 }
