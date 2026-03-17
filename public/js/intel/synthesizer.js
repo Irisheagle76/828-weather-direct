@@ -1,7 +1,34 @@
 // /intel/synthesizer.js
 // Human‑Action Outlook Generator — Warm + Direct Hybrid Tone
-// Includes: Trend Awareness, Emoji Variation, Anti‑Redundancy
+// Includes: Trend Awareness, Humidity Relevance, Morning‑Aware Logic, Anti‑Redundancy
 
+// ------------------------------------------------------------
+// HUMIDITY RELEVANCE (mirrors comfort engine)
+// ------------------------------------------------------------
+function humidityRelevant(stats, events) {
+  const temp = stats.tempMax ?? 0;
+  const dew = stats.dewAvg ?? 0;
+  const wind = stats.windGustMax ?? 0;
+
+  const isSnowing = events?.driver === "snow";
+  const isRaining = events?.driver === "rain";
+  const windy = wind >= 15;
+
+  const bigDrop = stats.tempDrop ?? false;
+  const coldEnough = temp <= 40;
+
+  return (
+    !isSnowing &&
+    !isRaining &&
+    !windy &&
+    !bigDrop &&
+    !coldEnough
+  );
+}
+
+// ------------------------------------------------------------
+// MAIN SYNTHESIZER
+// ------------------------------------------------------------
 export function synthesizeOutlook(stats, events, hours) {
   if (!stats || hours.length === 0) {
     return {
@@ -26,7 +53,7 @@ export function synthesizeOutlook(stats, events, hours) {
 }
 
 // ------------------------------------------------------------
-// HEADLINE — expressive, warm + direct, trend‑aware, emoji‑aware
+// HEADLINE — warm + direct, trend‑aware
 // ------------------------------------------------------------
 function generateHeadline(stats, events, trends, emoji) {
   const d = events?.driver;
@@ -43,9 +70,13 @@ function generateHeadline(stats, events, trends, emoji) {
 
   let base = baseMap[d] ?? "A steady, uncomplicated day";
 
-  // Trend overrides
-  if (trends.includes("bigWarmup")) base = "A day that warms up nicely";
-  if (trends.includes("coolingOff")) base = "A cooler, more settled day";
+  // Trend overrides (but only after late morning)
+  const hour = new Date().getHours();
+  if (hour >= 11) {
+    if (trends.includes("bigWarmup")) base = "A day that warms up nicely";
+    if (trends.includes("coolingOff")) base = "A cooler, more settled day";
+  }
+
   if (trends.includes("brightening")) base = "A day that tries to brighten";
   if (trends.includes("cloudy")) base = "A gray, moody kind of day";
 
@@ -53,7 +84,7 @@ function generateHeadline(stats, events, trends, emoji) {
 }
 
 // ------------------------------------------------------------
-// NARRATIVE — warm + direct, trend‑aware, no stat dumps
+// NARRATIVE — warm + direct, trend‑aware, humidity‑aware
 // ------------------------------------------------------------
 function generateHumanNarrative(stats, events, trends) {
   const { tempMin, tempMax, windGustMax, rainTotal, snowTotal, cloudAvg } = stats;
@@ -65,8 +96,13 @@ function generateHumanNarrative(stats, events, trends) {
     buildCloudPhrase(cloudAvg)
   ];
 
-  if (trends.includes("bigWarmup")) parts.push("The day warms noticeably as it goes.");
-  if (trends.includes("coolingOff")) parts.push("Temperatures ease downward into a cooler feel.");
+  // Trend logic (afternoon only)
+  const hour = new Date().getHours();
+  if (hour >= 11) {
+    if (trends.includes("bigWarmup")) parts.push("The day warms noticeably as it goes.");
+    if (trends.includes("coolingOff")) parts.push("Temperatures ease downward into a cooler feel.");
+  }
+
   if (trends.includes("gusty")) parts.push("Winds get lively at times.");
   if (trends.includes("calming")) parts.push("Winds ease back later on.");
   if (trends.includes("brightening")) parts.push("Skies may try to brighten.");
@@ -76,7 +112,7 @@ function generateHumanNarrative(stats, events, trends) {
 }
 
 // ------------------------------------------------------------
-// BULLETS — human, actionable, no stat dumps
+// BULLETS — warm, human, actionable, humidity‑aware
 // ------------------------------------------------------------
 function generateHumanBullets(stats, events) {
   const bullets = [];
@@ -109,6 +145,14 @@ function generateHumanBullets(stats, events) {
   // Clouds
   if (stats.cloudAvg >= 80) bullets.push("Skies stay mostly gray.");
   else if (stats.cloudAvg <= 40) bullets.push("Some brighter breaks possible.");
+
+  // Humidity (only when relevant)
+  if (humidityRelevant(stats, events)) {
+    const dew = stats.dewAvg ?? 0;
+    if (dew <= 40) bullets.push("Dry and comfortable.");
+    else if (dew <= 55) bullets.push("Humidity stays manageable.");
+    else bullets.push("A bit humid at times.");
+  }
 
   // Commute cues
   if (events?.pmCommuteImpact) bullets.push("PM commute: possible delays.");
@@ -157,7 +201,7 @@ function detectTrends(stats) {
   const trends = [];
 
   if (stats.tempMax - stats.tempMin >= 20) trends.push("bigWarmup");
-  else if (stats.tempMin - stats.tempMax >= 10) trends.push("coolingOff");
+  if (stats.tempMin - stats.tempMax >= 10) trends.push("coolingOff");
 
   if (stats.windGustMax >= 35) trends.push("gusty");
   else if (stats.windGustMax <= 10) trends.push("calming");
