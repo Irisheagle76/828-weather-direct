@@ -2,10 +2,18 @@ export default async function handler(req, res) {
   const FEED_URL = "https://timothyballisty.substack.com/feed/notes";
 
   try {
-    const response = await fetch(FEED_URL);
+    const response = await fetch(FEED_URL, {
+      headers: { "User-Agent": "Mozilla/5.0" }
+    });
+
     if (!response.ok) throw new Error("Substack Notes RSS error");
 
     const xml = await response.text();
+
+    if (!xml || !xml.includes("<item>")) {
+      console.error("Unexpected Substack response:", xml.slice(0, 200));
+      throw new Error("Invalid RSS feed");
+    }
 
     const items = Array.from(xml.matchAll(/<item>([\s\S]*?)<\/item>/g)).map(
       (match) => {
@@ -31,6 +39,7 @@ export default async function handler(req, res) {
       success: true,
       notes: items.slice(0, 3),
     });
+
   } catch (err) {
     console.error("Error fetching Substack Notes:", err);
     res.status(500).json({
