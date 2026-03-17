@@ -41,6 +41,26 @@ export default async function handler(req, res) {
       description
     };
 
+    // ------------------------------------------------------------
+    // ⭐ Fetch OG image from your new endpoint
+    // ------------------------------------------------------------
+    let ogImage = null;
+
+    try {
+      const ogRes = await fetch(
+        `${req.headers.origin}/api/substack-og?url=${encodeURIComponent(article.link)}`
+      );
+      const ogData = await ogRes.json();
+      ogImage = ogData.ogImage || null;
+    } catch (err) {
+      console.error("OG image fetch failed:", err);
+    }
+
+    article.ogImage = ogImage;
+
+    // ------------------------------------------------------------
+    // Return final article object
+    // ------------------------------------------------------------
     res.status(200).json({ success: true, article });
 
   } catch (err) {
