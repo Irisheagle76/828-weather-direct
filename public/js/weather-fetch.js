@@ -13,8 +13,8 @@ export async function getNearestWUStation(lat, lon) {
   if (!res.ok) throw new Error("WU nearest station lookup failed");
 
   const data = await res.json();
-
   const stationId = data.location?.stationId?.[0] ?? null;
+
   if (!stationId) throw new Error("No nearby WU station found");
 
   return { stationId };
@@ -30,27 +30,59 @@ export async function getWUCurrentConditions(stationId) {
   const res = await fetch(url);
   if (!res.ok) throw new Error("WU current conditions fetch failed");
 
-  const data = await res.json();
-
-  // Return raw — normalization happens in app.js
-  return data;
+  return await res.json();
 }
 
 
 // ------------------------------------------------------------
-// 3. OPEN-METEO — SHORT TERM HOURLY FORECAST
+// 3. OPEN-METEO — SMART MODEL SELECTION + FALLBACK
 // ------------------------------------------------------------
-export async function getShortTermForecast(lat, lon) {
-  const url =
-    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
-    `&hourly=temperature_2m,dewpoint_2m,rain,snowfall,wind_speed_10m,wind_gusts_10m,uv_index,cloudcover` +
-    `&forecast_days=2&timezone=auto`;
-console.log("USING WEATHER-FETCH.JS VERSION A");
-console.log("Open-Meteo URL:", url);
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("Open-Meteo hourly forecast failed");
 
-  return await res.json();
+/*
+  Smart model engine:
+  - Try HRRR first (best for US, high resolution)
+  - If HRRR returns no hourly block → fallback to GFS
+  - If GFS also fails → fallback to ICON
+  - Always return:
+      { data, modelUsed }
+*/
+
+export async function getShortTermForecast(lat, lon) {
+  const modelsToTry = ["hrrr", "gfs", "icon"];
+  let lastError = null;
+
+  for (const model of modelsToTry) {
+    const url =
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+      `&hourly=temperature_2m,dewpoint_2m,rain,snowfall,wind_speed_10m,wind_gusts_10m,uv_index,cloudcover` +
+      `&forecast_days=2&timezone=auto&models=${model}`;
+
+    console.log(`Trying Open-Meteo model: ${model}`);
+    console.log("Open-Meteo URL:", url);
+
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Model ${model} fetch failed`);
+
+      const data = await res.json();
+
+      // Check if hourly block exists
+      if (data?.hourly?.time && Array.isArray(data.hourly.time)) {
+        console.log(`✔ Using model: ${model}`);
+        return { data, modelUsed: model };
+      }
+
+      console.warn(`Model ${model} returned no hourly data. Trying next model…`);
+      lastError = new Error(`Model ${model} missing hourly block`);
+
+    } catch (err) {
+      console.warn(`Model ${model} failed:`, err);
+      lastError = err;
+    }
+  }
+
+  // If all models fail:
+  throw lastError ?? new Error("All Open-Meteo models failed");
 }
 
 
@@ -88,12 +120,6 @@ export async function getTempestDeviceObs(deviceId, token) {
   const obs = data?.obs?.[0] ?? null;
   if (!obs) return null;
 
-  // Tempest obs array structure:
-  // [ epoch, windLull, windAvg, windGust, windDir, windSampleInterval,
-  //   pressure, airTemp, relativeHumidity, illuminance, uv, solarRadiation,
-  //   rainAccum, precipType, lightningAvgDistance, lightningStrikeCount,
-  //   battery, reportInterval ]
-
   return {
     temp: obs[7] ?? null,
     humidity: obs[8] ?? null,
@@ -102,8 +128,6 @@ export async function getTempestDeviceObs(deviceId, token) {
     windDir: obs[4] ?? null,
     uv: obs[10] ?? null,
     solar: obs[11] ?? null,
-
-    // Tempest high temp today (if present)
     tempHighToday: data?.summary?.temp?.max ?? null
   };
 }
