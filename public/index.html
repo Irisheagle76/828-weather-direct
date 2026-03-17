@@ -130,9 +130,7 @@
     line-height: 1.1;
   }
 
-  /* ------------------------------
-     COMFORT MODULE
-  ------------------------------ */
+  /* COMFORT MODULE */
   .comfort-row {
     margin-bottom: var(--gap);
   }
@@ -176,9 +174,7 @@
     margin-top: 0.15rem;
   }
 
-  /* ------------------------------
-     TODAY + TOMORROW
-  ------------------------------ */
+  /* TODAY + TOMORROW */
   .now-tomorrow-row {
     display: flex;
     flex-wrap: wrap;
@@ -223,8 +219,6 @@
     color: #ffffff;
     margin-bottom: 0.3rem;
     line-height: 1.2;
-
-    /* ⭐ Auto‑shrink support */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -235,33 +229,28 @@
     font-size: 0.82rem;
     color: #b9c7f5;
     line-height: 1.4;
-
-    /* ⭐ Prevent micro‑overflow */
     overflow-wrap: break-word;
     word-break: break-word;
     max-width: 100%;
   }
 
-/* BULLETS */
-.today-bullets,
-.tomorrow-bullets {
-  margin-top: 0.35rem;
-  margin-bottom: 0.2rem;
-  padding-left: 1rem;
-  list-style: none;
-}
+  .today-bullets,
+  .tomorrow-bullets {
+    margin-top: 0.35rem;
+    margin-bottom: 0.2rem;
+    padding-left: 1rem;
+    list-style: none;
+  }
 
-.today-bullets li,
-.tomorrow-bullets li {
-  font-size: 0.82rem;
-  color: #d8dff7;
-  line-height: 1.35;
-  margin: 0.25rem 0;
-}
+  .today-bullets li,
+  .tomorrow-bullets li {
+    font-size: 0.82rem;
+    color: #d8dff7;
+    line-height: 1.35;
+    margin: 0.25rem 0;
+  }
 
-  /* ------------------------------
-     EXPANDED PANELS
-  ------------------------------ */
+  /* EXPANDED PANELS */
   .expanded-panel {
     margin-top: 1rem;
     padding: 1.2rem 1.4rem;
@@ -296,60 +285,52 @@
     color: #d8dff7;
   }
 
-/* ------------------------------
-   UV INDEX COLOR + EMPHASIS
------------------------------- */
-#wU-uv,
-#wu-uv {
-  font-size: 1.45rem;
-  font-weight: 700;
-  text-align: center;
-}
+  /* UV INDEX */
+  #wU-uv,
+  #wu-uv {
+    font-size: 1.45rem;
+    font-weight: 700;
+    text-align: center;
+  }
 
-.uv-low { color: #4caf50; }
-.uv-moderate { color: #ffeb3b; }
-.uv-high { color: #ff9800; }
-.uv-very-high { color: #f44336; }
-.uv-extreme { color: #9c27b0; }
+  .uv-low { color: #4caf50; }
+  .uv-moderate { color: #ffeb3b; }
+  .uv-high { color: #ff9800; }
+  .uv-very-high { color: #f44336; }
+  .uv-extreme { color: #9c27b0; }
 
-/* ------------------------------
-   TEMPERATURE COLOR SCALE
------------------------------- */
-.temp-freezing { color: #4dabf7; }
-.temp-cold     { color: #74c0fc; }
-.temp-cool     { color: #a5d8ff; }
-.temp-mild     { color: #ffd43b; }
-.temp-warm     { color: #ffa94d; }
-.temp-hot      { color: #ff6b6b; }
+  /* TEMPERATURE COLOR SCALE */
+  .temp-freezing { color: #4dabf7; }
+  .temp-cold     { color: #74c0fc; }
+  .temp-cool     { color: #a5d8ff; }
+  .temp-mild     { color: #ffd43b; }
+  .temp-warm     { color: #ffa94d; }
+  .temp-hot      { color: #ff6b6b; }
 
-/* ------------------------------
-   DEW POINT COMFORT SCALE
------------------------------- */
-.dew-dry       { color: #74c0fc; }
-.dew-comfort   { color: #ffd43b; }
-.dew-humid     { color: #ffa94d; }
-.dew-tropical  { color: #ff6b6b; }
+  /* DEW POINT SCALE */
+  .dew-dry       { color: #74c0fc; }
+  .dew-comfort   { color: #ffd43b; }
+  .dew-humid     { color: #ffa94d; }
+  .dew-tropical  { color: #ff6b6b; }
 
-/* ------------------------------
-   FOOTER
------------------------------- */
-.footer-note {
-  margin-top: var(--gap);
-  padding-top: 0.8rem;
-  border-top: 1px solid rgba(255,255,255,0.08);
-  font-size: 0.78rem;
-  color: #e0b27a;
-  text-align: center;
-  opacity: 0.9;
-  letter-spacing: 0.03em;
-}
+  /* FOOTER */
+  .footer-note {
+    margin-top: var(--gap);
+    padding-top: 0.8rem;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    font-size: 0.78rem;
+    color: #e0b27a;
+    text-align: center;
+    opacity: 0.9;
+    letter-spacing: 0.03em;
+  }
 
-.action-module.fade {
-  opacity: 0.55;
-  transform: translateY(2px);
-  filter: saturate(0.8);
-  transition: opacity 0.6s ease, transform 0.6s ease, filter 0.6s ease;
-}
+  .action-module.fade {
+    opacity: 0.55;
+    transform: translateY(2px);
+    filter: saturate(0.8);
+    transition: opacity 0.6s ease, transform 0.6s ease, filter 0.6s ease;
+  }
 </style>
 </head>
 
@@ -420,9 +401,11 @@
         <div id="today-emoji" class="action-emoji">--</div>
         <div>
           <div class="action-label">Today’s Human‑Action Outlook</div>
+          <!-- Remainder-of-today label (shown after 3 PM when active) -->
           <div id="today-remainder-label" class="action-label" style="display:none;">
-  Remainder of Today (after 3 PM)
-</div>
+            Remainder of Today (after 3 PM)
+          </div>
+
           <div id="today-headline" class="action-headline">Loading…</div>
 
           <div id="today-text" class="action-text">
@@ -447,7 +430,6 @@
         <div>
           <div class="action-label">Tomorrow’s Human‑Action Outlook</div>
 
-          <!-- ⭐ Updated badge container -->
           <div id="tomorrow-badge-container" style="margin-bottom: 0.35rem;">
             <div id="tomorrow-badge" class="badge"></div>
           </div>
@@ -477,4 +459,3 @@
 
 </body>
 </html>
-
