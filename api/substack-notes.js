@@ -5,7 +5,7 @@ export default async function handler(req, res) {
     const response = await fetch(FEED_URL, {
       headers: { "User-Agent": "Mozilla/5.0" }
     });
-
+console.log("STATUS:", response.status, "STATUS TEXT:", response.statusText);
     if (!response.ok) throw new Error("Substack Notes RSS error");
 
     const xml = await response.text();
