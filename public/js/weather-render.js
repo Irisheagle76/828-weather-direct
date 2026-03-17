@@ -199,6 +199,7 @@ export function renderTodayOutlook(intel) {
 
   emojiEl.textContent = "";
   headlineEl.textContent = today.headline;
+  fitHeadlineToWidth(headlineEl);
   textEl.textContent = today.narrative;
 
   renderBullets(bulletsEl, today.bullets);
@@ -254,6 +255,7 @@ export function renderTomorrowOutlook(intel) {
   }
 
   headlineEl.textContent = tomorrow.headline;
+  fitHeadlineToWidth(headlineEl);
   textEl.textContent = tomorrow.narrative;
 
   renderBullets(bulletsEl, tomorrow.bullets);
