@@ -29,6 +29,22 @@ function formatSnowAmount(amount) {
 }
 
 // ------------------------------------------------------------
+// HEADLINE AUTO‑SHRINK HELPER
+// ------------------------------------------------------------
+function fitHeadlineToWidth(el, maxSize = 1.25, minSize = 0.95) {
+  if (!el) return;
+
+  // Reset to max size first
+  el.style.fontSize = `${maxSize}rem`;
+
+  // Shrink until it fits or hits minimum
+  while (el.scrollWidth > el.clientWidth && maxSize > minSize) {
+    maxSize -= 0.05;
+    el.style.fontSize = `${maxSize}rem`;
+  }
+}
+
+// ------------------------------------------------------------
 // RENDER CURRENT OBSERVATIONS (WU)
 // ------------------------------------------------------------
 export function renderCurrentObservations(intel) {
@@ -199,7 +215,10 @@ export function renderTodayOutlook(intel) {
 
   emojiEl.textContent = "";
   headlineEl.textContent = today.headline;
+
+  // ⭐ Auto‑shrink headline
   fitHeadlineToWidth(headlineEl);
+
   textEl.textContent = today.narrative;
 
   renderBullets(bulletsEl, today.bullets);
@@ -217,6 +236,7 @@ export function renderTodayOutlook(intel) {
 export function renderTomorrowOutlook(intel) {
   const emojiEl = document.getElementById("tomorrow-emoji");
   const badgeEl = document.getElementById("tomorrow-badge");
+  const badgeContainer = document.getElementById("tomorrow-badge-container");
   const headlineEl = document.getElementById("tomorrow-headline");
   const textEl = document.getElementById("tomorrow-text");
   const bulletsEl = document.getElementById("tomorrow-bullets");
@@ -245,17 +265,20 @@ export function renderTomorrowOutlook(intel) {
 
   const badge = badgeMap[dominant];
 
-  // ⭐ Hide badge entirely for "easy" days
+  // ⭐ Hide badge container entirely for "easy" days
   if (!badge) {
-    badgeEl.style.display = "none";
+    badgeContainer.style.display = "none";
   } else {
-    badgeEl.style.display = "inline-flex";
+    badgeContainer.style.display = "block";
     badgeEl.textContent = badge.text;
     badgeEl.className = `badge ${badge.class}`;
   }
 
   headlineEl.textContent = tomorrow.headline;
+
+  // ⭐ Auto‑shrink headline
   fitHeadlineToWidth(headlineEl);
+
   textEl.textContent = tomorrow.narrative;
 
   renderBullets(bulletsEl, tomorrow.bullets);
@@ -345,19 +368,4 @@ export function toggleForecastExpanded(which, intel) {
     panelToday.style.display = "none";
     return;
   }
-// ------------------------------------------------------------
-// FIT HEADLINE TO ONE LINE
-// ------------------------------------------------------------
-  function fitHeadlineToWidth(el, maxSize = 1.25, minSize = 0.95) {
-  if (!el) return;
-
-  // Reset to max size first
-  el.style.fontSize = `${maxSize}rem`;
-
-  // Shrink until it fits or hits minimum
-  while (el.scrollWidth > el.clientWidth && maxSize > minSize) {
-    maxSize -= 0.05;
-    el.style.fontSize = `${maxSize}rem`;
-  }
-}
 }
