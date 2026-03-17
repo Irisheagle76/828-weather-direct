@@ -219,7 +219,18 @@ h1 {
   color: #b9c7f5;
   line-height: 1.4;
 }
-
+#model-debug {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  background: rgba(0,0,0,0.55);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  color: #9ecbff;
+  pointer-events: none;
+  z-index: 9999;
+}
 /* BULLETS — true flush-left alignment */
 .today-bullets,
 .tomorrow-bullets {
@@ -459,7 +470,7 @@ h1 {
   </div>
 
   <div class="error-text" id="wu-error" style="display:none;"></div>
-
+<div id="model-debug"></div>
 </div>
 
 <script type="module" src="/js/app.js"></script>
