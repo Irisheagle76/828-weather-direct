@@ -31,7 +31,6 @@ window.toggleForecastExpanded = toggleForecastExpanded;
 // STATUS + ERROR HELPERS
 // ------------------------------------------------------------
 function setWUStatus(state, label, text) {
-  const badge = document.getElementById("wu-status-badge");
   const dot = document.getElementById("wu-status-dot");
   const lbl = document.getElementById("wu-status-label");
   const txt = document.getElementById("wu-status-text");
@@ -40,7 +39,6 @@ function setWUStatus(state, label, text) {
   txt.textContent = text;
 
   dot.classList.remove("ok", "error");
-
   if (state === "ok") dot.classList.add("ok");
   if (state === "error") dot.classList.add("error");
 }
@@ -94,35 +92,25 @@ async function initApp() {
 
         setWUStatus("ok", "WU Connected", "Weather Underground data loaded.");
 
-  // ⭐ Normalize Weather Underground current conditions
-const obs = wuCurrentRaw?.observations?.[0] ?? {};
-const imp = obs.imperial ?? {};
+        // ⭐ Normalize Weather Underground current conditions
+        const obs = wuCurrentRaw?.observations?.[0] ?? {};
+        const imp = obs.imperial ?? {};
 
-const wuCurrent = {
-  stationId: nearest.stationId,
-
-  // Temperature
-  temp: imp.temp ?? null,
-
-  // Feels like (heatIndex OR windChill OR temp)
-  feelsLike:
-    (imp.heatIndex !== null && imp.heatIndex !== undefined)
-      ? imp.heatIndex
-      : (imp.windChill !== null && imp.windChill !== undefined)
-        ? imp.windChill
-        : imp.temp ?? null,
-
-  // Dew point
-  dew: imp.dewpt ?? null,
-
-  // Humidity
-  humidity: obs.humidity ?? null,
-
-  // Wind
-  windSpeed: obs.windSpeed ?? null,
-  windGust: obs.windGust ?? null,
-  windDir: obs.winddir ?? null
-};
+        const wuCurrent = {
+          stationId: nearest.stationId,
+          temp: imp.temp ?? null,
+          feelsLike:
+            (imp.heatIndex !== null && imp.heatIndex !== undefined)
+              ? imp.heatIndex
+              : (imp.windChill !== null && imp.windChill !== undefined)
+                ? imp.windChill
+                : imp.temp ?? null,
+          dew: imp.dewpt ?? null,
+          humidity: obs.humidity ?? null,
+          windSpeed: obs.windSpeed ?? null,
+          windGust: obs.windGust ?? null,
+          windDir: obs.winddir ?? null
+        };
 
         // ⭐ 2. Tempest Device Observations
         const TEMPEST_DEVICE_ID = "315255";
@@ -131,26 +119,26 @@ const wuCurrent = {
         const tempest = await getTempestDeviceObs(TEMPEST_DEVICE_ID, TEMPEST_TOKEN);
         const tempestHigh = tempest?.tempHighToday ?? null;
 
-  // ⭐ 3. Hourly Forecast (Open-Meteo format)
-const hourly = await getShortTermForecast(lat, lon);
+        // ⭐ 3. Hourly Forecast (Open-Meteo format)
+        const hourly = await getShortTermForecast(lat, lon);
 
-// Validate hourly structure
-if (!hourly?.time || !Array.isArray(hourly.time)) {
-  throw new Error("Open-Meteo hourly data missing or malformed");
-}
+        // Validate hourly structure
+        if (!hourly?.time || !Array.isArray(hourly.time)) {
+          throw new Error("Open-Meteo hourly data missing or malformed");
+        }
 
-// ⭐ Convert Open-Meteo column format → array of hourly objects
-const hours = hourly.time.map((t, i) => ({
-  time: t,
-  temp: hourly.temperature_2m?.[i] ?? null,
-  dewpoint: hourly.dewpoint_2m?.[i] ?? null,
-  rain: hourly.rain?.[i] ?? null,
-  snow: hourly.snowfall?.[i] ?? null,
-  windSpeed: hourly.wind_speed_10m?.[i] ?? null,
-  windGust: hourly.wind_gusts_10m?.[i] ?? null,
-  uv: hourly.uv_index?.[i] ?? null,
-  cloud: hourly.cloudcover?.[i] ?? null
-}));
+        // ⭐ Convert Open-Meteo column format → array of hourly objects
+        const hours = hourly.time.map((t, i) => ({
+          time: t,
+          temp: hourly.temperature_2m?.[i] ?? null,
+          dewpoint: hourly.dewpoint_2m?.[i] ?? null,
+          rain: hourly.rain?.[i] ?? null,
+          snow: hourly.snowfall?.[i] ?? null,
+          windSpeed: hourly.wind_speed_10m?.[i] ?? null,
+          windGust: hourly.wind_gusts_10m?.[i] ?? null,
+          uv: hourly.uv_index?.[i] ?? null,
+          cloud: hourly.cloudcover?.[i] ?? null
+        }));
 
         window._hourly = hours;
 
@@ -207,12 +195,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (todayModule) {
     todayModule.addEventListener("click", () => {
+      if (!window._intel) return;
       toggleForecastExpanded("today", window._intel);
     });
   }
 
   if (tomorrowModule) {
     tomorrowModule.addEventListener("click", () => {
+      if (!window._intel) return;
       toggleForecastExpanded("tomorrow", window._intel);
     });
   }
