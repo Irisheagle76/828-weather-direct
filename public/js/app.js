@@ -105,17 +105,19 @@ async function initApp() {
         const hourly = await getShortTermForecast(lat, lon);
 
         // ⭐ Convert Open-Meteo column format → array of hourly objects
-        const hours = hourly.time.map((t, i) => ({
-          time: t,
-          temp: hourly.temperature_2m[i],
-          dewpoint: hourly.dewpoint_2m[i],
-          rain: hourly.rain[i],
-          snow: hourly.snowfall[i],
-          windSpeed: hourly.wind_speed_10m[i],
-          windGust: hourly.wind_gusts_10m[i],
-          uv: hourly.uv_index[i],
-          cloud: hourly.cloudcover?.[i] ?? null
-        }));
+      const h = hourly.hourly; // shorthand
+
+const hours = h.time.map((t, i) => ({
+  time: t,
+  temp: h.temperature_2m?.[i] ?? null,
+  dewpoint: h.dewpoint_2m?.[i] ?? null,
+  rain: h.rain?.[i] ?? null,
+  snow: h.snowfall?.[i] ?? null,
+  windSpeed: h.wind_speed_10m?.[i] ?? null,
+  windGust: h.wind_gusts_10m?.[i] ?? null,
+  uv: h.uv_index?.[i] ?? null,
+  cloud: h.cloudcover?.[i] ?? null
+}));
 
         // Debug
         window._hourly = hours;
