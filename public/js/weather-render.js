@@ -198,25 +198,36 @@ export function renderTodayOutlook(intel) {
   const headlineEl = document.getElementById("today-headline");
   const textEl = document.getElementById("today-text");
   const bulletsEl = document.getElementById("today-bullets");
+  const remainderLabel = document.getElementById("today-remainder-label");
 
   const today = intel.today;
   const remainder = intel.remainderToday;
 
+  // If neither exists, bail
   if ((!today || !today.available) && (!remainder || !remainder.available)) {
     headlineEl.textContent = "No data available";
     textEl.textContent = "";
     bulletsEl.innerHTML = "";
+    remainderLabel.style.display = "none";
     return;
   }
 
+  // Choose which intel to show
   const active = (remainder && remainder.available) ? remainder : today;
 
+  // Show or hide the remainder label
+  if (active === remainder) {
+    remainderLabel.style.display = "block";
+  } else {
+    remainderLabel.style.display = "none";
+  }
+
+  // Render
   emojiEl.textContent = "";
   headlineEl.textContent = active.headline;
   fitHeadlineToWidth(headlineEl);
 
   textEl.textContent = active.narrative;
-
   renderBullets(bulletsEl, active.bullets);
 
   const todayModule = document.getElementById("today-module");
