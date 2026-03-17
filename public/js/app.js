@@ -172,13 +172,18 @@ const hours = hourly.hourly.time.map((t, i) => ({
         window._intel = intel;
 
         // ⭐ 6. Update UI
-        updateUI(intel);
+updateUI(intel);
 
-      } catch (err) {
-        console.error("Weather init error:", err);
-        setWUStatus("error", "Data Error", "Unable to load weather data.");
-        showWUError("Unable to load weather data. Please try again later.");
-      }
+// ⭐ Debug overlay — show which forecast model was used
+const dbg = document.getElementById("model-debug");
+if (dbg && window._forecastModel) {
+  dbg.textContent = `Forecast model: ${window._forecastModel.toUpperCase()}`;
+}
+     } catch (err) {
+  console.error("Weather init error:", err);
+  setWUStatus("error", "Data Error", "Unable to load weather data.");
+  showWUError("Unable to load weather data. Please try again later.");
+}
     },
 
     (err) => {
