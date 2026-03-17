@@ -1,198 +1,321 @@
-// ============================================================
-// UNIFIED OUTLOOK SYNTHESIZER (Expressive Tone C)
-// Headline + Bullets only
-// Includes:
-// - Morning commute awareness (5–9 AM)
-// - Precip intensity tiers
-// - Rain-to-snow transition language
-// - Clothing guidance as final bullet
-// - Today fade-out (after 7 PM)
-// - Tomorrow fade-in (before 5 AM)
-// - Bullet polishing + wind dedupe + clothing compression
-// ============================================================
+// /intel/synthesizer.js
+// Human‑Action Outlook Generator — Warm + Direct Hybrid Tone
+// Includes: Trend Awareness, Emoji Variation, Anti‑Redundancy
 
-// ------------------------------------------------------------
-// MAIN SYNTHESIZER
-// ------------------------------------------------------------
-export function synthesizeOutlook({ raw, comfort }) {
-  const { phases, drivers, trends, dominant, commute, precipTotal, snowTotal } = raw.meta;
-  const bullets = [];
-
-  // ------------------------------------------------------------
-  // PRECIP INTENSITY HELPER
-  // ------------------------------------------------------------
-  function describePrecipIntensity(total) {
-    if (total >= 0.25) return "Heavier rain at times.";
-    if (total >= 0.10) return "Steadier rain at times.";
-    if (total >= 0.05) return "A few showers around.";
-    if (total > 0) return "A stray shower possible.";
-    return "";
-  }
-
-  const precipIntensity = describePrecipIntensity(precipTotal);
-
-  // ------------------------------------------------------------
-  // HEADLINE
-  // ------------------------------------------------------------
-  const headline = (() => {
-    if (commute?.commuteHeavy && dominant === "rain" && trends.tempFalling) {
-      return "Rainy morning, then turning sharply colder.";
-    }
-
-    if (commute?.commutePrecip >= 0.05 && dominant === "rain") {
-      return "Rain early, then cooling later.";
-    }
-
-    if (dominant === "snow" && phases.includes("post-frontal-cold")) {
-      return "Colder air brings snow showers.";
-    }
-
-    if (dominant === "wind") return "Breezy with shifting winds.";
-    if (dominant === "heat") return "Warm and a bit intense at times.";
-    if (dominant === "cold") return "A colder feel settling in.";
-    if (dominant === "goldilocks") return "A pleasant, comfortable day overall.";
-    if (dominant === "rain") return "Showers drifting through at times.";
-
-    return "A quiet day overall.";
-  })();
-
-  // ------------------------------------------------------------
-  // BULLETS
-  // ------------------------------------------------------------
-
-  // COMMUTE IMPACTS
-  if (commute?.commuteHeavy) {
-    bullets.push("Steadier rain for the morning commute.");
-  } else if (commute?.commutePrecip >= 0.05) {
-    bullets.push("Rain likely early, especially around the commute.");
-  }
-
-  // PRECIP INTENSITY
-  if (precipIntensity && !commute?.commuteHeavy) {
-    bullets.push(precipIntensity);
-  }
-
-  // RAIN → SNOW TRANSITION
-  if (snowTotal > 0 && phases.includes("post-frontal-cold")) {
-    bullets.push("Rain may mix with wet snow later.");
-  }
-
-  // WIND (dedupe)
-  if (drivers.includes("wind")) {
-    const hasWindBullet = bullets.some(b =>
-      b.toLowerCase().includes("breezy") ||
-      b.toLowerCase().includes("wind")
-    );
-    if (!hasWindBullet) {
-      bullets.push("Breezy at times.");
-    }
-  }
-
-  // ------------------------------------------------------------
-  // SUPPRESS COMFORT BULLETS ON ACTIVE WEATHER DAYS
-  // ------------------------------------------------------------
-  const activeWeather =
-    dominant !== "easy" &&
-    dominant !== "goldilocks" &&
-    (
-      precipTotal > 0.05 ||
-      commute?.commutePrecip > 0.05 ||
-      trends.tempFalling ||
-      drivers.includes("front") ||
-      drivers.includes("wind") ||
-      drivers.includes("snow") ||
-      phases.includes("frontal-passage") ||
-      phases.includes("post-frontal-cold")
-    );
-
-  if (!activeWeather) {
-    const comfortText = comfort.summary.toLowerCase();
-    if (comfortText.includes("humid")) bullets.push("Humidity may feel a bit sticky.");
-    if (comfortText.includes("crisp")) bullets.push("Air stays crisp and comfortable.");
-    if (dominant === "goldilocks") bullets.push("A great day for outdoor plans.");
-  }
-
-  // ------------------------------------------------------------
-  // CLOTHING GUIDANCE (compressed + conditional snow-gear)
-  // ------------------------------------------------------------
-  if (raw.clothing) {
-    const base = raw.clothing
-      .replace(/\s+/g, " ")
-      .replace(/\.+/g, ".")
-      .trim()
-      .replace(/\.$/, "");
-
-    const needsSnowGear =
-      snowTotal > 0 ||
-      phases.includes("post-frontal-cold") ||
-      drivers.includes("snow");
-
-    if (needsSnowGear) {
-      bullets.push(`Clothing: ${base}, with snow gear kept at the ready.`);
-    } else {
-      bullets.push(`Clothing: ${base}.`);
-    }
-  }
-
-  // ------------------------------------------------------------
-  // BULLET POLISHING PASS
-  // ------------------------------------------------------------
-  const seenKeys = new Set();
-  const polished = [];
-
-  for (const b of bullets) {
-    const key = b.toLowerCase()
-      .replace(/[^a-z0-9 ]/g, "")
-      .replace(/\s+/g, " ")
-      .trim();
-
-    if (seenKeys.has(key)) continue;
-
-    const headlineKey = headline.toLowerCase().replace(/[^a-z0-9 ]/g, "");
-    if (headlineKey.includes(key) || key.includes(headlineKey)) continue;
-
-    seenKeys.add(key);
-    polished.push(b);
-  }
-
-  // ------------------------------------------------------------
-  // FADE LOGIC
-  // ------------------------------------------------------------
-  const now = new Date();
-  const hour = now.getHours();
-
-  // TODAY fade-out (after 7 PM)
-  if (raw?.meta?.dayType === "today" && hour >= 19) {
+export function synthesizeOutlook(stats, events, hours) {
+  if (!stats || hours.length === 0) {
     return {
-      headline: "The day is winding down.",
-      text: "Fresh forecast updates arrive tomorrow morning.",
+      headline: "No data available",
+      narrative: "",
       bullets: [],
-      emoji: "",
-      isEndOfDay: true,
+      isEndOfDay: false,
       isEarlyMorning: false
     };
   }
 
-  // TOMORROW fade-in (before 5 AM)
-  if (raw?.meta?.dayType === "tomorrow" && hour < 5) {
-    return {
-      headline: "Forecast updates arriving shortly.",
-      text: "Tomorrow’s details will appear as the morning begins.",
-      bullets: [],
-      emoji: "",
-      isEndOfDay: false,
-      isEarlyMorning: true
-    };
+  const trends = detectTrends(stats);
+  const emoji = pickEmoji(events, trends);
+
+  return {
+    headline: generateHeadline(stats, events, trends, emoji),
+    narrative: generateHumanNarrative(stats, events, trends),
+    bullets: generateHumanBullets(stats, events),
+    isEndOfDay: events?.isEndOfDay ?? false,
+    isEarlyMorning: events?.isEarlyMorning ?? false
+  };
+}
+
+// ------------------------------------------------------------
+// HEADLINE — expressive, warm + direct, trend‑aware, emoji‑aware
+// ------------------------------------------------------------
+function generateHeadline(stats, events, trends, emoji) {
+  const d = events?.driver;
+
+  const baseMap = {
+    rain: "A damp, drizzly kind of day",
+    snow: "Snowy vibes ahead",
+    wind: "A breezy, lively day",
+    hot: "Warm and energetic",
+    cold: "A chilly, layered kind of day",
+    goldilocks: "A genuinely pleasant day",
+    easy: "A calm, manageable day"
+  };
+
+  let base = baseMap[d] ?? "A steady, uncomplicated day";
+
+  // Trend overrides
+  if (trends.includes("bigWarmup")) base = "A day that warms up nicely";
+  if (trends.includes("coolingOff")) base = "A cooler, more settled day";
+  if (trends.includes("brightening")) base = "A day that tries to brighten";
+  if (trends.includes("cloudy")) base = "A gray, moody kind of day";
+
+  return `${emoji} ${base}`;
+}
+
+// ------------------------------------------------------------
+// NARRATIVE — warm + direct, trend‑aware, no stat dumps
+// ------------------------------------------------------------
+function generateHumanNarrative(stats, events, trends) {
+  const { tempMin, tempMax, windGustMax, rainTotal, snowTotal, cloudAvg } = stats;
+
+  const parts = [
+    buildTempPhrase(tempMin, tempMax),
+    buildWindPhrase(windGustMax),
+    buildPrecipPhrase(rainTotal, snowTotal),
+    buildCloudPhrase(cloudAvg)
+  ];
+
+  if (trends.includes("bigWarmup")) parts.push("The day warms noticeably as it goes.");
+  if (trends.includes("coolingOff")) parts.push("Temperatures ease downward into a cooler feel.");
+  if (trends.includes("gusty")) parts.push("Winds get lively at times.");
+  if (trends.includes("calming")) parts.push("Winds ease back later on.");
+  if (trends.includes("brightening")) parts.push("Skies may try to brighten.");
+  if (trends.includes("cloudy")) parts.push("Clouds hold firm for much of the day.");
+
+  return parts.filter(Boolean).join(" ").trim();
+}
+
+// ------------------------------------------------------------
+// BULLETS — human, actionable, no stat dumps
+// ------------------------------------------------------------
+function generateHumanBullets(stats, events) {
+  const bullets = [];
+
+  // Clothing
+  if (stats.tempMax <= 40) bullets.push("Dress warm — layers help.");
+  else if (stats.tempMax <= 55) bullets.push("A jacket is a smart move.");
+  else if (stats.tempMax >= 80) bullets.push("Light clothing keeps things comfortable.");
+
+  // Wind
+  if (stats.windGustMax >= 35) bullets.push("Expect a few pushy gusts.");
+  else if (stats.windGustMax >= 20) bullets.push("A breezy afternoon may nudge you around.");
+
+  // Rain
+  if (stats.rainTotal >= 0.25) bullets.push("Keep rain gear handy.");
+  else if (stats.rainTotal > 0) bullets.push("A quick shower is possible.");
+
+  // Snow
+  if (stats.snowTotal >= 0.5) {
+    bullets.push("Watch for slick spots early.");
+  } else if (stats.snowTotal > 0) {
+    const options = [
+      "A touch of snow early in the day.",
+      "A light dusting to start things off.",
+      "Snowflakes could make a morning appearance."
+    ];
+    bullets.push(options[Math.floor(Math.random() * options.length)]);
   }
 
-  // ------------------------------------------------------------
-  // NORMAL RETURN
-  // ------------------------------------------------------------
+  // Clouds
+  if (stats.cloudAvg >= 80) bullets.push("Skies stay mostly gray.");
+  else if (stats.cloudAvg <= 40) bullets.push("Some brighter breaks possible.");
+
+  // Commute cues
+  if (events?.pmCommuteImpact) bullets.push("PM commute: possible delays.");
+  if (events?.amCommuteImpact) bullets.push("AM commute: allow a little extra time.");
+
+  return bullets;
+}
+
+// ------------------------------------------------------------
+// PHRASE HELPERS — warm + direct
+// ------------------------------------------------------------
+function buildTempPhrase(min, max) {
+  if (max <= 32) return "Cold from start to finish.";
+  if (max <= 45) return "Chilly overall.";
+  if (max <= 60) return "Cool but manageable.";
+  if (max <= 75) return "Comfortable for most of the day.";
+  if (max <= 85) return "Warm but not overbearing.";
+  return "On the hotter side.";
+}
+
+function buildWindPhrase(gust) {
+  if (gust >= 45) return "Winds get feisty at times.";
+  if (gust >= 30) return "A few lively gusts in the mix.";
+  if (gust >= 20) return "A gentle, steady breeze.";
+  return "";
+}
+
+function buildPrecipPhrase(rain, snow) {
+  if (snow >= 1) return "Snow makes a noticeable appearance.";
+  if (snow > 0) return "A touch of snow early.";
+  if (rain >= 0.5) return "Rain is a steady companion.";
+  if (rain > 0) return "A few showers drift through.";
+  return "";
+}
+
+function buildCloudPhrase(cloud) {
+  if (cloud >= 80) return "Skies lean gray and moody.";
+  if (cloud <= 40) return "Some brighter breaks possible.";
+  return "";
+}
+
+// ------------------------------------------------------------
+// TREND AWARENESS
+// ------------------------------------------------------------
+function detectTrends(stats) {
+  const trends = [];
+
+  if (stats.tempMax - stats.tempMin >= 20) trends.push("bigWarmup");
+  else if (stats.tempMin - stats.tempMax >= 10) trends.push("coolingOff");
+
+  if (stats.windGustMax >= 35) trends.push("gusty");
+  else if (stats.windGustMax <= 10) trends.push("calming");
+
+  if (stats.rainTotal >= 0.25 || stats.snowTotal >= 0.25) trends.push("wetPattern");
+  else if (stats.rainTotal === 0 && stats.snowTotal === 0) trends.push("dryingOut");
+
+  if (stats.cloudAvg >= 80) trends.push("cloudy");
+  else if (stats.cloudAvg <= 40) trends.push("brightening");
+
+  return trends;
+}
+
+// ------------------------------------------------------------
+// EMOJI VARIATION
+// ------------------------------------------------------------
+function pickEmoji(events, trends) {
+  const d = events?.driver;
+
+  const map = {
+    rain: ["🌧️", "🌦️", "☔"],
+    snow: ["❄️", "🌨️", "☃️"],
+    wind: ["🌬️", "🍃", "💨"],
+    hot: ["🔥", "🌞", "🥵"],
+    cold: ["🥶", "❄️", "🧊"],
+    goldilocks: ["🌤️", "🌿", "😊"],
+    easy: ["🌤️", "🙂", "🍃"]
+  };
+
+  const trendMap = {
+    bigWarmup: ["📈", "🌡️"],
+    coolingOff: ["📉", "🧥"],
+    gusty: ["💨"],
+    calming: ["🍃"],
+    wetPattern: ["☔"],
+    dryingOut: ["🌤️"],
+    cloudy: ["☁️"],
+    brightening: ["🌤️"]
+  };
+
+  const base = map[d] ?? ["🌤️"];
+  const trendEmojis = trends.flatMap(t => trendMap[t] ?? []);
+
+  const combined = [...base, ...trendEmojis];
+  return combined[Math.floor(Math.random() * combined.length)];
+}
+
+// ------------------------------------------------------------
+// REMAINDER-OF-TODAY OUTLOOK — earlier vs later comparison
+// ------------------------------------------------------------
+export function synthesizeRemainderTodayOutlook(statsEarlier, statsRemainder) {
+  const deltas = {
+    tempDrop: statsEarlier.tempMax - statsRemainder.tempMax,
+    windDrop: statsEarlier.windGustMax - statsRemainder.windGustMax,
+    cloudDrop: statsEarlier.cloudAvg - statsRemainder.cloudAvg,
+    precipEarlier: statsEarlier.rainTotal + statsEarlier.snowTotal,
+    precipLater: statsRemainder.rainTotal + statsRemainder.snowTotal
+  };
+
+  let headline = "A steady finish to the day";
+  const narrativeParts = [];
+  const bullets = [];
+
+  // Temperature comparison
+  if (deltas.tempDrop >= 12) {
+    narrativeParts.push("Temperatures fall sharply compared to earlier today.");
+    bullets.push("Expect a noticeably cooler feel.");
+  } else if (deltas.tempDrop >= 6) {
+    narrativeParts.push("A cooler turn compared to earlier today.");
+  }
+
+  // Wind comparison
+  if (deltas.windDrop >= 10) {
+    narrativeParts.push("Winds calm down after a breezy start.");
+  }
+
+  // Cloud comparison
+  if (deltas.cloudDrop >= 20) {
+    narrativeParts.push("Skies brighten a bit after a gray start.");
+  }
+
+  // Precip comparison
+  if (deltas.precipEarlier > 0 && deltas.precipLater === 0) {
+    narrativeParts.push("No more precipitation expected after this morning’s activity.");
+    bullets.push("Roads should gradually improve.");
+  }
+
+  // If nothing dramatic changes
+  if (narrativeParts.length === 0) {
+    narrativeParts.push("A quiet, uncomplicated finish to the day.");
+  }
+
   return {
     headline,
-    text: "",
-    bullets: polished.slice(0, 5),
-    isEndOfDay: false,
-    isEarlyMorning: false
+    narrative: narrativeParts.join(" "),
+    bullets
   };
+}
+
+// ------------------------------------------------------------
+// ANTI‑REDUNDANCY — ensures Tomorrow doesn't echo Today
+// ------------------------------------------------------------
+export function differentiateFromToday(todayOutlook, tomorrowOutlook) {
+  if (!todayOutlook || !tomorrowOutlook) return tomorrowOutlook;
+
+  const tdy = todayOutlook;
+  const tmr = { ...tomorrowOutlook };
+
+  if (tdy.headline === tmr.headline) {
+    tmr.headline = transformHeadline(tmr.headline);
+  }
+
+  const overlap = wordOverlap(tdy.narrative, tmr.narrative);
+  if (overlap > 0.45) {
+    tmr.narrative = reframeNarrative(tmr.narrative);
+  }
+
+  tmr.bullets = tmr.bullets.filter(b => {
+    return !tdy.bullets.some(tb => bulletSimilarity(tb, b) > 0.5);
+  });
+
+  if (tmr.bullets.length === 0) {
+    tmr.bullets.push("A different feel from today.");
+  }
+
+  return tmr;
+}
+
+// ------------------------------------------------------------
+// ANTI‑REDUNDANCY HELPERS
+// ------------------------------------------------------------
+function wordOverlap(a, b) {
+  const A = new Set(a.toLowerCase().split(/\W+/));
+  const B = new Set(b.toLowerCase().split(/\W+/));
+  const inter = [...A].filter(x => B.has(x));
+  return inter.length / Math.min(A.size, B.size);
+}
+
+function bulletSimilarity(a, b) {
+  const A = a.toLowerCase().split(/\W+/);
+  const B = b.toLowerCase().split(/\W+/);
+  const inter = A.filter(x => B.includes(x));
+  return inter.length / Math.min(A.length, B.length);
+}
+
+function transformHeadline(h) {
+  const variants = [
+    "A different feel tomorrow",
+    "A shift in the pattern",
+    "A new tone to the day",
+    "A change of pace ahead"
+  ];
+  return variants[Math.floor(Math.random() * variants.length)];
+}
+
+function reframeNarrative(n) {
+  return (
+    "Tomorrow brings a slightly different rhythm. " +
+    n.replace(/^[A-Z][^.]+\./, "").trim()
+  );
 }
