@@ -48,8 +48,14 @@ export default async function handler(req, res) {
 
     try {
       const ogRes = await fetch(
-        `${req.headers.origin}/api/substack-og?url=${encodeURIComponent(article.link)}`
-      );
+        const baseUrl =
+  process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000";
+
+const ogRes = await fetch(
+  `${baseUrl}/api/substack-og?url=${encodeURIComponent(article.link)}`
+);
       const ogData = await ogRes.json();
       ogImage = ogData.ogImage || null;
     } catch (err) {
