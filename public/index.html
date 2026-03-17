@@ -331,6 +331,61 @@
     filter: saturate(0.8);
     transition: opacity 0.6s ease, transform 0.6s ease, filter 0.6s ease;
   }
+  .substack-module {
+  /* Inherits .module-card look; this is just light tuning */
+}
+
+.substack-notes-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.substack-note-item {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 0.5rem;
+}
+
+.substack-note-item:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.substack-note-meta,
+.substack-article-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.substack-note-time,
+.substack-article-time {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.substack-note-snippet,
+.substack-article-snippet {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin-bottom: 0.35rem;
+}
+
+.substack-note-link,
+.substack-article-link {
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.substack-note-link:hover,
+.substack-article-link:hover {
+  text-decoration: underline;
+}
 </style>
 </head>
 
