@@ -223,18 +223,23 @@
     color: #ffffff;
     margin-bottom: 0.3rem;
     line-height: 1.2;
+
+    /* ⭐ Auto‑shrink support */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: font-size 0.15s ease;
   }
-  .action-headline {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: block;
-  transition: font-size 0.15s ease;
-}
+
   .action-text {
     font-size: 0.82rem;
     color: #b9c7f5;
     line-height: 1.4;
+
+    /* ⭐ Prevent micro‑overflow */
+    overflow-wrap: break-word;
+    word-break: break-word;
+    max-width: 100%;
   }
 
 /* BULLETS */
@@ -469,3 +474,4 @@
 
 </body>
 </html>
+
