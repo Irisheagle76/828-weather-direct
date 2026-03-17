@@ -172,7 +172,7 @@ function renderBullets(ul, bullets) {
 }
 
 // ------------------------------------------------------------
-// RENDER RIGHT NOW COMFORT (Unified Comfort Engine)
+// RENDER RIGHT NOW COMFORT
 // ------------------------------------------------------------
 export function renderRightNowComfort(intel) {
   const emojiEl = document.getElementById("comfort-emoji");
@@ -191,7 +191,7 @@ export function renderRightNowComfort(intel) {
 }
 
 // ------------------------------------------------------------
-// RENDER TODAY OUTLOOK
+// RENDER TODAY OUTLOOK (with remainder-of-today support)
 // ------------------------------------------------------------
 export function renderTodayOutlook(intel) {
   const emojiEl = document.getElementById("today-emoji");
@@ -203,26 +203,21 @@ export function renderTodayOutlook(intel) {
   const today = intel.today;
   const remainder = intel.remainderToday;
 
-  // If neither exists, bail
   if ((!today || !today.available) && (!remainder || !remainder.available)) {
     headlineEl.textContent = "No data available";
     textEl.textContent = "";
     bulletsEl.innerHTML = "";
-    remainderLabel.style.display = "none";
+    if (remainderLabel) remainderLabel.style.display = "none";
     return;
   }
 
-  // Choose which intel to show
   const active = (remainder && remainder.available) ? remainder : today;
 
-  // Show or hide the remainder label
-  if (active === remainder) {
-    remainderLabel.style.display = "block";
-  } else {
-    remainderLabel.style.display = "none";
+  if (remainderLabel) {
+    if (active === remainder) remainderLabel.style.display = "block";
+    else remainderLabel.style.display = "none";
   }
 
-  // Render
   emojiEl.textContent = "";
   headlineEl.textContent = active.headline;
   fitHeadlineToWidth(headlineEl);
@@ -283,7 +278,6 @@ export function renderTomorrowOutlook(intel) {
   fitHeadlineToWidth(headlineEl);
 
   textEl.textContent = tomorrow.narrative;
-
   renderBullets(bulletsEl, tomorrow.bullets);
 
   const tomorrowModule = document.getElementById("tomorrow-module");
@@ -294,7 +288,7 @@ export function renderTomorrowOutlook(intel) {
 }
 
 // ------------------------------------------------------------
-// RENDER UV INDEX (FORECAST)
+// RENDER UV INDEX
 // ------------------------------------------------------------
 export function renderUV(intel) {
   const uvEl = document.getElementById("wu-uv");
