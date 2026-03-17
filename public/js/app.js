@@ -8,7 +8,7 @@ import {
   getWUCurrentConditions,
   getShortTermForecast,
   getMRMSPixel,
-  getTempestDeviceObs
+  getTempestDeviceObs   // ⭐ Correct Tempest function
 } from './weather-fetch.js';
 
 import { buildWeatherIntel } from './intel/forecast-intel.js';
@@ -88,65 +88,47 @@ async function initApp() {
       const lon = pos.coords.longitude;
 
       try {
-        // ⭐ 1. WU Station + Current Conditions
+        // ⭐ 1. WU Station + Current Conditions (NO HISTORY)
         const nearest = await getNearestWUStation(lat, lon);
         const wuCurrent = await getWUCurrentConditions(nearest.stationId);
 
         setWUStatus("ok", "WU Connected", "Weather Underground data loaded.");
 
-        // ⭐ 2. Tempest Device Observations
+        // ⭐ 2. Tempest Device Observations (today's high comes from here)
         const TEMPEST_DEVICE_ID = "315255";
         const TEMPEST_TOKEN = "838ff386-d14b-4d45-897a-18903e6970a9";
 
         const tempest = await getTempestDeviceObs(TEMPEST_DEVICE_ID, TEMPEST_TOKEN);
+
+        // ⭐ Extract Tempest high/low
         const tempestHigh = tempest?.tempHighToday ?? null;
 
-        // ⭐ 3. Hourly Forecast (Open-Meteo format)
+        // ⭐ 3. Hourly Forecast
         const hourly = await getShortTermForecast(lat, lon);
 
-        // ⭐ Convert Open-Meteo column format → array of hourly objects
-      const h = hourly.hourly; // shorthand
-
-const hours = h.time.map((t, i) => ({
-  time: t,
-  temp: h.temperature_2m?.[i] ?? null,
-  dewpoint: h.dewpoint_2m?.[i] ?? null,
-  rain: h.rain?.[i] ?? null,
-  snow: h.snowfall?.[i] ?? null,
-  windSpeed: h.wind_speed_10m?.[i] ?? null,
-  windGust: h.wind_gusts_10m?.[i] ?? null,
-  uv: h.uv_index?.[i] ?? null,
-  cloud: h.cloudcover?.[i] ?? null
-}));
-
         // Debug
-        window._hourly = hours;
+        window._hourly = hourly;
 
         // ⭐ 4. MRMS Radar Pixel
         const mrmsPixel = await getMRMSPixel(lat, lon);
 
         // ⭐ 5. Build Unified Intelligence
-        const intel = buildWeatherIntel(hours);
+        const intel = buildWeatherIntel(hourly);
 
         // Attach WU + MRMS + Tempest
         intel.wu = wuCurrent;
         intel.mrms = mrmsPixel;
         intel.tempest = tempest;
 
-        // ⭐ Merge Tempest wind into WU wind (Tempest = primary)
-        intel.wu.windSpeed = tempest?.windSpeed ?? intel.wu.windSpeed;
-        intel.wu.windGust  = tempest?.windGust  ?? intel.wu.windGust;
-        intel.wu.windDir   = tempest?.windDir   ?? intel.wu.windDir;
-
         // ⭐ Attach Tempest high into today's stats
         intel.today = intel.today || {};
         intel.today.stats = intel.today.stats || {};
         intel.today.stats.maxTemp = tempestHigh;
 
-        // ⭐ Compute comfort now that Tempest high + wind are attached
+        // ⭐ Compute comfort now that Tempest high is attached
         intel.comfort = computeComfort(intel);
 
-        // Debug
+        // Expose for debugging
         window._intel = intel;
 
         // ⭐ 6. Update UI
