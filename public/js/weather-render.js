@@ -34,10 +34,8 @@ function formatSnowAmount(amount) {
 function fitHeadlineToWidth(el, maxSize = 1.25, minSize = 0.95) {
   if (!el) return;
 
-  // Reset to max size first
   el.style.fontSize = `${maxSize}rem`;
 
-  // Shrink until it fits or hits minimum
   while (el.scrollWidth > el.clientWidth && maxSize > minSize) {
     maxSize -= 0.05;
     el.style.fontSize = `${maxSize}rem`;
@@ -58,7 +56,6 @@ export function renderCurrentObservations(intel) {
   const gustEl = document.getElementById("wu-wind-gust");
   const uvEl = document.getElementById("wu-uv");
 
-  // Temperature
   if (tempEl) {
     tempEl.textContent = wu.temp != null ? `${wu.temp}°` : "--";
     tempEl.className = "metric-value";
@@ -72,7 +69,6 @@ export function renderCurrentObservations(intel) {
     else tempEl.classList.add("temp-hot");
   }
 
-  // Dew Point
   if (dewEl) {
     dewEl.textContent = wu.dewPoint != null ? `${wu.dewPoint}°` : "--";
     dewEl.className = "metric-value";
@@ -88,7 +84,6 @@ export function renderCurrentObservations(intel) {
     humEl.textContent = wu.humidity != null ? `Humidity ${wu.humidity}%` : "Humidity --";
   }
 
-  // Wind
   if (windEl) {
     const dir = wu.windDir != null ? degToCompass(wu.windDir) : "";
     const spd = wu.windSpeed != null ? `${wu.windSpeed} mph` : "--";
@@ -99,7 +94,6 @@ export function renderCurrentObservations(intel) {
     gustEl.textContent = wu.windGust != null ? `Gusts ${wu.windGust} mph` : "Gusts --";
   }
 
-  // UV
   if (uvEl) {
     uvEl.textContent = wu.uv != null ? wu.uv : "--";
     uvEl.className = "metric-value " + getUVClass(wu.uv ?? 0);
@@ -206,25 +200,27 @@ export function renderTodayOutlook(intel) {
   const bulletsEl = document.getElementById("today-bullets");
 
   const today = intel.today;
-  if (!today || !today.available) {
+  const remainder = intel.remainderToday;
+
+  if ((!today || !today.available) && (!remainder || !remainder.available)) {
     headlineEl.textContent = "No data available";
     textEl.textContent = "";
     bulletsEl.innerHTML = "";
     return;
   }
 
-  emojiEl.textContent = "";
-  headlineEl.textContent = today.headline;
+  const active = (remainder && remainder.available) ? remainder : today;
 
-  // ⭐ Auto‑shrink headline
+  emojiEl.textContent = "";
+  headlineEl.textContent = active.headline;
   fitHeadlineToWidth(headlineEl);
 
-  textEl.textContent = today.narrative;
+  textEl.textContent = active.narrative;
 
-  renderBullets(bulletsEl, today.bullets);
+  renderBullets(bulletsEl, active.bullets);
 
   const todayModule = document.getElementById("today-module");
-  if (todayModule) {
+  if (todayModule && today) {
     if (today.isEndOfDay) todayModule.classList.add("fade");
     else todayModule.classList.remove("fade");
   }
@@ -253,7 +249,6 @@ export function renderTomorrowOutlook(intel) {
 
   const dominant = tomorrow.events?.driver ?? "easy";
 
-  // ⭐ Updated badge map — no "easy" entry
   const badgeMap = {
     rain:  { text: "Rain Gear",     class: "badge-rain" },
     wind:  { text: "Wind Alert",    class: "badge-wind" },
@@ -265,18 +260,15 @@ export function renderTomorrowOutlook(intel) {
 
   const badge = badgeMap[dominant];
 
-  // ⭐ Hide badge container entirely for "easy" days
   if (!badge) {
-    badgeContainer.style.display = "none";
+    if (badgeContainer) badgeContainer.style.display = "none";
   } else {
-    badgeContainer.style.display = "block";
+    if (badgeContainer) badgeContainer.style.display = "block";
     badgeEl.textContent = badge.text;
     badgeEl.className = `badge ${badge.class}`;
   }
 
   headlineEl.textContent = tomorrow.headline;
-
-  // ⭐ Auto‑shrink headline
   fitHeadlineToWidth(headlineEl);
 
   textEl.textContent = tomorrow.narrative;
