@@ -1,47 +1,41 @@
-// Serverless function: /api/substack-notes
-// Fetches latest Substack Notes and returns a compact JSON payload
-
 export default async function handler(req, res) {
-  const FEED_URL = 'https://timothyballisty.substack.com/feed/notes';
+  const FEED_URL = "https://timothyballisty.substack.com/feed/notes";
 
   try {
     const response = await fetch(FEED_URL);
-    if (!response.ok) {
-      throw new Error(`Substack Notes RSS error: ${response.status}`);
-    }
+    if (!response.ok) throw new Error("Substack Notes RSS error");
 
     const xml = await response.text();
 
-    // Very lightweight XML parsing using DOMParser-like approach via regex
-    // (Good enough for Substack's consistent RSS structure)
-    const items = Array.from(xml.matchAll(/<item>([\s\S]*?)<\/item>/g)).map(match => {
-      const itemXml = match[1];
+    const items = Array.from(xml.matchAll(/<item>([\s\S]*?)<\/item>/g)).map(
+      (match) => {
+        const itemXml = match[1];
 
-      const getTag = (tag) => {
-        const m = itemXml.match(new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`));
-        return m ? m[1].trim() : '';
-      };
+        const getTag = (tag) => {
+          const m = itemXml.match(
+            new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`)
+          );
+          return m ? m[1].trim() : "";
+        };
 
-      const title = getTag('title');
-      const link = getTag('link');
-      const pubDate = getTag('pubDate');
-      const description = getTag('description');
-
-      return { title, link, pubDate, description };
-    });
-
-    // Keep only the 3 most recent Notes
-    const latestNotes = items.slice(0, 3);
+        return {
+          title: getTag("title"),
+          link: getTag("link"),
+          pubDate: getTag("pubDate"),
+          description: getTag("description"),
+        };
+      }
+    );
 
     res.status(200).json({
       success: true,
-      notes: latestNotes,
+      notes: items.slice(0, 3),
     });
-  } catch (error) {
-    console.error('Error fetching Substack Notes:', error);
+  } catch (err) {
+    console.error("Error fetching Substack Notes:", err);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch Substack Notes.',
+      error: "Failed to fetch Substack Notes.",
     });
   }
 }
