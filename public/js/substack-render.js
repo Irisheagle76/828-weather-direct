@@ -6,7 +6,7 @@ export async function renderSubstackArticle() {
   if (!container) return;
 
   container.innerHTML = `
-    <div class="module-header">Latest Weather Briefing</div>
+    <div class="module-header">From 828 Weather Update</div>
     <div class="substack-loading">Loading…</div>
   `;
 
@@ -14,7 +14,7 @@ export async function renderSubstackArticle() {
     const article = await fetchSubstackLatestArticle();
     if (!article) {
       container.innerHTML = `
-        <div class="module-header">Latest Weather Briefing</div>
+        <div class="module-header">From 828 Weather Update</div>
         <div class="substack-empty">No recent articles found.</div>
       `;
       return;
@@ -31,38 +31,40 @@ export async function renderSubstackArticle() {
       : "";
 
     // Extract first sentence as subheadline
-    const cleanText = description
+    const cleanText = (description || "")
       .replace(/<[^>]+>/g, "")
       .replace(/\s+/g, " ")
       .trim();
 
-    const subheadline = cleanText.split(".")[0] + ".";
+    const subheadline = cleanText
+      ? cleanText.split(".")[0] + "."
+      : "A fresh weather update from the 828.";
 
-container.innerHTML = `
-  <div class="module-header">From 828 Weather Update</div>
+    container.innerHTML = `
+      <div class="module-header">From 828 Weather Update</div>
 
-  <div class="substack-article">
+      <div class="substack-article">
 
-    ${ogImage ? `
-      <img src="${ogImage}" class="substack-thumb" alt="Article thumbnail">
-    ` : ""}
+        ${ogImage ? `
+          <img src="${ogImage}" class="substack-thumb" alt="Article thumbnail">
+        ` : ""}
 
-    <a href="${link}" target="_blank" rel="noopener" class="substack-title">
-      ${title}
-    </a>
+        <a href="${link}" target="_blank" rel="noopener" class="substack-title">
+          ${title}
+        </a>
 
-    <div class="substack-date">${formattedDate}</div>
+        <div class="substack-date">${formattedDate}</div>
 
-    <div class="substack-subheadline">
-      ${subheadline}
-    </div>
+        <div class="substack-subheadline">
+          ${subheadline}
+        </div>
 
-  </div>
-`;
+      </div>
+    `;
   } catch (err) {
     console.error("Error rendering Substack Article:", err);
     container.innerHTML = `
-      <div class="module-header">Latest Weather Briefing</div>
+      <div class="module-header">From 828 Weather Update</div>
       <div class="substack-error">Unable to load article.</div>
     `;
   }
