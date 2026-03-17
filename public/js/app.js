@@ -120,28 +120,27 @@ async function initApp() {
         const tempestHigh = tempest?.tempHighToday ?? null;
 
 // ⭐ 3. Hourly Forecast (Open-Meteo format)
-const hourly = await getShortTermForecast(lat, lon);
+const { data: hourly, modelUsed } = await getShortTermForecast(lat, lon);
 
-        // Validate structure
-if (!hourly || typeof hourly !== "object") {
-  throw new Error("Open-Meteo returned no data");
-}
+// Debug overlay
+window._forecastModel = modelUsed;
 
-if (!Array.isArray(hourly.time)) {
+// Validate structure
+if (!hourly?.hourly?.time || !Array.isArray(hourly.hourly.time)) {
   throw new Error("Open-Meteo hourly data missing or malformed");
 }
 
-// ⭐ Convert Open-Meteo column format → array of hourly objects
-const hours = hourly.time.map((t, i) => ({
+// Convert column format → array
+const hours = hourly.hourly.time.map((t, i) => ({
   time: t,
-  temp: hourly.temperature_2m?.[i] ?? null,
-  dewpoint: hourly.dewpoint_2m?.[i] ?? null,
-  rain: hourly.rain?.[i] ?? null,
-  snow: hourly.snowfall?.[i] ?? null,
-  windSpeed: hourly.wind_speed_10m?.[i] ?? null,
-  windGust: hourly.wind_gusts_10m?.[i] ?? null,
-  uv: hourly.uv_index?.[i] ?? null,
-  cloud: hourly.cloudcover?.[i] ?? null
+  temp: hourly.hourly.temperature_2m?.[i] ?? null,
+  dewpoint: hourly.hourly.dewpoint_2m?.[i] ?? null,
+  rain: hourly.hourly.rain?.[i] ?? null,
+  snow: hourly.hourly.snowfall?.[i] ?? null,
+  windSpeed: hourly.hourly.wind_speed_10m?.[i] ?? null,
+  windGust: hourly.hourly.wind_gusts_10m?.[i] ?? null,
+  uv: hourly.hourly.uv_index?.[i] ?? null,
+  cloud: hourly.hourly.cloudcover?.[i] ?? null
 }));
 
         window._hourly = hours;
