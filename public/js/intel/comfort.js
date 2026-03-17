@@ -1,6 +1,6 @@
 // /intel/comfort.js
 // Unified Comfort Engine — Wind, Humidity, Sun Angle, Precip, Feels‑Like, Trend Logic
-// Tempest-integrated version (Tempest provides today's high + precip type)
+// Tempest-integrated version (Tempest provides today's high)
 
 import { LOCATION } from "../config/location.js";
 
@@ -120,34 +120,25 @@ function computeTempDropFeel(intel) {
 }
 
 // ------------------------------------------------------------
-// PRECIP DETECTION (Tempest → MRMS → fallback)
+// FALLING PRECIP COMFORT
 // ------------------------------------------------------------
 function fallingPrecipFeel(intel) {
-  const t = intel.tempest;
-  const mrms = intel.mrms;
+  const rate = intel.wu?.precipRate ?? 0;
+  const type = intel.wu?.precipType ?? "";
 
-  const type = t?.precipType;
-  const tempF = t?.temp;
-  const accum = t?.rainAccum ?? 0;
+  if (rate <= 0) return null;
 
-  // Tempest direct detection
-  if (type === 3 || type === 6) {
+  if (type === "snow" && rate < 0.1)
     return { emoji: "❄️", summary: "Light snow falling — a wintry feel." };
-  }
 
-  if (type === 1 || type === 5) {
+  if (type === "snow")
+    return { emoji: "🌨️", summary: "Steady snow falling — bundle up out there." };
+
+  if (type === "rain" && rate < 0.05)
+    return { emoji: "🌦️", summary: "Light rain falling — a damp, cool feel." };
+
+  if (type === "rain")
     return { emoji: "🌧️", summary: "Rain falling — a noticeably damp feel." };
-  }
-
-  // Infer snow from accumulation + freezing temps
-  if (accum > 0 && tempF <= 34) {
-    return { emoji: "❄️", summary: "Snow showers in progress — a raw, wintry feel." };
-  }
-
-  // MRMS fallback
-  if (mrms?.type === "snow") {
-    return { emoji: "❄️", summary: "Snow in the area — occasional flakes possible." };
-  }
 
   return null;
 }
@@ -183,7 +174,7 @@ export function computeComfort(intel) {
   const wind = wu.windSpeed ?? 0;
   const timestamp = wu.obsTimeLocal ?? Date.now();
 
-  // 1. Falling precip override (snow/rain)
+  // 1. Falling precip override
   const precipOverride = fallingPrecipFeel(intel);
   if (precipOverride) return precipOverride;
 
@@ -224,22 +215,15 @@ export function computeComfort(intel) {
 
   const summaryParts = [firstSentence];
 
-  // 8. Humidity demotion logic
-  const isSnowing = intel.tempest?.precipType === 3 || intel.tempest?.precipType === 6;
-  const isRaining = intel.tempest?.precipType === 1 || intel.tempest?.precipType === 5;
-  const windy = wind >= 15;
-  const bigDrop = dropFeel != null;
-
-  if (!isSnowing && !isRaining && !windy && !bigDrop) {
-    summaryParts.push(humidFeel);
-  }
+  // 8. Humidity
+  summaryParts.push(humidFeel);
 
   // 9. Solar boost
   if (isSolarHelpful(intel, elev)) {
     summaryParts.push(rawSunFeel);
   }
 
-  // 10. Wind feel
+  // 10. Wind
   if (wind >= 15) {
     summaryParts.push("A noticeable breeze adds some edge.");
   }
