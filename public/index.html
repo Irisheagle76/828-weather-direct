@@ -237,7 +237,7 @@
   margin-top: 0.35rem;
   margin-bottom: 0.2rem;
   padding-left: 1rem;
-  list-style: none;   /* ← THIS removes the browser’s bullet */
+  list-style: none;
 }
 
 .today-bullets li,
@@ -284,67 +284,55 @@
     font-size: 0.95rem;
     color: #d8dff7;
   }
+
 /* ------------------------------
    UV INDEX COLOR + EMPHASIS
 ------------------------------ */
 #wU-uv,
 #wu-uv {
-  font-size: 1.45rem;       /* Larger, more prominent */
+  font-size: 1.45rem;
   font-weight: 700;
   text-align: center;
 }
 
-/* UV color scale */
-.uv-low {
-  color: #4caf50;           /* green */
-}
+.uv-low { color: #4caf50; }
+.uv-moderate { color: #ffeb3b; }
+.uv-high { color: #ff9800; }
+.uv-very-high { color: #f44336; }
+.uv-extreme { color: #9c27b0; }
 
-.uv-moderate {
-  color: #ffeb3b;           /* yellow */
-}
-
-.uv-high {
-  color: #ff9800;           /* orange */
-}
-
-.uv-very-high {
-  color: #f44336;           /* red */
-}
-
-.uv-extreme {
-  color: #9c27b0;           /* purple */
-}
-  /* ------------------------------
+/* ------------------------------
    TEMPERATURE COLOR SCALE
 ------------------------------ */
-.temp-freezing { color: #4dabf7; }   /* icy blue */
-.temp-cold     { color: #74c0fc; }   /* cold blue */
-.temp-cool     { color: #a5d8ff; }   /* cool light blue */
-.temp-mild     { color: #ffd43b; }   /* mild yellow */
-.temp-warm     { color: #ffa94d; }   /* warm orange */
-.temp-hot      { color: #ff6b6b; }   /* hot red */
+.temp-freezing { color: #4dabf7; }
+.temp-cold     { color: #74c0fc; }
+.temp-cool     { color: #a5d8ff; }
+.temp-mild     { color: #ffd43b; }
+.temp-warm     { color: #ffa94d; }
+.temp-hot      { color: #ff6b6b; }
 
-  /* ------------------------------
+/* ------------------------------
    DEW POINT COMFORT SCALE
 ------------------------------ */
-.dew-dry       { color: #74c0fc; }   /* dry blue */
-.dew-comfort   { color: #ffd43b; }   /* comfortable yellow */
-.dew-humid     { color: #ffa94d; }   /* humid orange */
-.dew-tropical  { color: #ff6b6b; }   /* oppressive red */
-  
-  /* ------------------------------
-     FOOTER
-  ------------------------------ */
-  .footer-note {
-    margin-top: var(--gap);
-    padding-top: 0.8rem;
-    border-top: 1px solid rgba(255,255,255,0.08);
-    font-size: 0.78rem;
-    color: #e0b27a;
-    text-align: center;
-    opacity: 0.9;
-    letter-spacing: 0.03em;
-  }
+.dew-dry       { color: #74c0fc; }
+.dew-comfort   { color: #ffd43b; }
+.dew-humid     { color: #ffa94d; }
+.dew-tropical  { color: #ff6b6b; }
+
+/* ------------------------------
+   FOOTER
+------------------------------ */
+.footer-note {
+  margin-top: var(--gap);
+  padding-top: 0.8rem;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  font-size: 0.78rem;
+  color: #e0b27a;
+  text-align: center;
+  opacity: 0.9;
+  letter-spacing: 0.03em;
+}
+
 .action-module.fade {
   opacity: 0.55;
   transform: translateY(2px);
@@ -445,7 +433,10 @@
         <div>
           <div class="action-label">Tomorrow’s Human‑Action Outlook</div>
 
-          <div id="tomorrow-badge" class="badge"></div>
+          <!-- ⭐ Updated badge container -->
+          <div id="tomorrow-badge-container" style="margin-bottom: 0.35rem;">
+            <div id="tomorrow-badge" class="badge"></div>
+          </div>
 
           <div id="tomorrow-headline" class="action-headline">Analyzing tomorrow’s setup…</div>
           <div id="tomorrow-text" class="action-text"></div>
