@@ -1,128 +1,58 @@
-import { fetchSubstackNotes, fetchSubstackLatestArticle } from "./substack-api.js";
+// substack-render.js
+// Renders ONLY the latest Substack Article (Notes removed)
 
-// --- UTILITIES ----------------------------------------------------
+import { fetchSubstackLatestArticle } from "./substack-api.js";
 
-function formatTimeAgo(dateString) {
-  if (!dateString) return "";
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now - date;
-
-  const seconds = Math.floor(diffMs / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-
-  if (days > 7) {
-    return date.toLocaleDateString(undefined, {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  }
-
-  if (days >= 1) return `${days} day${days === 1 ? "" : "s"} ago`;
-  if (hours >= 1) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
-  if (minutes >= 1) return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
-  return "Just now";
-}
-
-function sanitizeHtmlSnippet(html) {
-  if (!html) return "";
-  let cleaned = html.replace(
-    /<(script|style)[^>]*>[\s\S]*?<\/\1>/gi,
-    ""
-  );
-  cleaned = cleaned.replace(
-    /<(?!\/?(b|strong|i|em|br|p)\b)[^>]*>/gi,
-    ""
-  );
-  return cleaned.trim();
-}
-
-// --- RENDER NOTES ----------------------------------------------------
-
-export async function renderWeatherNotes() {
-  const container = document.getElementById("weather-notes-module");
-  if (!container) return;
-
-  container.innerHTML = `<div class="module-title">Loading notes…</div>`;
-
-  try {
-    const notes = await fetchSubstackNotes();
-
-    if (!notes.length) {
-      container.innerHTML = `<div class="module-title">Weather Notes</div><p>No recent notes.</p>`;
-      return;
-    }
-
-    container.innerHTML = `
-      <h2 class="module-title">Weather Notes</h2>
-      <ul class="substack-notes-list">
-        ${notes
-          .map((note) => {
-            const snippet = sanitizeHtmlSnippet(note.description).slice(0, 220);
-            const ellipsis = snippet.length === 220 ? "…" : "";
-            return `
-              <li class="substack-note-item">
-                <div class="substack-note-meta">
-                  <span class="substack-note-time">${formatTimeAgo(
-                    note.pubDate
-                  )}</span>
-                </div>
-                <div class="substack-note-snippet">${snippet}${ellipsis}</div>
-                <a href="${note.link}" target="_blank" class="substack-note-link">
-                  Read on Substack →
-                </a>
-              </li>
-            `;
-          })
-          .join("")}
-      </ul>
-    `;
-  } catch (err) {
-    container.innerHTML = `<p>Error loading notes.</p>`;
-  }
-}
-
-// --- RENDER ARTICLES ----------------------------------------------------
-
-export async function renderWeatherArticles() {
+export async function renderSubstackArticle() {
   const container = document.getElementById("weather-articles-module");
   if (!container) return;
 
-  container.innerHTML = `<div class="module-title">Loading article…</div>`;
+  container.innerHTML = `
+    <div class="module-header">Latest Weather Article</div>
+    <div class="substack-loading">Loading article…</div>
+  `;
 
   try {
     const article = await fetchSubstackLatestArticle();
 
     if (!article) {
-      container.innerHTML = `<h2 class="module-title">Weather Articles</h2><p>No recent articles.</p>`;
+      container.innerHTML = `
+        <div class="module-header">Latest Weather Article</div>
+        <div class="substack-empty">No recent articles found.</div>
+      `;
       return;
     }
 
-    const snippet = sanitizeHtmlSnippet(article.description).slice(0, 500);
-    const ellipsis = snippet.length === 500 ? "…" : "";
+    const { title, link, pubDate, description } = article;
+
+    const formattedDate = pubDate
+      ? new Date(pubDate).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric"
+        })
+      : "";
 
     container.innerHTML = `
-      <h2 class="module-title">Weather Articles</h2>
-      <header class="substack-article-header">
-        <h3 class="substack-article-title">${article.title}</h3>
-        <span class="substack-article-time">${formatTimeAgo(
-          article.pubDate
-        )}</span>
-      </header>
-      <div class="substack-article-snippet">${snippet}${ellipsis}</div>
-      <a href="${article.link}" target="_blank" class="substack-article-link">
-        Read full article →
-      </a>
+      <div class="module-header">Latest Weather Article</div>
+      <div class="substack-article">
+        <a href="${link}" target="_blank" rel="noopener" class="substack-title">
+          ${title}
+        </a>
+        <div class="substack-date">${formattedDate}</div>
+        <div class="substack-description">
+          ${description || ""}
+        </div>
+      </div>
     `;
   } catch (err) {
-    container.innerHTML = `<p>Error loading article.</p>`;
+    console.error("Error rendering Substack Article:", err);
+    container.innerHTML = `
+      <div class="module-header">Latest Weather Article</div>
+      <div class="substack-error">Unable to load article.</div>
+    `;
   }
 }
 
-// --- AUTO-RUN ----------------------------------------------------
-
-renderWeatherNotes();
-renderWeatherArticles();
+// Auto-run on page load
+document.addEventListener("DOMContentLoaded", renderSubstackArticle);
