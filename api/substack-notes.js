@@ -3,15 +3,27 @@ export default async function handler(req, res) {
 
   try {
     const response = await fetch(FEED_URL, {
-      headers: { "User-Agent": "Mozilla/5.0" }
-    });
+     const response = await fetch(FEED_URL, {
+  headers: {
+    "User-Agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0",
+    "Accept":
+      "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
+    "Cache-Control": "no-cache",
+    "Pragma": "no-cache",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "none",
+    "Sec-Fetch-User": "?1"
+  }
+});
+
 console.log("STATUS:", response.status, "STATUS TEXT:", response.statusText);
     if (!response.ok) throw new Error("Substack Notes RSS error");
 
     const xml = await response.text();
 // ⭐ Add this temporary log:
-console.log("SUBSTACK RAW RESPONSE (first 300 chars):", xml.slice(0, 300));
-
 
     if (!xml || !xml.includes("<item>")) {
       console.error("Unexpected Substack response:", xml.slice(0, 200));
