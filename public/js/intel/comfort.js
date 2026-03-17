@@ -215,8 +215,31 @@ export function computeComfort(intel) {
 
   const summaryParts = [firstSentence];
 
-  // 8. Humidity
-  summaryParts.push(humidFeel);
+  // ------------------------------------------------------------
+  // 8. HUMIDITY — ONLY SPEAK WHEN IT'S ACTUALLY PART OF THE FEEL
+  // ------------------------------------------------------------
+  const isSnowing = intel.wu?.precipType === "snow";
+  const isRaining = intel.wu?.precipType === "rain";
+  const windy = (wind >= 15);
+
+  const bigDrop = (() => {
+    const morningHigh = computeObservedMorningHigh(intel);
+    if (morningHigh == null || temp == null) return false;
+    return (morningHigh - temp) >= 12;
+  })();
+
+  const coldEnoughToIgnoreHumidity = temp <= 40;
+
+  const humidityRelevant =
+    !isSnowing &&
+    !isRaining &&
+    !windy &&
+    !bigDrop &&
+    !coldEnoughToIgnoreHumidity;
+
+  if (humidityRelevant) {
+    summaryParts.push(humidFeel);
+  }
 
   // 9. Solar boost
   if (isSolarHelpful(intel, elev)) {
@@ -234,7 +257,7 @@ export function computeComfort(intel) {
     emoji,
     summary,
     feelsLike,
-    humidityFeel: humidFeel,
+    humidityFeel: humidityRelevant ? humidFeel : "",
     sunFeel: isSolarHelpful(intel, elev) ? rawSunFeel : "",
     precipFeel: precipOverride?.summary ?? "",
     raw: {
