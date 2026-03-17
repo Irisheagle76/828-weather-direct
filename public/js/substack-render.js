@@ -54,5 +54,5 @@ export async function renderSubstackArticle() {
   }
 }
 
-// Auto-run on page load
-document.addEventListener("DOMContentLoaded", renderSubstackArticle);
+// ⭐ Run immediately — NOT on DOMContentLoaded
+renderSubstackArticle();
