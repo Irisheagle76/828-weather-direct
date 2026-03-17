@@ -9,6 +9,9 @@ export default async function handler(req, res) {
     if (!response.ok) throw new Error("Substack Notes RSS error");
 
     const xml = await response.text();
+// ⭐ Add this temporary log:
+console.log("SUBSTACK RAW RESPONSE (first 300 chars):", xml.slice(0, 300));
+
 
     if (!xml || !xml.includes("<item>")) {
       console.error("Unexpected Substack response:", xml.slice(0, 200));
