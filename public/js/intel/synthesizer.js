@@ -204,15 +204,129 @@ function pickEmoji(events, trends) {
 // REMAINDER-OF-TODAY OUTLOOK (earlier vs later)
 // ------------------------------------------------------------
 export function synthesizeRemainderTodayOutlook(statsEarlier, statsRemainder) {
-  const deltas = {
-    tempDrop: statsEarlier.tempMax - statsRemainder.tempMax,
-    windDrop: statsEarlier.windGustMax - statsRemainder.windGustMax,
-    cloudDrop: statsEarlier.cloudAvg - statsRemainder.cloudAvg,
-    precipEarlier: statsEarlier.rainTotal + statsEarlier.snowTotal,
-    precipLater: statsRemainder.rainTotal + statsRemainder.snowTotal
-  };
+  const narrativeParts = [];
+  const bullets = [];
 
-  // Determine a simple driver for the remainder window
+  // -----------------------------
+  // Temperature comparison
+  // -----------------------------
+  const tempDrop = statsEarlier.tempMax - statsRemainder.tempMax;
+  const tempRise = statsRemainder.tempMax - statsEarlier.tempMax;
+
+  if (tempDrop >= 12) {
+    narrativeParts.push("Temperatures fall sharply compared to earlier today.");
+    bullets.push("Expect a noticeably cooler feel.");
+  } else if (tempDrop >= 6) {
+    narrativeParts.push("A cooler turn compared to earlier today.");
+  }
+
+  if (tempRise >= 10) {
+    narrativeParts.push("Temperatures climb compared to earlier today.");
+  }
+
+  // -----------------------------
+  // Dewpoint / humidity comparison
+  // -----------------------------
+  const dewDrop = statsEarlier.dewAvg - statsRemainder.dewAvg;
+  const dewRise = statsRemainder.dewAvg - statsEarlier.dewAvg;
+
+  if (dewDrop >= 10) {
+    narrativeParts.push("Humidity drops off noticeably compared to earlier.");
+    bullets.push("A less muggy feel later on.");
+  } else if (dewDrop >= 6) {
+    narrativeParts.push("Humidity eases back later in the day.");
+  }
+
+  if (dewRise >= 10) {
+    narrativeParts.push("Humidity builds noticeably compared to earlier.");
+    bullets.push("A more humid feel develops.");
+  } else if (dewRise >= 6) {
+    narrativeParts.push("Humidity increases again this evening.");
+  }
+
+  // -----------------------------
+  // Wind speed comparison
+  // -----------------------------
+  const windDrop = statsEarlier.windGustMax - statsRemainder.windGustMax;
+  const windRise = statsRemainder.windGustMax - statsEarlier.windGustMax;
+
+  if (windDrop >= 10) {
+    narrativeParts.push("Winds calm down after a breezy start.");
+  }
+
+  if (windRise >= 10) {
+    narrativeParts.push("Winds pick up compared to earlier.");
+  }
+
+  // -----------------------------
+  // Wind direction comparison
+  // -----------------------------
+  const earlierDir = statsEarlier.windDirDominant;
+  const laterDir = statsRemainder.windDirDominant;
+
+  if (earlierDir && laterDir && earlierDir !== laterDir) {
+    if (earlierDir.startsWith("NW") && laterDir.startsWith("SW")) {
+      narrativeParts.push("Winds shift southerly later — a warmer feel.");
+    } else if (earlierDir.startsWith("SW") && laterDir.startsWith("NW")) {
+      narrativeParts.push("A cooler northwest breeze moves in later.");
+    } else if (laterDir.startsWith("S")) {
+      narrativeParts.push("A more humid southerly flow develops.");
+    } else if (laterDir.startsWith("N")) {
+      narrativeParts.push("A drier north breeze settles in.");
+    }
+  }
+
+  // -----------------------------
+  // Cloud trend nuance
+  // -----------------------------
+  const cloudDrop = statsEarlier.cloudAvg - statsRemainder.cloudAvg;
+  const cloudRise = statsRemainder.cloudAvg - statsEarlier.cloudAvg;
+
+  if (cloudDrop >= 25) {
+    narrativeParts.push("Skies brighten noticeably later on.");
+  } else if (cloudDrop >= 15) {
+    narrativeParts.push("Some clearing develops later.");
+  }
+
+  if (cloudRise >= 25) {
+    narrativeParts.push("Clouds rebuild toward evening.");
+  } else if (cloudRise >= 15) {
+    narrativeParts.push("Skies turn cloudier later in the day.");
+  }
+
+  // -----------------------------
+  // Precipitation nuance
+  // -----------------------------
+  const earlierPrecip = statsEarlier.rainTotal + statsEarlier.snowTotal;
+  const laterPrecip = statsRemainder.rainTotal + statsRemainder.snowTotal;
+
+  if (earlierPrecip === 0 && laterPrecip > 0) {
+    narrativeParts.push("Showers develop later after a dry start.");
+    bullets.push("Rain gear may be needed later.");
+  }
+
+  if (earlierPrecip > 0 && laterPrecip > 0) {
+    narrativeParts.push("Another round of precipitation is possible later.");
+  }
+
+  if (earlierPrecip > laterPrecip && laterPrecip > 0) {
+    narrativeParts.push("Precipitation tapers but does not fully end.");
+  }
+
+  if (laterPrecip > earlierPrecip) {
+    narrativeParts.push("Precipitation becomes more likely later in the day.");
+  }
+
+  // -----------------------------
+  // If nothing dramatic changes
+  // -----------------------------
+  if (narrativeParts.length === 0) {
+    narrativeParts.push("A quiet, uncomplicated finish to the day.");
+  }
+
+  // -----------------------------
+  // Remainder driver + emoji
+  // -----------------------------
   let driver = "easy";
   if (statsRemainder.snowTotal > 0) driver = "snow";
   else if (statsRemainder.rainTotal > 0) driver = "rain";
@@ -223,40 +337,7 @@ export function synthesizeRemainderTodayOutlook(statsEarlier, statsRemainder) {
   const trends = detectTrends(statsRemainder);
   const emoji = pickEmoji({ driver }, trends);
 
-  let baseHeadline = "A steady finish to the day";
-  const narrativeParts = [];
-  const bullets = [];
-
-  // Temperature comparison
-  if (deltas.tempDrop >= 12) {
-    narrativeParts.push("Temperatures fall sharply compared to earlier today.");
-    bullets.push("Expect a noticeably cooler feel.");
-  } else if (deltas.tempDrop >= 6) {
-    narrativeParts.push("A cooler turn compared to earlier today.");
-  }
-
-  // Wind comparison
-  if (deltas.windDrop >= 10) {
-    narrativeParts.push("Winds calm down after a breezy start.");
-  }
-
-  // Cloud comparison
-  if (deltas.cloudDrop >= 20) {
-    narrativeParts.push("Skies brighten a bit after a gray start.");
-  }
-
-  // Precip comparison
-  if (deltas.precipEarlier > 0 && deltas.precipLater === 0) {
-    narrativeParts.push("No more precipitation expected after this morning’s activity.");
-    bullets.push("Roads should gradually improve.");
-  }
-
-  // If nothing dramatic changes
-  if (narrativeParts.length === 0) {
-    narrativeParts.push("A quiet, uncomplicated finish to the day.");
-  }
-
-  const headline = `${emoji} ${baseHeadline}`;
+  const headline = `${emoji} A steady finish to the day`;
 
   return {
     headline,
