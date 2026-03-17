@@ -121,7 +121,7 @@ async function initApp() {
 
 // ⭐ 3. Hourly Forecast (Open-Meteo format)
 const hourly = await getShortTermForecast(lat, lon);
-
+console.log("Open-Meteo URL:", url);
 // Debug raw payload
 console.log("Open-Meteo raw:", hourly);
 
