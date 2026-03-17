@@ -343,4 +343,19 @@ export function toggleForecastExpanded(which, intel) {
     panelToday.style.display = "none";
     return;
   }
+// ------------------------------------------------------------
+// FIT HEADLINE TO ONE LINE
+// ------------------------------------------------------------
+  function fitHeadlineToWidth(el, maxSize = 1.25, minSize = 0.95) {
+  if (!el) return;
+
+  // Reset to max size first
+  el.style.fontSize = `${maxSize}rem`;
+
+  // Shrink until it fits or hits minimum
+  while (el.scrollWidth > el.clientWidth && maxSize > minSize) {
+    maxSize -= 0.05;
+    el.style.fontSize = `${maxSize}rem`;
+  }
+}
 }
