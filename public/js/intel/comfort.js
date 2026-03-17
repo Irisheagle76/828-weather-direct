@@ -99,11 +99,15 @@ function computeObservedMorningHigh(intel) {
 }
 
 // ------------------------------------------------------------
-// TEMPERATURE DROP FEEL
+// TEMPERATURE DROP FEEL — NOW MORNING-AWARE
 // ------------------------------------------------------------
 function computeTempDropFeel(intel) {
   const wu = intel.wu;
   if (!wu) return null;
+
+  // ⭐ Do not run trend logic before late morning
+  const hour = new Date(wu.obsTimeLocal ?? Date.now()).getHours();
+  if (hour < 11) return null;
 
   const current = wu.temp ?? null;
   const morningHigh = computeObservedMorningHigh(intel);
@@ -113,8 +117,8 @@ function computeTempDropFeel(intel) {
   const drop = morningHigh - current;
 
   if (drop >= 20) return "a sharp drop compared to earlier today";
-  if (drop >= 12) return "noticeably colder than earlier";
-  if (drop >= 6) return "a cooler turn compared to this morning";
+  if (drop >= 12) return "noticeably colder than earlier today";
+  if (drop >= 6) return "a cooler turn compared to earlier today";
 
   return null;
 }
