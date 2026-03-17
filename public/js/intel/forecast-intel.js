@@ -1,129 +1,76 @@
 // /intel/forecast-intel.js
-// ============================================================
-// FORECAST INTELLIGENCE ENGINE (HARDENED + SAFE)
-// ============================================================
 
-import {
-  getTodayHumanActionOutlook,
-  getTomorrowHumanActionOutlook
-} from "./human-action-outlook.js";
+import { computeComfort } from "./comfort.js";
+import { synthesizeOutlook, differentiateFromToday } from "./synthesizer.js";
+import { computeStats } from "./stats.js";
+import { computeEvents } from "./events.js";
+import { getTodayWindow, getTomorrowWindow } from "./windows.js";
 
-// ------------------------------------------------------------
-// MAIN ENTRY — expects an array of hourly objects
-// ------------------------------------------------------------
-export function buildWeatherIntel(hours) {
-  const intel = {};
+export function buildWeatherIntel(hourly) {
+  // -----------------------------
+  // Current hour snapshot
+  // -----------------------------
+  const nowIndex = 0; // first hour = "now"
+  const hourlyNow = {
+    temperature_2m: hourly.temperature_2m[nowIndex],
+    dewpoint_2m: hourly.dewpoint_2m[nowIndex],
+    wind_speed_10m: hourly.wind_speed_10m[nowIndex],
+    wind_gusts_10m: hourly.wind_gusts_10m[nowIndex]
+  };
 
-  // Safety: ensure hours is a valid array
-  if (!Array.isArray(hours) || hours.length === 0) {
-    console.warn("forecast-intel: hours array missing or empty");
-    intel.today = {};
-    intel.tomorrow = {};
-    return intel;
-  }
+  // -----------------------------
+  // Build Today + Tomorrow windows
+  // -----------------------------
+  const todayHours = getTodayWindow(hourly);
+  const tomorrowHours = getTomorrowWindow(hourly);
 
-  // ------------------------------------------------------------
-  // TODAY + TOMORROW STATS
-  // ------------------------------------------------------------
-  intel.today = computeDayStats(hours, 0);
-  intel.tomorrow = computeDayStats(hours, 1);
+  // -----------------------------
+  // Stats + Events
+  // -----------------------------
+  const statsToday = computeStats(hourly, todayHours);
+  const statsTomorrow = computeStats(hourly, tomorrowHours);
 
-  // ------------------------------------------------------------
-  // HUMAN‑ACTION OUTLOOKS (NEW)
-  // ------------------------------------------------------------
-  intel.today.actionOutlook = getTodayHumanActionOutlook(intel);
-  intel.tomorrow.actionOutlook = getTomorrowHumanActionOutlook(intel);
+  const eventsToday = computeEvents(hourly, todayHours, statsToday);
+  const eventsTomorrow = computeEvents(hourly, tomorrowHours, statsTomorrow);
+
+  // -----------------------------
+  // Synthesized Outlooks
+  // -----------------------------
+  const todayOutlook = synthesizeOutlook(statsToday, eventsToday, todayHours);
+  let tomorrowOutlook = synthesizeOutlook(statsTomorrow, eventsTomorrow, tomorrowHours);
+
+  // Anti‑redundancy: ensure Tomorrow doesn't echo Today
+  tomorrowOutlook = differentiateFromToday(todayOutlook, tomorrowOutlook);
+
+  // -----------------------------
+  // Return unified intel object
+  // (WU + MRMS attached later in app.js)
+  // -----------------------------
+  const intel = {
+    today: {
+      available: todayHours.length > 0,
+      ...todayOutlook,
+      stats: statsToday,
+      events: eventsToday
+    },
+    tomorrow: {
+      available: tomorrowHours.length > 0,
+      ...tomorrowOutlook,
+      stats: statsTomorrow,
+      events: eventsTomorrow
+    },
+    comfort: null, // filled below
+    wu: null,
+    mrms: null
+  };
+
+  // -----------------------------
+  // Compute comfort AFTER WU is attached in app.js
+  // -----------------------------
+  // app.js will do:
+  // intel.wu = wuCurrent;
+  // intel.mrms = mrmsPixel;
+  // intel.comfort = computeComfort(intel);
 
   return intel;
-}
-
-// ------------------------------------------------------------
-// DAY STATS (safe + defensive)
-// ------------------------------------------------------------
-function computeDayStats(hours, dayOffset) {
-  if (!Array.isArray(hours) || hours.length === 0) {
-    return {
-      stats: {},
-      precipType: null,
-      windSpeed: null,
-      tempTrend: null
-    };
-  }
-
-  const start = dayOffset * 24;
-  const slice = hours.slice(start, start + 24);
-
-  if (!slice || slice.length === 0) {
-    return {
-      stats: {},
-      precipType: null,
-      windSpeed: null,
-      tempTrend: null
-    };
-  }
-
-  // Extract temps safely
-  const temps = slice.map(h => safeNum(h.temp));
-  const maxTemp = maxOrNull(temps);
-  const minTemp = minOrNull(temps);
-
-  // UV: pick hour 12 if available, else fallback
-  const uv =
-    slice[12]?.uv ??
-    slice[Math.floor(slice.length / 2)]?.uv ??
-    null;
-
-  // Wind: same fallback logic
-  const windSpeed =
-    slice[12]?.windSpeed ??
-    slice[Math.floor(slice.length / 2)]?.windSpeed ??
-    null;
-
-  // Temperature trend: last - first
-  const tempTrend =
-    temps.length >= 2
-      ? safeNum(temps[temps.length - 1]) - safeNum(temps[0])
-      : null;
-
-  return {
-    stats: {
-      maxTemp,
-      minTemp,
-      uv
-    },
-    precipType: detectPrecipType(slice),
-    windSpeed,
-    tempTrend
-  };
-}
-
-// ------------------------------------------------------------
-// PRECIP TYPE DETECTION (safe)
-// ------------------------------------------------------------
-function detectPrecipType(hours) {
-  if (!Array.isArray(hours)) return null;
-
-  for (const h of hours) {
-    if (safeNum(h.snow) > 0) return "snow";
-    if (safeNum(h.rain) > 0) return "rain";
-  }
-  return null;
-}
-
-// ------------------------------------------------------------
-// SAFE HELPERS
-// ------------------------------------------------------------
-function safeNum(v) {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
-
-function maxOrNull(arr) {
-  const nums = arr.filter(n => Number.isFinite(n));
-  return nums.length ? Math.max(...nums) : null;
-}
-
-function minOrNull(arr) {
-  const nums = arr.filter(n => Number.isFinite(n));
-  return nums.length ? Math.min(...nums) : null;
 }
