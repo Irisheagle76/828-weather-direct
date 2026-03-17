@@ -57,6 +57,7 @@ export default async function handler(req, res) {
     }
 
     article.ogImage = ogImage;
+console.log("OG fetch result:", ogData);
 
     // ------------------------------------------------------------
     // Return final article object
