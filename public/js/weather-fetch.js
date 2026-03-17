@@ -45,7 +45,8 @@ export async function getShortTermForecast(lat, lon) {
     `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
     `&hourly=temperature_2m,dewpoint_2m,rain,snowfall,wind_speed_10m,wind_gusts_10m,uv_index,cloudcover` +
     `&forecast_days=2&timezone=auto`;
-
+console.log("USING WEATHER-FETCH.JS VERSION A");
+console.log("Open-Meteo URL:", url);
   const res = await fetch(url);
   if (!res.ok) throw new Error("Open-Meteo hourly forecast failed");
 
