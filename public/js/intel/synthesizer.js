@@ -1,33 +1,8 @@
-// /intel/synthesizer.js
-// Human‑Action Outlook Generator — Warm + Direct Hybrid Tone
-// Includes: Trend Awareness, Humidity Relevance, Morning‑Aware Logic, Anti‑Redundancy
+// /js/intel/synthesizer.js
+// Human‑Action Outlook Generator — Today, Tomorrow, Remainder of Today
 
 // ------------------------------------------------------------
-// HUMIDITY RELEVANCE (mirrors comfort engine)
-// ------------------------------------------------------------
-function humidityRelevant(stats, events) {
-  const temp = stats.tempMax ?? 0;
-  const dew = stats.dewAvg ?? 0;
-  const wind = stats.windGustMax ?? 0;
-
-  const isSnowing = events?.driver === "snow";
-  const isRaining = events?.driver === "rain";
-  const windy = wind >= 15;
-
-  const bigDrop = stats.tempDrop ?? false;
-  const coldEnough = temp <= 40;
-
-  return (
-    !isSnowing &&
-    !isRaining &&
-    !windy &&
-    !bigDrop &&
-    !coldEnough
-  );
-}
-
-// ------------------------------------------------------------
-// MAIN SYNTHESIZER
+// MAIN OUTLOOK (Today / Tomorrow)
 // ------------------------------------------------------------
 export function synthesizeOutlook(stats, events, hours) {
   if (!stats || hours.length === 0) {
@@ -53,7 +28,7 @@ export function synthesizeOutlook(stats, events, hours) {
 }
 
 // ------------------------------------------------------------
-// HEADLINE — warm + direct, trend‑aware
+// HEADLINE
 // ------------------------------------------------------------
 function generateHeadline(stats, events, trends, emoji) {
   const d = events?.driver;
@@ -70,13 +45,8 @@ function generateHeadline(stats, events, trends, emoji) {
 
   let base = baseMap[d] ?? "A steady, uncomplicated day";
 
-  // Trend overrides (but only after late morning)
-  const hour = new Date().getHours();
-  if (hour >= 11) {
-    if (trends.includes("bigWarmup")) base = "A day that warms up nicely";
-    if (trends.includes("coolingOff")) base = "A cooler, more settled day";
-  }
-
+  if (trends.includes("bigWarmup")) base = "A day that warms up nicely";
+  if (trends.includes("coolingOff")) base = "A cooler, more settled day";
   if (trends.includes("brightening")) base = "A day that tries to brighten";
   if (trends.includes("cloudy")) base = "A gray, moody kind of day";
 
@@ -84,7 +54,7 @@ function generateHeadline(stats, events, trends, emoji) {
 }
 
 // ------------------------------------------------------------
-// NARRATIVE — warm + direct, trend‑aware, humidity‑aware
+// NARRATIVE
 // ------------------------------------------------------------
 function generateHumanNarrative(stats, events, trends) {
   const { tempMin, tempMax, windGustMax, rainTotal, snowTotal, cloudAvg } = stats;
@@ -96,13 +66,8 @@ function generateHumanNarrative(stats, events, trends) {
     buildCloudPhrase(cloudAvg)
   ];
 
-  // Trend logic (afternoon only)
-  const hour = new Date().getHours();
-  if (hour >= 11) {
-    if (trends.includes("bigWarmup")) parts.push("The day warms noticeably as it goes.");
-    if (trends.includes("coolingOff")) parts.push("Temperatures ease downward into a cooler feel.");
-  }
-
+  if (trends.includes("bigWarmup")) parts.push("The day warms noticeably as it goes.");
+  if (trends.includes("coolingOff")) parts.push("Temperatures ease downward into a cooler feel.");
   if (trends.includes("gusty")) parts.push("Winds get lively at times.");
   if (trends.includes("calming")) parts.push("Winds ease back later on.");
   if (trends.includes("brightening")) parts.push("Skies may try to brighten.");
@@ -112,25 +77,21 @@ function generateHumanNarrative(stats, events, trends) {
 }
 
 // ------------------------------------------------------------
-// BULLETS — warm, human, actionable, humidity‑aware
+// BULLETS
 // ------------------------------------------------------------
 function generateHumanBullets(stats, events) {
   const bullets = [];
 
-  // Clothing
   if (stats.tempMax <= 40) bullets.push("Dress warm — layers help.");
   else if (stats.tempMax <= 55) bullets.push("A jacket is a smart move.");
   else if (stats.tempMax >= 80) bullets.push("Light clothing keeps things comfortable.");
 
-  // Wind
   if (stats.windGustMax >= 35) bullets.push("Expect a few pushy gusts.");
   else if (stats.windGustMax >= 20) bullets.push("A breezy afternoon may nudge you around.");
 
-  // Rain
   if (stats.rainTotal >= 0.25) bullets.push("Keep rain gear handy.");
   else if (stats.rainTotal > 0) bullets.push("A quick shower is possible.");
 
-  // Snow
   if (stats.snowTotal >= 0.5) {
     bullets.push("Watch for slick spots early.");
   } else if (stats.snowTotal > 0) {
@@ -142,19 +103,9 @@ function generateHumanBullets(stats, events) {
     bullets.push(options[Math.floor(Math.random() * options.length)]);
   }
 
-  // Clouds
   if (stats.cloudAvg >= 80) bullets.push("Skies stay mostly gray.");
   else if (stats.cloudAvg <= 40) bullets.push("Some brighter breaks possible.");
 
-  // Humidity (only when relevant)
-  if (humidityRelevant(stats, events)) {
-    const dew = stats.dewAvg ?? 0;
-    if (dew <= 40) bullets.push("Dry and comfortable.");
-    else if (dew <= 55) bullets.push("Humidity stays manageable.");
-    else bullets.push("A bit humid at times.");
-  }
-
-  // Commute cues
   if (events?.pmCommuteImpact) bullets.push("PM commute: possible delays.");
   if (events?.amCommuteImpact) bullets.push("AM commute: allow a little extra time.");
 
@@ -162,7 +113,7 @@ function generateHumanBullets(stats, events) {
 }
 
 // ------------------------------------------------------------
-// PHRASE HELPERS — warm + direct
+// PHRASE HELPERS
 // ------------------------------------------------------------
 function buildTempPhrase(min, max) {
   if (max <= 32) return "Cold from start to finish.";
@@ -195,13 +146,13 @@ function buildCloudPhrase(cloud) {
 }
 
 // ------------------------------------------------------------
-// TREND AWARENESS
+// TRENDS
 // ------------------------------------------------------------
 function detectTrends(stats) {
   const trends = [];
 
   if (stats.tempMax - stats.tempMin >= 20) trends.push("bigWarmup");
-  if (stats.tempMin - stats.tempMax >= 10) trends.push("coolingOff");
+  else if (stats.tempMin - stats.tempMax >= 10) trends.push("coolingOff");
 
   if (stats.windGustMax >= 35) trends.push("gusty");
   else if (stats.windGustMax <= 10) trends.push("calming");
@@ -216,7 +167,7 @@ function detectTrends(stats) {
 }
 
 // ------------------------------------------------------------
-// EMOJI VARIATION
+// EMOJI SELECTION
 // ------------------------------------------------------------
 function pickEmoji(events, trends) {
   const d = events?.driver;
@@ -250,7 +201,72 @@ function pickEmoji(events, trends) {
 }
 
 // ------------------------------------------------------------
-// ANTI‑REDUNDANCY — ensures Tomorrow doesn't echo Today
+// REMAINDER-OF-TODAY OUTLOOK (earlier vs later)
+// ------------------------------------------------------------
+export function synthesizeRemainderTodayOutlook(statsEarlier, statsRemainder) {
+  const deltas = {
+    tempDrop: statsEarlier.tempMax - statsRemainder.tempMax,
+    windDrop: statsEarlier.windGustMax - statsRemainder.windGustMax,
+    cloudDrop: statsEarlier.cloudAvg - statsRemainder.cloudAvg,
+    precipEarlier: statsEarlier.rainTotal + statsEarlier.snowTotal,
+    precipLater: statsRemainder.rainTotal + statsRemainder.snowTotal
+  };
+
+  // Determine a simple driver for the remainder window
+  let driver = "easy";
+  if (statsRemainder.snowTotal > 0) driver = "snow";
+  else if (statsRemainder.rainTotal > 0) driver = "rain";
+  else if (statsRemainder.windGustMax >= 25) driver = "wind";
+  else if (statsRemainder.tempMax >= 80) driver = "hot";
+  else if (statsRemainder.tempMax <= 40) driver = "cold";
+
+  const trends = detectTrends(statsRemainder);
+  const emoji = pickEmoji({ driver }, trends);
+
+  let baseHeadline = "A steady finish to the day";
+  const narrativeParts = [];
+  const bullets = [];
+
+  // Temperature comparison
+  if (deltas.tempDrop >= 12) {
+    narrativeParts.push("Temperatures fall sharply compared to earlier today.");
+    bullets.push("Expect a noticeably cooler feel.");
+  } else if (deltas.tempDrop >= 6) {
+    narrativeParts.push("A cooler turn compared to earlier today.");
+  }
+
+  // Wind comparison
+  if (deltas.windDrop >= 10) {
+    narrativeParts.push("Winds calm down after a breezy start.");
+  }
+
+  // Cloud comparison
+  if (deltas.cloudDrop >= 20) {
+    narrativeParts.push("Skies brighten a bit after a gray start.");
+  }
+
+  // Precip comparison
+  if (deltas.precipEarlier > 0 && deltas.precipLater === 0) {
+    narrativeParts.push("No more precipitation expected after this morning’s activity.");
+    bullets.push("Roads should gradually improve.");
+  }
+
+  // If nothing dramatic changes
+  if (narrativeParts.length === 0) {
+    narrativeParts.push("A quiet, uncomplicated finish to the day.");
+  }
+
+  const headline = `${emoji} ${baseHeadline}`;
+
+  return {
+    headline,
+    narrative: narrativeParts.join(" "),
+    bullets
+  };
+}
+
+// ------------------------------------------------------------
+// ANTI‑REDUNDANCY (Tomorrow vs Today)
 // ------------------------------------------------------------
 export function differentiateFromToday(todayOutlook, tomorrowOutlook) {
   if (!todayOutlook || !tomorrowOutlook) return tomorrowOutlook;
