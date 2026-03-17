@@ -95,8 +95,10 @@ export function renderCurrentObservations(intel) {
   }
 
   if (uvEl) {
-    uvEl.textContent = wu.uv != null ? wu.uv : "--";
-    uvEl.className = "metric-value " + getUVClass(wu.uv ?? 0);
+    // Display the unified, validated UV from intel
+    const uv = intel.uv ?? wu.uv ?? 0;
+    uvEl.textContent = uv != null ? uv.toFixed(1) : "--";
+    uvEl.className = "metric-value " + getUVClass(uv ?? 0);
   }
 }
 
@@ -288,15 +290,15 @@ export function renderTomorrowOutlook(intel) {
 }
 
 // ------------------------------------------------------------
-// RENDER UV INDEX
+// RENDER UV INDEX (using unified intel.uv)
 // ------------------------------------------------------------
 export function renderUV(intel) {
   const uvEl = document.getElementById("wu-uv");
   if (!uvEl) return;
 
-  const uv = intel.wu?.uv ?? 0;
+  const uv = intel.uv ?? intel.wu?.uv ?? 0;
   uvEl.textContent = uv.toFixed(1);
-  uvEl.className = getUVClass(uv);
+  uvEl.className = "metric-value " + getUVClass(uv);
 }
 
 // ------------------------------------------------------------
