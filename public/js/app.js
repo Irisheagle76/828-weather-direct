@@ -119,26 +119,33 @@ async function initApp() {
         const tempest = await getTempestDeviceObs(TEMPEST_DEVICE_ID, TEMPEST_TOKEN);
         const tempestHigh = tempest?.tempHighToday ?? null;
 
-        // ⭐ 3. Hourly Forecast (Open-Meteo format)
-        const hourly = await getShortTermForecast(lat, lon);
+// ⭐ 3. Hourly Forecast (Open-Meteo format)
+const hourly = await getShortTermForecast(lat, lon);
 
-        // Validate hourly structure
-        if (!hourly?.time || !Array.isArray(hourly.time)) {
-          throw new Error("Open-Meteo hourly data missing or malformed");
-        }
+// Debug raw payload
+console.log("Open-Meteo raw:", hourly);
 
-        // ⭐ Convert Open-Meteo column format → array of hourly objects
-        const hours = hourly.time.map((t, i) => ({
-          time: t,
-          temp: hourly.temperature_2m?.[i] ?? null,
-          dewpoint: hourly.dewpoint_2m?.[i] ?? null,
-          rain: hourly.rain?.[i] ?? null,
-          snow: hourly.snowfall?.[i] ?? null,
-          windSpeed: hourly.wind_speed_10m?.[i] ?? null,
-          windGust: hourly.wind_gusts_10m?.[i] ?? null,
-          uv: hourly.uv_index?.[i] ?? null,
-          cloud: hourly.cloudcover?.[i] ?? null
-        }));
+// Validate structure
+if (!hourly || typeof hourly !== "object") {
+  throw new Error("Open-Meteo returned no data");
+}
+
+if (!Array.isArray(hourly.time)) {
+  throw new Error("Open-Meteo hourly data missing or malformed");
+}
+
+// ⭐ Convert Open-Meteo column format → array of hourly objects
+const hours = hourly.time.map((t, i) => ({
+  time: t,
+  temp: hourly.temperature_2m?.[i] ?? null,
+  dewpoint: hourly.dewpoint_2m?.[i] ?? null,
+  rain: hourly.rain?.[i] ?? null,
+  snow: hourly.snowfall?.[i] ?? null,
+  windSpeed: hourly.wind_speed_10m?.[i] ?? null,
+  windGust: hourly.wind_gusts_10m?.[i] ?? null,
+  uv: hourly.uv_index?.[i] ?? null,
+  cloud: hourly.cloudcover?.[i] ?? null
+}));
 
         window._hourly = hours;
 
