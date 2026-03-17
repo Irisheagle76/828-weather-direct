@@ -1,29 +1,187 @@
 // /js/weather-render.js
 // ============================================================
-// RENDERING ENGINE — UI OUTPUT FOR ALL MODULES
+// WEATHER RENDERER — Today, Tomorrow, Comfort, UV, Details
 // ============================================================
 
+// ------------------------------------------------------------
+// PRECIPITATION RANGE HELPERS
+// ------------------------------------------------------------
+function formatRainAmount(amount) {
+  if (amount === 0) return "Dry";
+  if (amount < 0.05) return "A few sprinkles — Low confidence";
+  if (amount < 0.25) return "Light rain — Moderate confidence";
+  if (amount < 0.5) return "A decent rainfall — Moderate confidence";
+  if (amount < 1) return "A soaking rain — Fairly likely";
+  if (amount < 2) return "Heavy rain — Fairly likely";
+  return "Very heavy rain. Localized flooding possible. — High confidence";
+}
+
+function formatSnowAmount(amount) {
+  if (amount === 0) return "No accumulation expected";
+  if (amount < 0.1) return "Trace — Low confidence";
+  if (amount < 0.5) return "A coating — Low confidence";
+  if (amount < 1) return "Upwards of an inch possible — Moderate confidence";
+  if (amount < 2) return "1–2 inches possible — Moderate confidence";
+  if (amount < 4) return "A few inches possible — Fairly likely";
+  if (amount < 6) return "Several inches possible — Fairly likely";
+  if (amount < 10) return "Half a foot or more — High confidence";
+  return "Significant accumulation possible — High confidence";
+}
 
 // ------------------------------------------------------------
-// RIGHT NOW COMFORT
+// RENDER CURRENT OBSERVATIONS (WU)
+// ------------------------------------------------------------
+export function renderCurrentObservations(intel) {
+  const wu = intel.wu;
+  if (!wu) return;
+
+  const tempEl = document.getElementById("wu-temp");
+  const dewEl = document.getElementById("wu-dew");
+  const humEl = document.getElementById("wu-humidity");
+  const windEl = document.getElementById("wu-wind");
+  const gustEl = document.getElementById("wu-wind-gust");
+  const uvEl = document.getElementById("wu-uv");
+
+  // Temperature
+  if (tempEl) {
+    tempEl.textContent = wu.temp != null ? `${wu.temp}°` : "--";
+    tempEl.className = "metric-value";
+
+    const t = wu.temp;
+    if (t <= 32) tempEl.classList.add("temp-freezing");
+    else if (t <= 45) tempEl.classList.add("temp-cold");
+    else if (t <= 60) tempEl.classList.add("temp-cool");
+    else if (t <= 75) tempEl.classList.add("temp-mild");
+    else if (t <= 85) tempEl.classList.add("temp-warm");
+    else tempEl.classList.add("temp-hot");
+  }
+
+  // Dew Point
+  if (dewEl) {
+    dewEl.textContent = wu.dewPoint != null ? `${wu.dewPoint}°` : "--";
+    dewEl.className = "metric-value";
+
+    const d = wu.dewPoint;
+    if (d <= 40) dewEl.classList.add("dew-dry");
+    else if (d <= 55) dewEl.classList.add("dew-comfort");
+    else if (d <= 70) dewEl.classList.add("dew-humid");
+    else dewEl.classList.add("dew-tropical");
+  }
+
+  if (humEl) {
+    humEl.textContent = wu.humidity != null ? `Humidity ${wu.humidity}%` : "Humidity --";
+  }
+
+  // Wind
+  if (windEl) {
+    const dir = wu.windDir != null ? degToCompass(wu.windDir) : "";
+    const spd = wu.windSpeed != null ? `${wu.windSpeed} mph` : "--";
+    windEl.textContent = dir ? `${dir} ${spd}` : spd;
+  }
+
+  if (gustEl) {
+    gustEl.textContent = wu.windGust != null ? `Gusts ${wu.windGust} mph` : "Gusts --";
+  }
+
+  // UV
+  if (uvEl) {
+    uvEl.textContent = wu.uv != null ? wu.uv : "--";
+    uvEl.className = "metric-value " + getUVClass(wu.uv ?? 0);
+  }
+}
+
+// ------------------------------------------------------------
+// Compass helper
+// ------------------------------------------------------------
+export function degToCompass(deg) {
+  if (deg == null) return "";
+  const dirs = [
+    "N","NNE","NE","ENE","E","ESE","SE","SSE",
+    "S","SSW","SW","WSW","W","WNW","NW","NNW"
+  ];
+  return dirs[Math.round(deg / 22.5) % 16];
+}
+
+// ------------------------------------------------------------
+// UV class helper
+// ------------------------------------------------------------
+export function getUVClass(uv) {
+  if (uv == null) return "uv-0";
+  if (uv <= 2) return "uv-low";
+  if (uv <= 5) return "uv-moderate";
+  if (uv <= 7) return "uv-high";
+  if (uv <= 10) return "uv-very-high";
+  return "uv-extreme";
+}
+
+// ------------------------------------------------------------
+// BULLET DE-DUPLICATOR
+// ------------------------------------------------------------
+function dedupeBullets(bullets) {
+  const seen = new Set();
+  const result = [];
+
+  bullets.forEach(b => {
+    let key = b.toLowerCase();
+    key = key.replace(/[^a-z0-9 ]/g, " ");
+    key = key
+      .replace(/\bjacket\b/g, "coat")
+      .replace(/\bchilly\b/g, "cold")
+      .replace(/\bearly\b/g, "morning")
+      .replace(/\bmorning air\b/g, "morning")
+      .replace(/\bair\b/g, "")
+      .replace(/\bcoat helps\b/g, "coat recommended")
+      .replace(/\bcoat is helpful\b/g, "coat recommended")
+      .replace(/\bcoat recommended\b/g, "coat recommended");
+    key = key.replace(/\b(a|the|is|very|quite|bit|little)\b/g, "");
+    key = key.replace(/\s+/g, " ").trim();
+    key = key.split(" ").sort().join(" ");
+
+    if (!seen.has(key)) {
+      seen.add(key);
+      result.push(b);
+    }
+  });
+
+  return result;
+}
+
+// ------------------------------------------------------------
+// HYBRID BULLET RENDERER
+// ------------------------------------------------------------
+function renderBullets(ul, bullets) {
+  bullets = dedupeBullets(bullets);
+  ul.innerHTML = "";
+
+  bullets.forEach(b => {
+    const li = document.createElement("li");
+    if (/^[\p{Emoji}]/u.test(b)) li.textContent = b;
+    else li.textContent = "• " + b;
+    ul.appendChild(li);
+  });
+}
+
+// ------------------------------------------------------------
+// RENDER RIGHT NOW COMFORT (Unified Comfort Engine)
 // ------------------------------------------------------------
 export function renderRightNowComfort(intel) {
   const emojiEl = document.getElementById("comfort-emoji");
   const textEl = document.getElementById("comfort-text");
+  if (!emojiEl || !textEl) return;
 
-  if (!intel.comfort) {
-    emojiEl.textContent = "–";
-    textEl.textContent = "Comfort unavailable";
+  const comfort = intel.comfort;
+  if (!comfort) {
+    emojiEl.textContent = "";
+    textEl.textContent = "";
     return;
   }
 
-  emojiEl.textContent = intel.comfort.emoji;
-  textEl.textContent = intel.comfort.summary;
+  emojiEl.textContent = comfort.emoji ?? "";
+  textEl.textContent = comfort.summary ?? "";
 }
 
-
 // ------------------------------------------------------------
-// TODAY HUMAN‑ACTION OUTLOOK (UPDATED WITH EMOJI + BULLETS)
+// RENDER TODAY OUTLOOK
 // ------------------------------------------------------------
 export function renderTodayOutlook(intel) {
   const emojiEl = document.getElementById("today-emoji");
@@ -31,164 +189,152 @@ export function renderTodayOutlook(intel) {
   const textEl = document.getElementById("today-text");
   const bulletsEl = document.getElementById("today-bullets");
 
-  const out = intel.today?.actionOutlook;
-  if (!out) {
-    emojiEl.textContent = "🌤️";
-    headlineEl.textContent = "No outlook available.";
+  const today = intel.today;
+  if (!today || !today.available) {
+    headlineEl.textContent = "No data available";
     textEl.textContent = "";
     bulletsEl.innerHTML = "";
     return;
   }
 
-  emojiEl.textContent = out.emoji ?? "🌤️";
-  headlineEl.textContent = out.headline;
-  textEl.textContent = out.context;
+  emojiEl.textContent = "";
+  headlineEl.textContent = today.headline;
+  textEl.textContent = today.narrative;
 
-  bulletsEl.innerHTML =
-    "<ul>" + out.bullets.map(b => `<li>${b}</li>`).join("") + "</ul>";
+  renderBullets(bulletsEl, today.bullets);
+
+  const todayModule = document.getElementById("today-module");
+  if (todayModule) {
+    if (today.isEndOfDay) todayModule.classList.add("fade");
+    else todayModule.classList.remove("fade");
+  }
 }
 
-
 // ------------------------------------------------------------
-// TOMORROW HUMAN‑ACTION OUTLOOK (UPDATED WITH EMOJI + BULLETS)
+// RENDER TOMORROW OUTLOOK
 // ------------------------------------------------------------
 export function renderTomorrowOutlook(intel) {
   const emojiEl = document.getElementById("tomorrow-emoji");
+  const badgeEl = document.getElementById("tomorrow-badge");
   const headlineEl = document.getElementById("tomorrow-headline");
   const textEl = document.getElementById("tomorrow-text");
   const bulletsEl = document.getElementById("tomorrow-bullets");
 
-  const out = intel.tomorrow?.actionOutlook;
-  if (!out) {
-    emojiEl.textContent = "🌤️";
-    headlineEl.textContent = "No outlook available.";
+  const tomorrow = intel.tomorrow;
+  if (!tomorrow || !tomorrow.available) {
+    headlineEl.textContent = "No data available";
     textEl.textContent = "";
     bulletsEl.innerHTML = "";
     return;
   }
 
-  emojiEl.textContent = out.emoji ?? "🌤️";
-  headlineEl.textContent = out.headline;
-  textEl.textContent = out.context;
+  emojiEl.textContent = "";
 
-  bulletsEl.innerHTML =
-    "<ul>" + out.bullets.map(b => `<li>${b}</li>`).join("") + "</ul>";
+  const dominant = tomorrow.events?.driver ?? "easy";
+
+  const badgeMap = {
+    rain:  { text: "Rain Gear",     class: "badge-rain" },
+    wind:  { text: "Wind Alert",    class: "badge-wind" },
+    snow:  { text: "Snow Impact",   class: "badge-snow" },
+    hot:   { text: "Heat Caution",  class: "badge-heat" },
+    cold:  { text: "Cold Start",    class: "badge-cold" },
+    goldilocks: { text: "Perfect Day", class: "badge-goldilocks" },
+    easy:  { text: "Easy Day",      class: "badge-easy" }
+  };
+
+  const badge = badgeMap[dominant] ?? badgeMap.easy;
+
+  badgeEl.textContent = badge.text;
+  badgeEl.className = `badge ${badge.class}`;
+
+  headlineEl.textContent = tomorrow.headline;
+  textEl.textContent = tomorrow.narrative;
+
+  renderBullets(bulletsEl, tomorrow.bullets);
+
+  const tomorrowModule = document.getElementById("tomorrow-module");
+  if (tomorrowModule) {
+    if (tomorrow.isEarlyMorning) tomorrowModule.classList.add("fade");
+    else tomorrowModule.classList.remove("fade");
+  }
 }
 
-
 // ------------------------------------------------------------
-// UV INDEX
+// RENDER UV INDEX (FORECAST)
 // ------------------------------------------------------------
 export function renderUV(intel) {
-  const el = document.getElementById("wu-uv");
-  const uv = intel.today?.stats?.uv ?? null;
+  const uvEl = document.getElementById("wu-uv");
+  if (!uvEl) return;
 
-  if (uv == null) {
-    el.textContent = "--";
-    return;
-  }
-
-  el.textContent = uv;
-
-  el.classList.remove("uv-low", "uv-moderate", "uv-high", "uv-very-high", "uv-extreme");
-
-  if (uv <= 2) el.classList.add("uv-low");
-  else if (uv <= 5) el.classList.add("uv-moderate");
-  else if (uv <= 7) el.classList.add("uv-high");
-  else if (uv <= 10) el.classList.add("uv-very-high");
-  else el.classList.add("uv-extreme");
+  const uv = intel.wu?.uv ?? 0;
+  uvEl.textContent = uv.toFixed(1);
+  uvEl.className = getUVClass(uv);
 }
 
-
 // ------------------------------------------------------------
-// TODAY DETAIL PANEL
+// RENDER TODAY DETAIL
 // ------------------------------------------------------------
 export function renderTodayDetail(intel) {
   const panel = document.getElementById("expanded-today");
   if (!panel) return;
 
-  panel.innerHTML = `
-    <div class="fx-section">
-      <div class="fx-label">High Temperature</div>
-      <div class="fx-value">${intel.today?.stats?.maxTemp ?? "--"}°</div>
-    </div>
+  const stats = intel.today?.stats;
+  if (!stats) {
+    panel.innerHTML = "";
+    return;
+  }
 
-    <div class="fx-section">
-      <div class="fx-label">Wind</div>
-      <div class="fx-value">${intel.wu.windSpeed ?? "--"} mph</div>
-    </div>
+  panel.innerHTML = `
+    <div class="fx-section"><div class="fx-label">High</div><div class="fx-value">${Math.round(stats.tempMax)}°</div></div>
+    <div class="fx-section"><div class="fx-label">Low</div><div class="fx-value">${Math.round(stats.tempMin)}°</div></div>
+    <div class="fx-section"><div class="fx-label">Wind</div><div class="fx-value">${Math.round(stats.windAvg)} mph (gusts ${Math.round(stats.windGustMax)} mph)</div></div>
+    <div class="fx-section"><div class="fx-label">Rain</div><div class="fx-value">${formatRainAmount(stats.rainTotal)}</div></div>
+    <div class="fx-section"><div class="fx-label">Snow</div><div class="fx-value">${formatSnowAmount(stats.snowTotal)}</div></div>
+    <div class="fx-section"><div class="fx-label">Cloud Cover</div><div class="fx-value">${Math.round(stats.cloudAvg)}%</div></div>
   `;
 }
 
-
 // ------------------------------------------------------------
-// TOMORROW DETAIL PANEL
+// RENDER TOMORROW DETAIL
 // ------------------------------------------------------------
 export function renderTomorrowDetail(intel) {
   const panel = document.getElementById("expanded-tomorrow");
   if (!panel) return;
 
-  panel.innerHTML = `
-    <div class="fx-section">
-      <div class="fx-label">High Temperature</div>
-      <div class="fx-value">${intel.tomorrow?.stats?.maxTemp ?? "--"}°</div>
-    </div>
-
-    <div class="fx-section">
-      <div class="fx-label">Wind</div>
-      <div class="fx-value">${intel.tomorrow?.windSpeed ?? "--"} mph</div>
-    </div>
-  `;
-}
-
-
-// ------------------------------------------------------------
-// CURRENT OBSERVATIONS
-// ------------------------------------------------------------
-export function renderCurrentObservations(intel) {
-  document.getElementById("wu-temp").textContent = `${intel.wu.temp}°`;
-  document.getElementById("wu-feels").textContent = `Feels like ${intel.wu.feelsLike}°`;
-
-  document.getElementById("wu-dew").textContent = `${intel.wu.dew}°`;
-  document.getElementById("wu-humidity").textContent = `Humidity ${intel.wu.humidity}%`;
-
-  document.getElementById("wu-wind").textContent = `${intel.wu.windSpeed} mph`;
-  document.getElementById("wu-wind-gust").textContent = `Gusts ${intel.wu.windGust} mph`;
-}
-
-
-// ============================================================
-// EXPAND / COLLAPSE — CLEAN NEW SYSTEM
-// ============================================================
-export function toggleForecastExpanded(which, intel) {
-  const isToday = which === "today";
-
-  const moduleEl = document.getElementById(
-    isToday ? "today-module" : "tomorrow-module"
-  );
-  const panelEl = document.getElementById(
-    isToday ? "expanded-today" : "expanded-tomorrow"
-  );
-
-  if (!moduleEl || !panelEl) return;
-
-  const isOpen = panelEl.style.display === "block";
-
-  // CLOSE
-  if (isOpen) {
-    panelEl.style.display = "none";
-    moduleEl.classList.remove("fade");
+  const stats = intel.tomorrow?.stats;
+  if (!stats) {
+    panel.innerHTML = "";
     return;
   }
 
-  // OPEN
-  moduleEl.classList.add("fade");
-  panelEl.style.display = "block";
+  panel.innerHTML = `
+    <div class="fx-section"><div class="fx-label">High</div><div class="fx-value">${Math.round(stats.tempMax)}°</div></div>
+    <div class="fx-section"><div class="fx-label">Low</div><div class="fx-value">${Math.round(stats.tempMin)}°</div></div>
+    <div class="fx-section"><div class="fx-label">Wind</div><div class="fx-value">${Math.round(stats.windAvg)} mph (gusts ${Math.round(stats.windGustMax)} mph)</div></div>
+    <div class="fx-section"><div class="fx-label">Rain</div><div class="fx-value">${formatRainAmount(stats.rainTotal)}</div></div>
+    <div class="fx-section"><div class="fx-label">Snow</div><div class="fx-value">${formatSnowAmount(stats.snowTotal)}</div></div>
+    <div class="fx-section"><div class="fx-label">Cloud Cover</div><div class="fx-value">${Math.round(stats.cloudAvg)}%</div></div>
+  `;
+}
 
-  // Render detail panel
-  if (isToday) {
-    renderTodayDetail(intel);
-  } else {
-    renderTomorrowDetail(intel);
+// ------------------------------------------------------------
+// EXPANSION PANEL TOGGLER
+// ------------------------------------------------------------
+export function toggleForecastExpanded(which, intel) {
+  const panelToday = document.getElementById("expanded-today");
+  const panelTomorrow = document.getElementById("expanded-tomorrow");
+
+  if (which === "today") {
+    const isOpen = panelToday.style.display === "block";
+    panelToday.style.display = isOpen ? "none" : "block";
+    panelTomorrow.style.display = "none";
+    return;
+  }
+
+  if (which === "tomorrow") {
+    const isOpen = panelTomorrow.style.display === "block";
+    panelTomorrow.style.display = isOpen ? "none" : "block";
+    panelToday.style.display = "none";
+    return;
   }
 }
