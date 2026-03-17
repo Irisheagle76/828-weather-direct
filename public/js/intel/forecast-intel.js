@@ -1,16 +1,16 @@
-// /intel/forecast-intel.js
+// /js/intel/forecast-intel.js
+// Build unified forecast intelligence (Today, Tomorrow, Remainder of Today)
 
-import { computeComfort } from "./comfort.js";
-import { synthesizeOutlook, differentiateFromToday } from "./synthesizer.js";
+import { synthesizeOutlook, differentiateFromToday, synthesizeRemainderTodayOutlook } from "./synthesizer.js";
 import { computeStats } from "./stats.js";
 import { computeEvents } from "./events.js";
 import { getTodayWindow, getTomorrowWindow } from "./windows.js";
 
 export function buildWeatherIntel(hourly) {
   // -----------------------------
-  // Current hour snapshot
+  // Current hour snapshot (reserved for future use)
   // -----------------------------
-  const nowIndex = 0; // first hour = "now"
+  const nowIndex = 0;
   const hourlyNow = {
     temperature_2m: hourly.temperature_2m[nowIndex],
     dewpoint_2m: hourly.dewpoint_2m[nowIndex],
@@ -43,8 +43,29 @@ export function buildWeatherIntel(hourly) {
   tomorrowOutlook = differentiateFromToday(todayOutlook, tomorrowOutlook);
 
   // -----------------------------
+  // Remainder-of-today intel (after 3 PM)
+  // -----------------------------
+  const remainderInfo = buildRemainderSubwindows(hourly, todayHours);
+  let remainderTodayIntel = null;
+
+  if (remainderInfo) {
+    const { earlier, remainder } = remainderInfo;
+    const statsEarlier = computeStats(hourly, earlier);
+    const statsRemainder = computeStats(hourly, remainder);
+
+    const outlook = synthesizeRemainderTodayOutlook(statsEarlier, statsRemainder);
+
+    remainderTodayIntel = {
+      available: true,
+      ...outlook,
+      statsEarlier,
+      statsRemainder
+    };
+  }
+
+  // -----------------------------
   // Return unified intel object
-  // (WU + MRMS attached later in app.js)
+  // (WU + MRMS + Tempest attached later in app.js)
   // -----------------------------
   const intel = {
     today: {
@@ -59,18 +80,44 @@ export function buildWeatherIntel(hourly) {
       stats: statsTomorrow,
       events: eventsTomorrow
     },
-    comfort: null, // filled below
+    remainderToday: remainderTodayIntel, // may be null
+    comfort: null,
     wu: null,
-    mrms: null
+    mrms: null,
+    tempest: null
   };
 
-  // -----------------------------
-  // Compute comfort AFTER WU is attached in app.js
-  // -----------------------------
-  // app.js will do:
-  // intel.wu = wuCurrent;
-  // intel.mrms = mrmsPixel;
-  // intel.comfort = computeComfort(intel);
-
   return intel;
+}
+
+// -----------------------------
+// Helper: split today into earlier vs remainder (after 3 PM)
+// -----------------------------
+function buildRemainderSubwindows(hourly, todayHours) {
+  if (!hourly || !hourly.time || !todayHours || todayHours.length === 0) return null;
+
+  const now = new Date();
+  const nowMs = now.getTime();
+  const currentHour = now.getHours();
+
+  // Only activate after 3 PM local
+  if (currentHour < 15) return null;
+
+  const earlier = [];
+  const remainder = [];
+
+  for (const idx of todayHours) {
+    const t = new Date(hourly.time[idx]);
+    const tMs = t.getTime();
+    const h = t.getHours();
+
+    if (tMs < nowMs) {
+      earlier.push(idx);
+    } else if (h >= 15) {
+      remainder.push(idx);
+    }
+  }
+
+  if (earlier.length === 0 || remainder.length === 0) return null;
+  return { earlier, remainder };
 }
