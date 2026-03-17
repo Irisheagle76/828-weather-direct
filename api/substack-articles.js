@@ -8,7 +8,7 @@ export default async function handler(req, res) {
     const xml = await response.text();
 
     // Extract first <item>
-    const match = xml.match(/<item>([\s\S]*?)<\/item>/);
+    const match = xml.match(/<item>([\s\\S]*?)<\\/item>/);
     if (!match) {
       return res.status(200).json({ success: true, article: null });
     }
@@ -42,20 +42,20 @@ export default async function handler(req, res) {
     };
 
     // ------------------------------------------------------------
-    // ⭐ Fetch OG image from your new endpoint
+    // ⭐ Fetch OG image (with safe base URL)
     // ------------------------------------------------------------
     let ogImage = null;
 
     try {
-      const ogRes = await fetch(
-        const baseUrl =
-  process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000";
+      const baseUrl =
+        process.env.VERCEL_URL
+          ? `https://${process.env.VERCEL_URL}`
+          : "http://localhost:3000";
 
-const ogRes = await fetch(
-  `${baseUrl}/api/substack-og?url=${encodeURIComponent(article.link)}`
-);
+      const ogRes = await fetch(
+        `${baseUrl}/api/substack-og?url=${encodeURIComponent(article.link)}`
+      );
+
       const ogData = await ogRes.json();
       ogImage = ogData.ogImage || null;
     } catch (err) {
@@ -63,11 +63,7 @@ const ogRes = await fetch(
     }
 
     article.ogImage = ogImage;
-console.log("OG fetch result:", ogData);
 
-    // ------------------------------------------------------------
-    // Return final article object
-    // ------------------------------------------------------------
     res.status(200).json({ success: true, article });
 
   } catch (err) {
