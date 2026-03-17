@@ -232,20 +232,26 @@ export function renderTomorrowOutlook(intel) {
 
   const dominant = tomorrow.events?.driver ?? "easy";
 
+  // ⭐ Updated badge map — no "easy" entry
   const badgeMap = {
     rain:  { text: "Rain Gear",     class: "badge-rain" },
     wind:  { text: "Wind Alert",    class: "badge-wind" },
     snow:  { text: "Snow Impact",   class: "badge-snow" },
     hot:   { text: "Heat Caution",  class: "badge-heat" },
     cold:  { text: "Cold Start",    class: "badge-cold" },
-    goldilocks: { text: "Perfect Day", class: "badge-goldilocks" },
-    easy:  { text: "Easy Day",      class: "badge-easy" }
+    goldilocks: { text: "Perfect Day", class: "badge-goldilocks" }
   };
 
-  const badge = badgeMap[dominant] ?? badgeMap.easy;
+  const badge = badgeMap[dominant];
 
-  badgeEl.textContent = badge.text;
-  badgeEl.className = `badge ${badge.class}`;
+  // ⭐ Hide badge entirely for "easy" days
+  if (!badge) {
+    badgeEl.style.display = "none";
+  } else {
+    badgeEl.style.display = "inline-flex";
+    badgeEl.textContent = badge.text;
+    badgeEl.className = `badge ${badge.class}`;
+  }
 
   headlineEl.textContent = tomorrow.headline;
   textEl.textContent = tomorrow.narrative;
