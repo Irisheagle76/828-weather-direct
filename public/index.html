@@ -220,13 +220,19 @@ h1 {
   line-height: 1.4;
 }
 
-/* BULLETS — flush, modern, minimal indent */
+/* BULLETS — true flush-left alignment */
 .today-bullets,
 .tomorrow-bullets {
   margin-top: 0.35rem;
   margin-bottom: 0.2rem;
-  padding-left: 0.25rem;   /* dramatically reduced */
-  list-style: disc inside; /* bullet sits inside the text block */
+
+  /* Remove browser default indent entirely */
+  padding-left: 0;
+  margin-left: 0;
+
+  /* Bullet sits inside the text block */
+  list-style-position: inside;
+  list-style-type: disc;
 }
 
 .today-bullets li,
@@ -235,7 +241,9 @@ h1 {
   color: #d8dff7;
   line-height: 1.35;
   margin: 0.25rem 0;
-  padding-left: 0;         /* remove extra nudge */
+
+  /* Remove any inherited padding */
+  padding-left: 0;
 }
 /* ---------------------------------------
    BULLET REVEAL ANIMATION
