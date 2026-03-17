@@ -8,7 +8,6 @@ export default async function handler(req, res) {
     const response = await fetch(url);
     const html = await response.text();
 
-    // Extract <meta property="og:image" content="...">
     const match = html.match(
       /<meta property="og:image" content="([^"]+)"\/?>/i
     );
