@@ -90,9 +90,38 @@ async function initApp() {
       try {
         // ⭐ 1. WU Station + Current Conditions
         const nearest = await getNearestWUStation(lat, lon);
-        const wuCurrent = await getWUCurrentConditions(nearest.stationId);
+        const wuCurrentRaw = await getWUCurrentConditions(nearest.stationId);
 
         setWUStatus("ok", "WU Connected", "Weather Underground data loaded.");
+
+        // ⭐ Normalize Weather Underground current conditions
+        const obs = wuCurrentRaw?.observations?.[0] ?? {};
+        const imp = obs.imperial ?? {};
+
+        const wuCurrent = {
+          stationId: nearest.stationId,
+
+          // Temperature
+          temp: imp.temp ?? null,
+
+          // Feels like (heatIndex OR windChill OR temp)
+          feelsLike:
+            imp.heatIndex ??
+            imp.windChill ??
+            imp.temp ??
+            null,
+
+          // Dew point
+          dew: imp.dewpt ?? null,
+
+          // Humidity
+          humidity: obs.humidity ?? null,
+
+          // Wind
+          windSpeed: obs.windSpeed ?? null,
+          windGust: obs.windGust ?? null,
+          windDir: obs.winddir ?? null
+        };
 
         // ⭐ 2. Tempest Device Observations
         const TEMPEST_DEVICE_ID = "315255";
@@ -117,7 +146,6 @@ async function initApp() {
           cloud: hourly.cloudcover?.[i] ?? null
         }));
 
-        // Debug
         window._hourly = hours;
 
         // ⭐ 4. MRMS Radar Pixel
@@ -144,7 +172,6 @@ async function initApp() {
         // ⭐ Compute comfort now that Tempest high + wind are attached
         intel.comfort = computeComfort(intel);
 
-        // Debug
         window._intel = intel;
 
         // ⭐ 6. Update UI
@@ -168,19 +195,4 @@ async function initApp() {
 // ------------------------------------------------------------
 // CLICK LISTENERS FOR EXPANSION
 // ------------------------------------------------------------
-document.addEventListener("DOMContentLoaded", () => {
-  const todayModule = document.getElementById("today-module");
-  const tomorrowModule = document.getElementById("tomorrow-module");
-
-  if (todayModule) {
-    todayModule.addEventListener("click", () => {
-      toggleForecastExpanded("today", window._intel);
-    });
-  }
-
-  if (tomorrowModule) {
-    tomorrowModule.addEventListener("click", () => {
-      toggleForecastExpanded("tomorrow", window._intel);
-    });
-  }
-});
+document.addEventListener("DOMContentLoaded
