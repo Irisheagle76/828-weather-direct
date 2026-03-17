@@ -31,6 +31,7 @@ window.toggleForecastExpanded = toggleForecastExpanded;
 // STATUS + ERROR HELPERS
 // ------------------------------------------------------------
 function setWUStatus(state, label, text) {
+  const badge = document.getElementById("wu-status-badge");
   const dot = document.getElementById("wu-status-dot");
   const lbl = document.getElementById("wu-status-label");
   const txt = document.getElementById("wu-status-text");
@@ -39,6 +40,7 @@ function setWUStatus(state, label, text) {
   txt.textContent = text;
 
   dot.classList.remove("ok", "error");
+
   if (state === "ok") dot.classList.add("ok");
   if (state === "error") dot.classList.add("error");
 }
@@ -88,29 +90,9 @@ async function initApp() {
       try {
         // ⭐ 1. WU Station + Current Conditions
         const nearest = await getNearestWUStation(lat, lon);
-        const wuCurrentRaw = await getWUCurrentConditions(nearest.stationId);
+        const wuCurrent = await getWUCurrentConditions(nearest.stationId);
 
         setWUStatus("ok", "WU Connected", "Weather Underground data loaded.");
-
-        // ⭐ Normalize Weather Underground current conditions
-        const obs = wuCurrentRaw?.observations?.[0] ?? {};
-        const imp = obs.imperial ?? {};
-
-        const wuCurrent = {
-          stationId: nearest.stationId,
-          temp: imp.temp ?? null,
-          feelsLike:
-            (imp.heatIndex !== null && imp.heatIndex !== undefined)
-              ? imp.heatIndex
-              : (imp.windChill !== null && imp.windChill !== undefined)
-                ? imp.windChill
-                : imp.temp ?? null,
-          dew: imp.dewpt ?? null,
-          humidity: obs.humidity ?? null,
-          windSpeed: obs.windSpeed ?? null,
-          windGust: obs.windGust ?? null,
-          windDir: obs.winddir ?? null
-        };
 
         // ⭐ 2. Tempest Device Observations
         const TEMPEST_DEVICE_ID = "315255";
@@ -119,29 +101,23 @@ async function initApp() {
         const tempest = await getTempestDeviceObs(TEMPEST_DEVICE_ID, TEMPEST_TOKEN);
         const tempestHigh = tempest?.tempHighToday ?? null;
 
-// ⭐ 3. Hourly Forecast (Open-Meteo format)
-const hourly = await getShortTermForecast(lat, lon);
+        // ⭐ 3. Hourly Forecast (Open-Meteo format)
+        const hourly = await getShortTermForecast(lat, lon);
 
-// Debug overlay — no model engine yet
-window._forecastModel = "default";
+        // ⭐ Convert Open-Meteo column format → array of hourly objects
+        const hours = hourly.time.map((t, i) => ({
+          time: t,
+          temp: hourly.temperature_2m[i],
+          dewpoint: hourly.dewpoint_2m[i],
+          rain: hourly.rain[i],
+          snow: hourly.snowfall[i],
+          windSpeed: hourly.wind_speed_10m[i],
+          windGust: hourly.wind_gusts_10m[i],
+          uv: hourly.uv_index[i],
+          cloud: hourly.cloudcover?.[i] ?? null
+        }));
 
-// Validate structure
-if (!hourly?.hourly?.time || !Array.isArray(hourly.hourly.time)) {
-  throw new Error("Open-Meteo hourly data missing or malformed");
-}
-
-// Convert column format → array
-const hours = hourly.hourly.time.map((t, i) => ({
-  time: t,
-  temp: hourly.hourly.temperature_2m?.[i] ?? null,
-  dewpoint: hourly.hourly.dewpoint_2m?.[i] ?? null,
-  rain: hourly.hourly.rain?.[i] ?? null,
-  snow: hourly.hourly.snowfall?.[i] ?? null,
-  windSpeed: hourly.hourly.wind_speed_10m?.[i] ?? null,
-  windGust: hourly.hourly.wind_gusts_10m?.[i] ?? null,
-  uv: hourly.hourly.uv_index?.[i] ?? null,
-  cloud: hourly.hourly.cloudcover?.[i] ?? null
-}));
+        // Debug
         window._hourly = hours;
 
         // ⭐ 4. MRMS Radar Pixel
@@ -168,21 +144,17 @@ const hours = hourly.hourly.time.map((t, i) => ({
         // ⭐ Compute comfort now that Tempest high + wind are attached
         intel.comfort = computeComfort(intel);
 
+        // Debug
         window._intel = intel;
 
         // ⭐ 6. Update UI
-updateUI(intel);
+        updateUI(intel);
 
-// ⭐ Debug overlay — show which forecast model was used
-const dbg = document.getElementById("model-debug");
-if (dbg && window._forecastModel) {
-  dbg.textContent = `Forecast model: ${window._forecastModel.toUpperCase()}`;
-}
-     } catch (err) {
-  console.error("Weather init error:", err);
-  setWUStatus("error", "Data Error", "Unable to load weather data.");
-  showWUError("Unable to load weather data. Please try again later.");
-}
+      } catch (err) {
+        console.error("Weather init error:", err);
+        setWUStatus("error", "Data Error", "Unable to load weather data.");
+        showWUError("Unable to load weather data. Please try again later.");
+      }
     },
 
     (err) => {
@@ -202,14 +174,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (todayModule) {
     todayModule.addEventListener("click", () => {
-      if (!window._intel) return;
       toggleForecastExpanded("today", window._intel);
     });
   }
 
   if (tomorrowModule) {
     tomorrowModule.addEventListener("click", () => {
-      if (!window._intel) return;
       toggleForecastExpanded("tomorrow", window._intel);
     });
   }
