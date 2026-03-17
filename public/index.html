@@ -6,6 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <style>
+  /* ============================================================
+     ROOT VARIABLES
+  ============================================================ */
   :root {
     --card-padding: 1.5rem;
     --module-padding: 1rem 1.2rem;
@@ -22,99 +25,111 @@
     }
   }
 
+  /* ============================================================
+     GLOBAL ELEMENTS
+  ============================================================ */
   body {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     background: #0a0f1c;
     color: #f5f5f5;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     margin: 0;
     padding: var(--card-padding);
   }
 
-  .card {
-    max-width: 720px;
-    margin: 0 auto;
-    background: #141a2a;
-    border-radius: var(--module-radius);
-    padding: var(--card-padding);
-    box-shadow: 0 18px 40px rgba(0,0,0,0.45);
-    border: 1px solid rgba(255,255,255,0.05);
-  }
-
   h1 {
-    margin: 0 0 0.4rem;
     font-size: 1.6rem;
     letter-spacing: 0.03em;
+    margin: 0 0 0.4rem;
   }
 
   .subtitle {
-    font-size: 0.9rem;
     color: #9aa3c2;
+    font-size: 0.9rem;
     margin-bottom: var(--gap);
   }
 
+  /* ============================================================
+     CARD WRAPPER
+  ============================================================ */
+  .card {
+    background: #141a2a;
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: var(--module-radius);
+    box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+    margin: 0 auto;
+    max-width: 720px;
+    padding: var(--card-padding);
+  }
+
+  /* ============================================================
+     STATUS BLOCK
+  ============================================================ */
   .status-row {
+    align-items: center;
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
     gap: 0.75rem;
     margin-bottom: var(--gap);
   }
 
   .badge {
-    display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
-    padding: 0.3rem 0.7rem;
-    border-radius: 999px;
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    border: 1px solid rgba(255,255,255,0.12);
     background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 0.78rem;
+    gap: 0.4rem;
+    letter-spacing: 0.08em;
+    padding: 0.3rem 0.7rem;
+    text-transform: uppercase;
   }
 
   .badge-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 999px;
     background: #f5c84c;
+    border-radius: 999px;
+    height: 8px;
+    width: 8px;
   }
 
   .badge-dot.ok { background: #ffa94d; }
   .badge-dot.error { background: #fb7185; }
 
   .status-text {
-    font-size: 0.85rem;
     color: #c4c9e5;
+    font-size: 0.85rem;
   }
 
+  /* ============================================================
+     METRICS GRID
+  ============================================================ */
   .metrics-row {
     margin-bottom: var(--gap);
   }
 
   .grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
     gap: var(--gap);
+    grid-template-columns: repeat(4, 1fr);
   }
 
   .metric {
     background: rgba(255,255,255,0.03);
-    border-radius: 12px;
-    padding: 0.45rem 0.6rem;
     border: 1px solid rgba(255,255,255,0.05);
-    min-height: 70px;
+    border-radius: 12px;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    min-height: 70px;
+    padding: 0.45rem 0.6rem;
   }
 
   .metric-label {
-    font-size: 0.62rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
     color: #f0b777;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
     margin-bottom: 0.15rem;
+    text-transform: uppercase;
   }
 
   .metric-value {
@@ -124,57 +139,61 @@
   }
 
   .metric-sub {
-    font-size: 0.68rem;
     color: #9aa3c2;
-    margin-top: 0.1rem;
+    font-size: 0.68rem;
     line-height: 1.1;
+    margin-top: 0.1rem;
   }
 
-  /* COMFORT MODULE */
+  /* ============================================================
+     COMFORT MODULE
+  ============================================================ */
   .comfort-row {
     margin-bottom: var(--gap);
   }
 
   .comfort-module {
+    align-items: center;
     background: rgba(255, 169, 77, 0.10);
     border: 1px solid rgba(255, 169, 77, 0.35);
     border-radius: var(--module-radius);
-    padding: var(--module-padding);
     display: flex;
-    align-items: center;
     gap: 0.8rem;
+    padding: var(--module-padding);
   }
 
   .comfort-emoji {
-    font-size: 2rem;
     flex-shrink: 0;
+    font-size: 2rem;
   }
 
   .comfort-label {
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letterletter-spacing: 0.08em;
     color: #f0b777;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
     margin-bottom: 0.15rem;
+    text-transform: uppercase;
     white-space: nowrap;
   }
 
   .comfort-text {
+    color: #ffa94d;
     font-size: 1.02rem;
     font-weight: 600;
-    color: #ffa94d;
     letter-spacing: 0.02em;
     line-height: 1.25;
     word-wrap: break-word;
   }
 
   .comfort-sub {
-    font-size: 0.78rem;
     color: #9aa3c2;
+    font-size: 0.78rem;
     margin-top: 0.15rem;
   }
 
-  /* TODAY + TOMORROW */
+  /* ============================================================
+     TODAY + TOMORROW MODULES
+  ============================================================ */
   .now-tomorrow-row {
     display: flex;
     flex-wrap: wrap;
@@ -189,14 +208,14 @@
   }
 
   .action-module {
+    align-items: flex-start;
     background: rgba(120, 180, 255, 0.10);
     border: 2px solid rgba(120, 180, 255, 0.18);
     border-radius: var(--module-radius);
-    padding: var(--module-padding);
     display: flex;
-    align-items: flex-start;
     gap: 0.9rem;
     min-width: 0;
+    padding: var(--module-padding);
   }
 
   .action-emoji {
@@ -205,62 +224,69 @@
   }
 
   .action-label {
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
     color: #8fb7ff;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
     margin-bottom: 0.25rem;
+    text-transform: uppercase;
     white-space: nowrap;
   }
 
   .action-headline {
+    color: #ffffff;
     font-size: 1.25rem;
     font-weight: 700;
-    color: #ffffff;
-    margin-bottom: 0.3rem;
     line-height: 1.2;
-    white-space: nowrap;
+    margin-bottom: 0.3rem;
     overflow: hidden;
     text-overflow: ellipsis;
     transition: font-size 0.15s ease;
+    white-space: nowrap;
   }
 
   .action-text {
-    font-size: 0.82rem;
     color: #b9c7f5;
+    font-size: 0.82rem;
     line-height: 1.4;
+    max-width: 100%;
     overflow-wrap: break-word;
     word-break: break-word;
-    max-width: 100%;
   }
 
   .today-bullets,
   .tomorrow-bullets {
-    margin-top: 0.35rem;
-    margin-bottom: 0.2rem;
-    padding-left: 1rem;
     list-style: none;
+    margin: 0.35rem 0 0.2rem;
+    padding-left: 1rem;
   }
 
   .today-bullets li,
   .tomorrow-bullets li {
-    font-size: 0.82rem;
     color: #d8dff7;
+    font-size: 0.82rem;
     line-height: 1.35;
     margin: 0.25rem 0;
   }
 
-  /* EXPANDED PANELS */
+  .action-module.fade {
+    filter: saturate(0.8);
+    opacity: 0.55;
+    transform: translateY(2px);
+    transition: opacity 0.6s ease, transform 0.6s ease, filter 0.6s ease;
+  }
+
+  /* ============================================================
+     EXPANDED PANELS
+  ============================================================ */
   .expanded-panel {
-    margin-top: 1rem;
-    padding: 1.2rem 1.4rem;
     background: rgba(20, 26, 42, 0.88);
     border: 1px solid rgba(255,255,255,0.10);
     border-radius: 18px;
-    backdrop-filter: blur(10px);
     box-shadow: 0 6px 18px rgba(0,0,0,0.35);
     color: #e8eaf6;
     line-height: 1.45;
+    margin-top: 1rem;
+    padding: 1.2rem 1.4rem;
     transition: all 0.25s ease;
   }
 
@@ -273,19 +299,21 @@
   }
 
   .expanded-panel .fx-label {
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
     color: #f0b777;
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
     margin-bottom: 0.25rem;
+    text-transform: uppercase;
   }
 
   .expanded-panel .fx-value {
-    font-size: 0.95rem;
     color: #d8dff7;
+    font-size: 0.95rem;
   }
 
-  /* UV INDEX */
+  /* ============================================================
+     UV INDEX COLORS
+  ============================================================ */
   #wU-uv,
   #wu-uv {
     font-size: 1.45rem;
@@ -299,7 +327,9 @@
   .uv-very-high { color: #f44336; }
   .uv-extreme { color: #9c27b0; }
 
-  /* TEMPERATURE COLOR SCALE */
+  /* ============================================================
+     TEMPERATURE + DEW POINT COLOR SCALES
+  ============================================================ */
   .temp-freezing { color: #4dabf7; }
   .temp-cold     { color: #74c0fc; }
   .temp-cool     { color: #a5d8ff; }
@@ -307,40 +337,28 @@
   .temp-warm     { color: #ffa94d; }
   .temp-hot      { color: #ff6b6b; }
 
-  /* DEW POINT SCALE */
   .dew-dry       { color: #74c0fc; }
   .dew-comfort   { color: #ffd43b; }
   .dew-humid     { color: #ffa94d; }
   .dew-tropical  { color: #ff6b6b; }
 
-  /* FOOTER */
-  .footer-note {
+  /* ============================================================
+     SUBSTACK MODULES
+  ============================================================ */
+  .substack-module {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: var(--module-radius);
     margin-top: var(--gap);
-    padding-top: 0.8rem;
-    border-top: 1px solid rgba(255,255,255,0.08);
-    font-size: 0.78rem;
-    color: #e0b27a;
-    text-align: center;
-    opacity: 0.9;
-    letter-spacing: 0.03em;
+    padding: var(--module-padding);
   }
-
-  .action-module.fade {
-    opacity: 0.55;
-    transform: translateY(2px);
-    filter: saturate(0.8);
-    transition: opacity 0.6s ease, transform 0.6s ease, filter 0.6s ease;
-  }
-
-  /* SUBSTACK MODULES */
-  .substack-module {}
 
   .substack-notes-list {
+    display: grid;
+    gap: 0.75rem;
     list-style: none;
     margin: 0;
     padding: 0;
-    display: grid;
-    gap: 0.75rem;
   }
 
   .substack-note-item {
@@ -355,10 +373,10 @@
 
   .substack-note-meta,
   .substack-article-header {
-    display: flex;
-    justify-content: space-between;
     align-items: baseline;
+    display: flex;
     gap: 0.5rem;
+    justify-content: space-between;
     margin-bottom: 0.25rem;
   }
 
@@ -385,6 +403,20 @@
   .substack-note-link:hover,
   .substack-article-link:hover {
     text-decoration: underline;
+  }
+
+  /* ============================================================
+     FOOTER
+  ============================================================ */
+  .footer-note {
+    border-top: 1px solid rgba(255,255,255,0.08);
+    color: #e0b27a;
+    font-size: 0.78rem;
+    letter-spacing: 0.03em;
+    margin-top: var(--gap);
+    opacity: 0.9;
+    padding-top: 0.8rem;
+    text-align: center;
   }
 </style>
 </head>
@@ -456,7 +488,7 @@
         <div id="today-emoji" class="action-emoji">--</div>
         <div>
           <div class="action-label">Today’s Human‑Action Outlook</div>
-          <!-- Remainder-of-today label (shown after 3 PM when active) -->
+
           <div id="today-remainder-label" class="action-label" style="display:none;">
             Remainder of Today (after 3 PM)
           </div>
@@ -502,25 +534,11 @@
 
   </div>
 
-  <!-- ========================= -->
-  <!-- SUBSTACK MODULES (Option A) -->
-  <!-- ========================= -->
-
+  <!-- SUBSTACK MODULES -->
   <section id="weather-notes-module" class="module-card substack-module"></section>
-
   <section id="weather-articles-module" class="module-card substack-module"></section>
 
   <!-- FOOTER -->
   <div class="footer-note" id="wu-station-footer">
-    Live data from Weather Underground Station --
-  </div>
+    Live data from Weather
 
-  <div class="error-text" id="wu-error" style="display:none;"></div>
-
-</div>
-
-<script type="module" src="/js/app.js"></script>
-<script type="module" src="/js/substack-render.js"></script>
-
-</body>
-</html>
