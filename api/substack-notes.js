@@ -19,7 +19,6 @@ export default async function handler(req, res) {
   }
 });
 
-console.log("STATUS:", response.status, "STATUS TEXT:", response.statusText);
     if (!response.ok) throw new Error("Substack Notes RSS error");
 
     const xml = await response.text();
