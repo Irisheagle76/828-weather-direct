@@ -63,11 +63,13 @@ export async function renderSubstackArticle() {
           <div class="substack-thumb-gradient"></div>
         </div>
 
-        <a href="${link}" target="_blank" rel="noopener" class="substack-title">
-          ${title}
-        </a>
+        <div class="substack-title-row">
+          <a href="${link}" target="_blank" rel="noopener" class="substack-title">
+            ${title}
+          </a>
 
-        ${isNew ? `<span class="substack-new-badge">NEW</span>` : ""}
+          ${isNew ? `<span class="substack-new-badge">NEW</span>` : ""}
+        </div>
 
         <div class="substack-date">${formattedDate}</div>
 
