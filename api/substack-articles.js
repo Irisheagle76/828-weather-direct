@@ -7,7 +7,7 @@ export default async function handler(req, res) {
 
     const xml = await response.text();
 
-    // Extract first <item> — FIXED REGEX
+    // Extract first <item>
     const match = xml.match(/<item>([\s\S]*?)<\/item>/);
     if (!match) {
       return res.status(200).json({ success: true, article: null });
@@ -17,20 +17,17 @@ export default async function handler(req, res) {
 
     // Helper that extracts CDATA OR plain text
     const getTag = (tag) => {
-      // CDATA version
       const cdata = itemXml.match(
         new RegExp(`<${tag}><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>`)
       );
       if (cdata) return cdata[1].trim();
 
-      // Plain version
       const plain = itemXml.match(
         new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`)
       );
       return plain ? plain[1].trim() : "";
     };
 
-    // Substack sometimes uses <content:encoded>
     const description =
       getTag("description") || getTag("content:encoded") || "";
 
@@ -42,7 +39,7 @@ export default async function handler(req, res) {
     };
 
     // ------------------------------------------------------------
-    // ⭐ Fetch OG image (safe base URL)
+    // Fetch OG image (safe base URL)
     // ------------------------------------------------------------
     let ogImage = null;
 
@@ -62,7 +59,8 @@ export default async function handler(req, res) {
       console.error("OG image fetch failed:", err);
     }
 
-   article.ogImage = ogImage || "/images/828-brand-card.png";
+    // ⭐ Fallback to your brand card
+    article.ogImage = ogImage || "/images/828-brand-card.jpg";
 
     res.status(200).json({ success: true, article });
 
