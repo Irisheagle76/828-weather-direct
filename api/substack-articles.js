@@ -62,7 +62,7 @@ export default async function handler(req, res) {
       console.error("OG image fetch failed:", err);
     }
 
-    article.ogImage = ogImage;
+   article.ogImage = ogImage || "/images/828-brand-card.png";
 
     res.status(200).json({ success: true, article });
 
