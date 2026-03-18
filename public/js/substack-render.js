@@ -30,15 +30,17 @@ export async function renderSubstackArticle() {
         })
       : "";
 
-    // Extract first sentence as subheadline
-    const cleanText = (description || "")
-      .replace(/<[^>]+>/g, "")
-      .replace(/\s+/g, " ")
-      .trim();
+// Extract clean text
+const cleanText = (description || "")
+  .replace(/<[^>]+>/g, "")
+  .replace(/\s+/g, " ")
+  .trim();
 
-    const subheadline = cleanText
-      ? cleanText.split(".")[0] + "."
-      : "A fresh weather update from the 828.";
+// Limit to ~120 characters
+let subheadline = cleanText;
+if (subheadline.length > 120) {
+  subheadline = subheadline.substring(0, 120).trim() + "...";
+}
 
     container.innerHTML = `
   <div class="module-header">From 828 Weather Update</div>
