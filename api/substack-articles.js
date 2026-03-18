@@ -33,15 +33,21 @@ export default async function handler(req, res) {
       latest.content ||
       "";
 
-    // --- Fetch OG image from your serverless OG fetcher ---
+    // ---------------------------------------------------------
+    // SAFE, BULLETPROOF OG IMAGE FETCHER CALL
+    // ---------------------------------------------------------
+
+    // Build absolute URL safely for both localhost and Vercel
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : `http://localhost:3000`;
+
     let ogImage = "/images/828-brand-card.png";
     let fallback = true;
 
     try {
       const ogRes = await fetch(
-        `${req.headers.host.startsWith("localhost") ? "http" : "https"}://${
-          req.headers.host
-        }/api/substack-og?url=${encodeURIComponent(articleUrl)}`
+        `${baseUrl}/api/substack-og?url=${encodeURIComponent(articleUrl)}`
       );
 
       const ogJson = await ogRes.json();
@@ -53,6 +59,8 @@ export default async function handler(req, res) {
     } catch (err) {
       console.error("OG fetcher failed inside articles API:", err);
     }
+
+    // ---------------------------------------------------------
 
     return res.status(200).json({
       title: latest.title || "Untitled",
