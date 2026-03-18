@@ -342,171 +342,289 @@
   .dew-humid     { color: #ffa94d; }
   .dew-tropical  { color: #ff6b6b; }
 
-/* ============================================================
-   SUBSTACK MODULE — DARK THEME, MATCHES HUMAN-ACTION MODULES
-============================================================ */
+  /* ============================================================
+     828 WEATHER PULSE MODULE
+  ============================================================ */
 
-.substack-module {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.05);
-  border-radius: var(--module-radius);
-  margin-top: var(--gap);
-  padding: var(--module-padding);
-}
+  .pulse-module {
+    margin: var(--gap) auto 0;
+    max-width: 640px;
+  }
 
-/* Thumbnail wrapper */
-.substack-thumb-wrapper {
-  position: relative;
-  width: 100%;
-  height: 160px;
-  overflow: hidden;
-  border-radius: 14px;
-  margin-bottom: 0.75rem;
-}
+  .pulse-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: var(--module-radius);
+    padding: 0.9rem 1.1rem 0.7rem;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.35);
+    cursor: pointer;
+    overflow: hidden;
+    transition: box-shadow 0.2s ease;
+  }
 
-.substack-thumb {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  display: block;
-  opacity: 0.95;
-}
+  .pulse-card:hover {
+    box-shadow: 0 14px 32px rgba(0,0,0,0.45);
+  }
 
-/* Gradient overlay */
-.substack-thumb-gradient {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 45%;
-  background: linear-gradient(
-    to bottom,
-    rgba(0,0,0,0) 0%,
-    rgba(0,0,0,0.45) 60%,
-    rgba(0,0,0,0.65) 100%
-  );
-  pointer-events: none;
-}
+  .pulse-header {
+    margin-bottom: 0.4rem;
+  }
 
-/* Article container (dark theme) */
-.substack-article {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 14px;
-  padding: 16px;
-  margin-top: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.35);
-}
+  .pulse-title {
+    font-size: 0.98rem;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #8fb7ff;
+  }
 
-/* Typography — unified with Human-Action modules */
-.substack-article,
-.substack-title,
-.substack-date,
-.substack-subheadline,
-.substack-footer-link {
-  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-}
+  .pulse-badge-pill {
+    display: inline-block;
+    margin-top: 0.25rem;
+    padding: 2px 10px;
+    border-radius: 9999px;
+    background: rgba(255, 169, 77, 0.16);
+    border: 1px solid rgba(255, 169, 77, 0.55);
+    font-size: 0.72rem;
+    color: #ffa94d;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
 
-/* Title */
-.substack-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #f7c873; /* warm accent */
-  text-decoration: none;
-  line-height: 1.3;
-  display: block;
-  margin-top: 6px;
-}
+  .pulse-timestamp {
+    margin-top: 0.25rem;
+    font-size: 0.8rem;
+    color: #b9c7f5;
+  }
 
-.substack-title:hover {
-  color: #ffdca0;
-  text-decoration: underline;
-}
+  .pulse-body {
+    display: flex;
+    gap: 0.6rem;
+    margin-top: 0.6rem;
+  }
 
-/* Date */
-.substack-date {
-  font-size: 0.82rem;
-  color: #b9c7f5;
-  margin-top: 4px;
-}
+  .pulse-thumb {
+    flex: 0 0 72px;
+    max-height: 72px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #1f2435;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  }
 
-.substack-subheadline {
-  font-size: 0.78rem;   /* smaller, more compact */
-  color: #d8dff7;
-  margin-top: 10px;
-  line-height: 1.35;
-}
-/* ============================================================
-   SUBSTACK TITLE ROW + NEW BADGE
-============================================================ */
+  .pulse-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
 
-.substack-title-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-top: 0.35rem;
-}
+  .pulse-preview {
+    flex: 1;
+    font-size: 0.86rem;
+    color: #d8dff7;
+    line-height: 1.4;
+  }
 
-.substack-new-badge {
-  background: rgba(255, 169, 77, 0.22);
-  border: 1px solid rgba(255, 169, 77, 0.55);
-  color: #ffa94d;
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  padding: 0.18rem 0.55rem;
-  border-radius: 999px;
-  flex-shrink: 0;
-  box-shadow: 0 0 6px rgba(255, 169, 77, 0.35);
-}
-/* Footer link */
-.substack-footer-link {
-  margin-top: 14px;
-  font-size: 0.9rem;
-}
+  .pulse-toggle {
+    margin-top: 0.55rem;
+    margin-bottom: 0.1rem;
+    border: none;
+    background: none;
+    color: #8fb7ff;
+    font-size: 0.78rem;
+    padding: 0;
+    text-align: left;
+    cursor: pointer;
+  }
 
-.substack-footer-link a {
-  color: #8fb7ff;
-  text-decoration: none;
-  font-weight: 500;
-}
+  .pulse-toggle:hover {
+    text-decoration: underline;
+  }
 
-.substack-footer-link a:hover {
-  text-decoration: underline;
-}
+  .pulse-expanded .pulse-body {
+    flex-direction: column;
+  }
 
-/* ============================================================
-   SUBSTACK HEADER — MATCH HUMAN-ACTION OUTLOOK + BADGE + DIVIDER
-============================================================ */
+  .pulse-expanded .pulse-thumb {
+    flex: 0 0 auto;
+    max-height: none;
+    width: 100%;
+  }
 
-#weather-articles-module .module-header {
-  font-family: "Inter", system-ui, sans-serif;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  font-size: 0.95rem;        /* keep your current size */
-  color: #8fb7ff;            /* same cool blue accent */
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  margin-bottom: 0.85rem;
-  padding-bottom: 0.4rem;
-  border-bottom: 1px solid rgba(255,255,255,0.08); /* subtle divider */
-}
+  .pulse-expanded .pulse-preview {
+    margin-top: 0.5rem;
+  }
 
-/* Tiny badge dot (matches your status indicators) */
-#weather-articles-module .module-header::before {
-  content: "";
-  width: 8px;
-  height: 8px;
-  background: #8fb7ff;
-  border-radius: 50%;
-  opacity: 0.9;
-}
-    /* ============================================================
+  /* ============================================================
+     SUBSTACK MODULE — DARK THEME, MATCHES HUMAN-ACTION MODULES
+  ============================================================ */
+
+  .substack-module {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: var(--module-radius);
+    margin-top: var(--gap);
+    padding: var(--module-padding);
+  }
+
+  /* Thumbnail wrapper */
+  .substack-thumb-wrapper {
+    position: relative;
+    width: 100%;
+    height: 160px;
+    overflow: hidden;
+    border-radius: 14px;
+    margin-bottom: 0.75rem;
+  }
+
+  .substack-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    opacity: 0.95;
+  }
+
+  /* Gradient overlay */
+  .substack-thumb-gradient {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 45%;
+    background: linear-gradient(
+      to bottom,
+      rgba(0,0,0,0) 0%,
+      rgba(0,0,0,0.45) 60%,
+      rgba(0,0,0,0.65) 100%
+    );
+    pointer-events: none;
+  }
+
+  /* Article container (dark theme) */
+  .substack-article {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 16px;
+    margin-top: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.35);
+  }
+
+  /* Typography — unified with Human-Action modules */
+  .substack-article,
+  .substack-title,
+  .substack-date,
+  .substack-subheadline,
+  .substack-footer-link {
+    font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  /* Title */
+  .substack-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #f7c873; /* warm accent */
+    text-decoration: none;
+    line-height: 1.3;
+    display: block;
+    margin-top: 6px;
+  }
+
+  .substack-title:hover {
+    color: #ffdca0;
+    text-decoration: underline;
+  }
+
+  /* Date */
+  .substack-date {
+    font-size: 0.82rem;
+    color: #b9c7f5;
+    margin-top: 4px;
+  }
+
+  .substack-subheadline {
+    font-size: 0.78rem;   /* smaller, more compact */
+    color: #d8dff7;
+    margin-top: 10px;
+    line-height: 1.35;
+  }
+
+  /* ============================================================
+     SUBSTACK TITLE ROW + NEW BADGE
+  ============================================================ */
+
+  .substack-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 0.35rem;
+  }
+
+  .substack-new-badge {
+    background: rgba(255, 169, 77, 0.22);
+    border: 1px solid rgba(255, 169, 77, 0.55);
+    color: #ffa94d;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 0.18rem 0.55rem;
+    border-radius: 999px;
+    flex-shrink: 0;
+    box-shadow: 0 0 6px rgba(255, 169, 77, 0.35);
+  }
+
+  /* Footer link */
+  .substack-footer-link {
+    margin-top: 14px;
+    font-size: 0.9rem;
+  }
+
+  .substack-footer-link a {
+    color: #8fb7ff;
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .substack-footer-link a:hover {
+    text-decoration: underline;
+  }
+
+  /* ============================================================
+     SUBSTACK HEADER — MATCH HUMAN-ACTION OUTLOOK + BADGE + DIVIDER
+  ============================================================ */
+
+  #weather-articles-module .module-header {
+    font-family: "Inter", system-ui, sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-size: 0.95rem;
+    color: #8fb7ff;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 0.85rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  /* Tiny badge dot (matches your status indicators) */
+  #weather-articles-module .module-header::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    background: #8fb7ff;
+    border-radius: 50%;
+    opacity: 0.9;
+  }
+
+  /* ============================================================
      FOOTER
   ============================================================ */
   .footer-note {
@@ -635,10 +753,32 @@
 
   </div>
 
+  <!-- 828 WEATHER PULSE MODULE -->
+  <section id="pulse-module" class="pulse-module">
+    <div class="pulse-card pulse-collapsed" id="pulse-card">
+      <div class="pulse-header">
+        <h2 class="pulse-title">828 Weather Pulse</h2>
+        <span class="pulse-badge-pill">Quick • Live • 828</span>
+        <div class="pulse-timestamp" id="pulse-timestamp">Posted just now</div>
+      </div>
+      <div class="pulse-body">
+        <div class="pulse-thumb" id="pulse-thumb">
+          <!-- thumbnail image injected via JS -->
+        </div>
+        <div class="pulse-preview" id="pulse-preview">
+          <!-- preview text injected via JS -->
+        </div>
+      </div>
+      <button class="pulse-toggle" id="pulse-toggle" type="button" aria-expanded="false">
+        Read full update
+      </button>
+    </div>
+  </section>
+
   <!-- SUBSTACK MODULES -->
   <section id="weather-articles-module" class="module-card substack-module"></section>
 
- <!-- FOOTER -->
+  <!-- FOOTER -->
   <div class="footer-note" id="wu-station-footer">
     Live data from Weather Underground Station --
   </div>
@@ -653,4 +793,3 @@
 
 </body>
 </html>
-
