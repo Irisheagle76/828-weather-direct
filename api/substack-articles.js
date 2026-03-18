@@ -1,74 +1,78 @@
+import Parser from "rss-parser";
+
+const parser = new Parser({
+  headers: {
+    "User-Agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
+  },
+});
+
 export default async function handler(req, res) {
-  const FEED_URL = "https://timothyballisty.substack.com/feed";
-
   try {
-    const response = await fetch(FEED_URL);
-    if (!response.ok) throw new Error("Substack RSS error");
+    const feed = await parser.parseURL(
+      "https://timothyballisty.substack.com/feed"
+    );
 
-    const xml = await response.text();
-
-    // Extract first <item>
-    const match = xml.match(/<item>([\s\S]*?)<\/item>/);
-    if (!match) {
-      return res.status(200).json({ success: true, article: null });
+    if (!feed || !feed.items || feed.items.length === 0) {
+      return res.status(200).json({
+        title: "No articles available",
+        link: null,
+        pubDate: null,
+        description: null,
+        ogImage: "/images/828-brand-card.png",
+        fallback: true,
+      });
     }
 
-    const itemXml = match[1];
+    const latest = feed.items[0];
 
-    // Helper that extracts CDATA OR plain text
-    const getTag = (tag) => {
-      const cdata = itemXml.match(
-        new RegExp(`<${tag}><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>`)
-      );
-      if (cdata) return cdata[1].trim();
-
-      const plain = itemXml.match(
-        new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`)
-      );
-      return plain ? plain[1].trim() : "";
-    };
-
+    const articleUrl = latest.link;
     const description =
-      getTag("description") || getTag("content:encoded") || "";
+      latest["content:encodedSnippet"] ||
+      latest.contentSnippet ||
+      latest.content ||
+      "";
 
-    const article = {
-      title: getTag("title"),
-      link: getTag("link"),
-      pubDate: getTag("pubDate"),
-      description
-    };
-
-    // ------------------------------------------------------------
-    // Fetch OG image (safe base URL)
-    // ------------------------------------------------------------
-    let ogImage = null;
+    // --- Fetch OG image from your serverless OG fetcher ---
+    let ogImage = "/images/828-brand-card.png";
+    let fallback = true;
 
     try {
-      const baseUrl =
-        process.env.VERCEL_URL
-          ? `https://${process.env.VERCEL_URL}`
-          : "http://localhost:3000";
-
       const ogRes = await fetch(
-        `${baseUrl}/api/substack-og?url=${encodeURIComponent(article.link)}`
+        `${req.headers.host.startsWith("localhost") ? "http" : "https"}://${
+          req.headers.host
+        }/api/substack-og?url=${encodeURIComponent(articleUrl)}`
       );
 
-      const ogData = await ogRes.json();
-      ogImage = ogData.ogImage || null;
+      const ogJson = await ogRes.json();
+
+      if (ogJson && ogJson.ogImage) {
+        ogImage = ogJson.ogImage;
+        fallback = ogJson.fallback ?? false;
+      }
     } catch (err) {
-      console.error("OG image fetch failed:", err);
+      console.error("OG fetcher failed inside articles API:", err);
     }
 
-    // ⭐ Fallback to your brand card
-    article.ogImage = ogImage || "/images/828-brand-card.jpg";
-
-    res.status(200).json({ success: true, article });
-
+    return res.status(200).json({
+      title: latest.title || "Untitled",
+      link: articleUrl,
+      pubDate: latest.pubDate || null,
+      description,
+      ogImage,
+      fallback,
+    });
   } catch (err) {
-    console.error("Error fetching Substack Articles:", err);
-    res.status(500).json({
-      success: false,
-      error: "Failed to fetch Substack Articles."
+    console.error("Substack Articles API error:", err);
+
+    return res.status(200).json({
+      title: "Error loading article",
+      link: null,
+      pubDate: null,
+      description: null,
+      ogImage: "/images/828-brand-card.png",
+      fallback: true,
+      error: "Articles API failed, using fallback",
     });
   }
 }
