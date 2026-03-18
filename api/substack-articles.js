@@ -7,7 +7,7 @@ export default async function handler(req, res) {
 
     const xml = await response.text();
 
-    // Extract first <item>
+    // Extract first <item> — FIXED REGEX
     const match = xml.match(/<item>([\s\S]*?)<\/item>/);
     if (!match) {
       return res.status(200).json({ success: true, article: null });
