@@ -41,26 +41,31 @@ export async function renderSubstackArticle() {
       : "A fresh weather update from the 828.";
 
     container.innerHTML = `
-      <div class="module-header">From 828 Weather Update</div>
+  <div class="module-header">From 828 Weather Update</div>
 
-      <div class="substack-article">
+  <div class="substack-article">
 
-        ${ogImage ? `
-          <img src="${ogImage}" class="substack-thumb" alt="Article thumbnail">
-        ` : ""}
+    <div class="substack-thumb-wrapper">
+      <img src="${ogImage}" class="substack-thumb" alt="Article thumbnail">
+      <div class="substack-thumb-gradient"></div>
+    </div>
 
-        <a href="${link}" target="_blank" rel="noopener" class="substack-title">
-          ${title}
-        </a>
+    <a href="${link}" target="_blank" rel="noopener" class="substack-title">
+      ${title}
+    </a>
 
-        <div class="substack-date">${formattedDate}</div>
+    <div class="substack-date">${formattedDate}</div>
 
-        <div class="substack-subheadline">
-          ${subheadline}
-        </div>
+    <div class="substack-subheadline">
+      ${subheadline}
+    </div>
 
-      </div>
-    `;
+    <div class="substack-footer-link">
+      <a href="${link}" target="_blank" rel="noopener">Read full article →</a>
+    </div>
+
+  </div>
+`;
   } catch (err) {
     console.error("Error rendering Substack Article:", err);
     container.innerHTML = `
