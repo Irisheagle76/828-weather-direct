@@ -384,6 +384,15 @@
   object-position: center;
   display: block;
 }
+/* Unified module container (matches Human-Action modules) */
+.substack-article {
+  background: var(--module-bg, #ffffff);
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 14px;
+  padding: 16px;
+  margin-top: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
 
 /* Gradient overlay for readability */
 .substack-thumb-gradient {
@@ -403,41 +412,59 @@
 
 /* Title link styling */
 .substack-title {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 600;
-  color: #f7c873; /* your warm accent */
+  color: #222;
   text-decoration: none;
   line-height: 1.3;
+  display: block;
+  margin-top: 6px;
 }
 
 .substack-title:hover {
   text-decoration: underline;
-  color: #ffdca0;
 }
 
-/* Subheadline */
+.substack-date {
+  font-size: 0.82rem;
+  color: #666;
+  margin-top: 4px;
+}
+
 .substack-subheadline {
   font-size: 0.9rem;
-  color: #d8dff7;
+  color: #444;
+  margin-top: 10px;
   line-height: 1.4;
-  margin-top: 0.3rem;
 }
 
-/* Footer link */
 .substack-footer-link {
-  margin-top: 0.8rem;
+  margin-top: 14px;
+  font-size: 0.9rem;
 }
 
 .substack-footer-link a {
-  font-size: 0.9rem;
-  color: #f7c873;
+  color: #0066cc;
   text-decoration: none;
   font-weight: 500;
 }
 
 .substack-footer-link a:hover {
   text-decoration: underline;
-  color: #ffdca0;
+}
+.substack-article,
+.substack-title,
+.substack-date,
+.substack-subheadline,
+.substack-footer-link {
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+.module-header {
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 10px;
 }
     /* ============================================================
      FOOTER
