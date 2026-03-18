@@ -34,13 +34,20 @@ export default async function handler(req, res) {
       "";
 
     // ---------------------------------------------------------
-    // SAFE, BULLETPROOF OG IMAGE FETCHER CALL
+    // SAFE, BULLETPROOF BASE URL BUILDER
     // ---------------------------------------------------------
 
-    // Build absolute URL safely for both localhost and Vercel
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : `http://localhost:3000`;
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      (process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : req.headers.host
+          ? `https://${req.headers.host}`
+          : "http://localhost:3000");
+
+    // ---------------------------------------------------------
+    // SAFE OG IMAGE FETCH
+    // ---------------------------------------------------------
 
     let ogImage = "/images/828-brand-card.png";
     let fallback = true;
