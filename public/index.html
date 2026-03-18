@@ -342,59 +342,38 @@
   .dew-humid     { color: #ffa94d; }
   .dew-tropical  { color: #ff6b6b; }
 
-  /* ============================================================
-     SUBSTACK MODULES
-  ============================================================ */
-  .substack-module {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.05);
-    border-radius: var(--module-radius);
-    margin-top: var(--gap);
-    padding: var(--module-padding);
-  }
-.substack-thumb {
-  width: 100%;
-  border-radius: 14px;
-  margin-bottom: 0.4rem;
-  opacity: 0.95;
-}
-  .substack-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #f7c873;   /* Warm orange accent */
-  text-decoration: none;
+/* ============================================================
+   SUBSTACK MODULE — DARK THEME, MATCHES HUMAN-ACTION MODULES
+============================================================ */
+
+.substack-module {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: var(--module-radius);
+  margin-top: var(--gap);
+  padding: var(--module-padding);
 }
 
-.substack-title:hover {
-  text-decoration: underline;
-  color: #ffdca0;   /* Slightly brighter hover */
-}
+/* Thumbnail wrapper */
 .substack-thumb-wrapper {
   position: relative;
   width: 100%;
-  height: 160px;        /* Adjust this to taste: 140–200px works great */
+  height: 160px;
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: 14px;
+  margin-bottom: 0.75rem;
 }
 
 .substack-thumb {
   width: 100%;
   height: 100%;
-  object-fit: cover;    /* This is the magic */
+  object-fit: cover;
   object-position: center;
   display: block;
-}
-/* Unified module container (matches Human-Action modules) */
-.substack-article {
-  background: var(--module-bg, #ffffff);
-  border: 1px solid rgba(0,0,0,0.08);
-  border-radius: 14px;
-  padding: 16px;
-  margin-top: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  opacity: 0.95;
 }
 
-/* Gradient overlay for readability */
+/* Gradient overlay */
 .substack-thumb-gradient {
   position: absolute;
   bottom: 0;
@@ -403,55 +382,24 @@
   height: 45%;
   background: linear-gradient(
     to bottom,
-    rgba(0, 0, 0, 0) 0%,
-    rgba(0, 0, 0, 0.35) 60%,
-    rgba(0, 0, 0, 0.55) 100%
+    rgba(0,0,0,0) 0%,
+    rgba(0,0,0,0.45) 60%,
+    rgba(0,0,0,0.65) 100%
   );
   pointer-events: none;
 }
 
-/* Title link styling */
-.substack-title {
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: #222;
-  text-decoration: none;
-  line-height: 1.3;
-  display: block;
-  margin-top: 6px;
+/* Article container (dark theme) */
+.substack-article {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 16px;
+  margin-top: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.35);
 }
 
-.substack-title:hover {
-  text-decoration: underline;
-}
-
-.substack-date {
-  font-size: 0.82rem;
-  color: #666;
-  margin-top: 4px;
-}
-
-.substack-subheadline {
-  font-size: 0.9rem;
-  color: #444;
-  margin-top: 10px;
-  line-height: 1.4;
-}
-
-.substack-footer-link {
-  margin-top: 14px;
-  font-size: 0.9rem;
-}
-
-.substack-footer-link a {
-  color: #0066cc;
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.substack-footer-link a:hover {
-  text-decoration: underline;
-}
+/* Typography — unified with Human-Action modules */
 .substack-article,
 .substack-title,
 .substack-date,
@@ -459,11 +407,60 @@
 .substack-footer-link {
   font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
+
+/* Title */
+.substack-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #f7c873; /* warm accent */
+  text-decoration: none;
+  line-height: 1.3;
+  display: block;
+  margin-top: 6px;
+}
+
+.substack-title:hover {
+  color: #ffdca0;
+  text-decoration: underline;
+}
+
+/* Date */
+.substack-date {
+  font-size: 0.82rem;
+  color: #b9c7f5;
+  margin-top: 4px;
+}
+
+/* Subheadline */
+.substack-subheadline {
+  font-size: 0.9rem;
+  color: #d8dff7;
+  margin-top: 10px;
+  line-height: 1.4;
+}
+
+/* Footer link */
+.substack-footer-link {
+  margin-top: 14px;
+  font-size: 0.9rem;
+}
+
+.substack-footer-link a {
+  color: #8fb7ff;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.substack-footer-link a:hover {
+  text-decoration: underline;
+}
+
+/* Header label (matches Human-Action modules) */
 .module-header {
   font-family: "Inter", system-ui, sans-serif;
   font-size: 0.95rem;
   font-weight: 600;
-  color: #333;
+  color: #d8dff7;
   margin-bottom: 10px;
 }
     /* ============================================================
