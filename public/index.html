@@ -455,15 +455,33 @@
   text-decoration: underline;
 }
 
-/* Substack header styled like HUMAN-ACTION OUTLOOK */
+/* ============================================================
+   SUBSTACK HEADER — MATCH HUMAN-ACTION OUTLOOK + BADGE + DIVIDER
+============================================================ */
+
 #weather-articles-module .module-header {
   font-family: "Inter", system-ui, sans-serif;
   font-weight: 600;
-  letter-spacing: 0.06em;     /* matches Human-Action modules */
-  text-transform: uppercase;  /* matches HUMAN ACTION OUTLOOK */
-  color: #8fb7ff;             /* same cool blue accent */
-  font-size: 0.95rem;         /* keep your current size */
-  margin-bottom: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.95rem;        /* keep your current size */
+  color: #8fb7ff;            /* same cool blue accent */
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08); /* subtle divider */
+}
+
+/* Tiny badge dot (matches your status indicators) */
+#weather-articles-module .module-header::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  background: #8fb7ff;
+  border-radius: 50%;
+  opacity: 0.9;
 }
     /* ============================================================
      FOOTER
