@@ -1,46 +1,22 @@
-export default async function handler(req, res) {
-  try {
-    const { url } = req.query;
+// Build absolute URL safely for both localhost and Vercel
+const baseUrl = process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL}`
+  : `http://localhost:3000`;
 
-    if (!url) {
-      return res.status(400).json({ ogImage: null, error: "Missing ?url=" });
-    }
+let ogImage = "/images/828-brand-card.png";
+let fallback = true;
 
-    // Fetch the article HTML
-    const response = await fetch(url, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
-        Accept: "text/html",
-      },
-    });
+try {
+  const ogRes = await fetch(
+    `${baseUrl}/api/substack-og?url=${encodeURIComponent(articleUrl)}`
+  );
 
-    const html = await response.text();
+  const ogJson = await ogRes.json();
 
-    // Extract OG image
-    const match = html.match(
-      /<meta property="og:image" content="([^"]+)"\/?>/i
-    );
-
-    const ogImage = match ? match[1] : null;
-
-    // If Substack has no OG image → return your fallback
-    if (!ogImage) {
-      return res.status(200).json({
-        ogImage: "/images/828-brand-card.png",
-        fallback: true,
-      });
-    }
-
-    return res.status(200).json({ ogImage, fallback: false });
-  } catch (err) {
-    console.error("OG fetch error:", err);
-
-    // On ANY error → return fallback instead of crashing
-    return res.status(200).json({
-      ogImage: "/images/828-brand-card.png",
-      fallback: true,
-      error: "OG fetch failed, using fallback",
-    });
+  if (ogJson && ogJson.ogImage) {
+    ogImage = ogJson.ogImage;
+    fallback = ogJson.fallback ?? false;
   }
+} catch (err) {
+  console.error("OG fetcher failed inside articles API:", err);
 }
