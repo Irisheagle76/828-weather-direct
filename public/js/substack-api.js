@@ -7,7 +7,7 @@ export async function fetchSubstackLatestArticle() {
     if (!res.ok) throw new Error("Failed to load Substack Articles");
 
     const data = await res.json();
-    return data.article || null;
+    return data || null;   // <-- FIXED
   } catch (err) {
     console.error("Error fetching Substack Article:", err);
     return null;
