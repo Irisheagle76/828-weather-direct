@@ -369,22 +369,20 @@
   text-decoration: underline;
   color: #ffdca0;   /* Slightly brighter hover */
 }
-  /* Thumbnail wrapper with gradient overlay */
 .substack-thumb-wrapper {
   position: relative;
   width: 100%;
-  border-radius: 14px; /* matches your module cards */
+  height: 160px;        /* Adjust this to taste: 140–200px works great */
   overflow: hidden;
-  margin-bottom: 0.6rem;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25); /* subtle drop shadow */
+  border-radius: 12px;
 }
 
-/* The thumbnail image */
 .substack-thumb {
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;    /* This is the magic */
+  object-position: center;
   display: block;
-  opacity: 0.95;
 }
 
 /* Gradient overlay for readability */
