@@ -30,13 +30,16 @@ async function loadPulse() {
       ? formatTimeAgo(ts)
       : "Just now";
 
-    // Thumbnail
-    if (data.imageUrl) {
-      thumbEl.innerHTML = `<img src="${data.imageUrl}" alt="Pulse image" />`;
-    } else {
-      thumbEl.innerHTML = "";
-    }
+    // Thumbnail (with fallback + thumbnail styling)
+const thumbSrc = data.imageUrl || "/828-brand-card.png";
 
+thumbEl.innerHTML = `
+  <img 
+    src="${thumbSrc}" 
+    alt="Pulse image" 
+    class="pulse-thumb"
+  />
+`;
     // Preview text (shortened)
     const fullText = data.text || "";
     const shortText =
