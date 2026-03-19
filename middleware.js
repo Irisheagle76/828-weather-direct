@@ -1,8 +1,6 @@
 export function middleware(req) {
   const url = new URL(req.url);
-
   console.log("RAW PATHNAME:", JSON.stringify(url.pathname));
-
   return;
 }
 
