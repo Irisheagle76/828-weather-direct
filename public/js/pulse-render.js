@@ -9,7 +9,41 @@ function cleanHtml(html) {
     .replace(/<\/span>/g, "")
     .replace(/&nbsp;/g, " ");
 }
+function createHybridPreview(html) {
+  // Strip tags for sentence detection
+  const textOnly = html
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
+  // Split into sentences
+  const sentences = textOnly.split(/(?<=[.!?])\s+/);
+
+  // If no sentences, fallback to word-based
+  if (sentences.length === 0) {
+    return textOnly.slice(0, 160) + "…";
+  }
+
+  // First sentence
+  const first = sentences[0];
+
+  // If first sentence is long enough (>= 12 words), use it
+  if (first.split(" ").length >= 12) {
+    return first + "…";
+  }
+
+  // If second sentence exists, combine them
+  if (sentences.length > 1) {
+    const combined = first + " " + sentences[1];
+    if (combined.split(" ").length >= 20) {
+      return combined + "…";
+    }
+  }
+
+  // Fallback: 30-word preview
+  const words = textOnly.split(" ");
+  return words.slice(0, 30).join(" ") + "…";
+}
 async function loadPulse() {
   try {
     const res = await fetch("/api/tidbits/pulse-latest");
