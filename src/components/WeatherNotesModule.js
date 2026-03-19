@@ -1,97 +1,88 @@
 import { useEffect, useState } from 'react';
-import { fetchSubstackNotes } from '../services/substackApi';
 import { formatTimeAgo } from '../utils/timeFormatting';
-import { sanitizeHtmlSnippet } from '../utils/htmlSanitizer';
 
-export default function WeatherNotesModule() {
-  const [notes, setNotes] = useState([]);
+export default function WeatherPulseModule() {
+  const [pulse, setPulse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
 
-    async function loadNotes() {
+    async function loadPulse() {
       try {
-        const data = await fetchSubstackNotes();
+        const res = await fetch('/api/tidbits/pulse-latest');
+        const data = await res.json();
+
         if (isMounted) {
-          setNotes(data || []);
+          setPulse(data);
           setError(null);
         }
       } catch (err) {
-        console.error('WeatherNotesModule error:', err);
-        if (isMounted) setError('Unable to load Weather Notes right now.');
+        console.error('WeatherPulseModule error:', err);
+        if (isMounted) setError('Unable to load Weather Pulse right now.');
       } finally {
         if (isMounted) setLoading(false);
       }
     }
 
-    loadNotes();
+    loadPulse();
     return () => {
       isMounted = false;
     };
   }, []);
 
+  // Loading state
   if (loading) {
     return (
-      <section className="module-card substack-module">
-        <h2 className="module-title">Weather Notes</h2>
-        <p className="module-subtle-text">Loading the latest notes…</p>
+      <section className="module-card pulse-module">
+        <h2 className="module-title">Weather Pulse</h2>
+        <p className="module-subtle-text">Loading the latest update…</p>
       </section>
     );
   }
 
+  // Error state
   if (error) {
     return (
-      <section className="module-card substack-module">
-        <h2 className="module-title">Weather Notes</h2>
+      <section className="module-card pulse-module">
+        <h2 className="module-title">Weather Pulse</h2>
         <p className="module-subtle-text">{error}</p>
       </section>
     );
   }
 
-  if (!notes.length) {
+  // Fallback state (no pulse yet)
+  if (!pulse || pulse.fallback) {
     return (
-      <section className="module-card substack-module">
-        <h2 className="module-title">Weather Notes</h2>
-        <p className="module-subtle-text">No recent notes just yet.</p>
+      <section className="module-card pulse-module">
+        <h2 className="module-title">Weather Pulse</h2>
+        <p className="module-subtle-text">No Weather Pulse update yet.</p>
       </section>
     );
   }
 
+  // Normal render
   return (
-    <section className="module-card substack-module">
-      <h2 className="module-title">Weather Notes</h2>
-      <ul className="substack-notes-list">
-        {notes.map((note, index) => {
-          const snippet = sanitizeHtmlSnippet(note.description || '').slice(0, 220);
-          const showEllipsis = snippet.length === 220;
+    <section className="module-card pulse-module">
+      <h2 className="module-title">{pulse.title}</h2>
 
-          return (
-            <li key={index} className="substack-note-item">
-              <div className="substack-note-meta">
-                <span className="substack-note-time">
-                  {formatTimeAgo(note.pubDate)}
-                </span>
-              </div>
-              <div
-                className="substack-note-snippet"
-                dangerouslySetInnerHTML={{
-                  __html: showEllipsis ? `${snippet}…` : snippet,
-                }}
-              />
-              <a
-                href={note.link}
-                className="substack-note-link"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Read on Substack →
-              </a>
-            </li>
-          );
-        })}
-      </ul>
+      {pulse.imageUrl && (
+        <div className="pulse-image-wrapper">
+          <img
+            src={pulse.imageUrl}
+            alt=""
+            className="pulse-image"
+            loading="lazy"
+          />
+        </div>
+      )}
+
+      <p className="pulse-text">{pulse.text}</p>
+
+      <p className="pulse-timestamp">
+        {pulse.timestamp ? formatTimeAgo(pulse.timestamp) : ''}
+      </p>
     </section>
   );
 }
