@@ -144,13 +144,19 @@
           }
 
           statusEl.textContent = 'Publishing…';
-          const res = await fetch('/api/tidbits/publish', {
+
+          const res = await fetch('/api/tidbits/pulse-write', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ html, imageUrl }),
+            body: JSON.stringify({
+              title: "Weather Pulse",
+              text: html,
+              imageUrl
+            }),
           });
 
           if (!res.ok) throw new Error('Publish failed');
+
           statusEl.textContent = 'Published ✔';
           editor.innerHTML = '';
           imageInput.value = '';
@@ -165,3 +171,4 @@
     </script>
   </body>
 </html>
+
