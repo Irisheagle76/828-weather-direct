@@ -30,5 +30,8 @@ export function middleware(req) {
 }
 
 export const config = {
-  matcher: ['/admin/tidbits/:path*'],
+  matcher: [
+    '/admin/tidbits',
+    '/admin/tidbits/:path*'
+  ],
 };
