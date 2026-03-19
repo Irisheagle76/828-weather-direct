@@ -25,8 +25,8 @@ export default async function handler(req, res) {
     }
 
     const latest = feed.items[0];
-
     const articleUrl = latest.link;
+
     const description =
       latest["content:encodedSnippet"] ||
       latest.contentSnippet ||
@@ -34,9 +34,8 @@ export default async function handler(req, res) {
       "";
 
     // ---------------------------------------------------------
-    // SAFE, BULLETPROOF BASE URL BUILDER
+    // SAFE BASE URL BUILDER
     // ---------------------------------------------------------
-
     const baseUrl =
       process.env.NEXT_PUBLIC_SITE_URL ||
       (process.env.VERCEL_URL
@@ -46,9 +45,8 @@ export default async function handler(req, res) {
           : "http://localhost:3000");
 
     // ---------------------------------------------------------
-    // SAFE OG IMAGE FETCH
+    // FETCH OG IMAGE (JSON)
     // ---------------------------------------------------------
-
     let ogImage = "/images/828-brand-card.png";
     let fallback = true;
 
@@ -77,6 +75,7 @@ export default async function handler(req, res) {
       ogImage,
       fallback,
     });
+
   } catch (err) {
     console.error("Substack Articles API error:", err);
 
