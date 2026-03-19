@@ -3,6 +3,13 @@
 // 828 WEATHER PULSE — Fetch + Inject + Expand/Collapse
 // ============================================================
 
+function cleanHtml(html) {
+  return (html || "")
+    .replace(/<span[^>]*>/g, "")
+    .replace(/<\/span>/g, "")
+    .replace(/&nbsp;/g, " ");
+}
+
 async function loadPulse() {
   try {
     const res = await fetch("/api/tidbits/pulse-latest");
@@ -30,22 +37,22 @@ async function loadPulse() {
       ? formatTimeAgo(ts)
       : "Just now";
 
-    // Thumbnail (with fallback + thumbnail styling)
-const thumbSrc = data.imageUrl || "/828-brand-card.png";
+    // Thumbnail (with fallback)
+    const thumbSrc = data.imageUrl || "/828-brand-card.png";
 
-thumbEl.innerHTML = `
-  <img 
-    src="${thumbSrc}" 
-    alt="Pulse image" 
-    class="pulse-thumb"
-  />
-`;
-    // Preview text (shortened)
-    const fullText = data.text || "";
+    thumbEl.innerHTML = `
+      <img 
+        src="${thumbSrc}" 
+        alt="Pulse image"
+      />
+    `;
+
+    // Preview text (shortened, cleaned HTML)
+    const fullText = cleanHtml(data.text || "");
     const shortText =
       fullText.length > 160 ? fullText.slice(0, 160) + "…" : fullText;
 
-    previewEl.textContent = shortText;
+    previewEl.innerHTML = shortText;
 
     // Expand/Collapse
     let expanded = false;
@@ -55,12 +62,12 @@ thumbEl.innerHTML = `
 
       if (expanded) {
         card.classList.add("pulse-expanded");
-        previewEl.textContent = fullText;
+        previewEl.innerHTML = fullText;
         toggleBtn.textContent = "Show less";
         toggleBtn.setAttribute("aria-expanded", "true");
       } else {
         card.classList.remove("pulse-expanded");
-        previewEl.textContent = shortText;
+        previewEl.innerHTML = shortText;
         toggleBtn.textContent = "Read full update";
         toggleBtn.setAttribute("aria-expanded", "false");
       }
