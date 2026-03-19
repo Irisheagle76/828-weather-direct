@@ -3,14 +3,15 @@ const BASIC_AUTH_PASS = process.env.PULSE_ADMIN_PASS;
 
 export function middleware(req) {
   const url = new URL(req.url);
+
   console.log("MIDDLEWARE PATH:", url.pathname);
 
   if (!url.pathname.startsWith('/admin/tidbits')) {
+    console.log("MIDDLEWARE: did NOT match admin path");
     return;
   }
 
-  ...
-}
+  console.log("MIDDLEWARE: matched admin path");
 
   const auth = req.headers.get('authorization');
   if (!auth || !auth.startsWith('Basic ')) {
