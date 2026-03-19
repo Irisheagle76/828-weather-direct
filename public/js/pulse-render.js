@@ -3,36 +3,33 @@
 // 828 WEATHER PULSE — Fetch + Inject + Expand/Collapse
 // ============================================================
 
+// Remove garbage spans + nbsp
 function cleanHtml(html) {
   return (html || "")
     .replace(/<span[^>]*>/g, "")
     .replace(/<\/span>/g, "")
     .replace(/&nbsp;/g, " ");
 }
+
+// Hybrid preview: sentence-based + fallback
 function createHybridPreview(html) {
-  // Strip tags for sentence detection
   const textOnly = html
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 
-  // Split into sentences
   const sentences = textOnly.split(/(?<=[.!?])\s+/);
 
-  // If no sentences, fallback to word-based
   if (sentences.length === 0) {
     return textOnly.slice(0, 160) + "…";
   }
 
-  // First sentence
   const first = sentences[0];
 
-  // If first sentence is long enough (>= 12 words), use it
   if (first.split(" ").length >= 12) {
     return first + "…";
   }
 
-  // If second sentence exists, combine them
   if (sentences.length > 1) {
     const combined = first + " " + sentences[1];
     if (combined.split(" ").length >= 20) {
@@ -40,16 +37,19 @@ function createHybridPreview(html) {
     }
   }
 
-  // Fallback: 30-word preview
   const words = textOnly.split(" ");
   return words.slice(0, 30).join(" ") + "…";
 }
+
+// ============================================================
+// MAIN LOADER
+// ============================================================
+
 async function loadPulse() {
   try {
     const res = await fetch("/api/tidbits/pulse-latest");
     const data = await res.json();
 
-    // Elements
     const card = document.getElementById("pulse-card");
     const timestampEl = document.getElementById("pulse-timestamp");
     const thumbEl = document.getElementById("pulse-thumb");
@@ -67,13 +67,10 @@ async function loadPulse() {
 
     // Timestamp
     const ts = data.timestamp ? new Date(data.timestamp) : null;
-    timestampEl.textContent = ts
-      ? formatTimeAgo(ts)
-      : "Just now";
+    timestampEl.textContent = ts ? formatTimeAgo(ts) : "Just now";
 
     // Thumbnail (with fallback)
     const thumbSrc = data.imageUrl || "/828-brand-card.png";
-
     thumbEl.innerHTML = `
       <img 
         src="${thumbSrc}" 
@@ -81,10 +78,9 @@ async function loadPulse() {
       />
     `;
 
-    // Preview text (shortened, cleaned HTML)
+    // Clean + preview text
     const fullText = cleanHtml(data.text || "");
-    const shortText =
-      fullText.length > 160 ? fullText.slice(0, 160) + "…" : fullText;
+    const shortText = createHybridPreview(fullText);
 
     previewEl.innerHTML = shortText;
 
@@ -106,6 +102,7 @@ async function loadPulse() {
         toggleBtn.setAttribute("aria-expanded", "false");
       }
     });
+
   } catch (err) {
     console.error("Pulse load error:", err);
 
@@ -117,7 +114,10 @@ async function loadPulse() {
   }
 }
 
-// Utility — matches your Substack module
+// ============================================================
+// TIME AGO UTILITY
+// ============================================================
+
 function formatTimeAgo(date) {
   const now = new Date();
   const diff = (now - date) / 1000;
