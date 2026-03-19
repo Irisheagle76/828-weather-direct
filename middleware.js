@@ -6,7 +6,8 @@ export function middleware(req) {
 
   console.log("MIDDLEWARE PATH:", url.pathname);
 
-  if (!url.pathname.startsWith('/admin')) {
+  // Only protect admin routes
+  if (!url.pathname.startsWith('/admin/tidbits')) {
     console.log("MIDDLEWARE: did NOT match admin path");
     return;
   }
@@ -35,5 +36,5 @@ export function middleware(req) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: ['/:path*'],
 };
