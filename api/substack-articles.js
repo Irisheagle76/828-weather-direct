@@ -41,11 +41,11 @@ export default async function handler(req, res) {
       (process.env.VERCEL_URL
         ? `https://${process.env.VERCEL_URL}`
         : req.headers.host
-          ? `https://${req.headers.host}`
-          : "http://localhost:3000");
+        ? `https://${req.headers.host}`
+        : "http://localhost:3000");
 
     // ---------------------------------------------------------
-    // FETCH OG IMAGE (JSON)
+    // FETCH OG IMAGE (SAFE JSON PARSE)
     // ---------------------------------------------------------
     let ogImage = "/images/828-brand-card.png";
     let fallback = true;
@@ -55,7 +55,14 @@ export default async function handler(req, res) {
         `${baseUrl}/api/substack-og?url=${encodeURIComponent(articleUrl)}`
       );
 
-      const ogJson = await ogRes.json();
+      const raw = await ogRes.text();
+      let ogJson = null;
+
+      try {
+        ogJson = JSON.parse(raw);
+      } catch (err) {
+        console.warn("OG fetcher returned non‑JSON:", raw.slice(0, 200));
+      }
 
       if (ogJson && ogJson.ogImage) {
         ogImage = ogJson.ogImage;
@@ -75,7 +82,6 @@ export default async function handler(req, res) {
       ogImage,
       fallback,
     });
-
   } catch (err) {
     console.error("Substack Articles API error:", err);
 
