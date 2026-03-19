@@ -6,7 +6,7 @@ export function middleware(req) {
 
   console.log("MIDDLEWARE PATH:", url.pathname);
 
-  if (!url.pathname.startsWith('/admin/tidbits')) {
+  if (!url.pathname.startsWith('/admin')) {
     console.log("MIDDLEWARE: did NOT match admin path");
     return;
   }
@@ -35,9 +35,5 @@ export function middleware(req) {
 }
 
 export const config = {
-  matcher: [
-    '/admin/tidbits',
-    '/admin/tidbits/',
-    '/admin/tidbits/:path*'
-  ],
+  matcher: ['/admin/:path*'],
 };
