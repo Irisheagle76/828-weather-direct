@@ -9,12 +9,19 @@ export default async function handler(req, res) {
       });
     }
 
-    const html = await fetch(targetUrl, {
+    const response = await fetch(targetUrl, {
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
       },
-    }).then(r => r.text());
+    });
+
+    const status = response.status;
+    const html = await response.text();
+
+    if (status !== 200) {
+      console.warn("OG fetcher: non-200 status", status, targetUrl);
+    }
 
     const match = html.match(
       /<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i
