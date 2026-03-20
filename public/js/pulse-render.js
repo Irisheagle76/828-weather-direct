@@ -3,12 +3,56 @@
 // 828 WEATHER PULSE — Fetch + Inject + Expand/Collapse
 // ============================================================
 
+// Remove garbage spans + nbsp
+function cleanHtml(html) {
+  return (html || "")
+    .replace(/<span[^>]*>/g, "")
+    .replace(/<\/span>/g, "")
+    .replace(/&nbsp;/g, " ");
+}
+
+// Hybrid preview: sentence-based + fallback (longer)
+function createHybridPreview(html) {
+  const textOnly = html
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const sentences = textOnly.split(/(?<=[.!?])\s+/);
+
+  if (sentences.length === 0) {
+    return textOnly.slice(0, 280) + "…";
+  }
+
+  const first = sentences[0];
+
+  // First sentence must be at least 20 words
+  if (first.split(" ").length >= 20) {
+    return first + "…";
+  }
+
+  // Combine first + second if needed
+  if (sentences.length > 1) {
+    const combined = first + " " + sentences[1];
+    if (combined.split(" ").length >= 35) {
+      return combined + "…";
+    }
+  }
+
+  // Fallback: 50-word preview
+  const words = textOnly.split(" ");
+  return words.slice(0, 50).join(" ") + "…";
+}
+
+// ============================================================
+// MAIN LOADER
+// ============================================================
+
 async function loadPulse() {
   try {
     const res = await fetch("/api/tidbits/pulse-latest");
     const data = await res.json();
 
-    // Elements
     const card = document.getElementById("pulse-card");
     const timestampEl = document.getElementById("pulse-timestamp");
     const thumbEl = document.getElementById("pulse-thumb");
@@ -26,23 +70,22 @@ async function loadPulse() {
 
     // Timestamp
     const ts = data.timestamp ? new Date(data.timestamp) : null;
-    timestampEl.textContent = ts
-      ? formatTimeAgo(ts)
-      : "Just now";
+    timestampEl.textContent = ts ? formatTimeAgo(ts) : "Just now";
 
-    // Thumbnail
-    if (data.imageUrl) {
-      thumbEl.innerHTML = `<img src="${data.imageUrl}" alt="Pulse image" />`;
-    } else {
-      thumbEl.innerHTML = "";
-    }
+    // Thumbnail (with fallback)
+    const thumbSrc = data.imageUrl || "/828-brand-card.png";
+    thumbEl.innerHTML = `
+      <img 
+        src="${thumbSrc}" 
+        alt="Pulse image"
+      />
+    `;
 
-    // Preview text (shortened)
-    const fullText = data.text || "";
-    const shortText =
-      fullText.length > 160 ? fullText.slice(0, 160) + "…" : fullText;
+    // Clean + preview text
+    const fullText = cleanHtml(data.text || "");
+    const shortText = createHybridPreview(fullText);
 
-    previewEl.textContent = shortText;
+    previewEl.innerHTML = shortText;
 
     // Expand/Collapse
     let expanded = false;
@@ -52,16 +95,28 @@ async function loadPulse() {
 
       if (expanded) {
         card.classList.add("pulse-expanded");
-        previewEl.textContent = fullText;
+
+        // HERO IMAGE + FULL TEXT
+        previewEl.innerHTML = `
+          <div class="pulse-hero">
+            <img src="${thumbSrc}" alt="Pulse image" />
+          </div>
+          <div class="pulse-full-text">
+            ${fullText}
+          </div>
+        `;
+
         toggleBtn.textContent = "Show less";
         toggleBtn.setAttribute("aria-expanded", "true");
+
       } else {
         card.classList.remove("pulse-expanded");
-        previewEl.textContent = shortText;
+        previewEl.innerHTML = shortText;
         toggleBtn.textContent = "Read full update";
         toggleBtn.setAttribute("aria-expanded", "false");
       }
     });
+
   } catch (err) {
     console.error("Pulse load error:", err);
 
@@ -73,7 +128,10 @@ async function loadPulse() {
   }
 }
 
-// Utility — matches your Substack module
+// ============================================================
+// TIME AGO UTILITY
+// ============================================================
+
 function formatTimeAgo(date) {
   const now = new Date();
   const diff = (now - date) / 1000;
