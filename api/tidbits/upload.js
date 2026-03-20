@@ -2,7 +2,7 @@ import { put } from '@vercel/blob';
 
 export const config = {
   api: {
-    bodyParser: false, // Required for file uploads
+    bodyParser: false,
   },
 };
 
@@ -18,15 +18,12 @@ export default async function handler(req, res) {
     }
     const buffer = Buffer.concat(chunks);
 
-    // Generate a unique filename
     const filename = `pulse-${Date.now()}.jpg`;
 
-    // Upload to Vercel Blob
     const blob = await put(filename, buffer, {
       access: 'public',
     });
 
-    // blob.url is the public URL
     return res.status(200).json({ url: blob.url });
 
   } catch (err) {
