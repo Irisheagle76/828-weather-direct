@@ -11,7 +11,7 @@ function cleanHtml(html) {
     .replace(/&nbsp;/g, " ");
 }
 
-// Hybrid preview: sentence-based + fallback
+// Hybrid preview: sentence-based + fallback (longer)
 function createHybridPreview(html) {
   const textOnly = html
     .replace(/<[^>]+>/g, " ")
@@ -21,24 +21,27 @@ function createHybridPreview(html) {
   const sentences = textOnly.split(/(?<=[.!?])\s+/);
 
   if (sentences.length === 0) {
-    return textOnly.slice(0, 160) + "…";
+    return textOnly.slice(0, 280) + "…";
   }
 
   const first = sentences[0];
 
-  if (first.split(" ").length >= 12) {
+  // First sentence must be at least 20 words
+  if (first.split(" ").length >= 20) {
     return first + "…";
   }
 
+  // Combine first + second if needed
   if (sentences.length > 1) {
     const combined = first + " " + sentences[1];
-    if (combined.split(" ").length >= 20) {
+    if (combined.split(" ").length >= 35) {
       return combined + "…";
     }
   }
 
+  // Fallback: 50-word preview
   const words = textOnly.split(" ");
-  return words.slice(0, 30).join(" ") + "…";
+  return words.slice(0, 50).join(" ") + "…";
 }
 
 // ============================================================
@@ -92,9 +95,20 @@ async function loadPulse() {
 
       if (expanded) {
         card.classList.add("pulse-expanded");
-        previewEl.innerHTML = fullText;
+
+        // HERO IMAGE + FULL TEXT
+        previewEl.innerHTML = `
+          <div class="pulse-hero">
+            <img src="${thumbSrc}" alt="Pulse image" />
+          </div>
+          <div class="pulse-full-text">
+            ${fullText}
+          </div>
+        `;
+
         toggleBtn.textContent = "Show less";
         toggleBtn.setAttribute("aria-expanded", "true");
+
       } else {
         card.classList.remove("pulse-expanded");
         previewEl.innerHTML = shortText;
