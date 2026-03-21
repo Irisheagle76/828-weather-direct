@@ -3,7 +3,7 @@
 // 828 WEATHER PULSE — Fetch + Inject + Expand/Collapse
 // ============================================================
 
-// Remove garbage spans + nbsp
+// Clean HTML
 function cleanHtml(html) {
   return (html || "")
     .replace(/<span[^>]*>/g, "")
@@ -11,7 +11,7 @@ function cleanHtml(html) {
     .replace(/&nbsp;/g, " ");
 }
 
-// Hybrid preview: sentence-based + fallback (longer)
+// Hybrid preview
 function createHybridPreview(html) {
   const textOnly = html
     .replace(/<[^>]+>/g, " ")
@@ -20,26 +20,17 @@ function createHybridPreview(html) {
 
   const sentences = textOnly.split(/(?<=[.!?])\s+/);
 
-  if (sentences.length === 0) {
-    return textOnly.slice(0, 280) + "…";
-  }
+  if (sentences.length === 0) return textOnly.slice(0, 280) + "…";
 
   const first = sentences[0];
 
-  // First sentence must be at least 20 words
-  if (first.split(" ").length >= 20) {
-    return first + "…";
-  }
+  if (first.split(" ").length >= 20) return first + "…";
 
-  // Combine first + second if needed
   if (sentences.length > 1) {
     const combined = first + " " + sentences[1];
-    if (combined.split(" ").length >= 35) {
-      return combined + "…";
-    }
+    if (combined.split(" ").length >= 35) return combined + "…";
   }
 
-  // Fallback: 50-word preview
   const words = textOnly.split(" ");
   return words.slice(0, 50).join(" ") + "…";
 }
@@ -59,7 +50,7 @@ async function loadPulse() {
     const previewEl = document.getElementById("pulse-preview");
     const toggleBtn = document.getElementById("pulse-toggle");
 
-    // Fallback state
+    // Fallback
     if (!data || data.fallback) {
       timestampEl.textContent = "No Weather Pulse update yet";
       previewEl.textContent = "Stay tuned for the next quick update.";
@@ -72,19 +63,29 @@ async function loadPulse() {
     const ts = data.timestamp ? new Date(data.timestamp) : null;
     timestampEl.textContent = ts ? formatTimeAgo(ts) : "Just now";
 
-    // Thumbnail (with fallback)
+    // Image
     const thumbSrc = data.imageUrl || "/828-brand-card.png";
+
+    // 🔥 Cloudinary optimization
+    const optimizedSrc = thumbSrc.includes("/upload/")
+      ? thumbSrc.replace("/upload/", "/upload/w_900,q_auto,f_auto/")
+      : thumbSrc;
+
+    // Thumbnail (collapsed view only)
     thumbEl.innerHTML = `
-      <img src="${thumbSrc}" alt="Pulse image" />
+      <img src="${optimizedSrc}" alt="Pulse image" />
     `;
 
-    // Clean + preview text
+    // Text
     const fullText = cleanHtml(data.text || "");
     const shortText = createHybridPreview(fullText);
 
     previewEl.innerHTML = shortText;
 
-    // Expand/Collapse
+    // ============================================================
+    // TOGGLE
+    // ============================================================
+
     let expanded = false;
 
     toggleBtn.addEventListener("click", () => {
@@ -93,19 +94,18 @@ async function loadPulse() {
       if (expanded) {
         card.classList.add("pulse-expanded");
 
-        // 🚨 Hide thumbnail when expanded
+        // Hide thumbnail
         thumbEl.style.display = "none";
 
-        // HERO IMAGE + FULL TEXT
-      previewEl.innerHTML = `
-  <div class="pulse-hero">
-    <img src="${thumbSrc}" alt="Pulse image" />
-    <div class="pulse-overlay"></div>
-    <div class="pulse-hero-text">
-      ${fullText}
-    </div>
-  </div>
-`;
+        // ✅ CLEAN EXPANDED LAYOUT (NO OVERLAY)
+        previewEl.innerHTML = `
+          <div class="pulse-expanded-content">
+            <img src="${optimizedSrc}" class="pulse-expanded-img" />
+            <div class="pulse-full-text">
+              ${fullText}
+            </div>
+          </div>
+        `;
 
         toggleBtn.textContent = "Show less";
         toggleBtn.setAttribute("aria-expanded", "true");
@@ -113,10 +113,11 @@ async function loadPulse() {
       } else {
         card.classList.remove("pulse-expanded");
 
-        // ✅ Show thumbnail again
+        // Show thumbnail again
         thumbEl.style.display = "block";
 
         previewEl.innerHTML = shortText;
+
         toggleBtn.textContent = "Read full update";
         toggleBtn.setAttribute("aria-expanded", "false");
       }
@@ -125,16 +126,15 @@ async function loadPulse() {
   } catch (err) {
     console.error("Pulse load error:", err);
 
-    const timestampEl = document.getElementById("pulse-timestamp");
-    const previewEl = document.getElementById("pulse-preview");
-
-    timestampEl.textContent = "Unable to load Weather Pulse";
-    previewEl.textContent = "Please try again later.";
+    document.getElementById("pulse-timestamp").textContent =
+      "Unable to load Weather Pulse";
+    document.getElementById("pulse-preview").textContent =
+      "Please try again later.";
   }
 }
 
 // ============================================================
-// TIME AGO UTILITY
+// TIME AGO
 // ============================================================
 
 function formatTimeAgo(date) {
@@ -147,5 +147,4 @@ function formatTimeAgo(date) {
   return `${Math.floor(diff / 86400)} days ago`;
 }
 
-// Run on load
 document.addEventListener("DOMContentLoaded", loadPulse);
