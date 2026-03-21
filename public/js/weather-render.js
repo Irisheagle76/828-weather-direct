@@ -113,7 +113,55 @@ export function degToCompass(deg) {
   ];
   return dirs[Math.round(deg / 22.5) % 16];
 }
+// ------------------------------------------------------------
+// 🧠 INTELLIGENCE LAYER (SAFE ADD)
+// ------------------------------------------------------------
+function getSkyCondition(stats) {
+  if (!stats) return "unknown";
 
+  if (stats.cloudAvg < 25) return "sunny";
+  if (stats.cloudAvg < 55) return "partly";
+  if (stats.cloudAvg < 80) return "mostly-cloudy";
+  return "cloudy";
+}
+
+function getDominantDriver(stats, fallback) {
+  if (!stats) return fallback ?? "easy";
+
+  if (stats.snowTotal > 0.5) return "snow";
+  if (stats.rainTotal > 0.25) return "rain";
+  if (stats.windGustMax > 30) return "wind";
+  if (stats.tempMax >= 90) return "hot";
+  if (stats.tempMin <= 35) return "cold";
+
+  // 🌤️ override for "actually nice day"
+  if (
+    stats.cloudAvg < 40 &&
+    stats.rainTotal < 0.05 &&
+    stats.tempMax >= 70 &&
+    stats.tempMax <= 85
+  ) {
+    return "goldilocks";
+  }
+
+  return fallback ?? "easy";
+}
+
+function generateHumanHeadline(stats, fallback) {
+  if (!stats) return fallback ?? "";
+
+  const sky = getSkyCondition(stats);
+
+  if (sky === "sunny" && stats.tempMax >= 75 && stats.tempMax <= 85) {
+    return "Beautiful day ahead";
+  }
+
+  if (sky === "partly") return "A mix of sun and clouds";
+  if (sky === "mostly-cloudy") return "More clouds than sun";
+  if (sky === "cloudy") return "Gray and overcast conditions";
+
+  return fallback ?? "";
+}
 // ------------------------------------------------------------
 // UV class helper
 // ------------------------------------------------------------
@@ -255,7 +303,10 @@ export function renderTomorrowOutlook(intel) {
 
   emojiEl.textContent = "";
 
-  const dominant = tomorrow.events?.driver ?? "easy";
+  const dominant = getDominantDriver(
+  tomorrow.stats,
+  tomorrow.events?.driver
+);
 
   const badgeMap = {
     rain:  { text: "Rain Gear",     class: "badge-rain" },
@@ -276,7 +327,10 @@ export function renderTomorrowOutlook(intel) {
     badgeEl.className = `badge ${badge.class}`;
   }
 
-  headlineEl.textContent = tomorrow.headline;
+  headlineEl.textContent = generateHumanHeadline(
+  tomorrow.stats,
+  tomorrow.headline
+);
   fitHeadlineToWidth(headlineEl);
 
   textEl.textContent = tomorrow.narrative;
