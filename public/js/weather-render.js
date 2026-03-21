@@ -295,14 +295,17 @@ export function renderTomorrowOutlook(intel) {
   const bulletsEl = document.getElementById("tomorrow-bullets");
 
   const tomorrow = intel.tomorrow;
-  if (!tomorrow || !tomorrow.available) {
-    headlineEl.textContent = "No data available";
-    textEl.textContent = "";
-    bulletsEl.innerHTML = "";
-    return;
-      console.log("RAW TOMORROW DATA:", tomorrow);
+
+if (!tomorrow || !tomorrow.available) {
+  headlineEl.textContent = "No data available";
+  textEl.textContent = "";
+  bulletsEl.innerHTML = "";
+  return;
+}
+
+// ✅ ADD LOGS HERE
+console.log("RAW TOMORROW DATA:", tomorrow);
 console.log("STATS:", tomorrow.stats);
-  }
 
   emojiEl.textContent = "";
 
