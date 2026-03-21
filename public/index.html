@@ -444,6 +444,22 @@
     text-decoration: underline;
   }
 
+  .pulse-expanded .pulse-body {
+    flex-direction: column;
+  }
+
+  .pulse-expanded .pulse-thumb {
+    flex: 0 0 auto;
+    height: auto;
+    max-height: none;
+    width: 100%;
+    margin-right: 0;
+  }
+
+  .pulse-expanded .pulse-preview {
+    margin-top: 0.5rem;
+  }
+
   /* ============================================================
      SUBSTACK MODULE — DARK THEME, MATCHES HUMAN-ACTION MODULES
   ============================================================ */
@@ -609,27 +625,7 @@
     border-radius: 50%;
     opacity: 0.9;
   }
-.pulse-hero {
-  width: 100%;
-  max-height: 320px;
-  overflow: hidden;
-  border-radius: 14px;
-  margin-bottom: 0.9rem;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.45);
-}
 
-.pulse-hero img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.pulse-full-text {
-  font-size: 0.95rem;
-  line-height: 1.55;
-  color: #d8dff7;
-}
   /* ============================================================
      FOOTER
   ============================================================ */
