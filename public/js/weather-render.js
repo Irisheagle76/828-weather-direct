@@ -287,4 +287,71 @@ export function renderTomorrowOutlook(intel) {
   textEl.textContent = tomorrow.narrative;
   renderBullets(bulletsEl, tomorrow.bullets);
 }
+// ------------------------------------------------------------
+// RENDER TODAY DETAIL (RESTORED)
+// ------------------------------------------------------------
+export function renderTodayDetail(intel) {
+  const panel = document.getElementById("expanded-today");
+  if (!panel) return;
+
+  const stats = intel.today?.stats;
+  if (!stats) {
+    panel.innerHTML = "";
+    return;
+  }
+
+  panel.innerHTML = `
+    <div class="fx-section"><div class="fx-label">High</div><div class="fx-value">${Math.round(stats.tempMax)}°</div></div>
+    <div class="fx-section"><div class="fx-label">Low</div><div class="fx-value">${Math.round(stats.tempMin)}°</div></div>
+    <div class="fx-section"><div class="fx-label">Wind</div><div class="fx-value">${Math.round(stats.windAvg)} mph (gusts ${Math.round(stats.windGustMax)} mph)</div></div>
+    <div class="fx-section"><div class="fx-label">Rain</div><div class="fx-value">${formatRainAmount(stats.rainTotal)}</div></div>
+    <div class="fx-section"><div class="fx-label">Snow</div><div class="fx-value">${formatSnowAmount(stats.snowTotal)}</div></div>
+    <div class="fx-section"><div class="fx-label">Cloud Cover</div><div class="fx-value">${Math.round(stats.cloudAvg)}%</div></div>
+  `;
+}
+
+// ------------------------------------------------------------
+// RENDER TOMORROW DETAIL (RESTORED)
+// ------------------------------------------------------------
+export function renderTomorrowDetail(intel) {
+  const panel = document.getElementById("expanded-tomorrow");
+  if (!panel) return;
+
+  const stats = intel.tomorrow?.stats;
+  if (!stats) {
+    panel.innerHTML = "";
+    return;
+  }
+
+  panel.innerHTML = `
+    <div class="fx-section"><div class="fx-label">High</div><div class="fx-value">${Math.round(stats.tempMax)}°</div></div>
+    <div class="fx-section"><div class="fx-label">Low</div><div class="fx-value">${Math.round(stats.tempMin)}°</div></div>
+    <div class="fx-section"><div class="fx-label">Wind</div><div class="fx-value">${Math.round(stats.windAvg)} mph (gusts ${Math.round(stats.windGustMax)} mph)</div></div>
+    <div class="fx-section"><div class="fx-label">Rain</div><div class="fx-value">${formatRainAmount(stats.rainTotal)}</div></div>
+    <div class="fx-section"><div class="fx-label">Snow</div><div class="fx-value">${formatSnowAmount(stats.snowTotal)}</div></div>
+    <div class="fx-section"><div class="fx-label">Cloud Cover</div><div class="fx-value">${Math.round(stats.cloudAvg)}%</div></div>
+  `;
+}
+
+// ------------------------------------------------------------
+// EXPANSION PANEL TOGGLER (RESTORED)
+// ------------------------------------------------------------
+export function toggleForecastExpanded(which) {
+  const panelToday = document.getElementById("expanded-today");
+  const panelTomorrow = document.getElementById("expanded-tomorrow");
+
+  if (which === "today") {
+    const isOpen = panelToday.style.display === "block";
+    panelToday.style.display = isOpen ? "none" : "block";
+    panelTomorrow.style.display = "none";
+    return;
+  }
+
+  if (which === "tomorrow") {
+    const isOpen = panelTomorrow.style.display === "block";
+    panelTomorrow.style.display = isOpen ? "none" : "block";
+    panelToday.style.display = "none";
+    return;
+  }
+}
 
