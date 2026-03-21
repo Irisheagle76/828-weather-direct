@@ -82,59 +82,73 @@ async function loadPulse() {
 
     previewEl.innerHTML = shortText;
 
-    // ============================================================
-    // TOGGLE
-    // ============================================================
+// ============================================================
+// TOGGLE
+// ============================================================
 
-    let expanded = false;
+let expanded = false;
 
-    toggleBtn.addEventListener("click", () => {
-      expanded = !expanded;
+// Central toggle function (clean + reusable)
+function handleToggle() {
+  expanded = !expanded;
 
-      if (expanded) {
-        card.classList.add("pulse-expanded");
+  if (expanded) {
+    card.classList.add("pulse-expanded");
 
-        // Hide thumbnail
-        thumbEl.style.display = "none";
+    // Hide thumbnail
+    thumbEl.style.display = "none";
 
-        // ✅ CLEAN EXPANDED LAYOUT (NO OVERLAY)
-        pconst firstSentence = fullText.split('. ')[0] + '.';
-const rest = fullText.replace(firstSentence, '');
+    // Headline extraction
+    const firstSentence = fullText.split('. ')[0] + '.';
+    const rest = fullText.replace(firstSentence, '');
 
-previewEl.innerHTML = `
-  <div class="pulse-expanded-content">
-    <img src="${optimizedSrc}" class="pulse-expanded-img" />
-    <div class="pulse-full-text">
-      <strong>${firstSentence}</strong> ${rest}
-    </div>
-  </div>
-`;
+    // Expanded layout
+    previewEl.innerHTML = `
+      <div class="pulse-expanded-content">
+        <img src="${optimizedSrc}" class="pulse-expanded-img" />
+        <div class="pulse-full-text">
+          <strong>${firstSentence}</strong> ${rest}
+        </div>
+      </div>
+    `;
 
-        toggleBtn.textContent = "Show less";
-        toggleBtn.setAttribute("aria-expanded", "true");
+    toggleBtn.textContent = "Show less";
+    toggleBtn.setAttribute("aria-expanded", "true");
 
-      } else {
-        card.classList.remove("pulse-expanded");
+  } else {
+    card.classList.remove("pulse-expanded");
 
-        // Show thumbnail again
-        thumbEl.style.display = "block";
+    // Show thumbnail again
+    thumbEl.style.display = "block";
 
-        previewEl.innerHTML = shortText;
+    previewEl.innerHTML = shortText;
 
-        toggleBtn.textContent = "Read full update";
-        toggleBtn.setAttribute("aria-expanded", "false");
-      }
-    });
-
-  } catch (err) {
-    console.error("Pulse load error:", err);
-
-    document.getElementById("pulse-timestamp").textContent =
-      "Unable to load Weather Pulse";
-    document.getElementById("pulse-preview").textContent =
-      "Please try again later.";
+    toggleBtn.textContent = "Read full update";
+    toggleBtn.setAttribute("aria-expanded", "false");
   }
 }
+
+// Button click (prevent double trigger)
+toggleBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  handleToggle();
+});
+
+// ============================================================
+// TAP ANYWHERE TO EXPAND (SMART VERSION)
+// ============================================================
+
+card.addEventListener("click", (e) => {
+  // Ignore clicks on button or links
+  if (
+    e.target.closest("#pulse-toggle") ||
+    e.target.closest("a")
+  ) {
+    return;
+  }
+
+  handleToggle();
+});
 
 // ============================================================
 // TIME AGO
