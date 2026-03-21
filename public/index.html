@@ -784,7 +784,21 @@
     .pulse-hero-text strong {
       font-weight: 600;
     }
+/* Pulse animation */
+.pulse-expanded-content {
+  animation: pulseFadeIn 0.25s ease;
+}
 
+@keyframes pulseFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
     /* ============================================================
      FOOTER
   ============================================================ */
