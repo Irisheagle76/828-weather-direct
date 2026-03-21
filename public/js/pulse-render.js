@@ -42,8 +42,58 @@ function createHybridPreview(html) {
   // Fallback: 50-word preview
   const words = textOnly.split(" ");
   return words.slice(0, 50).join(" ") + "…";
+}// ============================================================
+// Pulse Hero CSS
+// ============================================================
+.pulse-hero {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
 }
 
+/* Image */
+.pulse-hero img {
+  width: 100%;
+  height: auto;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+/* Subtle zoom on hover */
+.pulse-hero:hover img {
+  transform: scale(1.05);
+}
+
+/* Gradient overlay */
+.pulse-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,0.75) 0%,
+    rgba(0,0,0,0.4) 40%,
+    rgba(0,0,0,0.1) 70%,
+    rgba(0,0,0,0) 100%
+  );
+}
+
+/* Text on top of image */
+.pulse-hero-text {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0.75rem 0.85rem;
+  color: #fff;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+/* Optional: make text feel more premium */
+.pulse-hero-text strong {
+  font-weight: 600;
+}
 // ============================================================
 // MAIN LOADER
 // ============================================================
