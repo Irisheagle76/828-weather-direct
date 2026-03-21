@@ -4,54 +4,6 @@
 // ============================================================
 
 // ------------------------------------------------------------
-// 🧠 INTELLIGENCE LAYER (ADDED — SAFE)
-// ------------------------------------------------------------
-function getSkyCondition(stats) {
-  if (!stats) return "unknown";
-  if (stats.cloudAvg < 25) return "sunny";
-  if (stats.cloudAvg < 55) return "partly";
-  if (stats.cloudAvg < 80) return "mostly-cloudy";
-  return "cloudy";
-}
-
-function getDominantDriver(stats, fallback) {
-  if (!stats) return fallback ?? "easy";
-
-  if (stats.snowTotal > 0.5) return "snow";
-  if (stats.rainTotal > 0.25) return "rain";
-  if (stats.windGustMax > 30) return "wind";
-  if (stats.tempMax >= 90) return "hot";
-  if (stats.tempMin <= 35) return "cold";
-
-  if (
-    stats.cloudAvg < 40 &&
-    stats.rainTotal < 0.05 &&
-    stats.tempMax >= 70 &&
-    stats.tempMax <= 85
-  ) {
-    return "goldilocks";
-  }
-
-  return fallback ?? "easy";
-}
-
-function generateHumanHeadline(stats, fallback) {
-  if (!stats) return fallback ?? "";
-
-  const sky = getSkyCondition(stats);
-
-  if (sky === "sunny" && stats.tempMax >= 75 && stats.tempMax <= 85) {
-    return "Beautiful day ahead";
-  }
-
-  if (sky === "partly") return "A mix of sun and clouds";
-  if (sky === "mostly-cloudy") return "More clouds than sun";
-  if (sky === "cloudy") return "Gray and overcast conditions";
-
-  return fallback ?? "";
-}
-
-// ------------------------------------------------------------
 // PRECIPITATION RANGE HELPERS
 // ------------------------------------------------------------
 function formatRainAmount(amount) {
@@ -77,7 +29,7 @@ function formatSnowAmount(amount) {
 }
 
 // ------------------------------------------------------------
-// HEADLINE AUTO-SHRINK HELPER
+// HEADLINE AUTO‑SHRINK HELPER
 // ------------------------------------------------------------
 function fitHeadlineToWidth(el, maxSize = 1.25, minSize = 0.95) {
   if (!el) return;
@@ -143,6 +95,7 @@ export function renderCurrentObservations(intel) {
   }
 
   if (uvEl) {
+    // Display the unified, validated UV from intel
     const uv = intel.uv ?? wu.uv ?? 0;
     uvEl.textContent = uv != null ? uv.toFixed(1) : "--";
     uvEl.className = "metric-value " + getUVClass(uv ?? 0);
@@ -183,7 +136,18 @@ function dedupeBullets(bullets) {
   bullets.forEach(b => {
     let key = b.toLowerCase();
     key = key.replace(/[^a-z0-9 ]/g, " ");
+    key = key
+      .replace(/\bjacket\b/g, "coat")
+      .replace(/\bchilly\b/g, "cold")
+      .replace(/\bearly\b/g, "morning")
+      .replace(/\bmorning air\b/g, "morning")
+      .replace(/\bair\b/g, "")
+      .replace(/\bcoat helps\b/g, "coat recommended")
+      .replace(/\bcoat is helpful\b/g, "coat recommended")
+      .replace(/\bcoat recommended\b/g, "coat recommended");
+    key = key.replace(/\b(a|the|is|very|quite|bit|little)\b/g, "");
     key = key.replace(/\s+/g, " ").trim();
+    key = key.split(" ").sort().join(" ");
 
     if (!seen.has(key)) {
       seen.add(key);
@@ -203,7 +167,8 @@ function renderBullets(ul, bullets) {
 
   bullets.forEach(b => {
     const li = document.createElement("li");
-    li.textContent = b;
+    if (/^[\p{Emoji}]/u.test(b)) li.textContent = b;
+    else li.textContent = "• " + b;
     ul.appendChild(li);
   });
 }
@@ -228,67 +193,116 @@ export function renderRightNowComfort(intel) {
 }
 
 // ------------------------------------------------------------
-// RENDER TODAY OUTLOOK
+// RENDER TODAY OUTLOOK (with remainder-of-today support)
 // ------------------------------------------------------------
 export function renderTodayOutlook(intel) {
+  const emojiEl = document.getElementById("today-emoji");
   const headlineEl = document.getElementById("today-headline");
   const textEl = document.getElementById("today-text");
   const bulletsEl = document.getElementById("today-bullets");
+  const remainderLabel = document.getElementById("today-remainder-label");
 
   const today = intel.today;
-  if (!today || !today.available) return;
+  const remainder = intel.remainderToday;
 
-  headlineEl.textContent = today.headline;
+  if ((!today || !today.available) && (!remainder || !remainder.available)) {
+    headlineEl.textContent = "No data available";
+    textEl.textContent = "";
+    bulletsEl.innerHTML = "";
+    if (remainderLabel) remainderLabel.style.display = "none";
+    return;
+  }
+
+  const active = (remainder && remainder.available) ? remainder : today;
+
+  if (remainderLabel) {
+    if (active === remainder) remainderLabel.style.display = "block";
+    else remainderLabel.style.display = "none";
+  }
+
+  emojiEl.textContent = "";
+  headlineEl.textContent = active.headline;
   fitHeadlineToWidth(headlineEl);
 
-  textEl.textContent = today.narrative;
-  renderBullets(bulletsEl, today.bullets);
+  textEl.textContent = active.narrative;
+  renderBullets(bulletsEl, active.bullets);
+
+  const todayModule = document.getElementById("today-module");
+  if (todayModule && today) {
+    if (today.isEndOfDay) todayModule.classList.add("fade");
+    else todayModule.classList.remove("fade");
+  }
 }
 
 // ------------------------------------------------------------
-// RENDER TOMORROW OUTLOOK (🔥 FIXED)
+// RENDER TOMORROW OUTLOOK
 // ------------------------------------------------------------
 export function renderTomorrowOutlook(intel) {
+  const emojiEl = document.getElementById("tomorrow-emoji");
+  const badgeEl = document.getElementById("tomorrow-badge");
+  const badgeContainer = document.getElementById("tomorrow-badge-container");
   const headlineEl = document.getElementById("tomorrow-headline");
   const textEl = document.getElementById("tomorrow-text");
   const bulletsEl = document.getElementById("tomorrow-bullets");
-  const badgeEl = document.getElementById("tomorrow-badge");
-  const badgeContainer = document.getElementById("tomorrow-badge-container");
 
   const tomorrow = intel.tomorrow;
-  if (!tomorrow || !tomorrow.available) return;
+  if (!tomorrow || !tomorrow.available) {
+    headlineEl.textContent = "No data available";
+    textEl.textContent = "";
+    bulletsEl.innerHTML = "";
+    return;
+  }
 
-  const stats = tomorrow.stats;
+  emojiEl.textContent = "";
 
-  const dominant = getDominantDriver(stats, tomorrow.events?.driver);
+  const dominant = tomorrow.events?.driver ?? "easy";
 
   const badgeMap = {
-    rain: { text: "Rain Gear", class: "badge-rain" },
-    wind: { text: "Wind Alert", class: "badge-wind" },
-    snow: { text: "Snow Impact", class: "badge-snow" },
-    hot: { text: "Heat Caution", class: "badge-heat" },
-    cold: { text: "Cold Start", class: "badge-cold" },
+    rain:  { text: "Rain Gear",     class: "badge-rain" },
+    wind:  { text: "Wind Alert",    class: "badge-wind" },
+    snow:  { text: "Snow Impact",   class: "badge-snow" },
+    hot:   { text: "Heat Caution",  class: "badge-heat" },
+    cold:  { text: "Cold Start",    class: "badge-cold" },
     goldilocks: { text: "Perfect Day", class: "badge-goldilocks" }
   };
 
   const badge = badgeMap[dominant];
 
-  if (badge) {
-    badgeContainer.style.display = "block";
+  if (!badge) {
+    if (badgeContainer) badgeContainer.style.display = "none";
+  } else {
+    if (badgeContainer) badgeContainer.style.display = "block";
     badgeEl.textContent = badge.text;
     badgeEl.className = `badge ${badge.class}`;
-  } else {
-    badgeContainer.style.display = "none";
   }
 
-  const smartHeadline = generateHumanHeadline(stats, tomorrow.headline);
-  headlineEl.textContent = smartHeadline;
+  headlineEl.textContent = tomorrow.headline;
+  fitHeadlineToWidth(headlineEl);
 
   textEl.textContent = tomorrow.narrative;
   renderBullets(bulletsEl, tomorrow.bullets);
+
+  const tomorrowModule = document.getElementById("tomorrow-module");
+  if (tomorrowModule) {
+    if (tomorrow.isEarlyMorning) tomorrowModule.classList.add("fade");
+    else tomorrowModule.classList.remove("fade");
+  }
 }
+
 // ------------------------------------------------------------
-// RENDER TODAY DETAIL (RESTORED)
+// RENDER UV INDEX (using unified intel.uv)
+// ------------------------------------------------------------
+export function renderUV(intel) {
+  const uvEl = document.getElementById("wu-uv");
+  if (!uvEl) return;
+
+  const uv = intel.uv ?? intel.wu?.uv ?? 0;
+  uvEl.textContent = uv.toFixed(1);
+  uvEl.className = "metric-value " + getUVClass(uv);
+}
+
+// ------------------------------------------------------------
+// RENDER TODAY DETAIL
 // ------------------------------------------------------------
 export function renderTodayDetail(intel) {
   const panel = document.getElementById("expanded-today");
@@ -311,7 +325,7 @@ export function renderTodayDetail(intel) {
 }
 
 // ------------------------------------------------------------
-// RENDER TOMORROW DETAIL (RESTORED)
+// RENDER TOMORROW DETAIL
 // ------------------------------------------------------------
 export function renderTomorrowDetail(intel) {
   const panel = document.getElementById("expanded-tomorrow");
@@ -334,9 +348,9 @@ export function renderTomorrowDetail(intel) {
 }
 
 // ------------------------------------------------------------
-// EXPANSION PANEL TOGGLER (RESTORED)
+// EXPANSION PANEL TOGGLER
 // ------------------------------------------------------------
-export function toggleForecastExpanded(which) {
+export function toggleForecastExpanded(which, intel) {
   const panelToday = document.getElementById("expanded-today");
   const panelTomorrow = document.getElementById("expanded-tomorrow");
 
@@ -353,36 +367,4 @@ export function toggleForecastExpanded(which) {
     panelToday.style.display = "none";
     return;
   }
-}
-// ------------------------------------------------------------
-// RENDER UV MODULE (RESTORED)
-// ------------------------------------------------------------
-export function renderUV(intel) {
-  const uvEl = document.getElementById("uv-value");
-  const uvLabel = document.getElementById("uv-label");
-
-  if (!uvEl || !uvLabel) return;
-
-  const uv = intel?.uv ?? intel?.wu?.uv ?? 0;
-
-  if (uv == null) {
-    uvEl.textContent = "--";
-    uvLabel.textContent = "";
-    return;
-  }
-
-  uvEl.textContent = uv.toFixed(1);
-
-  // Classification
-  let label = "";
-  if (uv <= 2) label = "Low";
-  else if (uv <= 5) label = "Moderate";
-  else if (uv <= 7) label = "High";
-  else if (uv <= 10) label = "Very High";
-  else label = "Extreme";
-
-  uvLabel.textContent = label;
-
-  // Optional styling (matches your existing system)
-  uvEl.className = "metric-value " + getUVClass(uv);
 }
