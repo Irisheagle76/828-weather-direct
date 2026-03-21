@@ -286,8 +286,7 @@ export function renderTodayOutlook(intel) {
 // RENDER TOMORROW OUTLOOK
 // ------------------------------------------------------------
 export function renderTomorrowOutlook(intel) {
-  console.log("RAW TOMORROW DATA:", tomorrow);
-console.log("STATS:", tomorrow.stats);
+
   const emojiEl = document.getElementById("tomorrow-emoji");
   const badgeEl = document.getElementById("tomorrow-badge");
   const badgeContainer = document.getElementById("tomorrow-badge-container");
@@ -301,6 +300,8 @@ console.log("STATS:", tomorrow.stats);
     textEl.textContent = "";
     bulletsEl.innerHTML = "";
     return;
+      console.log("RAW TOMORROW DATA:", tomorrow);
+console.log("STATS:", tomorrow.stats);
   }
 
   emojiEl.textContent = "";
