@@ -98,14 +98,17 @@ async function loadPulse() {
         thumbEl.style.display = "none";
 
         // ✅ CLEAN EXPANDED LAYOUT (NO OVERLAY)
-        previewEl.innerHTML = `
-          <div class="pulse-expanded-content">
-            <img src="${optimizedSrc}" class="pulse-expanded-img" />
-            <div class="pulse-full-text">
-              ${fullText}
-            </div>
-          </div>
-        `;
+        pconst firstSentence = fullText.split('. ')[0] + '.';
+const rest = fullText.replace(firstSentence, '');
+
+previewEl.innerHTML = `
+  <div class="pulse-expanded-content">
+    <img src="${optimizedSrc}" class="pulse-expanded-img" />
+    <div class="pulse-full-text">
+      <strong>${firstSentence}</strong> ${rest}
+    </div>
+  </div>
+`;
 
         toggleBtn.textContent = "Show less";
         toggleBtn.setAttribute("aria-expanded", "true");
