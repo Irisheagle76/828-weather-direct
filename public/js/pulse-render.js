@@ -97,14 +97,15 @@ async function loadPulse() {
         thumbEl.style.display = "none";
 
         // HERO IMAGE + FULL TEXT
-        previewEl.innerHTML = `
-          <div class="pulse-hero">
-            <img src="${thumbSrc}" alt="Pulse image" />
-          </div>
-          <div class="pulse-full-text">
-            ${fullText}
-          </div>
-        `;
+      previewEl.innerHTML = `
+  <div class="pulse-hero">
+    <img src="${thumbSrc}" alt="Pulse image" />
+    <div class="pulse-overlay"></div>
+    <div class="pulse-hero-text">
+      ${fullText}
+    </div>
+  </div>
+`;
 
         toggleBtn.textContent = "Show less";
         toggleBtn.setAttribute("aria-expanded", "true");
