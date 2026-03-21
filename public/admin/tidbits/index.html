@@ -65,6 +65,41 @@
         opacity: 0.5;
         cursor: default;
       }
+
+      /* HERO PREVIEW STYLES */
+      .pulse-hero-preview {
+        position: relative;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-top: 0.5rem;
+      }
+
+      .pulse-hero-preview img {
+        width: 100%;
+        display: block;
+      }
+
+      .pulse-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          to top,
+          rgba(0,0,0,0.75),
+          rgba(0,0,0,0.3),
+          rgba(0,0,0,0)
+        );
+      }
+
+      .pulse-hero-text {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 0.6rem 0.7rem;
+        color: white;
+        font-size: 0.9rem;
+        line-height: 1.4;
+      }
     </style>
   </head>
 
@@ -106,6 +141,8 @@
       const publishBtn = document.getElementById('publish');
       const statusEl = document.getElementById('status');
 
+      let currentImageUrl = "";
+
       // Toolbar
       document.querySelectorAll('.toolbar button').forEach((btn) => {
         btn.addEventListener('click', () => {
@@ -124,18 +161,23 @@
       });
 
       function updatePreview() {
-      previewEl.innerHTML = `
-  <div class="pulse-hero">
-    <img src="${thumbSrc}" alt="Pulse image" />
-    <div class="pulse-overlay"></div>
-    <div class="pulse-hero-text">
-      ${fullText}
-    </div>
-  </div>
-`;
+        const text = editor.innerHTML;
+        const img = currentImageUrl || "/828-brand-card.png";
+
+        preview.innerHTML = `
+          <div class="pulse-hero-preview">
+            <img src="${img}" />
+            <div class="pulse-overlay"></div>
+            <div class="pulse-hero-text">
+              ${text}
+            </div>
+          </div>
+        `;
+      }
+
       editor.addEventListener('input', updatePreview);
 
-      // ✅ Cloudinary Upload
+      // Cloudinary Upload
       async function uploadImage(file) {
         const formData = new FormData();
         formData.append('file', file);
@@ -147,7 +189,6 @@
         });
 
         const data = await res.json();
-        console.log("Cloudinary response:", data);
 
         if (!data.secure_url) {
           throw new Error('Upload failed');
@@ -175,6 +216,8 @@
           if (file) {
             statusEl.textContent = 'Uploading image…';
             imageUrl = await uploadImage(file);
+            currentImageUrl = imageUrl;
+            updatePreview();
           }
 
           statusEl.textContent = 'Publishing…';
@@ -185,7 +228,7 @@
             body: JSON.stringify({
               title: "Weather Pulse",
               text: html,
-              imageUrl
+              imageUrl: imageUrl || null
             }),
           });
 
@@ -194,6 +237,7 @@
           statusEl.textContent = 'Published ✔';
           editor.innerHTML = '';
           imageInput.value = '';
+          currentImageUrl = '';
           updatePreview();
 
         } catch (e) {
