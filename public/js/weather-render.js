@@ -354,4 +354,35 @@ export function toggleForecastExpanded(which) {
     return;
   }
 }
+// ------------------------------------------------------------
+// RENDER UV MODULE (RESTORED)
+// ------------------------------------------------------------
+export function renderUV(intel) {
+  const uvEl = document.getElementById("uv-value");
+  const uvLabel = document.getElementById("uv-label");
 
+  if (!uvEl || !uvLabel) return;
+
+  const uv = intel?.uv ?? intel?.wu?.uv ?? 0;
+
+  if (uv == null) {
+    uvEl.textContent = "--";
+    uvLabel.textContent = "";
+    return;
+  }
+
+  uvEl.textContent = uv.toFixed(1);
+
+  // Classification
+  let label = "";
+  if (uv <= 2) label = "Low";
+  else if (uv <= 5) label = "Moderate";
+  else if (uv <= 7) label = "High";
+  else if (uv <= 10) label = "Very High";
+  else label = "Extreme";
+
+  uvLabel.textContent = label;
+
+  // Optional styling (matches your existing system)
+  uvEl.className = "metric-value " + getUVClass(uv);
+}
