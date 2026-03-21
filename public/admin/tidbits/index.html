@@ -109,9 +109,15 @@
       });
 
       function updatePreview() {
-        preview.innerHTML = editor.innerHTML;
-      }
-
+      previewEl.innerHTML = `
+  <div class="pulse-hero">
+    <img src="${thumbSrc}" alt="Pulse image" />
+    <div class="pulse-overlay"></div>
+    <div class="pulse-hero-text">
+      ${fullText}
+    </div>
+  </div>
+`;
       editor.addEventListener('input', updatePreview);
 
       async function uploadImage(file) {
