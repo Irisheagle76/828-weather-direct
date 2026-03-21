@@ -1,10 +1,8 @@
 import { put } from "@vercel/blob";
 
-export const config = {
-  runtime: "edge",
-};
+export const runtime = "edge";
 
-export default async function handler(req) {
+export async function POST(req: Request) {
   try {
     const form = await req.formData();
     const file = form.get("file");
