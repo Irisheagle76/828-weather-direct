@@ -100,10 +100,10 @@ async function loadPulse() {
         previewEl.innerHTML = `
           <div class="pulse-hero">
             <img src="${thumbSrc}" alt="Pulse image" />
-          </div>
-          <div class="pulse-full-text">
+          </div class="pulse-full-text">
             ${fullText}
           </div>
+          <div>
         `;
 
         toggleBtn.textContent = "Show less";
