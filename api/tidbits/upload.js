@@ -1,19 +1,22 @@
 import { put } from "@vercel/blob";
 
 export const config = {
-  runtime: "edge",
+  api: {
+    bodyParser: false,
+  },
 };
 
-export default async function handler(req) {
+export default async function handler(req, res) {
   try {
-    const form = await req.formData();
-    const file = form.get("file");
+    if (req.method !== "POST") {
+      return res.status(405).json({ error: "Method not allowed" });
+    }
+
+    const formData = await req.formData();
+    const file = formData.get("file");
 
     if (!file) {
-      return new Response(JSON.stringify({ error: "No file uploaded" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+      return res.status(400).json({ error: "No file uploaded" });
     }
 
     const filename = `pulse-${Date.now()}.jpg`;
@@ -22,16 +25,10 @@ export default async function handler(req) {
       access: "public",
     });
 
-    return new Response(JSON.stringify({ url }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    return res.status(200).json({ url });
 
   } catch (err) {
     console.error("Upload error:", err);
-    return new Response(JSON.stringify({ error: "Upload failed" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return res.status(500).json({ error: "Upload failed" });
   }
 }
