@@ -28,34 +28,6 @@ import {
 import { toggleForecastExpanded } from "./weather-render.js";
 window.toggleForecastExpanded = toggleForecastExpanded;
 
-// ------------------------------------------------------------
-// HOURLY RENDER
-// ------------------------------------------------------------
-function renderHourlyTemps(hourlyData) {
-  const container = document.getElementById("hourlyTemps");
-  if (!container || !hourlyData) return;
-
-  container.innerHTML = "";
-
-  const nextHours = hourlyData.slice(0, 6);
-
-  nextHours.forEach(hour => {
-    const time = new Date(hour.time);
-    const hourLabel = time.toLocaleTimeString([], { hour: "numeric" });
-
-    const temp = Math.round(hour.temp);
-
-    const item = document.createElement("div");
-    item.className = "hour-item";
-
-    item.innerHTML = `
-      <div class="hour-time">${hourLabel}</div>
-      <div class="hour-temp">${temp}°</div>
-    `;
-
-    container.appendChild(item);
-  });
-}
 
 // ------------------------------------------------------------
 // STATUS + ERROR HELPERS
