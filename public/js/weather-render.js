@@ -475,16 +475,3 @@ export function toggleForecastExpanded(which, intel) {
     return;
   }
 }
-
-// ------------------------------------------------------------
-// COMFORT MODULE EXPAND TOGGLE
-// ------------------------------------------------------------
-document.addEventListener("DOMContentLoaded", () => {
-  const comfortModule = document.querySelector(".comfort-module");
-
-  if (comfortModule) {
-    comfortModule.addEventListener("click", () => {
-      comfortModule.classList.toggle("active");
-    });
-  }
-});
