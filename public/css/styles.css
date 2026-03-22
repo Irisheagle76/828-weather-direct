@@ -203,12 +203,11 @@
 
 /* Expand behavior */
 .comfort-expand {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.35s ease;
-
-  /* DEBUG — makes it visible */
-  background: rgba(255, 0, 0, 0.2);
+  display: block !important;
+  max-height: none !important;
+  height: auto !important;
+  background: red !important;
+  padding: 10px !important;
 }
 
 /* When active */
