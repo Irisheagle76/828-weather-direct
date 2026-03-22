@@ -245,24 +245,36 @@
 
     editor.addEventListener('input', updatePreview);
 
-    async function uploadImage(file) {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_preset', 'pulse_upload');
+async function uploadImage(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', 'pulse_upload');
 
-      const endpoint = file.type.startsWith('video/')
-        ? 'https://api.cloudinary.com/v1_1/dz45rrije/video/upload'
-        : 'https://api.cloudinary.com/v1_1/dz45rrije/image/upload';
+  // 🔥 FORCE correct type
+  const isVideo = file.type.startsWith('video/');
+  formData.append('resource_type', isVideo ? 'video' : 'image');
 
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        body: formData
-      });
+  const endpoint = isVideo
+    ? 'https://api.cloudinary.com/v1_1/dz45rrije/video/upload'
+    : 'https://api.cloudinary.com/v1_1/dz45rrije/image/upload';
 
-      const data = await res.json();
-      return data.secure_url;
-    }
+  console.log("Uploading:", file.type);
+  console.log("Endpoint:", endpoint);
 
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    body: formData
+  });
+
+  const data = await res.json();
+  console.log("Cloudinary response:", data);
+
+  if (!data.secure_url) {
+    throw new Error("Upload failed");
+  }
+
+  return data.secure_url;
+}
     publishBtn.addEventListener('click', async () => {
       const html = editor.innerHTML.trim();
       if (!html) return;
