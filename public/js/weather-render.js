@@ -1,38 +1,11 @@
 // /js/weather-render.js
 // ============================================================
 // WEATHER RENDERER — Today, Tomorrow, Comfort, UV, Details
-// FULL VERSION — PRESERVED + ENHANCED
 // ============================================================
 
-
-// ============================================================
-// 🧠 REALITY ADJUSTMENT (ASHEVILLE TERRAIN TUNING)
-// ============================================================
-function adjustStatsForReality(stats) {
-  if (!stats) return stats;
-
-  const adjusted = { ...stats };
-
-  // Asheville valley warm bias
-  if (adjusted.tempMax != null) adjusted.tempMax += 3;
-
-  // Reduce phantom rain
-  if (adjusted.rainTotal != null && adjusted.rainTotal < 1) {
-    adjusted.rainTotal *= 0.6;
-  }
-
-  // Reduce cloud bias slightly
-  if (adjusted.cloudAvg != null) {
-    adjusted.cloudAvg *= 0.9;
-  }
-
-  return adjusted;
-}
-
-
-// ============================================================
-// PRECIP HELPERS
-// ============================================================
+// ------------------------------------------------------------
+// PRECIPITATION RANGE HELPERS
+// ------------------------------------------------------------
 function formatRainAmount(amount) {
   if (amount === 0) return "Dry";
   if (amount < 0.05) return "A few sprinkles — Low confidence";
@@ -55,10 +28,9 @@ function formatSnowAmount(amount) {
   return "Significant accumulation possible — High confidence";
 }
 
-
-// ============================================================
-// HEADLINE FIT
-// ============================================================
+// ------------------------------------------------------------
+// HEADLINE AUTO‑SHRINK HELPER
+// ------------------------------------------------------------
 function fitHeadlineToWidth(el, maxSize = 1.25, minSize = 0.95) {
   if (!el) return;
 
@@ -70,10 +42,9 @@ function fitHeadlineToWidth(el, maxSize = 1.25, minSize = 0.95) {
   }
 }
 
-
-// ============================================================
-// CURRENT OBS
-// ============================================================
+// ------------------------------------------------------------
+// RENDER CURRENT OBSERVATIONS (WU)
+// ------------------------------------------------------------
 export function renderCurrentObservations(intel) {
   const wu = intel.wu;
   if (!wu) return;
@@ -85,9 +56,33 @@ export function renderCurrentObservations(intel) {
   const gustEl = document.getElementById("wu-wind-gust");
   const uvEl = document.getElementById("wu-uv");
 
-  if (tempEl) tempEl.textContent = wu.temp != null ? `${wu.temp}°` : "--";
-  if (dewEl) dewEl.textContent = wu.dewPoint != null ? `${wu.dewPoint}°` : "--";
-  if (humEl) humEl.textContent = wu.humidity != null ? `Humidity ${wu.humidity}%` : "Humidity --";
+  if (tempEl) {
+    tempEl.textContent = wu.temp != null ? `${wu.temp}°` : "--";
+    tempEl.className = "metric-value";
+
+    const t = wu.temp;
+    if (t <= 32) tempEl.classList.add("temp-freezing");
+    else if (t <= 45) tempEl.classList.add("temp-cold");
+    else if (t <= 60) tempEl.classList.add("temp-cool");
+    else if (t <= 75) tempEl.classList.add("temp-mild");
+    else if (t <= 85) tempEl.classList.add("temp-warm");
+    else tempEl.classList.add("temp-hot");
+  }
+
+  if (dewEl) {
+    dewEl.textContent = wu.dewPoint != null ? `${wu.dewPoint}°` : "--";
+    dewEl.className = "metric-value";
+
+    const d = wu.dewPoint;
+    if (d <= 40) dewEl.classList.add("dew-dry");
+    else if (d <= 55) dewEl.classList.add("dew-comfort");
+    else if (d <= 70) dewEl.classList.add("dew-humid");
+    else dewEl.classList.add("dew-tropical");
+  }
+
+  if (humEl) {
+    humEl.textContent = wu.humidity != null ? `Humidity ${wu.humidity}%` : "Humidity --";
+  }
 
   if (windEl) {
     const dir = wu.windDir != null ? degToCompass(wu.windDir) : "";
@@ -100,61 +95,30 @@ export function renderCurrentObservations(intel) {
   }
 
   if (uvEl) {
+    // Display the unified, validated UV from intel
     const uv = intel.uv ?? wu.uv ?? 0;
-    uvEl.textContent = uv.toFixed(1);
-    uvEl.className = "metric-value " + getUVClass(uv);
+    uvEl.textContent = uv != null ? uv.toFixed(1) : "--";
+    uvEl.className = "metric-value " + getUVClass(uv ?? 0);
   }
 }
 
 // ------------------------------------------------------------
-// RIGHT NOW COMFORT MODULE
+// Compass helper
 // ------------------------------------------------------------
-export function renderRightNowComfort(intel) {
-  const el = document.getElementById("right-now-comfort");
-  if (!el) return;
-
-  const temp = intel.wu?.temp;
-  const dew = intel.wu?.dewPoint;
-  const wind = intel.wu?.windSpeed;
-
-  if (temp == null || dew == null) {
-    el.textContent = "No data available";
-    return;
-  }
-
-  let comfort = "Comfortable";
-
-  // Temperature feel
-  if (temp >= 90) comfort = "Hot";
-  else if (temp >= 80) comfort = "Warm";
-  else if (temp <= 40) comfort = "Cold";
-  else if (temp <= 55) comfort = "Cool";
-
-  // Humidity adjustment
-  if (dew >= 70) comfort += " and very humid";
-  else if (dew >= 60) comfort += " and humid";
-  else if (dew <= 40) comfort += " and dry";
-
-  // Wind adjustment
-  if (wind >= 15) comfort += " with a noticeable breeze";
-
-  el.textContent = comfort;
-}
-// ============================================================
-// COMPASS
-// ============================================================
 export function degToCompass(deg) {
   if (deg == null) return "";
-  const dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+  const dirs = [
+    "N","NNE","NE","ENE","E","ESE","SE","SSE",
+    "S","SSW","SW","WSW","W","WNW","NW","NNW"
+  ];
   return dirs[Math.round(deg / 22.5) % 16];
 }
-
-
-// ============================================================
-// INTELLIGENCE
-// ============================================================
+// ------------------------------------------------------------
+// 🧠 INTELLIGENCE LAYER (SAFE ADD)
+// ------------------------------------------------------------
 function getSkyCondition(stats) {
   if (!stats) return "unknown";
+
   if (stats.cloudAvg < 25) return "sunny";
   if (stats.cloudAvg < 55) return "partly";
   if (stats.cloudAvg < 80) return "mostly-cloudy";
@@ -165,17 +129,20 @@ function getDominantDriver(stats, fallback) {
   if (!stats) return fallback ?? "easy";
 
   if (stats.snowTotal > 0.5) return "snow";
-  if (stats.rainTotal > 0.4) return "rain";
+  if (stats.rainTotal > 0.25) return "rain";
   if (stats.windGustMax > 30) return "wind";
   if (stats.tempMax >= 90) return "hot";
   if (stats.tempMin <= 35) return "cold";
 
+  // 🌤️ override for "actually nice day"
   if (
     stats.cloudAvg < 40 &&
-    stats.rainTotal < 0.1 &&
-    stats.tempMax >= 72 &&
-    stats.tempMax <= 88
-  ) return "goldilocks";
+    stats.rainTotal < 0.05 &&
+    stats.tempMax >= 70 &&
+    stats.tempMax <= 85
+  ) {
+    return "goldilocks";
+  }
 
   return fallback ?? "easy";
 }
@@ -185,8 +152,9 @@ function generateHumanHeadline(stats, fallback) {
 
   const sky = getSkyCondition(stats);
 
-  if (sky === "sunny" && stats.tempMax >= 75 && stats.tempMax <= 88)
+  if (sky === "sunny" && stats.tempMax >= 75 && stats.tempMax <= 85) {
     return "Beautiful day ahead";
+  }
 
   if (sky === "partly") return "A mix of sun and clouds";
   if (sky === "mostly-cloudy") return "More clouds than sun";
@@ -194,12 +162,11 @@ function generateHumanHeadline(stats, fallback) {
 
   return fallback ?? "";
 }
-
-
-// ============================================================
-// UV CLASS
-// ============================================================
+// ------------------------------------------------------------
+// UV class helper
+// ------------------------------------------------------------
 export function getUVClass(uv) {
+  if (uv == null) return "uv-0";
   if (uv <= 2) return "uv-low";
   if (uv <= 5) return "uv-moderate";
   if (uv <= 7) return "uv-high";
@@ -207,95 +174,184 @@ export function getUVClass(uv) {
   return "uv-extreme";
 }
 
-
-// ============================================================
-// BULLETS
-// ============================================================
+// ------------------------------------------------------------
+// BULLET DE-DUPLICATOR
+// ------------------------------------------------------------
 function dedupeBullets(bullets) {
   const seen = new Set();
-  return bullets.filter(b => {
-    const key = b.toLowerCase().replace(/[^a-z0-9 ]/g, "");
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
+  const result = [];
+
+  bullets.forEach(b => {
+    let key = b.toLowerCase();
+    key = key.replace(/[^a-z0-9 ]/g, " ");
+    key = key
+      .replace(/\bjacket\b/g, "coat")
+      .replace(/\bchilly\b/g, "cold")
+      .replace(/\bearly\b/g, "morning")
+      .replace(/\bmorning air\b/g, "morning")
+      .replace(/\bair\b/g, "")
+      .replace(/\bcoat helps\b/g, "coat recommended")
+      .replace(/\bcoat is helpful\b/g, "coat recommended")
+      .replace(/\bcoat recommended\b/g, "coat recommended");
+    key = key.replace(/\b(a|the|is|very|quite|bit|little)\b/g, "");
+    key = key.replace(/\s+/g, " ").trim();
+    key = key.split(" ").sort().join(" ");
+
+    if (!seen.has(key)) {
+      seen.add(key);
+      result.push(b);
+    }
   });
+
+  return result;
 }
 
+// ------------------------------------------------------------
+// HYBRID BULLET RENDERER
+// ------------------------------------------------------------
 function renderBullets(ul, bullets) {
   bullets = dedupeBullets(bullets);
   ul.innerHTML = "";
+
   bullets.forEach(b => {
     const li = document.createElement("li");
-    li.textContent = b;
+    if (/^[\p{Emoji}]/u.test(b)) li.textContent = b;
+    else li.textContent = "• " + b;
     ul.appendChild(li);
   });
 }
 
+// ------------------------------------------------------------
+// RENDER RIGHT NOW COMFORT
+// ------------------------------------------------------------
+export function renderRightNowComfort(intel) {
+  const emojiEl = document.getElementById("comfort-emoji");
+  const textEl = document.getElementById("comfort-text");
+  if (!emojiEl || !textEl) return;
 
-// ============================================================
-// TODAY
-// ============================================================
+  const comfort = intel.comfort;
+  if (!comfort) {
+    emojiEl.textContent = "";
+    textEl.textContent = "";
+    return;
+  }
+
+  emojiEl.textContent = comfort.emoji ?? "";
+  textEl.textContent = comfort.summary ?? "";
+}
+
+// ------------------------------------------------------------
+// RENDER TODAY OUTLOOK (with remainder-of-today support)
+// ------------------------------------------------------------
 export function renderTodayOutlook(intel) {
-  const today = intel.today;
-  if (!today || !today.available) return;
-
+  const emojiEl = document.getElementById("today-emoji");
   const headlineEl = document.getElementById("today-headline");
   const textEl = document.getElementById("today-text");
   const bulletsEl = document.getElementById("today-bullets");
+  const remainderLabel = document.getElementById("today-remainder-label");
 
-  headlineEl.textContent = today.headline;
+  const today = intel.today;
+  const remainder = intel.remainderToday;
+
+  if ((!today || !today.available) && (!remainder || !remainder.available)) {
+    headlineEl.textContent = "No data available";
+    textEl.textContent = "";
+    bulletsEl.innerHTML = "";
+    if (remainderLabel) remainderLabel.style.display = "none";
+    return;
+  }
+
+  const active = (remainder && remainder.available) ? remainder : today;
+
+  if (remainderLabel) {
+    if (active === remainder) remainderLabel.style.display = "block";
+    else remainderLabel.style.display = "none";
+  }
+
+  emojiEl.textContent = "";
+  headlineEl.textContent = active.headline;
   fitHeadlineToWidth(headlineEl);
 
-  textEl.textContent = today.narrative;
-  renderBullets(bulletsEl, today.bullets);
+  textEl.textContent = active.narrative;
+  renderBullets(bulletsEl, active.bullets);
+
+  const todayModule = document.getElementById("today-module");
+  if (todayModule && today) {
+    if (today.isEndOfDay) todayModule.classList.add("fade");
+    else todayModule.classList.remove("fade");
+  }
 }
 
-
-// ============================================================
-// TOMORROW (FIXED)
-// ============================================================
+// ------------------------------------------------------------
+// RENDER TOMORROW OUTLOOK
+// ------------------------------------------------------------
 export function renderTomorrowOutlook(intel) {
-  const tomorrow = intel.tomorrow;
-  if (!tomorrow || !tomorrow.available) return;
 
+  const emojiEl = document.getElementById("tomorrow-emoji");
+  const badgeEl = document.getElementById("tomorrow-badge");
+  const badgeContainer = document.getElementById("tomorrow-badge-container");
   const headlineEl = document.getElementById("tomorrow-headline");
   const textEl = document.getElementById("tomorrow-text");
   const bulletsEl = document.getElementById("tomorrow-bullets");
-  const badgeEl = document.getElementById("tomorrow-badge");
-  const badgeContainer = document.getElementById("tomorrow-badge-container");
 
-  const stats = adjustStatsForReality(tomorrow.stats);
+  const tomorrow = intel.tomorrow;
 
-  const dominant = getDominantDriver(stats, tomorrow.events?.driver);
+if (!tomorrow || !tomorrow.available) {
+  headlineEl.textContent = "No data available";
+  textEl.textContent = "";
+  bulletsEl.innerHTML = "";
+  return;
+}
+
+// ✅ ADD LOGS HERE
+console.log("RAW TOMORROW DATA:", tomorrow);
+console.log("STATS:", tomorrow.stats);
+
+  emojiEl.textContent = "";
+
+  const dominant = getDominantDriver(
+  tomorrow.stats,
+  tomorrow.events?.driver
+);
 
   const badgeMap = {
-    rain: { text: "Rain Gear", class: "badge-rain" },
-    wind: { text: "Wind Alert", class: "badge-wind" },
-    snow: { text: "Snow Impact", class: "badge-snow" },
-    hot: { text: "Heat Caution", class: "badge-heat" },
-    cold: { text: "Cold Start", class: "badge-cold" },
+    rain:  { text: "Rain Gear",     class: "badge-rain" },
+    wind:  { text: "Wind Alert",    class: "badge-wind" },
+    snow:  { text: "Snow Impact",   class: "badge-snow" },
+    hot:   { text: "Heat Caution",  class: "badge-heat" },
+    cold:  { text: "Cold Start",    class: "badge-cold" },
     goldilocks: { text: "Perfect Day", class: "badge-goldilocks" }
   };
 
   const badge = badgeMap[dominant];
 
-  if (badge) {
-    badgeContainer.style.display = "block";
+  if (!badge) {
+    if (badgeContainer) badgeContainer.style.display = "none";
+  } else {
+    if (badgeContainer) badgeContainer.style.display = "block";
     badgeEl.textContent = badge.text;
     badgeEl.className = `badge ${badge.class}`;
-  } else {
-    badgeContainer.style.display = "none";
   }
 
-  headlineEl.textContent = generateHumanHeadline(stats, tomorrow.headline);
+  headlineEl.textContent = generateHumanHeadline(
+  tomorrow.stats,
+  tomorrow.headline
+);
+  fitHeadlineToWidth(headlineEl);
+
   textEl.textContent = tomorrow.narrative;
   renderBullets(bulletsEl, tomorrow.bullets);
+
+  const tomorrowModule = document.getElementById("tomorrow-module");
+  if (tomorrowModule) {
+    if (tomorrow.isEarlyMorning) tomorrowModule.classList.add("fade");
+    else tomorrowModule.classList.remove("fade");
+  }
 }
 
-
-// ============================================================
-// UV INDEX
-// ============================================================
+// ------------------------------------------------------------
+// RENDER UV INDEX (using unified intel.uv)
+// ------------------------------------------------------------
 export function renderUV(intel) {
   const uvEl = document.getElementById("wu-uv");
   if (!uvEl) return;
@@ -305,10 +361,9 @@ export function renderUV(intel) {
   uvEl.className = "metric-value " + getUVClass(uv);
 }
 
-
-// ============================================================
-// TODAY DETAIL
-// ============================================================
+// ------------------------------------------------------------
+// RENDER TODAY DETAIL
+// ------------------------------------------------------------
 export function renderTodayDetail(intel) {
   const panel = document.getElementById("expanded-today");
   if (!panel) return;
@@ -329,10 +384,9 @@ export function renderTodayDetail(intel) {
   `;
 }
 
-
-// ============================================================
-// TOMORROW DETAIL
-// ============================================================
+// ------------------------------------------------------------
+// RENDER TOMORROW DETAIL
+// ------------------------------------------------------------
 export function renderTomorrowDetail(intel) {
   const panel = document.getElementById("expanded-tomorrow");
   if (!panel) return;
@@ -353,11 +407,10 @@ export function renderTomorrowDetail(intel) {
   `;
 }
 
-
-// ============================================================
-// TOGGLE
-// ============================================================
-export function toggleForecastExpanded(which) {
+// ------------------------------------------------------------
+// EXPANSION PANEL TOGGLER
+// ------------------------------------------------------------
+export function toggleForecastExpanded(which, intel) {
   const panelToday = document.getElementById("expanded-today");
   const panelTomorrow = document.getElementById("expanded-tomorrow");
 
@@ -365,11 +418,13 @@ export function toggleForecastExpanded(which) {
     const isOpen = panelToday.style.display === "block";
     panelToday.style.display = isOpen ? "none" : "block";
     panelTomorrow.style.display = "none";
+    return;
   }
 
   if (which === "tomorrow") {
     const isOpen = panelTomorrow.style.display === "block";
     panelTomorrow.style.display = isOpen ? "none" : "block";
     panelToday.style.display = "none";
+    return;
   }
 }
