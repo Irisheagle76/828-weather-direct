@@ -33,7 +33,39 @@ function computeSolarElevation(timestamp, lat, lon) {
 
   return elevation * (180 / Math.PI);
 }
+// ------------------------------------------------------------
+// Future Trend  Helper
+// ------------------------------------------------------------
+function computeShortTermTrend(intel) {
+  const hourly = intel.hourly;
+  if (!hourly?.temperature_2m || !hourly.time) return null;
 
+  const now = new Date();
+  let startIndex = 0;
+
+  for (let i = 0; i < hourly.time.length; i++) {
+    if (new Date(hourly.time[i]) > now) {
+      startIndex = i;
+      break;
+    }
+  }
+
+  const temps = hourly.temperature_2m;
+
+  const t1 = temps[startIndex];
+  const t3 = temps[startIndex + 2];
+
+  if (t1 == null || t3 == null) return null;
+
+  const delta = t3 - t1;
+
+  if (delta >= 4) return "warming quickly";
+  if (delta >= 2) return "warming gradually";
+  if (delta <= -4) return "cooling quickly";
+  if (delta <= -2) return "cooling gradually";
+
+  return null;
+}
 // ------------------------------------------------------------
 // WIND CHILL (NWS formula)
 // ------------------------------------------------------------
@@ -212,10 +244,15 @@ export function computeComfort(intel) {
   else if (state === "hot") baseFeel = "Hot and energetic";
 
   const dropFeel = computeTempDropFeel(intel);
+  const shortTrend = computeShortTermTrend(intel);
 
-  const firstSentence = dropFeel
-    ? `${baseFeel} — ${dropFeel}.`
-    : `${baseFeel}.`;
+  let firstSentence = `${baseFeel}.`;
+
+if (dropFeel) {
+  firstSentence = `${baseFeel} — ${dropFeel}.`;
+} else if (shortTrend) {
+  firstSentence = `${baseFeel} — ${shortTrend} over the next few hours.`;
+}
 
   const summaryParts = [firstSentence];
 
