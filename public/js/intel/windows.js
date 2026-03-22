@@ -41,15 +41,23 @@ export function getTomorrowWindow(hourly) {
   const month = tomorrow.getMonth();
   const year = tomorrow.getFullYear();
 
-  const start = new Date(year, month, day, 0, 0, 0);
-  const end = new Date(year, month, day, 23, 59, 59);
-
   const indices = [];
 
   for (let i = 0; i < hourly.time.length; i++) {
     const t = new Date(hourly.time[i]);
-    if (t >= start && t <= end) {
-      indices.push(i);
+
+    // ✅ Still ensure it's tomorrow
+    if (
+      t.getDate() === day &&
+      t.getMonth() === month &&
+      t.getFullYear() === year
+    ) {
+      const hour = t.getHours();
+
+      // 🔥 CRITICAL CHANGE: only daytime hours
+      if (hour >= 10 && hour <= 20) {
+        indices.push(i);
+      }
     }
   }
 

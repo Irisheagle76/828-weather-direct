@@ -23,6 +23,7 @@ export function buildWeatherIntel(hourly) {
   // -----------------------------
   const todayHours = getTodayWindow(hourly);
   const tomorrowHours = getTomorrowWindow(hourly);
+  console.log("TOMORROW HOURS:", tomorrowHours.length);
 
   // -----------------------------
   // Stats + Events
