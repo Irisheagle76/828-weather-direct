@@ -206,15 +206,21 @@
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.35s ease;
+
+  /* DEBUG — makes it visible */
+  background: rgba(255, 0, 0, 0.2);
 }
 
 /* When active */
 .comfort-module.active .comfort-expand {
-  max-height: 300px;
+  max-height: 400px;
   padding-top: 12px;
   border-top: 1px solid rgba(255,255,255,0.1);
 }
-
+.comfort-module {
+  display: flex;
+  flex-direction: column; /* THIS unlocks expansion */
+}
     /* ============================================================
      TODAY + TOMORROW MODULES
   ============================================================ */
