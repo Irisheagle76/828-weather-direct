@@ -205,10 +205,11 @@
 
 /* Hidden state */
 .comfort-expand {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.35s ease;
-  background: rgba(255, 0, 0, 0.2); /* TEMP */
+  display: block !important;
+  max-height: none !important;
+  height: auto !important;
+  padding: 10px !important;
+  background: red !important;
 }
 
 /* Expanded state */
