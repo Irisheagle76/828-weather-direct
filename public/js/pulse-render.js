@@ -62,9 +62,21 @@ async function loadPulse() {
       ? thumbSrc.replace("/upload/", "/upload/w_900,q_auto,f_auto/")
       : thumbSrc;
 
-    thumbEl.innerHTML = `
-      <img src="${optimizedSrc}" alt="Pulse image" />
-    `;
+    const isVideo =
+  optimizedSrc.includes('/video/upload') ||
+  optimizedSrc.endsWith('.mp4');
+
+if (isVideo) {
+  thumbEl.innerHTML = `
+    <video autoplay loop muted playsinline class="pulse-thumb-video">
+      <source src="${optimizedSrc}" type="video/mp4">
+    </video>
+  `;
+} else {
+  thumbEl.innerHTML = `
+    <img src="${optimizedSrc}" alt="Pulse image" />
+  `;
+}
 
     const fullText = cleanHtml(data.text || "");
     const shortText = createHybridPreview(fullText);
