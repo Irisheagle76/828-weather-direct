@@ -106,7 +106,40 @@ export function renderCurrentObservations(intel) {
   }
 }
 
+// ------------------------------------------------------------
+// RIGHT NOW COMFORT MODULE
+// ------------------------------------------------------------
+export function renderRightNowComfort(intel) {
+  const el = document.getElementById("right-now-comfort");
+  if (!el) return;
 
+  const temp = intel.wu?.temp;
+  const dew = intel.wu?.dewPoint;
+  const wind = intel.wu?.windSpeed;
+
+  if (temp == null || dew == null) {
+    el.textContent = "No data available";
+    return;
+  }
+
+  let comfort = "Comfortable";
+
+  // Temperature feel
+  if (temp >= 90) comfort = "Hot";
+  else if (temp >= 80) comfort = "Warm";
+  else if (temp <= 40) comfort = "Cold";
+  else if (temp <= 55) comfort = "Cool";
+
+  // Humidity adjustment
+  if (dew >= 70) comfort += " and very humid";
+  else if (dew >= 60) comfort += " and humid";
+  else if (dew <= 40) comfort += " and dry";
+
+  // Wind adjustment
+  if (wind >= 15) comfort += " with a noticeable breeze";
+
+  el.textContent = comfort;
+}
 // ============================================================
 // COMPASS
 // ============================================================
