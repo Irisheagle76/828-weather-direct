@@ -24,6 +24,24 @@ export function buildWeatherIntel(hourly) {
   const todayHours = getTodayWindow(hourly);
   const tomorrowHours = getTomorrowWindow(hourly);
 
+  // =============================
+  // 🔍 DEBUG (SAFE — WILL NOT BREAK)
+  // =============================
+  try {
+    console.log("----- DEBUG TOMORROW WINDOW -----");
+
+    console.log("Window count:", tomorrowHours.length);
+
+    const temps = tomorrowHours.map(i => hourly.temperature_2m[i]);
+    console.log("Temps in window:", temps);
+
+    const times = tomorrowHours.map(i => hourly.time[i]);
+    console.log("Times in window:", times);
+
+  } catch (e) {
+    console.log("Debug error:", e);
+  }
+
   // -----------------------------
   // Stats + Events
   // -----------------------------
@@ -39,7 +57,7 @@ export function buildWeatherIntel(hourly) {
   const todayOutlook = synthesizeOutlook(statsToday, eventsToday, todayHours);
   let tomorrowOutlook = synthesizeOutlook(statsTomorrow, eventsTomorrow, tomorrowHours);
 
-  // Anti‑redundancy: ensure Tomorrow doesn't echo Today
+  // Anti-redundancy: ensure Tomorrow doesn't echo Today
   tomorrowOutlook = differentiateFromToday(todayOutlook, tomorrowOutlook);
 
   // -----------------------------
@@ -62,13 +80,9 @@ export function buildWeatherIntel(hourly) {
       statsRemainder
     };
   }
-console.log(
-  "ALL TOMORROW TEMPS:",
-  tomorrowHours.map(i => hourly.temperature_2m[i])
-);
+
   // -----------------------------
   // Return unified intel object
-  // (WU + MRMS + Tempest attached later in app.js)
   // -----------------------------
   const intel = {
     today: {
@@ -83,7 +97,7 @@ console.log(
       stats: statsTomorrow,
       events: eventsTomorrow
     },
-    remainderToday: remainderTodayIntel, // may be null
+    remainderToday: remainderTodayIntel,
     comfort: null,
     wu: null,
     mrms: null,
