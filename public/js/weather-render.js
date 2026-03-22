@@ -115,13 +115,28 @@ export function renderHourlyTemps(hourlyData) {
 
   if (!times || !temps) return;
 
-  const count = Math.min(6, times.length);
+  const now = new Date();
+
+  // 👉 Find first future hour index
+  let startIndex = 0;
+
+  for (let i = 0; i < times.length; i++) {
+    const t = new Date(times[i]);
+    if (t > now) {
+      startIndex = i;
+      break;
+    }
+  }
+
+  const count = Math.min(6, times.length - startIndex);
 
   for (let i = 0; i < count; i++) {
-    const time = new Date(times[i]);
+    const idx = startIndex + i;
+
+    const time = new Date(times[idx]);
     const hourLabel = time.toLocaleTimeString([], { hour: "numeric" });
 
-    const temp = Math.round(temps[i]);
+    const temp = Math.round(temps[idx]);
 
     const item = document.createElement("div");
     item.className = "hour-item";
