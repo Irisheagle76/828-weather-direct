@@ -149,15 +149,18 @@
       margin-bottom: var(--gap);
     }
 
-    .comfort-module {
-      align-items: center;
-      background: rgba(255, 169, 77, 0.10);
-      border: 1px solid rgba(255, 169, 77, 0.35);
-      border-radius: var(--module-radius);
-      display: flex;
-      gap: 0.8rem;
-      padding: var(--module-padding);
-    }
+   /* ============================================================
+   COMFORT MODULE (MERGED FIX)
+============================================================ */
+.comfort-module {
+  display: flex;
+  flex-direction: column; /* allows expand */
+  background: rgba(255, 169, 77, 0.10);
+  border: 1px solid rgba(255, 169, 77, 0.35);
+  border-radius: var(--module-radius);
+  padding: var(--module-padding);
+  cursor: pointer;
+}
 
     .comfort-emoji {
       flex-shrink: 0;
@@ -191,13 +194,6 @@
    COMFORT EXPAND
 ============================================================ */
 
-/* Fix layout so expand works */
-.comfort-module {
-  display: flex;
-  flex-direction: column;
-  cursor: pointer;
-}
-
 /* Top row layout */
 .comfort-main {
   display: flex;
@@ -219,10 +215,6 @@
   border-top: 1px solid rgba(255,255,255,0.1);
 }
 
-/* DEBUG — remove later */
-.comfort-expand {
-  background: rgba(255, 0, 0, 0.2);
-}
     /* ============================================================
      TODAY + TOMORROW MODULES
   ============================================================ */
