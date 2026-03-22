@@ -362,7 +362,42 @@
       color: #d8dff7;
       font-size: 0.95rem;
     }
+ ============================================================
+     PULSE VIDEO UPLOAD FIX
+  ============================================================ */
+.pulse-container {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
 
+.pulse-media-wrapper {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  backdrop-filter: blur(6px);
+}
+
+.pulse-media {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  border-radius: 14px;
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+/* Hover effect */
+.pulse-media-wrapper:hover .pulse-media {
+  transform: scale(1.05);
+  box-shadow: 0 12px 35px rgba(0,0,0,0.45);
+}
+
+/* Hidden fallback */
+.hidden {
+  display: none;
+}
     /* ============================================================
      UV INDEX COLORS
   ============================================================ */
