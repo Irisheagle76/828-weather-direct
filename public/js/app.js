@@ -115,6 +115,7 @@ function updateUI(intel) {
   renderTodayDetail(intel);
   renderTomorrowDetail(intel);
   renderCurrentObservations(intel);
+renderHourlyTemps(intel.hourly);
 
   const footer = document.getElementById("wu-station-footer");
   if (intel.wu?.stationId) {
