@@ -187,13 +187,14 @@
       font-size: 0.78rem;
       margin-top: 0.15rem;
     }
-  /* ============================================================
-     COMFORT EXPAND
-  ============================================================ */
-./* Fix layout so expand works */
+/* ============================================================
+   COMFORT EXPAND
+============================================================ */
+
+/* Fix layout so expand works */
 .comfort-module {
   display: flex;
-  flex-direction: column; /* critical */
+  flex-direction: column;
   cursor: pointer;
 }
 
@@ -213,10 +214,11 @@
 
 /* When active */
 .comfort-module.active .comfort-expand {
-  max-height: 200px;
+  max-height: 400px; /* increased so we can SEE it */
+  padding-top: 10px;
 }
 
-/* Optional debug (remove later) */
+/* DEBUG — remove later */
 .comfort-expand {
   background: rgba(255, 0, 0, 0.2);
 }
