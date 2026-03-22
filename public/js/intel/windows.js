@@ -14,12 +14,18 @@ export function getTodayWindow(hourly) {
 
   const indices = [];
 
-  for (let i = 0; i < hourly.time.length; i++) {
-    const t = new Date(hourly.time[i]);
-    if (t >= start && t <= end) {
-      indices.push(i);
-    }
+ if (
+  t.getDate() === day &&
+  t.getMonth() === month &&
+  t.getFullYear() === year
+) {
+  const hour = t.getHours();
+
+  // 🔥 UPDATED WINDOW (this is the fix)
+  if (hour >= 9 && hour <= 22) {
+    indices.push(i);
   }
+}
 
   return indices;
 }
