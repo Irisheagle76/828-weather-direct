@@ -214,8 +214,9 @@
 
 /* When active */
 .comfort-module.active .comfort-expand {
-  max-height: 400px; /* increased so we can SEE it */
-  padding-top: 10px;
+  max-height: 300px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.1);
 }
 
 /* DEBUG — remove later */
