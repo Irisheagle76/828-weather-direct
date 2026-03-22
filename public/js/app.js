@@ -21,7 +21,8 @@ import {
   renderUV,
   renderTodayDetail,
   renderTomorrowDetail,
-  renderCurrentObservations
+  renderCurrentObservations,
+  renderHourlyTemps   // ⭐ ADD THIS
 } from './weather-render.js';
 
 import { toggleForecastExpanded } from "./weather-render.js";
