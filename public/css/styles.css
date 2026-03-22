@@ -205,16 +205,14 @@
 
 /* Hidden state */
 .comfort-expand {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.35s ease;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: all 0.25s ease;
 }
 
-/* Expanded state */
 .comfort-module.active .comfort-expand {
-  max-height: 400px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(255,255,255,0.1);
+  opacity: 1;
+  transform: translateY(0);
 }
     /* ============================================================
      TODAY + TOMORROW MODULES
