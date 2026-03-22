@@ -200,8 +200,8 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("comfort module found");
 
     comfortModule.addEventListener("click", () => {
-      console.log("comfort clicked");
-      comfortModule.classList.toggle("active");
-    });
+  console.log("CLICK FIRED");
+  comfortModule.classList.toggle("active");
+});
   }
 });
