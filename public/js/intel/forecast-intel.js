@@ -62,7 +62,10 @@ export function buildWeatherIntel(hourly) {
       statsRemainder
     };
   }
-
+console.log(
+  "ALL TOMORROW TEMPS:",
+  tomorrowHours.map(i => hourly.temperature_2m[i])
+);
   // -----------------------------
   // Return unified intel object
   // (WU + MRMS + Tempest attached later in app.js)
