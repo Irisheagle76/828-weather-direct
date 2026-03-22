@@ -104,7 +104,6 @@
       color: #9aa3c2;
     }
 
-    /* PREVIEW */
     .preview {
       margin-top: 1rem;
     }
@@ -118,6 +117,8 @@
     .pulse-hero-preview img,
     .pulse-hero-preview video {
       width: 100%;
+      height: 100%;
+      object-fit: cover;
       display: block;
       border-radius: 12px;
     }
@@ -158,8 +159,8 @@
       </div>
 
       <div class="field">
-        <label>Image</label>
-        <input type="file" id="image" accept="image/*" />
+        <label>Media</label>
+        <input type="file" id="image" accept="image/*,video/mp4" />
       </div>
 
       <div class="field">
@@ -202,22 +203,28 @@
     function getMediaHTML(url) {
       if (!url) return "";
 
-      // Detect GIF
-      if (url.endsWith(".gif")) {
-        const videoUrl = url.replace("/image/upload/", "/video/upload/");
+      const isVideo =
+        url.includes('/video/upload') ||
+        url.endsWith('.mp4');
 
+      if (isVideo) {
         return `
-          <video 
-            src="${videoUrl}"
-            autoplay
-            loop
-            muted
-            playsinline
-          ></video>
+          <video autoplay loop muted playsinline>
+            <source src="${url}" type="video/mp4">
+          </video>
         `;
       }
 
-      // Default image
+      // GIF fallback → try forcing video pipeline
+      if (url.endsWith(".gif")) {
+        const videoUrl = url.replace("/image/upload/", "/video/upload/");
+        return `
+          <video autoplay loop muted playsinline>
+            <source src="${videoUrl}" type="video/mp4">
+          </video>
+        `;
+      }
+
       return `<img src="${url}" />`;
     }
 
@@ -243,7 +250,11 @@
       formData.append('file', file);
       formData.append('upload_preset', 'pulse_upload');
 
-      const res = await fetch('https://api.cloudinary.com/v1_1/dz45rrije/image/upload', {
+      const endpoint = file.type.startsWith('video/')
+        ? 'https://api.cloudinary.com/v1_1/dz45rrije/video/upload'
+        : 'https://api.cloudinary.com/v1_1/dz45rrije/image/upload';
+
+      const res = await fetch(endpoint, {
         method: 'POST',
         body: formData
       });
