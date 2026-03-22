@@ -203,16 +203,34 @@
    COMFORT EXPAND
 ============================================================ */
 
-/* Hidden state */
+/* COLLAPSED STATE */
 .comfort-expand {
+  max-height: 0;
+  overflow: hidden;
   opacity: 0;
-  transform: translateY(-6px);
-  transition: all 0.25s ease;
+  transform: translateY(-6px) scale(0.98);
+  transition:
+    max-height 0.4s ease,
+    opacity 0.25s ease,
+    transform 0.25s ease;
 }
 
+/* EXPANDED STATE */
 .comfort-module.active .comfort-expand {
+  max-height: 160px; /* enough for ~6 hourly items */
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
+}
+.comfort-module.active {
+  backdrop-filter: blur(6px);
+}
+
+#hourlyTemps {
+  scrollbar-width: none;
+}
+
+#hourlyTemps::-webkit-scrollbar {
+  display: none;
 }
 /* ============================================================
    COMFORT EXPAND HOURLY TEMPS CSS
@@ -363,7 +381,7 @@
       font-size: 0.95rem;
     }
  ============================================================
-     PULSE VIDEO UPLOAD FIX
+     PULSE VIDEO UPLOAD
   ============================================================ */
 .pulse-container {
   position: relative;
