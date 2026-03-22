@@ -160,6 +160,7 @@ async function initApp() {
 document.addEventListener("DOMContentLoaded", () => {
   const todayModule = document.getElementById("today-module");
   const tomorrowModule = document.getElementById("tomorrow-module");
+  const comfortModule = document.getElementById("comfort-module");
 
   if (todayModule) {
     todayModule.addEventListener("click", () => {
@@ -170,6 +171,16 @@ document.addEventListener("DOMContentLoaded", () => {
   if (tomorrowModule) {
     tomorrowModule.addEventListener("click", () => {
       toggleForecastExpanded("tomorrow", window._intel);
+    });
+  }
+
+  // ✅ ADD THIS
+  if (comfortModule) {
+    console.log("comfort module found");
+
+    comfortModule.addEventListener("click", () => {
+      console.log("comfort clicked");
+      comfortModule.classList.toggle("active");
     });
   }
 });
