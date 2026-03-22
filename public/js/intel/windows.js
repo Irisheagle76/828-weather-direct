@@ -5,27 +5,24 @@ export function getTodayWindow(hourly) {
   if (!hourly?.time?.length) return [];
 
   const now = new Date();
-  const today = now.getDate();
+
+  const day = now.getDate();
   const month = now.getMonth();
   const year = now.getFullYear();
 
-  const start = new Date(year, month, today, 0, 0, 0);
-  const end = new Date(year, month, today, 23, 59, 59);
-
   const indices = [];
 
- if (
-  t.getDate() === day &&
-  t.getMonth() === month &&
-  t.getFullYear() === year
-) {
-  const hour = t.getHours();
+  for (let i = 0; i < hourly.time.length; i++) {
+    const t = new Date(hourly.time[i]);
 
-  // 🔥 UPDATED WINDOW (this is the fix)
-  if (hour >= 9 && hour <= 22) {
-    indices.push(i);
+    if (
+      t.getDate() === day &&
+      t.getMonth() === month &&
+      t.getFullYear() === year
+    ) {
+      indices.push(i);
+    }
   }
-}
 
   return indices;
 }
