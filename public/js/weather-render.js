@@ -101,7 +101,39 @@ export function renderCurrentObservations(intel) {
     uvEl.className = "metric-value " + getUVClass(uv ?? 0);
   }
 }
+// ------------------------------------------------------------
+// HOURLY TEMPS IN COMFORT DROPDOWN
+// ------------------------------------------------------------
+export function renderHourlyTemps(hourlyData) {
+  const container = document.getElementById("hourlyTemps");
+  if (!container || !hourlyData) return;
 
+  container.innerHTML = "";
+
+  const times = hourlyData.time;
+  const temps = hourlyData.temperature_2m;
+
+  if (!times || !temps) return;
+
+  const count = Math.min(6, times.length);
+
+  for (let i = 0; i < count; i++) {
+    const time = new Date(times[i]);
+    const hourLabel = time.toLocaleTimeString([], { hour: "numeric" });
+
+    const temp = Math.round(temps[i]);
+
+    const item = document.createElement("div");
+    item.className = "hour-item";
+
+    item.innerHTML = `
+      <div class="hour-time">${hourLabel}</div>
+      <div class="hour-temp">${temp}°</div>
+    `;
+
+    container.appendChild(item);
+  }
+}
 // ------------------------------------------------------------
 // Compass helper
 // ------------------------------------------------------------
