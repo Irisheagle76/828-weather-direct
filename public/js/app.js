@@ -22,11 +22,38 @@ import {
   renderTodayDetail,
   renderTomorrowDetail,
   renderCurrentObservations,
-  renderHourlyTemps   // ⭐ ADD THIS
+  renderHourlyTemps
 } from './weather-render.js';
 
 import { toggleForecastExpanded } from "./weather-render.js";
 window.toggleForecastExpanded = toggleForecastExpanded;
+
+
+// ============================================================
+// 🔥 NEW: PULSE MEDIA HANDLER (VIDEO + IMAGE SUPPORT)
+// ============================================================
+
+function renderPulseMedia(url) {
+  const container = document.getElementById("pulse-media");
+  if (!container || !url) return;
+
+  const isVideo =
+    url.includes('/video/upload') ||
+    url.endsWith('.mp4');
+
+  if (isVideo) {
+    container.innerHTML = `
+      <video autoplay loop muted playsinline class="pulse-video">
+        <source src="${url}" type="video/mp4">
+      </video>
+    `;
+  } else {
+    container.innerHTML = `<img src="${url}" class="pulse-video" />`;
+  }
+}
+
+// Expose globally so your Pulse module / API response can call it
+window.setPulseMedia = renderPulseMedia;
 
 
 // ------------------------------------------------------------
@@ -52,6 +79,8 @@ function showWUError(msg) {
   el.style.display = "block";
   el.textContent = msg;
 }
+
+
 // ------------------------------------------------------------
 // MASTER UI UPDATE FUNCTION
 // ------------------------------------------------------------
@@ -64,14 +93,19 @@ function updateUI(intel) {
   renderTomorrowDetail(intel);
   renderCurrentObservations(intel);
 
-  // ⭐ ADD THIS LINE
   renderHourlyTemps(intel.hourly);
 
   const footer = document.getElementById("wu-station-footer");
   if (intel.wu?.stationId) {
     footer.textContent = `Live data from Weather Underground Station ${intel.wu.stationId}`;
   }
+
+  // 🔥 OPTIONAL: If your API returns pulse media
+  if (intel.pulse?.imageUrl) {
+    renderPulseMedia(intel.pulse.imageUrl);
+  }
 }
+
 
 // ------------------------------------------------------------
 // ENTRY POINT
@@ -92,54 +126,38 @@ async function initApp() {
       const lon = pos.coords.longitude;
 
       try {
-        // ⭐ 1. WU Station + Current Conditions (NO HISTORY)
         const nearest = await getNearestWUStation(lat, lon);
         const wuCurrent = await getWUCurrentConditions(nearest.stationId);
 
         setWUStatus("ok", "WU Connected", "Weather Underground data loaded.");
 
-        // ⭐ 2. Tempest Device Observations
         const TEMPEST_DEVICE_ID = "315255";
         const TEMPEST_TOKEN = "838ff386-d14b-4d45-897a-18903e6970a9";
 
         const tempest = await getTempestDeviceObs(TEMPEST_DEVICE_ID, TEMPEST_TOKEN);
-
-        // ⭐ Extract Tempest high/low
         const tempestHigh = tempest?.tempHighToday ?? null;
 
-        // ⭐ 3. Hourly Forecast (Open-Meteo)
         const hourly = await getShortTermForecast(lat, lon);
-
-        // Debug
         window._hourly = hourly;
 
-        // ⭐ 4. MRMS Radar Pixel
         const mrmsPixel = await getMRMSPixel(lat, lon);
 
-        // ⭐ 5. Build Unified Intelligence
         const intel = buildWeatherIntel(hourly);
 
-        // Attach WU + MRMS + Tempest
         intel.wu = wuCurrent;
         intel.mrms = mrmsPixel;
         intel.tempest = tempest;
-        intel.hourly = hourly;   // ⭐ Needed for UV fallback alignment
+        intel.hourly = hourly;
 
-        // ⭐ Attach Tempest high into today's stats
         intel.today = intel.today || {};
         intel.today.stats = intel.today.stats || {};
         intel.today.stats.maxTemp = tempestHigh;
 
-        // ⭐ Compute comfort now that Tempest high is attached
         intel.comfort = computeComfort(intel);
-
-        // ⭐ Compute unified UV (Tempest → WU → OM → solar)
         intel.uv = getReliableUV(intel);
 
-        // Debug
         window._intel = intel;
 
-        // ⭐ 6. Update UI
         updateUI(intel);
 
       } catch (err) {
@@ -156,6 +174,7 @@ async function initApp() {
     }
   );
 }
+
 
 // ------------------------------------------------------------
 // CLICK LISTENERS FOR EXPANSION
@@ -177,7 +196,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ✅ ADD THIS
   if (comfortModule) {
     console.log("comfort module found");
 
