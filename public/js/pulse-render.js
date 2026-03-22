@@ -56,25 +56,24 @@ async function loadPulse() {
     const ts = data.timestamp ? new Date(data.timestamp) : null;
     timestampEl.textContent = ts ? formatTimeAgo(ts) : "Just now";
 
-    const thumbSrc = data.imageUrl || "/828-brand-card.png";
+const thumbSrc = data.imageUrl || "/828-brand-card.png";
 
-    const isVideo =
+// Detect once
+const isVideo =
   thumbSrc.includes('/video/upload') ||
   thumbSrc.endsWith('.mp4');
 
+// Optimize safely
 const optimizedSrc = thumbSrc.includes("/upload/")
   ? thumbSrc.replace(
       "/upload/",
       isVideo
-        ? "/upload/q_auto/"                // ✅ video-safe
-        : "/upload/w_900,q_auto,f_auto/"  // ✅ image optimized
+        ? "/upload/q_auto/"                // video-safe
+        : "/upload/w_900,q_auto,f_auto/"  // image optimized
     )
   : thumbSrc;
 
-    const isVideo =
-  optimizedSrc.includes('/video/upload') ||
-  optimizedSrc.endsWith('.mp4');
-
+// Render thumbnail
 if (isVideo) {
   thumbEl.innerHTML = `
     <video autoplay loop muted playsinline class="pulse-thumb-video">
