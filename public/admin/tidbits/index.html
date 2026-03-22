@@ -115,9 +115,11 @@
       overflow: hidden;
     }
 
-    .pulse-hero-preview img {
+    .pulse-hero-preview img,
+    .pulse-hero-preview video {
       width: 100%;
       display: block;
+      border-radius: 12px;
     }
 
     .pulse-overlay {
@@ -133,7 +135,6 @@
       font-size: 0.85rem;
       color: white;
     }
-
   </style>
 </head>
 
@@ -198,13 +199,35 @@
       });
     });
 
+    function getMediaHTML(url) {
+      if (!url) return "";
+
+      // Detect GIF
+      if (url.endsWith(".gif")) {
+        const videoUrl = url.replace("/image/upload/", "/video/upload/");
+
+        return `
+          <video 
+            src="${videoUrl}"
+            autoplay
+            loop
+            muted
+            playsinline
+          ></video>
+        `;
+      }
+
+      // Default image
+      return `<img src="${url}" />`;
+    }
+
     function updatePreview() {
       const text = editor.innerHTML;
       const img = currentImageUrl || "/828-brand-card.png";
 
       preview.innerHTML = `
         <div class="pulse-hero-preview">
-          <img src="${img}" />
+          ${getMediaHTML(img)}
           <div class="pulse-overlay"></div>
           <div class="pulse-hero-text">
             ${text}
