@@ -58,9 +58,18 @@ async function loadPulse() {
 
     const thumbSrc = data.imageUrl || "/828-brand-card.png";
 
-    const optimizedSrc = thumbSrc.includes("/upload/")
-      ? thumbSrc.replace("/upload/", "/upload/w_900,q_auto,f_auto/")
-      : thumbSrc;
+    const isVideo =
+  thumbSrc.includes('/video/upload') ||
+  thumbSrc.endsWith('.mp4');
+
+const optimizedSrc = thumbSrc.includes("/upload/")
+  ? thumbSrc.replace(
+      "/upload/",
+      isVideo
+        ? "/upload/q_auto/"                // ✅ video-safe
+        : "/upload/w_900,q_auto,f_auto/"  // ✅ image optimized
+    )
+  : thumbSrc;
 
     const isVideo =
   optimizedSrc.includes('/video/upload') ||
@@ -99,14 +108,24 @@ if (isVideo) {
         const firstSentence = fullText.split('. ')[0] + '.';
         const rest = fullText.replace(firstSentence, '');
 
-        previewEl.innerHTML = `
-          <div class="pulse-expanded-content">
-            <img src="${optimizedSrc}" class="pulse-expanded-img" />
-            <div class="pulse-full-text">
-              <strong>${firstSentence}</strong> ${rest}
-            </div>
-          </div>
-        `;
+        const isVideo =
+  optimizedSrc.includes('/video/upload') ||
+  optimizedSrc.endsWith('.mp4');
+
+const expandedMedia = isVideo
+  ? `<video autoplay loop muted playsinline class="pulse-expanded-img">
+       <source src="${optimizedSrc}" type="video/mp4">
+     </video>`
+  : `<img src="${optimizedSrc}" class="pulse-expanded-img" />`;
+
+previewEl.innerHTML = `
+  <div class="pulse-expanded-content">
+    ${expandedMedia}
+    <div class="pulse-full-text">
+      <strong>${firstSentence}</strong> ${rest}
+    </div>
+  </div>
+`;
 
         toggleBtn.textContent = "Show less";
         toggleBtn.setAttribute("aria-expanded", "true");
