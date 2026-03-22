@@ -214,6 +214,35 @@
   opacity: 1;
   transform: translateY(0);
 }
+/* ============================================================
+   COMFORT EXPAND HOURLY TEMPS CSS
+============================================================ */
+#hourlyTemps {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-top: 10px;
+}
+
+.hour-item {
+  min-width: 60px;
+  flex-shrink: 0;
+  text-align: center;
+  background: rgba(255,255,255,0.05);
+  border-radius: 10px;
+  padding: 8px 6px;
+}
+
+.hour-time {
+  font-size: 0.75rem;
+  color: #9aa3c2;
+}
+
+.hour-temp {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #f5f5f5;
+}
     /* ============================================================
      TODAY + TOMORROW MODULES
   ============================================================ */
