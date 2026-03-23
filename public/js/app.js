@@ -10,6 +10,7 @@ import {
   getTempestDeviceObs
 } from './weather-fetch.js';
 
+import { subscribeUserToPush } from "../../lib/notifications/subscribeClient.js";
 import { buildWeatherIntel } from './intel/forecast-intel.js';
 import { computeComfort } from './intel/comfort.js';
 import { getReliableUV } from './intel/uv.js';
@@ -28,7 +29,14 @@ import {
 import { toggleForecastExpanded } from "./weather-render.js";
 window.toggleForecastExpanded = toggleForecastExpanded;
 
-
+// ------------------------------------------------------------
+// SERVICE WORKER REGISTRATION (for push notifications)
+// ------------------------------------------------------------
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js").catch(err => {
+    console.error("Service worker registration failed:", err);
+  });
+}
 // ============================================================
 // 🔥 NEW: PULSE MEDIA HANDLER (VIDEO + IMAGE SUPPORT)
 // ============================================================
@@ -79,7 +87,17 @@ function showWUError(msg) {
   el.style.display = "block";
   el.textContent = msg;
 }
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  if (!toast) return;
 
+  toast.textContent = message;
+  toast.classList.add("show");
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 2500);
+}
 
 // ------------------------------------------------------------
 // MASTER UI UPDATE FUNCTION
@@ -180,6 +198,26 @@ async function initApp() {
 // CLICK LISTENERS FOR EXPANSION
 // ------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
+  
+  // ------------------------------------------------------------
+  // ENABLE NOTIFICATIONS BUTTON
+  // ------------------------------------------------------------
+ const notifBtn = document.getElementById("enable-notifications-btn");
+
+if (notifBtn) {
+  notifBtn.addEventListener("click", async () => {
+    const result = await subscribeUserToPush();
+
+    if (result.ok) {
+      notifBtn.textContent = "Notifications Enabled";
+      notifBtn.disabled = true;
+      notifBtn.classList.add("enabled"); // optional styling hook
+    } else {
+      alert("Unable to enable notifications.");
+    }
+  });
+}
+
   const todayModule = document.getElementById("today-module");
   const tomorrowModule = document.getElementById("tomorrow-module");
   const comfortModule = document.getElementById("comfort-module");

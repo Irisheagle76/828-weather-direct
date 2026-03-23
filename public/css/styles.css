@@ -142,6 +142,62 @@
       line-height: 1.1;
       margin-top: 0.1rem;
     }
+    
+/* ============================================================
+   NOTIFICATIONS STYLE
+======================================================*/
+.enable-notifications-btn {
+  background: linear-gradient(135deg, #ffb86c, #ff7e5f);
+  color: white;
+  border: none;
+  padding: 12px 22px;
+  border-radius: 30px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(255, 126, 95, 0.35);
+  transition: all 0.25s ease;
+  letter-spacing: 0.3px;
+}
+
+.enable-notifications-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 126, 95, 0.45);
+}
+
+.enable-notifications-btn:active {
+  transform: translateY(0px);
+  box-shadow: 0 3px 10px rgba(255, 126, 95, 0.3);
+}
+
+.enable-notifications-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+/* ============================================================
+   Toast STYLE
+======================================================*/
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(40px);
+  background: rgba(30, 30, 30, 0.85);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.35s ease;
+  z-index: 9999;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
 /* ============================================================
    COMFORT MODULE
 ============================================================ */

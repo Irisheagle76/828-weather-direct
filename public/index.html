@@ -10,7 +10,9 @@
 </head>
 
 <body>
-
+<button id="enable-notifications-btn" class="enable-notifications-btn">
+  🔔 Enable Notifications
+</button>
   <div class="card">
     <h1>828 Weather Direct</h1>
     <div class="subtitle">Hyper‑local conditions via Weather Underground PWS network</div>
@@ -171,7 +173,7 @@
     <div class="error-text" id="wu-error" style="display:none;"></div>
 
   </div> <!-- end .card wrapper -->
-
+<div id="toast" class="toast"></div>
   <!-- JAVASCRIPT MODULES -->
   <script type="module" src="/js/app.js"></script>
   <script type="module" src="/js/substack-render.js"></script>
