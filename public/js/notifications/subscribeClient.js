@@ -12,7 +12,7 @@ export async function subscribeUserToPush() {
 
   const subscription = await registration.pushManager.subscribe({
     userVisibleOnly: true,
-    applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+    applicationServerKey: window.VAPID_PUBLIC_KEY
   });
 
   await fetch("/api/notifications/subscribe", {
