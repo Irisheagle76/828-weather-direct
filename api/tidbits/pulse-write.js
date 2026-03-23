@@ -1,6 +1,6 @@
 import { kv } from "@vercel/kv";
 import { sendPushToAll } from "../../lib/notifications/sendPush.js";
-
+console.log("Pulse-write route loaded at", Date.now());
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
