@@ -151,21 +151,51 @@ function buildCloudPhrase(cloud) {
 function detectTrends(stats) {
   const trends = [];
 
-  if (stats.tempMax - stats.tempMin >= 20) trends.push("bigWarmup");
-  else if (stats.tempMin - stats.tempMax >= 10) trends.push("coolingOff");
+  // ------------------------------------------------------------
+  // TEMPERATURE TRENDS (fixed + more meteorologically honest)
+  // ------------------------------------------------------------
 
-  if (stats.windGustMax >= 35) trends.push("gusty");
-  else if (stats.windGustMax <= 10) trends.push("calming");
+  // True big diurnal warmup: unusually large rise (≥ 25°F)
+  // This preserves your ability to call out "bigWarmup" days.
+  if (stats.tempMax - stats.tempMin >= 25) {
+    trends.push("bigWarmup");
+  }
 
-  if (stats.rainTotal >= 0.25 || stats.snowTotal >= 0.25) trends.push("wetPattern");
-  else if (stats.rainTotal === 0 && stats.snowTotal === 0) trends.push("dryingOut");
+  // True cooling day: max temp at least 10°F below the morning low
+  // (your original logic, preserved)
+  else if (stats.tempMin - stats.tempMax >= 10) {
+    trends.push("coolingOff");
+  }
 
-  if (stats.cloudAvg >= 80) trends.push("cloudy");
-  else if (stats.cloudAvg <= 40) trends.push("brightening");
+  // ------------------------------------------------------------
+  // WIND TRENDS
+  // ------------------------------------------------------------
+  if (stats.windGustMax >= 35) {
+    trends.push("gusty");
+  } else if (stats.windGustMax <= 10) {
+    trends.push("calming");
+  }
+
+  // ------------------------------------------------------------
+  // PRECIPITATION TRENDS
+  // ------------------------------------------------------------
+  if (stats.rainTotal >= 0.25 || stats.snowTotal >= 0.25) {
+    trends.push("wetPattern");
+  } else if (stats.rainTotal === 0 && stats.snowTotal === 0) {
+    trends.push("dryingOut");
+  }
+
+  // ------------------------------------------------------------
+  // CLOUD TRENDS
+  // ------------------------------------------------------------
+  if (stats.cloudAvg >= 80) {
+    trends.push("cloudy");
+  } else if (stats.cloudAvg <= 40) {
+    trends.push("brightening");
+  }
 
   return trends;
 }
-
 // ------------------------------------------------------------
 // EMOJI SELECTION
 // ------------------------------------------------------------
