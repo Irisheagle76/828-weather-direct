@@ -10,7 +10,7 @@ import {
   getTempestDeviceObs
 } from './weather-fetch.js';
 
-import { subscribeUserToPush } from "../../lib/notifications/subscribeClient.js";
+import { subscribeUserToPush } from "./notifications/subscribeClient.js";
 import { buildWeatherIntel } from './intel/forecast-intel.js';
 import { computeComfort } from './intel/comfort.js';
 import { getReliableUV } from './intel/uv.js';
