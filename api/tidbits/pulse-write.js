@@ -20,17 +20,24 @@ export default async function handler(req, res) {
       timestamp: Date.now(),
     };
 
-    // Save Pulse Tidbit to KV
+    // ------------------------------------------------------------
+    // 1) Save Pulse FIRST — this should never fail due to push
+    // ------------------------------------------------------------
     await kv.set("pulse:latest", pulse);
 
-    // 🔔 Send push notification to all subscribers
-    await sendPushToAll({
+    // ------------------------------------------------------------
+    // 2) Fire push notifications SECOND — but never block publishing
+    // ------------------------------------------------------------
+    sendPushToAll({
       title: "New Pulse Tidbit",
       body: title,
       url: "/#pulse"
+    }).catch(err => {
+      console.error("Push notification error (non-blocking):", err);
     });
 
     return res.status(200).json({ success: true, pulse });
+
   } catch (err) {
     console.error("Pulse write error:", err);
     return res.status(500).json({ error: "Failed to save pulse update" });
