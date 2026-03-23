@@ -38,8 +38,7 @@ export function getTomorrowWindow(hourly) {
   const month = tomorrow.getMonth();
   const year = tomorrow.getFullYear();
 
-  // 1) Collect ALL hours that belong to tomorrow
-  const allTomorrow = [];
+  const indices = [];
 
   for (let i = 0; i < hourly.time.length; i++) {
     const t = new Date(hourly.time[i]);
@@ -49,21 +48,9 @@ export function getTomorrowWindow(hourly) {
       t.getMonth() === month &&
       t.getFullYear() === year
     ) {
-      allTomorrow.push(i);
+      indices.push(i);
     }
   }
 
-  // 2) If nothing found, bail safely
-  if (allTomorrow.length === 0) return [];
-
-  // 3) Sort those hours by temperature (warmest first)
-  const sortedByTemp = allTomorrow.sort(
-    (a, b) => hourly.temperature_2m[b] - hourly.temperature_2m[a]
-  );
-
-  // 4) Take top N warmest hours (captures true daytime peak)
-  const TOP_HOURS = 8;
-  const selected = sortedByTemp.slice(0, TOP_HOURS);
-
-  return selected;
+  return indices;
 }
