@@ -65,7 +65,10 @@ function computeComfortScore(temp, dew, wind, elev, windDir) {
   else drynessPenalty = 0.2;
 
   let windPenalty = Math.min(wind / 25, 1) * 0.4;
-  if (windDir && windDir.includes("W")) {
+
+  // ⭐ FIXED: convert windDir to string safely
+  const dir = String(windDir ?? "");
+  if (dir.includes("W")) {
     windPenalty += 0.2;
   }
 
@@ -82,7 +85,6 @@ function computeComfortScore(temp, dew, wind, elev, windDir) {
     Math.max(0, Math.min(100, 100 - (score * 100)))
   );
 }
-
 // ------------------------------------------------------------
 // COLOR + LABEL
 // ------------------------------------------------------------
