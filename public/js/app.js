@@ -185,11 +185,7 @@ async function initApp() {
         // ------------------------------------------------------------
         // Build Future Comfort (next ~6 hours)
         // ------------------------------------------------------------
-        intel.futureComfort = buildFutureComfort(
-          intel.hourly,
-          intel.futureComfortWindow,
-          computeComfort
-        );
+        intel.futureComfort = buildFutureComfort(intel.hourly, computeComfort);
 
         window._intel = intel;
 

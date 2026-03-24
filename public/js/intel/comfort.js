@@ -319,14 +319,25 @@ export function computeComfort(intel) {
     feelsLike
   };
 }
-
 // ------------------------------------------------------------
-// FUTURE BUILDER
+// FUTURE BUILDER — FIXED (next 6 real future hours)
 // ------------------------------------------------------------
-export function buildFutureComfort(hourly, futureWindow, computeComfort) {
-  if (!hourly || !futureWindow?.length) return [];
+export function buildFutureComfort(hourly, computeComfort) {
+  if (!hourly || !hourly.time) return [];
 
-  return futureWindow.map(idx => {
+  const now = Date.now();
+  const times = hourly.time;
+
+  // ⭐ Find the first hour in the future
+  let startIndex = times.findIndex(t => new Date(t).getTime() > now);
+  if (startIndex === -1) return [];
+
+  const items = [];
+
+  for (let i = 0; i < 6; i++) {
+    const idx = startIndex + i;
+    if (idx >= times.length) break;
+
     const intelForHour = {
       wu: {
         temp: hourly.temperature_2m[idx],
@@ -340,15 +351,17 @@ export function buildFutureComfort(hourly, futureWindow, computeComfort) {
 
     const c = computeComfort(intelForHour);
 
-    return {
+    items.push({
       time: hourly.time[idx],
       hourLabel: formatHourLabel(hourly.time[idx]),
       comfortScore: c.comfortScore,
       color: c.color,
       label: c.label,
       emoji: c.emoji
-    };
-  });
+    });
+  }
+
+  return items;
 }
 
 function formatHourLabel(iso) {
