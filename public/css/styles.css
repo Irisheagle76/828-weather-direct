@@ -359,16 +359,19 @@
     }
 
     .action-headline {
-      color: #ffffff;
-      font-size: 1.25rem;
-      font-weight: 700;
-      line-height: 1.2;
-      margin-bottom: 0.3rem;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      transition: font-size 0.15s ease;
-      white-space: nowrap;
-    }
+  color: #ffffff;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 0.3rem;
+
+  /* FIX: allow wrapping so the module can expand */
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+
+  transition: font-size 0.15s ease;
+}
 
     .action-text {
       color: #b9c7f5;
