@@ -106,9 +106,12 @@ function showToast(message) {
 // ------------------------------------------------------------
 function updateUI(intel) {
 
-  // ⭐ NEW — Render Comfort Now + Future Comfort
-  document.getElementById("comfort-now-container").innerHTML =
-    renderRightNowComfort(intel);
+ // ⭐ Render Comfort Now
+document.getElementById("comfort-now-container").innerHTML =
+  renderRightNowComfort(intel);
+
+// ⭐ Render Hourly Temps directly underneath
+renderHourlyTemps(intel.hourly);
 
   document.getElementById("future-comfort-container").innerHTML =
     renderFutureComfort(intel);
