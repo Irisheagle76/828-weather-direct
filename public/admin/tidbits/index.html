@@ -293,15 +293,20 @@ async function uploadImage(file) {
 
         statusEl.textContent = "Publishing…";
 
-        await fetch('/api/tidbits/pulse-write', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title: "Weather Pulse",
-            text: html,
-            imageUrl
-          })
-        });
+        const res = await fetch('/api/tidbits/pulse-write', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    title: "Weather Pulse",
+    text: html,
+    imageUrl
+  })
+});
+
+if (!res.ok) {
+  const text = await res.text();
+  throw new Error(`API error: ${res.status} - ${text}`);
+}
 
         statusEl.textContent = "Published ✔";
         editor.innerHTML = '';
