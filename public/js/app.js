@@ -110,15 +110,16 @@ function updateUI(intel) {
 document.getElementById("comfort-now-container").innerHTML =
   renderRightNowComfort(intel);
 
-// ⭐ Enable click-to-expand hourly temps
+// ⭐ Click to expand/collapse hourly temps
 document
   .getElementById("comfort-now-container")
   .addEventListener("click", () => {
     document.getElementById("hourlyTemps").classList.toggle("hidden");
   });
 
-// ⭐ Render hourly temps AFTER intel is fully ready
+// ⭐ Render hourly temps once (hidden initially)
 renderHourlyTemps(intel.hourly);
+
 
   document.getElementById("future-comfort-container").innerHTML =
     renderFutureComfort(intel);

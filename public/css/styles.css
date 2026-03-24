@@ -317,11 +317,19 @@
   font-weight: 600;
   color: #f5f5f5;
 }
-/* --- COMFORT ROW LAYOUT --- */
 #comfort-row {
   display: flex;
+  flex-wrap: wrap;   /* ⭐ critical mobile fix */
   gap: 12px;
   margin-bottom: 20px;
+}
+
+/* ⭐ REQUIRED: groups Comfort Now + Hourly Temps */
+.comfort-left-col {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 100%;
+  gap: 10px;
 }
 
 /* --- FUTURE COMFORT STRIP --- */
