@@ -209,25 +209,35 @@
 /* Main container */
 .comfort-module {
   display: flex;
-  flex-direction: column;   /* REQUIRED for expansion */
+  flex-direction: column;
+  width: 100%;        /* ⭐ ADD THIS */
+  min-width: 0;       /* ⭐ ADD THIS */
+
   background: rgba(255, 169, 77, 0.10);
   border: 1px solid rgba(255, 169, 77, 0.35);
   border-radius: var(--module-radius);
   padding: var(--module-padding);
   cursor: pointer;
 }
-
 /* Top row layout */
 .comfort-main {
   display: flex;
   align-items: center;
   gap: 0.8rem;
 }
-
+.comfort-text-block {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;   /* subtle spacing improvement */
+}
 /* Emoji */
 .comfort-emoji {
   flex-shrink: 0;
   font-size: 2rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
 }
 
 /* Text styles */
@@ -238,6 +248,11 @@
   margin-bottom: 0.15rem;
   text-transform: uppercase;
   white-space: nowrap;
+}
+.comfort-text-block {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;        /* ⭐ prevents text overflow */
 }
 
 .comfort-text {
@@ -296,6 +311,9 @@
   gap: 10px;
   overflow-x: auto;
   padding-top: 10px;
+
+  max-width: 100%;     /* ⭐ critical */
+  min-width: 0;        /* ⭐ critical */
 }
 
 .hour-item {
@@ -335,8 +353,7 @@
 /* --- FUTURE COMFORT STRIP --- */
 .fc-strip {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  gap: 6px;              /* ⭐ cleaner spacing */
   margin-top: 12px;
   padding: 0 4px;
 }
@@ -345,7 +362,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 16%; /* 6 items across */
+
+  flex: 1;        /* ⭐ replaces width */
+  min-width: 0;   /* ⭐ prevents overflow bugs */
 }
 
 .fc-hour-label {
@@ -479,13 +498,8 @@
       color: #d8dff7;
       font-size: 0.95rem;
     }
-    .comfort-left-col {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  gap: 10px;
-}
-/* ============================================================
+    
+    /* ============================================================
    PULSE VIDEO UPLOAD — POLISHED VERSION
    ============================================================ */
 
