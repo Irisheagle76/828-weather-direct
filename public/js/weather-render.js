@@ -95,12 +95,12 @@ export function renderCurrentObservations(intel) {
   }
 
   if (uvEl) {
-    // Display the unified, validated UV from intel
     const uv = intel.uv ?? wu.uv ?? 0;
     uvEl.textContent = uv != null ? uv.toFixed(1) : "--";
     uvEl.className = "metric-value " + getUVClass(uv ?? 0);
   }
 }
+
 // ------------------------------------------------------------
 // HOURLY TEMPS IN COMFORT DROPDOWN
 // ------------------------------------------------------------
@@ -117,7 +117,6 @@ export function renderHourlyTemps(hourlyData) {
 
   const now = new Date();
 
-  // 👉 Find first future hour index
   let startIndex = 0;
 
   for (let i = 0; i < times.length; i++) {
@@ -149,6 +148,7 @@ export function renderHourlyTemps(hourlyData) {
     container.appendChild(item);
   }
 }
+
 // ------------------------------------------------------------
 // Compass helper
 // ------------------------------------------------------------
@@ -160,8 +160,9 @@ export function degToCompass(deg) {
   ];
   return dirs[Math.round(deg / 22.5) % 16];
 }
+
 // ------------------------------------------------------------
-// 🧠 INTELLIGENCE LAYER (SAFE ADD)
+// 🧠 INTELLIGENCE LAYER
 // ------------------------------------------------------------
 function getSkyCondition(stats) {
   if (!stats) return "unknown";
@@ -181,7 +182,6 @@ function getDominantDriver(stats, fallback) {
   if (stats.tempMax >= 90) return "hot";
   if (stats.tempMin <= 35) return "cold";
 
-  // 🌤️ override for "actually nice day"
   if (
     stats.cloudAvg < 40 &&
     stats.rainTotal < 0.05 &&
@@ -209,6 +209,7 @@ function generateHumanHeadline(stats, fallback) {
 
   return fallback ?? "";
 }
+
 // ------------------------------------------------------------
 // UV class helper
 // ------------------------------------------------------------
@@ -269,26 +270,62 @@ function renderBullets(ul, bullets) {
 }
 
 // ------------------------------------------------------------
-// RENDER RIGHT NOW COMFORT
+// ⭐ UPDATED — RENDER RIGHT NOW COMFORT (returns HTML)
 // ------------------------------------------------------------
 export function renderRightNowComfort(intel) {
-  const emojiEl = document.getElementById("comfort-emoji");
-  const textEl = document.getElementById("comfort-text");
-  if (!emojiEl || !textEl) return;
-
   const comfort = intel.comfort;
-  if (!comfort) {
-    emojiEl.textContent = "";
-    textEl.textContent = "";
-    return;
-  }
+  if (!comfort) return "";
 
-  emojiEl.textContent = comfort.emoji ?? "";
-  textEl.textContent = comfort.summary ?? "";
+  return `
+    <div class="comfort-module">
+      <div class="comfort-main">
+        <div class="comfort-emoji">${comfort.emoji}</div>
+
+        <div class="comfort-text-block">
+          <div class="comfort-label">Right Now Comfort</div>
+          <div class="comfort-text">${comfort.summary}</div>
+          <div class="comfort-sub">Based on current conditions</div>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 // ------------------------------------------------------------
-// RENDER TODAY OUTLOOK (with remainder-of-today support)
+// ⭐ UPDATED — Future Comfort (matches Comfort Now card)
+// ------------------------------------------------------------
+export function renderFutureComfort(intel) {
+  const fc = intel.futureComfort;
+  if (!fc || fc.length === 0) return "";
+
+  const items = fc.map(item => `
+    <div class="fc-hour">
+      <div class="fc-hour-label">${item.hourLabel}</div>
+      <div class="fc-hour-emoji">${item.emoji}</div>
+    </div>
+  `).join("");
+
+  return `
+    <div class="comfort-module">
+      <div class="comfort-main">
+        <div class="comfort-emoji">${fc[0].emoji}</div>
+
+        <div class="comfort-text-block">
+          <div class="comfort-label">Next 6 Hours</div>
+          <div class="comfort-text">${fc[0].shortPhrase}</div>
+          <div class="comfort-sub">Comfort trend</div>
+        </div>
+      </div>
+
+      <div class="fc-strip">
+        ${items}
+      </div>
+    </div>
+  `;
+}
+
+// ------------------------------------------------------------
+// RENDER TODAY OUTLOOK
 // ------------------------------------------------------------
 export function renderTodayOutlook(intel) {
   const emojiEl = document.getElementById("today-emoji");
@@ -343,23 +380,22 @@ export function renderTomorrowOutlook(intel) {
 
   const tomorrow = intel.tomorrow;
 
-if (!tomorrow || !tomorrow.available) {
-  headlineEl.textContent = "No data available";
-  textEl.textContent = "";
-  bulletsEl.innerHTML = "";
-  return;
-}
+  if (!tomorrow || !tomorrow.available) {
+    headlineEl.textContent = "No data available";
+    textEl.textContent = "";
+    bulletsEl.innerHTML = "";
+    return;
+  }
 
-// ✅ ADD LOGS HERE
-console.log("RAW TOMORROW DATA:", tomorrow);
-console.log("STATS:", tomorrow.stats);
+  console.log("RAW TOMORROW DATA:", tomorrow);
+  console.log("STATS:", tomorrow.stats);
 
   emojiEl.textContent = "";
 
   const dominant = getDominantDriver(
-  tomorrow.stats,
-  tomorrow.events?.driver
-);
+    tomorrow.stats,
+    tomorrow.events?.driver
+  );
 
   const badgeMap = {
     rain:  { text: "Rain Gear",     class: "badge-rain" },
@@ -381,9 +417,9 @@ console.log("STATS:", tomorrow.stats);
   }
 
   headlineEl.textContent = generateHumanHeadline(
-  tomorrow.stats,
-  tomorrow.headline
-);
+    tomorrow.stats,
+    tomorrow.headline
+  );
   fitHeadlineToWidth(headlineEl);
 
   textEl.textContent = tomorrow.narrative;
@@ -397,7 +433,7 @@ console.log("STATS:", tomorrow.stats);
 }
 
 // ------------------------------------------------------------
-// RENDER UV INDEX (using unified intel.uv)
+// RENDER UV INDEX
 // ------------------------------------------------------------
 export function renderUV(intel) {
   const uvEl = document.getElementById("wu-uv");

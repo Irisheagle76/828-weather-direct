@@ -13,10 +13,12 @@ import {
 import { subscribeUserToPush } from "./notifications/subscribeClient.js";
 import { buildWeatherIntel } from './intel/forecast-intel.js';
 import { computeComfort } from './intel/comfort.js';
+import { buildFutureComfort } from './intel/comfort.js';
 import { getReliableUV } from './intel/uv.js';
 
 import {
   renderRightNowComfort,
+  renderFutureComfort,
   renderTodayOutlook,
   renderTomorrowOutlook,
   renderUV,
@@ -37,6 +39,7 @@ if ("serviceWorker" in navigator) {
     console.error("Service worker registration failed:", err);
   });
 }
+
 // ============================================================
 // 🔥 NEW: PULSE MEDIA HANDLER (VIDEO + IMAGE SUPPORT)
 // ============================================================
@@ -60,9 +63,7 @@ function renderPulseMedia(url) {
   }
 }
 
-// Expose globally so your Pulse module / API response can call it
 window.setPulseMedia = renderPulseMedia;
-
 
 // ------------------------------------------------------------
 // STATUS + ERROR HELPERS
@@ -87,6 +88,7 @@ function showWUError(msg) {
   el.style.display = "block";
   el.textContent = msg;
 }
+
 function showToast(message) {
   const toast = document.getElementById("toast");
   if (!toast) return;
@@ -103,7 +105,15 @@ function showToast(message) {
 // MASTER UI UPDATE FUNCTION
 // ------------------------------------------------------------
 function updateUI(intel) {
-  renderRightNowComfort(intel);
+
+  // ⭐ NEW — Render Comfort Now + Future Comfort
+  document.getElementById("comfort-now-container").innerHTML =
+    renderRightNowComfort(intel);
+
+  document.getElementById("future-comfort-container").innerHTML =
+    renderFutureComfort(intel);
+
+  // Existing modules
   renderTodayOutlook(intel);
   renderTomorrowOutlook(intel);
   renderUV(intel);
@@ -118,12 +128,10 @@ function updateUI(intel) {
     footer.textContent = `Live data from Weather Underground Station ${intel.wu.stationId}`;
   }
 
-  // 🔥 OPTIONAL: If your API returns pulse media
   if (intel.pulse?.imageUrl) {
     renderPulseMedia(intel.pulse.imageUrl);
   }
 }
-
 
 // ------------------------------------------------------------
 // ENTRY POINT
@@ -174,6 +182,15 @@ async function initApp() {
         intel.comfort = computeComfort(intel);
         intel.uv = getReliableUV(intel);
 
+        // ------------------------------------------------------------
+        // Build Future Comfort (next ~6 hours)
+        // ------------------------------------------------------------
+        intel.futureComfort = buildFutureComfort(
+          intel.hourly,
+          intel.futureComfortWindow,
+          computeComfort
+        );
+
         window._intel = intel;
 
         updateUI(intel);
@@ -193,34 +210,32 @@ async function initApp() {
   );
 }
 
-
 // ------------------------------------------------------------
 // CLICK LISTENERS FOR EXPANSION
 // ------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
-  
+
   // ------------------------------------------------------------
   // ENABLE NOTIFICATIONS BUTTON
   // ------------------------------------------------------------
- const notifBtn = document.getElementById("enable-notifications-btn");
+  const notifBtn = document.getElementById("enable-notifications-btn");
 
-if (notifBtn) {
-  notifBtn.addEventListener("click", async () => {
-    const result = await subscribeUserToPush();
+  if (notifBtn) {
+    notifBtn.addEventListener("click", async () => {
+      const result = await subscribeUserToPush();
 
-    if (result.ok) {
-      notifBtn.textContent = "Notifications Enabled";
-      notifBtn.disabled = true;
-      notifBtn.classList.add("enabled"); // optional styling hook
-    } else {
-      alert("Unable to enable notifications.");
-    }
-  });
-}
+      if (result.ok) {
+        notifBtn.textContent = "Notifications Enabled";
+        notifBtn.disabled = true;
+        notifBtn.classList.add("enabled");
+      } else {
+        alert("Unable to enable notifications.");
+      }
+    });
+  }
 
   const todayModule = document.getElementById("today-module");
   const tomorrowModule = document.getElementById("tomorrow-module");
-  const comfortModule = document.getElementById("comfort-module");
 
   if (todayModule) {
     todayModule.addEventListener("click", () => {
@@ -234,19 +249,10 @@ if (notifBtn) {
     });
   }
 
-  if (comfortModule) {
-    console.log("comfort module found");
-
-    comfortModule.addEventListener("click", () => {
-  console.log("CLICK FIRED");
-  comfortModule.classList.toggle("active");
-});
-  }
-
   // ------------------------------------------------------------
   // Debugging
   // ------------------------------------------------------------
   navigator.serviceWorker.addEventListener("message", e => {
-  alert("SW MSG: " + JSON.stringify(e.data));
-});
+    alert("SW MSG: " + JSON.stringify(e.data));
+  });
 });

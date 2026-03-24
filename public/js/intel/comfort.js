@@ -1,11 +1,10 @@
 // /intel/comfort.js
-// Unified Comfort Engine — Wind, Humidity, Sun Angle, Precip, Feels‑Like, Trend Logic
-// Tempest-integrated version (Tempest provides today's high)
+// FULL HYBRID — Narrative Engine + Asheville Comfort Score
 
 import { LOCATION } from "../config/location.js";
 
 // ------------------------------------------------------------
-// SOLAR ELEVATION (NOAA simplified algorithm)
+// SOLAR ELEVATION
 // ------------------------------------------------------------
 function computeSolarElevation(timestamp, lat, lon) {
   const date = new Date(timestamp);
@@ -33,41 +32,77 @@ function computeSolarElevation(timestamp, lat, lon) {
 
   return elevation * (180 / Math.PI);
 }
-// ------------------------------------------------------------
-// Future Trend  Helper
-// ------------------------------------------------------------
-function computeShortTermTrend(intel) {
-  const hourly = intel.hourly;
-  if (!hourly?.temperature_2m || !hourly.time) return null;
 
-  const now = new Date();
-  let startIndex = 0;
+// ------------------------------------------------------------
+// DEW → RH
+// ------------------------------------------------------------
+function dewToRH(tempF, dewF) {
+  const t = (tempF - 32) * 5/9;
+  const d = (dewF - 32) * 5/9;
 
-  for (let i = 0; i < hourly.time.length; i++) {
-    if (new Date(hourly.time[i]) > now) {
-      startIndex = i;
-      break;
-    }
+  const rh =
+    100 *
+    (Math.exp((17.625 * d) / (243.04 + d)) /
+     Math.exp((17.625 * t) / (243.04 + t)));
+
+  return Math.max(0, Math.min(100, rh));
+}
+
+// ------------------------------------------------------------
+// ASHEVILLE COMFORT SCORE
+// ------------------------------------------------------------
+function computeComfortScore(temp, dew, wind, elev, windDir) {
+  const rh = dewToRH(temp, dew);
+
+  const tIdeal = 70;
+  const tDiff = Math.abs(temp - tIdeal);
+  const tScore = Math.min(tDiff / 35, 1);
+
+  let drynessPenalty = 0;
+  if (rh < 25) drynessPenalty = 1;
+  else if (rh < 35) drynessPenalty = 0.75;
+  else if (rh < 45) drynessPenalty = 0.5;
+  else drynessPenalty = 0.2;
+
+  let windPenalty = Math.min(wind / 25, 1) * 0.4;
+  if (windDir && windDir.includes("W")) {
+    windPenalty += 0.2;
   }
 
-  const temps = hourly.temperature_2m;
+  let solarBonus = 0;
+  if (elev > 20 && temp < 75) solarBonus = 0.15;
 
-  const t1 = temps[startIndex];
-  const t3 = temps[startIndex + 2];
+  let score =
+    (tScore * 0.5) +
+    (drynessPenalty * 0.9) +
+    windPenalty -
+    solarBonus;
 
-  if (t1 == null || t3 == null) return null;
-
-  const delta = t3 - t1;
-
-  if (delta >= 4) return "warming quickly";
-  if (delta >= 2) return "warming gradually";
-  if (delta <= -4) return "cooling quickly";
-  if (delta <= -2) return "cooling gradually";
-
-  return null;
+  return Math.round(
+    Math.max(0, Math.min(100, 100 - (score * 100)))
+  );
 }
+
 // ------------------------------------------------------------
-// WIND CHILL (NWS formula)
+// COLOR + LABEL
+// ------------------------------------------------------------
+export function getComfortColor(score) {
+  if (score >= 80) return "#4f7cff";
+  if (score >= 65) return "#2ec4b6";
+  if (score >= 45) return "#ff9f1c";
+  return "#e63946";
+}
+
+export function getComfortLabel(score) {
+  if (score >= 80) return "Great";
+  if (score >= 65) return "Comfortable";
+  if (score >= 50) return "Dry";
+  if (score >= 35) return "Very Dry";
+  return "Harsh / Fire Risk";
+}
+
+// ------------------------------------------------------------
+// WIND CHILL
 // ------------------------------------------------------------
 function computeWindChill(tempF, windMph) {
   if (tempF > 50 || windMph < 3) return tempF;
@@ -91,7 +126,7 @@ function humidityFeel(dew) {
 }
 
 // ------------------------------------------------------------
-// SUN ANGLE FEEL
+// SUN FEEL
 // ------------------------------------------------------------
 function sunAngleFeel(elev) {
   if (elev <= 0) return "Nighttime calm.";
@@ -101,9 +136,6 @@ function sunAngleFeel(elev) {
   return "Strong sun overhead.";
 }
 
-// ------------------------------------------------------------
-// CONTEXT-AWARE SOLAR FILTER
-// ------------------------------------------------------------
 function isSolarHelpful(intel, elev) {
   const wu = intel.wu;
   if (!wu) return false;
@@ -116,47 +148,12 @@ function isSolarHelpful(intel, elev) {
     elev > 15 &&
     cloud < 60 &&
     trend >= 0 &&
-    windDir !== "NW"
+    !windDir.includes("W")
   );
 }
 
 // ------------------------------------------------------------
-// TEMPEST-BASED MORNING HIGH
-// ------------------------------------------------------------
-function computeObservedMorningHigh(intel) {
-  const tempestHigh = intel?.today?.stats?.maxTemp;
-  if (tempestHigh != null) return tempestHigh;
-
-  return intel?.wu?.temp ?? null;
-}
-
-// ------------------------------------------------------------
-// TEMPERATURE DROP FEEL — NOW MORNING-AWARE
-// ------------------------------------------------------------
-function computeTempDropFeel(intel) {
-  const wu = intel.wu;
-  if (!wu) return null;
-
-  // ⭐ Do not run trend logic before late morning
-  const hour = new Date(wu.obsTimeLocal ?? Date.now()).getHours();
-  if (hour < 11) return null;
-
-  const current = wu.temp ?? null;
-  const morningHigh = computeObservedMorningHigh(intel);
-
-  if (current == null || morningHigh == null) return null;
-
-  const drop = morningHigh - current;
-
-  if (drop >= 20) return "a sharp drop compared to earlier today";
-  if (drop >= 12) return "noticeably colder than earlier today";
-  if (drop >= 6) return "a cooler turn compared to earlier today";
-
-  return null;
-}
-
-// ------------------------------------------------------------
-// FALLING PRECIP COMFORT
+// PRECIP FEEL (RESTORED)
 // ------------------------------------------------------------
 function fallingPrecipFeel(intel) {
   const rate = intel.wu?.precipRate ?? 0;
@@ -180,51 +177,76 @@ function fallingPrecipFeel(intel) {
 }
 
 // ------------------------------------------------------------
-// EMOJI VARIATION
+// TREND + DROP (RESTORED)
 // ------------------------------------------------------------
-function pickComfortEmoji(state) {
-  const map = {
-    cold: ["🥶", "❄️", "🧊"],
-    cool: ["🧥", "🍃", "🌫️"],
-    mild: ["🙂", "🌤️", "🍂"],
-    warm: ["🌞", "😎", "🌤️"],
-    hot: ["🥵", "🔥", "🌞"],
-    humid: ["💧", "🌫️", "😅"],
-    gloomy: ["☁️", "🌫️", "😐"],
-    night: ["🌙", "✨", "🌌"]
-  };
+function computeShortTermTrend(intel) {
+  const temps = intel.hourly?.temperature_2m;
+  if (!temps) return null;
 
-  const arr = map[state] ?? ["🌤️"];
-  return arr[Math.floor(Math.random() * arr.length)];
+  const t1 = temps[0];
+  const t3 = temps[2];
+  if (t1 == null || t3 == null) return null;
+
+  const delta = t3 - t1;
+
+  if (delta >= 4) return "warming quickly";
+  if (delta >= 2) return "warming gradually";
+  if (delta <= -4) return "cooling quickly";
+  if (delta <= -2) return "cooling gradually";
+
+  return null;
+}
+
+function computeTempDropFeel(intel) {
+  const wu = intel.wu;
+  if (!wu) return null;
+
+  const hour = new Date(wu.obsTimeLocal).getHours();
+  if (hour < 11) return null;
+
+  const current = wu.temp;
+  const high = intel?.today?.stats?.maxTemp ?? current;
+
+  const drop = high - current;
+
+  if (drop >= 20) return "a sharp drop compared to earlier today";
+  if (drop >= 12) return "noticeably colder than earlier today";
+  if (drop >= 6) return "a cooler turn compared to earlier today";
+
+  return null;
 }
 
 // ------------------------------------------------------------
-// MAIN COMFORT ENGINE
+// MAIN ENGINE
 // ------------------------------------------------------------
 export function computeComfort(intel) {
   const wu = intel.wu;
-  if (!wu) return { emoji: "", summary: "" };
+  if (!wu) return {};
 
   const temp = wu.temp ?? 0;
   const dew = wu.dewPoint ?? 0;
   const wind = wu.windSpeed ?? 0;
+  const windDir = wu.windDir ?? "";
   const timestamp = wu.obsTimeLocal ?? Date.now();
 
-  // 1. Falling precip override
-  const precipOverride = fallingPrecipFeel(intel);
-  if (precipOverride) return precipOverride;
-
-  // 2. Solar elevation
   const elev = computeSolarElevation(timestamp, LOCATION.lat, LOCATION.lon);
-  const rawSunFeel = sunAngleFeel(elev);
-
-  // 3. Wind chill
   const feelsLike = computeWindChill(temp, wind);
 
-  // 4. Humidity feel
-  const humidFeel = humidityFeel(dew);
+  // ⭐ NEW SCORE
+  const comfortScore = computeComfortScore(temp, dew, wind, elev, windDir);
 
-  // 5. Temperature comfort state
+  // --- precip override
+  const precipOverride = fallingPrecipFeel(intel);
+  if (precipOverride) {
+    return {
+      ...precipOverride,
+      comfortScore,
+      label: getComfortLabel(comfortScore),
+      color: getComfortColor(comfortScore)
+    };
+  }
+
+  // --- state
   let state = "mild";
   if (feelsLike <= 32) state = "cold";
   else if (feelsLike <= 50) state = "cool";
@@ -232,81 +254,89 @@ export function computeComfort(intel) {
   else if (feelsLike <= 85) state = "warm";
   else state = "hot";
 
-  // 6. Emoji
   const emoji = pickComfortEmoji(state);
 
-  // 7. TREND-AWARE FIRST SENTENCE
-  let baseFeel = "";
-  if (state === "cold") baseFeel = "Cold with a noticeable chill";
-  else if (state === "cool") baseFeel = "Cool and manageable";
-  else if (state === "mild") baseFeel = "Comfortable overall";
-  else if (state === "warm") baseFeel = "Warm with a gentle edge";
-  else if (state === "hot") baseFeel = "Hot and energetic";
+  let baseFeel =
+    state === "cold" ? "Cold with a noticeable chill" :
+    state === "cool" ? "Cool and manageable" :
+    state === "warm" ? "Warm with a gentle edge" :
+    state === "hot" ? "Hot and energetic" :
+    "Comfortable overall";
 
   const dropFeel = computeTempDropFeel(intel);
-  const shortTrend = computeShortTermTrend(intel);
+  const trend = computeShortTermTrend(intel);
 
   let firstSentence = `${baseFeel}.`;
 
-if (dropFeel) {
-  firstSentence = `${baseFeel} — ${dropFeel}.`;
-} else if (shortTrend) {
-  firstSentence = `${baseFeel} — ${shortTrend} over the next few hours.`;
-}
-
-  const summaryParts = [firstSentence];
-
-  // ------------------------------------------------------------
-  // 8. HUMIDITY — ONLY SPEAK WHEN IT'S ACTUALLY PART OF THE FEEL
-  // ------------------------------------------------------------
-  const isSnowing = intel.wu?.precipType === "snow";
-  const isRaining = intel.wu?.precipType === "rain";
-  const windy = (wind >= 15);
-
-  const bigDrop = (() => {
-    const morningHigh = computeObservedMorningHigh(intel);
-    if (morningHigh == null || temp == null) return false;
-    return (morningHigh - temp) >= 12;
-  })();
-
-  const coldEnoughToIgnoreHumidity = temp <= 40;
-
-  const humidityRelevant =
-    !isSnowing &&
-    !isRaining &&
-    !windy &&
-    !bigDrop &&
-    !coldEnoughToIgnoreHumidity;
-
-  if (humidityRelevant) {
-    summaryParts.push(humidFeel);
+  if (dropFeel) {
+    firstSentence = `${baseFeel} — ${dropFeel}.`;
+  } else if (trend) {
+    firstSentence = `${baseFeel} — ${trend} over the next few hours.`;
   }
 
-  // 9. Solar boost
+  const parts = [firstSentence];
+
+  const humidText = humidityFeel(dew);
+  if (humidText) parts.push(humidText);
+
   if (isSolarHelpful(intel, elev)) {
-    summaryParts.push(rawSunFeel);
+    parts.push(sunAngleFeel(elev));
   }
 
-  // 10. Wind
   if (wind >= 15) {
-    summaryParts.push("A noticeable breeze adds some edge.");
+    parts.push("A noticeable breeze adds some edge.");
   }
 
-  const summary = summaryParts.filter(Boolean).join(" ");
+  // 🔥 fire messaging overlay
+  if (comfortScore < 45) {
+    parts.push("Dry air and wind are increasing fire danger.");
+  }
 
   return {
     emoji,
-    summary,
-    feelsLike,
-    humidityFeel: humidityRelevant ? humidFeel : "",
-    sunFeel: isSolarHelpful(intel, elev) ? rawSunFeel : "",
-    precipFeel: precipOverride?.summary ?? "",
-    raw: {
-      temp,
-      dew,
-      wind,
-      elev,
-      feelsLike
-    }
+    summary: parts.join(" "),
+    comfortScore,
+    label: getComfortLabel(comfortScore),
+    color: getComfortColor(comfortScore),
+    feelsLike
   };
+}
+
+// ------------------------------------------------------------
+// FUTURE BUILDER
+// ------------------------------------------------------------
+export function buildFutureComfort(hourly, futureWindow, computeComfort) {
+  if (!hourly || !futureWindow?.length) return [];
+
+  return futureWindow.map(idx => {
+    const intelForHour = {
+      wu: {
+        temp: hourly.temperature_2m[idx],
+        dewPoint: hourly.dewpoint_2m[idx],
+        windSpeed: hourly.wind_speed_10m[idx],
+        windDir: hourly.wind_direction_10m?.[idx] ?? "",
+        obsTimeLocal: hourly.time[idx]
+      },
+      hourly
+    };
+
+    const c = computeComfort(intelForHour);
+
+    return {
+      time: hourly.time[idx],
+      hourLabel: formatHourLabel(hourly.time[idx]),
+      comfortScore: c.comfortScore,
+      color: c.color,
+      label: c.label,
+      emoji: c.emoji
+    };
+  });
+}
+
+function formatHourLabel(iso) {
+  const d = new Date(iso);
+  let h = d.getHours();
+  const suffix = h >= 12 ? "PM" : "AM";
+  h = h % 12 || 12;
+  return `${h} ${suffix}`;
 }

@@ -44,6 +44,11 @@ export function buildWeatherIntel(hourly) {
   tomorrowOutlook = differentiateFromToday(todayOutlook, tomorrowOutlook);
 
   // -----------------------------
+  // Future Comfort Window (next ~6 hours)
+  // -----------------------------
+  const futureComfortWindow = getFutureComfortWindow(hourly);
+
+  // -----------------------------
   // Remainder-of-today intel (after 3 PM)
   // -----------------------------
   const remainderInfo = buildRemainderSubwindows(hourly, todayHours);
@@ -81,19 +86,15 @@ export function buildWeatherIntel(hourly) {
       stats: statsTomorrow,
       events: eventsTomorrow
     },
-    remainderToday: remainderTodayIntel, // may be null
-    comfort: null, // filled below
+    remainderToday: remainderTodayIntel,
+
+    // ⭐ NEW: Future Comfort Window
+    futureComfortWindow,
+
+    comfort: null, // filled in app.js
     wu: null,
     mrms: null
   };
-
-  // -----------------------------
-  // Compute comfort AFTER WU is attached in app.js
-  // -----------------------------
-  // app.js will do:
-  // intel.wu = wuCurrent;
-  // intel.mrms = mrmsPixel;
-  // intel.comfort = computeComfort(intel);
 
   return intel;
 }
@@ -128,4 +129,22 @@ function buildRemainderSubwindows(hourly, todayHours) {
 
   if (earlier.length === 0 || remainder.length === 0) return null;
   return { earlier, remainder };
+}
+
+// -----------------------------
+// Helper: next 6 hours window for Future Comfort
+// -----------------------------
+function getFutureComfortWindow(hourly) {
+  if (!hourly || !hourly.time || hourly.time.length === 0) return [];
+
+  const startIndex = 0; // current hour
+  const maxCount = 6;
+  const lastIndex = Math.min(hourly.time.length, startIndex + maxCount);
+
+  const indices = [];
+  for (let i = startIndex; i < lastIndex; i++) {
+    indices.push(i);
+  }
+
+  return indices;
 }

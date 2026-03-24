@@ -1,3 +1,4 @@
+
 // /js/intel/forecast-intel.js
 // Build unified forecast intelligence (Today, Tomorrow, Remainder of Today)
 
@@ -82,6 +83,11 @@ export function buildWeatherIntel(hourly) {
   }
 
   // -----------------------------
+  // Future Comfort Window (next ~6 hours)
+  // -----------------------------
+  const futureComfortWindow = getFutureComfortWindow(hourly);
+
+  // -----------------------------
   // Return unified intel object
   // -----------------------------
   const intel = {
@@ -98,6 +104,10 @@ export function buildWeatherIntel(hourly) {
       events: eventsTomorrow
     },
     remainderToday: remainderTodayIntel,
+
+    // NEW
+    futureComfortWindow,
+
     comfort: null,
     wu: null,
     mrms: null,
@@ -137,4 +147,22 @@ function buildRemainderSubwindows(hourly, todayHours) {
 
   if (earlier.length === 0 || remainder.length === 0) return null;
   return { earlier, remainder };
+}
+
+// -----------------------------
+// Helper: next 6 hours window for Future Comfort
+// -----------------------------
+function getFutureComfortWindow(hourly) {
+  if (!hourly || !hourly.time || hourly.time.length === 0) return [];
+
+  const startIndex = 0; // current hour
+  const maxCount = 6;
+  const lastIndex = Math.min(hourly.time.length, startIndex + maxCount);
+
+  const indices = [];
+  for (let i = startIndex; i < lastIndex; i++) {
+    indices.push(i);
+  }
+
+  return indices;
 }

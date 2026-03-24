@@ -317,6 +317,38 @@
   font-weight: 600;
   color: #f5f5f5;
 }
+/* --- COMFORT ROW LAYOUT --- */
+#comfort-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+/* --- FUTURE COMFORT STRIP --- */
+.fc-strip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  padding: 0 4px;
+}
+
+.fc-hour {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 16%; /* 6 items across */
+}
+
+.fc-hour-label {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  margin-bottom: 4px;
+}
+
+.fc-hour-emoji {
+  font-size: 1.25rem;
+}
     /* ============================================================
      TODAY + TOMORROW MODULES
   ============================================================ */
