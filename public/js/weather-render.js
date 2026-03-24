@@ -492,7 +492,17 @@ export function renderTomorrowDetail(intel) {
     <div class="fx-section"><div class="fx-label">Cloud Cover</div><div class="fx-value">${Math.round(stats.cloudAvg)}%</div></div>
   `;
 }
+function setupComfortToggle() {
+  const comfortModule = document.querySelector("#comfort-now-container .comfort-module");
+  const hourly = document.getElementById("hourlyTemps");
 
+  if (!comfortModule || !hourly) return;
+
+  comfortModule.addEventListener("click", () => {
+    const isOpen = hourly.style.display === "flex";
+    hourly.style.display = isOpen ? "none" : "flex";
+  });
+}
 // ------------------------------------------------------------
 // EXPANSION PANEL TOGGLER
 // ------------------------------------------------------------

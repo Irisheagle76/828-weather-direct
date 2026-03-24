@@ -300,9 +300,10 @@
   scrollbar-width: none;
 }
 
-#hourlyTemps::-webkit-scrollbar {
-  display: none;
+#hourlyTemps {
+  display: none;     /* hidden initially */
 }
+
 /* ============================================================
    COMFORT EXPAND HOURLY TEMPS CSS
 ============================================================ */
@@ -337,17 +338,14 @@
 }
 #comfort-row {
   display: flex;
-  flex-wrap: wrap;   /* ⭐ critical mobile fix */
   gap: 12px;
   margin-bottom: 20px;
 }
 
-/* ⭐ REQUIRED: groups Comfort Now + Hourly Temps */
-.comfort-left-col {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 100%;
-  gap: 10px;
+.comfort-left-col,
+.comfort-right-col {
+  flex: 1;
+  min-width: 0;
 }
 
 /* --- FUTURE COMFORT STRIP --- */
