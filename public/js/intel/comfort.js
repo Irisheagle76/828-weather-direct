@@ -66,7 +66,7 @@ function computeComfortScore(temp, dew, wind, elev, windDir) {
 
   let windPenalty = Math.min(wind / 25, 1) * 0.4;
 
-  // ⭐ FIXED: convert windDir to string safely
+  // ⭐ FIX: windDir may be a number → convert safely
   const dir = String(windDir ?? "");
   if (dir.includes("W")) {
     windPenalty += 0.2;
@@ -85,6 +85,7 @@ function computeComfortScore(temp, dew, wind, elev, windDir) {
     Math.max(0, Math.min(100, 100 - (score * 100)))
   );
 }
+
 // ------------------------------------------------------------
 // COLOR + LABEL
 // ------------------------------------------------------------
@@ -143,7 +144,7 @@ function isSolarHelpful(intel, elev) {
   if (!wu) return false;
 
   const cloud = wu.cloudCover ?? 100;
-  const windDir = wu.windDir ?? "";
+  const windDir = String(wu.windDir ?? "");
   const trend = intel.tempTrend ?? 0;
 
   return (
@@ -219,6 +220,20 @@ function computeTempDropFeel(intel) {
 }
 
 // ------------------------------------------------------------
+// ⭐ INLINE EMOJI PICKER (replaces missing pickComfortEmoji)
+// ------------------------------------------------------------
+function pickComfortEmoji(state) {
+  switch (state) {
+    case "cold": return "🥶";
+    case "cool": return "🧥";
+    case "mild": return "🙂";
+    case "warm": return "😌";
+    case "hot":  return "🥵";
+    default:     return "😐";
+  }
+}
+
+// ------------------------------------------------------------
 // MAIN ENGINE
 // ------------------------------------------------------------
 export function computeComfort(intel) {
@@ -234,7 +249,7 @@ export function computeComfort(intel) {
   const elev = computeSolarElevation(timestamp, LOCATION.lat, LOCATION.lon);
   const feelsLike = computeWindChill(temp, wind);
 
-  // ⭐ NEW SCORE
+  // ⭐ Asheville‑tuned score
   const comfortScore = computeComfortScore(temp, dew, wind, elev, windDir);
 
   // --- precip override
@@ -256,6 +271,7 @@ export function computeComfort(intel) {
   else if (feelsLike <= 85) state = "warm";
   else state = "hot";
 
+  // ⭐ FIXED: restored emoji picker
   const emoji = pickComfortEmoji(state);
 
   let baseFeel =
