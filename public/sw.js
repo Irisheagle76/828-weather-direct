@@ -1,3 +1,20 @@
+// ------------------------------------------------------------
+// REQUIRED FOR iOS SAFARI
+// ------------------------------------------------------------
+self.addEventListener("install", event => {
+  self.skipWaiting();
+});
+
+self.addEventListener("activate", event => {
+  event.waitUntil(clients.claim());
+});
+
+// iOS requires a fetch handler, even if it's a no-op
+self.addEventListener("fetch", () => {});
+
+// ------------------------------------------------------------
+// PUSH HANDLER
+// ------------------------------------------------------------
 self.addEventListener("push", event => {
   const data = event.data?.json() || {};
 
@@ -11,6 +28,9 @@ self.addEventListener("push", event => {
   );
 });
 
+// ------------------------------------------------------------
+// NOTIFICATION CLICK
+// ------------------------------------------------------------
 self.addEventListener("notificationclick", event => {
   event.notification.close();
   event.waitUntil(
