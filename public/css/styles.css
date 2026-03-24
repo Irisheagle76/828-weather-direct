@@ -471,6 +471,12 @@
       color: #d8dff7;
       font-size: 0.95rem;
     }
+    .comfort-left-col {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 10px;
+}
 /* ============================================================
    PULSE VIDEO UPLOAD — POLISHED VERSION
    ============================================================ */
