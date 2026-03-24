@@ -2,27 +2,30 @@
 // REQUIRED FOR iOS SAFARI
 // ------------------------------------------------------------
 self.addEventListener("install", event => {
+  console.log("SW INSTALL");
   self.skipWaiting();
 });
 
 self.addEventListener("activate", event => {
+  console.log("SW ACTIVATE");
   event.waitUntil(clients.claim());
 });
 
-// iOS requires a fetch handler, even if it's a no-op
-self.addEventListener("fetch", () => {});
+// iOS requires a REAL fetch handler (not empty)
+self.addEventListener("fetch", event => {
+  // Minimal pass-through fetch handler
+  event.respondWith(fetch(event.request));
+});
+
 // ------------------------------------------------------------
-// TEST DEBUG
+// DEBUG
 // ------------------------------------------------------------
 console.log("SW LOADED");
-self.addEventListener("install", () => console.log("SW INSTALL"));
-self.addEventListener("activate", () => console.log("SW ACTIVATE"));
-// ------------------------------------------------------------
-// TEST DEBUG
-// ------------------------------------------------------------
+
 self.clients.matchAll().then(clients => {
   clients.forEach(client => client.postMessage("SW is active"));
 });
+
 // ------------------------------------------------------------
 // PUSH HANDLER
 // ------------------------------------------------------------
