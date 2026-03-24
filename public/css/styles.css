@@ -648,17 +648,31 @@
 }
 
 /* ============================================================
-   EXPANDED VIEW
+   EXPANDED VIEW — UPDATED WITH FIXES
    ============================================================ */
+
+.pulse-expanded {
+  overflow: hidden; /* prevents image overflow */
+}
 
 .pulse-expanded .pulse-body {
   flex-direction: column;
+  max-width: 100%;
 }
 
 .pulse-expanded .pulse-thumbnail {
   width: 100%;
   height: auto;
   max-height: none;
+  border-radius: 12px;
+  margin-bottom: 0.75rem;
+}
+
+/* FIXED: prevent giant images */
+.pulse-expanded-img {
+  width: 100%;
+  max-height: 360px;      /* keeps expanded card compact */
+  object-fit: cover;      /* premium hero look */
   border-radius: 12px;
   margin-bottom: 0.75rem;
 }
@@ -675,7 +689,7 @@
   font-size: 0.95rem;
   line-height: 1.55;
   color: #e5e7eb;
-  margin-top: 0.75rem;
+  margin-top: 0.75rem; /* improved rhythm */
 }
 
 /* ============================================================
