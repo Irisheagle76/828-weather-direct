@@ -1,5 +1,6 @@
-// /js/pulse-render.js
-
+// ============================================================
+// CLEAN HTML
+// ============================================================
 function cleanHtml(html) {
   return (html || "")
     .replace(/<span[^>]*>/g, "")
@@ -7,6 +8,9 @@ function cleanHtml(html) {
     .replace(/&nbsp;/g, " ");
 }
 
+// ============================================================
+// HYBRID PREVIEW (your editorial logic preserved)
+// ============================================================
 function createHybridPreview(html) {
   const textOnly = html
     .replace(/<[^>]+>/g, " ")
@@ -33,7 +37,6 @@ function createHybridPreview(html) {
 // ============================================================
 // MAIN LOADER
 // ============================================================
-
 async function loadPulse() {
   try {
     const res = await fetch("/api/tidbits/pulse-latest");
@@ -41,60 +44,71 @@ async function loadPulse() {
 
     const card = document.getElementById("pulse-card");
     const timestampEl = document.getElementById("pulse-timestamp");
-    const thumbEl = document.getElementById("pulse-thumb");
+    const thumbEl = document.getElementById("pulse-thumb"); // now an <img>
     const previewEl = document.getElementById("pulse-preview");
     const toggleBtn = document.getElementById("pulse-toggle");
 
+    // ------------------------------------------------------------
+    // FALLBACK
+    // ------------------------------------------------------------
     if (!data || data.fallback) {
       timestampEl.textContent = "No Weather Pulse update yet";
       previewEl.textContent = "Stay tuned for the next quick update.";
-      thumbEl.innerHTML = "";
+      thumbEl.style.display = "none";
       toggleBtn.style.display = "none";
       return;
     }
 
+    // ------------------------------------------------------------
+    // TIMESTAMP
+    // ------------------------------------------------------------
     const ts = data.timestamp ? new Date(data.timestamp) : null;
     timestampEl.textContent = ts ? formatTimeAgo(ts) : "Just now";
 
-const thumbSrc = data.imageUrl || "/828-brand-card.png";
+    // ------------------------------------------------------------
+    // THUMBNAIL (image or video)
+    // ------------------------------------------------------------
+    const rawSrc = data.imageUrl || "/828-brand-card.png";
 
-// Detect once
-const isVideo =
-  thumbSrc.includes('/video/upload') ||
-  thumbSrc.endsWith('.mp4');
+    const isVideo =
+      rawSrc.includes("/video/upload") ||
+      rawSrc.endsWith(".mp4");
 
-// Optimize safely
-const optimizedSrc = thumbSrc.includes("/upload/")
-  ? thumbSrc.replace(
-      "/upload/",
-      isVideo
-        ? "/upload/q_auto/"                // video-safe
-        : "/upload/w_900,q_auto,f_auto/"  // image optimized
-    )
-  : thumbSrc;
+    const optimizedSrc = rawSrc.includes("/upload/")
+      ? rawSrc.replace(
+          "/upload/",
+          isVideo
+            ? "/upload/q_auto/"               // video-safe
+            : "/upload/w_900,q_auto,f_auto/"  // image optimized
+        )
+      : rawSrc;
 
-// Render thumbnail
-if (isVideo) {
-  thumbEl.innerHTML = `
-    <video autoplay loop muted playsinline class="pulse-thumb-video">
-      <source src="${optimizedSrc}" type="video/mp4">
-    </video>
-  `;
-} else {
-  thumbEl.innerHTML = `
-    <img src="${optimizedSrc}" alt="Pulse image" />
-  `;
-}
+    // Render thumbnail into the <img> or replace with <video>
+    if (isVideo) {
+      // Replace <img> with <video> for collapsed view
+      thumbEl.outerHTML = `
+        <video autoplay loop muted playsinline 
+               id="pulse-thumb" 
+               class="pulse-thumbnail pulse-thumb-video">
+          <source src="${optimizedSrc}" type="video/mp4">
+        </video>
+      `;
+    } else {
+      thumbEl.src = optimizedSrc;
+      thumbEl.alt = "Pulse image";
+    }
 
+    // ------------------------------------------------------------
+    // PREVIEW TEXT
+    // ------------------------------------------------------------
     const fullText = cleanHtml(data.text || "");
     const shortText = createHybridPreview(fullText);
 
     previewEl.innerHTML = shortText;
 
-    // ============================================================
-    // TOGGLE
-    // ============================================================
-
+    // ------------------------------------------------------------
+    // EXPAND / COLLAPSE
+    // ------------------------------------------------------------
     let expanded = false;
 
     function handleToggle() {
@@ -102,36 +116,39 @@ if (isVideo) {
 
       if (expanded) {
         card.classList.add("pulse-expanded");
-        thumbEl.style.display = "none";
 
-        const firstSentence = fullText.split('. ')[0] + '.';
-        const rest = fullText.replace(firstSentence, '');
+        // Hide collapsed thumbnail
+        const thumbNode = document.getElementById("pulse-thumb");
+        if (thumbNode) thumbNode.style.display = "none";
 
-        const isVideo =
-  optimizedSrc.includes('/video/upload') ||
-  optimizedSrc.endsWith('.mp4');
+        // Split first sentence for bold treatment
+        const firstSentence = fullText.split(". ")[0] + ".";
+        const rest = fullText.replace(firstSentence, "");
 
-const expandedMedia = isVideo
-  ? `<video autoplay loop muted playsinline class="pulse-expanded-img">
-       <source src="${optimizedSrc}" type="video/mp4">
-     </video>`
-  : `<img src="${optimizedSrc}" class="pulse-expanded-img" />`;
+        const expandedMedia = isVideo
+          ? `<video autoplay loop muted playsinline class="pulse-expanded-img">
+               <source src="${optimizedSrc}" type="video/mp4">
+             </video>`
+          : `<img src="${optimizedSrc}" class="pulse-expanded-img" />`;
 
-previewEl.innerHTML = `
-  <div class="pulse-expanded-content">
-    ${expandedMedia}
-    <div class="pulse-full-text">
-      <strong>${firstSentence}</strong> ${rest}
-    </div>
-  </div>
-`;
+        previewEl.innerHTML = `
+          <div class="pulse-expanded-content">
+            ${expandedMedia}
+            <div class="pulse-full-text">
+              <strong>${firstSentence}</strong> ${rest}
+            </div>
+          </div>
+        `;
 
         toggleBtn.textContent = "Show less";
         toggleBtn.setAttribute("aria-expanded", "true");
 
       } else {
         card.classList.remove("pulse-expanded");
-        thumbEl.style.display = "block";
+
+        // Restore collapsed thumbnail
+        const thumbNode = document.getElementById("pulse-thumb");
+        if (thumbNode) thumbNode.style.display = "block";
 
         previewEl.innerHTML = shortText;
 
@@ -140,11 +157,13 @@ previewEl.innerHTML = `
       }
     }
 
+    // Button click
     toggleBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       handleToggle();
     });
 
+    // Card click (but ignore clicks on button or links)
     card.addEventListener("click", (e) => {
       if (e.target.closest("#pulse-toggle") || e.target.closest("a")) return;
       handleToggle();
@@ -161,9 +180,8 @@ previewEl.innerHTML = `
 }
 
 // ============================================================
-// TIME AGO (OUTSIDE loadPulse)
+// TIME AGO
 // ============================================================
-
 function formatTimeAgo(date) {
   const now = new Date();
   const diff = (now - date) / 1000;

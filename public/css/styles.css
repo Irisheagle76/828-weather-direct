@@ -544,187 +544,208 @@
     .dew-tropical {
       color: #ff6b6b;
     }
+/* ============================================================
+   828 WEATHER PULSE MODULE — CLEAN CONSOLIDATED REWRITE
+   ============================================================ */
 
-    /* ============================================================
-     828 WEATHER PULSE MODULE
-  ============================================================ */
+.pulse-module {
+  margin: var(--gap) auto 0;
+  max-width: 640px;
+}
 
-    .pulse-module {
-      margin: var(--gap) auto 0;
-      max-width: 640px;
-    }
+/* Card */
+.pulse-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--module-radius);
+  padding: 1rem 1.1rem 0.85rem;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+}
 
-    .pulse-card {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: var(--module-radius);
-      padding: 0.9rem 1.1rem 0.7rem;
-      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
-      cursor: pointer;
-      overflow: hidden;
-      transition: box-shadow 0.2s ease;
-    }
+.pulse-card:hover {
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
+}
 
-    .pulse-card:hover {
-      box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
-    }
+/* Header */
+.pulse-header {
+  margin-bottom: 0.55rem;
+}
 
-    .pulse-header {
-      margin-bottom: 0.4rem;
-    }
+.pulse-title {
+  font-size: 0.98rem;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8fb7ff;
+}
 
-    .pulse-title {
-      font-size: 0.98rem;
-      font-weight: 600;
-      margin: 0;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: #8fb7ff;
-    }
+.pulse-badge-pill {
+  display: inline-block;
+  margin-top: 0.25rem;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  background: rgba(255, 169, 77, 0.16);
+  border: 1px solid rgba(255, 169, 77, 0.55);
+  font-size: 0.72rem;
+  color: #ffa94d;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
 
-    .pulse-badge-pill {
-      display: inline-block;
-      margin-top: 0.25rem;
-      padding: 2px 10px;
-      border-radius: 9999px;
-      background: rgba(255, 169, 77, 0.16);
-      border: 1px solid rgba(255, 169, 77, 0.55);
-      font-size: 0.72rem;
-      color: #ffa94d;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
+.pulse-timestamp {
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: #b9c7f5;
+}
 
-    .pulse-timestamp {
-      margin-top: 0.25rem;
-      font-size: 0.8rem;
-      color: #b9c7f5;
-    }
+/* ============================================================
+   COLLAPSED VIEW — Thumbnail + Preview
+   ============================================================ */
 
-    .pulse-body {
-      display: flex;
-      gap: 0.6rem;
-      margin-top: 0.6rem;
-    }
+.pulse-body {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-top: 0.65rem;
+}
 
-    .pulse-thumb {
-      flex: 0 0 64px;
-      height: 64px;
-      border-radius: 8px;
-      overflow: hidden;
-      background: #1f2435;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-      margin-right: 0.75rem;
-    }
+/* NEW: 120px Thumbnail */
+.pulse-thumbnail {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+}
 
-    .pulse-thumb img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
+.pulse-preview {
+  flex: 1;
+  font-size: 0.88rem;
+  color: #d8dff7;
+  line-height: 1.45;
+}
 
-    .pulse-preview {
-      flex: 1;
-      font-size: 0.86rem;
-      color: #d8dff7;
-      line-height: 1.4;
-    }
+/* Toggle */
+.pulse-toggle {
+  margin-top: 0.65rem;
+  margin-bottom: 0.1rem;
+  border: none;
+  background: none;
+  color: #8fb7ff;
+  font-size: 0.78rem;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
 
-    .pulse-toggle {
-      margin-top: 0.55rem;
-      margin-bottom: 0.1rem;
-      border: none;
-      background: none;
-      color: #8fb7ff;
-      font-size: 0.78rem;
-      padding: 0;
-      text-align: left;
-      cursor: pointer;
-    }
+.pulse-toggle:hover {
+  text-decoration: underline;
+}
 
-    .pulse-toggle:hover {
-      text-decoration: underline;
-    }
+/* ============================================================
+   EXPANDED VIEW
+   ============================================================ */
 
-    .pulse-expanded .pulse-body {
-      flex-direction: column;
-    }
+.pulse-expanded .pulse-body {
+  flex-direction: column;
+}
 
-    .pulse-expanded .pulse-thumb {
-      flex: 0 0 auto;
-      height: auto;
-      max-height: none;
-      width: 100%;
-      margin-right: 0;
-    }
+.pulse-expanded .pulse-thumbnail {
+  width: 100%;
+  height: auto;
+  max-height: none;
+  border-radius: 12px;
+  margin-bottom: 0.75rem;
+}
 
-    .pulse-expanded .pulse-preview {
-      margin-top: 0.5rem;
-    }
+.pulse-expanded .pulse-preview {
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #e5e7eb;
+}
 
-    .pulse-hero {
-      position: relative;
-      border-radius: 14px;
-      overflow: hidden;
-      margin-bottom: 0.75rem;
-    }
+/* Full text block */
+.pulse-full-text {
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #e5e7eb;
+  margin-top: 0.75rem;
+}
 
-    /* Image */
-    .pulse-hero img {
-      width: 100%;
-      height: auto;
-      display: block;
-      transition: transform 0.4s ease;
-    }
+/* ============================================================
+   OPTIONAL HERO (Used in Tidbits or Full View)
+   ============================================================ */
 
-    /* Subtle zoom on hover */
-    .pulse-hero:hover img {
-      transform: scale(1.05);
-    }
+.pulse-hero {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
 
-    /* Gradient overlay */
-    .pulse-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to top,
-          rgba(0, 0, 0, 0.75) 0%,
-          rgba(0, 0, 0, 0.4) 40%,
-          rgba(0, 0, 0, 0.1) 70%,
-          rgba(0, 0, 0, 0) 100%);
-    }
+.pulse-hero img {
+  width: 100%;
+  height: auto;
+  display: block;
+  transition: transform 0.4s ease;
+}
 
-    /* Text on top of image */
-    .pulse-hero-text {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      padding: 0.75rem 0.85rem;
-      color: #fff;
-      font-size: 0.95rem;
-      line-height: 1.4;
-    }
+.pulse-hero:hover img {
+  transform: scale(1.05);
+}
 
-    /* Optional: make text feel more premium */
-    .pulse-hero-text strong {
-      font-weight: 600;
-    }
+.pulse-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.75) 0%,
+    rgba(0, 0, 0, 0.4) 40%,
+    rgba(0, 0, 0, 0.1) 70%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
 
-    /* Expanded view */
-    .pulse-expanded-img {
-      width: 100%;
-      border-radius: 12px;
-      margin-bottom: 0.6rem;
-    }
+.pulse-hero-text {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0.75rem 0.85rem;
+  color: #fff;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
 
-    .pulse-full-text {
-      font-size: 0.95rem;
-      line-height: 1.5;
-      color: #e5e7eb;
-    }
+.pulse-hero-text strong {
+  font-weight: 600;
+}
 
-    /* ============================================================
+/* ============================================================
+   ANIMATION
+   ============================================================ */
+
+.pulse-expanded-content {
+  animation: pulseFadeIn 0.25s ease;
+}
+
+@keyframes pulseFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+      /* ============================================================
      SUBSTACK MODULE — DARK THEME, MATCHES HUMAN-ACTION MODULES
   ============================================================ */
 
@@ -888,71 +909,6 @@
       opacity: 0.9;
     }
 
-    /* ============================================================
-     PULSE TIDBITS CSS
-  ============================================================ */
-    .pulse-hero {
-      position: relative;
-      border-radius: 14px;
-      overflow: hidden;
-      margin-bottom: 0.75rem;
-    }
-
-    /* Image */
-    .pulse-hero img {
-      width: 100%;
-      height: auto;
-      display: block;
-      transition: transform 0.4s ease;
-    }
-
-    /* Subtle zoom on hover */
-    .pulse-hero:hover img {
-      transform: scale(1.05);
-    }
-
-    /* Gradient overlay */
-    .pulse-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to top,
-          rgba(0, 0, 0, 0.75) 0%,
-          rgba(0, 0, 0, 0.4) 40%,
-          rgba(0, 0, 0, 0.1) 70%,
-          rgba(0, 0, 0, 0) 100%);
-    }
-
-    /* Text on top of image */
-    .pulse-hero-text {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      padding: 0.75rem 0.85rem;
-      color: #fff;
-      font-size: 0.95rem;
-      line-height: 1.4;
-    }
-
-    /* Optional: make text feel more premium */
-    .pulse-hero-text strong {
-      font-weight: 600;
-    }
-/* Pulse animation */
-.pulse-expanded-content {
-  animation: pulseFadeIn 0.25s ease;
-}
-
-@keyframes pulseFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
     /* ============================================================
      FOOTER
   ============================================================ */
