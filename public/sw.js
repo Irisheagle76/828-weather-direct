@@ -18,6 +18,12 @@ console.log("SW LOADED");
 self.addEventListener("install", () => console.log("SW INSTALL"));
 self.addEventListener("activate", () => console.log("SW ACTIVATE"));
 // ------------------------------------------------------------
+// TEST DEBUG
+// ------------------------------------------------------------
+self.clients.matchAll().then(clients => {
+  clients.forEach(client => client.postMessage("SW is active"));
+});
+// ------------------------------------------------------------
 // PUSH HANDLER
 // ------------------------------------------------------------
 self.addEventListener("push", event => {

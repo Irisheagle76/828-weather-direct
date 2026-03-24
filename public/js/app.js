@@ -242,4 +242,11 @@ if (notifBtn) {
   comfortModule.classList.toggle("active");
 });
   }
+
+  // ------------------------------------------------------------
+  // Debugging
+  // ------------------------------------------------------------
+  navigator.serviceWorker.addEventListener("message", e => {
+  alert("SW MSG: " + JSON.stringify(e.data));
+});
 });
