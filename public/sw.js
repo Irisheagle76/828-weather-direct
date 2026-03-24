@@ -1,29 +1,37 @@
 // ------------------------------------------------------------
-// REQUIRED FOR iOS SAFARI
+// SERVICE WORKER VERSION (bump this to force iOS to reload SW)
+// ------------------------------------------------------------
+const SW_VERSION = "v1.0.1";
+console.log("SW VERSION:", SW_VERSION);
+
+// ------------------------------------------------------------
+// INSTALL — required for iOS
 // ------------------------------------------------------------
 self.addEventListener("install", event => {
-  console.log("SW INSTALL");
+  console.log("SW INSTALL", SW_VERSION);
   self.skipWaiting();
 });
 
+// ------------------------------------------------------------
+// ACTIVATE — required for iOS
+// ------------------------------------------------------------
 self.addEventListener("activate", event => {
-  console.log("SW ACTIVATE");
+  console.log("SW ACTIVATE", SW_VERSION);
   event.waitUntil(clients.claim());
 });
 
-// iOS requires a REAL fetch handler (not empty)
+// ------------------------------------------------------------
+// FETCH — iOS requires a REAL fetch handler (not empty)
+// ------------------------------------------------------------
 self.addEventListener("fetch", event => {
-  // Minimal pass-through fetch handler
   event.respondWith(fetch(event.request));
 });
 
 // ------------------------------------------------------------
-// DEBUG
+// DEBUG — confirm SW is active
 // ------------------------------------------------------------
-console.log("SW LOADED");
-
 self.clients.matchAll().then(clients => {
-  clients.forEach(client => client.postMessage("SW is active"));
+  clients.forEach(client => client.postMessage("SW is active " + SW_VERSION));
 });
 
 // ------------------------------------------------------------
