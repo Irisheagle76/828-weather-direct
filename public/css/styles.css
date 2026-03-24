@@ -436,14 +436,16 @@
       color: #d8dff7;
       font-size: 0.95rem;
     }
- ============================================================
-     PULSE VIDEO UPLOAD
-  ============================================================ */
+/* ============================================================
+   PULSE VIDEO UPLOAD — POLISHED VERSION
+   ============================================================ */
+
 .pulse-container {
   position: relative;
   width: 100%;
   max-width: 500px;
   margin: 0 auto;
+  overflow: hidden; /* prevents bleed */
 }
 
 .pulse-media-wrapper {
@@ -451,15 +453,19 @@
   overflow: hidden;
   border-radius: 14px;
   backdrop-filter: blur(6px);
+  aspect-ratio: 16 / 9; /* prevents layout jump */
 }
 
 .pulse-media {
   width: 100%;
-  height: auto;
+  height: 100%;
   display: block;
   object-fit: cover;
   border-radius: 14px;
   transition: transform 0.35s ease, box-shadow 0.35s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35); /* matches Pulse aesthetic */
+  opacity: 0;
+  animation: pulseVideoFade 0.4s ease forwards;
 }
 
 /* Hover effect */
@@ -472,7 +478,13 @@
 .hidden {
   display: none;
 }
-    /* ============================================================
+
+/* Fade-in animation */
+@keyframes pulseVideoFade {
+  from { opacity: 0; transform: scale(1.01); }
+  to   { opacity: 1; transform: scale(1); }
+}
+/*============================================================
      UV INDEX COLORS
   ============================================================ */
     #wU-uv,
@@ -690,6 +702,53 @@
   line-height: 1.55;
   color: #e5e7eb;
   margin-top: 0.75rem; /* improved rhythm */
+}
+/* ============================================================
+   Glowing 828 Quick Live badge
+   ============================================================ */
+.pulse-badge-pill {
+  display: inline-block;
+  margin-top: 0.25rem;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  background: rgba(255, 169, 77, 0.16);
+  border: 1px solid rgba(255, 169, 77, 0.55);
+  font-size: 0.72rem;
+  color: #ffa94d;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  /* Subtle glow animation */
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%   { box-shadow: 0 0 0px rgba(255,169,77,0.0); }
+  50%  { box-shadow: 0 0 8px rgba(255,169,77,0.35); }
+  100% { box-shadow: 0 0 0px rgba(255,169,77,0.0); }
+}
+/* ============================================================
+   PULSE HEADER HEARTBEAT
+   ============================================================ */
+.pulse-header {
+  animation: pulseHeartbeat 3s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes pulseHeartbeat {
+  0%   { transform: scale(1); }
+  10%  { transform: scale(1.015); }
+  20%  { transform: scale(1); }
+
+  /* tiny pause between beats */
+  30%  { transform: scale(1); }
+
+  /* second beat */
+  40%  { transform: scale(1.015); }
+  50%  { transform: scale(1); }
+
+  /* long rest */
+  100% { transform: scale(1); }
 }
 
 /* ============================================================
