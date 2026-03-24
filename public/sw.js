@@ -11,7 +11,12 @@ self.addEventListener("activate", event => {
 
 // iOS requires a fetch handler, even if it's a no-op
 self.addEventListener("fetch", () => {});
-
+// ------------------------------------------------------------
+// TEST DEBUG
+// ------------------------------------------------------------
+console.log("SW LOADED");
+self.addEventListener("install", () => console.log("SW INSTALL"));
+self.addEventListener("activate", () => console.log("SW ACTIVATE"));
 // ------------------------------------------------------------
 // PUSH HANDLER
 // ------------------------------------------------------------
