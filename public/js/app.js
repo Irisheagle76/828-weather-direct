@@ -106,11 +106,18 @@ function showToast(message) {
 // ------------------------------------------------------------
 function updateUI(intel) {
 
- // ⭐ Render Comfort Now
+// ⭐ Render Comfort Now
 document.getElementById("comfort-now-container").innerHTML =
   renderRightNowComfort(intel);
 
-// ⭐ Render Hourly Temps directly underneath
+// ⭐ Enable click-to-expand hourly temps
+document
+  .getElementById("comfort-now-container")
+  .addEventListener("click", () => {
+    document.getElementById("hourlyTemps").classList.toggle("hidden");
+  });
+
+// ⭐ Render hourly temps AFTER intel is fully ready
 renderHourlyTemps(intel.hourly);
 
   document.getElementById("future-comfort-container").innerHTML =
