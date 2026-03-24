@@ -312,7 +312,10 @@ export function renderFutureComfort(intel) {
 
         <div class="comfort-text-block">
           <div class="comfort-label">Next 6 Hours</div>
-          <div class="comfort-text">${fc[0].shortPhrase}</div>
+
+          <!-- ⭐ FIXED: use label instead of shortPhrase -->
+          <div class="comfort-text">${fc[0].label}</div>
+
           <div class="comfort-sub">Comfort trend</div>
         </div>
       </div>
