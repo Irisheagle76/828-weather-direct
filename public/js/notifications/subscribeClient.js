@@ -28,7 +28,7 @@ export async function subscribeUserToPush() {
     console.log("Attempting push subscription...");
     const sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY)
+      applicationServerKey: urlBase64ToUint8Array(window.VAPID_PUBLIC_KEY)
     });
 
     console.log("SUB SUCCESS:", sub);
