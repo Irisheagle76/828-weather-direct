@@ -20,7 +20,7 @@ import {
   renderRightNowComfort,
   renderFutureComfort,
 
-  renderUV,
+  
   renderCurrentObservations,
   renderHourlyTemps
 } from './weather-render.js';
@@ -124,7 +124,7 @@ renderHourlyTemps(intel.hourly);
   // Existing modules
 
  
-  renderUV(intel);
+ 
   renderCurrentObservations(intel);
   renderHourlyTemps(intel.hourly);
 setupComfortToggle(); // ⭐ ADD THIS LINE HERE
