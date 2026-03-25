@@ -22,7 +22,6 @@ import {
   renderTodayOutlook,
   renderTomorrowOutlook,
   renderUV,
-  renderTodayDetail,
   renderTomorrowDetail,
   renderCurrentObservations,
   renderHourlyTemps
