@@ -392,7 +392,8 @@
   display: flex;
   gap: 6px;
   margin-top: 12px;
-  padding: 0 4px 6px;   /* ⭐ adds subtle bottom breathing room */
+  padding: 0 4px 6px;
+  min-width: 0;   /* ⭐ prevents containment break */
 }
 
 .fc-hour {
