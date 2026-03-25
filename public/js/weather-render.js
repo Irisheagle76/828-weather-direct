@@ -29,23 +29,21 @@ function formatSnowAmount(amount) {
 }
 
 // ------------------------------------------------------------
-// HEADLINE AUTO-SHRINK HELPER
+// HEADLINE AUTO‑SHRINK HELPER
 // ------------------------------------------------------------
 function fitHeadlineToWidth(el, maxSize = 1.25, minSize = 0.95) {
   if (!el) return;
 
-  let size = maxSize;
-  el.style.fontSize = `${size}rem`;
+  el.style.fontSize = `${maxSize}rem`;
 
-  let safety = 20;
-  while (el.scrollWidth > el.clientWidth && size > minSize && safety--) {
-    size -= 0.05;
-    el.style.fontSize = `${size}rem`;
+  while (el.scrollWidth > el.clientWidth && maxSize > minSize) {
+    maxSize -= 0.05;
+    el.style.fontSize = `${maxSize}rem`;
   }
 }
 
 // ------------------------------------------------------------
-// RENDER CURRENT OBSERVATIONS
+// RENDER CURRENT OBSERVATIONS (WU)
 // ------------------------------------------------------------
 export function renderCurrentObservations(intel) {
   const wu = intel.wu;
@@ -60,10 +58,7 @@ export function renderCurrentObservations(intel) {
 
   if (tempEl) {
     tempEl.textContent = wu.temp != null ? `${wu.temp}°` : "--";
-
-    tempEl.classList.remove(
-      "temp-freezing","temp-cold","temp-cool","temp-mild","temp-warm","temp-hot"
-    );
+    tempEl.className = "metric-value";
 
     const t = wu.temp;
     if (t <= 32) tempEl.classList.add("temp-freezing");
@@ -76,10 +71,7 @@ export function renderCurrentObservations(intel) {
 
   if (dewEl) {
     dewEl.textContent = wu.dewPoint != null ? `${wu.dewPoint}°` : "--";
-
-    dewEl.classList.remove(
-      "dew-dry","dew-comfort","dew-humid","dew-tropical"
-    );
+    dewEl.className = "metric-value";
 
     const d = wu.dewPoint;
     if (d <= 40) dewEl.classList.add("dew-dry");
@@ -104,17 +96,13 @@ export function renderCurrentObservations(intel) {
 
   if (uvEl) {
     const uv = intel.uv ?? wu.uv ?? 0;
-    uvEl.textContent = uv.toFixed(1);
-
-    uvEl.classList.remove(
-      "uv-low","uv-moderate","uv-high","uv-very-high","uv-extreme"
-    );
-    uvEl.classList.add(getUVClass(uv));
+    uvEl.textContent = uv != null ? uv.toFixed(1) : "--";
+    uvEl.className = "metric-value " + getUVClass(uv ?? 0);
   }
 }
 
 // ------------------------------------------------------------
-// HOURLY TEMPS
+// HOURLY TEMPS IN COMFORT DROPDOWN
 // ------------------------------------------------------------
 export function renderHourlyTemps(hourlyData) {
   const container = document.getElementById("hourlyTemps");
@@ -131,7 +119,8 @@ export function renderHourlyTemps(hourlyData) {
   let startIndex = 0;
 
   for (let i = 0; i < times.length; i++) {
-    if (new Date(times[i]) > now) {
+    const t = new Date(times[i]);
+    if (t > now) {
       startIndex = i;
       break;
     }
@@ -144,6 +133,7 @@ export function renderHourlyTemps(hourlyData) {
 
     const time = new Date(times[idx]);
     const hourLabel = time.toLocaleTimeString([], { hour: "numeric" });
+
     const temp = Math.round(temps[idx]);
 
     const item = document.createElement("div");
@@ -159,7 +149,7 @@ export function renderHourlyTemps(hourlyData) {
 }
 
 // ------------------------------------------------------------
-// COMPASS
+// Compass helper
 // ------------------------------------------------------------
 export function degToCompass(deg) {
   if (deg == null) return "";
@@ -171,9 +161,59 @@ export function degToCompass(deg) {
 }
 
 // ------------------------------------------------------------
-// UV CLASS
+// 🧠 INTELLIGENCE LAYER
+// ------------------------------------------------------------
+function getSkyCondition(stats) {
+  if (!stats) return "unknown";
+
+  if (stats.cloudAvg < 25) return "sunny";
+  if (stats.cloudAvg < 55) return "partly";
+  if (stats.cloudAvg < 80) return "mostly-cloudy";
+  return "cloudy";
+}
+
+function getDominantDriver(stats, fallback) {
+  if (!stats) return fallback ?? "easy";
+
+  if (stats.snowTotal > 0.5) return "snow";
+  if (stats.rainTotal > 0.25) return "rain";
+  if (stats.windGustMax > 30) return "wind";
+  if (stats.tempMax >= 90) return "hot";
+  if (stats.tempMin <= 35) return "cold";
+
+  if (
+    stats.cloudAvg < 40 &&
+    stats.rainTotal < 0.05 &&
+    stats.tempMax >= 70 &&
+    stats.tempMax <= 85
+  ) {
+    return "goldilocks";
+  }
+
+  return fallback ?? "easy";
+}
+
+function generateHumanHeadline(stats, fallback) {
+  if (!stats) return fallback ?? "";
+
+  const sky = getSkyCondition(stats);
+
+  if (sky === "sunny" && stats.tempMax >= 75 && stats.tempMax <= 85) {
+    return "Beautiful day ahead";
+  }
+
+  if (sky === "partly") return "A mix of sun and clouds";
+  if (sky === "mostly-cloudy") return "More clouds than sun";
+  if (sky === "cloudy") return "Gray and overcast conditions";
+
+  return fallback ?? "";
+}
+
+// ------------------------------------------------------------
+// UV class helper
 // ------------------------------------------------------------
 export function getUVClass(uv) {
+  if (uv == null) return "uv-0";
   if (uv <= 2) return "uv-low";
   if (uv <= 5) return "uv-moderate";
   if (uv <= 7) return "uv-high";
@@ -182,7 +222,55 @@ export function getUVClass(uv) {
 }
 
 // ------------------------------------------------------------
-// COMFORT RENDERERS
+// BULLET DE-DUPLICATOR
+// ------------------------------------------------------------
+function dedupeBullets(bullets) {
+  const seen = new Set();
+  const result = [];
+
+  bullets.forEach(b => {
+    let key = b.toLowerCase();
+    key = key.replace(/[^a-z0-9 ]/g, " ");
+    key = key
+      .replace(/\bjacket\b/g, "coat")
+      .replace(/\bchilly\b/g, "cold")
+      .replace(/\bearly\b/g, "morning")
+      .replace(/\bmorning air\b/g, "morning")
+      .replace(/\bair\b/g, "")
+      .replace(/\bcoat helps\b/g, "coat recommended")
+      .replace(/\bcoat is helpful\b/g, "coat recommended")
+      .replace(/\bcoat recommended\b/g, "coat recommended");
+    key = key.replace(/\b(a|the|is|very|quite|bit|little)\b/g, "");
+    key = key.replace(/\s+/g, " ").trim();
+    key = key.split(" ").sort().join(" ");
+
+    if (!seen.has(key)) {
+      seen.add(key);
+      result.push(b);
+    }
+  });
+
+  return result;
+}
+
+// ------------------------------------------------------------
+// HYBRID BULLET RENDERER
+// ------------------------------------------------------------
+function renderBullets(ul, bullets) {
+  if (!ul) return;
+  bullets = dedupeBullets(bullets || []);
+  ul.innerHTML = "";
+
+  bullets.forEach(b => {
+    const li = document.createElement("li");
+    if (/^[\p{Emoji}]/u.test(b)) li.textContent = b;
+    else li.textContent = "• " + b;
+    ul.appendChild(li);
+  });
+}
+
+// ------------------------------------------------------------
+// ⭐ UPDATED — RENDER RIGHT NOW COMFORT (returns HTML)
 // ------------------------------------------------------------
 export function renderRightNowComfort(intel) {
   const comfort = intel.comfort;
@@ -203,6 +291,9 @@ export function renderRightNowComfort(intel) {
   `;
 }
 
+// ------------------------------------------------------------
+// ⭐ UPDATED — Future Comfort (matches Comfort Now card)
+// ------------------------------------------------------------
 export function renderFutureComfort(intel) {
   const fc = intel.futureComfort;
   if (!fc || fc.length === 0) return "";
@@ -234,35 +325,196 @@ export function renderFutureComfort(intel) {
 }
 
 // ------------------------------------------------------------
-// ⭐ FIXED TOGGLE (uses CSS class, not display)
+// RENDER TODAY OUTLOOK
 // ------------------------------------------------------------
-export function setupComfortToggle() {
-  const hourly = document.getElementById("hourlyTemps");
+export function renderTodayOutlook(intel) {
+  const emojiEl = document.getElementById("today-emoji");
+  const headlineEl = document.getElementById("today-headline");
+  const textEl = document.getElementById("today-text");
+  const bulletsEl = document.getElementById("today-bullets");
+  const remainderLabel = document.getElementById("today-remainder-label");
 
-  document.addEventListener("click", (e) => {
-    const module = e.target.closest("#comfort-now-container .comfort-module");
-    if (!module || !hourly) return;
+  if (!headlineEl || !textEl || !bulletsEl) return;
 
-    hourly.classList.toggle("active");
-  });
+  const today = intel.today;
+  const remainder = intel.remainderToday;
+
+  if ((!today || !today.available) && (!remainder || !remainder.available)) {
+    headlineEl.textContent = "No data available";
+    textEl.textContent = "";
+    bulletsEl.innerHTML = "";
+    if (remainderLabel) remainderLabel.style.display = "none";
+    if (emojiEl) emojiEl.textContent = "";
+    return;
+  }
+
+  const active = (remainder && remainder.available) ? remainder : today;
+
+  if (remainderLabel) {
+    remainderLabel.style.display = active === remainder ? "block" : "none";
+  }
+
+  if (emojiEl) emojiEl.textContent = "";
+
+  headlineEl.textContent = active.headline;
+  fitHeadlineToWidth(headlineEl);
+
+  textEl.textContent = active.narrative;
+  renderBullets(bulletsEl, active.bullets);
+
+  const todayModule = document.getElementById("today-module");
+  if (todayModule && today) {
+    if (today.isEndOfDay) todayModule.classList.add("fade");
+    else todayModule.classList.remove("fade");
+  }
+}
+
+// ------------------------------------------------------------
+// RENDER TOMORROW OUTLOOK
+// ------------------------------------------------------------
+export function renderTomorrowOutlook(intel) {
+  const emojiEl = document.getElementById("tomorrow-emoji");
+  const badgeEl = document.getElementById("tomorrow-badge");
+  const badgeContainer = document.getElementById("tomorrow-badge-container");
+  const headlineEl = document.getElementById("tomorrow-headline");
+  const textEl = document.getElementById("tomorrow-text");
+  const bulletsEl = document.getElementById("tomorrow-bullets");
+
+  if (!headlineEl || !textEl || !bulletsEl) return;
+
+  const tomorrow = intel.tomorrow;
+
+  if (!tomorrow || !tomorrow.available) {
+    headlineEl.textContent = "No data available";
+    textEl.textContent = "";
+    bulletsEl.innerHTML = "";
+    if (badgeContainer) badgeContainer.style.display = "none";
+    if (emojiEl) emojiEl.textContent = "";
+    return;
+  }
+
+  if (emojiEl) emojiEl.textContent = "";
+
+  const dominant = getDominantDriver(
+    tomorrow.stats,
+    tomorrow.events?.driver
+  );
+
+  const badgeMap = {
+    rain:  { text: "Rain Gear",     class: "badge-rain" },
+    wind:  { text: "Wind Alert",    class: "badge-wind" },
+    snow:  { text: "Snow Impact",   class: "badge-snow" },
+    hot:   { text: "Heat Caution",  class: "badge-heat" },
+    cold:  { text: "Cold Start",    class: "badge-cold" },
+    goldilocks: { text: "Perfect Day", class: "badge-goldilocks" }
+  };
+
+  const badge = badgeMap[dominant];
+
+  if (!badge) {
+    if (badgeContainer) badgeContainer.style.display = "none";
+  } else {
+    if (badgeContainer) badgeContainer.style.display = "block";
+    if (badgeEl) {
+      badgeEl.textContent = badge.text;
+      badgeEl.className = `badge ${badge.class}`;
+    }
+  }
+
+  headlineEl.textContent = generateHumanHeadline(
+    tomorrow.stats,
+    tomorrow.headline
+  );
+  fitHeadlineToWidth(headlineEl);
+
+  textEl.textContent = tomorrow.narrative;
+  renderBullets(bulletsEl, tomorrow.bullets);
+
+  const tomorrowModule = document.getElementById("tomorrow-module");
+  if (tomorrowModule) {
+    if (tomorrow.isEarlyMorning) tomorrowModule.classList.add("fade");
+    else tomorrowModule.classList.remove("fade");
+  }
+}
+
+// ------------------------------------------------------------
+// RENDER UV INDEX
+// ------------------------------------------------------------
+export function renderUV(intel) {
+  const uvEl = document.getElementById("wu-uv");
+  if (!uvEl) return;
+
+  const uv = intel.uv ?? intel.wu?.uv ?? 0;
+  uvEl.textContent = uv.toFixed(1);
+  uvEl.className = "metric-value " + getUVClass(uv);
+}
+
+// ------------------------------------------------------------
+// RENDER TODAY DETAIL
+// ------------------------------------------------------------
+export function renderTodayDetail(intel) {
+  const panel = document.getElementById("expanded-today");
+  if (!panel) return;
+
+  const stats = intel.today?.stats;
+  if (!stats) {
+    panel.innerHTML = "";
+    return;
+  }
+
+  panel.innerHTML = `
+    <div class="fx-section"><div class="fx-label">High</div><div class="fx-value">${Math.round(stats.tempMax)}°</div></div>
+    <div class="fx-section"><div class="fx-label">Low</div><div class="fx-value">${Math.round(stats.tempMin)}°</div></div>
+    <div class="fx-section"><div class="fx-label">Wind</div><div class="fx-value">${Math.round(stats.windAvg)} mph (gusts ${Math.round(stats.windGustMax)} mph)</div></div>
+    <div class="fx-section"><div class="fx-label">Rain</div><div class="fx-value">${formatRainAmount(stats.rainTotal)}</div></div>
+    <div class="fx-section"><div class="fx-label">Snow</div><div class="fx-value">${formatSnowAmount(stats.snowTotal)}</div></div>
+    <div class="fx-section"><div class="fx-label">Cloud Cover</div><div class="fx-value">${Math.round(stats.cloudAvg)}%</div></div>
+  `;
+}
+
+// ------------------------------------------------------------
+// RENDER TOMORROW DETAIL
+// ------------------------------------------------------------
+export function renderTomorrowDetail(intel) {
+  const panel = document.getElementById("expanded-tomorrow");
+  if (!panel) return;
+
+  const stats = intel.tomorrow?.stats;
+  if (!stats) {
+    panel.innerHTML = "";
+    return;
+  }
+
+  panel.innerHTML = `
+    <div class="fx-section"><div class="fx-label">High</div><div class="fx-value">${Math.round(stats.tempMax)}°</div></div>
+    <div class="fx-section"><div class="fx-label">Low</div><div class="fx-value">${Math.round(stats.tempMin)}°</div></div>
+    <div class="fx-section"><div class="fx-label">Wind</div><div class="fx-value">${Math.round(stats.windAvg)} mph (gusts ${Math.round(stats.windGustMax)} mph)</div></div>
+    <div class="fx-section"><div class="fx-label">Rain</div><div class="fx-value">${formatRainAmount(stats.rainTotal)}</div></div>
+    <div class="fx-section"><div class="fx-label">Snow</div><div class="fx-value">${formatSnowAmount(stats.snowTotal)}</div></div>
+    <div class="fx-section"><div class="fx-label">Cloud Cover</div><div class="fx-value">${Math.round(stats.cloudAvg)}%</div></div>
+  `;
 }
 
 // ------------------------------------------------------------
 // EXPANSION PANEL TOGGLER
 // ------------------------------------------------------------
-export function toggleForecastExpanded(which) {
+export function toggleForecastExpanded(which, intel) {
   const panelToday = document.getElementById("expanded-today");
   const panelTomorrow = document.getElementById("expanded-tomorrow");
 
+  if (!panelToday || !panelTomorrow) return;
+
   if (which === "today") {
-    panelToday.style.display =
-      panelToday.style.display === "block" ? "none" : "block";
+    const isOpen = panelToday.style.display === "block";
+    panelToday.style.display = isOpen ? "none" : "block";
     panelTomorrow.style.display = "none";
+    return;
   }
 
   if (which === "tomorrow") {
-    panelTomorrow.style.display =
-      panelTomorrow.style.display === "block" ? "none" : "block";
+    const isOpen = panelTomorrow.style.display === "block";
+    panelTomorrow.style.display = isOpen ? "none" : "block";
     panelToday.style.display = "none";
+    return;
   }
 }

@@ -8,24 +8,26 @@ import {
   getShortTermForecast,
   getMRMSPixel,
   getTempestDeviceObs
-} from './weather-fetch.js';
+} from "./weather-fetch.js";
 
 import { subscribeUserToPush } from "./notifications/subscribeClient.js";
-import { buildWeatherIntel } from './intel/forecast-intel.js';
-import { computeComfort } from './intel/comfort.js';
-import { buildFutureComfort } from './intel/comfort.js';
-import { getReliableUV } from './intel/uv.js';
+import { buildWeatherIntel } from "./intel/forecast-intel.js";
+import { computeComfort, buildFutureComfort } from "./intel/comfort.js";
+import { getReliableUV } from "./intel/uv.js";
 
 import {
   renderRightNowComfort,
   renderFutureComfort,
-
-  
+  renderTodayOutlook,
+  renderTomorrowOutlook,
+  renderUV,
+  renderTodayDetail,
+  renderTomorrowDetail,
   renderCurrentObservations,
-  renderHourlyTemps
-} from './weather-render.js';
+  renderHourlyTemps,
+  toggleForecastExpanded
+} from "./weather-render.js";
 
-import { toggleForecastExpanded } from "./weather-render.js";
 window.toggleForecastExpanded = toggleForecastExpanded;
 
 // ------------------------------------------------------------
@@ -38,16 +40,15 @@ if ("serviceWorker" in navigator) {
 }
 
 // ============================================================
-// 🔥 NEW: PULSE MEDIA HANDLER (VIDEO + IMAGE SUPPORT)
+// 🔥 PULSE MEDIA HANDLER (VIDEO + IMAGE SUPPORT)
 // ============================================================
-
 function renderPulseMedia(url) {
   const container = document.getElementById("pulse-media");
   if (!container || !url) return;
 
   const isVideo =
-    url.includes('/video/upload') ||
-    url.endsWith('.mp4');
+    url.includes("/video/upload") ||
+    url.endsWith(".mp4");
 
   if (isVideo) {
     container.innerHTML = `
@@ -71,6 +72,8 @@ function setWUStatus(state, label, text) {
   const lbl = document.getElementById("wu-status-label");
   const txt = document.getElementById("wu-status-text");
 
+  if (!badge || !dot || !lbl || !txt) return;
+
   lbl.textContent = label;
   txt.textContent = text;
 
@@ -82,6 +85,7 @@ function setWUStatus(state, label, text) {
 
 function showWUError(msg) {
   const el = document.getElementById("wu-error");
+  if (!el) return;
   el.style.display = "block";
   el.textContent = msg;
 }
@@ -102,38 +106,42 @@ function showToast(message) {
 // MASTER UI UPDATE FUNCTION
 // ------------------------------------------------------------
 function updateUI(intel) {
+  // Comfort Now
+  const comfortNowContainer = document.getElementById("comfort-now-container");
+  if (comfortNowContainer) {
+    comfortNowContainer.innerHTML = renderRightNowComfort(intel);
+  }
 
-// ⭐ Render Comfort Now
-document.getElementById("comfort-now-container").innerHTML =
-  renderRightNowComfort(intel);
-
-// ⭐ Click to expand/collapse hourly temps
-document
-  .getElementById("comfort-now-container")
-  .addEventListener("click", () => {
-    document.getElementById("hourlyTemps").classList.toggle("hidden");
-  });
-
-// ⭐ Render hourly temps once (hidden initially)
-renderHourlyTemps(intel.hourly);
-
-
-  document.getElementById("future-comfort-container").innerHTML =
-    renderFutureComfort(intel);
-
-  // Existing modules
-
- 
- 
-  renderCurrentObservations(intel);
+  // Hourly temps (hidden initially via CSS)
   renderHourlyTemps(intel.hourly);
-setupComfortToggle(); // ⭐ ADD THIS LINE HERE
 
+  // Future Comfort
+  const futureComfortContainer = document.getElementById("future-comfort-container");
+  if (futureComfortContainer) {
+    futureComfortContainer.innerHTML = renderFutureComfort(intel);
+  }
+
+  // Today + Tomorrow
+  renderTodayOutlook(intel);
+  renderTomorrowOutlook(intel);
+
+  // UV
+  renderUV(intel);
+
+  // Expanded panels
+  renderTodayDetail(intel);
+  renderTomorrowDetail(intel);
+
+  // Current observations (WU block)
+  renderCurrentObservations(intel);
+
+  // Station footer
   const footer = document.getElementById("wu-station-footer");
-  if (intel.wu?.stationId) {
+  if (footer && intel.wu?.stationId) {
     footer.textContent = `Live data from Weather Underground Station ${intel.wu.stationId}`;
   }
 
+  // Pulse media
   if (intel.pulse?.imageUrl) {
     renderPulseMedia(intel.pulse.imageUrl);
   }
@@ -153,7 +161,7 @@ async function initApp() {
   setWUStatus("pending", "Requesting Location", "Waiting for permission…");
 
   navigator.geolocation.getCurrentPosition(
-    async (pos) => {
+    async pos => {
       const lat = pos.coords.latitude;
       const lon = pos.coords.longitude;
 
@@ -188,23 +196,19 @@ async function initApp() {
         intel.comfort = computeComfort(intel);
         intel.uv = getReliableUV(intel);
 
-        // ------------------------------------------------------------
-        // Build Future Comfort (next ~6 hours)
-        // ------------------------------------------------------------
+        // Future Comfort (next ~6 hours)
         intel.futureComfort = buildFutureComfort(intel.hourly, computeComfort);
 
         window._intel = intel;
 
         updateUI(intel);
-
       } catch (err) {
         console.error("Weather init error:", err);
         setWUStatus("error", "Data Error", "Unable to load weather data.");
         showWUError("Unable to load weather data. Please try again later.");
       }
     },
-
-    (err) => {
+    err => {
       console.error("Geolocation error:", err);
       setWUStatus("error", "Location Error", "Location permission denied.");
       showWUError("We couldn’t access your location. Please enable location services and reload.");
@@ -213,13 +217,10 @@ async function initApp() {
 }
 
 // ------------------------------------------------------------
-// CLICK LISTENERS FOR EXPANSION
+// CLICK LISTENERS FOR EXPANSION + NOTIFICATIONS + COMFORT TOGGLE
 // ------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
-
-  // ------------------------------------------------------------
-  // ENABLE NOTIFICATIONS BUTTON
-  // ------------------------------------------------------------
+  // Enable notifications button
   const notifBtn = document.getElementById("enable-notifications-btn");
 
   if (notifBtn) {
@@ -236,25 +237,38 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Today / Tomorrow expansion
   const todayModule = document.getElementById("today-module");
   const tomorrowModule = document.getElementById("tomorrow-module");
 
   if (todayModule) {
     todayModule.addEventListener("click", () => {
+      if (!window._intel) return;
       toggleForecastExpanded("today", window._intel);
     });
   }
 
   if (tomorrowModule) {
     tomorrowModule.addEventListener("click", () => {
+      if (!window._intel) return;
       toggleForecastExpanded("tomorrow", window._intel);
     });
   }
 
-  // ------------------------------------------------------------
-  // Debugging
-  // ------------------------------------------------------------
-  navigator.serviceWorker.addEventListener("message", e => {
-    alert("SW MSG: " + JSON.stringify(e.data));
-  });
+  // Comfort → hourly temps toggle (class-based)
+  const comfortNowRoot = document.getElementById("comfort-now-container");
+  if (comfortNowRoot) {
+    comfortNowRoot.addEventListener("click", () => {
+      const hourlyEl = document.getElementById("hourlyTemps");
+      if (!hourlyEl) return;
+      hourlyEl.classList.toggle("hidden");
+    });
+  }
+
+  // Debugging: SW messages
+  if (navigator.serviceWorker) {
+    navigator.serviceWorker.addEventListener("message", e => {
+      alert("SW MSG: " + JSON.stringify(e.data));
+    });
+  }
 });

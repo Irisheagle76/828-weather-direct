@@ -297,8 +297,6 @@
 }
 
 
-
-
 /* ======================================
    COMFORT EXPAND HOURLY TEMPS CSS
 ========================================= */
@@ -307,17 +305,16 @@
   gap: 10px;
   padding-top: 10px;
 
-  max-height: 0;
-  opacity: 0;
-  overflow: hidden;
+  max-height: 0;     /* ← fully collapsed */
+  opacity: 0;        /* ← invisible */
+  overflow: hidden;  /* ← hides content */
 
   transition: all 0.3s ease;
 }
 
-/* visible state */
 #hourlyTemps.active {
-  max-height: 120px;
-  opacity: 1;
+  max-height: 120px; /* ← expands smoothly */
+  opacity: 1;        /* ← fades in */
 }
 
 .hour-item {
@@ -368,7 +365,7 @@
   .comfort-right-col {
     flex: 1 1 100%;
   }
-}
+  
 .comfort-main {
   min-width: 0;
 }
