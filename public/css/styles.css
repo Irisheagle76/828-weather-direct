@@ -223,6 +223,25 @@
 
   cursor: pointer;
 }
+
+/* ============================================================
+   COMFORT NOW — TYPOGRAPHY TUNING
+============================================================ */
+
+#comfort-now-container .comfort-text {
+  font-size: 0.88rem;
+  line-height: 1.32;
+}
+
+#comfort-now-container .comfort-emoji {
+  font-size: 1.6rem;
+}
+
+#comfort-now-container .comfort-sub {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
 /* Top row layout */
 .comfort-main {
   display: flex;
@@ -272,6 +291,14 @@
   color: #9aa3c2;
   font-size: 0.78rem;
   margin-top: 0.15rem;
+}
+
+/* ============================================================
+   SHARED TYPOGRAPHY FOR COMFORT NOW + FUTURE COMFORT
+   ============================================================ */
+.comfort-module {
+  font-size: 0.9rem;        /* unified baseline */
+  line-height: 1.35;        /* tighter, more editorial */
 }
 
 /* ============================================================
@@ -347,6 +374,25 @@
 .hourly-strip {
   margin-top: 6px;   /* subtle breathing room */
 }
+
+/* ============================================================
+   FUTURE COMFORT — TYPOGRAPHY TUNING
+============================================================ */
+
+#future-comfort-container .comfort-text {
+  font-size: 0.88rem;
+  line-height: 1.32;
+}
+
+#future-comfort-container .comfort-emoji {
+  font-size: 1.6rem;
+}
+
+#future-comfort-container .comfort-sub {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
 /* ============================================================
    COMFORT ROW LAYOUT — FINAL, CLEAN, BUG‑FREE VERSION
 ============================================================ */
