@@ -319,7 +319,7 @@
 
 /* EXPANDED STATE */
 .comfort-module.active .comfort-expand {
-  max-height: 160px; /* enough for ~6 hourly items */
+  max-height: 160px;
   opacity: 1;
   transform: translateY(0) scale(1);
 }
@@ -342,14 +342,13 @@
   overflow-x: auto;
   overflow-y: hidden;
 
-  max-width: 100%;   /* ⭐ ADD THIS */
-
+  max-width: 100%;
   transition: all 0.3s ease;
 }
 
 #hourlyTemps.active {
-  max-height: 120px; /* ← expands smoothly */
-  opacity: 1;        /* ← fades in */
+  max-height: 120px;
+  opacity: 1;
 }
 
 .hour-item {
@@ -371,14 +370,15 @@
   font-weight: 600;
   color: #f5f5f5;
 }
+
 .hourly-strip {
-  margin-top: 6px;   /* subtle breathing room */
+  margin-top: 6px;
 }
+
 
 /* ============================================================
    FUTURE COMFORT — TYPOGRAPHY TUNING
 ============================================================ */
-
 #future-comfort-container .comfort-text {
   font-size: 0.88rem;
   line-height: 1.32;
@@ -394,9 +394,35 @@
 }
 
 /* ============================================================
-   COMFORT ROW LAYOUT — FINAL, CLEAN, BUG‑FREE VERSION
+   FUTURE COMFORT — VERTICAL RHYTHM TUNING
 ============================================================ */
 
+#future-comfort-container.comfort-module {
+  padding-top: 0.75rem;     /* tighter top */
+  padding-bottom: 0.85rem;  /* tighter bottom */
+}
+
+#future-comfort-container .comfort-text-block {
+  gap: 1px;                 /* reduce spacing between label/text/subtext */
+}
+
+#future-comfort-container .comfort-label {
+  margin-bottom: 0.1rem;    /* slightly tighter */
+}
+
+#future-comfort-container .comfort-sub {
+  margin-top: 0.1rem;       /* reduce subtext spacing */
+}
+
+/* Tighten the hourly strip spacing */
+#future-comfort-container .fc-strip {
+  margin-top: 8px;          /* was 12px */
+  padding-bottom: 4px;      /* was 6px */
+}
+
+/* ============================================================
+   COMFORT ROW LAYOUT — FINAL, CLEAN, BUG‑FREE VERSION
+============================================================ */
 #comfort-row {
   display: flex;
   gap: 16px;
@@ -416,10 +442,33 @@
 /* Ensure Future Comfort fills its column */
 .comfort-right-col .comfort-module {
   height: 100%;
-  min-width: 0;   /* ⭐ prevents containment break */
+  min-width: 0;
 }
 
-/* Mobile layout: stacked */
+
+/* ============================================================
+   EVEN OUT COMFORT COLUMNS (FINAL FIX)
+============================================================ */
+@media (min-width: 640px) {
+  #comfort-row {
+    align-items: stretch;
+  }
+
+  .comfort-left-col,
+  .comfort-right-col {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .comfort-right-col .comfort-module {
+    flex: 1;
+  }
+}
+
+
+/* ============================================================
+   MOBILE LAYOUT — STACKED
+============================================================ */
 @media (max-width: 640px) {
   #comfort-row {
     flex-direction: column;
@@ -429,14 +478,17 @@
   .comfort-left-col,
   .comfort-right-col {
     flex: 1 1 auto;
-    min-width: 0;   /* ⭐ still required */
+    min-width: 0;
   }
 }
+
 
 /* Prevent text overflow inside the module */
 .comfort-main {
   min-width: 0;
 }
+
+
 /* --- FUTURE COMFORT STRIP --- */
 .fc-strip {
   display: flex;
@@ -445,7 +497,7 @@
   padding: 0 4px 6px;
 
   min-width: 0;
-  max-width: 100%;   /* ⭐ ADD THIS */
+  max-width: 100%;
 }
 
 .fc-hour {
@@ -454,21 +506,22 @@
   align-items: center;
   justify-content: center;
 
-  flex: 1 1 0;        /* ⭐ critical: allows proper shrinking */
-  min-width: 0;       /* ⭐ prevents overflow */
-  max-width: 100%;    /* ⭐ keeps it inside container */
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 100%;
 }
+
 .fc-hour-label {
   font-size: 0.7rem;
   opacity: 0.7;
   margin-bottom: 4px;
-
-  white-space: nowrap;   /* keep */
+  white-space: nowrap;
 }
 
 .fc-hour-emoji {
   font-size: 1.25rem;
 }
+
     /* ============================================================
      TODAY + TOMORROW MODULES
   ============================================================ */
