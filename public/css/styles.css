@@ -228,16 +228,19 @@
    COMFORT NOW — TYPOGRAPHY TUNING
 ============================================================ */
 
-#comfort-now-container .comfort-text {
+#comfort-now-container .comfort-text,
+#future-comfort-container .comfort-text {
   font-size: 0.88rem;
   line-height: 1.32;
 }
 
-#comfort-now-container .comfort-emoji {
+#comfort-now-container .comfort-text,
+#future-comfort-container .comfort-text {
   font-size: 1.6rem;
 }
 
-#comfort-now-container .comfort-sub {
+#comfort-now-container .comfort-text,
+#future-comfort-container .comfort-text {
   font-size: 0.75rem;
   opacity: 0.8;
 }
@@ -248,13 +251,14 @@
   align-items: center;
   gap: 0.8rem;
 }
+
 .comfort-text-block {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  gap: 2px;   /* subtle spacing improvement */
+  gap: 2px;
 }
-/* Emoji */
+
 .comfort-emoji {
   flex-shrink: 0;
   font-size: 2rem;
@@ -263,7 +267,6 @@
   align-items: center;
 }
 
-/* Text styles */
 .comfort-label {
   color: #f0b777;
   font-size: 0.78rem;
@@ -271,11 +274,6 @@
   margin-bottom: 0.15rem;
   text-transform: uppercase;
   white-space: nowrap;
-}
-.comfort-text-block {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;        /* ⭐ prevents text overflow */
 }
 
 .comfort-text {
@@ -375,49 +373,6 @@
   margin-top: 6px;
 }
 
-
-/* ============================================================
-   FUTURE COMFORT — TYPOGRAPHY TUNING
-============================================================ */
-#future-comfort-container .comfort-text {
-  font-size: 0.88rem;
-  line-height: 1.32;
-}
-
-#future-comfort-container .comfort-emoji {
-  font-size: 1.6rem;
-}
-
-#future-comfort-container .comfort-sub {
-  font-size: 0.75rem;
-  opacity: 0.8;
-}
-
-/* ============================================================
-   FUTURE COMFORT — VERTICAL RHYTHM TUNING
-============================================================ */
-
-#future-comfort-container .comfort-module {
-  padding-top: 0.75rem;
-  padding-bottom: 0.85rem;
-}
-
-#future-comfort-container .comfort-text-block {
-  gap: 1px;
-}
-
-#future-comfort-container .comfort-label {
-  margin-bottom: 0.1rem;
-}
-
-#future-comfort-container .comfort-sub {
-  margin-top: 0.1rem;
-}
-
-#future-comfort-container .fc-strip {
-  margin-top: 8px;
-  padding-bottom: 4px;
-}
 /* ============================================================
    COMFORT ROW LAYOUT — FINAL, CLEAN, BUG‑FREE VERSION
 ============================================================ */
