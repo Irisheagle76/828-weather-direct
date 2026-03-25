@@ -336,36 +336,47 @@
   font-weight: 600;
   color: #f5f5f5;
 }
+/* ============================================================
+   COMFORT ROW LAYOUT — FINAL, CLEAN, BUG‑FREE VERSION
+============================================================ */
+
 #comfort-row {
   display: flex;
   gap: 12px;
   margin-bottom: 20px;
 }
 
+/* Desktop layout: side‑by‑side */
 .comfort-left-col {
   flex: 1.6;
+  min-width: 0;   /* ⭐ REQUIRED for containment */
 }
 
 .comfort-right-col {
   flex: 0.9;
+  min-width: 0;   /* ⭐ REQUIRED for containment */
 }
 
+/* Ensure Future Comfort fills its column */
 .comfort-right-col .comfort-module {
   height: 100%;
 }
 
+/* Mobile layout: stacked */
 @media (max-width: 640px) {
   #comfort-row {
     flex-direction: column;
     gap: 10px;
   }
-}
 
   .comfort-left-col,
   .comfort-right-col {
-    flex: 1 1 100%;
+    flex: 1 1 auto;
+    min-width: 0;   /* ⭐ still required */
   }
-  
+}
+
+/* Prevent text overflow inside the module */
 .comfort-main {
   min-width: 0;
 }
@@ -485,17 +496,18 @@
     /* ============================================================
      EXPANDED PANELS
   ============================================================ */
-    .expanded-panel {
-      background: rgba(20, 26, 42, 0.88);
-      border: 1px solid rgba(255, 255, 255, 0.10);
-      border-radius: 18px;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
-      color: #e8eaf6;
-      line-height: 1.45;
-      margin-top: 1rem;
-      padding: 1.2rem 1.4rem;
-      transition: all 0.25s ease;
-    }
+   .expanded-panel {
+  background: rgba(20, 26, 42, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 18px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  color: #e8eaf6;
+  line-height: 1.45;
+  margin-top: 1rem;
+  padding: 1.2rem 1.4rem;
+  transition: all 0.25s ease;
+  min-width: 0;   /* ⭐ prevents overflow */
+}
 
     .expanded-panel .fx-section {
       margin-bottom: 1.1rem;

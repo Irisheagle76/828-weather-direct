@@ -255,15 +255,15 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Comfort → hourly temps toggle (class-based)
-  const comfortNowRoot = document.getElementById("comfort-now-container");
-  if (comfortNowRoot) {
-    comfortNowRoot.addEventListener("click", () => {
-      const hourlyEl = document.getElementById("hourlyTemps");
-      if (!hourlyEl) return;
-      hourlyEl.classList.toggle("hidden");
-    });
-  }
+// Comfort → hourly temps toggle (class-based)
+const comfortNowRoot = document.getElementById("comfort-now-container");
+if (comfortNowRoot) {
+  comfortNowRoot.addEventListener("click", () => {
+    const hourlyEl = document.getElementById("hourlyTemps");
+    if (!hourlyEl) return;
+    hourlyEl.classList.toggle("active");
+  });
+}
 
   // Debugging: SW messages
   if (navigator.serviceWorker) {
