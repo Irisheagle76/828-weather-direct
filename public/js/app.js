@@ -22,7 +22,6 @@ import {
   renderTodayOutlook,
   renderTomorrowOutlook,
   renderUV,
-  renderTomorrowDetail,
   renderCurrentObservations,
   renderHourlyTemps
 } from './weather-render.js';
@@ -127,8 +126,6 @@ renderHourlyTemps(intel.hourly);
   renderTodayOutlook(intel);
   renderTomorrowOutlook(intel);
   renderUV(intel);
-  renderTodayDetail(intel);
-  renderTomorrowDetail(intel);
   renderCurrentObservations(intel);
   renderHourlyTemps(intel.hourly);
 setupComfortToggle(); // ⭐ ADD THIS LINE HERE
