@@ -20,7 +20,6 @@ import {
   renderRightNowComfort,
   renderFutureComfort,
 
-  renderTomorrowOutlook,
   renderUV,
   renderCurrentObservations,
   renderHourlyTemps
@@ -124,7 +123,7 @@ renderHourlyTemps(intel.hourly);
 
   // Existing modules
 
-  renderTomorrowOutlook(intel);
+ 
   renderUV(intel);
   renderCurrentObservations(intel);
   renderHourlyTemps(intel.hourly);
