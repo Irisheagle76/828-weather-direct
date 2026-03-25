@@ -199,23 +199,17 @@
   transform: translateX(-50%) translateY(0);
 }
 /* ============================================================
-   COMFORT MODULE
+   COMFORT MODULE — BASE
 ============================================================ */
 
-.comfort-row {
-  margin-bottom: var(--gap);
-}
-
-/* Main container */
 .comfort-module {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 
   width: 100%;
-  min-width: 0;          /* ⭐ critical for flex containment */
-
-  box-sizing: border-box; /* ⭐ prevents padding overflow issues */
+  min-width: 0;
+  box-sizing: border-box;
 
   background: rgba(255, 169, 77, 0.10);
   border: 1px solid rgba(255, 169, 77, 0.35);
@@ -225,33 +219,13 @@
   cursor: pointer;
 }
 
-/* ============================================================
-   COMFORT NOW — TYPOGRAPHY TUNING
-============================================================ */
-
-#comfort-now-container .comfort-text,
-#future-comfort-container .comfort-text {
-  font-size: 0.88rem;
-  line-height: 1.32;
-}
-
-#comfort-now-container .comfort-text,
-#future-comfort-container .comfort-text {
-  font-size: 1.6rem;
-}
-
-#comfort-now-container .comfort-text,
-#future-comfort-container .comfort-text {
-  font-size: 0.75rem;
-  opacity: 0.8;
-}
-
 /* Top row layout */
 .comfort-main {
   display: flex;
   align-items: center;
   gap: 0.8rem;
   flex: 1;
+  min-width: 0;
 }
 
 .comfort-text-block {
@@ -293,19 +267,78 @@
   margin-top: 0.15rem;
 }
 
-/* ============================================================
-   SHARED TYPOGRAPHY FOR COMFORT NOW + FUTURE COMFORT
-   ============================================================ */
+/* Shared typography baseline */
 .comfort-module {
-  font-size: 0.9rem;        /* unified baseline */
-  line-height: 1.35;        /* tighter, more editorial */
+  font-size: 0.9rem;
+  line-height: 1.35;
 }
 
 /* ============================================================
-   COMFORT EXPAND
+   COMFORT NOW — TYPOGRAPHY TUNING
 ============================================================ */
 
-/* COLLAPSED STATE */
+#comfort-now-container .comfort-text {
+  font-size: 0.88rem;
+  line-height: 1.32;
+}
+
+#comfort-now-container .comfort-emoji {
+  font-size: 1.6rem;
+}
+
+#comfort-now-container .comfort-sub {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+/* ============================================================
+   FUTURE COMFORT — TYPOGRAPHY TUNING
+============================================================ */
+
+#future-comfort-container .comfort-text {
+  font-size: 0.88rem;
+  line-height: 1.32;
+}
+
+#future-comfort-container .comfort-emoji {
+  font-size: 1.6rem;
+}
+
+#future-comfort-container .comfort-sub {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+/* ============================================================
+   FUTURE COMFORT — VERTICAL RHYTHM TUNING
+============================================================ */
+
+#future-comfort-container .comfort-module {
+  padding-top: 0.75rem;
+  padding-bottom: 0.85rem;
+}
+
+#future-comfort-container .comfort-text-block {
+  gap: 1px;
+}
+
+#future-comfort-container .comfort-label {
+  margin-bottom: 0.1rem;
+}
+
+#future-comfort-container .comfort-sub {
+  margin-top: 0.1rem;
+}
+
+#future-comfort-container .fc-strip {
+  margin-top: 8px;
+  padding-bottom: 4px;
+}
+
+/* ============================================================
+   COMFORT EXPAND (HOURLY TEMPS)
+============================================================ */
+
 .comfort-expand {
   max-height: 0;
   overflow: hidden;
@@ -317,20 +350,16 @@
     transform 0.25s ease;
 }
 
-/* EXPANDED STATE */
 .comfort-module.active .comfort-expand {
   max-height: 160px;
   opacity: 1;
   transform: translateY(0) scale(1);
 }
+
 .comfort-module.active {
   backdrop-filter: blur(6px);
 }
 
-
-/* ======================================
-   COMFORT EXPAND HOURLY TEMPS CSS
-========================================= */
 #hourlyTemps {
   display: flex;
   gap: 10px;
@@ -376,8 +405,9 @@
 }
 
 /* ============================================================
-   COMFORT ROW LAYOUT — FINAL, CLEAN, BUG‑FREE VERSION
+   COMFORT ROW LAYOUT — DESKTOP
 ============================================================ */
+
 #comfort-row {
   display: flex;
   gap: 16px;
@@ -400,10 +430,10 @@
   min-width: 0;
 }
 
-
 /* ============================================================
    EVEN OUT COMFORT COLUMNS (FINAL FIX)
 ============================================================ */
+
 @media (min-width: 640px) {
   #comfort-row {
     align-items: stretch;
@@ -420,10 +450,10 @@
   }
 }
 
-
 /* ============================================================
    MOBILE LAYOUT — STACKED
 ============================================================ */
+
 @media (max-width: 640px) {
   #comfort-row {
     flex-direction: column;
@@ -437,14 +467,10 @@
   }
 }
 
+/* ============================================================
+   FUTURE COMFORT STRIP
+============================================================ */
 
-/* Prevent text overflow inside the module */
-.comfort-main {
-  min-width: 0;
-}
-
-
-/* --- FUTURE COMFORT STRIP --- */
 .fc-strip {
   display: flex;
   gap: 6px;
