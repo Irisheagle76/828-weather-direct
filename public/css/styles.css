@@ -290,7 +290,11 @@
   font-size: 0.78rem;
   margin-top: 0.15rem;
 }
-
+.comfort-module-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
 /* ============================================================
    SHARED TYPOGRAPHY FOR COMFORT NOW + FUTURE COMFORT
    ============================================================ */
@@ -382,22 +386,11 @@
   margin-bottom: 20px;
 }
 
-.comfort-left-col {
-  flex: 1.6;
-  min-width: 0;
-}
-
+.comfort-left-col,
 .comfort-right-col {
-  flex: 0.9;
+  flex: 1 1 0;   /* ⭐ THE FIX */
   min-width: 0;
 }
-
-/* Ensure Future Comfort fills its column */
-.comfort-right-col .comfort-module {
-  flex: 1;        /* ⭐ THIS is the real fix */
-  min-width: 0;
-}
-
 
 /* ============================================================
    EVEN OUT COMFORT COLUMNS (FINAL FIX)

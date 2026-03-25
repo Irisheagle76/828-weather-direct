@@ -289,10 +289,12 @@ export function renderRightNowComfort(intel) {
           <div class="comfort-sub">Based on current conditions</div>
         </div>
       </div>
+
+      <!-- ⭐ MOVE IT INSIDE -->
+      <div id="hourlyTemps"></div>
     </div>
   `;
 }
-
 // ------------------------------------------------------------
 // ⭐ UPDATED — Future Comfort (matches Comfort Now card)
 // ------------------------------------------------------------
