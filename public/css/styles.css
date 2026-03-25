@@ -394,7 +394,7 @@
 
 /* Ensure Future Comfort fills its column */
 .comfort-right-col .comfort-module {
-  height: 100%;
+  flex: 1;        /* ⭐ THIS is the real fix */
   min-width: 0;
 }
 
