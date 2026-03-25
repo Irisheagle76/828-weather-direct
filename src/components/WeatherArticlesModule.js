@@ -84,7 +84,7 @@ export default function WeatherArticlesModule() {
         target="_blank"
         rel="noopener noreferrer"
       >
-        Read full article →
+        Read full article on Tim Ballisty's Substack →
       </a>
     </section>
   );
