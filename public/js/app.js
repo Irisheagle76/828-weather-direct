@@ -166,42 +166,165 @@ async function initApp() {
       const lon = pos.coords.longitude;
 
       try {
+        // ------------------------------------------------------------
+        // WU STATION + CURRENT CONDITIONS
+        // ------------------------------------------------------------
         const nearest = await getNearestWUStation(lat, lon);
         const wuCurrent = await getWUCurrentConditions(nearest.stationId);
 
         setWUStatus("ok", "WU Connected", "Weather Underground data loaded.");
 
+        // ------------------------------------------------------------
+        // TEMPEST DEVICE OBS
+        // ------------------------------------------------------------
         const TEMPEST_DEVICE_ID = "315255";
         const TEMPEST_TOKEN = "838ff386-d14b-4d45-897a-18903e6970a9";
 
         const tempest = await getTempestDeviceObs(TEMPEST_DEVICE_ID, TEMPEST_TOKEN);
         const tempestHigh = tempest?.tempHighToday ?? null;
 
+        // ------------------------------------------------------------
+        // OPEN-METEO HOURLY FORECAST
+        // ------------------------------------------------------------
         const hourly = await getShortTermForecast(lat, lon);
         window._hourly = hourly;
 
+        // ------------------------------------------------------------
+        // MRMS PRECIP PIXEL
+        // ------------------------------------------------------------
         const mrmsPixel = await getMRMSPixel(lat, lon);
 
+        // ------------------------------------------------------------
+        // BUILD BASE INTEL
+        // ------------------------------------------------------------
         const intel = buildWeatherIntel(hourly);
 
         intel.wu = wuCurrent;
+
+        // ⭐ Give WU a cloudCover fallback using Open‑Meteo hourly data
+        if (hourly?.cloudcover?.length > 0) {
+          intel.wu.cloudCover = hourly.cloudcover[0];
+        }
+
         intel.mrms = mrmsPixel;
         intel.tempest = tempest;
         intel.hourly = hourly;
 
+        // ------------------------------------------------------------
+        // ⭐ FIX 4 — Unified Sky Intelligence
+        // ------------------------------------------------------------
+        intel.sky = {
+          // Cloud cover: WU → Tempest illuminance → OM cloudcover
+          cloud:
+            intel.wu.cloudCover ??
+            (intel.tempest?.illuminance != null
+              ? Math.max(
+                  0,
+                  Math.min(100, 100 - (intel.tempest.illuminance / 120000) * 100)
+                )
+              : null) ??
+            hourly.cloudcover?.[0] ??
+            null,
+
+          // UV: Tempest → WU → OM
+          uv:
+            intel.tempest?.uv ??
+            intel.wu?.uv ??
+            hourly.uv_index?.[0] ??
+            null,
+
+          // Solar radiation: Tempest → WU
+          solar:
+            intel.tempest?.solarRadiation ??
+            intel.wu?.solarRadiation ??
+            null
+        };
+
+        // ------------------------------------------------------------
+        // ⭐ UNIFIED CURRENT CONDITIONS
+        // ------------------------------------------------------------
+        intel.current = {
+          temp:
+            intel.tempest?.temp ??
+            intel.wu?.temp ??
+            null,
+
+          dew:
+            intel.wu?.dewPoint ??
+            null,
+
+          humidity:
+            intel.tempest?.humidity ??
+            intel.wu?.humidity ??
+            null,
+
+          windSpeed:
+            intel.tempest?.windSpeed ??
+            intel.wu?.windSpeed ??
+            null,
+
+          windGust:
+            intel.tempest?.windGust ??
+            intel.wu?.windGust ??
+            null,
+
+          windDir:
+            intel.tempest?.windDir ??
+            intel.wu?.windDir ??
+            null,
+
+          precipType:
+            intel.tempest?.precipType ??
+            intel.wu?.precipType ??
+            null,
+
+          precipRate:
+            intel.wu?.precipRate ??
+            null,
+
+          cloud:
+            intel.sky.cloud,
+
+          uv:
+            intel.sky.uv,
+
+          solar:
+            intel.sky.solar,
+
+          timestamp:
+            intel.tempest?.timestamp ??
+            intel.wu?.obsTimeLocal ??
+            Date.now()
+        };
+
+        // ------------------------------------------------------------
+        // TODAY STATS (Tempest high)
+        // ------------------------------------------------------------
         intel.today = intel.today || {};
         intel.today.stats = intel.today.stats || {};
         intel.today.stats.maxTemp = tempestHigh;
 
+        // ------------------------------------------------------------
+        // COMFORT ENGINE (now uses unified sky + unified current)
+        // ------------------------------------------------------------
         intel.comfort = computeComfort(intel);
+
+        // UV block stays as-is
         intel.uv = getReliableUV(intel);
 
-        // Future Comfort (next ~6 hours)
+        // ------------------------------------------------------------
+        // FUTURE COMFORT (next 6 hours)
+        // ------------------------------------------------------------
         intel.futureComfort = buildFutureComfort(intel.hourly, computeComfort);
 
+        // Debug handle
         window._intel = intel;
 
+        // ------------------------------------------------------------
+        // UPDATE UI
+        // ------------------------------------------------------------
         updateUI(intel);
+
       } catch (err) {
         console.error("Weather init error:", err);
         setWUStatus("error", "Data Error", "Unable to load weather data.");
@@ -255,15 +378,15 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-// Comfort → hourly temps toggle (class-based)
-const comfortNowRoot = document.getElementById("comfort-now-container");
-if (comfortNowRoot) {
-  comfortNowRoot.addEventListener("click", () => {
-    const hourlyEl = document.getElementById("hourlyTemps");
-    if (!hourlyEl) return;
-    hourlyEl.classList.toggle("active");
-  });
-}
+  // Comfort → hourly temps toggle
+  const comfortNowRoot = document.getElementById("comfort-now-container");
+  if (comfortNowRoot) {
+    comfortNowRoot.addEventListener("click", () => {
+      const hourlyEl = document.getElementById("hourlyTemps");
+      if (!hourlyEl) return;
+      hourlyEl.classList.toggle("active");
+    });
+  }
 
   // Debugging: SW messages
   if (navigator.serviceWorker) {

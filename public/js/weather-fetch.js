@@ -45,12 +45,19 @@ export async function getWUCurrentConditions(stationId) {
       windDir: null,
       solarRadiation: null,
       uv: null,
+      precipType: null,
       stationId: stationId,
       history: []
     };
   }
 
   const imp = obs.imperial || {};
+
+  // ⭐ Normalize precipType for comfort engine
+  let precipType = null;
+  const rawType = String(obs.precipType ?? "").toLowerCase();
+  if (rawType.includes("rain")) precipType = "rain";
+  else if (rawType.includes("snow")) precipType = "snow";
 
   return {
     temp: imp.temp ?? obs.temperature ?? null,
@@ -63,6 +70,9 @@ export async function getWUCurrentConditions(stationId) {
 
     solarRadiation: obs.solarRadiation ?? null,
     uv: obs.uv ?? null,
+
+    precipType, // ⭐ added
+    cloudCover: null,   // ⭐ placeholder for Fix 2
 
     stationId: obs.stationID ?? stationId,
     history: []
@@ -118,7 +128,13 @@ export async function getTempestDeviceObs(deviceId, token) {
     uv: arr[10],
     solarRadiation: arr[11],
     rainAccum: arr[12],
-    precipType: arr[13],
+
+    // Normalize Tempest precipType to match comfort engine
+precipType:
+  arr[13] === 1 ? "rain" :
+  arr[13] === 3 ? "snow" :
+  null,
+  
     lightningDist: arr[14],
     lightningCount: arr[15],
     battery: arr[16],

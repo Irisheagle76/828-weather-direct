@@ -3,6 +3,8 @@
 // WEATHER RENDERER — Today, Tomorrow, Comfort, UV, Details
 // ============================================================
 
+import { generateFutureComfortPhrase } from "./intel/comfort.js";
+
 // ------------------------------------------------------------
 // PRECIPITATION RANGE HELPERS
 // ------------------------------------------------------------
@@ -298,6 +300,9 @@ export function renderFutureComfort(intel) {
   const fc = intel.futureComfort;
   if (!fc || fc.length === 0) return "";
 
+  // ⭐ NEW — Generate future‑tense narrative
+  const phrase = generateFutureComfortPhrase(fc, intel.hourly);
+
   const items = fc.map(item => `
     <div class="fc-hour">
       <div class="fc-hour-label">${item.hourLabel}</div>
@@ -312,7 +317,7 @@ export function renderFutureComfort(intel) {
 
         <div class="comfort-text-block">
           <div class="comfort-label">Next 6 Hours</div>
-          <div class="comfort-text">${fc[0].label}</div>
+          <div class="comfort-text">${phrase}</div>
           <div class="comfort-sub">Comfort trend</div>
         </div>
       </div>
@@ -448,7 +453,6 @@ export function renderUV(intel) {
   uvEl.textContent = uv.toFixed(1);
   uvEl.className = "metric-value " + getUVClass(uv);
 }
-
 // ------------------------------------------------------------
 // RENDER TODAY DETAIL
 // ------------------------------------------------------------

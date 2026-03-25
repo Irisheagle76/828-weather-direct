@@ -78,7 +78,7 @@ function computeComfortScore(temp, dew, wind, elev, windDir) {
   let score =
     (tScore * 0.5) +
     (drynessPenalty * 0.9) +
-    windPenalty -
+    windPenalty - 
     solarBonus;
 
   return Math.round(
@@ -238,6 +238,7 @@ function pickComfortEmoji(state) {
 // ------------------------------------------------------------
 export function computeComfort(intel) {
   const wu = intel.wu;
+  const sky = intel.sky ?? {};   // ⭐ unified sky intelligence
   if (!wu) return {};
 
   const temp = wu.temp ?? 0;
@@ -271,7 +272,6 @@ export function computeComfort(intel) {
   else if (feelsLike <= 85) state = "warm";
   else state = "hot";
 
-  // ⭐ FIXED: restored emoji picker
   const emoji = pickComfortEmoji(state);
 
   let baseFeel =
@@ -297,6 +297,16 @@ export function computeComfort(intel) {
   const humidText = humidityFeel(dew);
   if (humidText) parts.push(humidText);
 
+  // ⭐ unified cloud cover
+  const cloud = sky.cloud ?? wu.cloudCover ?? 100;
+
+  // ⭐ unified UV
+  const uv = sky.uv ?? intel.uv ?? wu.uv ?? 0;
+
+  // ⭐ unified solar radiation
+  const solar = sky.solar ?? wu.solarRadiation ?? null;
+
+  // solar helpfulness now uses unified sky
   if (isSolarHelpful(intel, elev)) {
     parts.push(sunAngleFeel(elev));
   }
@@ -319,6 +329,7 @@ export function computeComfort(intel) {
     feelsLike
   };
 }
+
 // ------------------------------------------------------------
 // FUTURE BUILDER — FIXED (next 6 real future hours)
 // ------------------------------------------------------------
@@ -352,22 +363,148 @@ export function buildFutureComfort(hourly, computeComfort) {
     const c = computeComfort(intelForHour);
 
     items.push({
+      index: idx,
       time: hourly.time[idx],
-      hourLabel: formatHourLabel(hourly.time[idx]),
+      hourLabel: formatHourLabel(hourly.time[idx]),  // ⭐ timezone‑safe
       comfortScore: c.comfortScore,
       color: c.color,
       label: c.label,
-      emoji: c.emoji
+      emoji: c.emoji,
+
+      // raw values for phrase engine
+      temp: hourly.temperature_2m[idx],
+      dew: hourly.dewpoint_2m[idx],
+      wind: hourly.wind_speed_10m[idx]
     });
   }
 
   return items;
 }
 
+// ------------------------------------------------------------
+// ⭐ TIMEZONE‑SAFE HOUR LABEL
+// ------------------------------------------------------------
 function formatHourLabel(iso) {
   const d = new Date(iso);
-  let h = d.getHours();
-  const suffix = h >= 12 ? "PM" : "AM";
-  h = h % 12 || 12;
-  return `${h} ${suffix}`;
+
+  // ⭐ Force Asheville local time
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    hour12: true,
+    timeZone: "America/New_York"
+  });
+
+  const parts = formatter.formatToParts(d);
+  const hour = parts.find(p => p.type === "hour")?.value ?? "";
+  const suffix = parts.find(p => p.type === "dayPeriod")?.value?.toUpperCase() ?? "";
+
+  return `${hour} ${suffix}`;
+}
+
+// ------------------------------------------------------------
+// ⭐ FUTURE COMFORT PHRASE ENGINE — Asheville‑Tuned, Seasonal, Sky‑Aware
+// ------------------------------------------------------------
+export function generateFutureComfortPhrase(items, hourly) {
+  if (!items || items.length === 0) return "";
+
+  const first = items[0];
+  const last = items[items.length - 1];
+
+  const temps = items.map(i => i.temp);
+  const dews = items.map(i => i.dew);
+  const winds = items.map(i => i.wind);
+
+  // 1. Temperature band (Asheville‑tuned)
+  function tempBand(t) {
+    if (t <= 42) return "cold";
+    if (t <= 56) return "cool";
+    if (t <= 72) return "mild";
+    if (t <= 83) return "warm";
+    return "hot";
+  }
+
+  const bandStart = tempBand(first.temp);
+  const bandEnd = tempBand(last.temp);
+
+  // 2. Dew point feel (Asheville‑tuned)
+  function dewFeel(d) {
+    if (d <= 40) return "crisp, mountain‑dry air";
+    if (d <= 55) return "comfortable humidity";
+    if (d <= 63) return "a touch of humidity";
+    if (d <= 68) return "noticeable humidity";
+    return "muggy air building";
+  }
+
+  const dewPhrase = dewFeel(first.dew);
+
+  // 3. Wind feel (Asheville‑tuned)
+  function windFeel(w) {
+    if (w < 4) return "calm conditions";
+    if (w < 10) return "a gentle breeze";
+    if (w < 18) return "a noticeable breeze";
+    return "breezy conditions";
+  }
+
+  const windPhrase = windFeel(first.wind);
+
+  // 4. Trend detection
+  const tempTrend = last.temp - first.temp;
+  const dewTrend = last.dew - first.dew;
+  const windTrend = last.wind - first.wind;
+
+  let trendPhrase = "";
+
+  if (tempTrend >= 6) trendPhrase = "warming through the afternoon";
+  else if (tempTrend >= 3) trendPhrase = "warming gradually";
+  else if (tempTrend <= -6) trendPhrase = "cooling off noticeably later";
+  else if (tempTrend <= -3) trendPhrase = "cooling gradually";
+
+  // 5. Seasonal tone
+  const month = new Date(first.time).getMonth() + 1;
+  const isWinter = month === 12 || month <= 2;
+  const isSummer = month >= 6 && month <= 8;
+
+  const seasonalMap = {
+    cold: isWinter ? "Cold and brisk" : "Cold",
+    cool: isWinter ? "Chilly" : "Cool and manageable",
+    mild: isSummer ? "Pleasantly mild" : "Mild and easygoing",
+    warm: isSummer ? "Warm and summery" : "Warm and pleasant",
+    hot: isSummer ? "Hot and summery" : "Hot and energetic"
+  };
+
+  const base = seasonalMap[bandStart] ?? "Comfortable";
+
+  // 6. Sky & solar influence (using hourly.cloudcover)
+  let skyPhrase = "";
+  if (hourly && Array.isArray(hourly.cloudcover)) {
+    const cloud = hourly.cloudcover[first.index] ?? null;
+    if (cloud != null) {
+      if (cloud < 25) skyPhrase = "with sunshine adding a bit of warmth";
+      else if (cloud < 55) skyPhrase = "under partly sunny skies";
+      else if (cloud < 80) skyPhrase = "with filtered sun through clouds";
+      else skyPhrase = "under mostly cloudy skies";
+    }
+  }
+
+  // 7. Hazard‑aware modifiers
+  let hazard = "";
+  if (first.wind >= 20) hazard = "gusty at times";
+  if (first.dew >= 69) hazard = "muggy air building";
+  if (first.temp >= 88) hazard = "trending hot later";
+
+  // 8. Time‑of‑day awareness
+  const hour = new Date(first.time).getHours();
+  let timePhrase = "";
+  if (hour < 10) timePhrase = "this morning";
+  else if (hour < 15) timePhrase = "by midday";
+  else if (hour < 18) timePhrase = "this afternoon";
+  else timePhrase = "this evening";
+
+  // 9. Build final sentence
+  let sentence = `${base} ${timePhrase} with ${dewPhrase} and ${windPhrase}`;
+  if (skyPhrase) sentence += `, ${skyPhrase}`;
+  if (hazard) sentence += ` — ${hazard}`;
+  if (trendPhrase) sentence += ` — ${trendPhrase}`;
+
+  return sentence.trim() + ".";
 }
