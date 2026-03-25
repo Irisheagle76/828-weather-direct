@@ -28,13 +28,6 @@ self.addEventListener("fetch", event => {
 });
 
 // ------------------------------------------------------------
-// DEBUG — confirm SW is active
-// ------------------------------------------------------------
-self.clients.matchAll().then(clients => {
-  clients.forEach(client => client.postMessage("SW is active " + SW_VERSION));
-});
-
-// ------------------------------------------------------------
 // PUSH HANDLER
 // ------------------------------------------------------------
 self.addEventListener("push", event => {
