@@ -296,34 +296,30 @@
   backdrop-filter: blur(6px);
 }
 
-#hourlyTemps {
-  scrollbar-width: none;
-}
 
+
+
+/* ======================================
+   COMFORT EXPAND HOURLY TEMPS CSS
+========================================= */
 #hourlyTemps {
-  display: none;          /* hidden by default */
+  display: flex;
   gap: 10px;
   padding-top: 10px;
 
-  overflow: hidden;       /* ⭐ kills scroll */
-  flex-wrap: wrap;        /* ⭐ allows wrapping instead of scrolling */
-}
-
-======================================
-   COMFORT EXPAND HOURLY TEMPS CSS
-============================================================ */
-#hourlyTemps {
-  display: flex;
   max-height: 0;
   opacity: 0;
   overflow: hidden;
+
   transition: all 0.3s ease;
 }
 
+/* visible state */
 #hourlyTemps.active {
   max-height: 120px;
   opacity: 1;
 }
+
 .hour-item {
   min-width: 60px;
   flex-shrink: 0;
@@ -350,19 +346,23 @@
 }
 
 .comfort-left-col {
-  flex: 1.4;     /* bigger */
-  min-width: 0;
+  flex: 1.6;
 }
 
 .comfort-right-col {
-  flex: 1;       /* smaller */
-  min-width: 0;
+  flex: 0.9;
+}
+
+.comfort-right-col .comfort-module {
+  height: 100%;
 }
 
 @media (max-width: 640px) {
   #comfort-row {
-    flex-direction: column;   /* ⭐ stack */
+    flex-direction: column;
+    gap: 10px;
   }
+}
 
   .comfort-left-col,
   .comfort-right-col {

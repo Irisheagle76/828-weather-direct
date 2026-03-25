@@ -131,8 +131,8 @@ renderHourlyTemps(intel.hourly);
   renderTodayDetail(intel);
   renderTomorrowDetail(intel);
   renderCurrentObservations(intel);
-
   renderHourlyTemps(intel.hourly);
+setupComfortToggle(); // ⭐ ADD THIS LINE HERE
 
   const footer = document.getElementById("wu-station-footer");
   if (intel.wu?.stationId) {
