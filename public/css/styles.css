@@ -210,6 +210,7 @@
 .comfort-module {
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
 
   width: 100%;
   min-width: 0;          /* ⭐ critical for flex containment */
@@ -250,6 +251,7 @@
   display: flex;
   align-items: center;
   gap: 0.8rem;
+  flex: 1;
 }
 
 .comfort-text-block {
