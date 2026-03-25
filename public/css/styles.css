@@ -210,13 +210,17 @@
 .comfort-module {
   display: flex;
   flex-direction: column;
-  width: 100%;        /* ⭐ ADD THIS */
-  min-width: 0;       /* ⭐ ADD THIS */
+
+  width: 100%;
+  min-width: 0;          /* ⭐ critical for flex containment */
+
+  box-sizing: border-box; /* ⭐ prevents padding overflow issues */
 
   background: rgba(255, 169, 77, 0.10);
   border: 1px solid rgba(255, 169, 77, 0.35);
   border-radius: var(--module-radius);
   padding: var(--module-padding);
+
   cursor: pointer;
 }
 /* Top row layout */
@@ -308,9 +312,10 @@
   max-height: 0;
   opacity: 0;
 
-  overflow-x: auto;   /* ⭐ horizontal scroll enabled */
-  overflow-y: hidden; /* keep collapse animation clean */
-  -webkit-overflow-scrolling: touch;
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  max-width: 100%;   /* ⭐ ADD THIS */
 
   transition: all 0.3s ease;
 }
@@ -352,16 +357,14 @@
   margin-bottom: 20px;
 }
 
-/* Desktop layout: side‑by‑side */
-.comfort-right-col {
-  flex: 0.9;
+.comfort-left-col {
+  flex: 1.6;
   min-width: 0;
-  overflow: hidden;   /* ⭐ THIS FIXES YOUR ISSUE */
 }
 
 .comfort-right-col {
   flex: 0.9;
-  min-width: 0;   /* ⭐ REQUIRED for containment */
+  min-width: 0;
 }
 
 /* Ensure Future Comfort fills its column */
@@ -396,7 +399,7 @@
   padding: 0 4px 6px;
 
   min-width: 0;
-  overflow: hidden;   /* ⭐ KEY FIX */
+  max-width: 100%;   /* ⭐ ADD THIS */
 }
 
 .fc-hour {
@@ -410,15 +413,11 @@
   max-width: 100%;    /* ⭐ keeps it inside container */
 }
 .fc-hour-label {
-  font-size: 0.68rem;
-  letter-spacing: 0.02em;
+  font-size: 0.7rem;
   opacity: 0.7;
   margin-bottom: 4px;
 
-  white-space: nowrap;      /* ⭐ prevents wrapping */
-  overflow: hidden;         /* ⭐ prevents spill */
-  text-overflow: ellipsis;  /* ⭐ clean cutoff if needed */
-  max-width: 100%;          /* ⭐ keeps inside container */
+  white-space: nowrap;   /* keep */
 }
 
 .fc-hour-emoji {
