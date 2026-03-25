@@ -19,7 +19,7 @@ import { getReliableUV } from './intel/uv.js';
 import {
   renderRightNowComfort,
   renderFutureComfort,
-  renderTodayOutlook,
+
   renderTomorrowOutlook,
   renderUV,
   renderCurrentObservations,
@@ -123,7 +123,7 @@ renderHourlyTemps(intel.hourly);
     renderFutureComfort(intel);
 
   // Existing modules
-  renderTodayOutlook(intel);
+
   renderTomorrowOutlook(intel);
   renderUV(intel);
   renderCurrentObservations(intel);
