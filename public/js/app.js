@@ -11,10 +11,10 @@ import {
   getTempestDeviceObs
 } from "./weather-fetch.js";
 
-import { subscribeUserToPush } from "./notifications/subscribeClient.js";
-import { buildWeatherIntel } from "./intel/forecast-intel.js";
-import { computeComfort, buildFutureComfort } from "./intel/comfort.js";
-import { getReliableUV } from "./intel/uv.js";
+import { subscribeUserToPush } from "./notifications/subscribeClient.js?v=1.0.0";
+import { buildWeatherIntel } from "./intel/forecast-intel.js?v=1.0.0";
+import { computeComfort, buildFutureComfort } from "./intel/comfort.js?v=1.0.0";
+import { getReliableUV } from "./intel/uv.js?v=1.0.0";
 
 import {
   renderRightNowComfort,

@@ -1,5 +1,5 @@
 import { kv } from "@vercel/kv";
-import { sendPushToAll } from "../../lib/notifications/sendPush.js";
+import { sendPushToAll } from "../../lib/notifications/sendPush.js?v=1.0.0";
 console.log("Pulse-write route loaded at", Date.now());
 export default async function handler(req, res) {
   if (req.method !== "POST") {

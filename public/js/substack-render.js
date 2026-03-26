@@ -1,5 +1,5 @@
 // substack-render.js
-import { fetchSubstackLatestArticle } from "./substack-api.js";
+import { fetchSubstackLatestArticle } from "./substack-api.js?v=1.0.0";
 
 export async function renderSubstackArticle() {
   const container = document.getElementById("weather-articles-module");

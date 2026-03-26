@@ -1,7 +1,7 @@
 // /intel/comfort.js
 // FULL HYBRID — Narrative Engine + Asheville Comfort Score
 
-import { LOCATION } from "../config/location.js";
+import { LOCATION } from "../config/location.js?v=1.0.0";
 
 // ------------------------------------------------------------
 // SOLAR ELEVATION

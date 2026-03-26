@@ -3,9 +3,9 @@
 // WEATHER RENDERER — Today, Tomorrow, Comfort, UV, Details
 // ============================================================
 
-import { generateFutureComfortPhrase } from "./intel/comfort.js";
-import { generateHumanAction } from "./modules/human-action-2/human-action-2.js";
-import { buildTomorrowCurrent } from "./modules/human-action-2/tomorrow-builder.js";
+import { generateFutureComfortPhrase } from "./intel/comfort.js?v=1.0.0";
+import { generateHumanAction } from "./modules/human-action-2/human-action-2.js?v=1.0.0";
+import { buildTomorrowCurrent } from "./modules/human-action-2/tomorrow-builder.js?v=1.0.0";
 
 // ------------------------------------------------------------
 // PRECIPITATION RANGE HELPERS

@@ -2,7 +2,7 @@
 // Human‑Action 2.0 — Output Layer (Warm Hybrid Bullets)
 // This file handles ONLY the visible phrasing. No heavy logic yet.
 
-import { evaluateHumanActionFactors } from "./core-engine.js";
+import { evaluateHumanActionFactors } from "./core-engine.js?v=1.0.0";
 
 // ---------------------------------------------------------
 // 1. Emoji Selector
