@@ -158,13 +158,12 @@ function updateUI(intel) {
     footer.textContent = `Live data from Weather Underground Station ${intel.wu.stationId}`;
   }
 
-  // ------------------------------------------------------------
-  // Pulse Media
-  // ------------------------------------------------------------
-  if (intel.pulse?.imageUrl) {
-    renderPulseMedia(intel.pulse.imageUrl);
-  }
+// Pulse Media (supports video + image)
+if (intel.pulse?.mediaUrl) {
+  renderPulseMedia(intel.pulse.mediaUrl);
 }
+  }
+  
 // ------------------------------------------------------------
 // ENTRY POINT
 // ------------------------------------------------------------
