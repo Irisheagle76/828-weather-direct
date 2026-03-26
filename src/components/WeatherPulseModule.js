@@ -67,16 +67,27 @@ export default function WeatherPulseModule() {
     <section className="module-card pulse-module">
       <h2 className="module-title">{pulse.title}</h2>
 
-      {pulse.imageUrl && (
-        <div className="pulse-image-wrapper">
-          <img
-            src={pulse.imageUrl}
-            alt=""
-            className="pulse-image"
-            loading="lazy"
-          />
-        </div>
-      )}
+  {pulse.mediaUrl && (
+  <div className="pulse-image-wrapper">
+    {pulse.mediaType === "video" ? (
+      <video
+        src={pulse.mediaUrl}
+        className="pulse-image"
+        autoPlay
+        loop
+        muted
+        playsInline
+      />
+    ) : (
+      <img
+        src={pulse.mediaUrl}
+        alt=""
+        className="pulse-image"
+        loading="lazy"
+      />
+    )}
+  </div>
+)}
 
       <p className="pulse-text">{pulse.text}</p>
 
