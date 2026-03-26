@@ -32,7 +32,7 @@ import {
 window.toggleForecastExpanded = toggleForecastExpanded;
 
 // ------------------------------------------------------------
-// SERVICE WORKER REGISTRATION (for push notifications)
+// SERVICE WORKER REGISTRATION
 // ------------------------------------------------------------
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/sw.js").catch(err => {
@@ -99,79 +99,69 @@ function showToast(message) {
     toast.classList.remove("show");
   }, 2500);
 }
-// ------------------------------------------------------------
-// MASTER UI UPDATE FUNCTION (Optimized + HA2.0 Safe)
-// ------------------------------------------------------------
+// ============================================================
+// MASTER UI UPDATE FUNCTION
+// ============================================================
 function updateUI(intel) {
   if (!intel) return;
 
-  // ------------------------------------------------------------
   // Comfort Now
-  // ------------------------------------------------------------
   const comfortNowContainer = document.getElementById("comfort-now-container");
   if (comfortNowContainer) {
     comfortNowContainer.innerHTML = renderRightNowComfort(intel);
   }
 
-  // ------------------------------------------------------------
-  // Hourly temps (hidden initially via CSS)
-  // ------------------------------------------------------------
+  // Hourly temps
   if (intel.hourly) {
     renderHourlyTemps(intel.hourly);
   }
 
-  // ------------------------------------------------------------
   // Future Comfort
-  // ------------------------------------------------------------
   const futureComfortContainer = document.getElementById("future-comfort-container");
   if (futureComfortContainer) {
     futureComfortContainer.innerHTML = renderFutureComfort(intel);
   }
 
-  // ------------------------------------------------------------
-  // Human‑Action 2.0 — Today + Tomorrow
-  // ------------------------------------------------------------
+  // Human‑Action 2.0
   renderTodayOutlook(intel);
   renderTomorrowOutlook(intel);
 
-  // ------------------------------------------------------------
   // UV Index
-  // ------------------------------------------------------------
   renderUV(intel);
 
-  // ------------------------------------------------------------
-  // Expanded Panels (Today + Tomorrow)
-  // ------------------------------------------------------------
+  // Expanded Panels
   renderTodayDetail(intel);
   renderTomorrowDetail(intel);
 
-  // ------------------------------------------------------------
-  // Current Observations (WU block)
-  // ------------------------------------------------------------
+  // Current Observations
   renderCurrentObservations(intel);
 
-  // ------------------------------------------------------------
   // Station Footer
-  // ------------------------------------------------------------
   const footer = document.getElementById("wu-station-footer");
   if (footer && intel.wu?.stationId) {
     footer.textContent = `Live data from Weather Underground Station ${intel.wu.stationId}`;
   }
 
-// Pulse Media (supports video + image)
-if (intel.pulse?.mediaUrl) {
-  renderPulseMedia(intel.pulse.mediaUrl);
-}
-// Pulse Text
-const preview = document.getElementById("pulse-preview");
-if (preview && intel.pulse?.text) {
-  preview.innerHTML = intel.pulse.text;
-}
+  // ------------------------------------------------------------
+  // ⭐ PULSE MEDIA + TEXT
+  // ------------------------------------------------------------
+  if (intel.pulse?.mediaUrl) {
+    renderPulseMedia(intel.pulse.mediaUrl);
   }
 
-// ------------------------------------------------------------
-// ENTRY POINT
-// ------------------------------------------------------------
+  const preview = document.getElementById("pulse-preview");
+  if (preview && intel.pulse?.text) {
+    preview.innerHTML = intel.pulse.text;
+  }
+
+  const fullText = document.getElementById("pulse-full-text");
+  if (fullText && intel.pulse?.text) {
+    fullText.innerHTML = intel.pulse.text;
+  }
+}
+// ============================================================
+// ENTRY POINT — INIT APP
+// ============================================================
 document.addEventListener("DOMContentLoaded", initApp);
 
 async function initApp() {
@@ -188,37 +178,22 @@ async function initApp() {
       const lon = pos.coords.longitude;
 
       try {
-        // ------------------------------------------------------------
-        // WU STATION + CURRENT CONDITIONS
-        // ------------------------------------------------------------
         const nearest = await getNearestWUStation(lat, lon);
         const wuCurrent = await getWUCurrentConditions(nearest.stationId);
 
         setWUStatus("ok", "WU Connected", "Weather Underground data loaded.");
 
-        // ------------------------------------------------------------
-        // TEMPEST DEVICE OBS
-        // ------------------------------------------------------------
         const TEMPEST_DEVICE_ID = "315255";
         const TEMPEST_TOKEN = "838ff386-d14b-4d45-897a-18903e6970a9";
 
         const tempest = await getTempestDeviceObs(TEMPEST_DEVICE_ID, TEMPEST_TOKEN);
         const tempestHigh = tempest?.tempHighToday ?? null;
 
-        // ------------------------------------------------------------
-        // OPEN-METEO HOURLY FORECAST
-        // ------------------------------------------------------------
         const hourly = await getShortTermForecast(lat, lon);
         window._hourly = hourly;
 
-        // ------------------------------------------------------------
-        // MRMS PRECIP PIXEL
-        // ------------------------------------------------------------
         const mrmsPixel = await getMRMSPixel(lat, lon);
 
-        // ------------------------------------------------------------
-        // BUILD BASE INTEL
-        // ------------------------------------------------------------
         const intel = buildWeatherIntel(hourly);
 
         intel.wu = wuCurrent;
@@ -226,14 +201,11 @@ async function initApp() {
         intel.hourly = hourly;
         intel.mrms = mrmsPixel;
 
-        // Cloud cover fallback from OM
         if (hourly?.cloudcover?.length > 0) {
           intel.wu.cloudCover = hourly.cloudcover[0];
         }
 
-        // ------------------------------------------------------------
-        // ⭐ UNIFIED SKY INTELLIGENCE
-        // ------------------------------------------------------------
+        // SKY INTEL
         intel.sky = {
           cloud:
             intel.wu.cloudCover ??
@@ -258,142 +230,68 @@ async function initApp() {
             null
         };
 
-        // ------------------------------------------------------------
-        // ⭐ UNIFIED CURRENT CONDITIONS (Human‑Action 2.0 Ready)
-        // ------------------------------------------------------------
+        // CURRENT CONDITIONS
         intel.current = {
-          temp:
-            intel.tempest?.temp ??
-            intel.wu?.temp ??
-            null,
-
-          feelsLike:
-            intel.tempest?.temp ??
-            intel.wu?.temp ??
-            null,
-
-          dewpoint:
-            intel.wu?.dewPoint ??
-            null,
-
-          humidity:
-            intel.tempest?.humidity ??
-            intel.wu?.humidity ??
-            null,
-
-          windSpeed:
-            intel.tempest?.windSpeed ??
-            intel.wu?.windSpeed ??
-            null,
-
-          windGust:
-            intel.tempest?.windGust ??
-            intel.wu?.windGust ??
-            null,
-
-          windDir:
-            intel.tempest?.windDir ??
-            intel.wu?.windDir ??
-            null,
-
-          precipType:
-            intel.tempest?.precipType ??
-            intel.wu?.precipType ??
-            null,
-
-          precipIntensity:
-            intel.wu?.precipRate ??
-            0,
-
-          cloudCover:
-            intel.sky.cloud != null ? intel.sky.cloud / 100 : null,
-
-          uvIndex:
-            intel.sky.uv ?? null,
-
-          visibility:
-            intel.wu?.visibility ?? 10,
-
-          smokeIndex:
-            intel.wu?.smokeIndex ?? 0,
-
+          temp: intel.tempest?.temp ?? intel.wu?.temp ?? null,
+          feelsLike: intel.tempest?.temp ?? intel.wu?.temp ?? null,
+          dewpoint: intel.wu?.dewPoint ?? null,
+          humidity: intel.tempest?.humidity ?? intel.wu?.humidity ?? null,
+          windSpeed: intel.tempest?.windSpeed ?? intel.wu?.windSpeed ?? null,
+          windGust: intel.tempest?.windGust ?? intel.wu?.windGust ?? null,
+          windDir: intel.tempest?.windDir ?? intel.wu?.windDir ?? null,
+          precipType: intel.tempest?.precipType ?? intel.wu?.precipType ?? null,
+          precipIntensity: intel.wu?.precipRate ?? 0,
+          cloudCover: intel.sky.cloud != null ? intel.sky.cloud / 100 : null,
+          uvIndex: intel.sky.uv ?? null,
+          visibility: intel.wu?.visibility ?? 10,
+          smokeIndex: intel.wu?.smokeIndex ?? 0,
           frostRisk:
             (intel.wu?.dewPoint <= 36 && intel.wu?.temp <= 37) ? 0.7 :
-            (intel.wu?.temp <= 34) ? 1 :
-            0,
-
+            (intel.wu?.temp <= 34) ? 1 : 0,
           freezeRisk:
             intel.wu?.temp <= 32 ? 1 :
-            intel.wu?.temp <= 34 ? 0.5 :
-            0,
-
+            intel.wu?.temp <= 34 ? 0.5 : 0,
           inversionRisk:
             (intel.wu?.temp <= 40 && (intel.tempest?.windSpeed ?? 0) < 3) ? 0.6 : 0,
-
           blackIceRisk:
             (intel.wu?.temp <= 32 && (intel.wu?.precipRate ?? 0) > 0) ? 1 :
-            (intel.wu?.temp <= 33 && intel.today?.stats?.tempMin <= 30) ? 0.5 :
-            0,
-
+            (intel.wu?.temp <= 33 && intel.today?.stats?.tempMin <= 30) ? 0.5 : 0,
           valleyFogRisk:
             (intel.wu?.humidity >= 90 &&
              intel.wu?.temp <= 50 &&
              (intel.tempest?.windSpeed ?? 0) < 3)
               ? 0.7 : 0,
-
           ridgeFogRisk:
             (intel.wu?.humidity >= 95 &&
              intel.sky.cloud >= 80 &&
              (intel.tempest?.windSpeed ?? 0) < 4)
               ? 0.6 : 0,
-
           timestamp:
             intel.tempest?.timestamp ??
             intel.wu?.obsTimeLocal ??
             Date.now()
         };
 
-        // ------------------------------------------------------------
-        // TODAY STATS (Tempest high)
-        // ------------------------------------------------------------
         intel.today = intel.today || {};
         intel.today.stats = intel.today.stats || {};
         intel.today.stats.maxTemp = tempestHigh;
 
-        // ------------------------------------------------------------
-        // COMFORT ENGINE
-        // ------------------------------------------------------------
         intel.comfort = computeComfort(intel);
-
-        // UV block
         intel.uv = getReliableUV(intel);
-
-        // ------------------------------------------------------------
-        // FUTURE COMFORT (next 6 hours)
-        // ------------------------------------------------------------
         intel.futureComfort = buildFutureComfort(intel.hourly, computeComfort);
 
-        // ------------------------------------------------------------
-        // ⭐ LOAD PULSE (video + image)
-        // ------------------------------------------------------------
+        // ⭐ LOAD PULSE
         try {
           const pulseRes = await fetch("/api/tidbits/pulse-latest");
-          const pulseData = await pulseRes.json();
-          intel.pulse = pulseData;
+          intel.pulse = await pulseRes.json();
         } catch (err) {
           console.error("Pulse fetch error:", err);
           intel.pulse = null;
         }
 
-        // ------------------------------------------------------------
-        // DEBUG HANDLE
-        // ------------------------------------------------------------
         window._intel = intel;
         window.intel = intel;
 
-        // ------------------------------------------------------------
-        // UPDATE UI
-        // ------------------------------------------------------------
         updateUI(intel);
 
       } catch (err) {
@@ -409,21 +307,16 @@ async function initApp() {
     }
   );
 }
-
-// ------------------------------------------------------------
+// ============================================================
 // CLICK LISTENERS — Expansion, Notifications, Comfort Toggle
-// ------------------------------------------------------------
+// ============================================================
 document.addEventListener("DOMContentLoaded", () => {
 
-  // ------------------------------------------------------------
-  // Enable Notifications Button
-  // ------------------------------------------------------------
+  // Notifications
   const notifBtn = document.getElementById("enable-notifications-btn");
-
   if (notifBtn) {
     notifBtn.addEventListener("click", async () => {
       const result = await subscribeUserToPush();
-
       if (result.ok) {
         notifBtn.textContent = "Notifications Enabled";
         notifBtn.disabled = true;
@@ -434,9 +327,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ------------------------------------------------------------
-  // Today / Tomorrow Expansion Panels
-  // ------------------------------------------------------------
+  // Today / Tomorrow Expansion
   const todayModule = document.getElementById("today-module");
   const tomorrowModule = document.getElementById("tomorrow-module");
 
@@ -454,11 +345,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ------------------------------------------------------------
   // Comfort → Hourly Temps Toggle
-  // ------------------------------------------------------------
   const comfortNowRoot = document.getElementById("comfort-now-container");
-
   if (comfortNowRoot) {
     comfortNowRoot.addEventListener("click", () => {
       const hourlyEl = document.getElementById("hourlyTemps");
@@ -468,8 +356,33 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ------------------------------------------------------------
-  // Service Worker Debug Messages
+  // ⭐ PULSE EXPAND / COLLAPSE (correct location)
   // ------------------------------------------------------------
+  const pulseCard = document.getElementById("pulse-card");
+  const pulseToggle = document.getElementById("pulse-toggle");
+  const pulsePreview = document.getElementById("pulse-preview");
+  const pulseFull = document.getElementById("pulse-full-text");
+
+  if (pulseCard && pulseToggle) {
+    pulseToggle.addEventListener("click", () => {
+      const isExpanded = pulseCard.classList.toggle("pulse-expanded");
+
+      pulseToggle.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+      pulseToggle.textContent = isExpanded ? "Hide update" : "Read full update";
+
+      if (!isExpanded) {
+        if (pulsePreview) pulsePreview.style.display = "block";
+        if (pulseFull) pulseFull.style.display = "none";
+      }
+
+      if (isExpanded) {
+        if (pulsePreview) pulsePreview.style.display = "none";
+        if (pulseFull) pulseFull.style.display = "block";
+      }
+    });
+  }
+
+  // Service Worker Debug
   if (navigator.serviceWorker) {
     navigator.serviceWorker.addEventListener("message", e => {
       alert("SW MSG: " + JSON.stringify(e.data));

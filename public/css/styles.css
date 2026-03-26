@@ -712,8 +712,8 @@
     .dew-tropical {
       color: #ff6b6b;
     }
-/*/* ============================================================
-   828 WEATHER PULSE MODULE — CLEAN CONSOLIDATED REWRITE
+/* ============================================================
+   828 WEATHER PULSE MODULE — FINAL CONSOLIDATED CSS
    ============================================================ */
 
 .pulse-module {
@@ -730,7 +730,7 @@
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
   cursor: pointer;
   overflow: hidden;
-  transition: box-shadow 0.2s ease;
+  transition: box-shadow 0.2s ease, max-height 0.35s ease;
 }
 
 .pulse-card:hover {
@@ -784,7 +784,7 @@
   margin-top: 0.65rem;
 }
 
-/* NEW: Thumbnail container for image OR video */
+/* Thumbnail container */
 .pulse-media {
   width: 120px;
   height: 120px;
@@ -832,16 +832,12 @@
    EXPANDED VIEW — Full Hero + Full Text
    ============================================================ */
 
-.pulse-expanded {
-  overflow: hidden;
-}
-
 .pulse-expanded .pulse-body {
   flex-direction: column;
   max-width: 100%;
 }
 
-/* Full hero image/video */
+/* Full hero */
 .pulse-expanded .pulse-media {
   width: 100%;
   height: auto;
@@ -858,19 +854,23 @@
   border-radius: 12px;
 }
 
+/* Hide preview when expanded */
 .pulse-expanded .pulse-preview {
-  margin-top: 0.5rem;
-  font-size: 0.95rem;
-  line-height: 1.55;
-  color: #e5e7eb;
+  display: none;
 }
 
 /* Full text block */
 .pulse-full-text {
+  display: none;
   font-size: 0.95rem;
   line-height: 1.55;
   color: #e5e7eb;
   margin-top: 0.75rem;
+}
+
+/* Show full text when expanded */
+.pulse-expanded .pulse-full-text {
+  display: block;
 }
 
 /* ============================================================
