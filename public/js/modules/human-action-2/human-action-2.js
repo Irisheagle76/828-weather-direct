@@ -279,8 +279,8 @@ export function getActionBullets(dominantFactor, data) {
 // ---------------------------------------------------------
 // 4. Final Assembler
 // ---------------------------------------------------------
-export function assembleHumanActionOutput(emoji, headline, bullets) {
-  return { emoji, headline, bullets };
+export function assembleHumanActionOutput(emoji, headline, bullets, dominantFactor) {
+  return { emoji, headline, bullets, dominantFactor };
 }
 
 // ---------------------------------------------------------
@@ -294,5 +294,5 @@ export function generateHumanAction(data) {
   const headline = getActionHeadline(dominantFactor, data);
   const bullets = getActionBullets(dominantFactor, data);
 
-  return assembleHumanActionOutput(emoji, headline, bullets);
+  return assembleHumanActionOutput(emoji, headline, bullets, dominantFactor);
 }
