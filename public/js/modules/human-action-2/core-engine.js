@@ -111,7 +111,7 @@ function scoreWind(data) {
 }
 
 function scoreMountainWind(data) {
-  // Use gusts as proxy; you can later refine with topo metadata
+  // Use gusts as proxy; you can later refine with topographic metadata
   const gust = data.windGust ?? data.windSpeed ?? 0;
 
   let base =
