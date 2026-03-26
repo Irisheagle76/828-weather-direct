@@ -712,7 +712,7 @@
     .dew-tropical {
       color: #ff6b6b;
     }
-/* ============================================================
+/*/* ============================================================
    828 WEATHER PULSE MODULE — CLEAN CONSOLIDATED REWRITE
    ============================================================ */
 
@@ -740,6 +740,8 @@
 /* Header */
 .pulse-header {
   margin-bottom: 0.55rem;
+  animation: pulseHeartbeat 3s ease-in-out infinite;
+  transform-origin: center;
 }
 
 .pulse-title {
@@ -762,6 +764,7 @@
   color: #ffa94d;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  animation: pulseGlow 3s ease-in-out infinite;
 }
 
 .pulse-timestamp {
@@ -781,14 +784,24 @@
   margin-top: 0.65rem;
 }
 
-/* NEW: 120px Thumbnail */
-.pulse-thumbnail {
+/* NEW: Thumbnail container for image OR video */
+.pulse-media {
   width: 120px;
   height: 120px;
-  object-fit: cover;
   border-radius: 8px;
+  overflow: hidden;
   flex-shrink: 0;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+}
+
+/* Media inside thumbnail */
+.pulse-media img,
+.pulse-media video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 8px;
 }
 
 .pulse-preview {
@@ -816,11 +829,11 @@
 }
 
 /* ============================================================
-   EXPANDED VIEW — UPDATED WITH FIXES
+   EXPANDED VIEW — Full Hero + Full Text
    ============================================================ */
 
 .pulse-expanded {
-  overflow: hidden; /* prevents image overflow */
+  overflow: hidden;
 }
 
 .pulse-expanded .pulse-body {
@@ -828,21 +841,21 @@
   max-width: 100%;
 }
 
-.pulse-expanded .pulse-thumbnail {
+/* Full hero image/video */
+.pulse-expanded .pulse-media {
   width: 100%;
   height: auto;
-  max-height: none;
+  max-height: 360px;
   border-radius: 12px;
   margin-bottom: 0.75rem;
 }
 
-/* FIXED: prevent giant images */
-.pulse-expanded-img {
+.pulse-expanded .pulse-media img,
+.pulse-expanded .pulse-media video {
   width: 100%;
-  max-height: 360px;      /* keeps expanded card compact */
-  object-fit: cover;      /* premium hero look */
+  height: 100%;
+  object-fit: cover;
   border-radius: 12px;
-  margin-bottom: 0.75rem;
 }
 
 .pulse-expanded .pulse-preview {
@@ -857,105 +870,28 @@
   font-size: 0.95rem;
   line-height: 1.55;
   color: #e5e7eb;
-  margin-top: 0.75rem; /* improved rhythm */
+  margin-top: 0.75rem;
 }
-/* ============================================================
-   Glowing 828 Quick Live badge
-   ============================================================ */
-.pulse-badge-pill {
-  display: inline-block;
-  margin-top: 0.25rem;
-  padding: 2px 10px;
-  border-radius: 9999px;
-  background: rgba(255, 169, 77, 0.16);
-  border: 1px solid rgba(255, 169, 77, 0.55);
-  font-size: 0.72rem;
-  color: #ffa94d;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 
-  /* Subtle glow animation */
-  animation: pulseGlow 3s ease-in-out infinite;
-}
+/* ============================================================
+   Glow + Heartbeat Animations
+   ============================================================ */
 
 @keyframes pulseGlow {
   0%   { box-shadow: 0 0 0px rgba(255,169,77,0.0); }
   50%  { box-shadow: 0 0 8px rgba(255,169,77,0.35); }
   100% { box-shadow: 0 0 0px rgba(255,169,77,0.0); }
 }
-/* ============================================================
-   PULSE HEADER HEARTBEAT
-   ============================================================ */
-.pulse-header {
-  animation: pulseHeartbeat 3s ease-in-out infinite;
-  transform-origin: center;
-}
 
 @keyframes pulseHeartbeat {
   0%   { transform: scale(1); }
   10%  { transform: scale(1.015); }
   20%  { transform: scale(1); }
-
-  /* tiny pause between beats */
   30%  { transform: scale(1); }
-
-  /* second beat */
   40%  { transform: scale(1.015); }
   50%  { transform: scale(1); }
-
-  /* long rest */
   100% { transform: scale(1); }
 }
-
-/* ============================================================
-   OPTIONAL HERO (Used in Tidbits or Full View)
-   ============================================================ */
-
-.pulse-hero {
-  position: relative;
-  border-radius: 14px;
-  overflow: hidden;
-  margin-bottom: 0.75rem;
-}
-
-.pulse-hero img {
-  width: 100%;
-  height: auto;
-  display: block;
-  transition: transform 0.4s ease;
-}
-
-.pulse-hero:hover img {
-  transform: scale(1.05);
-}
-
-.pulse-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to top,
-    rgba(0, 0, 0, 0.75) 0%,
-    rgba(0, 0, 0, 0.4) 40%,
-    rgba(0, 0, 0, 0.1) 70%,
-    rgba(0, 0, 0, 0) 100%
-  );
-}
-
-.pulse-hero-text {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 0.75rem 0.85rem;
-  color: #fff;
-  font-size: 0.95rem;
-  line-height: 1.4;
-}
-
-.pulse-hero-text strong {
-  font-weight: 600;
-}
-
 /* ============================================================
    ANIMATION
    ============================================================ */
