@@ -100,6 +100,72 @@ function showToast(message) {
   }, 2500);
 }
 // ------------------------------------------------------------
+// MASTER UI UPDATE FUNCTION (Optimized + HA2.0 Safe)
+// ------------------------------------------------------------
+function updateUI(intel) {
+  if (!intel) return;
+
+  // ------------------------------------------------------------
+  // Comfort Now
+  // ------------------------------------------------------------
+  const comfortNowContainer = document.getElementById("comfort-now-container");
+  if (comfortNowContainer) {
+    comfortNowContainer.innerHTML = renderRightNowComfort(intel);
+  }
+
+  // ------------------------------------------------------------
+  // Hourly temps (hidden initially via CSS)
+  // ------------------------------------------------------------
+  if (intel.hourly) {
+    renderHourlyTemps(intel.hourly);
+  }
+
+  // ------------------------------------------------------------
+  // Future Comfort
+  // ------------------------------------------------------------
+  const futureComfortContainer = document.getElementById("future-comfort-container");
+  if (futureComfortContainer) {
+    futureComfortContainer.innerHTML = renderFutureComfort(intel);
+  }
+
+  // ------------------------------------------------------------
+  // Human‑Action 2.0 — Today + Tomorrow
+  // ------------------------------------------------------------
+  renderTodayOutlook(intel);
+  renderTomorrowOutlook(intel);
+
+  // ------------------------------------------------------------
+  // UV Index
+  // ------------------------------------------------------------
+  renderUV(intel);
+
+  // ------------------------------------------------------------
+  // Expanded Panels (Today + Tomorrow)
+  // ------------------------------------------------------------
+  renderTodayDetail(intel);
+  renderTomorrowDetail(intel);
+
+  // ------------------------------------------------------------
+  // Current Observations (WU block)
+  // ------------------------------------------------------------
+  renderCurrentObservations(intel);
+
+  // ------------------------------------------------------------
+  // Station Footer
+  // ------------------------------------------------------------
+  const footer = document.getElementById("wu-station-footer");
+  if (footer && intel.wu?.stationId) {
+    footer.textContent = `Live data from Weather Underground Station ${intel.wu.stationId}`;
+  }
+
+  // ------------------------------------------------------------
+  // Pulse Media
+  // ------------------------------------------------------------
+  if (intel.pulse?.imageUrl) {
+    renderPulseMedia(intel.pulse.imageUrl);
+  }
+}
+// ------------------------------------------------------------
 // ENTRY POINT
 // ------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", initApp);
