@@ -19,7 +19,8 @@ export function getActionEmoji(dominantFactor) {
     sun: "☀️",
     clouds: "🌤️",
     fog: "🌫️",
-    default: "🌤️"
+    goldilocks: "🌟"
+    default: "🌟"
   };
 
   return map[dominantFactor] || map.default;
@@ -50,8 +51,10 @@ export function getActionHeadline(dominantFactor, data) {
       return "Cloudy with soft light";
     case "fog":
       return "Muted and low‑visibility";
+      case "goldilocks":
+  return "🌟 Goldilocks Day — just right!";
     default:
-      return "A mixed‑feel kind of day";
+      return "🌟 Goldilocks Day — just right!";
   }
 }
 
@@ -258,11 +261,13 @@ case "muggy":
       break;
 
     default:
-      bullets.push(
-        "A little bit of everything today — layers help you adapt.",
-        "Light wind and shifting clouds keep things interesting.",
-        "Outdoor plans look good with minor adjustments."
-      );
+case "goldilocks":
+  bullets.push(
+    "🌟 A beautifully balanced day with no major weather drivers.",
+    "Windows‑open comfort — perfect for errands, walks, or a slow afternoon.",
+    "Light layers are optional, and outdoor plans feel effortless."
+  );
+
   }
 
   return bullets;
