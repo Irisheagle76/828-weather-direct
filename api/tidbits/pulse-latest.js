@@ -3,6 +3,7 @@ import { kv } from "@vercel/kv";
 export default async function handler(req, res) {
   try {
     const pulse = await kv.get("pulse:latest");
+console.log("KV PULSE:", pulse);
 
     if (!pulse) {
       return res.status(200).json({
