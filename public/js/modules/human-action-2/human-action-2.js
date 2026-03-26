@@ -1,6 +1,5 @@
 // /modules/human-action-2/human-action-2.js
 // Human‑Action 2.0 — Output Layer (Warm Hybrid Bullets)
-// This file handles ONLY the visible phrasing. No heavy logic yet.
 
 import { evaluateHumanActionFactors } from "./core-engine.js?v=1.0.0";
 
@@ -19,7 +18,7 @@ export function getActionEmoji(dominantFactor) {
     sun: "☀️",
     clouds: "🌤️",
     fog: "🌫️",
-    goldilocks: "🌟"
+    goldilocks: "🌟",
     default: "🌟"
   };
 
@@ -51,55 +50,51 @@ export function getActionHeadline(dominantFactor, data) {
       return "Cloudy with soft light";
     case "fog":
       return "Muted and low‑visibility";
-  case "goldilocks":
-  return "🌟 Goldilocks Day — just right!";
-
-default:
-  return "🌟 Goldilocks Day — just right!";
+    case "goldilocks":
+      return "🌟 Goldilocks Day — just right!";
+    default:
+      return "🌟 Goldilocks Day — just right!";
   }
 }
 
 // ---------------------------------------------------------
 // 3. Bullet Generator (Warm Hybrid Style)
 // ---------------------------------------------------------
-// Bullets carry the narrative weight now — descriptive, actionable,
-// Asheville‑aware, and never redundant.
-
 export function getActionBullets(dominantFactor, data) {
   const bullets = [];
 
   switch (dominantFactor) {
     case "frost":
-  bullets.push(
-    "❄️ Patchy frost makes early travel slower — give yourself a few extra minutes.",
-    "A warm layer helps until the sun lifts the chill out of the valleys.",
-    "Shaded spots stay icy longer, especially near creeks and low pockets."
-  );
-  break;
+      bullets.push(
+        "❄️ Patchy frost makes early travel slower — give yourself a few extra minutes.",
+        "A warm layer helps until the sun lifts the chill out of the valleys.",
+        "Shaded spots stay icy longer, especially near creeks and low pockets."
+      );
+      break;
 
-case "freeze":
-  bullets.push(
-    "❄️ A hard freeze keeps surfaces slick and brittle early on.",
-    "Protect sensitive plants and outdoor faucets if you haven’t already.",
-    "Sun helps by late morning, but shaded areas stay frozen longer."
-  );
-  break;
+    case "freeze":
+      bullets.push(
+        "❄️ A hard freeze keeps surfaces slick and brittle early on.",
+        "Protect sensitive plants and outdoor faucets if you haven’t already.",
+        "Sun helps by late morning, but shaded areas stay frozen longer."
+      );
+      break;
 
-  case "smoke":
-  bullets.push(
-    "🌫️ Regional smoke lowers visibility and adds a muted, hazy feel.",
-    "Sensitive groups may feel the air quality more — take it easy outdoors.",
-    "Windows closed and indoor air circulation help keep things comfortable."
-  );
-  break;
+    case "smoke":
+      bullets.push(
+        "🌫️ Regional smoke lowers visibility and adds a muted, hazy feel.",
+        "Sensitive groups may feel the air quality more — take it easy outdoors.",
+        "Windows closed and indoor air circulation help keep things comfortable."
+      );
+      break;
 
-case "haze":
-  bullets.push(
-    "🌫️ Haze softens the light and trims visibility across the mountains.",
-    "Expect distant ridges to look washed out through the afternoon.",
-    "Outdoor plans are fine, but breathing may feel heavier during exertion."
-  );
-  break;
+    case "haze":
+      bullets.push(
+        "🌫️ Haze softens the light and trims visibility across the mountains.",
+        "Expect distant ridges to look washed out through the afternoon.",
+        "Outdoor plans are fine, but breathing may feel heavier during exertion."
+      );
+      break;
 
     case "heat":
       bullets.push(
@@ -117,29 +112,29 @@ case "haze":
       );
       break;
 
-case "inversion":
-  bullets.push(
-    "🌫️ A valley inversion traps cooler air low while ridges warm quickly.",
-    "Expect a noticeable temperature split between neighborhoods and elevations.",
-    "Fog or haze may linger in low spots longer than usual."
-  );
-  break;
+    case "inversion":
+      bullets.push(
+        "🌫️ A valley inversion traps cooler air low while ridges warm quickly.",
+        "Expect a noticeable temperature split between neighborhoods and elevations.",
+        "Fog or haze may linger in low spots longer than usual."
+      );
+      break;
 
-case "uv":
-  bullets.push(
-    "☀️ Strong sun makes the day feel warmer than the thermometer suggests.",
-    "Early‑season UV can surprise you — light protection goes a long way.",
-    "Great visibility for mountain views, but glare may be sharp at midday."
-  );
-  break;
+    case "uv":
+      bullets.push(
+        "☀️ Strong sun makes the day feel warmer than the thermometer suggests.",
+        "Early‑season UV can surprise you — light protection goes a long way.",
+        "Great visibility for mountain views, but glare may be sharp at midday."
+      );
+      break;
 
-case "mountainWind":
-  bullets.push(
-    "🌬️ Mountain winds funnel through gaps and ridges, creating sudden gusts.",
-    "Secure lightweight outdoor items — gusts may spike unexpectedly.",
-    "A wind‑blocking layer helps if you're out on exposed terrain."
-  );
-  break;
+    case "mountainWind":
+      bullets.push(
+        "🌬️ Mountain winds funnel through gaps and ridges, creating sudden gusts.",
+        "Secure lightweight outdoor items — gusts may spike unexpectedly.",
+        "A wind‑blocking layer helps if you're out on exposed terrain."
+      );
+      break;
 
     case "wind":
       bullets.push(
@@ -157,13 +152,13 @@ case "mountainWind":
       );
       break;
 
-case "coldRain":
-  bullets.push(
-    "🌧️ Cold rain adds a bone‑deep chill that cuts through light layers.",
-    "A waterproof shell and warm under‑layer make a big difference.",
-    "Surfaces stay slick longer, especially in shaded or leaf‑covered areas."
-  );
-  break;
+    case "coldRain":
+      bullets.push(
+        "🌧️ Cold rain adds a bone‑deep chill that cuts through light layers.",
+        "A waterproof shell and warm under‑layer make a big difference.",
+        "Surfaces stay slick longer, especially in shaded or leaf‑covered areas."
+      );
+      break;
 
     case "storms":
       bullets.push(
@@ -173,29 +168,29 @@ case "coldRain":
       );
       break;
 
-case "warmRain":
-  bullets.push(
-    "🌦️ Warm, tropical‑feeling rain adds a slow, heavy feel to the air.",
-    "A light rain shell keeps you comfortable without overheating.",
-    "Expect quick downpours and fast‑changing conditions through the day."
-  );
-  break;
+    case "warmRain":
+      bullets.push(
+        "🌦️ Warm, tropical‑feeling rain adds a slow, heavy feel to the air.",
+        "A light rain shell keeps you comfortable without overheating.",
+        "Expect quick downpours and fast‑changing conditions through the day."
+      );
+      break;
 
-case "valleyFog":
-  bullets.push(
-    "🌫️ Valley fog reduces visibility and keeps temps cooler early on.",
-    "Give yourself extra time on the road — conditions vary by neighborhood.",
-    "Fog lifts slowly, but sunshine breaks through by late morning."
-  );
-  break;
-case "ridgeFog":
+    case "valleyFog":
+      bullets.push(
+        "🌫️ Valley fog reduces visibility and keeps temps cooler early on.",
+        "Give yourself extra time on the road — conditions vary by neighborhood.",
+        "Fog lifts slowly, but sunshine breaks through by late morning."
+      );
+      break;
 
-  bullets.push(
-    "🌫️ Ridge‑top fog brings low visibility and a damp, muted feel.",
-    "Expect rapid changes in visibility as you move along elevation lines.",
-    "A light layer helps with the cool, moist air."
-  );
-  break;
+    case "ridgeFog":
+      bullets.push(
+        "🌫️ Ridge‑top fog brings low visibility and a damp, muted feel.",
+        "Expect rapid changes in visibility as you move along elevation lines.",
+        "A light layer helps with the cool, moist air."
+      );
+      break;
 
     case "snow":
       bullets.push(
@@ -221,21 +216,21 @@ case "ridgeFog":
       );
       break;
 
-case "freezingFog":
-  bullets.push(
-    "❄️ Freezing fog creates thin, sneaky ice on bridges and elevated surfaces.",
-    "Drive gently — traction can change quickly in shaded areas.",
-    "A warm layer helps until temps climb above freezing."
-  );
-  break;
+    case "freezingFog":
+      bullets.push(
+        "❄️ Freezing fog creates thin, sneaky ice on bridges and elevated surfaces.",
+        "Drive gently — traction can change quickly in shaded areas.",
+        "A warm layer helps until temps climb above freezing."
+      );
+      break;
 
-case "blackIce":
-  bullets.push(
-    "🧊 Melt‑freeze cycles create patchy black ice, especially early.",
-    "Bridges and shaded spots freeze first — take it slow.",
-    "Temps improve by late morning, but pockets of ice linger in low areas."
-  );
-  break;
+    case "blackIce":
+      bullets.push(
+        "🧊 Melt‑freeze cycles create patchy black ice, especially early.",
+        "Bridges and shaded spots freeze first — take it slow.",
+        "Temps improve by late morning, but pockets of ice linger in low areas."
+      );
+      break;
 
     case "clouds":
       bullets.push(
@@ -245,13 +240,13 @@ case "blackIce":
       );
       break;
 
-case "muggy":
-  bullets.push(
-    "💧 High dew points make the air feel heavy and slow‑moving.",
-    "Breathable fabrics help keep things comfortable on the move.",
-    "Expect surfaces and hair to hold moisture longer than usual."
-  );
-  break;
+    case "muggy":
+      bullets.push(
+        "💧 High dew points make the air feel heavy and slow‑moving.",
+        "Breathable fabrics help keep things comfortable on the move.",
+        "Expect surfaces and hair to hold moisture longer than usual."
+      );
+      break;
 
     case "fog":
       bullets.push(
@@ -262,20 +257,20 @@ case "muggy":
       break;
 
     case "goldilocks":
-  bullets.push(
-    "🌟 A beautifully balanced day with no major weather drivers.",
-    "Windows‑open comfort — perfect for errands, walks, or a slow afternoon.",
-    "Light layers are optional, and outdoor plans feel effortless."
-  );
-  break;
+      bullets.push(
+        "🌟 A beautifully balanced day with no major weather drivers.",
+        "Windows‑open comfort — perfect for errands, walks, or a slow afternoon.",
+        "Light layers are optional, and outdoor plans feel effortless."
+      );
+      break;
 
-default:
-  bullets.push(
-    "🌟 A beautifully balanced day with no major weather drivers.",
-    "Windows‑open comfort — perfect for errands, walks, or a slow afternoon.",
-    "Light layers are optional, and outdoor plans feel effortless."
-  );
-  break;
+    default:
+      bullets.push(
+        "🌟 A beautifully balanced day with no major weather drivers.",
+        "Windows‑open comfort — perfect for errands, walks, or a slow afternoon.",
+        "Light layers are optional, and outdoor plans feel effortless."
+      );
+      break;
   }
 
   return bullets;
@@ -285,27 +280,19 @@ default:
 // 4. Final Assembler
 // ---------------------------------------------------------
 export function assembleHumanActionOutput(emoji, headline, bullets) {
-  return {
-    emoji,
-    headline,
-    bullets
-  };
+  return { emoji, headline, bullets };
 }
 
 // ---------------------------------------------------------
-// 5. Main Generator — ties everything together
+// 5. Main Generator
 // ---------------------------------------------------------
 export function generateHumanAction(data) {
-  // 1. Run the core engine
   const result = evaluateHumanActionFactors(data);
-
   const { dominantFactor } = result;
 
-  // 2. Build the phrasing
   const emoji = getActionEmoji(dominantFactor);
   const headline = getActionHeadline(dominantFactor, data);
   const bullets = getActionBullets(dominantFactor, data);
 
-  // 3. Assemble final output
   return assembleHumanActionOutput(emoji, headline, bullets);
 }
