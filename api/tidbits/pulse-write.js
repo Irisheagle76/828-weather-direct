@@ -9,36 +9,27 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { title, text, imageUrl, videoUrl, mediaUrl } = req.body;
+    const { title, text, imageUrl, videoUrl, mediaUrl, mediaType } = req.body;
 
     if (!title || !text) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // ------------------------------------------------------------
-    // Normalize media input (image OR video)
-    // ------------------------------------------------------------
+    // Normalize media input
     const finalMediaUrl = mediaUrl || imageUrl || videoUrl || null;
-
-  let mediaType = req.body.mediaType || null;
-    }
 
     const pulse = {
       title,
       text,
       mediaUrl: finalMediaUrl,
-      mediaType,
+      mediaType: mediaType || null,
       timestamp: Date.now(),
     };
 
-    // ------------------------------------------------------------
-    // 1) Save Pulse FIRST — never block on push
-    // ------------------------------------------------------------
+    // Save Pulse FIRST
     await kv.set("pulse:latest", pulse);
 
-    // ------------------------------------------------------------
-    // 2) Fire push notifications SECOND — non-blocking
-    // ------------------------------------------------------------
+    // Fire push notifications SECOND — non-blocking
     sendPushToAll({
       title: "New Pulse Tidbit",
       body: title,
