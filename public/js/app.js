@@ -163,7 +163,7 @@ if (intel.pulse?.mediaUrl) {
   renderPulseMedia(intel.pulse.mediaUrl);
 }
   }
-  
+
 // ------------------------------------------------------------
 // ENTRY POINT
 // ------------------------------------------------------------
@@ -369,10 +369,22 @@ async function initApp() {
         intel.futureComfort = buildFutureComfort(intel.hourly, computeComfort);
 
         // ------------------------------------------------------------
+        // ⭐ LOAD PULSE (video + image)
+        // ------------------------------------------------------------
+        try {
+          const pulseRes = await fetch("/api/tidbits/pulse-latest");
+          const pulseData = await pulseRes.json();
+          intel.pulse = pulseData;
+        } catch (err) {
+          console.error("Pulse fetch error:", err);
+          intel.pulse = null;
+        }
+
+        // ------------------------------------------------------------
         // DEBUG HANDLE
         // ------------------------------------------------------------
         window._intel = intel;
-        window.intel = intel; // ⭐ Expose for debugging + HA2.0 validation
+        window.intel = intel;
 
         // ------------------------------------------------------------
         // UPDATE UI
@@ -392,6 +404,7 @@ async function initApp() {
     }
   );
 }
+
 // ------------------------------------------------------------
 // CLICK LISTENERS — Expansion, Notifications, Comfort Toggle
 // ------------------------------------------------------------
