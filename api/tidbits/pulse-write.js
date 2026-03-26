@@ -20,11 +20,7 @@ export default async function handler(req, res) {
     // ------------------------------------------------------------
     const finalMediaUrl = mediaUrl || imageUrl || videoUrl || null;
 
-    let mediaType = null;
-    if (finalMediaUrl) {
-      if (finalMediaUrl.includes("/image/")) mediaType = "image";
-      else if (finalMediaUrl.includes("/video/")) mediaType = "video";
-      else mediaType = "unknown";
+  let mediaType = req.body.mediaType || null;
     }
 
     const pulse = {
