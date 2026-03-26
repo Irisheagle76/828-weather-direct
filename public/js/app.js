@@ -243,60 +243,108 @@ async function initApp() {
         // ------------------------------------------------------------
         // ⭐ UNIFIED CURRENT CONDITIONS
         // ------------------------------------------------------------
-        intel.current = {
-          temp:
-            intel.tempest?.temp ??
-            intel.wu?.temp ??
-            null,
+        // ------------------------------------------------------------
+// ⭐ UNIFIED CURRENT CONDITIONS (Enhanced for Human‑Action 2.0)
+// ------------------------------------------------------------
+intel.current = {
+  temp:
+    intel.tempest?.temp ??
+    intel.wu?.temp ??
+    null,
 
-          dew:
-            intel.wu?.dewPoint ??
-            null,
+  feelsLike:
+    intel.tempest?.temp ??
+    intel.wu?.temp ??
+    null,
 
-          humidity:
-            intel.tempest?.humidity ??
-            intel.wu?.humidity ??
-            null,
+  dewpoint:
+    intel.wu?.dewPoint ??
+    null,
 
-          windSpeed:
-            intel.tempest?.windSpeed ??
-            intel.wu?.windSpeed ??
-            null,
+  humidity:
+    intel.tempest?.humidity ??
+    intel.wu?.humidity ??
+    null,
 
-          windGust:
-            intel.tempest?.windGust ??
-            intel.wu?.windGust ??
-            null,
+  windSpeed:
+    intel.tempest?.windSpeed ??
+    intel.wu?.windSpeed ??
+    null,
 
-          windDir:
-            intel.tempest?.windDir ??
-            intel.wu?.windDir ??
-            null,
+  windGust:
+    intel.tempest?.windGust ??
+    intel.wu?.windGust ??
+    null,
 
-          precipType:
-            intel.tempest?.precipType ??
-            intel.wu?.precipType ??
-            null,
+  windDir:
+    intel.tempest?.windDir ??
+    intel.wu?.windDir ??
+    null,
 
-          precipRate:
-            intel.wu?.precipRate ??
-            null,
+  precipType:
+    intel.tempest?.precipType ??
+    intel.wu?.precipType ??
+    null,
 
-          cloud:
-            intel.sky.cloud,
+  precipIntensity:
+    intel.wu?.precipRate ??
+    0,
 
-          uv:
-            intel.sky.uv,
+  // ⭐ Cloud cover normalized to 0–1
+  cloudCover:
+    (intel.sky.cloud != null ? intel.sky.cloud / 100 : null),
 
-          solar:
-            intel.sky.solar,
+  // ⭐ UV index unified
+  uvIndex:
+    intel.sky.uv ??
+    null,
 
-          timestamp:
-            intel.tempest?.timestamp ??
-            intel.wu?.obsTimeLocal ??
-            Date.now()
-        };
+  // ⭐ Visibility (fallback to 10 miles if unknown)
+  visibility:
+    intel.wu?.visibility ??
+    10,
 
+  // ⭐ Smoke index placeholder (0 = none)
+  smokeIndex:
+    intel.wu?.smokeIndex ??
+    0,
+
+  // ⭐ Frost risk (simple heuristic)
+  frostRisk:
+    (intel.wu?.dewPoint <= 36 && intel.wu?.temp <= 37) ? 0.7 :
+    (intel.wu?.temp <= 34) ? 1 :
+    0,
+
+  // ⭐ Freeze risk
+  freezeRisk:
+    intel.wu?.temp <= 32 ? 1 :
+    intel.wu?.temp <= 34 ? 0.5 :
+    0,
+
+  // ⭐ Inversion risk (valley cold + calm wind)
+  inversionRisk:
+    (intel.wu?.temp <= 40 && (intel.tempest?.windSpeed ?? 0) < 3) ? 0.6 : 0,
+
+  // ⭐ Black ice risk (freeze + precip)
+  blackIceRisk:
+    (intel.wu?.temp <= 32 && (intel.wu?.precipRate ?? 0) > 0) ? 1 :
+    (intel.wu?.temp <= 33 && intel.today?.stats?.tempMin <= 30) ? 0.5 :
+    0,
+
+  // ⭐ Fog risks (simple humidity + wind + temp heuristics)
+  valleyFogRisk:
+    (intel.wu?.humidity >= 90 && intel.wu?.temp <= 50 && (intel.tempest?.windSpeed ?? 0) < 3)
+      ? 0.7 : 0,
+
+  ridgeFogRisk:
+    (intel.wu?.humidity >= 95 && intel.sky.cloud >= 80 && (intel.tempest?.windSpeed ?? 0) < 4)
+      ? 0.6 : 0,
+
+  timestamp:
+    intel.tempest?.timestamp ??
+    intel.wu?.obsTimeLocal ??
+    Date.now()
+};
         // ------------------------------------------------------------
         // TODAY STATS (Tempest high)
         // ------------------------------------------------------------

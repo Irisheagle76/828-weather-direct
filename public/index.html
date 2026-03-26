@@ -9,6 +9,7 @@
 </head>
 
 <body>
+
 <button id="enable-notifications-btn" class="enable-notifications-btn">
   🔔 Enable Notifications
 </button>
@@ -18,9 +19,7 @@
 </script>
 
 <div class="card">
-  <h1 class="app-title">
-  828 Weather Direct
-</h1>
+  <h1 class="app-title">828 Weather Direct</h1>
   <div class="subtitle">Hyper-local Asheville weather • Built by Timothy Ballisty</div>
 
   <!-- STATUS BLOCK -->
@@ -62,20 +61,20 @@
     </div>
   </div>
 
-  <!-- ⭐ ROW 2 — Combined Comfort (Correct Placement) -->
-<div id="comfort-row">
+  <!-- ROW 2 — Combined Comfort -->
+  <div id="comfort-row">
 
-  <!-- LEFT COLUMN -->
-  <div class="comfort-left-col">
-    <div id="comfort-now-container"></div>
+    <!-- LEFT COLUMN -->
+    <div class="comfort-left-col">
+      <div id="comfort-now-container"></div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="comfort-right-col">
+      <div id="future-comfort-container"></div>
+    </div>
+
   </div>
-
-  <!-- RIGHT COLUMN -->
-  <div class="comfort-right-col">
-    <div id="future-comfort-container"></div>
-  </div>
-
-</div>
 
   <!-- ROW 3 — Today + Tomorrow -->
   <div class="now-tomorrow-row">
@@ -94,13 +93,8 @@
 
           <div id="today-headline" class="action-headline">Loading…</div>
 
-          <div id="today-text" class="action-text">
-            Checking today’s weather impacts…
-          </div>
-
+          <!-- Human‑Action 2.0 does not use narrative text -->
           <ul id="today-bullets" class="today-bullets"></ul>
-
-          <div id="micro-advice" class="action-text" style="margin-top: 0.4rem;"></div>
         </div>
       </div>
 
@@ -121,8 +115,8 @@
           </div>
 
           <div id="tomorrow-headline" class="action-headline">Analyzing tomorrow’s setup…</div>
-          <div id="tomorrow-text" class="action-text"></div>
 
+          <!-- Human‑Action 2.0 does not use narrative text -->
           <ul id="tomorrow-bullets" class="tomorrow-bullets"></ul>
         </div>
       </div>
@@ -144,40 +138,28 @@
         <div class="pulse-timestamp" id="pulse-timestamp">Posted just now</div>
       </div>
 
-      <!-- Body: Thumbnail + Preview -->
+      <!-- Body -->
       <div class="pulse-body">
-        <img 
-          id="pulse-thumb" 
-          class="pulse-thumbnail" 
-          alt="Pulse image"
-        />
-
-        <div class="pulse-preview" id="pulse-preview">
-          <!-- preview text injected via JS -->
-        </div>
+        <img id="pulse-thumb" class="pulse-thumbnail" alt="Pulse image" />
+        <div class="pulse-preview" id="pulse-preview"></div>
       </div>
 
       <!-- Toggle Button -->
-      <button 
-        class="pulse-toggle" 
-        id="pulse-toggle" 
-        type="button" 
-        aria-expanded="false"
-      >
+      <button class="pulse-toggle" id="pulse-toggle" type="button" aria-expanded="false">
         Read full update
       </button>
 
     </div>
   </section>
 
-  <!-- SUBSTACK MODULES -->
+  <!-- SUBSTACK MODULE -->
   <section id="weather-articles-module" class="module-card substack-module"></section>
 
   <!-- FOOTER -->
   <div class="footer-note" id="wu-station-footer">
     © 2026 Timothy Ballisty • 828 Weather<br>
-Independent Asheville weather analysis<br>
-Not official NWS guidance
+    Independent Asheville weather analysis<br>
+    Not official NWS guidance
   </div>
 
   <div class="error-text" id="wu-error" style="display:none;"></div>
@@ -193,4 +175,3 @@ Not official NWS guidance
 
 </body>
 </html>
-

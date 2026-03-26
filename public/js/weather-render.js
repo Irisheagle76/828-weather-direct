@@ -4,6 +4,8 @@
 // ============================================================
 
 import { generateFutureComfortPhrase } from "./intel/comfort.js";
+import { generateHumanAction } from "./modules/human-action-2/human-action-2.js";
+import { buildTomorrowCurrent } from "./modules/human-action-2/tomorrow-builder.js";
 
 // ------------------------------------------------------------
 // PRECIPITATION RANGE HELPERS
@@ -149,7 +151,6 @@ export function renderHourlyTemps(hourlyData) {
     container.appendChild(item);
   }
 }
-
 // ------------------------------------------------------------
 // Compass helper
 // ------------------------------------------------------------
@@ -160,55 +161,6 @@ export function degToCompass(deg) {
     "S","SSW","SW","WSW","W","WNW","NW","NNW"
   ];
   return dirs[Math.round(deg / 22.5) % 16];
-}
-
-// ------------------------------------------------------------
-// 🧠 INTELLIGENCE LAYER
-// ------------------------------------------------------------
-function getSkyCondition(stats) {
-  if (!stats) return "unknown";
-
-  if (stats.cloudAvg < 25) return "sunny";
-  if (stats.cloudAvg < 55) return "partly";
-  if (stats.cloudAvg < 80) return "mostly-cloudy";
-  return "cloudy";
-}
-
-function getDominantDriver(stats, fallback) {
-  if (!stats) return fallback ?? "easy";
-
-  if (stats.snowTotal > 0.5) return "snow";
-  if (stats.rainTotal > 0.25) return "rain";
-  if (stats.windGustMax > 30) return "wind";
-  if (stats.tempMax >= 90) return "hot";
-  if (stats.tempMin <= 35) return "cold";
-
-  if (
-    stats.cloudAvg < 40 &&
-    stats.rainTotal < 0.05 &&
-    stats.tempMax >= 70 &&
-    stats.tempMax <= 85
-  ) {
-    return "goldilocks";
-  }
-
-  return fallback ?? "easy";
-}
-
-function generateHumanHeadline(stats, fallback) {
-  if (!stats) return fallback ?? "";
-
-  const sky = getSkyCondition(stats);
-
-  if (sky === "sunny" && stats.tempMax >= 75 && stats.tempMax <= 85) {
-    return "Beautiful day ahead";
-  }
-
-  if (sky === "partly") return "A mix of sun and clouds";
-  if (sky === "mostly-cloudy") return "More clouds than sun";
-  if (sky === "cloudy") return "Gray and overcast conditions";
-
-  return fallback ?? "";
 }
 
 // ------------------------------------------------------------
@@ -295,6 +247,7 @@ export function renderRightNowComfort(intel) {
     </div>
   `;
 }
+
 // ------------------------------------------------------------
 // ⭐ UPDATED — Future Comfort (matches Comfort Now card)
 // ------------------------------------------------------------
@@ -302,7 +255,6 @@ export function renderFutureComfort(intel) {
   const fc = intel.futureComfort;
   if (!fc || fc.length === 0) return "";
 
-  // ⭐ NEW — Generate future‑tense narrative
   const phrase = generateFutureComfortPhrase(fc, intel.hourly);
 
   const items = fc.map(item => `
@@ -330,9 +282,8 @@ export function renderFutureComfort(intel) {
     </div>
   `;
 }
-
 // ------------------------------------------------------------
-// RENDER TODAY OUTLOOK
+// ⭐ FULL HUMAN‑ACTION 2.0 — TODAY OUTLOOK
 // ------------------------------------------------------------
 export function renderTodayOutlook(intel) {
   const emojiEl = document.getElementById("today-emoji");
@@ -343,41 +294,35 @@ export function renderTodayOutlook(intel) {
 
   if (!headlineEl || !textEl || !bulletsEl) return;
 
+  // Human‑Action 2.0 uses unified current conditions
+  const action = generateHumanAction(intel.current);
+
+  // Fade logic stays
   const today = intel.today;
-  const remainder = intel.remainderToday;
-
-  if ((!today || !today.available) && (!remainder || !remainder.available)) {
-    headlineEl.textContent = "No data available";
-    textEl.textContent = "";
-    bulletsEl.innerHTML = "";
-    if (remainderLabel) remainderLabel.style.display = "none";
-    if (emojiEl) emojiEl.textContent = "";
-    return;
-  }
-
-  const active = (remainder && remainder.available) ? remainder : today;
-
-  if (remainderLabel) {
-    remainderLabel.style.display = active === remainder ? "block" : "none";
-  }
-
-  if (emojiEl) emojiEl.textContent = "";
-
-  headlineEl.textContent = active.headline;
-  fitHeadlineToWidth(headlineEl);
-
-  textEl.textContent = active.narrative;
-  renderBullets(bulletsEl, active.bullets);
-
   const todayModule = document.getElementById("today-module");
   if (todayModule && today) {
     if (today.isEndOfDay) todayModule.classList.add("fade");
     else todayModule.classList.remove("fade");
   }
+
+  // Remainder label logic stays
+  const remainder = intel.remainderToday;
+  if (remainderLabel) {
+    remainderLabel.style.display =
+      remainder && remainder.available ? "block" : "none";
+  }
+
+  // Render Human‑Action 2.0
+  if (emojiEl) emojiEl.textContent = action.emoji;
+  headlineEl.textContent = action.headline;
+  textEl.textContent = ""; // No narrative sentence
+  renderBullets(bulletsEl, action.bullets);
+
+  fitHeadlineToWidth(headlineEl);
 }
 
 // ------------------------------------------------------------
-// RENDER TOMORROW OUTLOOK
+// ⭐ FULL HUMAN‑ACTION 2.0 — TOMORROW OUTLOOK
 // ------------------------------------------------------------
 export function renderTomorrowOutlook(intel) {
   const emojiEl = document.getElementById("tomorrow-emoji");
@@ -400,20 +345,27 @@ export function renderTomorrowOutlook(intel) {
     return;
   }
 
-  if (emojiEl) emojiEl.textContent = "";
+  // ⭐ NEW — Build Human‑Action‑ready data for tomorrow
+  const tomorrowData = buildTomorrowCurrent(tomorrow.stats);
+  const action = generateHumanAction(tomorrowData);
 
-  const dominant = getDominantDriver(
-    tomorrow.stats,
-    tomorrow.events?.driver
-  );
+  // Render Human‑Action 2.0
+  if (emojiEl) emojiEl.textContent = action.emoji;
+  headlineEl.textContent = action.headline;
+  textEl.textContent = "";
+  renderBullets(bulletsEl, action.bullets);
 
+  fitHeadlineToWidth(headlineEl);
+
+  // Badge system (unchanged)
+  const dominant = action.dominantFactor;
   const badgeMap = {
     rain:  { text: "Rain Gear",     class: "badge-rain" },
     wind:  { text: "Wind Alert",    class: "badge-wind" },
     snow:  { text: "Snow Impact",   class: "badge-snow" },
-    hot:   { text: "Heat Caution",  class: "badge-heat" },
+    heat:  { text: "Heat Caution",  class: "badge-heat" },
     cold:  { text: "Cold Start",    class: "badge-cold" },
-    goldilocks: { text: "Perfect Day", class: "badge-goldilocks" }
+    sun:   { text: "Bright Day",    class: "badge-goldilocks" }
   };
 
   const badge = badgeMap[dominant];
@@ -428,22 +380,13 @@ export function renderTomorrowOutlook(intel) {
     }
   }
 
-  headlineEl.textContent = generateHumanHeadline(
-    tomorrow.stats,
-    tomorrow.headline
-  );
-  fitHeadlineToWidth(headlineEl);
-
-  textEl.textContent = tomorrow.narrative;
-  renderBullets(bulletsEl, tomorrow.bullets);
-
+  // Fade logic stays
   const tomorrowModule = document.getElementById("tomorrow-module");
   if (tomorrowModule) {
     if (tomorrow.isEarlyMorning) tomorrowModule.classList.add("fade");
     else tomorrowModule.classList.remove("fade");
   }
 }
-
 // ------------------------------------------------------------
 // RENDER UV INDEX
 // ------------------------------------------------------------
@@ -455,6 +398,7 @@ export function renderUV(intel) {
   uvEl.textContent = uv.toFixed(1);
   uvEl.className = "metric-value " + getUVClass(uv);
 }
+
 // ------------------------------------------------------------
 // RENDER TODAY DETAIL
 // ------------------------------------------------------------
