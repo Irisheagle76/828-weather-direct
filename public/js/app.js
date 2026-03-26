@@ -1,5 +1,6 @@
 // ============================================================
 // APP ENTRY — Fetch Data → Build Intel → Render UI
+// Optimized + Safe for Human‑Action 2.0
 // ============================================================
 
 import {
@@ -50,15 +51,13 @@ function renderPulseMedia(url) {
     url.includes("/video/upload") ||
     url.endsWith(".mp4");
 
-  if (isVideo) {
-    container.innerHTML = `
+  container.innerHTML = isVideo
+    ? `
       <video autoplay loop muted playsinline class="pulse-video">
         <source src="${url}" type="video/mp4">
       </video>
-    `;
-  } else {
-    container.innerHTML = `<img src="${url}" class="pulse-video" />`;
-  }
+    `
+    : `<img src="${url}" class="pulse-video" />`;
 }
 
 window.setPulseMedia = renderPulseMedia;
@@ -78,7 +77,6 @@ function setWUStatus(state, label, text) {
   txt.textContent = text;
 
   dot.classList.remove("ok", "error");
-
   if (state === "ok") dot.classList.add("ok");
   if (state === "error") dot.classList.add("error");
 }
@@ -101,52 +99,6 @@ function showToast(message) {
     toast.classList.remove("show");
   }, 2500);
 }
-
-// ------------------------------------------------------------
-// MASTER UI UPDATE FUNCTION
-// ------------------------------------------------------------
-function updateUI(intel) {
-  // Comfort Now
-  const comfortNowContainer = document.getElementById("comfort-now-container");
-  if (comfortNowContainer) {
-    comfortNowContainer.innerHTML = renderRightNowComfort(intel);
-  }
-
-  // Hourly temps (hidden initially via CSS)
-  renderHourlyTemps(intel.hourly);
-
-  // Future Comfort
-  const futureComfortContainer = document.getElementById("future-comfort-container");
-  if (futureComfortContainer) {
-    futureComfortContainer.innerHTML = renderFutureComfort(intel);
-  }
-
-  // Today + Tomorrow
-  renderTodayOutlook(intel);
-  renderTomorrowOutlook(intel);
-
-  // UV
-  renderUV(intel);
-
-  // Expanded panels
-  renderTodayDetail(intel);
-  renderTomorrowDetail(intel);
-
-  // Current observations (WU block)
-  renderCurrentObservations(intel);
-
-  // Station footer
-  const footer = document.getElementById("wu-station-footer");
-  if (footer && intel.wu?.stationId) {
-    footer.textContent = `Live data from Weather Underground Station ${intel.wu.stationId}`;
-  }
-
-  // Pulse media
-  if (intel.pulse?.imageUrl) {
-    renderPulseMedia(intel.pulse.imageUrl);
-  }
-}
-
 // ------------------------------------------------------------
 // ENTRY POINT
 // ------------------------------------------------------------
@@ -200,21 +152,19 @@ async function initApp() {
         const intel = buildWeatherIntel(hourly);
 
         intel.wu = wuCurrent;
+        intel.tempest = tempest;
+        intel.hourly = hourly;
+        intel.mrms = mrmsPixel;
 
-        // ⭐ Give WU a cloudCover fallback using Open‑Meteo hourly data
+        // Cloud cover fallback from OM
         if (hourly?.cloudcover?.length > 0) {
           intel.wu.cloudCover = hourly.cloudcover[0];
         }
 
-        intel.mrms = mrmsPixel;
-        intel.tempest = tempest;
-        intel.hourly = hourly;
-
         // ------------------------------------------------------------
-        // ⭐ FIX 4 — Unified Sky Intelligence
+        // ⭐ UNIFIED SKY INTELLIGENCE
         // ------------------------------------------------------------
         intel.sky = {
-          // Cloud cover: WU → Tempest illuminance → OM cloudcover
           cloud:
             intel.wu.cloudCover ??
             (intel.tempest?.illuminance != null
@@ -226,14 +176,12 @@ async function initApp() {
             hourly.cloudcover?.[0] ??
             null,
 
-          // UV: Tempest → WU → OM
           uv:
             intel.tempest?.uv ??
             intel.wu?.uv ??
             hourly.uv_index?.[0] ??
             null,
 
-          // Solar radiation: Tempest → WU
           solar:
             intel.tempest?.solarRadiation ??
             intel.wu?.solarRadiation ??
@@ -241,110 +189,100 @@ async function initApp() {
         };
 
         // ------------------------------------------------------------
-        // ⭐ UNIFIED CURRENT CONDITIONS
+        // ⭐ UNIFIED CURRENT CONDITIONS (Human‑Action 2.0 Ready)
         // ------------------------------------------------------------
-        // ------------------------------------------------------------
-// ⭐ UNIFIED CURRENT CONDITIONS (Enhanced for Human‑Action 2.0)
-// ------------------------------------------------------------
-intel.current = {
-  temp:
-    intel.tempest?.temp ??
-    intel.wu?.temp ??
-    null,
+        intel.current = {
+          temp:
+            intel.tempest?.temp ??
+            intel.wu?.temp ??
+            null,
 
-  feelsLike:
-    intel.tempest?.temp ??
-    intel.wu?.temp ??
-    null,
+          feelsLike:
+            intel.tempest?.temp ??
+            intel.wu?.temp ??
+            null,
 
-  dewpoint:
-    intel.wu?.dewPoint ??
-    null,
+          dewpoint:
+            intel.wu?.dewPoint ??
+            null,
 
-  humidity:
-    intel.tempest?.humidity ??
-    intel.wu?.humidity ??
-    null,
+          humidity:
+            intel.tempest?.humidity ??
+            intel.wu?.humidity ??
+            null,
 
-  windSpeed:
-    intel.tempest?.windSpeed ??
-    intel.wu?.windSpeed ??
-    null,
+          windSpeed:
+            intel.tempest?.windSpeed ??
+            intel.wu?.windSpeed ??
+            null,
 
-  windGust:
-    intel.tempest?.windGust ??
-    intel.wu?.windGust ??
-    null,
+          windGust:
+            intel.tempest?.windGust ??
+            intel.wu?.windGust ??
+            null,
 
-  windDir:
-    intel.tempest?.windDir ??
-    intel.wu?.windDir ??
-    null,
+          windDir:
+            intel.tempest?.windDir ??
+            intel.wu?.windDir ??
+            null,
 
-  precipType:
-    intel.tempest?.precipType ??
-    intel.wu?.precipType ??
-    null,
+          precipType:
+            intel.tempest?.precipType ??
+            intel.wu?.precipType ??
+            null,
 
-  precipIntensity:
-    intel.wu?.precipRate ??
-    0,
+          precipIntensity:
+            intel.wu?.precipRate ??
+            0,
 
-  // ⭐ Cloud cover normalized to 0–1
-  cloudCover:
-    (intel.sky.cloud != null ? intel.sky.cloud / 100 : null),
+          cloudCover:
+            intel.sky.cloud != null ? intel.sky.cloud / 100 : null,
 
-  // ⭐ UV index unified
-  uvIndex:
-    intel.sky.uv ??
-    null,
+          uvIndex:
+            intel.sky.uv ?? null,
 
-  // ⭐ Visibility (fallback to 10 miles if unknown)
-  visibility:
-    intel.wu?.visibility ??
-    10,
+          visibility:
+            intel.wu?.visibility ?? 10,
 
-  // ⭐ Smoke index placeholder (0 = none)
-  smokeIndex:
-    intel.wu?.smokeIndex ??
-    0,
+          smokeIndex:
+            intel.wu?.smokeIndex ?? 0,
 
-  // ⭐ Frost risk (simple heuristic)
-  frostRisk:
-    (intel.wu?.dewPoint <= 36 && intel.wu?.temp <= 37) ? 0.7 :
-    (intel.wu?.temp <= 34) ? 1 :
-    0,
+          frostRisk:
+            (intel.wu?.dewPoint <= 36 && intel.wu?.temp <= 37) ? 0.7 :
+            (intel.wu?.temp <= 34) ? 1 :
+            0,
 
-  // ⭐ Freeze risk
-  freezeRisk:
-    intel.wu?.temp <= 32 ? 1 :
-    intel.wu?.temp <= 34 ? 0.5 :
-    0,
+          freezeRisk:
+            intel.wu?.temp <= 32 ? 1 :
+            intel.wu?.temp <= 34 ? 0.5 :
+            0,
 
-  // ⭐ Inversion risk (valley cold + calm wind)
-  inversionRisk:
-    (intel.wu?.temp <= 40 && (intel.tempest?.windSpeed ?? 0) < 3) ? 0.6 : 0,
+          inversionRisk:
+            (intel.wu?.temp <= 40 && (intel.tempest?.windSpeed ?? 0) < 3) ? 0.6 : 0,
 
-  // ⭐ Black ice risk (freeze + precip)
-  blackIceRisk:
-    (intel.wu?.temp <= 32 && (intel.wu?.precipRate ?? 0) > 0) ? 1 :
-    (intel.wu?.temp <= 33 && intel.today?.stats?.tempMin <= 30) ? 0.5 :
-    0,
+          blackIceRisk:
+            (intel.wu?.temp <= 32 && (intel.wu?.precipRate ?? 0) > 0) ? 1 :
+            (intel.wu?.temp <= 33 && intel.today?.stats?.tempMin <= 30) ? 0.5 :
+            0,
 
-  // ⭐ Fog risks (simple humidity + wind + temp heuristics)
-  valleyFogRisk:
-    (intel.wu?.humidity >= 90 && intel.wu?.temp <= 50 && (intel.tempest?.windSpeed ?? 0) < 3)
-      ? 0.7 : 0,
+          valleyFogRisk:
+            (intel.wu?.humidity >= 90 &&
+             intel.wu?.temp <= 50 &&
+             (intel.tempest?.windSpeed ?? 0) < 3)
+              ? 0.7 : 0,
 
-  ridgeFogRisk:
-    (intel.wu?.humidity >= 95 && intel.sky.cloud >= 80 && (intel.tempest?.windSpeed ?? 0) < 4)
-      ? 0.6 : 0,
+          ridgeFogRisk:
+            (intel.wu?.humidity >= 95 &&
+             intel.sky.cloud >= 80 &&
+             (intel.tempest?.windSpeed ?? 0) < 4)
+              ? 0.6 : 0,
 
-  timestamp:
-    intel.tempest?.timestamp ??
-    intel.wu?.obsTimeLocal ??
-    Date.now()
-};
+          timestamp:
+            intel.tempest?.timestamp ??
+            intel.wu?.obsTimeLocal ??
+            Date.now()
+        };
+
         // ------------------------------------------------------------
         // TODAY STATS (Tempest high)
         // ------------------------------------------------------------
@@ -353,11 +291,11 @@ intel.current = {
         intel.today.stats.maxTemp = tempestHigh;
 
         // ------------------------------------------------------------
-        // COMFORT ENGINE (now uses unified sky + unified current)
+        // COMFORT ENGINE
         // ------------------------------------------------------------
         intel.comfort = computeComfort(intel);
 
-        // UV block stays as-is
+        // UV block
         intel.uv = getReliableUV(intel);
 
         // ------------------------------------------------------------
@@ -365,8 +303,11 @@ intel.current = {
         // ------------------------------------------------------------
         intel.futureComfort = buildFutureComfort(intel.hourly, computeComfort);
 
-        // Debug handle
+        // ------------------------------------------------------------
+        // DEBUG HANDLE
+        // ------------------------------------------------------------
         window._intel = intel;
+        window.intel = intel; // ⭐ Expose for debugging + HA2.0 validation
 
         // ------------------------------------------------------------
         // UPDATE UI
@@ -386,12 +327,14 @@ intel.current = {
     }
   );
 }
-
 // ------------------------------------------------------------
-// CLICK LISTENERS FOR EXPANSION + NOTIFICATIONS + COMFORT TOGGLE
+// CLICK LISTENERS — Expansion, Notifications, Comfort Toggle
 // ------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
-  // Enable notifications button
+
+  // ------------------------------------------------------------
+  // Enable Notifications Button
+  // ------------------------------------------------------------
   const notifBtn = document.getElementById("enable-notifications-btn");
 
   if (notifBtn) {
@@ -408,7 +351,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Today / Tomorrow expansion
+  // ------------------------------------------------------------
+  // Today / Tomorrow Expansion Panels
+  // ------------------------------------------------------------
   const todayModule = document.getElementById("today-module");
   const tomorrowModule = document.getElementById("tomorrow-module");
 
@@ -426,8 +371,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Comfort → hourly temps toggle
+  // ------------------------------------------------------------
+  // Comfort → Hourly Temps Toggle
+  // ------------------------------------------------------------
   const comfortNowRoot = document.getElementById("comfort-now-container");
+
   if (comfortNowRoot) {
     comfortNowRoot.addEventListener("click", () => {
       const hourlyEl = document.getElementById("hourlyTemps");
@@ -436,7 +384,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Debugging: SW messages
+  // ------------------------------------------------------------
+  // Service Worker Debug Messages
+  // ------------------------------------------------------------
   if (navigator.serviceWorker) {
     navigator.serviceWorker.addEventListener("message", e => {
       alert("SW MSG: " + JSON.stringify(e.data));
