@@ -162,6 +162,11 @@ function updateUI(intel) {
 if (intel.pulse?.mediaUrl) {
   renderPulseMedia(intel.pulse.mediaUrl);
 }
+// Pulse Text
+const preview = document.getElementById("pulse-preview");
+if (preview && intel.pulse?.text) {
+  preview.innerHTML = intel.pulse.text;
+}
   }
 
 // ------------------------------------------------------------
