@@ -175,149 +175,163 @@
     </div>
   </div>
 
-  <script>
-    const editor = document.getElementById('editor');
-    const preview = document.getElementById('preview-content');
-    const imageInput = document.getElementById('image');
-    const publishBtn = document.getElementById('publish');
-    const statusEl = document.getElementById('status');
+<script>
+  const editor = document.getElementById('editor');
+  const preview = document.getElementById('preview-content');
+  const imageInput = document.getElementById('image');
+  const publishBtn = document.getElementById('publish');
+  const statusEl = document.getElementById('status');
 
-    let currentImageUrl = "";
+  let currentMediaUrl = "";
+  let currentMediaType = null;
 
-    document.querySelectorAll('.toolbar button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const cmd = btn.dataset.cmd;
+  // ============================================================
+  // TOOLBAR
+  // ============================================================
+  document.querySelectorAll('.toolbar button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cmd = btn.dataset.cmd;
 
-        if (cmd === 'createLink') {
-          const url = prompt('Enter URL:');
-          if (url) document.execCommand(cmd, false, url);
-        } else {
-          document.execCommand(cmd);
-        }
+      if (cmd === 'createLink') {
+        const url = prompt('Enter URL:');
+        if (url) document.execCommand(cmd, false, url);
+      } else {
+        document.execCommand(cmd);
+      }
 
-        editor.focus();
-        updatePreview();
-      });
+      editor.focus();
+      updatePreview();
     });
+  });
 
-    function getMediaHTML(url) {
-      if (!url) return "";
+  // ============================================================
+  // MEDIA RENDERER
+  // ============================================================
+  function getMediaHTML(url, type) {
+    if (!url) return "";
 
-      const isVideo =
-        url.includes('/video/upload') ||
-        url.endsWith('.mp4');
-
-      if (isVideo) {
-        return `
-          <video autoplay loop muted playsinline>
-            <source src="${url}" type="video/mp4">
-          </video>
-        `;
-      }
-
-      // GIF fallback → try forcing video pipeline
-      if (url.endsWith(".gif")) {
-        const videoUrl = url.replace("/image/upload/", "/video/upload/");
-        return `
-          <video autoplay loop muted playsinline>
-            <source src="${videoUrl}" type="video/mp4">
-          </video>
-        `;
-      }
-
-      return `<img src="${url}" />`;
-    }
-
-    function updatePreview() {
-      const text = editor.innerHTML;
-      const img = currentImageUrl || "/828-brand-card.png";
-
-      preview.innerHTML = `
-        <div class="pulse-hero-preview">
-          ${getMediaHTML(img)}
-          <div class="pulse-overlay"></div>
-          <div class="pulse-hero-text">
-            ${text}
-          </div>
-        </div>
+    if (type === "video") {
+      return `
+        <video autoplay loop muted playsinline>
+          <source src="${url}" type="video/mp4">
+        </video>
       `;
     }
 
-    editor.addEventListener('input', updatePreview);
-
-async function uploadImage(file) {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('upload_preset', 'pulse_upload');
-
-  // 🔥 FORCE correct type
-  const isVideo = file.type.startsWith('video/');
-  formData.append('resource_type', isVideo ? 'video' : 'image');
-
-  const endpoint = isVideo
-    ? 'https://api.cloudinary.com/v1_1/dz45rrije/video/upload'
-    : 'https://api.cloudinary.com/v1_1/dz45rrije/image/upload';
-
-  console.log("Uploading:", file.type);
-  console.log("Endpoint:", endpoint);
-
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    body: formData
-  });
-
-  const data = await res.json();
-  console.log("Cloudinary response:", data);
-
-  if (!data.secure_url) {
-    throw new Error("Upload failed");
+    return `<img src="${url}" />`;
   }
 
-  return data.secure_url;
-}
-    publishBtn.addEventListener('click', async () => {
-      const html = editor.innerHTML.trim();
-      if (!html) return;
+  // ============================================================
+  // PREVIEW
+  // ============================================================
+  function updatePreview() {
+    const text = editor.innerHTML;
+    const url = currentMediaUrl || "/828-brand-card.png";
+    const type = currentMediaType || "image";
 
-      publishBtn.disabled = true;
+    preview.innerHTML = `
+      <div class="pulse-hero-preview">
+        ${getMediaHTML(url, type)}
+        <div class="pulse-overlay"></div>
+        <div class="pulse-hero-text">
+          ${text}
+        </div>
+      </div>
+    `;
+  }
 
-      try {
-        let imageUrl = '';
-        const file = imageInput.files[0];
+  editor.addEventListener('input', updatePreview);
 
-        if (file) {
-          statusEl.textContent = "Uploading…";
-          imageUrl = await uploadImage(file);
-          currentImageUrl = imageUrl;
-        }
+  // ============================================================
+  // CLOUDINARY UPLOAD (image or video)
+  // ============================================================
+  async function uploadPulseMedia(file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "pulse_upload");
 
-        statusEl.textContent = "Publishing…";
+    const isVideo = file.type.startsWith("video/");
+    const endpoint = isVideo
+      ? "https://api.cloudinary.com/v1_1/dz45rrije/video/upload"
+      : "https://api.cloudinary.com/v1_1/dz45rrije/image/upload";
 
-        const res = await fetch('/api/tidbits/pulse-write', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    title: "Weather Pulse",
-    text: html,
-    imageUrl
-  })
-});
+    console.log("Uploading:", file.type);
+    console.log("Endpoint:", endpoint);
 
-if (!res.ok) {
-  const text = await res.text();
-  throw new Error(`API error: ${res.status} - ${text}`);
-}
+    const res = await fetch(endpoint, {
+      method: "POST",
+      body: formData
+    });
 
-        statusEl.textContent = "Published ✔";
-        editor.innerHTML = '';
-        updatePreview();
+    const data = await res.json();
+    console.log("Cloudinary response:", data);
 
-      } catch {
-        statusEl.textContent = "Error";
+    if (!data.secure_url) {
+      throw new Error("Upload failed");
+    }
+
+    return {
+      mediaUrl: data.secure_url,
+      mediaType: isVideo ? "video" : "image"
+    };
+  }
+
+  // ============================================================
+  // PUBLISH HANDLER
+  // ============================================================
+  publishBtn.addEventListener("click", async () => {
+    const html = editor.innerHTML.trim();
+    if (!html) return;
+
+    publishBtn.disabled = true;
+
+    try {
+      let mediaUrl = null;
+      let mediaType = null;
+
+      const file = imageInput.files[0];
+
+      if (file) {
+        statusEl.textContent = "Uploading…";
+        const uploaded = await uploadPulseMedia(file);
+        mediaUrl = uploaded.mediaUrl;
+        mediaType = uploaded.mediaType;
+
+        currentMediaUrl = mediaUrl;
+        currentMediaType = mediaType;
       }
 
-      publishBtn.disabled = false;
-    });
-  </script>
+      statusEl.textContent = "Publishing…";
+
+      const res = await fetch("/api/tidbits/pulse-write", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "Weather Pulse",
+          text: html,
+          mediaUrl,
+          mediaType
+        })
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`API error: ${res.status} - ${text}`);
+      }
+
+      statusEl.textContent = "Published ✔";
+      editor.innerHTML = "";
+      currentMediaUrl = "";
+      currentMediaType = null;
+      updatePreview();
+
+    } catch (err) {
+      console.error(err);
+      statusEl.textContent = "Error";
+    }
+
+    publishBtn.disabled = false;
+  });
+</script>
 </body>
 </html>
