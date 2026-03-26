@@ -51,10 +51,11 @@ export function getActionHeadline(dominantFactor, data) {
       return "Cloudy with soft light";
     case "fog":
       return "Muted and low‑visibility";
-      case "goldilocks":
+  case "goldilocks":
   return "🌟 Goldilocks Day — just right!";
-    default:
-      return "🌟 Goldilocks Day — just right!";
+
+default:
+  return "🌟 Goldilocks Day — just right!";
   }
 }
 
@@ -260,14 +261,21 @@ case "muggy":
       );
       break;
 
-    default:
-case "goldilocks":
+    case "goldilocks":
   bullets.push(
     "🌟 A beautifully balanced day with no major weather drivers.",
     "Windows‑open comfort — perfect for errands, walks, or a slow afternoon.",
     "Light layers are optional, and outdoor plans feel effortless."
   );
+  break;
 
+default:
+  bullets.push(
+    "🌟 A beautifully balanced day with no major weather drivers.",
+    "Windows‑open comfort — perfect for errands, walks, or a slow afternoon.",
+    "Light layers are optional, and outdoor plans feel effortless."
+  );
+  break;
   }
 
   return bullets;
