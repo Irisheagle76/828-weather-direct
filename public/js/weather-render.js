@@ -491,13 +491,41 @@ export function renderTodayDetail(intel) {
   const rainVal = safe(rain, idx);
   const snowVal = safe(snow, idx);
 
- panel.innerHTML = `
-  <div class="fx-section"><div class="fx-label">Temperature</div><div class="fx-value">${Math.round(temp)}°</div></div>
-  <div class="fx-section"><div class="fx-label">Dew Point</div><div class="fx-value">${Math.round(dewpt)}°</div></div>
-  <div class="fx-section"><div class="fx-label">Wind</div><div class="fx-value">${Math.round(wind)} mph (gusts ${Math.round(gust)} mph)</div></div>
-  <div class="fx-section"><div class="fx-label">Cloud Cover</div><div class="fx-value">${Math.round(cloud)}%</div></div>
-  <div class="fx-section"><div class="fx-label">Rain</div><div class="fx-value">${describePrecip(rainVal)}</div></div>
-  <div class="fx-section"><div class="fx-label">Snow</div><div class="fx-value">${describeSnow(snowVal)}</div></div>
+panel.innerHTML = `
+  <div class="fx-grid">
+
+    <div class="fx-tile">
+      <div class="fx-top">🌡 ${Math.round(temp)}°</div>
+      <div class="fx-label">Temp</div>
+    </div>
+
+    <div class="fx-tile">
+      <div class="fx-top">💧 ${Math.round(dewpt)}°</div>
+      <div class="fx-label">Dew</div>
+    </div>
+
+    <div class="fx-tile">
+      <div class="fx-top">🌬 ${Math.round(wind)} mph</div>
+      <div class="fx-sub">Gusts ${Math.round(gust)}</div>
+      <div class="fx-label">Wind</div>
+    </div>
+
+    <div class="fx-tile">
+      <div class="fx-top">☁ ${Math.round(cloud)}%</div>
+      <div class="fx-label">Cloud</div>
+    </div>
+
+    <div class="fx-tile">
+      <div class="fx-top">🌧 ${describePrecip(rainVal)}</div>
+      <div class="fx-label">Rain</div>
+    </div>
+
+    <div class="fx-tile">
+      <div class="fx-top">❄ ${describeSnow(snowVal)}</div>
+      <div class="fx-label">Snow</div>
+    </div>
+
+  </div>
 `;
 }
 
@@ -534,12 +562,40 @@ export function renderTomorrowDetail(intel) {
   const snowVal = safe(snow, idx);
 
   panel.innerHTML = `
-  <div class="fx-section"><div class="fx-label">Temperature</div><div class="fx-value">${Math.round(temp)}°</div></div>
-  <div class="fx-section"><div class="fx-label">Dew Point</div><div class="fx-value">${Math.round(dewpt)}°</div></div>
-  <div class="fx-section"><div class="fx-label">Wind</div><div class="fx-value">${Math.round(wind)} mph (gusts ${Math.round(gust)} mph)</div></div>
-  <div class="fx-section"><div class="fx-label">Cloud Cover</div><div class="fx-value">${Math.round(cloud)}%</div></div>
-  <div class="fx-section"><div class="fx-label">Rain</div><div class="fx-value">${describePrecip(rainVal)}</div></div>
-  <div class="fx-section"><div class="fx-label">Snow</div><div class="fx-value">${describeSnow(snowVal)}</div></div>
+  <div class="fx-grid">
+
+    <div class="fx-tile">
+      <div class="fx-top">🌡 ${Math.round(temp)}°</div>
+      <div class="fx-label">Temp</div>
+    </div>
+
+    <div class="fx-tile">
+      <div class="fx-top">💧 ${Math.round(dewpt)}°</div>
+      <div class="fx-label">Dew</div>
+    </div>
+
+    <div class="fx-tile">
+      <div class="fx-top">🌬 ${Math.round(wind)} mph</div>
+      <div class="fx-sub">Gusts ${Math.round(gust)}</div>
+      <div class="fx-label">Wind</div>
+    </div>
+
+    <div class="fx-tile">
+      <div class="fx-top">☁ ${Math.round(cloud)}%</div>
+      <div class="fx-label">Cloud</div>
+    </div>
+
+    <div class="fx-tile">
+      <div class="fx-top">🌧 ${describePrecip(rainVal)}</div>
+      <div class="fx-label">Rain</div>
+    </div>
+
+    <div class="fx-tile">
+      <div class="fx-top">❄ ${describeSnow(snowVal)}</div>
+      <div class="fx-label">Snow</div>
+    </div>
+
+  </div>
 `;
 }
 
