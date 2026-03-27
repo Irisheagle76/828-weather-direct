@@ -467,7 +467,46 @@
 .fc-hour-emoji {
   font-size: 1.25rem;
 }
+/* --- ADDITIONS FOR ENHANCED FC STRIP --- */
 
+.fc-hour-main {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.fc-hour-temp {
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+.fc-hour-extra {
+  margin-top: 2px;
+  font-size: 0.65rem;
+  opacity: 0.7;
+  text-align: center;
+  line-height: 1.1;
+}
+
+.fc-hour-score {
+  display: block;
+  font-weight: 600;
+}
+
+.fc-hour-label-text {
+  display: block;
+  font-size: 0.6rem;
+}
+
+/* keeps layout stable when expanding */
+.fc-hour {
+  min-height: 52px;
+}
+
+/* hide/show behavior */
+.hidden {
+  display: none;
+}
     /* ============================================================
      TODAY + TOMORROW MODULES
   ============================================================ */

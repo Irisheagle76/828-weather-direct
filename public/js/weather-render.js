@@ -296,12 +296,37 @@ export function renderFutureComfort(intel) {
 
   const phrase = generateFutureComfortPhrase(fc, intel.hourly);
 
-  const items = fc.map(item => `
-    <div class="fc-hour">
+  const items = fc.map((item, i) => `
+    <div class="fc-hour" data-idx="${i}">
+      
       <div class="fc-hour-label">${item.hourLabel}</div>
-      <div class="fc-hour-emoji">${item.emoji}</div>
+
+      <div class="fc-hour-main">
+        <span class="fc-hour-emoji">${item.emoji}</span>
+        <span class="fc-hour-temp">${Math.round(item.temp)}°</span>
+      </div>
+
+      <div class="fc-hour-extra hidden">
+        <span class="fc-hour-score" style="color:${item.color}">
+          ${item.comfortScore}
+        </span>
+        <span class="fc-hour-label-text">
+          ${item.label}
+        </span>
+      </div>
+
     </div>
   `).join("");
+
+  // attach click behavior AFTER render
+  setTimeout(() => {
+    document.querySelectorAll(".fc-hour").forEach(el => {
+      el.addEventListener("click", () => {
+        const extra = el.querySelector(".fc-hour-extra");
+        if (extra) extra.classList.toggle("hidden");
+      });
+    });
+  }, 0);
 
   return `
     <div class="comfort-module">

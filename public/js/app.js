@@ -1,6 +1,6 @@
 // /js/app.js
 // ============================================================
-// APP ENTRY — Clean, Modular, Human-Action 2.0 Ready
+// APP ENTRY — Clean, Stable Version (RESET)
 // ============================================================
 
 import { buildIntel } from "./intel/intel-builder.js?v=1.0.0";
@@ -20,15 +20,6 @@ import {
 } from "./weather-render.js?v=1.0.0";
 
 import { subscribeUserToPush } from "./notifications/subscribeClient.js?v=1.0.0";
-
-// ⭐ NEW — Comfort UI imports
-import {
-  buildFutureComfort,
-  computeComfort,
-  attachComfortNowExpansion,
-  renderNext6Hours,
-  attachNext6HourToggle
-} from "./intel/comfort.js?v=1.0.0";
 
 window.toggleForecastExpanded = toggleForecastExpanded;
 
@@ -69,7 +60,7 @@ function updateUI(intel) {
   if (!intel) return;
 
   // ---------------------------
-  // RIGHT NOW COMFORT
+  // RIGHT NOW COMFORT (your logic intact)
   // ---------------------------
   const comfortNowContainer = document.getElementById("comfort-now-container");
   if (comfortNowContainer) {
@@ -77,32 +68,18 @@ function updateUI(intel) {
   }
 
   // ---------------------------
-  // HOURLY TEMPS (existing)
+  // HOURLY TEMPS
   // ---------------------------
-  if (intel.hourly) renderHourlyTemps(intel.hourly);
-
-  // ---------------------------
-  // FUTURE COMFORT (existing container)
-  // ---------------------------
-  const futureComfortContainer = document.getElementById("future-comfort-container");
-  if (futureComfortContainer) {
-    // (you can keep or remove your old renderFutureComfort here if desired)
-    // futureComfortContainer.innerHTML = renderFutureComfort(intel);
+  if (intel.hourly) {
+    renderHourlyTemps(intel.hourly);
   }
 
   // ---------------------------
-  // ⭐ NEW — INTERACTIVE COMFORT SYSTEM
+  // FUTURE COMFORT (restored)
   // ---------------------------
-  const items = buildFutureComfort(intel.hourly, computeComfort);
-
-  // Expand behavior for "Comfort Now"
-  attachComfortNowExpansion(intel);
-
-  // Render Next 6 Hours module
-  const container = document.getElementById("next-6-hours");
-  if (container) {
-    renderNext6Hours(container, items);
-    attachNext6HourToggle(container);
+  const futureComfortContainer = document.getElementById("future-comfort-container");
+  if (futureComfortContainer) {
+    futureComfortContainer.innerHTML = renderFutureComfort(intel);
   }
 
   // ---------------------------
