@@ -1,4 +1,14 @@
 // /js/app.js
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(reg => {
+      console.log("UNREGISTERING SW:", reg);
+      reg.unregister();
+    });
+  });
+}
+
 // ============================================================
 // APP ENTRY — Clean, Modular, Human‑Action 2.0 Ready
 // ============================================================
