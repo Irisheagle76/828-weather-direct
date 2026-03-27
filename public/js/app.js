@@ -232,6 +232,8 @@ async function initApp() {
 
         const hourly = await getShortTermForecast(lat, lon);
 console.log("RAW HOURLY:", hourly);   // ⭐ Add this
+console.log("TYPE OF RAW HOURLY:", typeof hourly, Array.isArray(hourly));
+console.log("RAW HOURLY KEYS:", Object.keys(hourly));
 window._hourly = hourly;
 
         const mrmsPixel = await getMRMSPixel(lat, lon);
