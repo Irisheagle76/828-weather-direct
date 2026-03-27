@@ -1,10 +1,10 @@
 // /public/js/modules/human-action-2/core-engine.js
-// Human‑Action 2.0 — Core Engine (Rich Return)
+// Human‑Action 2.0 — Core Engine (Rich Return, Hybrid Daypart Aware)
 // Determines dominantFactor, confidence, secondaryFactors, and notes.
 // This file does NOT handle phrasing — only logic and scoring.
 
 /**
- * Expected data shape (conceptual):
+ * Expected single-snapshot data shape:
  * {
  *   temp: number,            // °F
  *   feelsLike: number,       // °F
@@ -25,6 +25,19 @@
  *   valleyFogRisk: number,   // 0–1
  *   ridgeFogRisk: number,    // 0–1
  *   timestamp: number        // ms since epoch
+ * }
+ *
+ * Hybrid tomorrow shape (from buildTomorrowCurrent):
+ * {
+ *   morning: { ...single snapshot... },
+ *   afternoon: { ...single snapshot... },
+ *   stats: {
+ *     tempMin, tempMax, tempSwing,
+ *     windGustMax, windAvg,
+ *     dewpointAvg, cloudAvg,
+ *     rainTotal, snowTotal,
+ *     coldStart, windImpact
+ *   }
  * }
  */
 
@@ -59,7 +72,73 @@ function clamp(value, min = 0, max = 1) {
 }
 
 // ---------------------------------------------------------
-// Main scoring engine
+// Priority helpers
+// ---------------------------------------------------------
+function pickDominantFactor(factors) {
+  const priority = [
+    "blackIce",
+    "freezingFog",
+    "freeze",
+    "frost",
+    "snow",
+    "storms",
+    "coldRain",
+    "warmRain",
+    "rain",
+    "mountainWind",
+    "wind",
+    "cold",
+    "heat",
+    "humidity",
+    "muggy",
+    "valleyFog",
+    "ridgeFog",
+    "fog",
+    "smoke",
+    "haze",
+    "uv",
+    "clouds",
+    "sun",
+    "inversion"
+  ];
+
+  for (const p of priority) {
+    if (factors.includes(p)) return p;
+  }
+
+  return "default";
+}
+
+const severityRank = {
+  blackIce: 10,
+  freezingFog: 9,
+  freeze: 9,
+  frost: 8,
+  snow: 7,
+  storms: 7,
+  coldRain: 6,
+  warmRain: 6,
+  rain: 6,
+  mountainWind: 6,
+  wind: 5,
+  cold: 4,
+  heat: 4,
+  humidity: 3,
+  muggy: 3,
+  valleyFog: 3,
+  ridgeFog: 3,
+  fog: 3,
+  smoke: 3,
+  haze: 2,
+  uv: 2,
+  clouds: 2,
+  sun: 1,
+  inversion: 1,
+  default: 0
+};
+
+// ---------------------------------------------------------
+// Main scoring engine (now hybrid-aware)
 // ---------------------------------------------------------
 export function evaluateHumanActionFactors(data) {
   if (!data || typeof data !== "object") {
@@ -71,6 +150,45 @@ export function evaluateHumanActionFactors(data) {
     };
   }
 
+  const isHybrid =
+    data.morning &&
+    data.afternoon &&
+    data.stats;
+
+  // -------------------------------------------------------
+  // HYBRID MODE — tomorrow (morning + afternoon + stats)
+  // -------------------------------------------------------
+  if (isHybrid) {
+    const morningEval = evaluateSingleSnapshotRich(data.morning);
+    const afternoonEval = evaluateSingleSnapshotRich(data.afternoon);
+
+    const hybrid = combineDayparts(morningEval, afternoonEval, data.stats);
+
+    const notes = buildNotes(
+      { factor: hybrid.dominantFactor, score: hybrid.confidence },
+      hybrid.secondaryFactors,
+      // pass afternoon snapshot as representative context
+      data.afternoon
+    );
+
+    return {
+      dominantFactor: hybrid.dominantFactor,
+      confidence: hybrid.confidence,
+      secondaryFactors: hybrid.secondaryFactors,
+      notes
+    };
+  }
+
+  // -------------------------------------------------------
+  // SINGLE SNAPSHOT MODE — current conditions, etc.
+  // -------------------------------------------------------
+  return evaluateSingleSnapshotRich(data);
+}
+
+// =========================================================
+// SINGLE SNAPSHOT EVALUATOR (original logic, extracted)
+// =========================================================
+function evaluateSingleSnapshotRich(data) {
   const {
     temp,
     feelsLike,
@@ -95,7 +213,8 @@ export function evaluateHumanActionFactors(data) {
 
   const seasonal = getSeasonalContext(timestamp);
   const scores = [];
-    // -----------------------------
+
+  // -----------------------------
   // Temperature factors
   // -----------------------------
   if (typeof feelsLike === "number") {
@@ -289,7 +408,8 @@ export function evaluateHumanActionFactors(data) {
       score: clamp(inversionRisk)
     });
   }
-    // ---------------------------------------------------------
+
+  // ---------------------------------------------------------
   // Filter + sort + determine dominant factor
   // ---------------------------------------------------------
   const meaningful = scores.filter(s => s.score > 0.05);
@@ -323,6 +443,133 @@ export function evaluateHumanActionFactors(data) {
     secondaryFactors,
     notes
   };
+}
+
+// =========================================================
+// HYBRID DAYPART COMBINER
+// =========================================================
+function combineDayparts(morningEval, afternoonEval, stats) {
+  const mFactors = [
+    morningEval.dominantFactor,
+    ...morningEval.secondaryFactors
+  ];
+  const aFactors = [
+    afternoonEval.dominantFactor,
+    ...afternoonEval.secondaryFactors
+  ];
+
+  // 1. Shared factors dominate
+  const shared = mFactors.filter(f => aFactors.includes(f));
+  if (shared.length > 0) {
+    const dominantFactor = pickDominantFactor(shared);
+    const confidence = Math.max(
+      morningEval.confidence,
+      afternoonEval.confidence
+    );
+
+    const allFactors = Array.from(new Set([...mFactors, ...aFactors]));
+    const secondaryFactors = allFactors
+      .filter(f => f !== dominantFactor)
+      .slice(0, 2);
+
+    return { dominantFactor, confidence, secondaryFactors };
+  }
+
+  // 2. Strong outliers from day-level stats
+  if (stats && stats.coldStart) {
+    return {
+      dominantFactor: "cold",
+      confidence: Math.max(morningEval.confidence, 0.7),
+      secondaryFactors: dedupeSecondary([
+        morningEval.dominantFactor,
+        ...morningEval.secondaryFactors,
+        afternoonEval.dominantFactor
+      ], "cold")
+    };
+  }
+
+  if (stats && stats.windImpact) {
+    return {
+      dominantFactor: "wind",
+      confidence: Math.max(
+        morningEval.confidence,
+        afternoonEval.confidence,
+        0.7
+      ),
+      secondaryFactors: dedupeSecondary([
+        morningEval.dominantFactor,
+        ...morningEval.secondaryFactors,
+        afternoonEval.dominantFactor,
+        ...afternoonEval.secondaryFactors
+      ], "wind")
+    };
+  }
+
+  if (stats && typeof stats.tempSwing === "number" &&
+      Math.abs(stats.tempSwing) >= 15) {
+    if (stats.tempSwing < 0) {
+      return {
+        dominantFactor: "cold",
+        confidence: Math.max(
+          morningEval.confidence,
+          afternoonEval.confidence,
+          0.7
+        ),
+        secondaryFactors: dedupeSecondary([
+          morningEval.dominantFactor,
+          afternoonEval.dominantFactor
+        ], "cold")
+      };
+    }
+    if (stats.tempSwing > 0) {
+      return {
+        dominantFactor: "heat",
+        confidence: Math.max(
+          morningEval.confidence,
+          afternoonEval.confidence,
+          0.7
+        ),
+        secondaryFactors: dedupeSecondary([
+          morningEval.dominantFactor,
+          afternoonEval.dominantFactor
+        ], "heat")
+      };
+    }
+  }
+
+  // 3. Compare severity of dominant factors
+  const mDom = morningEval.dominantFactor;
+  const aDom = afternoonEval.dominantFactor;
+
+  const mScore = severityRank[mDom] ?? 0;
+  const aScore = severityRank[aDom] ?? 0;
+
+  if (mScore > aScore) {
+    return {
+      dominantFactor: mDom,
+      confidence: morningEval.confidence,
+      secondaryFactors: morningEval.secondaryFactors
+    };
+  }
+
+  if (aScore > mScore) {
+    return {
+      dominantFactor: aDom,
+      confidence: afternoonEval.confidence,
+      secondaryFactors: afternoonEval.secondaryFactors
+    };
+  }
+
+  // 4. Equal severity but different type → lean afternoon
+  return {
+    dominantFactor: aDom,
+    confidence: afternoonEval.confidence,
+    secondaryFactors: afternoonEval.secondaryFactors
+  };
+}
+
+function dedupeSecondary(list, dominant) {
+  return Array.from(new Set(list.filter(f => f && f !== dominant))).slice(0, 2);
 }
 
 // ---------------------------------------------------------

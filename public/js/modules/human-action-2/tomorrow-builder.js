@@ -1,13 +1,12 @@
 // /modules/human-action-2/tomorrow-builder.js
-// Converts tomorrow.stats → Human‑Action 2.0 compatible data object
+// Human‑Action 2.0 — Tomorrow Daypart Builder (Fully Integrated Hybrid Model)
 
 export function buildTomorrowCurrent(stats) {
   if (!stats) return null;
 
   // ---------------------------------------------------------
-  // 1. HUMIDITY FALLBACK (CRITICAL FIX)
+  // 1. HUMIDITY FALLBACK
   // ---------------------------------------------------------
-  // If humidityAvg is missing, use a safe neutral value.
   const humidity = stats.humidityAvg ?? 55;
 
   // ---------------------------------------------------------
@@ -53,22 +52,7 @@ export function buildTomorrowCurrent(stats) {
     10;
 
   // ---------------------------------------------------------
-  // 6. Fog risks (updated to use humidity fallback)
-  // ---------------------------------------------------------
-  const valleyFogRisk =
-    (humidity >= 90 &&
-     stats.tempMin <= 50 &&
-     stats.windAvg < 3)
-      ? 0.6 : 0;
-
-  const ridgeFogRisk =
-    (humidity >= 95 &&
-     cloudCover >= 0.8 &&
-     stats.windAvg < 4)
-      ? 0.5 : 0;
-
-  // ---------------------------------------------------------
-  // 7. Freeze / frost / black ice
+  // 6. Freeze / frost / black ice
   // ---------------------------------------------------------
   const freezeRisk =
     stats.tempMin <= 32 ? 1 :
@@ -86,43 +70,118 @@ export function buildTomorrowCurrent(stats) {
     0;
 
   // ---------------------------------------------------------
-  // 8. Inversion risk
+  // 7. Inversion risk
   // ---------------------------------------------------------
   const inversionRisk =
     (stats.tempMin <= 40 && stats.windAvg < 3) ? 0.5 : 0;
 
   // ---------------------------------------------------------
-  // 9. Timestamp (tomorrow at 8 AM)
+  // 8. Feels‑like adjustment (same strength for both dayparts)
   // ---------------------------------------------------------
-  const tomorrowTimestamp = (() => {
+  function computeFeelsLike(temp, gust, humidity) {
+    if (temp <= 50) {
+      const windFactor = Math.min(gust, 50);
+      return temp - (windFactor * 0.15);
+    }
+    if (temp >= 70) {
+      return temp + ((humidity - 50) * 0.05);
+    }
+    if (gust >= 30) {
+      return temp - 2;
+    }
+    return temp;
+  }
+
+  const feelsLikeMorning = computeFeelsLike(stats.tempMin, stats.windGustMax, humidity);
+  const feelsLikeAfternoon = computeFeelsLike(stats.tempMax, stats.windGustMax, humidity);
+
+  // ---------------------------------------------------------
+  // 9. Timestamps for dayparts
+  // ---------------------------------------------------------
+  const morningTimestamp = (() => {
     const d = new Date();
     d.setDate(d.getDate() + 1);
     d.setHours(8, 0, 0, 0);
     return d.getTime();
   })();
 
+  const afternoonTimestamp = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    d.setHours(14, 0, 0, 0);
+    return d.getTime();
+  })();
+
   // ---------------------------------------------------------
-  // 10. RETURN FINAL HUMAN‑ACTION 2.0 INPUT OBJECT
+  // 10. Day-level flags
+  // ---------------------------------------------------------
+  const coldStart = stats.tempMin < 40;
+  const windImpact = stats.windGustMax >= 30;
+  const tempSwing = stats.tempMax - (stats.tempMaxPrev ?? stats.tempMax);
+
+  // ---------------------------------------------------------
+  // 11. RETURN FULL HYBRID DAYPART OBJECT
   // ---------------------------------------------------------
   return {
-    temp: stats.tempMax,
-    feelsLike: stats.tempMax,
-    dewpoint: dew,
-    humidity,
-    windSpeed: stats.windAvg,
-    windGust: stats.windGustMax,
-    precipType,
-    precipIntensity,
-    uvIndex: stats.uvMax ?? 0,
-    visibility,
-    cloudCover,
-    smokeIndex: 0, // placeholder
-    frostRisk,
-    freezeRisk,
-    inversionRisk,
-    blackIceRisk,
-    valleyFogRisk,
-    ridgeFogRisk,
-    timestamp: tomorrowTimestamp
+    // Morning snapshot
+    morning: {
+      temp: stats.tempMin,
+      feelsLike: feelsLikeMorning,
+      dewpoint: dew,
+      humidity,
+      windSpeed: stats.windAvg,
+      windGust: stats.windGustMax,
+      precipType,
+      precipIntensity,
+      uvIndex: stats.uvMax ?? 0,
+      visibility,
+      cloudCover,
+      smokeIndex: 0,
+      frostRisk,
+      freezeRisk,
+      inversionRisk,
+      blackIceRisk,
+      valleyFogRisk: 0,
+      ridgeFogRisk: 0,
+      timestamp: morningTimestamp
+    },
+
+    // Afternoon snapshot
+    afternoon: {
+      temp: stats.tempMax,
+      feelsLike: feelsLikeAfternoon,
+      dewpoint: dew,
+      humidity,
+      windSpeed: stats.windAvg,
+      windGust: stats.windGustMax,
+      precipType,
+      precipIntensity,
+      uvIndex: stats.uvMax ?? 0,
+      visibility,
+      cloudCover,
+      smokeIndex: 0,
+      frostRisk,
+      freezeRisk,
+      inversionRisk,
+      blackIceRisk,
+      valleyFogRisk: 0,
+      ridgeFogRisk: 0,
+      timestamp: afternoonTimestamp
+    },
+
+    // Day-level stats
+    stats: {
+      tempMin: stats.tempMin,
+      tempMax: stats.tempMax,
+      tempSwing,
+      windGustMax: stats.windGustMax,
+      windAvg: stats.windAvg,
+      dewpointAvg: dew,
+      cloudAvg: stats.cloudAvg,
+      rainTotal: stats.rainTotal,
+      snowTotal: stats.snowTotal,
+      coldStart,
+      windImpact
+    }
   };
 }
