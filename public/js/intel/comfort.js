@@ -508,3 +508,98 @@ export function generateFutureComfortPhrase(items, hourly) {
 
   return sentence.trim() + ".";
 }
+
+// ------------------------------------------------------------
+// COMFORT NOW — CLICK TO EXPAND NEXT 6 HOURS
+// ------------------------------------------------------------
+export function attachComfortNowExpansion(intel) {
+  const module = document.getElementById("comfort-now");
+  const panel = document.getElementById("comfort-now-expanded");
+
+  if (!module || !panel) return;
+
+  module.addEventListener("click", () => {
+    const isOpen = !panel.classList.contains("hidden");
+
+    if (isOpen) {
+      panel.classList.add("hidden");
+      return;
+    }
+
+    panel.classList.remove("hidden");
+
+    const items = buildFutureComfort(intel.hourly, computeComfort);
+    renderComfortExpansion(panel, items);
+  });
+}
+
+// ------------------------------------------------------------
+// RENDER — MINI COMFORT TIMELINE (EMOJI + TEMP + SCORE)
+// ------------------------------------------------------------
+function renderComfortExpansion(panel, items) {
+  if (!items.length) {
+    panel.innerHTML = `<div class="hour-row">No hourly data</div>`;
+    return;
+  }
+
+  panel.innerHTML = items.map(i => `
+    <div class="hour-row">
+
+      <div class="hour-time">${i.hourLabel}</div>
+
+      <div class="hour-mainline">
+        <span class="hour-emoji">${i.emoji}</span>
+        <span class="hour-temp">${Math.round(i.temp)}°</span>
+      </div>
+
+      <div class="hour-score" style="color:${i.color}">
+        ${i.comfortScore}
+      </div>
+
+      <div class="hour-label">
+        ${i.label}
+      </div>
+
+    </div>
+  `).join("");
+}
+
+// ------------------------------------------------------------
+// NEXT 6 HOURS — RENDER
+// ------------------------------------------------------------
+export function renderNext6Hours(container, items) {
+  if (!container) return;
+
+  container.innerHTML = items.map((i, idx) => `
+    <div class="hour-block" data-idx="${idx}">
+      
+      <div class="hour-main">
+        <span class="hour-time">${i.hourLabel}</span>
+        <span class="hour-temp">${Math.round(i.temp)}°</span>
+      </div>
+
+      <div class="hour-extra hidden">
+        <span class="hour-emoji">${i.emoji}</span>
+        <span class="hour-score" style="color:${i.color}">
+          ${i.comfortScore} (${i.label})
+        </span>
+      </div>
+
+    </div>
+  `).join("");
+}
+
+// ------------------------------------------------------------
+// NEXT 6 HOURS — CLICK TO TOGGLE EMOJI
+// ------------------------------------------------------------
+export function attachNext6HourToggle(container) {
+  if (!container) return;
+
+  container.addEventListener("click", (e) => {
+    const block = e.target.closest(".hour-block");
+    if (!block) return;
+
+    const extra = block.querySelector(".hour-extra");
+    extra.classList.toggle("hidden");
+  });
+}

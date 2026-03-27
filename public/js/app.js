@@ -23,6 +23,14 @@ import { subscribeUserToPush } from "./notifications/subscribeClient.js?v=1.0.0"
 
 window.toggleForecastExpanded = toggleForecastExpanded;
 
+import {
+  buildFutureComfort,
+  computeComfort,
+  attachComfortNowExpansion,
+  renderNext6Hours,
+  attachNext6HourToggle
+} from "./intel/comfort.js?v=1.0.0";
+
 // SERVICE WORKER
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/sw.js").catch(() => {});
@@ -66,7 +74,7 @@ function updateUI(intel) {
 
   const futureComfortContainer = document.getElementById("future-comfort-container");
   if (futureComfortContainer) {
-    futureComfortContainer.innerHTML = renderFutureComfort(intel);
+   
   }
 
   renderTodayOutlook(intel);
@@ -162,5 +170,14 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     };
   }
+// ⭐ NEW — COMFORT INTERACTIONS
+const items = buildFutureComfort(intel.hourly, computeComfort);
 
+attachComfortNowExpansion(intel);
+
+const container = document.getElementById("next-6-hours");
+if (container) {
+  renderNext6Hours(container, items);
+  attachNext6HourToggle(container);
+}
 });
