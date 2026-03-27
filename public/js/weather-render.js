@@ -369,6 +369,8 @@ export function renderTodayOutlook(intel) {
 
   let action;
 
+  console.log("CURRENT HOUR:", hour);
+  
   // 🌙 DAY vs NIGHT SWITCH
   if (hour >= 15 && remainder && remainder.statsRemainder) {
     const stats = remainder.statsRemainder;
