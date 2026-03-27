@@ -343,12 +343,13 @@ try {
       today: intel.today,
       tomorrow: intel.tomorrow,
 
-      // Corrected: hourly is an object, not an array
+      // Correct: hourly is an object with arrays inside
       hourlySample: hourly?.time?.slice?.(0, 12) || [],
 
       meta: {
         now: new Date().toISOString(),
-        hourlyCount: hourly?.time?.length || 0
+        hourlyCount: hourly?.time?.length || 0,
+        keys: Object.keys(hourly || {})
       }
     };
 
