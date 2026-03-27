@@ -554,7 +554,47 @@
       transform: translateY(2px);
       transition: opacity 0.6s ease, transform 0.6s ease, filter 0.6s ease;
     }
+/* ============================================================
+   HUMAN‑ACTION METRICS STRIP — WARM 828 VARIANT
+   ============================================================ */
 
+.ha-metrics {
+  margin-top: 0.85rem;
+  padding: 0.9rem 1rem;
+
+  background: rgba(255, 169, 77, 0.10); /* warm tint like Comfort module */
+  border: 1px solid rgba(255, 169, 77, 0.35); /* warm accent border */
+  border-radius: 16px;
+
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem 1rem;
+
+  box-shadow: 0 2px 6px rgba(0,0,0,0.28);
+}
+
+.ha-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.ha-label {
+  font-size: 0.68rem;
+  color: #f0b777; /* warm label color (matches Comfort + Pulse) */
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+.ha-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #d8dff7; /* cool value color for readability */
+  line-height: 1.25;
+  word-wrap: break-word;
+}
     /* ============================================================
      EXPANDED PANELS
   ============================================================ */

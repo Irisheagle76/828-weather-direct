@@ -318,8 +318,12 @@ export function renderTodayOutlook(intel) {
   renderBullets(bulletsEl, action.bullets);
 
   fitHeadlineToWidth(headlineEl);
-}
 
+  // ⭐ NEW — Fill Today metrics block
+  if (intel.today?.stats) {
+    renderHumanActionMetrics(intel.today.stats, "ha-today");
+  }
+}
 // ------------------------------------------------------------
 // ⭐ FULL HUMAN‑ACTION 2.0 — TOMORROW OUTLOOK
 // ------------------------------------------------------------
@@ -357,7 +361,6 @@ export function renderTomorrowOutlook(intel) {
   // ⭐ Modernized Human‑Action 2.0 badge map
   const dominant = action.dominantFactor;
   const badgeMap = {
-    // Cold family
     cold:        { text: "Cold Start",      class: "badge-cold" },
     frost:       { text: "Frost Early",     class: "badge-cold" },
     freeze:      { text: "Hard Freeze",     class: "badge-cold" },
@@ -365,27 +368,22 @@ export function renderTomorrowOutlook(intel) {
     freezingFog: { text: "Freezing Fog",    class: "badge-cold" },
     snow:        { text: "Snow Impact",     class: "badge-snow" },
 
-    // Heat / humidity
     heat:        { text: "Heat Caution",    class: "badge-heat" },
     humidity:    { text: "Humid & Heavy",   class: "badge-humid" },
     muggy:       { text: "Muggy Air",       class: "badge-humid" },
 
-    // Wind
     wind:        { text: "Wind Alert",      class: "badge-wind" },
     mountainWind:{ text: "Ridgetop Winds",  class: "badge-wind" },
 
-    // Rain / storms
     rain:        { text: "Rain Gear",       class: "badge-rain" },
     coldRain:    { text: "Cold Rain",       class: "badge-rain" },
     warmRain:    { text: "Warm Rain",       class: "badge-rain" },
     storms:      { text: "Storm Risk",      class: "badge-storm" },
 
-    // Visibility
     fog:         { text: "Low Visibility",  class: "badge-fog" },
     valleyFog:   { text: "Valley Fog",      class: "badge-fog" },
     ridgeFog:    { text: "Ridge Fog",       class: "badge-fog" },
 
-    // Goldilocks / neutral
     sun:         { text: "Bright Day",      class: "badge-goldilocks" },
     clouds:      { text: "Cloudy & Mild",   class: "badge-goldilocks" },
     goldilocks:  { text: "Just Right",      class: "badge-goldilocks" }
@@ -408,8 +406,30 @@ export function renderTomorrowOutlook(intel) {
     if (tomorrow.isEarlyMorning) tomorrowModule.classList.add("fade");
     else tomorrowModule.classList.remove("fade");
   }
-}
 
+  // ⭐ NEW — Fill Tomorrow metrics block
+  if (intel.tomorrow?.stats) {
+    renderHumanActionMetrics(intel.tomorrow.stats, "ha-tomorrow");
+  }
+}
+// ------------------------------------------------------------
+// Human‑Action Metrics Render
+// ------------------------------------------------------------
+function renderHumanActionMetrics(stats, prefix) {
+  if (!stats) return;
+
+  const set = (id, value) => {
+    const el = document.getElementById(`${prefix}-${id}`);
+    if (el) el.textContent = value;
+  };
+
+  set("high", `${Math.round(stats.tempMax)}°`);
+  set("low", `${Math.round(stats.tempMin)}°`);
+  set("wind", `${Math.round(stats.windAvg)} mph (gusts ${Math.round(stats.windGustMax)} mph)`);
+  set("rain", formatRainAmount(stats.rainTotal));
+  set("snow", formatSnowAmount(stats.snowTotal));
+  set("clouds", `${Math.round(stats.cloudAvg)}%`);
+}
 // ------------------------------------------------------------
 // RENDER UV INDEX
 // ------------------------------------------------------------
