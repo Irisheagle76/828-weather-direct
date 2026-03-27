@@ -786,8 +786,8 @@
 
 /* Thumbnail container */
 .pulse-media {
-  width: 120px;
-  height: 120px;
+  width: 160px;   /* increased from 120px */
+  height: 160px;  /* increased from 120px */
   border-radius: 8px;
   overflow: hidden;
   flex-shrink: 0;
@@ -811,21 +811,21 @@
   line-height: 1.45;
 }
 
-/* Toggle */
 .pulse-toggle {
-  margin-top: 0.65rem;
-  margin-bottom: 0.1rem;
-  border: none;
-  background: none;
+  margin-top: 0.75rem;
+  padding: 4px 12px;
+  background: rgba(143, 183, 255, 0.12);
+  border: 1px solid rgba(143, 183, 255, 0.35);
+  border-radius: 999px;
   color: #8fb7ff;
   font-size: 0.78rem;
-  padding: 0;
-  text-align: left;
   cursor: pointer;
+  transition: background 0.25s ease, border-color 0.25s ease;
 }
 
 .pulse-toggle:hover {
-  text-decoration: underline;
+  background: rgba(143, 183, 255, 0.22);
+  border-color: rgba(143, 183, 255, 0.55);
 }
 
 /* ============================================================
@@ -871,6 +871,11 @@
 /* Show full text when expanded */
 .pulse-expanded .pulse-full-text {
   display: block;
+}
+
+/* Visited link color inside Pulse full text */
+.pulse-full-text a:visited {
+  color: #ffa94d; /* 828 accent orange */
 }
 
 /* ============================================================

@@ -99,6 +99,40 @@ function showToast(message) {
     toast.classList.remove("show");
   }, 2500);
 }
+
+// ============================================================
+// ⭐ HYBRID PULSE PREVIEW BUILDER (PLAIN TEXT ONLY)
+// ============================================================
+function buildPulsePreview(html) {
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  const text = div.textContent || div.innerText || "";
+
+  const sentences = text.split(/(?<=[.!?])\s+/);
+  let preview = sentences[0] || "";
+
+  if (preview.length < 120 && sentences.length > 1) {
+    preview += " " + sentences[1];
+  }
+
+  if (preview.length > 200) {
+    preview = preview.slice(0, 200).trim() + "…";
+  }
+
+  return preview;
+}
+
+// ============================================================
+// ⭐ TIMESTAMP FORMATTER
+// ============================================================
+function formatTimeAgo(ts) {
+  const diff = Math.floor((Date.now() - ts) / 1000);
+  if (diff < 60) return "Updated just now";
+  if (diff < 3600) return `Updated ${Math.floor(diff / 60)} min ago`;
+  const hrs = Math.floor(diff / 3600);
+  return `Updated ${hrs} hour${hrs === 1 ? "" : "s"} ago`;
+}
+
 // ============================================================
 // MASTER UI UPDATE FUNCTION
 // ============================================================
@@ -141,22 +175,29 @@ function updateUI(intel) {
   if (footer && intel.wu?.stationId) {
     footer.textContent = `Live data from Weather Underground Station ${intel.wu.stationId}`;
   }
-
-  // ------------------------------------------------------------
+    // ------------------------------------------------------------
   // ⭐ PULSE MEDIA + TEXT
   // ------------------------------------------------------------
   if (intel.pulse?.mediaUrl) {
     renderPulseMedia(intel.pulse.mediaUrl);
   }
 
+  // PREVIEW (plain text intro)
   const preview = document.getElementById("pulse-preview");
   if (preview && intel.pulse?.text) {
-    preview.innerHTML = intel.pulse.text;
+    preview.innerText = buildPulsePreview(intel.pulse.text);
   }
 
+  // FULL TEXT (HTML allowed)
   const fullText = document.getElementById("pulse-full-text");
   if (fullText && intel.pulse?.text) {
     fullText.innerHTML = intel.pulse.text;
+  }
+
+  // TIMESTAMP
+  const ts = document.getElementById("pulse-timestamp");
+  if (ts && intel.pulse?.timestamp) {
+    ts.textContent = formatTimeAgo(intel.pulse.timestamp);
   }
 }
 // ============================================================
@@ -271,8 +312,7 @@ async function initApp() {
             intel.wu?.obsTimeLocal ??
             Date.now()
         };
-
-        intel.today = intel.today || {};
+                intel.today = intel.today || {};
         intel.today.stats = intel.today.stats || {};
         intel.today.stats.maxTemp = tempestHigh;
 
@@ -356,7 +396,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ------------------------------------------------------------
-  // ⭐ PULSE EXPAND / COLLAPSE (correct location)
+  // ⭐ PULSE EXPAND / COLLAPSE (final, corrected)
   // ------------------------------------------------------------
   const pulseCard = document.getElementById("pulse-card");
   const pulseToggle = document.getElementById("pulse-toggle");
