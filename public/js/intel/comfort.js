@@ -294,6 +294,23 @@ export function computeComfort(intel) {
 
   const parts = [firstSentence];
 
+  const future = intel.futureComfortWindow;
+
+if (future && future.length >= 2 && intel.hourly) {
+  const temps = intel.hourly.temperature_2m;
+
+  const tStart = temps[future[0]];
+  const tEnd = temps[future[future.length - 1]];
+
+  const delta = tEnd - tStart;
+
+  if (delta <= -4) {
+    parts.push("Expect a noticeable cool-down over the next few hours.");
+  } else if (delta >= 4) {
+    parts.push("Temperatures will climb noticeably through the next few hours.");
+  }
+}
+
   const humidText = humidityFeel(dew);
   if (humidText) parts.push(humidText);
 
@@ -320,14 +337,27 @@ export function computeComfort(intel) {
     parts.push("Dry air and wind are increasing fire danger.");
   }
 
-  return {
-    emoji,
-    summary: parts.join(" "),
-    comfortScore,
-    label: getComfortLabel(comfortScore),
-    color: getComfortColor(comfortScore),
-    feelsLike
-  };
+const summary = parts.join(" ");
+
+// ✨ split into UI-friendly lines
+const sentences = summary.split(". ").filter(Boolean);
+
+const line1 = sentences[0]
+  ? sentences[0] + (sentences[0].endsWith('.') ? '' : '.')
+  : "";
+
+const line2 = sentences.slice(1).join(". ");
+
+return {
+  emoji,
+  summary,
+  line1,
+  line2,
+  comfortScore,
+  label: getComfortLabel(comfortScore),
+  color: getComfortColor(comfortScore),
+  feelsLike
+};
 }
 
 // ------------------------------------------------------------

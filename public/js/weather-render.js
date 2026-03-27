@@ -277,7 +277,10 @@ export function renderRightNowComfort(intel) {
 
         <div class="comfort-text-block">
           <div class="comfort-label">Right Now Comfort</div>
-          <div class="comfort-text">${comfort.summary}</div>
+          <div class="comfort-text">
+  <div>${comfort.line1 || ""}</div>
+  ${comfort.line2 ? `<div class="comfort-subline">${comfort.line2}</div>` : ""}
+</div>
           <div class="comfort-sub">Based on current conditions</div>
         </div>
       </div>
@@ -359,16 +362,44 @@ export function renderTodayOutlook(intel) {
 
   if (!headlineEl || !textEl || !bulletsEl) return;
 
-  const action = generateHumanAction(intel.current);
+  const remainder = intel.remainderToday;
+
+let action;
+
+const labelEl = document.querySelector("#today-module .action-label");
+
+if (remainder && remainder.available) {
+  const stats = remainder.statsRemainder || {};
+
+  action = generateHumanAction({
+    temp: stats.avgTemp,
+    feelsLike: stats.avgTemp,
+    dewpoint: stats.avgDew,
+    humidity: stats.avgHumidity,
+    windSpeed: stats.avgWind,
+    windGust: stats.maxWindGust,
+    precipType: "none",
+    precipIntensity: 0,
+    uvIndex: 0,
+    visibility: 10,
+    cloudCover: 0.5,
+    timestamp: Date.now()
+  });
+
+  if (labelEl) labelEl.textContent = "Tonight’s Human-Action Outlook";
+} else {
+  action = generateHumanAction(intel.current);
+  if (labelEl) labelEl.textContent = "Today’s Human-Action Outlook";
+}
 
   const today = intel.today;
   const todayModule = document.getElementById("today-module");
+
   if (todayModule && today) {
     if (today.isEndOfDay) todayModule.classList.add("fade");
     else todayModule.classList.remove("fade");
   }
 
-  const remainder = intel.remainderToday;
   if (remainderLabel) {
     remainderLabel.style.display =
       remainder && remainder.available ? "block" : "none";
