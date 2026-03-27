@@ -297,7 +297,7 @@ export function renderTodayOutlook(intel) {
 
   if (!headlineEl || !textEl || !bulletsEl) return;
 
-  const action = generateHumanAction(intel.current);
+const action = generateHumanAction(intel.today.stats);
 
   const today = intel.today;
   const todayModule = document.getElementById("today-module");
@@ -348,8 +348,7 @@ export function renderTomorrowOutlook(intel) {
     return;
   }
 
-  const tomorrowData = buildTomorrowCurrent(tomorrow.stats);
-  const action = generateHumanAction(tomorrowData);
+const action = generateHumanAction(intel.tomorrow.stats);
 
   if (emojiEl) emojiEl.textContent = action.emoji;
   headlineEl.textContent = action.headline;
