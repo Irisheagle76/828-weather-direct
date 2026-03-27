@@ -359,52 +359,80 @@ export function renderTodayOutlook(intel) {
   const textEl = document.getElementById("today-text");
   const bulletsEl = document.getElementById("today-bullets");
   const remainderLabel = document.getElementById("today-remainder-label");
+  const labelEl = document.querySelector("#today-module .action-label");
 
   if (!headlineEl || !textEl || !bulletsEl) return;
 
   const remainder = intel.remainderToday;
+  const future = intel.futureComfort;
+  const hour = new Date().getHours();
 
-let action;
+  let action;
 
-const labelEl = document.querySelector("#today-module .action-label");
+  // 🌙 DAY vs NIGHT SWITCH
+  if (hour >= 15 && remainder && remainder.statsRemainder) {
+    const stats = remainder.statsRemainder;
 
-if (remainder && remainder.available) {
-  const stats = remainder.statsRemainder || {};
+    action = generateHumanAction({
+      temp: stats.avgTemp,
+      feelsLike: stats.avgTemp,
+      dewpoint: stats.avgDew,
+      humidity: stats.avgHumidity,
+      windSpeed: stats.avgWind,
+      windGust: stats.maxWindGust,
+      precipType: "none",
+      precipIntensity: 0,
+      uvIndex: 0,
+      visibility: 10,
+      cloudCover: 0.5,
+      timestamp: Date.now()
+    });
 
-  action = generateHumanAction({
-    temp: stats.avgTemp,
-    feelsLike: stats.avgTemp,
-    dewpoint: stats.avgDew,
-    humidity: stats.avgHumidity,
-    windSpeed: stats.avgWind,
-    windGust: stats.maxWindGust,
-    precipType: "none",
-    precipIntensity: 0,
-    uvIndex: 0,
-    visibility: 10,
-    cloudCover: 0.5,
-    timestamp: Date.now()
-  });
+    if (labelEl) labelEl.textContent = "Tonight’s Human-Action Outlook";
 
-  if (labelEl) labelEl.textContent = "Tonight’s Human-Action Outlook";
-} else {
-  action = generateHumanAction(intel.current);
-  if (labelEl) labelEl.textContent = "Today’s Human-Action Outlook";
-}
+  } else {
+    action = generateHumanAction(intel.current);
 
-  const today = intel.today;
+    if (labelEl) labelEl.textContent = "Today’s Human-Action Outlook";
+  }
+
+  // 🌙 EMOJI SYNC
+  if (hour >= 15 && future && future.length > 0) {
+    action.emoji = future[0].emoji || action.emoji;
+  }
+
+  // 🌡️ TONE SYNC
+  if (hour >= 15 && future && future.length > 1) {
+    const tStart = future[0].temp;
+    const tEnd = future[future.length - 1].temp;
+
+    if (tEnd < tStart) {
+      action.bullets.unshift("Temperatures trend cooler through the evening.");
+    } else if (tEnd > tStart) {
+      action.bullets.unshift("Temperatures hold steady or rise slightly into the evening.");
+    }
+  }
+
+  // 🌙 FADE EFFECT
   const todayModule = document.getElementById("today-module");
 
-  if (todayModule && today) {
-    if (today.isEndOfDay) todayModule.classList.add("fade");
-    else todayModule.classList.remove("fade");
+  if (todayModule) {
+    if (hour >= 15) {
+      todayModule.classList.add("fade");
+    } else {
+      todayModule.classList.remove("fade");
+    }
   }
 
+  // 🧠 REMAINDER LABEL
   if (remainderLabel) {
     remainderLabel.style.display =
-      remainder && remainder.available ? "block" : "none";
+      hour >= 15 && remainder && remainder.statsRemainder
+        ? "block"
+        : "none";
   }
 
+  // 🎯 RENDER
   if (emojiEl) emojiEl.textContent = action.emoji;
   headlineEl.textContent = action.headline;
   textEl.textContent = "";
