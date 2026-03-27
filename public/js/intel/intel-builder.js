@@ -10,11 +10,11 @@ import {
   getShortTermForecast,
   getMRMSPixel,
   getTempestDeviceObs
-} from "../weather-fetch.js?v=1.0.0";
+} from "../weather-fetch.js?v=1.0.20260327";
 
-import { computeComfort, buildFutureComfort } from "./comfort.js?v=1.0.0";
-import { getReliableUV } from "./uv.js?v=1.0.0";
-import { computeRisks } from "./risk-engine.js?v=1.0.0";
+import { computeComfort, buildFutureComfort } from "./comfort.js?v=1.0.20260327";
+import { getReliableUV } from "./uv.js?v=1.0.20260327";
+import { computeRisks } from "./risk-engine.js?v=1.0.20260327";
 
 export async function buildIntel(lat, lon) {
   const nearest = await getNearestWUStation(lat, lon);

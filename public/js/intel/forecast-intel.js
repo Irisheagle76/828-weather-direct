@@ -2,10 +2,10 @@
 // /js/intel/forecast-intel.js
 // Build unified forecast intelligence (Today, Tomorrow, Remainder of Today)
 
-import { synthesizeOutlook, differentiateFromToday, synthesizeRemainderTodayOutlook } from "./synthesizer.js?v=1.0.0";
-import { computeStats } from "./stats.js?v=1.0.0";
-import { computeEvents } from "./events.js?v=1.0.0";
-import { getTodayWindow, getTomorrowWindow } from "./windows.js?v=1.0.0";
+import { synthesizeOutlook, differentiateFromToday, synthesizeRemainderTodayOutlook } from "./synthesizer.js?v=1.0.20260327";
+import { computeStats } from "./stats.js?v=1.0.20260327";
+import { computeEvents } from "./events.js?v=1.0.20260327";
+import { getTodayWindow, getTomorrowWindow } from "./windows.js?v=1.0.20260327";
 
 export function buildWeatherIntel(hourly) {
   // -----------------------------

@@ -1,6 +1,6 @@
 // /api/notifications/subscribe.js
 
-import { saveSubscription } from "../../lib/notifications/store.js?v=1.0.0";
+import { saveSubscription } from "../../lib/notifications/store.js?v=1.0.20260327";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {

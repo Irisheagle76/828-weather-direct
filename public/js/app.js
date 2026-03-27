@@ -3,8 +3,8 @@
 // APP ENTRY — Clean, Modular, Human‑Action 2.0 Ready
 // ============================================================
 
-import { buildIntel } from "./intel/intel-builder.js?v=1.0.0";
-import { renderPulse } from "./pulse-render.js?v=1.0.0";
+import { buildIntel } from "./intel/intel-builder.js?v=20260327";
+import { renderPulse } from "./pulse-render.js?v=1.0.20260327";
 
 import {
   renderRightNowComfort,
@@ -17,9 +17,9 @@ import {
   renderCurrentObservations,
   renderHourlyTemps,
   toggleForecastExpanded
-} from "./weather-render.js?v=1.0.0";
+} from "./weather-render.js?v=1.0.20260327";
 
-import { subscribeUserToPush } from "./notifications/subscribeClient.js?v=1.0.0";
+import { subscribeUserToPush } from "./notifications/subscribeClient.js?v=1.0.20260327";
 
 window.toggleForecastExpanded = toggleForecastExpanded;
 
