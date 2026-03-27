@@ -370,7 +370,7 @@ export function renderTodayOutlook(intel) {
   let action;
 
   console.log("CURRENT HOUR:", hour);
-  
+
   // 🌙 DAY vs NIGHT SWITCH
   if (hour >= 15 && remainder && remainder.statsRemainder) {
     const stats = remainder.statsRemainder;
@@ -438,7 +438,6 @@ export function renderTodayOutlook(intel) {
   textEl.textContent = "";
   renderBullets(bulletsEl, action.bullets);
 
-  fitHeadlineToWidth(headlineEl);
 }
 
 // ------------------------------------------------------------
@@ -472,6 +471,16 @@ export function renderTomorrowOutlook(intel) {
   headlineEl.textContent = action.headline;
   textEl.textContent = "";
   renderBullets(bulletsEl, action.bullets);
+
+  // 🔥 FINAL LABEL CONTROL (guaranteed)
+const labelElFinal = document.querySelector("#today-module .action-label");
+
+if (labelElFinal) {
+  labelElFinal.textContent =
+    hour >= 15
+      ? "Tonight’s Human-Action Outlook"
+      : "Today’s Human-Action Outlook";
+}
 
   fitHeadlineToWidth(headlineEl);
 
