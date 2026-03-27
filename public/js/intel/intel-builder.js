@@ -1,7 +1,6 @@
 // /intel/intel-builder.js
 // ============================================================
 // INTEL BUILDER — Fetch → Normalize → Compute → Return
-// Clean modular extraction of your existing intel pipeline
 // ============================================================
 
 import {
@@ -35,7 +34,9 @@ export async function buildIntel(lat, lon) {
   intel.hourly = hourly;
   intel.mrms = mrmsPixel;
 
+  // ============================================================
   // SKY INTEL
+  // ============================================================
   intel.sky = {
     cloud:
       intel.wu.cloudCover ??
@@ -60,7 +61,9 @@ export async function buildIntel(lat, lon) {
       null
   };
 
+  // ============================================================
   // CURRENT CONDITIONS
+  // ============================================================
   intel.current = {
     temp: intel.tempest?.temp ?? intel.wu?.temp ?? null,
     feelsLike: intel.tempest?.temp ?? intel.wu?.temp ?? null,
@@ -81,33 +84,68 @@ export async function buildIntel(lat, lon) {
       Date.now()
   };
 
-  // TODAY STATS
+  // ============================================================
+  // TODAY STATS (simple for now)
+  // ============================================================
   intel.today = intel.today || {};
-  intel.today.stats = intel.today.stats || {};
-  intel.today.stats.maxTemp = tempestHigh;
+  intel.today.stats = {
+    tempMax: tempestHigh
+  };
 
-  // TOMORROW STATS (required for Human‑Action 2.0)
-intel.tomorrow = intel.tomorrow || {};
-intel.tomorrow.available = true;
-intel.tomorrow.stats = {
-  tempMax: hourly.temperature_2m_max?.[1] ?? null,
-  tempMin: hourly.temperature_2m_min?.[1] ?? null,
-  windAvg: hourly.windspeed_10m?.[1] ?? null,
-  windGustMax: hourly.windgusts_10m?.[1] ?? null,
-  rainTotal: hourly.rain?.[1] ?? 0,
-  snowTotal: hourly.snowfall?.[1] ?? 0,
-  cloudAvg: hourly.cloudcover?.[1] ?? null
-};
+  // ============================================================
+  // ✅ TOMORROW STATS (FIXED — computed from hourly data)
+  // ============================================================
+  intel.tomorrow = intel.tomorrow || {};
 
+  const temps = hourly.temperature_2m || [];
+  const winds = hourly.windspeed_10m || [];
+  const gusts = hourly.windgusts_10m || [];
+  const rain = hourly.rain || [];
+  const snow = hourly.snowfall || [];
+  const clouds = hourly.cloudcover || [];
+
+  // Tomorrow = hours 24–48
+  const start = 24;
+  const end = 48;
+
+  const tTemps = temps.slice(start, end);
+  const tWinds = winds.slice(start, end);
+  const tGusts = gusts.slice(start, end);
+  const tRain = rain.slice(start, end);
+  const tSnow = snow.slice(start, end);
+  const tClouds = clouds.slice(start, end);
+
+  if (!tTemps.length) {
+    intel.tomorrow.available = false;
+  } else {
+    intel.tomorrow.available = true;
+
+    intel.tomorrow.stats = {
+      tempMax: Math.max(...tTemps),
+      tempMin: Math.min(...tTemps),
+      windAvg: Math.round(tWinds.reduce((a, b) => a + b, 0) / tWinds.length),
+      windGustMax: Math.max(...tGusts),
+      rainTotal: tRain.reduce((a, b) => a + b, 0),
+      snowTotal: tSnow.reduce((a, b) => a + b, 0),
+      cloudAvg: Math.round(tClouds.reduce((a, b) => a + b, 0) / tClouds.length)
+    };
+  }
+
+  // ============================================================
   // RISK FACTORS
+  // ============================================================
   Object.assign(intel.current, computeRisks(intel));
 
+  // ============================================================
   // COMFORT + UV
+  // ============================================================
   intel.comfort = computeComfort(intel);
   intel.uv = getReliableUV(intel);
   intel.futureComfort = buildFutureComfort(intel.hourly, computeComfort);
 
+  // ============================================================
   // PULSE
+  // ============================================================
   try {
     const pulseRes = await fetch("/api/tidbits/pulse-latest");
     intel.pulse = await pulseRes.json();
