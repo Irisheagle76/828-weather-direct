@@ -21,9 +21,13 @@ export function buildWeatherIntel(hourly) {
   // -----------------------------
   // Build Today + Tomorrow windows
   // -----------------------------
-  const todayHours = getTodayWindow(hourly);
-  const tomorrowHours = getTomorrowWindow(hourly);
-  console.log("TOMORROW HOURS:", tomorrowHours.length);
+const todayHours = getTodayWindow(hourly);
+const tomorrowHours = getTomorrowWindow(hourly);
+
+// 🔍 Deep debugging
+console.log("RAW HOURLY (first 48):", hourly.time.slice(0, 48));
+console.log("TODAY HOURS:", todayHours);
+console.log("TOMORROW HOURS:", tomorrowHours);
 
   // -----------------------------
   // Stats + Events
@@ -33,6 +37,9 @@ export function buildWeatherIntel(hourly) {
 
   const eventsToday = computeEvents(hourly, todayHours, statsToday);
   const eventsTomorrow = computeEvents(hourly, tomorrowHours, statsTomorrow);
+
+  console.log("STATS TODAY:", statsToday);
+console.log("STATS TOMORROW:", statsTomorrow);
 
   // -----------------------------
   // Synthesized Outlooks
