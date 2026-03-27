@@ -1,7 +1,7 @@
 // /modules/human-action-2/human-action-2.js
 // Human‑Action 2.0 — Output Layer (Clean Production Build)
 
-import { evaluateHumanActionFactors } from "./core-engine.js?v=1.0.20260327";
+import { evaluateHumanActionFactors } from "./core-engine.js?v=1.0.0";
 
 // ---------------------------------------------------------
 // 1. Emoji Selector
