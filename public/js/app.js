@@ -131,7 +131,15 @@ async function initApp() {
     }
   );
 }
+todayModule.addEventListener("click", () => {
+  console.log("TODAY CLICKED");   // 👈 add this
+  if (window._intel) toggleForecastExpanded("today", window._intel);
+});
 
+tomorrowModule.addEventListener("click", () => {
+  console.log("TOMORROW CLICKED");  // 👈 add this
+  if (window._intel) toggleForecastExpanded("tomorrow", window._intel);
+});
 // ============================================================
 // EVENT LISTENERS
 // ============================================================
