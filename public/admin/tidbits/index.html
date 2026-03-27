@@ -6,23 +6,45 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
+    :root {
+      --bg-body: #0a0f1c;
+      --bg-card: #141a2a;
+      --bg-editor: #0f1525;
+      --text-main: #e5e7eb;
+      --text-muted: #9aa3c2;
+      --accent: #8fb7ff;
+      --accent-strong: #4f7cff;
+      --danger: #f97373;
+      --success: #4ade80;
+      --inline-code-editor-bg: rgba(255, 255, 255, 0.08);
+      --inline-code-editor-border: rgba(255, 255, 255, 0.12);
+      --inline-code-editor-text: #e8ecff;
+      --inline-code-preview-bg: rgba(255, 150, 60, 0.14);
+      --inline-code-preview-border: rgba(255, 150, 60, 0.22);
+      --inline-code-preview-text: #fff4e6;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: system-ui, -apple-system, Segoe UI, sans-serif;
-      background: #0a0f1c;
-      color: #e5e7eb;
+      background: var(--bg-body);
+      color: var(--text-main);
       margin: 0;
       padding: 1.2rem;
     }
 
     .container {
-      max-width: 640px;
-      margin: auto;
+      max-width: 720px;
+      margin: 0 auto 4rem auto;
     }
 
     .card {
-      background: #141a2a;
+      background: var(--bg-card);
       border-radius: 16px;
-      padding: 1rem 1.2rem;
+      padding: 1rem 1.2rem 1.4rem;
       box-shadow: 0 12px 30px rgba(0,0,0,0.4);
     }
 
@@ -33,7 +55,7 @@
 
     .subtitle {
       font-size: 0.85rem;
-      color: #9aa3c2;
+      color: var(--text-muted);
       margin-bottom: 1rem;
     }
 
@@ -44,97 +66,365 @@
     label {
       font-size: 0.75rem;
       text-transform: uppercase;
-      color: #8fb7ff;
+      color: var(--accent);
       display: block;
       margin-bottom: 0.35rem;
+      letter-spacing: 0.04em;
     }
 
+    /* Toolbar */
     .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
       margin-bottom: 0.4rem;
     }
 
     .toolbar button {
       background: rgba(255,255,255,0.05);
       border: none;
-      color: #e5e7eb;
+      color: var(--text-main);
       padding: 4px 8px;
-      margin-right: 4px;
       border-radius: 6px;
       cursor: pointer;
+      font-size: 0.8rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
 
     .toolbar button:hover {
       background: rgba(255,255,255,0.1);
     }
 
+    .toolbar button.active {
+      background: rgba(143,183,255,0.18);
+      color: #eaf1ff;
+    }
+
+    .toolbar button span.icon {
+      font-size: 0.8rem;
+    }
+
+    /* Editor */
     #editor {
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 10px;
       min-height: 140px;
-      padding: 0.6rem;
-      background: #0f1525;
+      padding: 0.6rem 0.7rem;
+      background: var(--bg-editor);
+      font-size: 0.9rem;
+      line-height: 1.4;
+      overflow-y: auto;
     }
 
     #editor:focus {
-      outline: 2px solid #8fb7ff;
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
     }
 
-    input[type="file"] {
-      color: #cbd5f5;
+    #editor p {
+      margin: 0 0 0.4rem 0;
+    }
+
+    #editor ul,
+    #editor ol {
+      margin: 0 0 0.4rem 1.1rem;
+      padding-left: 1rem;
+    }
+
+    #editor li {
+      margin-bottom: 0.2rem;
+    }
+
+    #editor a {
+      color: #bfdbfe;
+      text-decoration: underline;
+    }
+
+    #editor code {
+      background: var(--inline-code-editor-bg);
+      border: 1px solid var(--inline-code-editor-border);
+      color: var(--inline-code-editor-text);
+      border-radius: 6px;
+      padding: 2px 5px;
+      font-size: 0.85em;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    /* Media drop zone */
+    .media-zone {
+      border-radius: 10px;
+      border: 1px dashed rgba(255,255,255,0.18);
+      background: rgba(15,21,37,0.9);
+      padding: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .media-zone.dragover {
+      background: rgba(79,124,255,0.12);
+      border-color: rgba(143,183,255,0.9);
+    }
+
+    .media-zone-left {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
       font-size: 0.8rem;
     }
 
+    .media-zone-title {
+      font-weight: 500;
+    }
+
+    .media-zone-sub {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+
+    .media-zone-badge {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .media-zone-right {
+      font-size: 0.8rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      color: var(--text-main);
+      white-space: nowrap;
+    }
+
+    .media-filename {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+    }
+
+    .media-progress {
+      margin-top: 0.35rem;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+
+    .media-progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+      transition: width 0.15s linear;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    /* Publish row */
+    .publish-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
     button.primary {
-      background: linear-gradient(135deg, #4f7cff, #8fb7ff);
+      background: linear-gradient(135deg, var(--accent-strong), var(--accent));
       color: white;
       border-radius: 999px;
       border: none;
       padding: 0.5rem 1.2rem;
       cursor: pointer;
       font-weight: 500;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
     }
 
     button.primary:disabled {
       opacity: 0.5;
+      cursor: default;
     }
 
     #status {
       font-size: 0.8rem;
-      margin-left: 0.5rem;
-      color: #9aa3c2;
+      color: var(--text-muted);
     }
 
+    #status.status-success {
+      color: var(--success);
+    }
+
+    #status.status-error {
+      color: var(--danger);
+    }
+
+    #status.status-busy {
+      color: var(--accent);
+    }
+
+    .draft-indicator {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-left: auto;
+    }
+
+    .draft-indicator strong {
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .draft-restore-banner {
+      margin-bottom: 0.75rem;
+      padding: 0.5rem 0.7rem;
+      border-radius: 10px;
+      background: rgba(79,124,255,0.12);
+      border: 1px solid rgba(143,183,255,0.5);
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .draft-restore-banner button {
+      background: rgba(255,255,255,0.08);
+      border-radius: 999px;
+      border: none;
+      color: #eaf1ff;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    /* Preview */
     .preview {
-      margin-top: 1rem;
+      margin-top: 1.1rem;
+    }
+
+    .preview-label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.4rem;
+    }
+
+    .preview-label-row span {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .preview-timestamp {
+      font-size: 0.75rem;
+      color: var(--text-muted);
     }
 
     .pulse-hero-preview {
       position: relative;
       border-radius: 12px;
       overflow: hidden;
+      background: #020617;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
     }
 
-    .pulse-hero-preview img,
-    .pulse-hero-preview video {
+    .pulse-hero-aspect {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%; /* 16:9 */
+    }
+
+    .pulse-hero-media {
+      position: absolute;
+      inset: 0;
+    }
+
+    .pulse-hero-media img,
+    .pulse-hero-media video {
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: block;
-      border-radius: 12px;
     }
 
     .pulse-overlay {
       position: absolute;
       inset: 0;
-      background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+      background: linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0.05));
     }
 
     .pulse-hero-text {
       position: absolute;
-      bottom: 0;
-      padding: 0.6rem;
-      font-size: 0.85rem;
+      inset-inline: 0.7rem;
+      bottom: 0.6rem;
+      font-size: 0.9rem;
       color: white;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+      max-height: 55%;
+      overflow: hidden;
+    }
+
+    .pulse-hero-text p {
+      margin: 0 0 0.35rem 0;
+    }
+
+    .pulse-hero-text ul,
+    .pulse-hero-text ol {
+      margin: 0 0 0.35rem 1.1rem;
+      padding-left: 1rem;
+    }
+
+    .pulse-hero-text li {
+      margin-bottom: 0.15rem;
+    }
+
+    .pulse-hero-text a {
+      color: #fee2b3;
+      text-decoration: underline;
+    }
+
+    .pulse-hero-text code {
+      background: var(--inline-code-preview-bg);
+      border: 1px solid var(--inline-code-preview-border);
+      color: var(--inline-code-preview-text);
+      border-radius: 6px;
+      padding: 2px 6px;
+      font-size: 0.85em;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    .preview-empty-hint {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.4rem;
+    }
+
+    @media (max-width: 600px) {
+      .card {
+        padding: 0.9rem 0.9rem 1.2rem;
+      }
+      .media-zone {
+        align-items: flex-start;
+      }
+      .media-zone-right {
+        align-self: flex-start;
+      }
+      .publish-row {
+        align-items: flex-start;
+      }
     }
   </style>
 </head>
@@ -144,15 +434,28 @@
     <div class="card">
 
       <h1>828 Weather Pulse</h1>
-      <div class="subtitle">Compose a quick update</div>
+      <div class="subtitle">Compose a quick, visual-first update</div>
+
+      <div id="draft-restore" class="draft-restore-banner" style="display:none;">
+        <span>We found an unsent Pulse draft.</span>
+        <div>
+          <button type="button" id="restore-draft-btn">Restore</button>
+          <button type="button" id="discard-draft-btn">Discard</button>
+        </div>
+      </div>
 
       <div class="field">
         <label>Content</label>
 
-        <div class="toolbar">
-          <button type="button" data-cmd="bold"><b>B</b></button>
-          <button type="button" data-cmd="italic"><i>I</i></button>
-          <button type="button" data-cmd="createLink">Link</button>
+        <div class="toolbar" id="toolbar">
+          <button type="button" data-action="bold"><span class="icon">B</span></button>
+          <button type="button" data-action="italic"><span class="icon">I</span></button>
+          <button type="button" data-action="underline"><span class="icon">U</span></button>
+          <button type="button" data-action="code"><span class="icon">{ }</span></button>
+          <button type="button" data-action="ul"><span class="icon">•</span> List</button>
+          <button type="button" data-action="ol"><span class="icon">1.</span> List</button>
+          <button type="button" data-action="link"><span class="icon">🔗</span>Link</button>
+          <button type="button" data-action="clear"><span class="icon">✕</span>Clear</button>
         </div>
 
         <div id="editor" contenteditable="true"></div>
@@ -160,16 +463,44 @@
 
       <div class="field">
         <label>Media</label>
-        <input type="file" id="image" accept="image/*,video/mp4" />
+        <div class="media-zone" id="media-zone">
+          <div class="media-zone-left">
+            <div class="media-zone-title">Drop image or video here</div>
+            <div class="media-zone-sub">Tap to browse · JPG, PNG, MP4</div>
+            <div class="media-zone-badge">
+              <span>Uses 828 fallback if empty</span>
+            </div>
+          </div>
+          <div class="media-zone-right">
+            Choose file
+          </div>
+        </div>
+        <input type="file" id="media-input" accept="image/*,video/mp4" />
+        <div class="media-filename" id="media-filename"></div>
+        <div class="media-progress" id="media-progress" style="display:none;">
+          <div class="media-progress-bar" id="media-progress-bar"></div>
+        </div>
       </div>
 
-      <div class="field">
-        <button class="primary" id="publish">Publish</button>
+      <div class="field publish-row">
+        <button class="primary" id="publish">
+          <span>Publish Pulse</span>
+        </button>
         <span id="status"></span>
+        <span class="draft-indicator" id="draft-indicator" style="display:none;">
+          Draft saved <strong>locally</strong>
+        </span>
       </div>
 
       <div class="preview">
+        <div class="preview-label-row">
+          <span>Live preview</span>
+          <span class="preview-timestamp" id="preview-timestamp"></span>
+        </div>
         <div id="preview-content"></div>
+        <div class="preview-empty-hint" id="preview-hint">
+          Start typing or add media to see how your Pulse card will look.
+        </div>
       </div>
 
     </div>
@@ -177,74 +508,375 @@
 
 <script>
   const editor = document.getElementById('editor');
+  const toolbar = document.getElementById('toolbar');
   const preview = document.getElementById('preview-content');
-  const imageInput = document.getElementById('image');
+  const previewHint = document.getElementById('preview-hint');
+  const previewTimestamp = document.getElementById('preview-timestamp');
+  const mediaZone = document.getElementById('media-zone');
+  const mediaInput = document.getElementById('media-input');
+  const mediaFilename = document.getElementById('media-filename');
+  const mediaProgress = document.getElementById('media-progress');
+  const mediaProgressBar = document.getElementById('media-progress-bar');
   const publishBtn = document.getElementById('publish');
   const statusEl = document.getElementById('status');
+  const draftIndicator = document.getElementById('draft-indicator');
+  const draftRestoreBanner = document.getElementById('draft-restore');
+  const restoreDraftBtn = document.getElementById('restore-draft-btn');
+  const discardDraftBtn = document.getElementById('discard-draft-btn');
+
+  const DRAFT_KEY = '828_pulse_draft_v1';
 
   let currentMediaUrl = "";
   let currentMediaType = null;
+  let currentFile = null;
+  let isUploading = false;
+  let draftSaveTimer = null;
 
-  // ============================================================
-  // TOOLBAR
-  // ============================================================
-  document.querySelectorAll('.toolbar button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const cmd = btn.dataset.cmd;
+  // -----------------------------
+  // Utility: selection + range
+  // -----------------------------
+  function getCurrentRange() {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return null;
+    return sel.getRangeAt(0);
+  }
 
-      if (cmd === 'createLink') {
-        const url = prompt('Enter URL:');
-        if (url) document.execCommand(cmd, false, url);
-      } else {
-        document.execCommand(cmd);
+  function isSelectionInsideEditor() {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return false;
+    let node = sel.anchorNode;
+    while (node) {
+      if (node === editor) return true;
+      node = node.parentNode;
+    }
+    return false;
+  }
+
+  function wrapSelection(tagName) {
+    const range = getCurrentRange();
+    if (!range || range.collapsed || !isSelectionInsideEditor()) return;
+
+    const selectedText = range.toString();
+    const wrapper = document.createElement(tagName);
+    wrapper.textContent = selectedText;
+
+    range.deleteContents();
+    range.insertNode(wrapper);
+
+    // Move cursor to end of wrapper
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    const newRange = document.createRange();
+    newRange.selectNodeContents(wrapper);
+    newRange.collapse(false);
+    sel.addRange(newRange);
+  }
+
+  function toggleInlineTag(tagName) {
+    const range = getCurrentRange();
+    if (!range || range.collapsed || !isSelectionInsideEditor()) return;
+
+    const sel = window.getSelection();
+    const commonAncestor = range.commonAncestorContainer;
+    let node = commonAncestor.nodeType === 1 ? commonAncestor : commonAncestor.parentNode;
+
+    let found = null;
+    while (node && node !== editor) {
+      if (node.nodeName.toLowerCase() === tagName.toLowerCase()) {
+        found = node;
+        break;
       }
-
-      editor.focus();
-      updatePreview();
-    });
-  });
-
-  // ============================================================
-  // MEDIA RENDERER
-  // ============================================================
-  function getMediaHTML(url, type) {
-    if (!url) return "";
-
-    if (type === "video") {
-      return `
-        <video autoplay loop muted playsinline>
-          <source src="${url}" type="video/mp4">
-        </video>
-      `;
+      node = node.parentNode;
     }
 
-    return `<img src="${url}" />`;
+    if (found) {
+      // unwrap
+      const parent = found.parentNode;
+      while (found.firstChild) {
+        parent.insertBefore(found.firstChild, found);
+      }
+      parent.removeChild(found);
+    } else {
+      wrapSelection(tagName);
+    }
   }
 
-  // ============================================================
-  // PREVIEW
-  // ============================================================
-  function updatePreview() {
-    const text = editor.innerHTML;
-    const url = currentMediaUrl || "/828-brand-card.png";
-    const type = currentMediaType || "image";
+  function toggleList(listTag) {
+    const range = getCurrentRange();
+    if (!range || !isSelectionInsideEditor()) return;
 
-    preview.innerHTML = `
-      <div class="pulse-hero-preview">
-        ${getMediaHTML(url, type)}
-        <div class="pulse-overlay"></div>
-        <div class="pulse-hero-text">
-          ${text}
-        </div>
-      </div>
-    `;
+    // Simple list behavior: wrap current block(s) in <ul>/<ol>, no nesting
+    const sel = window.getSelection();
+    const startContainer = range.startContainer;
+    const endContainer = range.endContainer;
+
+    function getBlock(node) {
+      while (node && node !== editor) {
+        if (node.nodeName === 'P' || node.nodeName === 'DIV' || node.nodeName === 'LI') {
+          return node;
+        }
+        node = node.parentNode;
+      }
+      return null;
+    }
+
+    const startBlock = getBlock(startContainer);
+    const endBlock = getBlock(endContainer) || startBlock;
+
+    if (!startBlock) return;
+
+    // If already in a list of same type, unwrap
+    let node = startBlock;
+    while (node && node !== editor) {
+      if (node.nodeName === 'UL' || node.nodeName === 'OL') {
+        if (node.nodeName.toLowerCase() === listTag.toLowerCase()) {
+          // unwrap list
+          const parent = node.parentNode;
+          while (node.firstChild) {
+            if (node.firstChild.nodeName === 'LI') {
+              const p = document.createElement('p');
+              while (node.firstChild.firstChild) {
+                p.appendChild(node.firstChild.firstChild);
+              }
+              parent.insertBefore(p, node);
+              node.removeChild(node.firstChild);
+            } else {
+              parent.insertBefore(node.firstChild, node);
+            }
+          }
+          parent.removeChild(node);
+          return;
+        } else {
+          break;
+        }
+      }
+      node = node.parentNode;
+    }
+
+    // Wrap selected blocks in new list
+    const list = document.createElement(listTag);
+    let current = startBlock;
+    const afterEnd = endBlock.nextSibling;
+
+    while (current && current !== afterEnd) {
+      const next = current.nextSibling;
+      if (current.nodeName === 'P' || current.nodeName === 'DIV' || current.nodeName === 'LI') {
+        const li = document.createElement('li');
+        while (current.firstChild) {
+          li.appendChild(current.firstChild);
+        }
+        list.appendChild(li);
+        current.parentNode.removeChild(current);
+      }
+      current = next;
+    }
+
+    editor.insertBefore(list, afterEnd || null);
   }
 
-  editor.addEventListener('input', updatePreview);
+  function clearFormatting() {
+    const range = getCurrentRange();
+    if (!range || range.collapsed || !isSelectionInsideEditor()) return;
 
-  // ============================================================
-  // CLOUDINARY UPLOAD (image or video)
-  // ============================================================
+    const sel = window.getSelection();
+    const selectedContent = range.cloneContents();
+    const div = document.createElement('div');
+    div.appendChild(selectedContent);
+
+    // Strip tags but keep text and <br>
+    function strip(node) {
+      const children = Array.from(node.childNodes);
+      for (const child of children) {
+        if (child.nodeType === Node.TEXT_NODE) continue;
+        if (child.nodeName === 'BR') continue;
+        if (child.childNodes.length > 0) {
+          strip(child);
+          while (child.firstChild) {
+            node.insertBefore(child.firstChild, child);
+          }
+          node.removeChild(child);
+        } else {
+          node.removeChild(child);
+        }
+      }
+    }
+    strip(div);
+
+    range.deleteContents();
+    const frag = document.createDocumentFragment();
+    while (div.firstChild) {
+      frag.appendChild(div.firstChild);
+    }
+    range.insertNode(frag);
+
+    sel.removeAllRanges();
+    const newRange = document.createRange();
+    newRange.collapse(false);
+    sel.addRange(newRange);
+  }
+
+  function insertLink() {
+    const range = getCurrentRange();
+    if (!range || range.collapsed || !isSelectionInsideEditor()) return;
+
+    const url = window.prompt('Enter URL:');
+    if (!url) return;
+
+    const selectedText = range.toString();
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.textContent = selectedText;
+
+    range.deleteContents();
+    range.insertNode(a);
+
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    const newRange = document.createRange();
+    newRange.selectNodeContents(a);
+    newRange.collapse(false);
+    sel.addRange(newRange);
+  }
+
+  // -----------------------------
+  // Toolbar events
+  // -----------------------------
+  toolbar.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    const action = btn.dataset.action;
+
+    editor.focus();
+
+    switch (action) {
+      case 'bold':
+        toggleInlineTag('strong');
+        break;
+      case 'italic':
+        toggleInlineTag('em');
+        break;
+      case 'underline':
+        toggleInlineTag('u');
+        break;
+      case 'code':
+        toggleInlineTag('code');
+        break;
+      case 'ul':
+        toggleList('ul');
+        break;
+      case 'ol':
+        toggleList('ol');
+        break;
+      case 'link':
+        insertLink();
+        break;
+      case 'clear':
+        clearFormatting();
+        break;
+    }
+
+    updatePreview();
+    scheduleDraftSave();
+  });
+
+  // -----------------------------
+  // Paste sanitization
+  // -----------------------------
+  editor.addEventListener('paste', (e) => {
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+    const range = getCurrentRange();
+    if (!range) return;
+    range.deleteContents();
+    const lines = text.split(/\r?\n/);
+    const frag = document.createDocumentFragment();
+    lines.forEach((line, idx) => {
+      if (idx > 0) frag.appendChild(document.createElement('br'));
+      frag.appendChild(document.createTextNode(line));
+    });
+    range.insertNode(frag);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    const newRange = document.createRange();
+    newRange.collapse(false);
+    sel.addRange(newRange);
+    updatePreview();
+    scheduleDraftSave();
+  });
+
+  // -----------------------------
+  // Editor input
+  // -----------------------------
+  editor.addEventListener('input', () => {
+    normalizeEditor();
+    updatePreview();
+    scheduleDraftSave();
+  });
+
+  function normalizeEditor() {
+    if (editor.innerHTML.trim() === '') {
+      editor.innerHTML = '';
+      return;
+    }
+  }
+
+  // -----------------------------
+  // Media handling
+  // -----------------------------
+  mediaZone.addEventListener('click', () => {
+    if (isUploading) return;
+    mediaInput.click();
+  });
+
+  mediaZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    if (isUploading) return;
+    mediaZone.classList.add('dragover');
+  });
+
+  mediaZone.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    mediaZone.classList.remove('dragover');
+  });
+
+  mediaZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    mediaZone.classList.remove('dragover');
+    if (isUploading) return;
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      handleFileSelection(file);
+    }
+  });
+
+  mediaInput.addEventListener('change', () => {
+    if (mediaInput.files && mediaInput.files[0]) {
+      handleFileSelection(mediaInput.files[0]);
+    }
+  });
+
+  function handleFileSelection(file) {
+    currentFile = file;
+    mediaFilename.textContent = `${file.name} (${Math.round(file.size / 1024)} KB)`;
+    currentMediaUrl = "";
+    currentMediaType = file.type.startsWith('video/') ? 'video' : 'image';
+    updatePreview();
+    scheduleDraftSave();
+  }
+
+  function showProgress(show) {
+    mediaProgress.style.display = show ? 'block' : 'none';
+    if (!show) {
+      mediaProgressBar.style.width = '0%';
+    }
+  }
+
+  function setProgress(value) {
+    mediaProgressBar.style.width = `${value}%`;
+  }
+
   async function uploadPulseMedia(file) {
     const formData = new FormData();
     formData.append("file", file);
@@ -255,53 +887,198 @@
       ? "https://api.cloudinary.com/v1_1/dz45rrije/video/upload"
       : "https://api.cloudinary.com/v1_1/dz45rrije/image/upload";
 
-    console.log("Uploading:", file.type);
-    console.log("Endpoint:", endpoint);
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", endpoint, true);
 
-    const res = await fetch(endpoint, {
-      method: "POST",
-      body: formData
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percent = (event.loaded / event.total) * 100;
+          setProgress(percent);
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            if (!data.secure_url) {
+              reject(new Error("Upload failed"));
+            } else {
+              resolve({
+                mediaUrl: data.secure_url,
+                mediaType: isVideo ? "video" : "image"
+              });
+            }
+          } catch (err) {
+            reject(err);
+          }
+        } else {
+          reject(new Error(`Upload failed: ${xhr.status}`));
+        }
+      };
+
+      xhr.onerror = () => reject(new Error("Network error during upload"));
+
+      xhr.send(formData);
     });
-
-    const data = await res.json();
-    console.log("Cloudinary response:", data);
-
-    if (!data.secure_url) {
-      throw new Error("Upload failed");
-    }
-
-    return {
-      mediaUrl: data.secure_url,
-      mediaType: isVideo ? "video" : "image"
-    };
   }
 
-  // ============================================================
-  // PUBLISH HANDLER
-  // ============================================================
+  // -----------------------------
+  // Preview
+  // -----------------------------
+  function getMediaHTML(url, type) {
+    if (!url) return "";
+    if (type === "video") {
+      return `
+        <video autoplay loop muted playsinline>
+          <source src="${url}" type="video/mp4">
+        </video>
+      `;
+    }
+    return `<img src="${url}" alt="Pulse media" />`;
+  }
+
+  function updateTimestamp() {
+    const now = new Date();
+    const options = {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    };
+    previewTimestamp.textContent = now.toLocaleString(undefined, options);
+  }
+
+  function updatePreview() {
+    const html = editor.innerHTML.trim();
+    const hasContent = html.length > 0;
+    const url = currentMediaUrl || "/828-brand-card.png";
+    const type = currentMediaType || "image";
+
+    if (!hasContent && !currentMediaUrl) {
+      preview.innerHTML = "";
+      previewHint.style.display = "block";
+      return;
+    }
+
+    previewHint.style.display = "none";
+    updateTimestamp();
+
+    preview.innerHTML = `
+      <div class="pulse-hero-preview">
+        <div class="pulse-hero-aspect">
+          <div class="pulse-hero-media">
+            ${getMediaHTML(url, type)}
+          </div>
+          <div class="pulse-overlay"></div>
+          <div class="pulse-hero-text">
+            ${html || '<p></p>'}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // -----------------------------
+  // Draft handling
+  // -----------------------------
+  function saveDraft() {
+    const draft = {
+      html: editor.innerHTML,
+      mediaType: currentMediaType,
+      mediaUrl: currentMediaUrl,
+      filename: mediaFilename.textContent || "",
+      hasFile: !!currentFile
+    };
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    draftIndicator.style.display = 'inline';
+  }
+
+  function scheduleDraftSave() {
+    if (draftSaveTimer) clearTimeout(draftSaveTimer);
+    draftSaveTimer = setTimeout(saveDraft, 2000);
+  }
+
+  function clearDraft() {
+    localStorage.removeItem(DRAFT_KEY);
+    draftIndicator.style.display = 'none';
+  }
+
+  function checkForDraft() {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return;
+    try {
+      const draft = JSON.parse(raw);
+      if (draft && (draft.html || draft.mediaUrl)) {
+        draftRestoreBanner.style.display = 'flex';
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  restoreDraftBtn.addEventListener('click', () => {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return;
+    try {
+      const draft = JSON.parse(raw);
+      editor.innerHTML = draft.html || "";
+      currentMediaType = draft.mediaType || null;
+      currentMediaUrl = draft.mediaUrl || "";
+      mediaFilename.textContent = draft.filename || "";
+      draftIndicator.style.display = 'inline';
+      draftRestoreBanner.style.display = 'none';
+      updatePreview();
+    } catch (e) {
+      // ignore
+    }
+  });
+
+  discardDraftBtn.addEventListener('click', () => {
+    clearDraft();
+    draftRestoreBanner.style.display = 'none';
+  });
+
+  // -----------------------------
+  // Status helpers
+  // -----------------------------
+  function setStatus(message, type) {
+    statusEl.textContent = message || "";
+    statusEl.classList.remove('status-success', 'status-error', 'status-busy');
+    if (type) statusEl.classList.add(`status-${type}`);
+  }
+
+  // -----------------------------
+  // Publish
+  // -----------------------------
   publishBtn.addEventListener("click", async () => {
     const html = editor.innerHTML.trim();
     if (!html) return;
 
     publishBtn.disabled = true;
+    setStatus("Preparing…", "busy");
 
     try {
       let mediaUrl = null;
       let mediaType = null;
 
-      const file = imageInput.files[0];
-
-      if (file) {
-        statusEl.textContent = "Uploading…";
-        const uploaded = await uploadPulseMedia(file);
+      if (currentFile) {
+        isUploading = true;
+        showProgress(true);
+        setStatus("Uploading media…", "busy");
+        const uploaded = await uploadPulseMedia(currentFile);
         mediaUrl = uploaded.mediaUrl;
         mediaType = uploaded.mediaType;
-
         currentMediaUrl = mediaUrl;
         currentMediaType = mediaType;
+        isUploading = false;
+        showProgress(false);
+        setStatus("Publishing…", "busy");
+        updatePreview();
+      } else {
+        setStatus("Publishing…", "busy");
       }
-
-      statusEl.textContent = "Publishing…";
 
       const res = await fetch("/api/tidbits/pulse-write", {
         method: "POST",
@@ -319,19 +1096,37 @@
         throw new Error(`API error: ${res.status} - ${text}`);
       }
 
-      statusEl.textContent = "Published ✔";
+      setStatus("Published ✔", "success");
       editor.innerHTML = "";
       currentMediaUrl = "";
       currentMediaType = null;
+      currentFile = null;
+      mediaFilename.textContent = "";
       updatePreview();
+      clearDraft();
+
+      setTimeout(() => {
+        setStatus("", null);
+      }, 2500);
 
     } catch (err) {
       console.error(err);
-      statusEl.textContent = "Error";
+      setStatus("Error publishing Pulse", "error");
     }
 
     publishBtn.disabled = false;
   });
+
+  // -----------------------------
+  // Init
+  // -----------------------------
+  function init() {
+    editor.innerHTML = "";
+    updatePreview();
+    checkForDraft();
+  }
+
+  init();
 </script>
 </body>
 </html>
