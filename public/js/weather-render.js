@@ -429,19 +429,38 @@ export function renderTodayDetail(intel) {
   const panel = document.getElementById("expanded-today");
   if (!panel) return;
 
-  const cur = intel.current;
-  if (!cur) {
-    panel.innerHTML = "";
-    return;
-  }
+  const hourly = intel.hourly;
+  if (!hourly) return;
+
+  const temps = hourly.temperature_2m || [];
+  const dew = hourly.dewpoint_2m || [];
+  const winds = hourly.windspeed_10m || [];
+  const gusts = hourly.windgusts_10m || [];
+  const rain = hourly.rain || [];
+  const snow = hourly.snowfall || [];
+  const clouds = hourly.cloudcover || [];
+
+  // 👉 Today midday (~12–3pm)
+  const idx = 12;
+
+  const safe = (arr, i) =>
+    typeof arr[i] === "number" && !isNaN(arr[i]) ? arr[i] : 0;
+
+  const temp = safe(temps, idx);
+  const dewpt = safe(dew, idx);
+  const wind = safe(winds, idx);
+  const gust = safe(gusts, idx);
+  const cloud = safe(clouds, idx);
+  const rainVal = safe(rain, idx);
+  const snowVal = safe(snow, idx);
 
   panel.innerHTML = `
-    <div class="fx-section"><div class="fx-label">Temperature</div><div class="fx-value">${Math.round(cur.temp)}° (feels ${Math.round(cur.feelsLike)}°)</div></div>
-    <div class="fx-section"><div class="fx-label">Humidity</div><div class="fx-value">${cur.humidity}%</div></div>
-    <div class="fx-section"><div class="fx-label">Wind</div><div class="fx-value">${Math.round(cur.windSpeed)} mph (gusts ${Math.round(cur.windGust)} mph)</div></div>
-    <div class="fx-section"><div class="fx-label">Visibility</div><div class="fx-value">${cur.visibility} miles</div></div>
-    <div class="fx-section"><div class="fx-label">Cloud Cover</div><div class="fx-value">${Math.round(cur.cloudCover * 100)}%</div></div>
-    <div class="fx-section"><div class="fx-label">Precipitation</div><div class="fx-value">${cur.precipType === "rain" ? cur.precipIntensity + " mm/hr" : "None"}</div></div>
+    <div class="fx-section"><div class="fx-label">Temperature</div><div class="fx-value">${Math.round(temp)}°</div></div>
+    <div class="fx-section"><div class="fx-label">Dew Point</div><div class="fx-value">${Math.round(dewpt)}°</div></div>
+    <div class="fx-section"><div class="fx-label">Wind</div><div class="fx-value">${Math.round(wind)} mph (gusts ${Math.round(gust)} mph)</div></div>
+    <div class="fx-section"><div class="fx-label">Cloud Cover</div><div class="fx-value">${Math.round(cloud)}%</div></div>
+    <div class="fx-section"><div class="fx-label">Rain</div><div class="fx-value">${rainVal.toFixed(2)} mm</div></div>
+    <div class="fx-section"><div class="fx-label">Snow</div><div class="fx-value">${snowVal.toFixed(2)} mm</div></div>
   `;
 }
 
@@ -452,25 +471,38 @@ export function renderTomorrowDetail(intel) {
   const panel = document.getElementById("expanded-tomorrow");
   if (!panel) return;
 
-  const stats = intel.tomorrow?.stats;
-  if (!stats) {
-    panel.innerHTML = "";
-    return;
-  }
+  const hourly = intel.hourly;
+  if (!hourly) return;
 
-  // Build hybrid morning+afternoon snapshot
-  const hybrid = buildTomorrowCurrent(stats);
+  const temps = hourly.temperature_2m || [];
+  const dew = hourly.dewpoint_2m || [];
+  const winds = hourly.windspeed_10m || [];
+  const gusts = hourly.windgusts_10m || [];
+  const rain = hourly.rain || [];
+  const snow = hourly.snowfall || [];
+  const clouds = hourly.cloudcover || [];
 
-  // Use afternoon snapshot as representative
-  const snap = hybrid.afternoon;
+  // 👉 Tomorrow midday (~18–21 = 12–3pm depending on timezone alignment)
+  const idx = 30;
+
+  const safe = (arr, i) =>
+    typeof arr[i] === "number" && !isNaN(arr[i]) ? arr[i] : 0;
+
+  const temp = safe(temps, idx);
+  const dewpt = safe(dew, idx);
+  const wind = safe(winds, idx);
+  const gust = safe(gusts, idx);
+  const cloud = safe(clouds, idx);
+  const rainVal = safe(rain, idx);
+  const snowVal = safe(snow, idx);
 
   panel.innerHTML = `
-    <div class="fx-section"><div class="fx-label">High</div><div class="fx-value">${Math.round(stats.tempMax)}°</div></div>
-    <div class="fx-section"><div class="fx-label">Low</div><div class="fx-value">${Math.round(stats.tempMin)}°</div></div>
-    <div class="fx-section"><div class="fx-label">Wind</div><div class="fx-value">${Math.round(stats.windAvg)} mph (gusts ${Math.round(stats.windGustMax)} mph)</div></div>
-    <div class="fx-section"><div class="fx-label">Cloud Cover</div><div class="fx-value">${Math.round(stats.cloudAvg)}%</div></div>
-    <div class="fx-section"><div class="fx-label">Rain</div><div class="fx-value">${stats.rainTotal} mm</div></div>
-    <div class="fx-section"><div class="fx-label">Snow</div><div class="fx-value">${stats.snowTotal} mm</div></div>
+    <div class="fx-section"><div class="fx-label">Temperature</div><div class="fx-value">${Math.round(temp)}°</div></div>
+    <div class="fx-section"><div class="fx-label">Dew Point</div><div class="fx-value">${Math.round(dewpt)}°</div></div>
+    <div class="fx-section"><div class="fx-label">Wind</div><div class="fx-value">${Math.round(wind)} mph (gusts ${Math.round(gust)} mph)</div></div>
+    <div class="fx-section"><div class="fx-label">Cloud Cover</div><div class="fx-value">${Math.round(cloud)}%</div></div>
+    <div class="fx-section"><div class="fx-label">Rain</div><div class="fx-value">${rainVal.toFixed(2)} mm</div></div>
+    <div class="fx-section"><div class="fx-label">Snow</div><div class="fx-value">${snowVal.toFixed(2)} mm</div></div>
   `;
 }
 
