@@ -332,6 +332,27 @@ async function initApp() {
         window._intel = intel;
         window.intel = intel;
 
+        // ⭐ TEMPORARY: Print intel for debugging
+try {
+  const debugPanel = document.getElementById("intel-debug");
+  if (debugPanel) {
+    const debugData = {
+      today: intel.today,
+      tomorrow: intel.tomorrow,
+      hourlySample: hourly?.slice?.(0, 12) || [],
+      meta: {
+        now: new Date().toISOString(),
+        hourlyCount: hourly?.length || 0
+      }
+    };
+
+    debugPanel.textContent = JSON.stringify(debugData, null, 2);
+  }
+} catch (err) {
+  console.error("Debug panel error:", err);
+}
+ // ⭐ UPDATEUI SECTION
+ 
         updateUI(intel);
 
       } catch (err) {
