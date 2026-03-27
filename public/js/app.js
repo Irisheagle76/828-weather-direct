@@ -335,17 +335,20 @@ window._hourly = hourly;
         window._intel = intel;
         window.intel = intel;
 
-        // ⭐ TEMPORARY: Print intel for debugging
+// ⭐ TEMPORARY: Print intel for debugging
 try {
   const debugPanel = document.getElementById("intel-debug");
   if (debugPanel) {
     const debugData = {
       today: intel.today,
       tomorrow: intel.tomorrow,
-      hourlySample: hourly?.slice?.(0, 12) || [],
+
+      // Corrected: hourly is an object, not an array
+      hourlySample: hourly?.time?.slice?.(0, 12) || [],
+
       meta: {
         now: new Date().toISOString(),
-        hourlyCount: hourly?.length || 0
+        hourlyCount: hourly?.time?.length || 0
       }
     };
 
