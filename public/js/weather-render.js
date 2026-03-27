@@ -491,16 +491,17 @@ export function toggleForecastExpanded(which, intel) {
   const target = panels[which];
   const other = which === "today" ? panelTomorrow : panelToday;
 
-  const isOpen = target.classList.contains("open");
+  const isOpen = target.style.display === "block";
 
-  // Close both first
-  panelToday.classList.remove("open");
-  panelTomorrow.classList.remove("open");
+  // Close both
+  panelToday.style.display = "none";
+  panelTomorrow.style.display = "none";
 
-  // Re-render and open if it was closed
+  // If it was closed → open it
   if (!isOpen) {
     if (which === "today") renderTodayDetail(intel);
     if (which === "tomorrow") renderTomorrowDetail(intel);
-    target.classList.add("open");
+
+    target.style.display = "block";   // ⭐ THIS WAS MISSING
   }
 }

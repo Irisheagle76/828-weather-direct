@@ -141,25 +141,27 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ⭐ BULLETPROOF CLICK HANDLER (THIS FIXES YOUR ISSUE)
-  document.addEventListener("click", (e) => {
-    const today = e.target.closest("#today-module");
-    const tomorrow = e.target.closest("#tomorrow-module");
+document.addEventListener("DOMContentLoaded", () => {
 
-    if (today && window._intel) {
-      toggleForecastExpanded("today", window._intel);
-    }
+  const todayModule = document.getElementById("today-module");
+  const tomorrowModule = document.getElementById("tomorrow-module");
 
-    if (tomorrow && window._intel) {
-      toggleForecastExpanded("tomorrow", window._intel);
-    }
-  });
-
-  // ⭐ Comfort toggle
-  const comfortNowRoot = document.getElementById("comfort-now-container");
-  if (comfortNowRoot) {
-    comfortNowRoot.addEventListener("click", () => {
-      const hourlyEl = document.getElementById("hourlyTemps");
-      if (hourlyEl) hourlyEl.classList.toggle("active");
-    });
+  if (todayModule) {
+    todayModule.onclick = () => {
+      console.log("TODAY CLICK");
+      if (window._intel) {
+        window.toggleForecastExpanded("today", window._intel);
+      }
+    };
   }
+
+  if (tomorrowModule) {
+    tomorrowModule.onclick = () => {
+      console.log("TOMORROW CLICK");
+      if (window._intel) {
+        window.toggleForecastExpanded("tomorrow", window._intel);
+      }
+    };
+  }
+
 });
