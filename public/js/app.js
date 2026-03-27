@@ -231,7 +231,8 @@ async function initApp() {
         const tempestHigh = tempest?.tempHighToday ?? null;
 
         const hourly = await getShortTermForecast(lat, lon);
-        window._hourly = hourly;
+console.log("RAW HOURLY:", hourly);   // ⭐ Add this
+window._hourly = hourly;
 
         const mrmsPixel = await getMRMSPixel(lat, lon);
 
@@ -352,7 +353,7 @@ try {
   console.error("Debug panel error:", err);
 }
  // ⭐ UPDATEUI SECTION
- 
+
         updateUI(intel);
 
       } catch (err) {
