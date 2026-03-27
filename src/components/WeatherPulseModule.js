@@ -27,12 +27,9 @@ export default function WeatherPulseModule() {
     }
 
     loadPulse();
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, []);
 
-  // Loading state
   if (loading) {
     return (
       <section className="module-card pulse-module">
@@ -42,7 +39,6 @@ export default function WeatherPulseModule() {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <section className="module-card pulse-module">
@@ -52,8 +48,8 @@ export default function WeatherPulseModule() {
     );
   }
 
-  // Fallback state (no pulse yet)
-  if (!pulse || pulse.fallback) {
+  // FIXED: Only fallback when truly no pulse
+  if (!pulse || (pulse.fallback && !pulse.text)) {
     return (
       <section className="module-card pulse-module">
         <h2 className="module-title">Weather Pulse</h2>
@@ -62,34 +58,36 @@ export default function WeatherPulseModule() {
     );
   }
 
-  // Normal render
   return (
     <section className="module-card pulse-module">
       <h2 className="module-title">{pulse.title}</h2>
 
-  {pulse.mediaUrl && (
-  <div className="pulse-image-wrapper">
-    {pulse.mediaType === "video" ? (
-      <video
-        src={pulse.mediaUrl}
-        className="pulse-image"
-        autoPlay
-        loop
-        muted
-        playsInline
-      />
-    ) : (
-      <img
-        src={pulse.mediaUrl}
-        alt=""
-        className="pulse-image"
-        loading="lazy"
-      />
-    )}
-  </div>
-)}
+      {pulse.mediaUrl && (
+        <div className="pulse-image-wrapper">
+          {pulse.mediaType === "video" ? (
+            <video
+              src={pulse.mediaUrl}
+              className="pulse-image"
+              autoPlay
+              loop
+              muted
+              playsInline
+            />
+          ) : (
+            <img
+              src={pulse.mediaUrl}
+              alt=""
+              className="pulse-image"
+              loading="lazy"
+            />
+          )}
+        </div>
+      )}
 
-      <p className="pulse-text">{pulse.text}</p>
+      <div
+        className="pulse-text"
+        dangerouslySetInnerHTML={{ __html: pulse.text }}
+      />
 
       <p className="pulse-timestamp">
         {pulse.timestamp ? formatTimeAgo(pulse.timestamp) : ''}
