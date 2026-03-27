@@ -21,8 +21,7 @@ import {
 
 import { subscribeUserToPush } from "./notifications/subscribeClient.js?v=1.0.0";
 
-window.toggleForecastExpanded = toggleForecastExpanded;
-
+// ⭐ NEW — Comfort UI imports
 import {
   buildFutureComfort,
   computeComfort,
@@ -31,12 +30,16 @@ import {
   attachNext6HourToggle
 } from "./intel/comfort.js?v=1.0.0";
 
+window.toggleForecastExpanded = toggleForecastExpanded;
+
 // SERVICE WORKER
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/sw.js").catch(() => {});
 }
 
+// ============================================================
 // STATUS + ERROR HELPERS
+// ============================================================
 function setWUStatus(state, label, text) {
   const badge = document.getElementById("wu-status-badge");
   const dot = document.getElementById("wu-status-dot");
@@ -65,18 +68,46 @@ function showWUError(msg) {
 function updateUI(intel) {
   if (!intel) return;
 
+  // ---------------------------
+  // RIGHT NOW COMFORT
+  // ---------------------------
   const comfortNowContainer = document.getElementById("comfort-now-container");
   if (comfortNowContainer) {
     comfortNowContainer.innerHTML = renderRightNowComfort(intel);
   }
 
+  // ---------------------------
+  // HOURLY TEMPS (existing)
+  // ---------------------------
   if (intel.hourly) renderHourlyTemps(intel.hourly);
 
+  // ---------------------------
+  // FUTURE COMFORT (existing container)
+  // ---------------------------
   const futureComfortContainer = document.getElementById("future-comfort-container");
   if (futureComfortContainer) {
-   
+    // (you can keep or remove your old renderFutureComfort here if desired)
+    // futureComfortContainer.innerHTML = renderFutureComfort(intel);
   }
 
+  // ---------------------------
+  // ⭐ NEW — INTERACTIVE COMFORT SYSTEM
+  // ---------------------------
+  const items = buildFutureComfort(intel.hourly, computeComfort);
+
+  // Expand behavior for "Comfort Now"
+  attachComfortNowExpansion(intel);
+
+  // Render Next 6 Hours module
+  const container = document.getElementById("next-6-hours");
+  if (container) {
+    renderNext6Hours(container, items);
+    attachNext6HourToggle(container);
+  }
+
+  // ---------------------------
+  // OTHER MODULES
+  // ---------------------------
   renderTodayOutlook(intel);
   renderTomorrowOutlook(intel);
   renderUV(intel);
@@ -91,6 +122,7 @@ function updateUI(intel) {
 
   renderPulse(intel.pulse);
 
+  // Debug
   const debugEl = document.getElementById("intel-debug");
   if (debugEl) {
     debugEl.textContent = JSON.stringify(intel, null, 2);
@@ -113,9 +145,15 @@ async function initApp() {
   navigator.geolocation.getCurrentPosition(
     async pos => {
       try {
-        const intel = await buildIntel(pos.coords.latitude, pos.coords.longitude);
+        const intel = await buildIntel(
+          pos.coords.latitude,
+          pos.coords.longitude
+        );
+
         window._intel = intel;
+
         updateUI(intel);
+
         setWUStatus("ok", "WU Connected", "Weather Underground data loaded.");
       } catch {
         setWUStatus("error", "Data Error", "Unable to load weather data.");
@@ -124,13 +162,15 @@ async function initApp() {
     },
     () => {
       setWUStatus("error", "Location Error", "Location permission denied.");
-      showWUError("We couldn’t access your location. Please enable location services and reload.");
+      showWUError(
+        "We couldn’t access your location. Please enable location services and reload."
+      );
     }
   );
 }
 
 // ============================================================
-// EVENT LISTENERS (FIXED)
+// EVENT LISTENERS
 // ============================================================
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -149,35 +189,24 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ⭐ CLICK HANDLERS (FIXED — no nesting)
+  // TODAY CLICK
   const todayModule = document.getElementById("today-module");
-  const tomorrowModule = document.getElementById("tomorrow-module");
-
   if (todayModule) {
     todayModule.onclick = () => {
-      console.log("TODAY CLICK");
       if (window._intel) {
         window.toggleForecastExpanded("today", window._intel);
       }
     };
   }
 
+  // TOMORROW CLICK
+  const tomorrowModule = document.getElementById("tomorrow-module");
   if (tomorrowModule) {
     tomorrowModule.onclick = () => {
-      console.log("TOMORROW CLICK");
       if (window._intel) {
         window.toggleForecastExpanded("tomorrow", window._intel);
       }
     };
   }
-// ⭐ NEW — COMFORT INTERACTIONS
-const items = buildFutureComfort(intel.hourly, computeComfort);
 
-attachComfortNowExpansion(intel);
-
-const container = document.getElementById("next-6-hours");
-if (container) {
-  renderNext6Hours(container, items);
-  attachNext6HourToggle(container);
-}
 });
