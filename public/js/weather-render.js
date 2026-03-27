@@ -429,19 +429,19 @@ export function renderTodayDetail(intel) {
   const panel = document.getElementById("expanded-today");
   if (!panel) return;
 
-  const stats = intel.today?.stats;
-  if (!stats) {
+  const cur = intel.current;
+  if (!cur) {
     panel.innerHTML = "";
     return;
   }
 
   panel.innerHTML = `
-    <div class="fx-section"><div class="fx-label">High</div><div class="fx-value">${Math.round(stats.tempMax)}°</div></div>
-    <div class="fx-section"><div class="fx-label">Low</div><div class="fx-value">${Math.round(stats.tempMin)}°</div></div>
-    <div class="fx-section"><div class="fx-label">Wind</div><div class="fx-value">${Math.round(stats.windAvg)} mph (gusts ${Math.round(stats.windGustMax)} mph)</div></div>
-    <div class="fx-section"><div class="fx-label">Rain</div><div class="fx-value">${formatRainAmount(stats.rainTotal)}</div></div>
-    <div class="fx-section"><div class="fx-label">Snow</div><div class="fx-value">${formatSnowAmount(stats.snowTotal)}</div></div>
-    <div class="fx-section"><div class="fx-label">Cloud Cover</div><div class="fx-value">${Math.round(stats.cloudAvg)}%</div></div>
+    <div class="fx-section"><div class="fx-label">Temperature</div><div class="fx-value">${Math.round(cur.temp)}° (feels ${Math.round(cur.feelsLike)}°)</div></div>
+    <div class="fx-section"><div class="fx-label">Humidity</div><div class="fx-value">${cur.humidity}%</div></div>
+    <div class="fx-section"><div class="fx-label">Wind</div><div class="fx-value">${Math.round(cur.windSpeed)} mph (gusts ${Math.round(cur.windGust)} mph)</div></div>
+    <div class="fx-section"><div class="fx-label">Visibility</div><div class="fx-value">${cur.visibility} miles</div></div>
+    <div class="fx-section"><div class="fx-label">Cloud Cover</div><div class="fx-value">${Math.round(cur.cloudCover * 100)}%</div></div>
+    <div class="fx-section"><div class="fx-label">Precipitation</div><div class="fx-value">${cur.precipType === "rain" ? cur.precipIntensity + " mm/hr" : "None"}</div></div>
   `;
 }
 
@@ -458,13 +458,19 @@ export function renderTomorrowDetail(intel) {
     return;
   }
 
+  // Build hybrid morning+afternoon snapshot
+  const hybrid = buildTomorrowCurrent(stats);
+
+  // Use afternoon snapshot as representative
+  const snap = hybrid.afternoon;
+
   panel.innerHTML = `
     <div class="fx-section"><div class="fx-label">High</div><div class="fx-value">${Math.round(stats.tempMax)}°</div></div>
     <div class="fx-section"><div class="fx-label">Low</div><div class="fx-value">${Math.round(stats.tempMin)}°</div></div>
     <div class="fx-section"><div class="fx-label">Wind</div><div class="fx-value">${Math.round(stats.windAvg)} mph (gusts ${Math.round(stats.windGustMax)} mph)</div></div>
-    <div class="fx-section"><div class="fx-label">Rain</div><div class="fx-value">${formatRainAmount(stats.rainTotal)}</div></div>
-    <div class="fx-section"><div class="fx-label">Snow</div><div class="fx-value">${formatSnowAmount(stats.snowTotal)}</div></div>
     <div class="fx-section"><div class="fx-label">Cloud Cover</div><div class="fx-value">${Math.round(stats.cloudAvg)}%</div></div>
+    <div class="fx-section"><div class="fx-label">Rain</div><div class="fx-value">${stats.rainTotal} mm</div></div>
+    <div class="fx-section"><div class="fx-label">Snow</div><div class="fx-value">${stats.snowTotal} mm</div></div>
   `;
 }
 
@@ -477,17 +483,24 @@ export function toggleForecastExpanded(which, intel) {
 
   if (!panelToday || !panelTomorrow) return;
 
-  if (which === "today") {
-    const isOpen = panelToday.style.display === "block";
-    panelToday.style.display = isOpen ? "none" : "block";
-    panelTomorrow.style.display = "none";
-    return;
-  }
+  const panels = {
+    today: panelToday,
+    tomorrow: panelTomorrow
+  };
 
-  if (which === "tomorrow") {
-    const isOpen = panelTomorrow.style.display === "block";
-    panelTomorrow.style.display = isOpen ? "none" : "block";
-    panelToday.style.display = "none";
-    return;
+  const target = panels[which];
+  const other = which === "today" ? panelTomorrow : panelToday;
+
+  const isOpen = target.classList.contains("open");
+
+  // Close both first
+  panelToday.classList.remove("open");
+  panelTomorrow.classList.remove("open");
+
+  // Re-render and open if it was closed
+  if (!isOpen) {
+    if (which === "today") renderTodayDetail(intel);
+    if (which === "tomorrow") renderTomorrowDetail(intel);
+    target.classList.add("open");
   }
 }
