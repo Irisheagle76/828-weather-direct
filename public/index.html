@@ -82,9 +82,8 @@
     <!-- TODAY COLUMN -->
     <div class="now-col">
 
- <div class="today-module action-module" id="today-module">
+     <div class="today-module action-module" id="today-module">
   <div id="today-emoji" class="action-emoji">--</div>
-
   <div>
     <div class="action-label">Today’s Human‑Action Outlook</div>
 
@@ -94,42 +93,9 @@
 
     <div id="today-headline" class="action-headline">Loading…</div>
 
-    <div id="today-text" class="action-text"></div>
+    <div id="today-text" class="action-text"></div> <!-- ⭐ REQUIRED -->
 
     <ul id="today-bullets" class="today-bullets"></ul>
-
-    <!-- METRICS BLOCK -->
-    <div class="ha-metrics">
-      <div class="ha-metric">
-        <div class="ha-label">High</div>
-        <div class="ha-value" id="ha-today-high"></div>
-      </div>
-
-      <div class="ha-metric">
-        <div class="ha-label">Low</div>
-        <div class="ha-value" id="ha-today-low"></div>
-      </div>
-
-      <div class="ha-metric">
-        <div class="ha-label">Wind</div>
-        <div class="ha-value" id="ha-today-wind"></div>
-      </div>
-
-      <div class="ha-metric">
-        <div class="ha-label">Rain</div>
-        <div class="ha-value" id="ha-today-rain"></div>
-      </div>
-
-      <div class="ha-metric">
-        <div class="ha-label">Snow</div>
-        <div class="ha-value" id="ha-today-snow"></div>
-      </div>
-
-      <div class="ha-metric">
-        <div class="ha-label">Clouds</div>
-        <div class="ha-value" id="ha-today-clouds"></div>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -141,55 +107,21 @@
     <div class="tomorrow-col">
 
       <div class="tomorrow-module action-module" id="tomorrow-module">
-  <div id="tomorrow-emoji" class="action-emoji">--</div>
+        <div id="tomorrow-emoji" class="action-emoji">--</div>
+        <div>
+          <div class="action-label">Tomorrow’s Human‑Action Outlook</div>
 
-  <div>
-    <div class="action-label">Tomorrow’s Human‑Action Outlook</div>
+          <div id="tomorrow-badge-container" style="margin-bottom: 0.35rem;">
+            <div id="tomorrow-badge" class="badge"></div>
+          </div>
 
-    <div id="tomorrow-badge-container" style="margin-bottom: 0.35rem;">
-      <div id="tomorrow-badge" class="badge"></div>
-    </div>
+         <div id="tomorrow-headline" class="action-headline">Analyzing tomorrow’s setup…</div>
 
-    <div id="tomorrow-headline" class="action-headline">Analyzing tomorrow’s setup…</div>
+<div id="tomorrow-text" class="action-text"></div> <!-- required for HA 2.0 wiring -->
 
-    <div id="tomorrow-text" class="action-text"></div>
-
-    <ul id="tomorrow-bullets" class="tomorrow-bullets"></ul>
-
-    <!-- METRICS BLOCK -->
-    <div class="ha-metrics">
-      <div class="ha-metric">
-        <div class="ha-label">High</div>
-        <div class="ha-value" id="ha-tomorrow-high"></div>
+<ul id="tomorrow-bullets" class="tomorrow-bullets"></ul>
+        </div>
       </div>
-
-      <div class="ha-metric">
-        <div class="ha-label">Low</div>
-        <div class="ha-value" id="ha-tomorrow-low"></div>
-      </div>
-
-      <div class="ha-metric">
-        <div class="ha-label">Wind</div>
-        <div class="ha-value" id="ha-tomorrow-wind"></div>
-      </div>
-
-      <div class="ha-metric">
-        <div class="ha-label">Rain</div>
-        <div class="ha-value" id="ha-tomorrow-rain"></div>
-      </div>
-
-      <div class="ha-metric">
-        <div class="ha-label">Snow</div>
-        <div class="ha-value" id="ha-tomorrow-snow"></div>
-      </div>
-
-      <div class="ha-metric">
-        <div class="ha-label">Clouds</div>
-        <div class="ha-value" id="ha-tomorrow-clouds"></div>
-      </div>
-    </div>
-  </div>
-</div>
 
       <div class="expanded-panel" id="expanded-tomorrow" style="display:none;"></div>
 
@@ -235,7 +167,7 @@
 <div id="toast" class="toast"></div>
 
 <!-- JAVASCRIPT MODULES -->
-<script type="module" src="/js/app.js?v=20260327"></script>
+<script type="module" src="/js/app.js?v=1.0.20260327"></script>
 <script type="module" src="/js/substack-render.js?v=1.0.20260327"></script>
 <script type="module" src="/js/pulse-render.js?v=1.0.20260327"></script>
 

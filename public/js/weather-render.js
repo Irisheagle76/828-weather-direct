@@ -297,7 +297,7 @@ export function renderTodayOutlook(intel) {
 
   if (!headlineEl || !textEl || !bulletsEl) return;
 
-const action = generateHumanAction(intel.today.stats);
+  const action = generateHumanAction(intel.current);
 
   const today = intel.today;
   const todayModule = document.getElementById("today-module");
@@ -318,45 +318,46 @@ const action = generateHumanAction(intel.today.stats);
   renderBullets(bulletsEl, action.bullets);
 
   fitHeadlineToWidth(headlineEl);
-
-  // ⭐ NEW — Fill Today metrics block
-  if (intel.today?.stats) {
-    renderHumanActionMetrics(intel.today.stats, "ha-today");
-  }
 }
+
 // ------------------------------------------------------------
 // ⭐ FULL HUMAN‑ACTION 2.0 — TOMORROW OUTLOOK
 // ------------------------------------------------------------
 export function renderTomorrowOutlook(intel) {
   const emojiEl = document.getElementById("tomorrow-emoji");
+  const badgeEl = document.getElementById("tomorrow-badge");
+  const badgeContainer = document.getElementById("tomorrow-badge-container");
   const headlineEl = document.getElementById("tomorrow-headline");
   const textEl = document.getElementById("tomorrow-text");
   const bulletsEl = document.getElementById("tomorrow-bullets");
 
   if (!headlineEl || !textEl || !bulletsEl) return;
 
-  // ⭐ FIX: ALWAYS use builder
-  const tomorrowStats = window.buildTomorrowCurrent
-    ? window.buildTomorrowCurrent(intel)
-    : intel.tomorrow?.stats;
+  const tomorrow = intel.tomorrow;
 
-  if (!tomorrowStats) return;
+  if (!tomorrow || !tomorrow.available) {
+    headlineEl.textContent = "No data available";
+    textEl.textContent = "";
+    bulletsEl.innerHTML = "";
+    if (badgeContainer) badgeContainer.style.display = "none";
+    if (emojiEl) emojiEl.textContent = "";
+    return;
+  }
 
-  const action = generateHumanAction(tomorrowStats);
+  const tomorrowData = buildTomorrowCurrent(tomorrow.stats);
+  const action = generateHumanAction(tomorrowData);
 
-  // Populate UI
   if (emojiEl) emojiEl.textContent = action.emoji;
   headlineEl.textContent = action.headline;
-  textEl.textContent = action.summary;
-
+  textEl.textContent = "";
   renderBullets(bulletsEl, action.bullets);
-}
 
   fitHeadlineToWidth(headlineEl);
 
   // ⭐ Modernized Human‑Action 2.0 badge map
   const dominant = action.dominantFactor;
   const badgeMap = {
+    // Cold family
     cold:        { text: "Cold Start",      class: "badge-cold" },
     frost:       { text: "Frost Early",     class: "badge-cold" },
     freeze:      { text: "Hard Freeze",     class: "badge-cold" },
@@ -364,22 +365,27 @@ export function renderTomorrowOutlook(intel) {
     freezingFog: { text: "Freezing Fog",    class: "badge-cold" },
     snow:        { text: "Snow Impact",     class: "badge-snow" },
 
+    // Heat / humidity
     heat:        { text: "Heat Caution",    class: "badge-heat" },
     humidity:    { text: "Humid & Heavy",   class: "badge-humid" },
     muggy:       { text: "Muggy Air",       class: "badge-humid" },
 
+    // Wind
     wind:        { text: "Wind Alert",      class: "badge-wind" },
     mountainWind:{ text: "Ridgetop Winds",  class: "badge-wind" },
 
+    // Rain / storms
     rain:        { text: "Rain Gear",       class: "badge-rain" },
     coldRain:    { text: "Cold Rain",       class: "badge-rain" },
     warmRain:    { text: "Warm Rain",       class: "badge-rain" },
     storms:      { text: "Storm Risk",      class: "badge-storm" },
 
+    // Visibility
     fog:         { text: "Low Visibility",  class: "badge-fog" },
     valleyFog:   { text: "Valley Fog",      class: "badge-fog" },
     ridgeFog:    { text: "Ridge Fog",       class: "badge-fog" },
 
+    // Goldilocks / neutral
     sun:         { text: "Bright Day",      class: "badge-goldilocks" },
     clouds:      { text: "Cloudy & Mild",   class: "badge-goldilocks" },
     goldilocks:  { text: "Just Right",      class: "badge-goldilocks" }
@@ -402,30 +408,8 @@ export function renderTomorrowOutlook(intel) {
     if (tomorrow.isEarlyMorning) tomorrowModule.classList.add("fade");
     else tomorrowModule.classList.remove("fade");
   }
-
-  // ⭐ NEW — Fill Tomorrow metrics block
-  if (intel.tomorrow?.stats) {
-    renderHumanActionMetrics(intel.tomorrow.stats, "ha-tomorrow");
-  }
 }
-// ------------------------------------------------------------
-// Human‑Action Metrics Render
-// ------------------------------------------------------------
-function renderHumanActionMetrics(stats, prefix) {
-  if (!stats) return;
 
-  const set = (id, value) => {
-    const el = document.getElementById(`${prefix}-${id}`);
-    if (el) el.textContent = value;
-  };
-
-  set("high", `${Math.round(stats.tempMax)}°`);
-  set("low", `${Math.round(stats.tempMin)}°`);
-  set("wind", `${Math.round(stats.windAvg)} mph (gusts ${Math.round(stats.windGustMax)} mph)`);
-  set("rain", formatRainAmount(stats.rainTotal));
-  set("snow", formatSnowAmount(stats.snowTotal));
-  set("clouds", `${Math.round(stats.cloudAvg)}%`);
-}
 // ------------------------------------------------------------
 // RENDER UV INDEX
 // ------------------------------------------------------------
@@ -487,86 +471,23 @@ export function renderTomorrowDetail(intel) {
 // ------------------------------------------------------------
 // EXPANSION PANEL TOGGLER
 // ------------------------------------------------------------
-export function toggleForecastExpanded(type, intel) {
-  const module = document.getElementById(`${type}-module`);
-  if (!module || !intel) return;
+export function toggleForecastExpanded(which, intel) {
+  const panelToday = document.getElementById("expanded-today");
+  const panelTomorrow = document.getElementById("expanded-tomorrow");
 
-  // Remove existing panel (toggle behavior)
-  const existing = document.getElementById(`${type}-expanded`);
-  if (existing) {
-    existing.remove();
+  if (!panelToday || !panelTomorrow) return;
+
+  if (which === "today") {
+    const isOpen = panelToday.style.display === "block";
+    panelToday.style.display = isOpen ? "none" : "block";
+    panelTomorrow.style.display = "none";
     return;
   }
 
-  // --- GET CORRECT DATA SOURCE ---
-  let stats;
-
-  if (type === "today") {
-    stats = intel.today?.stats;
-  } else if (type === "tomorrow") {
-    stats = window.buildTomorrowCurrent
-      ? window.buildTomorrowCurrent(intel)
-      : intel.tomorrow?.stats;
-  }
-
-  if (!stats) {
-    console.warn("No stats available for", type);
+  if (which === "tomorrow") {
+    const isOpen = panelTomorrow.style.display === "block";
+    panelTomorrow.style.display = isOpen ? "none" : "block";
+    panelToday.style.display = "none";
     return;
   }
-
-  // --- SAFE VALUE HELPERS ---
-  const safe = (v, suffix = "") =>
-    v !== null && v !== undefined && !isNaN(v) ? `${Math.round(v)}${suffix}` : "--";
-
-  const rainText = formatRainAmount(stats.rainTotal ?? 0);
-  const snowText = formatSnowAmount(stats.snowTotal ?? 0);
-
-  // --- BUILD PANEL ---
-  const panel = document.createElement("div");
-  panel.className = "expanded-panel";
-  panel.id = `${type}-expanded`;
-
-  panel.innerHTML = `
-    <div class="fx-section">
-      <div class="fx-label">High</div>
-      <div class="fx-value">${safe(stats.tempMax, "°")}</div>
-    </div>
-
-    <div class="fx-section">
-      <div class="fx-label">Low</div>
-      <div class="fx-value">${safe(stats.tempMin, "°")}</div>
-    </div>
-
-    <div class="fx-section">
-      <div class="fx-label">Wind</div>
-      <div class="fx-value">
-        ${safe(stats.windSpeed, " mph")}
-        ${
-          stats.windGust
-            ? `(gusts ${safe(stats.windGust, " mph")})`
-            : ""
-        }
-      </div>
-    </div>
-
-    <div class="fx-section">
-      <div class="fx-label">Rain</div>
-      <div class="fx-value">${rainText}</div>
-    </div>
-
-    <div class="fx-section">
-      <div class="fx-label">Snow</div>
-      <div class="fx-value">${snowText}</div>
-    </div>
-
-    <div class="fx-section">
-      <div class="fx-label">Clouds</div>
-      <div class="fx-value">
-        ${safe((stats.cloudCover ?? 0) * 100, "%")}
-      </div>
-    </div>
-  `;
-
-  // ⭐ CRITICAL FIX — place BELOW module (not inside)
-  module.parentNode.insertBefore(panel, module.nextSibling);
 }
