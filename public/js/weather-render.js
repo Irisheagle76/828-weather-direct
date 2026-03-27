@@ -371,10 +371,12 @@ export function renderTodayOutlook(intel) {
 
   console.log("CURRENT HOUR:", hour);
   
-  // 🌙 DAY vs NIGHT SWITCH
-  if (hour >= 15 && remainder && remainder.statsRemainder) {
-    const stats = remainder.statsRemainder;
+// 🌙 DAY vs NIGHT SWITCH — always flip after 3pm
+if (hour >= 15) {
+  const stats = remainder?.statsRemainder;
 
+  if (stats) {
+    // Use remainder-of-day stats when available
     action = generateHumanAction({
       temp: stats.avgTemp,
       feelsLike: stats.avgTemp,
@@ -389,14 +391,18 @@ export function renderTodayOutlook(intel) {
       cloudCover: 0.5,
       timestamp: Date.now()
     });
-
-    if (labelEl) labelEl.textContent = "Tonight’s Human-Action Outlook";
-
   } else {
+    // Fallback if statsRemainder is missing
     action = generateHumanAction(intel.current);
-
-    if (labelEl) labelEl.textContent = "Today’s Human-Action Outlook";
   }
+
+  if (labelEl) labelEl.textContent = "Tonight’s Human-Action Outlook";
+
+} else {
+  // Before 3pm → normal daytime behavior
+  action = generateHumanAction(intel.current);
+  if (labelEl) labelEl.textContent = "Today’s Human-Action Outlook";
+}
 
   // 🌙 EMOJI SYNC
   if (hour >= 15 && future && future.length > 0) {
