@@ -2,6 +2,7 @@
 // ============================================================
 // APP ENTRY — Clean, Modular, Human‑Action 2.0 Ready
 // ============================================================
+console.log("NEW BUILD LOADED", Date.now());
 
 import { buildIntel } from "./intel/intel-builder.js?v=20260327";
 import { renderPulse } from "./pulse-render.js?v=1.0.20260327";
@@ -25,7 +26,7 @@ window.toggleForecastExpanded = toggleForecastExpanded;
 
 // SERVICE WORKER
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/sw.js").catch(() => {});
+//  navigator.serviceWorker.register("/sw.js").catch(() => {});
 }
 
 // STATUS + ERROR HELPERS
