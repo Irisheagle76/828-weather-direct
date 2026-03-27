@@ -1,6 +1,6 @@
 // /js/app.js
 // ============================================================
-// APP ENTRY — Clean, Modular, Human‑Action 2.0 Ready
+// APP ENTRY — Clean, Modular, Human-Action 2.0 Ready
 // ============================================================
 
 import { buildIntel } from "./intel/intel-builder.js?v=1.0.0";
@@ -51,15 +51,6 @@ function showWUError(msg) {
   el.textContent = msg;
 }
 
-function showToast(message) {
-  const toast = document.getElementById("toast");
-  if (!toast) return;
-
-  toast.textContent = message;
-  toast.classList.add("show");
-  setTimeout(() => toast.classList.remove("show"), 2500);
-}
-
 // ============================================================
 // UI UPDATE
 // ============================================================
@@ -90,10 +81,8 @@ function updateUI(intel) {
     footer.textContent = `Live data from Weather Underground Station ${intel.wu.stationId}`;
   }
 
-  // ⭐ Unified Pulse Renderer
   renderPulse(intel.pulse);
 
-  // ⭐ DEBUG OVERLAY
   const debugEl = document.getElementById("intel-debug");
   if (debugEl) {
     debugEl.textContent = JSON.stringify(intel, null, 2);
@@ -131,19 +120,12 @@ async function initApp() {
     }
   );
 }
-todayModule.addEventListener("click", () => {
-  console.log("TODAY CLICKED");   // 👈 add this
-  if (window._intel) toggleForecastExpanded("today", window._intel);
-});
 
-tomorrowModule.addEventListener("click", () => {
-  console.log("TOMORROW CLICKED");  // 👈 add this
-  if (window._intel) toggleForecastExpanded("tomorrow", window._intel);
-});
 // ============================================================
-// EVENT LISTENERS
+// EVENT LISTENERS (FIXED)
 // ============================================================
 document.addEventListener("DOMContentLoaded", () => {
+  // 🔔 Notifications
   const notifBtn = document.getElementById("enable-notifications-btn");
   if (notifBtn) {
     notifBtn.addEventListener("click", async () => {
@@ -158,20 +140,21 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const todayModule = document.getElementById("today-module");
-  if (todayModule) {
-    todayModule.addEventListener("click", () => {
-      if (window._intel) toggleForecastExpanded("today", window._intel);
-    });
-  }
+  // ⭐ BULLETPROOF CLICK HANDLER (THIS FIXES YOUR ISSUE)
+  document.addEventListener("click", (e) => {
+    const today = e.target.closest("#today-module");
+    const tomorrow = e.target.closest("#tomorrow-module");
 
-  const tomorrowModule = document.getElementById("tomorrow-module");
-  if (tomorrowModule) {
-    tomorrowModule.addEventListener("click", () => {
-      if (window._intel) toggleForecastExpanded("tomorrow", window._intel);
-    });
-  }
+    if (today && window._intel) {
+      toggleForecastExpanded("today", window._intel);
+    }
 
+    if (tomorrow && window._intel) {
+      toggleForecastExpanded("tomorrow", window._intel);
+    }
+  });
+
+  // ⭐ Comfort toggle
   const comfortNowRoot = document.getElementById("comfort-now-container");
   if (comfortNowRoot) {
     comfortNowRoot.addEventListener("click", () => {
