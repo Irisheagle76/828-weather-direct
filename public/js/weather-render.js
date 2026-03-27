@@ -1,5 +1,42 @@
 // /js/weather-render.js
 // ============================================================
+// Convert mm to in
+// ============================================================
+function formatPrecip(mm) {
+  const inches = mm / 25.4;
+
+  if (inches < 0.01) return "Dry";
+  return inches.toFixed(2) + " in";
+}
+// ============================================================
+// Rain conversion to adjectives
+// ============================================================
+function describePrecip(mm) {
+  const inches = mm / 25.4;
+
+  if (inches < 0.01) return "Dry";
+  if (inches < 0.03) return "A few sprinkles";
+  if (inches < 0.10) return "Light rain";
+  if (inches < 0.25) return "Steady light rain";
+  if (inches < 0.50) return "Moderate rain";
+  if (inches < 1.00) return "Steady rain";
+  return "Heavy rain";
+}
+// ============================================================
+// Snow conversion to adjectives
+// ============================================================
+function describeSnow(mm) {
+  const inches = mm / 25.4;
+
+  if (inches < 0.01) return "No accumulation";
+  if (inches < 0.10) return "Flurries";
+  if (inches < 0.50) return "A light coating";
+  if (inches < 1.5) return "Light accumulation";
+  if (inches < 3) return "Accumulating snow";
+  if (inches < 6) return "Moderate accumulation";
+  return "Heavy snow";
+}
+// ============================================================
 // WEATHER RENDERER — Today, Tomorrow, Comfort, UV, Details
 // ============================================================
 
@@ -454,14 +491,14 @@ export function renderTodayDetail(intel) {
   const rainVal = safe(rain, idx);
   const snowVal = safe(snow, idx);
 
-  panel.innerHTML = `
-    <div class="fx-section"><div class="fx-label">Temperature</div><div class="fx-value">${Math.round(temp)}°</div></div>
-    <div class="fx-section"><div class="fx-label">Dew Point</div><div class="fx-value">${Math.round(dewpt)}°</div></div>
-    <div class="fx-section"><div class="fx-label">Wind</div><div class="fx-value">${Math.round(wind)} mph (gusts ${Math.round(gust)} mph)</div></div>
-    <div class="fx-section"><div class="fx-label">Cloud Cover</div><div class="fx-value">${Math.round(cloud)}%</div></div>
-    <div class="fx-section"><div class="fx-label">Rain</div><div class="fx-value">${rainVal.toFixed(2)} mm</div></div>
-    <div class="fx-section"><div class="fx-label">Snow</div><div class="fx-value">${snowVal.toFixed(2)} mm</div></div>
-  `;
+ panel.innerHTML = `
+  <div class="fx-section"><div class="fx-label">Temperature</div><div class="fx-value">${Math.round(temp)}°</div></div>
+  <div class="fx-section"><div class="fx-label">Dew Point</div><div class="fx-value">${Math.round(dewpt)}°</div></div>
+  <div class="fx-section"><div class="fx-label">Wind</div><div class="fx-value">${Math.round(wind)} mph (gusts ${Math.round(gust)} mph)</div></div>
+  <div class="fx-section"><div class="fx-label">Cloud Cover</div><div class="fx-value">${Math.round(cloud)}%</div></div>
+  <div class="fx-section"><div class="fx-label">Rain</div><div class="fx-value">${describePrecip(rainVal)}</div></div>
+  <div class="fx-section"><div class="fx-label">Snow</div><div class="fx-value">${describeSnow(snowVal)}</div></div>
+`;
 }
 
 // ------------------------------------------------------------
@@ -497,13 +534,13 @@ export function renderTomorrowDetail(intel) {
   const snowVal = safe(snow, idx);
 
   panel.innerHTML = `
-    <div class="fx-section"><div class="fx-label">Temperature</div><div class="fx-value">${Math.round(temp)}°</div></div>
-    <div class="fx-section"><div class="fx-label">Dew Point</div><div class="fx-value">${Math.round(dewpt)}°</div></div>
-    <div class="fx-section"><div class="fx-label">Wind</div><div class="fx-value">${Math.round(wind)} mph (gusts ${Math.round(gust)} mph)</div></div>
-    <div class="fx-section"><div class="fx-label">Cloud Cover</div><div class="fx-value">${Math.round(cloud)}%</div></div>
-    <div class="fx-section"><div class="fx-label">Rain</div><div class="fx-value">${rainVal.toFixed(2)} mm</div></div>
-    <div class="fx-section"><div class="fx-label">Snow</div><div class="fx-value">${snowVal.toFixed(2)} mm</div></div>
-  `;
+  <div class="fx-section"><div class="fx-label">Temperature</div><div class="fx-value">${Math.round(temp)}°</div></div>
+  <div class="fx-section"><div class="fx-label">Dew Point</div><div class="fx-value">${Math.round(dewpt)}°</div></div>
+  <div class="fx-section"><div class="fx-label">Wind</div><div class="fx-value">${Math.round(wind)} mph (gusts ${Math.round(gust)} mph)</div></div>
+  <div class="fx-section"><div class="fx-label">Cloud Cover</div><div class="fx-value">${Math.round(cloud)}%</div></div>
+  <div class="fx-section"><div class="fx-label">Rain</div><div class="fx-value">${describePrecip(rainVal)}</div></div>
+  <div class="fx-section"><div class="fx-label">Snow</div><div class="fx-value">${describeSnow(snowVal)}</div></div>
+`;
 }
 
 // ------------------------------------------------------------
