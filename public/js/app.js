@@ -125,6 +125,7 @@ async function initApp() {
 // EVENT LISTENERS (FIXED)
 // ============================================================
 document.addEventListener("DOMContentLoaded", () => {
+
   // 🔔 Notifications
   const notifBtn = document.getElementById("enable-notifications-btn");
   if (notifBtn) {
@@ -140,9 +141,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ⭐ BULLETPROOF CLICK HANDLER (THIS FIXES YOUR ISSUE)
-document.addEventListener("DOMContentLoaded", () => {
-
+  // ⭐ CLICK HANDLERS (FIXED — no nesting)
   const todayModule = document.getElementById("today-module");
   const tomorrowModule = document.getElementById("tomorrow-module");
 
