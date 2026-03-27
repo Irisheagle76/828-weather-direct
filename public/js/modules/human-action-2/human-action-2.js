@@ -1,5 +1,5 @@
 // /modules/human-action-2/human-action-2.js
-// Human‑Action 2.0 — Output Layer (Fully Integrated, All Factors Supported)
+// Human‑Action 2.0 — Output Layer (Clean Production Build)
 
 import { evaluateHumanActionFactors } from "./core-engine.js?v=1.0.0";
 
@@ -40,50 +40,28 @@ export function getActionEmoji(dominantFactor) {
 // ---------------------------------------------------------
 export function getActionHeadline(dominantFactor, data) {
   switch (dominantFactor) {
-    case "heat":
-      return "Warm and energy‑draining";
-    case "cold":
-      return "Chilly with a bite";
-    case "wind":
-      return "Breezy and changeable";
-    case "mountainWind":
-      return "Gusty ridgetop winds";
-    case "rain":
-      return "Damp and unsettled";
-    case "coldRain":
-      return "Cold rain with a deep chill";
-    case "warmRain":
-      return "Warm, tropical‑feeling rain";
-    case "storms":
-      return "Storm‑tilted and active";
-    case "snow":
-      return "Cold with wintry texture";
-    case "humidity":
-      return "Sticky and slow‑moving";
-    case "muggy":
-      return "Heavy, muggy air";
-    case "sun":
-      return "Bright and comfortable";
-    case "clouds":
-      return "Cloudy with soft light";
-    case "fog":
-      return "Muted and low‑visibility";
-    case "valleyFog":
-      return "Fog settled in the valleys";
-    case "ridgeFog":
-      return "Fog clinging to the ridges";
-    case "freezingFog":
-      return "Freezing fog and slick spots";
-    case "frost":
-      return "Frosty and slow to warm";
-    case "freeze":
-      return "Hard freeze early on";
-    case "blackIce":
-      return "Patchy black ice early";
-    case "goldilocks":
-      return "🌟 Goldilocks Day — just right!";
-    default:
-      return "Easygoing conditions";
+    case "heat": return "Warm and energy‑draining";
+    case "cold": return "Chilly with a bite";
+    case "wind": return "Breezy and changeable";
+    case "mountainWind": return "Gusty ridgetop winds";
+    case "rain": return "Damp and unsettled";
+    case "coldRain": return "Cold rain with a deep chill";
+    case "warmRain": return "Warm, tropical‑feeling rain";
+    case "storms": return "Storm‑tilted and active";
+    case "snow": return "Cold with wintry texture";
+    case "humidity": return "Sticky and slow‑moving";
+    case "muggy": return "Heavy, muggy air";
+    case "sun": return "Bright and comfortable";
+    case "clouds": return "Cloudy with soft light";
+    case "fog": return "Muted and low‑visibility";
+    case "valleyFog": return "Fog settled in the valleys";
+    case "ridgeFog": return "Fog clinging to the ridges";
+    case "freezingFog": return "Freezing fog and slick spots";
+    case "frost": return "Frosty and slow to warm";
+    case "freeze": return "Hard freeze early on";
+    case "blackIce": return "Patchy black ice early";
+    case "goldilocks": return "🌟 Goldilocks Day — just right!";
+    default: return "Easygoing conditions";
   }
 }
 
@@ -287,47 +265,14 @@ export function assembleHumanActionOutput(emoji, headline, bullets, dominantFact
 export function generateHumanAction(data) {
   const result = evaluateHumanActionFactors(data);
 
-// ---------------------------------------------------------
-// Diagnostic Logger (Color‑Coded)
-// ---------------------------------------------------------
-if (typeof window !== "undefined") {
-  const isHybrid = data && data.morning && data.afternoon;
-  const label = isHybrid ? "TOMORROW (Hybrid)" : "TODAY (Single Snapshot)";
+  const emoji = getActionEmoji(result.dominantFactor);
+  const headline = getActionHeadline(result.dominantFactor, data);
+  const bullets = getActionBullets(result.dominantFactor, data);
 
-  // Color map by factor severity / vibe
-  const colorMap = {
-    heat: "color:#d9534f;font-weight:bold",          // red
-    cold: "color:#5bc0de;font-weight:bold",          // icy blue
-    freeze: "color:#0275d8;font-weight:bold",        // deep blue
-    frost: "color:#5bc0de;font-weight:bold",         // light blue
-    blackIce: "color:#000000;background:#a6e1fa;padding:2px 4px;border-radius:3px", // high contrast
-    wind: "color:#5bc0de;font-weight:bold",
-    mountainWind: "color:#0275d8;font-weight:bold",
-    rain: "color:#5cb85c;font-weight:bold",          // green
-    coldRain: "color:#0275d8;font-weight:bold",
-    warmRain: "color:#f0ad4e;font-weight:bold",      // warm gold
-    storms: "color:#d9534f;font-weight:bold",
-    snow: "color:#5bc0de;font-weight:bold",
-    humidity: "color:#5cb85c;font-weight:bold",
-    muggy: "color:#f0ad4e;font-weight:bold",
-    fog: "color:#999;font-weight:bold",
-    valleyFog: "color:#999;font-weight:bold",
-    ridgeFog: "color:#999;font-weight:bold",
-    freezingFog: "color:#0275d8;font-weight:bold",
-    sun: "color:#f0ad4e;font-weight:bold",
-    clouds: "color:#999;font-weight:bold",
-    inversion: "color:#999;font-weight:bold",
-    goldilocks: "color:#f7c873;font-weight:bold",
-    default: "color:#666;font-weight:bold"
-  };
-
-  const style = colorMap[result.dominantFactor] || "color:#666;font-weight:bold";
-
-  console.group(`🔍 %cHuman‑Action Debug — ${label}`, "color:#444;font-weight:bold");
-  console.log("%cDominant Factor:", "color:#888", `%c${result.dominantFactor}`, style);
-  console.log("%cSecondary Factors:", "color:#888", result.secondaryFactors);
-  console.log("%cConfidence:", "color:#888", result.confidence);
-  console.log("%cRaw Input:", "color:#888", data);
-  console.log("%cEngine Result:", "color:#888", result);
-  console.groupEnd();
+  return assembleHumanActionOutput(
+    emoji,
+    headline,
+    bullets,
+    result.dominantFactor
+  );
 }

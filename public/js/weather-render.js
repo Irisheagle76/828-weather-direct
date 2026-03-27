@@ -154,6 +154,7 @@ export function renderHourlyTemps(hourlyData) {
     container.appendChild(item);
   }
 }
+
 // ------------------------------------------------------------
 // Compass helper
 // ------------------------------------------------------------
@@ -225,7 +226,6 @@ function renderBullets(ul, bullets) {
     ul.appendChild(li);
   });
 }
-
 // ------------------------------------------------------------
 // ⭐ UPDATED — RENDER RIGHT NOW COMFORT (returns HTML)
 // ------------------------------------------------------------
@@ -245,7 +245,6 @@ export function renderRightNowComfort(intel) {
         </div>
       </div>
 
-      <!-- ⭐ MOVE IT INSIDE -->
       <div id="hourlyTemps"></div>
     </div>
   `;
@@ -285,6 +284,7 @@ export function renderFutureComfort(intel) {
     </div>
   `;
 }
+
 // ------------------------------------------------------------
 // ⭐ FULL HUMAN‑ACTION 2.0 — TODAY OUTLOOK
 // ------------------------------------------------------------
@@ -297,10 +297,8 @@ export function renderTodayOutlook(intel) {
 
   if (!headlineEl || !textEl || !bulletsEl) return;
 
-  // Human‑Action 2.0 uses unified current conditions
   const action = generateHumanAction(intel.current);
 
-  // Fade logic stays
   const today = intel.today;
   const todayModule = document.getElementById("today-module");
   if (todayModule && today) {
@@ -308,17 +306,15 @@ export function renderTodayOutlook(intel) {
     else todayModule.classList.remove("fade");
   }
 
-  // Remainder label logic stays
   const remainder = intel.remainderToday;
   if (remainderLabel) {
     remainderLabel.style.display =
       remainder && remainder.available ? "block" : "none";
   }
 
-  // Render Human‑Action 2.0
   if (emojiEl) emojiEl.textContent = action.emoji;
   headlineEl.textContent = action.headline;
-  textEl.textContent = ""; // No narrative sentence
+  textEl.textContent = "";
   renderBullets(bulletsEl, action.bullets);
 
   fitHeadlineToWidth(headlineEl);
@@ -348,11 +344,9 @@ export function renderTomorrowOutlook(intel) {
     return;
   }
 
-  // ⭐ NEW — Build Human‑Action‑ready data for tomorrow
   const tomorrowData = buildTomorrowCurrent(tomorrow.stats);
   const action = generateHumanAction(tomorrowData);
 
-  // Render Human‑Action 2.0
   if (emojiEl) emojiEl.textContent = action.emoji;
   headlineEl.textContent = action.headline;
   textEl.textContent = "";
@@ -360,15 +354,41 @@ export function renderTomorrowOutlook(intel) {
 
   fitHeadlineToWidth(headlineEl);
 
-  // Badge system (unchanged)
+  // ⭐ Modernized Human‑Action 2.0 badge map
   const dominant = action.dominantFactor;
   const badgeMap = {
-    rain:  { text: "Rain Gear",     class: "badge-rain" },
-    wind:  { text: "Wind Alert",    class: "badge-wind" },
-    snow:  { text: "Snow Impact",   class: "badge-snow" },
-    heat:  { text: "Heat Caution",  class: "badge-heat" },
-    cold:  { text: "Cold Start",    class: "badge-cold" },
-    sun:   { text: "Bright Day",    class: "badge-goldilocks" }
+    // Cold family
+    cold:        { text: "Cold Start",      class: "badge-cold" },
+    frost:       { text: "Frost Early",     class: "badge-cold" },
+    freeze:      { text: "Hard Freeze",     class: "badge-cold" },
+    blackIce:    { text: "Black Ice Risk",  class: "badge-cold" },
+    freezingFog: { text: "Freezing Fog",    class: "badge-cold" },
+    snow:        { text: "Snow Impact",     class: "badge-snow" },
+
+    // Heat / humidity
+    heat:        { text: "Heat Caution",    class: "badge-heat" },
+    humidity:    { text: "Humid & Heavy",   class: "badge-humid" },
+    muggy:       { text: "Muggy Air",       class: "badge-humid" },
+
+    // Wind
+    wind:        { text: "Wind Alert",      class: "badge-wind" },
+    mountainWind:{ text: "Ridgetop Winds",  class: "badge-wind" },
+
+    // Rain / storms
+    rain:        { text: "Rain Gear",       class: "badge-rain" },
+    coldRain:    { text: "Cold Rain",       class: "badge-rain" },
+    warmRain:    { text: "Warm Rain",       class: "badge-rain" },
+    storms:      { text: "Storm Risk",      class: "badge-storm" },
+
+    // Visibility
+    fog:         { text: "Low Visibility",  class: "badge-fog" },
+    valleyFog:   { text: "Valley Fog",      class: "badge-fog" },
+    ridgeFog:    { text: "Ridge Fog",       class: "badge-fog" },
+
+    // Goldilocks / neutral
+    sun:         { text: "Bright Day",      class: "badge-goldilocks" },
+    clouds:      { text: "Cloudy & Mild",   class: "badge-goldilocks" },
+    goldilocks:  { text: "Just Right",      class: "badge-goldilocks" }
   };
 
   const badge = badgeMap[dominant];
@@ -383,13 +403,13 @@ export function renderTomorrowOutlook(intel) {
     }
   }
 
-  // Fade logic stays
   const tomorrowModule = document.getElementById("tomorrow-module");
   if (tomorrowModule) {
     if (tomorrow.isEarlyMorning) tomorrowModule.classList.add("fade");
     else tomorrowModule.classList.remove("fade");
   }
 }
+
 // ------------------------------------------------------------
 // RENDER UV INDEX
 // ------------------------------------------------------------
