@@ -1,24 +1,33 @@
 // /intel/windows.js
-// Modern time-window engine for Today + Tomorrow
+// Robust local‑time window engine for Today + Tomorrow (UTC‑safe)
 
+/**
+ * Convert an Open‑Meteo UTC timestamp into a local Date object.
+ */
+function toLocal(t) {
+  return new Date(t); // JS automatically converts UTC → local
+}
+
+/**
+ * Build a window of hourly indices for the current local day.
+ */
 export function getTodayWindow(hourly) {
   if (!hourly?.time?.length) return [];
 
   const now = new Date();
-
-  const day = now.getDate();
-  const month = now.getMonth();
-  const year = now.getFullYear();
+  const targetYear = now.getFullYear();
+  const targetMonth = now.getMonth();
+  const targetDay = now.getDate();
 
   const indices = [];
 
   for (let i = 0; i < hourly.time.length; i++) {
-    const t = new Date(hourly.time[i]);
+    const t = toLocal(hourly.time[i]);
 
     if (
-      t.getDate() === day &&
-      t.getMonth() === month &&
-      t.getFullYear() === year
+      t.getFullYear() === targetYear &&
+      t.getMonth() === targetMonth &&
+      t.getDate() === targetDay
     ) {
       indices.push(i);
     }
@@ -27,6 +36,9 @@ export function getTodayWindow(hourly) {
   return indices;
 }
 
+/**
+ * Build a window of hourly indices for the next local calendar day.
+ */
 export function getTomorrowWindow(hourly) {
   if (!hourly?.time?.length) return [];
 
@@ -34,19 +46,19 @@ export function getTomorrowWindow(hourly) {
   const tomorrow = new Date(now);
   tomorrow.setDate(now.getDate() + 1);
 
-  const day = tomorrow.getDate();
-  const month = tomorrow.getMonth();
-  const year = tomorrow.getFullYear();
+  const targetYear = tomorrow.getFullYear();
+  const targetMonth = tomorrow.getMonth();
+  const targetDay = tomorrow.getDate();
 
   const indices = [];
 
   for (let i = 0; i < hourly.time.length; i++) {
-    const t = new Date(hourly.time[i]);
+    const t = toLocal(hourly.time[i]);
 
     if (
-      t.getDate() === day &&
-      t.getMonth() === month &&
-      t.getFullYear() === year
+      t.getFullYear() === targetYear &&
+      t.getMonth() === targetMonth &&
+      t.getDate() === targetDay
     ) {
       indices.push(i);
     }
