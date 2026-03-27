@@ -86,6 +86,19 @@ export async function buildIntel(lat, lon) {
   intel.today.stats = intel.today.stats || {};
   intel.today.stats.maxTemp = tempestHigh;
 
+  // TOMORROW STATS (required for Human‑Action 2.0)
+intel.tomorrow = intel.tomorrow || {};
+intel.tomorrow.available = true;
+intel.tomorrow.stats = {
+  tempMax: hourly.temperature_2m_max?.[1] ?? null,
+  tempMin: hourly.temperature_2m_min?.[1] ?? null,
+  windAvg: hourly.windspeed_10m?.[1] ?? null,
+  windGustMax: hourly.windgusts_10m?.[1] ?? null,
+  rainTotal: hourly.rain?.[1] ?? 0,
+  snowTotal: hourly.snowfall?.[1] ?? 0,
+  cloudAvg: hourly.cloudcover?.[1] ?? null
+};
+
   // RISK FACTORS
   Object.assign(intel.current, computeRisks(intel));
 

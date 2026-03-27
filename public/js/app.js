@@ -4,11 +4,7 @@
 // ============================================================
 
 import { buildIntel } from "./intel/intel-builder.js?v=1.0.0";
-import {
-  renderPulseMedia,
-  buildPulsePreview,
-  formatTimeAgo
-} from "./intel/pulse-utils.js?v=1.0.0";
+import { renderPulse } from "./pulse-render.js?v=1.0.0";
 
 import {
   renderRightNowComfort,
@@ -64,7 +60,9 @@ function showToast(message) {
   setTimeout(() => toast.classList.remove("show"), 2500);
 }
 
+// ============================================================
 // UI UPDATE
+// ============================================================
 function updateUI(intel) {
   if (!intel) return;
 
@@ -92,31 +90,19 @@ function updateUI(intel) {
     footer.textContent = `Live data from Weather Underground Station ${intel.wu.stationId}`;
   }
 
-  if (intel.pulse?.mediaUrl) renderPulseMedia(intel.pulse.mediaUrl);
+  // ⭐ Unified Pulse Renderer
+  renderPulse(intel.pulse);
 
-  const preview = document.getElementById("pulse-preview");
-  if (preview && intel.pulse?.text) {
-    preview.innerText = buildPulsePreview(intel.pulse.text);
-  }
-
-  const fullText = document.getElementById("pulse-full-text");
-  if (fullText && intel.pulse?.text) {
-    fullText.innerHTML = intel.pulse.text;
-  }
-
-  const ts = document.getElementById("pulse-timestamp");
-  if (ts && intel.pulse?.timestamp) {
-    ts.textContent = formatTimeAgo(intel.pulse.timestamp);
-  }
-
-  // ⭐ DEBUG OVERLAY — placed at the very end
+  // ⭐ DEBUG OVERLAY
   const debugEl = document.getElementById("intel-debug");
   if (debugEl) {
     debugEl.textContent = JSON.stringify(intel, null, 2);
   }
 }
 
+// ============================================================
 // INIT APP
+// ============================================================
 document.addEventListener("DOMContentLoaded", initApp);
 
 async function initApp() {
@@ -146,7 +132,9 @@ async function initApp() {
   );
 }
 
+// ============================================================
 // EVENT LISTENERS
+// ============================================================
 document.addEventListener("DOMContentLoaded", () => {
   const notifBtn = document.getElementById("enable-notifications-btn");
   if (notifBtn) {
@@ -181,27 +169,6 @@ document.addEventListener("DOMContentLoaded", () => {
     comfortNowRoot.addEventListener("click", () => {
       const hourlyEl = document.getElementById("hourlyTemps");
       if (hourlyEl) hourlyEl.classList.toggle("active");
-    });
-  }
-
-  const pulseCard = document.getElementById("pulse-card");
-  const pulseToggle = document.getElementById("pulse-toggle");
-  const pulsePreview = document.getElementById("pulse-preview");
-  const pulseFull = document.getElementById("pulse-full-text");
-
-  if (pulseCard && pulseToggle) {
-    pulseToggle.addEventListener("click", () => {
-      const isExpanded = pulseCard.classList.toggle("pulse-expanded");
-      pulseToggle.setAttribute("aria-expanded", isExpanded ? "true" : "false");
-      pulseToggle.textContent = isExpanded ? "Hide update" : "Read full update";
-
-      if (!isExpanded) {
-        if (pulsePreview) pulsePreview.style.display = "block";
-        if (pulseFull) pulseFull.style.display = "none";
-      } else {
-        if (pulsePreview) pulsePreview.style.display = "none";
-        if (pulseFull) pulseFull.style.display = "block";
-      }
     });
   }
 });
