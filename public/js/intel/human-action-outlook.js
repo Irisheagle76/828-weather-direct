@@ -287,7 +287,6 @@ function fallbackOutlook(message) {
 // ------------------------------------------------------------
 // SAFE NUMBER
 // ------------------------------------------------------------
-function safeNum(v) {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
+function safeNum(val) {
+  return val !== null && val !== undefined && !isNaN(val);
 }

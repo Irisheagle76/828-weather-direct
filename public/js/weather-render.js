@@ -329,31 +329,28 @@ const action = generateHumanAction(intel.today.stats);
 // ------------------------------------------------------------
 export function renderTomorrowOutlook(intel) {
   const emojiEl = document.getElementById("tomorrow-emoji");
-  const badgeEl = document.getElementById("tomorrow-badge");
-  const badgeContainer = document.getElementById("tomorrow-badge-container");
   const headlineEl = document.getElementById("tomorrow-headline");
   const textEl = document.getElementById("tomorrow-text");
   const bulletsEl = document.getElementById("tomorrow-bullets");
 
   if (!headlineEl || !textEl || !bulletsEl) return;
 
-  const tomorrow = intel.tomorrow;
+  // ⭐ FIX: ALWAYS use builder
+  const tomorrowStats = window.buildTomorrowCurrent
+    ? window.buildTomorrowCurrent(intel)
+    : intel.tomorrow?.stats;
 
-  if (!tomorrow || !tomorrow.available) {
-    headlineEl.textContent = "No data available";
-    textEl.textContent = "";
-    bulletsEl.innerHTML = "";
-    if (badgeContainer) badgeContainer.style.display = "none";
-    if (emojiEl) emojiEl.textContent = "";
-    return;
-  }
+  if (!tomorrowStats) return;
 
-const action = generateHumanAction(intel.tomorrow.stats);
+  const action = generateHumanAction(tomorrowStats);
 
+  // Populate UI
   if (emojiEl) emojiEl.textContent = action.emoji;
   headlineEl.textContent = action.headline;
-  textEl.textContent = "";
+  textEl.textContent = action.summary;
+
   renderBullets(bulletsEl, action.bullets);
+}
 
   fitHeadlineToWidth(headlineEl);
 
@@ -490,23 +487,86 @@ export function renderTomorrowDetail(intel) {
 // ------------------------------------------------------------
 // EXPANSION PANEL TOGGLER
 // ------------------------------------------------------------
-export function toggleForecastExpanded(which, intel) {
-  const panelToday = document.getElementById("expanded-today");
-  const panelTomorrow = document.getElementById("expanded-tomorrow");
+export function toggleForecastExpanded(type, intel) {
+  const module = document.getElementById(`${type}-module`);
+  if (!module || !intel) return;
 
-  if (!panelToday || !panelTomorrow) return;
-
-  if (which === "today") {
-    const isOpen = panelToday.style.display === "block";
-    panelToday.style.display = isOpen ? "none" : "block";
-    panelTomorrow.style.display = "none";
+  // Remove existing panel (toggle behavior)
+  const existing = document.getElementById(`${type}-expanded`);
+  if (existing) {
+    existing.remove();
     return;
   }
 
-  if (which === "tomorrow") {
-    const isOpen = panelTomorrow.style.display === "block";
-    panelTomorrow.style.display = isOpen ? "none" : "block";
-    panelToday.style.display = "none";
+  // --- GET CORRECT DATA SOURCE ---
+  let stats;
+
+  if (type === "today") {
+    stats = intel.today?.stats;
+  } else if (type === "tomorrow") {
+    stats = window.buildTomorrowCurrent
+      ? window.buildTomorrowCurrent(intel)
+      : intel.tomorrow?.stats;
+  }
+
+  if (!stats) {
+    console.warn("No stats available for", type);
     return;
   }
+
+  // --- SAFE VALUE HELPERS ---
+  const safe = (v, suffix = "") =>
+    v !== null && v !== undefined && !isNaN(v) ? `${Math.round(v)}${suffix}` : "--";
+
+  const rainText = formatRainAmount(stats.rainTotal ?? 0);
+  const snowText = formatSnowAmount(stats.snowTotal ?? 0);
+
+  // --- BUILD PANEL ---
+  const panel = document.createElement("div");
+  panel.className = "expanded-panel";
+  panel.id = `${type}-expanded`;
+
+  panel.innerHTML = `
+    <div class="fx-section">
+      <div class="fx-label">High</div>
+      <div class="fx-value">${safe(stats.tempMax, "°")}</div>
+    </div>
+
+    <div class="fx-section">
+      <div class="fx-label">Low</div>
+      <div class="fx-value">${safe(stats.tempMin, "°")}</div>
+    </div>
+
+    <div class="fx-section">
+      <div class="fx-label">Wind</div>
+      <div class="fx-value">
+        ${safe(stats.windSpeed, " mph")}
+        ${
+          stats.windGust
+            ? `(gusts ${safe(stats.windGust, " mph")})`
+            : ""
+        }
+      </div>
+    </div>
+
+    <div class="fx-section">
+      <div class="fx-label">Rain</div>
+      <div class="fx-value">${rainText}</div>
+    </div>
+
+    <div class="fx-section">
+      <div class="fx-label">Snow</div>
+      <div class="fx-value">${snowText}</div>
+    </div>
+
+    <div class="fx-section">
+      <div class="fx-label">Clouds</div>
+      <div class="fx-value">
+        ${safe((stats.cloudCover ?? 0) * 100, "%")}
+      </div>
+    </div>
+  `;
+
+  // ⭐ CRITICAL FIX — place BELOW module (not inside)
+  module.parentNode.insertBefore(panel, module.nextSibling);
 }
