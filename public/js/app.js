@@ -335,29 +335,6 @@ window._hourly = hourly;
         window._intel = intel;
         window.intel = intel;
 
-// ⭐ TEMPORARY: Print intel for debugging
-try {
-  const debugPanel = document.getElementById("intel-debug");
-  if (debugPanel) {
-    const debugData = {
-      today: intel.today,
-      tomorrow: intel.tomorrow,
-
-      // Correct: hourly is an object with arrays inside
-      hourlySample: hourly?.time?.slice?.(0, 12) || [],
-
-      meta: {
-        now: new Date().toISOString(),
-        hourlyCount: hourly?.time?.length || 0,
-        keys: Object.keys(hourly || {})
-      }
-    };
-
-    debugPanel.textContent = JSON.stringify(debugData, null, 2);
-  }
-} catch (err) {
-  console.error("Debug panel error:", err);
-}
  // ⭐ UPDATEUI SECTION
 
         updateUI(intel);

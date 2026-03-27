@@ -1,5 +1,5 @@
 // /modules/human-action-2/human-action-2.js
-// Human‑Action 2.0 — Output Layer (Warm Hybrid Bullets)
+// Human‑Action 2.0 — Output Layer (Fully Integrated, All Factors Supported)
 
 import { evaluateHumanActionFactors } from "./core-engine.js?v=1.0.0";
 
@@ -11,15 +11,25 @@ export function getActionEmoji(dominantFactor) {
     heat: "🔥",
     cold: "🧊",
     wind: "🌬️",
+    mountainWind: "🌬️",
     rain: "🌧️",
+    coldRain: "🌧️",
+    warmRain: "🌦️",
     storms: "⛈️",
     snow: "❄️",
     humidity: "💧",
+    muggy: "💧",
     sun: "☀️",
     clouds: "🌤️",
     fog: "🌫️",
+    valleyFog: "🌫️",
+    ridgeFog: "🌫️",
+    freezingFog: "❄️",
+    frost: "❄️",
+    freeze: "❄️",
+    blackIce: "🧊",
     goldilocks: "🌟",
-    default: "🌟"
+    default: "🙂"
   };
 
   return map[dominantFactor] || map.default;
@@ -36,24 +46,44 @@ export function getActionHeadline(dominantFactor, data) {
       return "Chilly with a bite";
     case "wind":
       return "Breezy and changeable";
+    case "mountainWind":
+      return "Gusty ridgetop winds";
     case "rain":
       return "Damp and unsettled";
+    case "coldRain":
+      return "Cold rain with a deep chill";
+    case "warmRain":
+      return "Warm, tropical‑feeling rain";
     case "storms":
       return "Storm‑tilted and active";
     case "snow":
       return "Cold with wintry texture";
     case "humidity":
       return "Sticky and slow‑moving";
+    case "muggy":
+      return "Heavy, muggy air";
     case "sun":
       return "Bright and comfortable";
     case "clouds":
       return "Cloudy with soft light";
     case "fog":
       return "Muted and low‑visibility";
+    case "valleyFog":
+      return "Fog settled in the valleys";
+    case "ridgeFog":
+      return "Fog clinging to the ridges";
+    case "freezingFog":
+      return "Freezing fog and slick spots";
+    case "frost":
+      return "Frosty and slow to warm";
+    case "freeze":
+      return "Hard freeze early on";
+    case "blackIce":
+      return "Patchy black ice early";
     case "goldilocks":
       return "🌟 Goldilocks Day — just right!";
     default:
-      return "🌟 Goldilocks Day — just right!";
+      return "Easygoing conditions";
   }
 }
 
@@ -80,99 +110,19 @@ export function getActionBullets(dominantFactor, data) {
       );
       break;
 
-    case "smoke":
+    case "blackIce":
       bullets.push(
-        "🌫️ Regional smoke lowers visibility and adds a muted, hazy feel.",
-        "Sensitive groups may feel the air quality more — take it easy outdoors.",
-        "Windows closed and indoor air circulation help keep things comfortable."
+        "🧊 Melt‑freeze cycles create patchy black ice, especially early.",
+        "Bridges and shaded spots freeze first — take it slow.",
+        "Temps improve by late morning, but pockets of ice linger in low areas."
       );
       break;
 
-    case "haze":
+    case "freezingFog":
       bullets.push(
-        "🌫️ Haze softens the light and trims visibility across the mountains.",
-        "Expect distant ridges to look washed out through the afternoon.",
-        "Outdoor plans are fine, but breathing may feel heavier during exertion."
-      );
-      break;
-
-    case "heat":
-      bullets.push(
-        "🔥 Warm temps may feel heavier this afternoon, especially in the sun.",
-        "Light, breathable layers keep you comfortable on the move.",
-        "Hydration helps more than you think on days like this."
-      );
-      break;
-
-    case "cold":
-      bullets.push(
-        "🧊 A chilly start means a warmer layer is your friend early on.",
-        "Light wind makes it feel a touch colder than the thermometer shows.",
-        "Hands and ears appreciate a bit of extra coverage."
-      );
-      break;
-
-    case "inversion":
-      bullets.push(
-        "🌫️ A valley inversion traps cooler air low while ridges warm quickly.",
-        "Expect a noticeable temperature split between neighborhoods and elevations.",
-        "Fog or haze may linger in low spots longer than usual."
-      );
-      break;
-
-    case "uv":
-      bullets.push(
-        "☀️ Strong sun makes the day feel warmer than the thermometer suggests.",
-        "Early‑season UV can surprise you — light protection goes a long way.",
-        "Great visibility for mountain views, but glare may be sharp at midday."
-      );
-      break;
-
-    case "mountainWind":
-      bullets.push(
-        "🌬️ Mountain winds funnel through gaps and ridges, creating sudden gusts.",
-        "Secure lightweight outdoor items — gusts may spike unexpectedly.",
-        "A wind‑blocking layer helps if you're out on exposed terrain."
-      );
-      break;
-
-    case "wind":
-      bullets.push(
-        "🌬️ A steady breeze keeps the air feeling crisp and clean.",
-        "Secure lightweight items outdoors — gusts pick up midday.",
-        "A light layer helps if you're sensitive to moving air."
-      );
-      break;
-
-    case "rain":
-      bullets.push(
-        "🌧️ Intermittent showers make a light rain shell a smart grab‑and‑go.",
-        "Surfaces stay slick longer today — take corners with care.",
-        "Humidity rises through the day, adding a mild heaviness."
-      );
-      break;
-
-    case "coldRain":
-      bullets.push(
-        "🌧️ Cold rain adds a bone‑deep chill that cuts through light layers.",
-        "A waterproof shell and warm under‑layer make a big difference.",
-        "Surfaces stay slick longer, especially in shaded or leaf‑covered areas."
-      );
-      break;
-
-    case "storms":
-      bullets.push(
-        "⛈️ Storm energy builds, especially in the afternoon hours.",
-        "Have a quick indoor backup plan if you're timing outdoor errands.",
-        "Wind and lightning may spike briefly as cells pass."
-      );
-      break;
-
-    case "warmRain":
-      bullets.push(
-        "🌦️ Warm, tropical‑feeling rain adds a slow, heavy feel to the air.",
-        "A light rain shell keeps you comfortable without overheating.",
-        "Expect quick downpours and fast‑changing conditions through the day."
+        "❄️ Freezing fog creates thin, sneaky ice on bridges and elevated surfaces.",
+        "Drive gently — traction can change quickly in shaded areas.",
+        "A warm layer helps until temps climb above freezing."
       );
       break;
 
@@ -192,11 +142,35 @@ export function getActionBullets(dominantFactor, data) {
       );
       break;
 
-    case "snow":
+    case "mountainWind":
       bullets.push(
-        "❄️ Light snow adds texture and reduces visibility at times.",
-        "A warm layer and good footing make outdoor time easier.",
-        "Roads may stay damp or slick in shaded spots."
+        "🌬️ Gusty ridgetop winds create sudden, sharp bursts of movement.",
+        "Secure lightweight outdoor items — gusts may spike unexpectedly.",
+        "A wind‑blocking layer helps if you're out on exposed terrain."
+      );
+      break;
+
+    case "wind":
+      bullets.push(
+        "🌬️ A steady breeze keeps the air feeling crisp and clean.",
+        "Secure lightweight items outdoors — gusts pick up midday.",
+        "A light layer helps if you're sensitive to moving air."
+      );
+      break;
+
+    case "cold":
+      bullets.push(
+        "🧊 A chilly start means a warmer layer is your friend early on.",
+        "Light wind makes it feel a touch colder than the thermometer shows.",
+        "Hands and ears appreciate a bit of extra coverage."
+      );
+      break;
+
+    case "heat":
+      bullets.push(
+        "🔥 Warm temps may feel heavier this afternoon, especially in the sun.",
+        "Light, breathable layers keep you comfortable on the move.",
+        "Hydration helps more than you think on days like this."
       );
       break;
 
@@ -208,6 +182,54 @@ export function getActionBullets(dominantFactor, data) {
       );
       break;
 
+    case "muggy":
+      bullets.push(
+        "💧 High dew points make the air feel heavy and slow‑moving.",
+        "Breathable fabrics help keep things comfortable on the move.",
+        "Expect surfaces and hair to hold moisture longer than usual."
+      );
+      break;
+
+    case "rain":
+      bullets.push(
+        "🌧️ Intermittent showers make a light rain shell a smart grab‑and‑go.",
+        "Surfaces stay slick longer today — take corners with care.",
+        "Humidity rises through the day, adding a mild heaviness."
+      );
+      break;
+
+    case "coldRain":
+      bullets.push(
+        "🌧️ Cold rain adds a bone‑deep chill that cuts through light layers.",
+        "A waterproof shell and warm under‑layer make a big difference.",
+        "Surfaces stay slick longer, especially in shaded or leaf‑covered areas."
+      );
+      break;
+
+    case "warmRain":
+      bullets.push(
+        "🌦️ Warm, tropical‑feeling rain adds a slow, heavy feel to the air.",
+        "A light rain shell keeps you comfortable without overheating.",
+        "Expect quick downpours and fast‑changing conditions through the day."
+      );
+      break;
+
+    case "storms":
+      bullets.push(
+        "⛈️ Storm energy builds, especially in the afternoon hours.",
+        "Have a quick indoor backup plan if you're timing outdoor errands.",
+        "Wind and lightning may spike briefly as cells pass."
+      );
+      break;
+
+    case "snow":
+      bullets.push(
+        "❄️ Light snow adds texture and reduces visibility at times.",
+        "A warm layer and good footing make outdoor time easier.",
+        "Roads may stay damp or slick in shaded spots."
+      );
+      break;
+
     case "sun":
       bullets.push(
         "☀️ Bright sun keeps the day feeling clean and comfortable.",
@@ -216,35 +238,11 @@ export function getActionBullets(dominantFactor, data) {
       );
       break;
 
-    case "freezingFog":
-      bullets.push(
-        "❄️ Freezing fog creates thin, sneaky ice on bridges and elevated surfaces.",
-        "Drive gently — traction can change quickly in shaded areas.",
-        "A warm layer helps until temps climb above freezing."
-      );
-      break;
-
-    case "blackIce":
-      bullets.push(
-        "🧊 Melt‑freeze cycles create patchy black ice, especially early.",
-        "Bridges and shaded spots freeze first — take it slow.",
-        "Temps improve by late morning, but pockets of ice linger in low areas."
-      );
-      break;
-
     case "clouds":
       bullets.push(
         "🌤️ Soft cloud cover keeps temps steady and mild.",
         "A light layer helps early, especially in shaded areas.",
-        "Low contrast light makes outdoor tasks easy on the eyes."
-      );
-      break;
-
-    case "muggy":
-      bullets.push(
-        "💧 High dew points make the air feel heavy and slow‑moving.",
-        "Breathable fabrics help keep things comfortable on the move.",
-        "Expect surfaces and hair to hold moisture longer than usual."
+        "Low‑contrast light makes outdoor tasks easy on the eyes."
       );
       break;
 
@@ -266,9 +264,9 @@ export function getActionBullets(dominantFactor, data) {
 
     default:
       bullets.push(
-        "🌟 A beautifully balanced day with no major weather drivers.",
-        "Windows‑open comfort — perfect for errands, walks, or a slow afternoon.",
-        "Light layers are optional, and outdoor plans feel effortless."
+        "🙂 A mild, steady feel with no major weather drivers.",
+        "Light layers work well from morning through afternoon.",
+        "Outdoor plans are smooth and flexible throughout the day."
       );
       break;
   }
@@ -288,11 +286,48 @@ export function assembleHumanActionOutput(emoji, headline, bullets, dominantFact
 // ---------------------------------------------------------
 export function generateHumanAction(data) {
   const result = evaluateHumanActionFactors(data);
-  const { dominantFactor } = result;
 
-  const emoji = getActionEmoji(dominantFactor);
-  const headline = getActionHeadline(dominantFactor, data);
-  const bullets = getActionBullets(dominantFactor, data);
+// ---------------------------------------------------------
+// Diagnostic Logger (Color‑Coded)
+// ---------------------------------------------------------
+if (typeof window !== "undefined") {
+  const isHybrid = data && data.morning && data.afternoon;
+  const label = isHybrid ? "TOMORROW (Hybrid)" : "TODAY (Single Snapshot)";
 
-  return assembleHumanActionOutput(emoji, headline, bullets, dominantFactor);
+  // Color map by factor severity / vibe
+  const colorMap = {
+    heat: "color:#d9534f;font-weight:bold",          // red
+    cold: "color:#5bc0de;font-weight:bold",          // icy blue
+    freeze: "color:#0275d8;font-weight:bold",        // deep blue
+    frost: "color:#5bc0de;font-weight:bold",         // light blue
+    blackIce: "color:#000000;background:#a6e1fa;padding:2px 4px;border-radius:3px", // high contrast
+    wind: "color:#5bc0de;font-weight:bold",
+    mountainWind: "color:#0275d8;font-weight:bold",
+    rain: "color:#5cb85c;font-weight:bold",          // green
+    coldRain: "color:#0275d8;font-weight:bold",
+    warmRain: "color:#f0ad4e;font-weight:bold",      // warm gold
+    storms: "color:#d9534f;font-weight:bold",
+    snow: "color:#5bc0de;font-weight:bold",
+    humidity: "color:#5cb85c;font-weight:bold",
+    muggy: "color:#f0ad4e;font-weight:bold",
+    fog: "color:#999;font-weight:bold",
+    valleyFog: "color:#999;font-weight:bold",
+    ridgeFog: "color:#999;font-weight:bold",
+    freezingFog: "color:#0275d8;font-weight:bold",
+    sun: "color:#f0ad4e;font-weight:bold",
+    clouds: "color:#999;font-weight:bold",
+    inversion: "color:#999;font-weight:bold",
+    goldilocks: "color:#f7c873;font-weight:bold",
+    default: "color:#666;font-weight:bold"
+  };
+
+  const style = colorMap[result.dominantFactor] || "color:#666;font-weight:bold";
+
+  console.group(`🔍 %cHuman‑Action Debug — ${label}`, "color:#444;font-weight:bold");
+  console.log("%cDominant Factor:", "color:#888", `%c${result.dominantFactor}`, style);
+  console.log("%cSecondary Factors:", "color:#888", result.secondaryFactors);
+  console.log("%cConfidence:", "color:#888", result.confidence);
+  console.log("%cRaw Input:", "color:#888", data);
+  console.log("%cEngine Result:", "color:#888", result);
+  console.groupEnd();
 }
