@@ -426,10 +426,8 @@ export function renderTodayOutlook(intel) {
 
   // 🧠 REMAINDER LABEL
   if (remainderLabel) {
-    remainderLabel.style.display =
-      hour >= 15 && remainder && remainder.statsRemainder
-        ? "block"
-        : "none";
+  remainderLabel.style.display =
+  hour >= 15 ? "block" : "none";
   }
 
   // 🎯 RENDER
