@@ -1327,6 +1327,19 @@
     }
 
     /* ============================================================
+   FIX: Prevent global .pulse-media rules from overriding Pulse
+   ============================================================ */
+
+.pulse-card .pulse-media {
+  width: unset;
+  height: unset;
+  aspect-ratio: unset;
+  box-shadow: unset;
+  border-radius: 8px;
+}
+
+
+    /* ============================================================
      FOOTER
   ============================================================ */
     .footer-note {
