@@ -3,14 +3,6 @@
 // RAW WEATHER FETCH LAYER — Unified fetchAllIntel()
 // ============================================================
 
-import {
-  getNearestWUStation,
-  getWUCurrentConditions,
-  getTempestDeviceObs,
-  getShortTermForecast,
-  getMRMSPixel
-} from "./weather-fetch.js"; // adjust path if needed
-
 /**
  * Unified raw intel fetcher.
  * Returns ONLY raw, normalized data — no sky logic, no UV logic.
@@ -72,4 +64,56 @@ export async function fetchAllIntel({
   }
 
   return result;
+}
+
+// ============================================================
+// WEATHER UNDERGROUND — nearest station + current conditions
+// ============================================================
+
+export async function getNearestWUStation(lat, lon) {
+  const url = `/api/wu/nearest?lat=${lat}&lon=${lon}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("WU nearest station lookup failed");
+  return res.json();
+}
+
+export async function getWUCurrentConditions(stationId) {
+  const url = `/api/wu/current?stationId=${stationId}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("WU current conditions failed");
+  return res.json();
+}
+
+// ============================================================
+// TEMPEST — device observations
+// ============================================================
+
+export async function getTempestDeviceObs(deviceId, token) {
+  const url = `/api/tempest/device?deviceId=${deviceId}&token=${token}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Tempest device obs failed");
+  return res.json();
+}
+
+// ============================================================
+// OPEN‑METEO — short‑term hourly forecast (3 days)
+// ============================================================
+
+export async function getShortTermForecast(lat, lon) {
+  const url = `/api/openmeteo/hourly?lat=${lat}&lon=${lon}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Open‑Meteo hourly forecast failed");
+  return res.json();
+}
+
+// ============================================================
+// MRMS — placeholder pixel fetcher
+// ============================================================
+
+export async function getMRMSPixel(lat, lon) {
+  // Placeholder until real MRMS endpoint is wired
+  return {
+    precipRate: 0,
+    timestamp: Date.now()
+  };
 }
