@@ -114,11 +114,15 @@ export function renderPulse(pulse) {
       const firstSentence = fullText.split(". ")[0] + ".";
       const rest = fullText.replace(firstSentence, "");
 
-      const expandedMedia = isVideo
-        ? `<video autoplay loop muted playsinline class="pulse-expanded-img">
-             <source src="${optimizedSrc}" type="video/mp4">
-           </video>`
-        : `<img src="${optimizedSrc}" class="pulse-expanded-img" />`;
+    const expandedMedia = isVideo
+  ? `<div class="pulse-media">
+       <video autoplay loop muted playsinline>
+         <source src="${optimizedSrc}" type="video/mp4">
+       </video>
+     </div>`
+  : `<div class="pulse-media">
+       <img src="${optimizedSrc}" />
+     </div>`;
 
       fullTextEl.innerHTML = `
         <div class="pulse-expanded-content">
