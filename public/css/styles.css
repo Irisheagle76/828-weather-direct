@@ -743,6 +743,79 @@
 .fx-tile:nth-child(5) .fx-top { color: #64b5f6; } /* rain */
 .fx-tile:nth-child(6) .fx-top { color: #e1f5fe; } /* snow */
 
+/*============================================================
+     UV INDEX COLORS
+  ============================================================ */
+    #wU-uv,
+    #wu-uv {
+      font-size: 1.45rem;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .uv-low {
+      color: #4caf50;
+    }
+
+    .uv-moderate {
+      color: #ffeb3b;
+    }
+
+    .uv-high {
+      color: #ff9800;
+    }
+
+    .uv-very-high {
+      color: #f44336;
+    }
+
+    .uv-extreme {
+      color: #9c27b0;
+    }
+
+    /* ============================================================
+     TEMPERATURE + DEW POINT COLOR SCALES
+  ============================================================ */
+    .temp-freezing {
+      color: #4dabf7;
+    }
+
+    .temp-cold {
+      color: #74c0fc;
+    }
+
+    .temp-cool {
+      color: #a5d8ff;
+    }
+
+    .temp-mild {
+      color: #ffd43b;
+    }
+
+    .temp-warm {
+      color: #ffa94d;
+    }
+
+    .temp-hot {
+      color: #ff6b6b;
+    }
+
+    .dew-dry {
+      color: #74c0fc;
+    }
+
+    .dew-comfort {
+      color: #ffd43b;
+    }
+
+    .dew-humid {
+      color: #ffa94d;
+    }
+
+    .dew-tropical {
+      color: #ff6b6b;
+    }
+
 /* =========================================
    MOBILE
 ========================================= */
@@ -829,82 +902,9 @@
   transform: scale(1.06);
   filter: brightness(1.05);
 }
-
-/*============================================================
-     UV INDEX COLORS
-  ============================================================ */
-    #wU-uv,
-    #wu-uv {
-      font-size: 1.45rem;
-      font-weight: 700;
-      text-align: center;
-    }
-
-    .uv-low {
-      color: #4caf50;
-    }
-
-    .uv-moderate {
-      color: #ffeb3b;
-    }
-
-    .uv-high {
-      color: #ff9800;
-    }
-
-    .uv-very-high {
-      color: #f44336;
-    }
-
-    .uv-extreme {
-      color: #9c27b0;
-    }
-
-    /* ============================================================
-     TEMPERATURE + DEW POINT COLOR SCALES
-  ============================================================ */
-    .temp-freezing {
-      color: #4dabf7;
-    }
-
-    .temp-cold {
-      color: #74c0fc;
-    }
-
-    .temp-cool {
-      color: #a5d8ff;
-    }
-
-    .temp-mild {
-      color: #ffd43b;
-    }
-
-    .temp-warm {
-      color: #ffa94d;
-    }
-
-    .temp-hot {
-      color: #ff6b6b;
-    }
-
-    .dew-dry {
-      color: #74c0fc;
-    }
-
-    .dew-comfort {
-      color: #ffd43b;
-    }
-
-    .dew-humid {
-      color: #ffa94d;
-    }
-
-    .dew-tropical {
-      color: #ff6b6b;
-    }
 /* ============================================================
-   828 WEATHER PULSE MODULE — FINAL CONSOLIDATED CSS
-   ============================================================ */
+   828 WEATHER PULSE MODULE — CLEAN FIXED VERSION
+============================================================ */
 
 .pulse-module {
   margin: var(--gap) auto 0;
@@ -931,71 +931,80 @@
 .pulse-header {
   margin-bottom: 0.55rem;
   animation: pulseHeartbeat 3s ease-in-out infinite;
-  transform-origin: center;
 }
 
 .pulse-title {
   font-size: 0.98rem;
   font-weight: 600;
-  margin: 0;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #8fb7ff;
 }
 
-.pulse-badge-pill {
-  display: inline-block;
-  margin-top: 0.25rem;
-  padding: 2px 10px;
-  border-radius: 9999px;
-  background: rgba(255, 169, 77, 0.16);
-  border: 1px solid rgba(255, 169, 77, 0.55);
-  font-size: 0.72rem;
-  color: #ffa94d;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  animation: pulseGlow 3s ease-in-out infinite;
-}
-
 .pulse-timestamp {
-  margin-top: 0.25rem;
   font-size: 0.8rem;
   color: #b9c7f5;
 }
 
 /* ============================================================
-   COLLAPSED VIEW — Thumbnail + Preview
-   ============================================================ */
+   COLLAPSED VIEW
+============================================================ */
 
 .pulse-body {
-  display: block;   /* 🔥 was flex */
+  display: block;
   margin-top: 0.65rem;
 }
 
+/* Thumbnail */
 .pulse-media {
   float: left;
-  width: 140px;
-  height: 140px;
+  width: 150px;
+  height: 150px;
   margin: 0 12px 8px 0;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.45);
 }
 
+/* Media */
+.pulse-media img,
+.pulse-media video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.35s ease;
+}
+
+/* Hover zoom (desktop only) */
+@media (hover: hover) and (pointer: fine) {
+  .pulse-card:hover .pulse-media img,
+  .pulse-card:hover .pulse-media video {
+    transform: scale(1.06);
+  }
+}
+
+/* Clear float */
 .pulse-body::after {
   content: "";
   display: table;
   clear: both;
 }
 
-/* =============================================================
-   FADE OUT INTO BUTTON
-   ============================================================*/
-
+/* Preview text */
 .pulse-preview {
   position: relative;
-  max-height: 5.6em; /* ~4 lines */
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+
   overflow: hidden;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: #d8dff7;
 }
 
-/* fade overlay */
+/* Gradient fade */
 .pulse-preview::after {
   content: "";
   position: absolute;
@@ -1003,49 +1012,10 @@
   left: 0;
   right: 0;
   height: 2.2em;
-
-  background: linear-gradient(
-    to bottom,
-    rgba(20, 26, 42, 0),
-    rgba(20, 26, 42, 0.95)
-  );
-  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(20,26,42,0), rgba(20,26,42,0.95));
 }
 
-.pulse-preview {
-  display: -webkit-box;
-  -webkit-line-clamp: 4;        /* 🔥 magic */
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* Thumbnail container */
-.pulse-media {
-  width: 160px;   /* increased from 120px */
-  height: 160px;  /* increased from 120px */
-  border-radius: 8px;
-  overflow: hidden;
-  flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
-}
-
-/* Media inside thumbnail */
-.pulse-media img,
-.pulse-media video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  border-radius: 8px;
-}
-
-.pulse-preview {
-  flex: 1;
-  font-size: 0.88rem;
-  color: #d8dff7;
-  line-height: 1.45;
-}
-
+/* Toggle button */
 .pulse-toggle {
   margin-top: 0.75rem;
   padding: 4px 12px;
@@ -1054,54 +1024,40 @@
   border-radius: 999px;
   color: #8fb7ff;
   font-size: 0.78rem;
-  cursor: pointer;
-  transition: background 0.25s ease, border-color 0.25s ease;
-}
-
-.pulse-toggle:hover {
-  background: rgba(143, 183, 255, 0.22);
-  border-color: rgba(143, 183, 255, 0.55);
 }
 
 /* ============================================================
-   EXPANDED VIEW — Full Hero + Full Text
-   ============================================================ */
+   EXPANDED VIEW (FIXED)
+============================================================ */
 
 .pulse-expanded .pulse-body {
-  flex-direction: column;
-  max-width: 100%;
-}
-
-/* Expanded container */
-/* Container */
-.pulse-expanded .pulse-media {
-  width: 100%;
-  max-width: 460px;        /* 🔥 reduce size (main fix) */
-  margin: 0 auto 10px;
-  border-radius: 12px;
-  overflow: hidden;
-  aspect-ratio: 16 / 9;    /* 🔥 enforce 16:9 */
-}
-
-/* Image / video */
-.pulse-expanded .pulse-media img,
-.pulse-expanded .pulse-media video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;       /* keeps crop clean */
   display: block;
 }
 
+/* ✅ FIXED IMAGE BEHAVIOR */
 .pulse-expanded .pulse-media {
-  max-height: 360px;
+  float: none;
+  width: 100%;
+  max-width: 460px;     /* 🔥 controls size */
+  margin: 0 auto 12px;
+  border-radius: 12px;
 }
 
-/* Hide preview when expanded */
+/* ✅ CRITICAL FIX */
+.pulse-expanded .pulse-media img,
+.pulse-expanded .pulse-media video {
+  width: 100%;
+  height: auto;         /* 🔥 prevents stretching */
+  max-height: 260px;    /* 🔥 keeps it compact */
+  object-fit: cover;
+}
+
+/* Hide preview */
 .pulse-expanded .pulse-preview {
   display: none;
 }
 
-/* Full text block */
+/* Full text */
 .pulse-full-text {
   display: none;
   font-size: 0.95rem;
@@ -1109,15 +1065,11 @@
   color: #e5e7eb;
   margin-top: 0.75rem;
 }
-.pulse-expanded .pulse-full-text {
-  max-width: 620px;
-  margin: 0 auto;
-}
 
 .pulse-expanded .pulse-full-text {
   display: block;
-  max-width: 620px;   /* 🔥 add this */
-  margin: 0 auto;     /* 🔥 and this */
+  max-width: 620px;
+  margin: 8px auto 0;
 }
 
 /* Visited link color inside Pulse full text */
@@ -1325,19 +1277,6 @@
       border-radius: 50%;
       opacity: 0.9;
     }
-
-    /* ============================================================
-   FIX: Prevent global .pulse-media rules from overriding Pulse
-   ============================================================ */
-
-.pulse-card .pulse-media {
-  width: unset;
-  height: unset;
-  aspect-ratio: unset;
-  box-shadow: unset;
-  border-radius: 8px;
-}
-
 
     /* ============================================================
      FOOTER
