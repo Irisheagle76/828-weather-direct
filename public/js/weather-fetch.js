@@ -100,7 +100,7 @@ export async function getTempestDeviceObs(deviceId, token) {
 // ============================================================
 
 export async function getShortTermForecast(lat, lon) {
-  const url = /api/weather?type=hourly&lat=${lat}&lon=${lon}`);
+  const url = `/api/weather?type=hourly&lat=${lat}&lon=${lon}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Open‑Meteo hourly forecast failed");
   return res.json();
