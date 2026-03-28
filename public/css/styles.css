@@ -1014,7 +1014,7 @@
 
 .pulse-preview {
   display: -webkit-box;
-  -webkit-line-clamp: 3;        /* 🔥 magic */
+  -webkit-line-clamp: 4;        /* 🔥 magic */
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1072,20 +1072,22 @@
   max-width: 100%;
 }
 
-/* Full hero */
+/* Expanded container */
 .pulse-expanded .pulse-media {
   width: 100%;
-  height: auto;
-  max-height: 360px;
+  max-width: 520px;   /* 🔥 controls size */
+  margin: 0 auto 12px;
   border-radius: 12px;
-  margin-bottom: 0.75rem;
+  overflow: hidden;
 }
 
+/* Image/video behavior */
 .pulse-expanded .pulse-media img,
 .pulse-expanded .pulse-media video {
   width: 100%;
-  height: auto;   /* 🔥 key fix */
+  height: auto;        /* 🔥 critical */
   object-fit: cover;
+  display: block;
 }
 
 .pulse-expanded .pulse-media {
