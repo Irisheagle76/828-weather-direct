@@ -1,0 +1,30 @@
+.action-module {
+  align-items: flex-start;
+  background: rgba(120, 180, 255, 0.10);
+  border: 2px solid rgba(120, 180, 255, 0.18);
+  border-radius: var(--module-radius);
+  display: flex;
+  gap: 0.9rem;
+  min-width: 0;
+  padding: var(--module-padding);
+}
+
+.action-emoji {
+  font-size: 1.9rem;
+  margin-top: 20px;
+}
+
+.action-label {
+  color: #8fb7ff;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.action-headline {
+  color: #ffffff;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 

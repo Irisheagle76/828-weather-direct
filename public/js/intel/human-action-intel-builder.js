@@ -1,0 +1,156 @@
+// /intel/human-action-intel-builder.js
+// ============================================================
+// HUMAN‑ACTION INTEL BUILDER — Raw → Snapshots → Engine
+// Produces { today, tomorrow } for the renderer.
+// ============================================================
+
+import { evaluateHumanActionFactors } from "../modules/human-action-2/core-engine.js";
+
+// ------------------------------------------------------------
+// MAIN BUILDER
+// ------------------------------------------------------------
+export function buildHumanActionIntel(raw) {
+  if (!raw || !raw.hourly || !Array.isArray(raw.hourly.hourly)) {
+    return {
+      today: null,
+      tomorrow: null
+    };
+  }
+
+  const hourly = raw.hourly.hourly;
+
+  // ------------------------------------------------------------
+  // 1. TODAY — use the current snapshot (hour 0)
+  // ------------------------------------------------------------
+  const current = hourly[0];
+  const todaySnapshot = normalizeSnapshot(current);
+
+  const todayIntel = evaluateHumanActionFactors(todaySnapshot);
+
+  // ------------------------------------------------------------
+  // 2. TOMORROW — build morning + afternoon hybrid
+  // ------------------------------------------------------------
+  const tomorrow = buildTomorrowSnapshots(hourly);
+  const tomorrowIntel = evaluateHumanActionFactors(tomorrow);
+
+  return {
+    today: {
+      ...todayIntel,
+      snapshot: todaySnapshot
+    },
+    tomorrow: {
+      ...tomorrowIntel,
+      snapshot: tomorrow
+    }
+  };
+}
+
+// ------------------------------------------------------------
+// NORMALIZE A SINGLE SNAPSHOT
+// ------------------------------------------------------------
+function normalizeSnapshot(h) {
+  return {
+    temp: h.temperature,
+    feelsLike: h.apparent_temperature,
+    dewpoint: h.dewpoint,
+    humidity: h.relative_humidity,
+    windSpeed: h.wind_speed,
+    windGust: h.wind_gust,
+    precipType: h.precipitation > 0 ? (h.snowfall > 0 ? "snow" : "rain") : "none",
+    precipIntensity: h.precipitation,
+    uvIndex: h.uv_index,
+    visibility: h.visibility,
+    cloudCover: h.cloud_cover,
+    smokeIndex: h.smoke_index,
+    frostRisk: h.frost_risk,
+    freezeRisk: h.freeze_risk,
+    inversionRisk: h.inversion_risk,
+    blackIceRisk: h.black_ice_risk,
+    valleyFogRisk: h.valley_fog_risk,
+    ridgeFogRisk: h.ridge_fog_risk,
+    timestamp: h.timestamp
+  };
+}
+
+// ------------------------------------------------------------
+// TOMORROW SNAPSHOTS (Morning + Afternoon)
+// ------------------------------------------------------------
+function buildTomorrowSnapshots(hourly) {
+  const tomorrowHours = hourly.slice(24, 48);
+
+  const morning = averageWindow(tomorrowHours.slice(0, 6));
+  const afternoon = averageWindow(tomorrowHours.slice(6, 12));
+
+  const stats = computeTomorrowStats(tomorrowHours);
+
+  return {
+    morning: normalizeSnapshot(morning),
+    afternoon: normalizeSnapshot(afternoon),
+    stats
+  };
+}
+
+// ------------------------------------------------------------
+// AVERAGE A WINDOW OF HOURLY DATA
+// ------------------------------------------------------------
+function averageWindow(hours) {
+  const avg = (key) => hours.reduce((a, h) => a + (h[key] ?? 0), 0) / hours.length;
+
+  return {
+    temperature: avg("temperature"),
+    apparent_temperature: avg("apparent_temperature"),
+    dewpoint: avg("dewpoint"),
+    relative_humidity: avg("relative_humidity"),
+    wind_speed: avg("wind_speed"),
+    wind_gust: avg("wind_gust"),
+    precipitation: avg("precipitation"),
+    snowfall: avg("snowfall"),
+    uv_index: avg("uv_index"),
+    visibility: avg("visibility"),
+    cloud_cover: avg("cloud_cover"),
+    smoke_index: avg("smoke_index"),
+    frost_risk: avg("frost_risk"),
+    freeze_risk: avg("freeze_risk"),
+    inversion_risk: avg("inversion_risk"),
+    black_ice_risk: avg("black_ice_risk"),
+    valley_fog_risk: avg("valley_fog_risk"),
+    ridge_fog_risk: avg("ridge_fog_risk"),
+    timestamp: hours[0].timestamp
+  };
+}
+
+// ------------------------------------------------------------
+// TOMORROW STATS (Temp swing, wind impact, cold start)
+// ------------------------------------------------------------
+function computeTomorrowStats(hours) {
+  const temps = hours.map(h => h.temperature);
+  const gusts = hours.map(h => h.wind_gust);
+  const winds = hours.map(h => h.wind_speed);
+
+  const tempMin = Math.min(...temps);
+  const tempMax = Math.max(...temps);
+  const tempSwing = tempMax - tempMin;
+
+  const windGustMax = Math.max(...gusts);
+  const windAvg = winds.reduce((a, b) => a + b, 0) / winds.length;
+
+  const dewpointAvg = hours.reduce((a, h) => a + (h.dewpoint ?? 0), 0) / hours.length;
+  const cloudAvg = hours.reduce((a, h) => a + (h.cloud_cover ?? 0), 0) / hours.length;
+
+  const rainTotal = hours.reduce((a, h) => a + (h.precipitation ?? 0), 0);
+  const snowTotal = hours.reduce((a, h) => a + (h.snowfall ?? 0), 0);
+
+  return {
+    tempMin,
+    tempMax,
+    tempSwing,
+    windGustMax,
+    windAvg,
+    dewpointAvg,
+    cloudAvg,
+    rainTotal,
+    snowTotal,
+    coldStart: tempMin <= 40,
+    windImpact: windGustMax >= 30
+  };
+}

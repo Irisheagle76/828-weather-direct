@@ -1,215 +1,298 @@
 // /intel/synthesizer.js
-// Human‑Action Outlook Generator — Sky‑Aware Edition
+// Human‑Action 2.x Premium Narrative Generator — Tomorrow‑Aware Edition
 
 // ------------------------------------------------------------
-// MAIN OUTLOOK (Today / Tonight / Tomorrow)
+// MAIN ENTRY
 // ------------------------------------------------------------
-export function synthesizePeriod(periodName, { morning, afternoon, evening, stats, events, sky }) {
-  if (!stats) {
+export function generateNarrative(intel, isTomorrow = false) {
+  if (!intel) {
     return {
-      headline: "No data available",
-      narrative: "",
+      emoji: "🌤️",
+      title: "A steady, uncomplicated day",
+      main: "Conditions stay manageable with no strong weather drivers.",
       bullets: []
     };
   }
 
-  const trends = detectTrends(stats, events, sky);
-  const emoji = pickEmoji(events, trends, sky);
-
-  return {
-    headline: generateHeadline(stats, events, trends, sky, emoji),
-    narrative: generateNarrative(stats, events, trends, sky),
-    bullets: generateBullets(stats, events, sky)
-  };
-}
-
-// ------------------------------------------------------------
-// HEADLINE
-// ------------------------------------------------------------
-function generateHeadline(stats, events, trends, sky, emoji) {
-  const d = events?.driver;
-
-  const baseMap = {
-    rain: "A damp, drizzly kind of day",
-    snow: "Snowy vibes ahead",
-    wind: "A breezy, lively day",
-    hot: "Warm and energetic",
-    cold: "A chilly, layered kind of day",
-    goldilocks: "A genuinely pleasant day",
-    easy: "A calm, manageable day"
-  };
-
-  let base = baseMap[d] ?? "A steady, uncomplicated day";
-
-  // Sky‑aware overrides
-  if (sky?.cloudState === "overcast") base = "A gray, muted kind of day";
-  if (sky?.cloudState === "mostly clear") base = "A brighter, more open-feeling day";
-  if (events?.fogRisk) base = "A fog‑prone start";
-  if (events?.hazyMorning) base = "A hazy, filtered morning";
-
-  // Trend overrides
-  if (trends.includes("bigWarmup")) base = "A day that warms up nicely";
-  if (trends.includes("coolingOff")) base = "A cooler, more settled day";
-  if (trends.includes("brightening")) base = "A day that tries to brighten";
-  if (trends.includes("cloudy")) base = "A gray, moody kind of day";
-
-  return `${emoji} ${base}`;
-}
-
-// ------------------------------------------------------------
-// NARRATIVE
-// ------------------------------------------------------------
-function generateNarrative(stats, events, trends, sky) {
-  const parts = [];
-
-  // Temperature
-  parts.push(buildTempPhrase(stats.tempMin, stats.tempMax));
-
-  // Wind
-  parts.push(buildWindPhrase(stats.windGustMax));
-
-  // Precipitation
-  parts.push(buildPrecipPhrase(stats.rainTotal, stats.snowTotal));
-
-  // Sky‑aware cloud phrasing
-  parts.push(buildSkyPhrase(stats, sky, events));
-
-  // Trend‑based nuance
-  if (trends.includes("bigWarmup")) parts.push("The day warms noticeably as it goes.");
-  if (trends.includes("coolingOff")) parts.push("Temperatures ease downward into a cooler feel.");
-  if (trends.includes("gusty")) parts.push("Winds get lively at times.");
-  if (trends.includes("calming")) parts.push("Winds ease back later on.");
-  if (trends.includes("brightening")) parts.push("Skies may try to brighten.");
-  if (trends.includes("cloudy")) parts.push("Clouds hold firm for much of the day.");
-
-  return parts.filter(Boolean).join(" ").trim();
-}
-
-// ------------------------------------------------------------
-// BULLETS
-// ------------------------------------------------------------
-function generateBullets(stats, events, sky) {
-  const bullets = [];
-
-  // Temperature guidance
-  if (stats.tempMax <= 40) bullets.push("Dress warm — layers help.");
-  else if (stats.tempMax <= 55) bullets.push("A jacket is a smart move.");
-  else if (stats.tempMax >= 80) bullets.push("Light clothing keeps things comfortable.");
-
-  // Wind
-  if (stats.windGustMax >= 35) bullets.push("Expect a few pushy gusts.");
-  else if (stats.windGustMax >= 20) bullets.push("A breezy afternoon may nudge you around.");
-
-  // Precip
-  if (stats.rainTotal >= 0.25) bullets.push("Keep rain gear handy.");
-  else if (stats.rainTotal > 0) bullets.push("A quick shower is possible.");
-
-  // Snow
-  if (stats.snowTotal >= 0.5) bullets.push("Watch for slick spots early.");
-  else if (stats.snowTotal > 0) {
-    const options = [
-      "A touch of snow early in the day.",
-      "A light dusting to start things off.",
-      "Snowflakes could make a morning appearance."
-    ];
-    bullets.push(options[Math.floor(Math.random() * options.length)]);
+  // TODAY: single snapshot
+  if (!isTomorrow) {
+    return generateTodayNarrative(intel);
   }
 
-  // Sky‑aware bullets
-  if (sky?.cloudState === "overcast") bullets.push("Skies stay mostly gray.");
-  if (sky?.cloudState === "mostly clear") bullets.push("Some brighter breaks possible.");
-  if (events?.sunnyBreak) bullets.push("A few sunny breaks help lift the mood.");
-  if (events?.filteredSun) bullets.push("Filtered sun peeks through at times.");
-  if (events?.fogRisk) bullets.push("Fog may linger in sheltered valleys.");
-  if (events?.hazyMorning) bullets.push("Haze may soften the morning light.");
-  if (events?.uvRisk) bullets.push("Midday UV runs on the higher side.");
+  // TOMORROW: morning + afternoon + stats
+  return generateTomorrowNarrative(intel);
+}
+
+// ------------------------------------------------------------
+// TODAY NARRATIVE
+// ------------------------------------------------------------
+function generateTodayNarrative(intel) {
+  const { dominantFactor, secondaryFactors, confidence, notes, snapshot } = intel;
+
+  const emoji = pickEmoji(dominantFactor, secondaryFactors, snapshot);
+  const title = pickTitle(dominantFactor, snapshot);
+  const main = buildMainNarrative(dominantFactor, secondaryFactors, notes, snapshot, confidence);
+  const bullets = buildBullets(dominantFactor, secondaryFactors, snapshot, confidence);
+
+  return { emoji, title, main, bullets };
+}
+
+// ------------------------------------------------------------
+// TOMORROW NARRATIVE — Morning + Afternoon + Stats
+// ------------------------------------------------------------
+function generateTomorrowNarrative(intel) {
+  const { morning, afternoon, stats } = intel;
+
+  const dominant = intel.dominantFactor;
+  const secondary = intel.secondaryFactors;
+  const confidence = intel.confidence;
+  const notes = intel.notes;
+
+  const emoji = pickEmoji(dominant, secondary, morning);
+  const title = pickTomorrowTitle(dominant, morning, afternoon, stats);
+
+  const main = buildTomorrowMain(morning, afternoon, stats, notes, dominant);
+  const bullets = buildTomorrowBullets(morning, afternoon, stats, dominant);
+
+  return { emoji, title, main, bullets };
+}
+
+// ------------------------------------------------------------
+// TOMORROW TITLE — Based on morning → afternoon evolution
+// ------------------------------------------------------------
+function pickTomorrowTitle(factor, morning, afternoon, stats) {
+  const warmup = afternoon.temp - morning.temp;
+  const cloudShift = afternoon.cloudCover - morning.cloudCover;
+
+  if (warmup >= 10) return "A day that warms up nicely";
+  if (warmup <= -8) return "A cooler, more settled day";
+
+  if (cloudShift <= -30) return "A day that brightens as it goes";
+  if (cloudShift >= 30) return "Clouds build through the afternoon";
+
+  const map = {
+    cold: "A chilly start, steady later",
+    heat: "Warmth builds through the day",
+    rain: "Rain shapes much of the day",
+    snow: "Snowy at times",
+    fog: "Fog early, clearer later",
+    valleyFog: "Valley fog to start",
+    ridgeFog: "Ridge‑top fog early",
+    default: "A steady, uncomplicated day"
+  };
+
+  return map[factor] ?? map.default;
+}
+
+// ------------------------------------------------------------
+// TOMORROW MAIN NARRATIVE
+// ------------------------------------------------------------
+function buildTomorrowMain(morning, afternoon, stats, notes, factor) {
+  const parts = [];
+
+  // Engine notes
+  if (notes) parts.push(notes);
+
+  // Morning feel
+  const mT = morning.feelsLike ?? morning.temp;
+  if (mT <= 32) parts.push("The morning starts cold, especially in shaded spots.");
+  else if (mT <= 45) parts.push("A cool morning feel settles in.");
+  else if (mT >= 80) parts.push("The morning starts warm and energetic.");
+
+  // Afternoon feel
+  const aT = afternoon.feelsLike ?? afternoon.temp;
+  if (aT >= mT + 10) parts.push("A noticeable warmup develops into the afternoon.");
+  else if (aT <= mT - 8) parts.push("Temperatures ease downward later in the day.");
+
+  // Cloud evolution
+  if (afternoon.cloudCover - morning.cloudCover >= 30) {
+    parts.push("Clouds thicken as the day goes on.");
+  } else if (afternoon.cloudCover - morning.cloudCover <= -30) {
+    parts.push("Skies brighten compared to the morning.");
+  }
+
+  // Precip
+  if (stats.rainTotal > 0.25) parts.push("Rain is a recurring theme.");
+  else if (stats.rainTotal > 0) parts.push("A few showers may pass through.");
+
+  if (stats.snowTotal > 0) parts.push("Snow is possible at times.");
+
+  // Fog
+  if (factor.includes("fog")) parts.push("Fog may linger early before lifting.");
+
+  return parts.join(" ").trim();
+}
+
+// ------------------------------------------------------------
+// TOMORROW BULLETS
+// ------------------------------------------------------------
+function buildTomorrowBullets(morning, afternoon, stats, factor) {
+  const bullets = [];
+
+  const mT = morning.feelsLike ?? morning.temp;
+  const aT = afternoon.feelsLike ?? afternoon.temp;
+
+  // Clothing
+  if (mT <= 40) bullets.push("A warm layer helps early.");
+  if (aT >= 80) bullets.push("Light clothing works best for the afternoon.");
+
+  // Wind
+  if (stats.windGustMax >= 35) bullets.push("Expect pushy gusts on ridge lines.");
+  else if (stats.windGustMax >= 20) bullets.push("A breezy feel develops at times.");
+
+  // Precip
+  if (stats.rainTotal >= 0.25) bullets.push("Rain gear is worth having nearby.");
+  else if (stats.rainTotal > 0) bullets.push("A quick shower is possible.");
+
+  if (stats.snowTotal > 0) bullets.push("Watch for slick spots early.");
+
+  // Fog
+  if (factor.includes("fog")) bullets.push("Visibility may be limited early.");
 
   return bullets;
 }
 
 // ------------------------------------------------------------
-// SKY‑AWARE PHRASE HELPERS
+// TODAY HELPERS (unchanged from premium version)
 // ------------------------------------------------------------
-function buildSkyPhrase(stats, sky, events) {
-  if (!sky) return "";
-
-  if (events?.fogRisk) return "Fog may linger early before slowly lifting.";
-  if (events?.hazyMorning) return "Haze softens the morning light.";
-  if (events?.sunnyBreak) return "A few sunny breaks help brighten things.";
-  if (events?.filteredSun) return "Filtered sun peeks through thicker clouds.";
-
-  if (sky.cloudState === "overcast") return "Skies lean gray and muted.";
-  if (sky.cloudState === "mostly cloudy") return "Clouds dominate much of the day.";
-  if (sky.cloudState === "partly cloudy") return "Skies mix between clouds and brighter moments.";
-  if (sky.cloudState === "mostly clear") return "Skies stay fairly bright overall.";
-
-  return "";
-}
-
-// ------------------------------------------------------------
-// TRENDS (Sky‑Aware)
-// ------------------------------------------------------------
-function detectTrends(stats, events, sky) {
-  const trends = [];
-
-  // Temperature
-  if (stats.tempMax - stats.tempMin >= 25) trends.push("bigWarmup");
-  else if (stats.tempMin - stats.tempMax >= 10) trends.push("coolingOff");
-
-  // Wind
-  if (stats.windGustMax >= 35) trends.push("gusty");
-  else if (stats.windGustMax <= 10) trends.push("calming");
-
-  // Precip
-  if (stats.rainTotal >= 0.25 || stats.snowTotal >= 0.25) trends.push("wetPattern");
-  else if (stats.rainTotal === 0 && stats.snowTotal === 0) trends.push("dryingOut");
-
-  // Sky
-  if (sky?.cloudState === "overcast") trends.push("cloudy");
-  if (sky?.cloudState === "mostly clear") trends.push("brightening");
-
-  return trends;
-}
-
-// ------------------------------------------------------------
-// EMOJI SELECTION (Sky‑Aware)
-// ------------------------------------------------------------
-function pickEmoji(events, trends, sky) {
-  const d = events?.driver;
+function pickEmoji(factor, secondary, snap) {
+  const t = snap?.feelsLike ?? snap?.temp ?? null;
 
   const map = {
+    cold: ["🥶", "🧊", "❄️"],
+    heat: ["🥵", "🔥", "🌞"],
+    wind: ["💨", "🌬️", "🍃"],
+    mountainWind: ["🌬️", "🌪️"],
     rain: ["🌧️", "🌦️", "☔"],
+    coldRain: ["🌧️", "🥶"],
+    warmRain: ["🌦️", "🌧️"],
     snow: ["❄️", "🌨️", "☃️"],
-    wind: ["🌬️", "🍃", "💨"],
-    hot: ["🔥", "🌞", "🥵"],
-    cold: ["🥶", "❄️", "🧊"],
-    goldilocks: ["🌤️", "🌿", "😊"],
-    easy: ["🌤️", "🙂", "🍃"]
-  };
-
-  const trendMap = {
-    bigWarmup: ["📈", "🌡️"],
-    coolingOff: ["📉", "🧥"],
-    gusty: ["💨"],
-    calming: ["🍃"],
-    wetPattern: ["☔"],
-    dryingOut: ["🌤️"],
-    cloudy: ["☁️"],
-    brightening: ["🌤️"]
-  };
-
-  const skyMap = {
-    overcast: ["☁️"],
-    "mostly clear": ["🌤️"],
-    "partly cloudy": ["⛅"],
     fog: ["🌫️"],
-    haze: ["🌫️"]
+    valleyFog: ["🌫️"],
+    ridgeFog: ["🌫️"],
+    freezingFog: ["🌫️", "🧊"],
+    frost: ["❄️"],
+    freeze: ["🧊"],
+    blackIce: ["🧊", "⚠️"],
+    smoke: ["🌫️", "🔥"],
+    haze: ["🌫️"],
+    uv: ["🌞"],
+    sun: ["🌤️"],
+    clouds: ["☁️"],
+    inversion: ["↕️"],
+    default: ["🌤️"]
   };
 
-  const base = map[d] ?? ["🌤️"];
-  const trendEmojis = trends.flatMap(t => trendMap[t] ?? []);
-  const skyEmojis = sky?.cloudState ? skyMap[sky.cloudState] ?? [] : [];
+  const list = map[factor] ?? map.default;
 
-  const combined = [...base, ...trendEmojis, ...skyEmojis];
-  return combined[Math.floor(Math.random() * combined.length)];
+  if (t != null) {
+    if (t <= 25) list.push("🥶");
+    if (t >= 90) list.push("🥵");
+  }
+
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+function pickTitle(factor, snap) {
+  const t = snap?.temp ?? null;
+
+  const map = {
+    cold: "Cold takes the lead",
+    heat: "Heat sets the tone",
+    wind: "Wind shapes the feel",
+    mountainWind: "Mountain winds stand out",
+    rain: "Rain drives the day",
+    coldRain: "Cold rain dominates",
+    warmRain: "Warm rain moves through",
+    snow: "Snow is the headline",
+    fog: "Fog trims visibility",
+    valleyFog: "Valley fog settles in",
+    ridgeFog: "Ridge‑top fog develops",
+    freezingFog: "Freezing fog concerns",
+    frost: "Frost risk early",
+    freeze: "Freeze conditions",
+    blackIce: "Black ice concerns",
+    smoke: "Smoke reduces clarity",
+    haze: "Hazy conditions",
+    uv: "Stronger sun and UV",
+    sun: "Bright and clear",
+    clouds: "Clouds dominate",
+    inversion: "Inversion shapes the feel",
+    default: "A steady, uncomplicated day"
+  };
+
+  let base = map[factor] ?? map.default;
+
+  if (t != null) {
+    if (t <= 32 && factor === "cold") base = "A winter‑sharp chill";
+    if (t >= 85 && factor === "heat") base = "A summer‑heavy warmth";
+  }
+
+  return base;
+}
+
+function buildMainNarrative(factor, secondary, notes, snap, confidence) {
+  const parts = [];
+
+  if (notes) parts.push(notes);
+
+  const f = snap?.feelsLike ?? null;
+  if (f != null) {
+    if (f <= 25) parts.push("It feels sharply cold, especially in shaded spots.");
+    else if (f <= 40) parts.push("A chilly feel lingers, especially in the valleys.");
+    else if (f >= 85) parts.push("Warmth builds with a noticeable edge.");
+  }
+
+  if (snap?.dewpoint >= 65) parts.push("Humidity adds a heavier, Southern‑summer feel.");
+  else if (snap?.dewpoint <= 40) parts.push("Dry air keeps things crisp and comfortable.");
+
+  if (snap?.visibility != null && snap.visibility < 2) {
+    parts.push("Visibility is reduced at times, especially near river valleys.");
+  }
+
+  if (snap?.windGust >= 30) parts.push("Gusts may feel pushy on exposed ridges.");
+  else if (snap?.windGust >= 15) parts.push("A steady breeze adds some movement to the air.");
+
+  if (confidence <= 0.4) {
+    parts.push("Forecast confidence is lower than usual due to shifting patterns.");
+  }
+
+  return parts.join(" ").trim();
+}
+
+function buildBullets(factor, secondary, snap, confidence) {
+  const bullets = [];
+
+  const f = snap?.feelsLike ?? null;
+
+  if (f != null) {
+    if (f <= 40) bullets.push("Layers help, especially early.");
+    else if (f <= 55) bullets.push("A light jacket is a smart move.");
+    else if (f >= 80) bullets.push("Light clothing keeps things comfortable.");
+  }
+
+  if (snap?.windGust >= 35) bullets.push("Expect pushy gusts on ridge lines.");
+  else if (snap?.windGust >= 20) bullets.push("A breezy feel develops at times.");
+
+  if (factor.includes("rain")) bullets.push("Rain gear is worth having nearby.");
+  if (factor === "snow") bullets.push("Watch for slick spots early.");
+  if (factor === "blackIce") bullets.push("Be cautious on bridges and shaded roads.");
+
+  if (factor.includes("fog")) bullets.push("Visibility may be limited in valleys and hollows.");
+
+  if (factor === "uv") bullets.push("Midday sun runs stronger — consider protection.");
+
+  if (factor === "smoke" || factor === "haze") {
+    bullets.push("Air quality may feel reduced at times.");
+  }
+
+  if (secondary?.length) {
+    bullets.push(`Secondary influences: ${secondary.join(", ")}.`);
+  }
+
+  if (confidence <= 0.4) {
+    bullets.push("Expect some variability as patterns shift.");
+  }
+
+  return bullets;
 }
