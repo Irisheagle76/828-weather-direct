@@ -1073,20 +1073,22 @@
 }
 
 /* Expanded container */
+/* Container */
 .pulse-expanded .pulse-media {
   width: 100%;
-  max-width: 520px;   /* 🔥 controls size */
-  margin: 0 auto 12px;
+  max-width: 460px;        /* 🔥 reduce size (main fix) */
+  margin: 0 auto 10px;
   border-radius: 12px;
   overflow: hidden;
+  aspect-ratio: 16 / 9;    /* 🔥 enforce 16:9 */
 }
 
-/* Image/video behavior */
+/* Image / video */
 .pulse-expanded .pulse-media img,
 .pulse-expanded .pulse-media video {
   width: 100%;
-  height: auto;        /* 🔥 critical */
-  object-fit: cover;
+  height: 100%;
+  object-fit: cover;       /* keeps crop clean */
   display: block;
 }
 
@@ -1107,10 +1109,15 @@
   color: #e5e7eb;
   margin-top: 0.75rem;
 }
+.pulse-expanded .pulse-full-text {
+  max-width: 620px;
+  margin: 0 auto;
+}
 
-/* Show full text when expanded */
 .pulse-expanded .pulse-full-text {
   display: block;
+  max-width: 620px;   /* 🔥 add this */
+  margin: 0 auto;     /* 🔥 and this */
 }
 
 /* Visited link color inside Pulse full text */
