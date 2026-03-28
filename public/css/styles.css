@@ -1047,14 +1047,19 @@
 .pulse-expanded .pulse-media img,
 .pulse-expanded .pulse-media video {
   width: 100%;
-  height: auto;         /* 🔥 prevents stretching */
-  max-height: 260px;    /* 🔥 keeps it compact */
-  object-fit: cover;
+  height: auto;
+  max-height: 260px;
+  object-fit: contain;   /* 🔥 key fix */
+  display: block;
 }
 
 /* Hide preview */
 .pulse-expanded .pulse-preview {
   display: none;
+}
+
+.pulse-expanded .pulse-media {
+  background: rgba(0,0,0,0.25);
 }
 
 /* Full text */
