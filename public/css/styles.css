@@ -1048,8 +1048,8 @@
 .pulse-expanded .pulse-media video {
   width: 100%;
   height: auto;
-  max-height: 260px;
-  object-fit: contain;   /* 🔥 key fix */
+  max-height: min(360px, 45vh);  /* 🔥 best balance */
+  object-fit: contain;
   display: block;
 }
 
