@@ -43,6 +43,7 @@ function describeSnow(mm) {
 import { generateFutureComfortPhrase } from "./intel/comfort.js?v=1.0.0";
 import { generateHumanAction } from "./modules/human-action-2/human-action-2.js?v=1.0.0";
 import { buildTomorrowCurrent } from "./modules/human-action-2/tomorrow-builder.js?v=1.0.0";
+import { synthesizeOutlook } from "./intel/synthesizer.js?v=1.0.0";
 
 window.generateHumanAction = generateHumanAction;
 window.buildTomorrowCurrent = buildTomorrowCurrent;
@@ -247,6 +248,87 @@ function dedupeBullets(bullets) {
 
   return result;
 }
+// ------------------------------------------------------------
+// 🔥 MERGE HUMAN ACTION + SYNTHESIZER (FINAL VERSION)
+// ------------------------------------------------------------
+function mergeOutlook(action, intel) {
+  try {
+    const hour = new Date().getHours();
+
+    const synth = synthesizeOutlook(
+      intel.today?.stats || {},
+      intel.today?.events || {},
+      intel.hourly?.time || []
+    );
+
+    // Start with GOOD Asheville-style bullets
+    let bullets = synth.bullets?.length
+      ? [...synth.bullets]
+      : [...(action.bullets || [])];
+
+    // 🌙 EVENING VOICE
+    if (hour >= 15) {
+      bullets.unshift("It cools off pretty quick once the sun drops.");
+    }
+
+    // 🌅 MORNING VOICE
+    if (hour < 11) {
+      bullets.unshift("Cool start, but it warms up nicely.");
+    }
+
+    // 🧠 Keep strongest Human Action signal (if useful)
+    if (action.bullets?.length) {
+      const primary = action.bullets[0];
+
+      if (!bullets.some(b =>
+        b.toLowerCase().includes(primary.toLowerCase().slice(0, 10))
+      )) {
+        bullets.unshift(primary);
+      }
+    }
+
+    // ✂️ Limit to clean 3–4 bullets
+bullets = bullets.slice(0, 4);
+
+return {
+  ...action,
+
+  // 🧠 Asheville-style headline
+  headline: buildHumanHeadline(synth, hour),
+
+  // 🧠 Asheville-style bullets
+  bullets
+};
+
+  } catch (e) {
+    console.warn("Merge failed:", e);
+    return action;
+  }
+}
+
+// ------------------------------------------------------------
+// 🧠 HUMAN HEADLINE BUILDER (ASHEVILLE STYLE)
+// ------------------------------------------------------------
+function buildHumanHeadline(synth, hour) {
+  if (!synth || !synth.headline) return "";
+
+  let headline = synth.headline;
+
+  // 🌅 MORNING
+  if (hour < 11) {
+    headline = headline.replace(/^.*? /, "🌅 ");
+  }
+
+  // 🌙 EVENING
+  if (hour >= 15) {
+    headline = headline
+      .replace(/kind of day/i, "kind of evening")
+      .replace(/day/i, "evening")
+      .replace(/^.*? /, "🌙 ");
+  }
+
+  return headline;
+}
 
 // ------------------------------------------------------------
 // HYBRID BULLET RENDERER
@@ -404,21 +486,11 @@ if (hour >= 15) {
   if (labelEl) labelEl.textContent = "Today’s Human-Action Outlook";
 }
 
+action = mergeOutlook(action, intel);
+
   // 🌙 EMOJI SYNC
   if (hour >= 15 && future && future.length > 0) {
     action.emoji = future[0].emoji || action.emoji;
-  }
-
-  // 🌡️ TONE SYNC
-  if (hour >= 15 && future && future.length > 1) {
-    const tStart = future[0].temp;
-    const tEnd = future[future.length - 1].temp;
-
-    if (tEnd < tStart) {
-      action.bullets.unshift("Temperatures trend cooler through the evening.");
-    } else if (tEnd > tStart) {
-      action.bullets.unshift("Temperatures hold steady or rise slightly into the evening.");
-    }
   }
 
   // 🌙 FADE EFFECT
