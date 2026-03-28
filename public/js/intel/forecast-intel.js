@@ -1,168 +1,200 @@
+// /intel/forecast-intel.js
+// ============================================================
+// HUMAN-ACTION 2.0 — Sky-aware Today / Tonight / Tomorrow
+// ============================================================
 
-// /js/intel/forecast-intel.js
-// Build unified forecast intelligence (Today, Tomorrow, Remainder of Today)
-
-import { synthesizeOutlook, differentiateFromToday, synthesizeRemainderTodayOutlook } from "./synthesizer.js?v=1.0.0";
 import { computeStats } from "./stats.js?v=1.0.0";
 import { computeEvents } from "./events.js?v=1.0.0";
-import { getTodayWindow, getTomorrowWindow } from "./windows.js?v=1.0.0";
+import { synthesizePeriod } from "./synthesizer.js?v=1.0.0";
+import { computeConfidence } from "./confidence.js?v=1.0.0";
 
-export function buildWeatherIntel(hourly) {
-  // -----------------------------
-  // Current hour snapshot (reserved for future use)
-  // -----------------------------
-  const nowIndex = 0;
-  const hourlyNow = {
-    temperature_2m: hourly.temperature_2m[nowIndex],
-    dewpoint_2m: hourly.dewpoint_2m[nowIndex],
-    wind_speed_10m: hourly.wind_speed_10m[nowIndex],
-    wind_gusts_10m: hourly.wind_gusts_10m[nowIndex]
+// ------------------------------------------------------------
+// Helper: build a snapshot from hourly indices + sky intel
+// ------------------------------------------------------------
+function buildSnapshot(hourly, indices, sky) {
+  if (!indices?.length) return null;
+
+  const t = indices.map(i => hourly.temperature_2m?.[i]).filter(v => v != null);
+  const dew = indices.map(i => hourly.dewpoint_2m?.[i]).filter(v => v != null);
+  const hum = indices.map(i => hourly.relativehumidity_2m?.[i]).filter(v => v != null);
+  const wind = indices.map(i => hourly.windspeed_10m?.[i]).filter(v => v != null);
+  const gust = indices.map(i => hourly.windgusts_10m?.[i]).filter(v => v != null);
+  const cloud = indices.map(i => hourly.cloudcover?.[i]).filter(v => v != null);
+  const rain = indices.map(i => hourly.rain?.[i]).filter(v => v != null);
+  const snow = indices.map(i => hourly.snowfall?.[i]).filter(v => v != null);
+  const uv = indices.map(i => hourly.uv_index?.[i]).filter(v => v != null);
+
+  const avg = arr => (arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null);
+
+  return {
+    // Core weather
+    temp: avg(t),
+    feelsLike: avg(t),
+    dewpoint: avg(dew),
+    humidity: avg(hum),
+    windSpeed: avg(wind),
+    windGust: gust.length ? Math.max(...gust) : null,
+    precipIntensity: (avg(rain) || 0) + (avg(snow) || 0),
+    precipType:
+      snow.some(v => v > 0) && rain.some(v => v > 0)
+        ? "mixed"
+        : snow.some(v => v > 0)
+        ? "snow"
+        : rain.some(v => v > 0)
+        ? "rain"
+        : "none",
+
+    // Sky-aware fields
+    cloudCover: sky.cloud ?? (cloud.length ? avg(cloud) : null),
+    cloudState: sky.cloudState,
+    uv: sky.uv ?? (uv.length ? Math.max(...uv) : null),
+    uvCategory: sky.uvCategory,
+    solar: sky.solar,
+    solarElevation: sky.solarElevation,
+    visibility: sky.visibilityKm,
+    visibilityCategory: sky.visibilityCategory,
+    fogPotential: sky.fogPotential,
+    smokeIndex: sky.smokeIndex
   };
-
-  // -----------------------------
-  // Build Today + Tomorrow windows
-  // -----------------------------
-  const todayHours = getTodayWindow(hourly);
-  const tomorrowHours = getTomorrowWindow(hourly);
-
-  // =============================
-  // 🔍 DEBUG (SAFE — WILL NOT BREAK)
-  // =============================
-  try {
-    console.log("----- DEBUG TOMORROW WINDOW -----");
-
-    console.log("Window count:", tomorrowHours.length);
-
-    const temps = tomorrowHours.map(i => hourly.temperature_2m[i]);
-    console.log("Temps in window:", temps);
-
-    const times = tomorrowHours.map(i => hourly.time[i]);
-    console.log("Times in window:", times);
-
-  } catch (e) {
-    console.log("Debug error:", e);
-  }
-
-  // -----------------------------
-  // Stats + Events
-  // -----------------------------
-  const statsToday = computeStats(hourly, todayHours);
-  const statsTomorrow = computeStats(hourly, tomorrowHours);
-
-  const eventsToday = computeEvents(hourly, todayHours, statsToday);
-  const eventsTomorrow = computeEvents(hourly, tomorrowHours, statsTomorrow);
-
-  // -----------------------------
-  // Synthesized Outlooks
-  // -----------------------------
-  const todayOutlook = synthesizeOutlook(statsToday, eventsToday, todayHours);
-  let tomorrowOutlook = synthesizeOutlook(statsTomorrow, eventsTomorrow, tomorrowHours);
-
-  // Anti-redundancy: ensure Tomorrow doesn't echo Today
-  tomorrowOutlook = differentiateFromToday(todayOutlook, tomorrowOutlook);
-
-  // -----------------------------
-  // Remainder-of-today intel (after 3 PM)
-  // -----------------------------
-  const remainderInfo = buildRemainderSubwindows(hourly, todayHours);
-  let remainderTodayIntel = null;
-
-  if (remainderInfo) {
-    const { earlier, remainder } = remainderInfo;
-    const statsEarlier = computeStats(hourly, earlier);
-    const statsRemainder = computeStats(hourly, remainder);
-
-    const outlook = synthesizeRemainderTodayOutlook(statsEarlier, statsRemainder);
-
-    remainderTodayIntel = {
-      available: true,
-      ...outlook,
-      statsEarlier,
-      statsRemainder
-    };
-  }
-
-  // -----------------------------
-  // Future Comfort Window (next ~6 hours)
-  // -----------------------------
-  const futureComfortWindow = getFutureComfortWindow(hourly);
-
-  // -----------------------------
-  // Return unified intel object
-  // -----------------------------
-  const intel = {
-    today: {
-      available: todayHours.length > 0,
-      ...todayOutlook,
-      stats: statsToday,
-      events: eventsToday
-    },
-    tomorrow: {
-      available: tomorrowHours.length > 0,
-      ...tomorrowOutlook,
-      stats: statsTomorrow,
-      events: eventsTomorrow
-    },
-    remainderToday: remainderTodayIntel,
-
-    // NEW
-    futureComfortWindow,
-
-    comfort: null,
-    wu: null,
-    mrms: null,
-    tempest: null
-  };
-
-  return intel;
 }
 
-// -----------------------------
-// Helper: split today into earlier vs remainder (after 3 PM)
-// -----------------------------
-function buildRemainderSubwindows(hourly, todayHours) {
-  if (!hourly || !hourly.time || !todayHours || todayHours.length === 0) return null;
+// ------------------------------------------------------------
+// Helper: slice hourly indices for your existing windows
+// ------------------------------------------------------------
+function sliceWindow(hourly, start, end) {
+  if (!hourly?.time) return [];
+  const now = Date.now();
 
-  const now = new Date();
-  const nowMs = now.getTime();
-  const currentHour = now.getHours();
-
-  // Only activate after 3 PM local
-  if (currentHour < 15) return null;
-
-  const earlier = [];
-  const remainder = [];
-
-  for (const idx of todayHours) {
-    const t = new Date(hourly.time[idx]);
-    const tMs = t.getTime();
-    const h = t.getHours();
-
-    if (tMs < nowMs) {
-      earlier.push(idx);
-    } else if (h >= 15) {
-      remainder.push(idx);
-    }
-  }
-
-  if (earlier.length === 0 || remainder.length === 0) return null;
-  return { earlier, remainder };
-}
-
-// -----------------------------
-// Helper: next 6 hours window for Future Comfort
-// -----------------------------
-function getFutureComfortWindow(hourly) {
-  if (!hourly || !hourly.time || hourly.time.length === 0) return [];
-
-  const startIndex = 0; // current hour
-  const maxCount = 6;
-  const lastIndex = Math.min(hourly.time.length, startIndex + maxCount);
+  // Find first forecast hour >= now
+  let startIndex = hourly.time.findIndex(t => new Date(t).getTime() >= now);
+  if (startIndex === -1) return [];
 
   const indices = [];
-  for (let i = startIndex; i < lastIndex; i++) {
+  for (let i = startIndex + start; i < startIndex + end; i++) {
+    if (i >= hourly.time.length) break;
     indices.push(i);
   }
-
   return indices;
+}
+
+// ------------------------------------------------------------
+// Main entry point
+// ------------------------------------------------------------
+export function buildWeatherIntel(hourly, sky) {
+  if (!hourly?.time) return null;
+
+  // ----------------------------------------------------------
+  // 1. Build windows (same as your existing system)
+  // ----------------------------------------------------------
+  const windows = {
+    today: {
+      morning: sliceWindow(hourly, 5, 11),
+      afternoon: sliceWindow(hourly, 11, 18),
+      fullDay: sliceWindow(hourly, 0, 24)
+    },
+    tonight: {
+      evening: sliceWindow(hourly, 15, 20),
+      lateEvening: sliceWindow(hourly, 20, 24),
+      fullNight: sliceWindow(hourly, 15, 24)
+    },
+    tomorrow: {
+      morning: sliceWindow(hourly, 24, 29),
+      afternoon: sliceWindow(hourly, 29, 35),
+      evening: sliceWindow(hourly, 35, 42),
+      fullDay: sliceWindow(hourly, 24, 48)
+    }
+  };
+
+  // ----------------------------------------------------------
+  // 2. Build snapshots (sky-aware)
+  // ----------------------------------------------------------
+  const todayMorning = buildSnapshot(hourly, windows.today.morning, sky);
+  const todayAfternoon = buildSnapshot(hourly, windows.today.afternoon, sky);
+
+  const tonightEvening = buildSnapshot(hourly, windows.tonight.evening, sky);
+  const tonightLate = buildSnapshot(hourly, windows.tonight.lateEvening, sky);
+
+  const tomorrowMorning = buildSnapshot(hourly, windows.tomorrow.morning, sky);
+  const tomorrowAfternoon = buildSnapshot(hourly, windows.tomorrow.afternoon, sky);
+  const tomorrowEvening = buildSnapshot(hourly, windows.tomorrow.evening, sky);
+
+  // ----------------------------------------------------------
+  // 3. Stats (sky-aware)
+  // ----------------------------------------------------------
+  const todayStats = computeStats(hourly, windows.today.fullDay, sky);
+  const tonightStats = computeStats(hourly, windows.tonight.fullNight, sky);
+  const tomorrowStats = computeStats(hourly, windows.tomorrow.fullDay, sky);
+
+  // ----------------------------------------------------------
+  // 4. Events (sky-aware)
+  // ----------------------------------------------------------
+  const todayEvents = computeEvents(todayStats, sky);
+  const tonightEvents = computeEvents(tonightStats, sky);
+  const tomorrowEvents = computeEvents(tomorrowStats, sky);
+
+  // ----------------------------------------------------------
+  // 5. Synthesis (Human-Action narrative)
+  // ----------------------------------------------------------
+  const todaySynth = synthesizePeriod("today", {
+    morning: todayMorning,
+    afternoon: todayAfternoon,
+    stats: todayStats,
+    events: todayEvents,
+    sky
+  });
+
+  const tonightSynth = synthesizePeriod("tonight", {
+    evening: tonightEvening,
+    lateEvening: tonightLate,
+    stats: tonightStats,
+    events: tonightEvents,
+    sky
+  });
+
+  const tomorrowSynth = synthesizePeriod("tomorrow", {
+    morning: tomorrowMorning,
+    afternoon: tomorrowAfternoon,
+    evening: tomorrowEvening,
+    stats: tomorrowStats,
+    events: tomorrowEvents,
+    sky
+  });
+
+  // ----------------------------------------------------------
+  // 6. Confidence scoring
+  // ----------------------------------------------------------
+  const todayConf = computeConfidence(todayStats, todayEvents);
+  const tonightConf = computeConfidence(tonightStats, tonightEvents);
+  const tomorrowConf = computeConfidence(tomorrowStats, tomorrowEvents);
+
+  // ----------------------------------------------------------
+  // 7. Final Human-Action intel object
+  // ----------------------------------------------------------
+  return {
+    today: {
+      ...todaySynth,
+      snapshots: { morning: todayMorning, afternoon: todayAfternoon },
+      stats: todayStats,
+      events: todayEvents,
+      confidence: todayConf
+    },
+    tonight: {
+      ...tonightSynth,
+      snapshots: { evening: tonightEvening, lateEvening: tonightLate },
+      stats: tonightStats,
+      events: tonightEvents,
+      confidence: tonightConf
+    },
+    tomorrow: {
+      ...tomorrowSynth,
+      snapshots: {
+        morning: tomorrowMorning,
+        afternoon: tomorrowAfternoon,
+        evening: tomorrowEvening
+      },
+      stats: tomorrowStats,
+      events: tomorrowEvents,
+      confidence: tomorrowConf
+    }
+  };
 }

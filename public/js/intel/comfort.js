@@ -1,5 +1,6 @@
 // /intel/comfort.js
 // FULL HYBRID — Narrative Engine + Asheville Comfort Score
+// UPDATED: Tempest-first ingestion for Comfort Now + Future Comfort
 
 import { LOCATION } from "../config/location.js?v=1.0.0";
 
@@ -66,7 +67,6 @@ function computeComfortScore(temp, dew, wind, elev, windDir) {
 
   let windPenalty = Math.min(wind / 25, 1) * 0.4;
 
-  // ⭐ FIX: windDir may be a number → convert safely
   const dir = String(windDir ?? "");
   if (dir.includes("W")) {
     windPenalty += 0.2;
@@ -140,11 +140,9 @@ function sunAngleFeel(elev) {
 }
 
 function isSolarHelpful(intel, elev) {
-  const wu = intel.wu;
-  if (!wu) return false;
-
-  const cloud = wu.cloudCover ?? 100;
-  const windDir = String(wu.windDir ?? "");
+  const src = intel.tempest ?? intel.wu ?? {};
+  const cloud = src.cloudCover ?? 100;
+  const windDir = String(src.windDir ?? "");
   const trend = intel.tempTrend ?? 0;
 
   return (
@@ -156,11 +154,12 @@ function isSolarHelpful(intel, elev) {
 }
 
 // ------------------------------------------------------------
-// PRECIP FEEL (RESTORED)
+// PRECIP FEEL — NOW USES TEMPEST FIRST
 // ------------------------------------------------------------
 function fallingPrecipFeel(intel) {
-  const rate = intel.wu?.precipRate ?? 0;
-  const type = intel.wu?.precipType ?? "";
+  const src = intel.tempest ?? intel.wu ?? {};
+  const rate = src.precipRate ?? 0;
+  const type = src.precipType ?? "";
 
   if (rate <= 0) return null;
 
@@ -180,7 +179,7 @@ function fallingPrecipFeel(intel) {
 }
 
 // ------------------------------------------------------------
-// TREND + DROP (RESTORED)
+// TREND + DROP
 // ------------------------------------------------------------
 function computeShortTermTrend(intel) {
   const temps = intel.hourly?.temperature_2m;
@@ -201,14 +200,15 @@ function computeShortTermTrend(intel) {
 }
 
 function computeTempDropFeel(intel) {
-  const wu = intel.wu;
-  if (!wu) return null;
-
-  const hour = new Date(wu.obsTimeLocal).getHours();
+  const src = intel.tempest ?? intel.wu ?? {};
+  const hour = new Date(src.obsTimeLocal ?? Date.now()).getHours();
   if (hour < 11) return null;
 
-  const current = wu.temp;
-  const high = intel?.today?.stats?.maxTemp ?? current;
+  const current = src.temp;
+  const high =
+    intel?.humanAction?.today?.stats?.tempMax ??
+    intel?.humanAction?.tomorrow?.stats?.tempMax ??
+    current;
 
   const drop = high - current;
 
@@ -220,7 +220,7 @@ function computeTempDropFeel(intel) {
 }
 
 // ------------------------------------------------------------
-// ⭐ INLINE EMOJI PICKER (replaces missing pickComfortEmoji)
+// EMOJI PICKER
 // ------------------------------------------------------------
 function pickComfortEmoji(state) {
   switch (state) {
@@ -234,26 +234,23 @@ function pickComfortEmoji(state) {
 }
 
 // ------------------------------------------------------------
-// MAIN ENGINE
+// ⭐ MAIN ENGINE — TEMPEST-FIRST
 // ------------------------------------------------------------
 export function computeComfort(intel) {
-  const wu = intel.wu;
-  const sky = intel.sky ?? {};   // ⭐ unified sky intelligence
-  if (!wu) return {};
+  const src = intel.tempest ?? intel.wu ?? {};
+  const sky = intel.sky ?? {};
 
-  const temp = wu.temp ?? 0;
-  const dew = wu.dewPoint ?? 0;
-  const wind = wu.windSpeed ?? 0;
-  const windDir = wu.windDir ?? "";
-  const timestamp = wu.obsTimeLocal ?? Date.now();
+  const temp = src.temp ?? 0;
+  const dew = src.dewPoint ?? 0;
+  const wind = src.windSpeed ?? 0;
+  const windDir = src.windDir ?? "";
+  const timestamp = src.obsTimeLocal ?? Date.now();
 
   const elev = computeSolarElevation(timestamp, LOCATION.lat, LOCATION.lon);
   const feelsLike = computeWindChill(temp, wind);
 
-  // ⭐ Asheville‑tuned score
   const comfortScore = computeComfortScore(temp, dew, wind, elev, windDir);
 
-  // --- precip override
   const precipOverride = fallingPrecipFeel(intel);
   if (precipOverride) {
     return {
@@ -264,7 +261,6 @@ export function computeComfort(intel) {
     };
   }
 
-  // --- state
   let state = "mild";
   if (feelsLike <= 32) state = "cold";
   else if (feelsLike <= 50) state = "cool";
@@ -296,34 +292,28 @@ export function computeComfort(intel) {
 
   const future = intel.futureComfortWindow;
 
-if (future && future.length >= 2 && intel.hourly) {
-  const temps = intel.hourly.temperature_2m;
+  if (future && future.length >= 2 && intel.hourly) {
+    const temps = intel.hourly.temperature_2m;
 
-  const tStart = temps[future[0]];
-  const tEnd = temps[future[future.length - 1]];
+    const tStart = temps[future[0]];
+    const tEnd = temps[future[future.length - 1]];
 
-  const delta = tEnd - tStart;
+    const delta = tEnd - tStart;
 
-  if (delta <= -4) {
-    parts.push("Expect a noticeable cool-down over the next few hours.");
-  } else if (delta >= 4) {
-    parts.push("Temperatures will climb noticeably through the next few hours.");
+    if (delta <= -4) {
+      parts.push("Expect a noticeable cool-down over the next few hours.");
+    } else if (delta >= 4) {
+      parts.push("Temperatures will climb noticeably through the next few hours.");
+    }
   }
-}
 
   const humidText = humidityFeel(dew);
   if (humidText) parts.push(humidText);
 
-  // ⭐ unified cloud cover
-  const cloud = sky.cloud ?? wu.cloudCover ?? 100;
+  const cloud = sky.cloud ?? src.cloudCover ?? 100;
+  const uv = sky.uv ?? intel.uv ?? src.uv ?? 0;
+  const solar = sky.solar ?? src.solarRadiation ?? null;
 
-  // ⭐ unified UV
-  const uv = sky.uv ?? intel.uv ?? wu.uv ?? 0;
-
-  // ⭐ unified solar radiation
-  const solar = sky.solar ?? wu.solarRadiation ?? null;
-
-  // solar helpfulness now uses unified sky
   if (isSolarHelpful(intel, elev)) {
     parts.push(sunAngleFeel(elev));
   }
@@ -332,36 +322,34 @@ if (future && future.length >= 2 && intel.hourly) {
     parts.push("A noticeable breeze adds some edge.");
   }
 
-  // 🔥 fire messaging overlay
   if (comfortScore < 45) {
     parts.push("Dry air and wind are increasing fire danger.");
   }
 
-const summary = parts.join(" ");
+  const summary = parts.join(" ");
 
-// ✨ split into UI-friendly lines
-const sentences = summary.split(". ").filter(Boolean);
+  const sentences = summary.split(". ").filter(Boolean);
 
-const line1 = sentences[0]
-  ? sentences[0] + (sentences[0].endsWith('.') ? '' : '.')
-  : "";
+  const line1 = sentences[0]
+    ? sentences[0] + (sentences[0].endsWith('.') ? '' : '.')
+    : "";
 
-const line2 = sentences.slice(1).join(". ");
+  const line2 = sentences.slice(1).join(". ");
 
-return {
-  emoji,
-  summary,
-  line1,
-  line2,
-  comfortScore,
-  label: getComfortLabel(comfortScore),
-  color: getComfortColor(comfortScore),
-  feelsLike
-};
+  return {
+    emoji,
+    summary,
+    line1,
+    line2,
+    comfortScore,
+    label: getComfortLabel(comfortScore),
+    color: getComfortColor(comfortScore),
+    feelsLike
+  };
 }
 
 // ------------------------------------------------------------
-// FUTURE BUILDER — FIXED (next 6 real future hours)
+// FUTURE COMFORT — NEXT 6 HOURS (UNCHANGED, BUT TEMPEST-FIRST)
 // ------------------------------------------------------------
 export function buildFutureComfort(hourly, computeComfort) {
   if (!hourly || !hourly.time) return [];
@@ -369,7 +357,6 @@ export function buildFutureComfort(hourly, computeComfort) {
   const now = Date.now();
   const times = hourly.time;
 
-  // ⭐ Find the first hour in the future
   let startIndex = times.findIndex(t => new Date(t).getTime() > now);
   if (startIndex === -1) return [];
 
@@ -380,6 +367,7 @@ export function buildFutureComfort(hourly, computeComfort) {
     if (idx >= times.length) break;
 
     const intelForHour = {
+      tempest: null, // future hours use Open-Meteo only
       wu: {
         temp: hourly.temperature_2m[idx],
         dewPoint: hourly.dewpoint_2m[idx],
@@ -395,13 +383,11 @@ export function buildFutureComfort(hourly, computeComfort) {
     items.push({
       index: idx,
       time: hourly.time[idx],
-      hourLabel: formatHourLabel(hourly.time[idx]),  // ⭐ timezone‑safe
+      hourLabel: formatHourLabel(hourly.time[idx]),
       comfortScore: c.comfortScore,
       color: c.color,
       label: c.label,
       emoji: c.emoji,
-
-      // raw values for phrase engine
       temp: hourly.temperature_2m[idx],
       dew: hourly.dewpoint_2m[idx],
       wind: hourly.wind_speed_10m[idx]
@@ -412,12 +398,11 @@ export function buildFutureComfort(hourly, computeComfort) {
 }
 
 // ------------------------------------------------------------
-// ⭐ TIMEZONE‑SAFE HOUR LABEL
+// TIMEZONE-SAFE LABEL
 // ------------------------------------------------------------
 function formatHourLabel(iso) {
   const d = new Date(iso);
 
-  // ⭐ Force Asheville local time
   const formatter = new Intl.DateTimeFormat("en-US", {
     hour: "numeric",
     hour12: true,
@@ -429,207 +414,4 @@ function formatHourLabel(iso) {
   const suffix = parts.find(p => p.type === "dayPeriod")?.value?.toUpperCase() ?? "";
 
   return `${hour} ${suffix}`;
-}
-
-// ------------------------------------------------------------
-// ⭐ FUTURE COMFORT PHRASE ENGINE — Asheville‑Tuned, Seasonal, Sky‑Aware
-// ------------------------------------------------------------
-export function generateFutureComfortPhrase(items, hourly) {
-  if (!items || items.length === 0) return "";
-
-  const first = items[0];
-  const last = items[items.length - 1];
-
-  const temps = items.map(i => i.temp);
-  const dews = items.map(i => i.dew);
-  const winds = items.map(i => i.wind);
-
-  // 1. Temperature band (Asheville‑tuned)
-  function tempBand(t) {
-    if (t <= 42) return "cold";
-    if (t <= 56) return "cool";
-    if (t <= 72) return "mild";
-    if (t <= 83) return "warm";
-    return "hot";
-  }
-
-  const bandStart = tempBand(first.temp);
-  const bandEnd = tempBand(last.temp);
-
-  // 2. Dew point feel (Asheville‑tuned)
-  function dewFeel(d) {
-    if (d <= 40) return "crisp, mountain‑dry air";
-    if (d <= 55) return "comfortable humidity";
-    if (d <= 63) return "a touch of humidity";
-    if (d <= 68) return "noticeable humidity";
-    return "muggy air building";
-  }
-
-  const dewPhrase = dewFeel(first.dew);
-
-  // 3. Wind feel (Asheville‑tuned)
-  function windFeel(w) {
-    if (w < 4) return "calm conditions";
-    if (w < 10) return "a gentle breeze";
-    if (w < 18) return "a noticeable breeze";
-    return "breezy conditions";
-  }
-
-  const windPhrase = windFeel(first.wind);
-
-  // 4. Trend detection
-  const tempTrend = last.temp - first.temp;
-  const dewTrend = last.dew - first.dew;
-  const windTrend = last.wind - first.wind;
-
-  let trendPhrase = "";
-
-  if (tempTrend >= 6) trendPhrase = "warming through the afternoon";
-  else if (tempTrend >= 3) trendPhrase = "warming gradually";
-  else if (tempTrend <= -6) trendPhrase = "cooling off noticeably later";
-  else if (tempTrend <= -3) trendPhrase = "cooling gradually";
-
-  // 5. Seasonal tone
-  const month = new Date(first.time).getMonth() + 1;
-  const isWinter = month === 12 || month <= 2;
-  const isSummer = month >= 6 && month <= 8;
-
-  const seasonalMap = {
-    cold: isWinter ? "Cold and brisk" : "Cold",
-    cool: isWinter ? "Chilly" : "Cool and manageable",
-    mild: isSummer ? "Pleasantly mild" : "Mild and easygoing",
-    warm: isSummer ? "Warm and summery" : "Warm and pleasant",
-    hot: isSummer ? "Hot and summery" : "Hot and energetic"
-  };
-
-  const base = seasonalMap[bandStart] ?? "Comfortable";
-
-  // 6. Sky & solar influence (using hourly.cloudcover)
-  let skyPhrase = "";
-  if (hourly && Array.isArray(hourly.cloudcover)) {
-    const cloud = hourly.cloudcover[first.index] ?? null;
-    if (cloud != null) {
-      if (cloud < 25) skyPhrase = "with sunshine adding a bit of warmth";
-      else if (cloud < 55) skyPhrase = "under partly sunny skies";
-      else if (cloud < 80) skyPhrase = "with filtered sun through clouds";
-      else skyPhrase = "under mostly cloudy skies";
-    }
-  }
-
-  // 7. Hazard‑aware modifiers
-  let hazard = "";
-  if (first.wind >= 20) hazard = "gusty at times";
-  if (first.dew >= 69) hazard = "muggy air building";
-  if (first.temp >= 88) hazard = "trending hot later";
-
-  // 8. Time‑of‑day awareness
-  const hour = new Date(first.time).getHours();
-  let timePhrase = "";
-  if (hour < 10) timePhrase = "this morning";
-  else if (hour < 15) timePhrase = "by midday";
-  else if (hour < 18) timePhrase = "this afternoon";
-  else timePhrase = "this evening";
-
-  // 9. Build final sentence
-  let sentence = `${base} ${timePhrase} with ${dewPhrase} and ${windPhrase}`;
-  if (skyPhrase) sentence += `, ${skyPhrase}`;
-  if (hazard) sentence += ` — ${hazard}`;
-  if (trendPhrase) sentence += ` — ${trendPhrase}`;
-
-  return sentence.trim() + ".";
-}
-
-// ------------------------------------------------------------
-// COMFORT NOW — CLICK TO EXPAND NEXT 6 HOURS
-// ------------------------------------------------------------
-export function attachComfortNowExpansion(intel) {
-  const module = document.getElementById("comfort-now");
-  const panel = document.getElementById("comfort-now-expanded");
-
-  if (!module || !panel) return;
-
-  module.addEventListener("click", () => {
-    const isOpen = !panel.classList.contains("hidden");
-
-    if (isOpen) {
-      panel.classList.add("hidden");
-      return;
-    }
-
-    panel.classList.remove("hidden");
-
-    const items = buildFutureComfort(intel.hourly, computeComfort);
-    renderComfortExpansion(panel, items);
-  });
-}
-
-// ------------------------------------------------------------
-// RENDER — MINI COMFORT TIMELINE (EMOJI + TEMP + SCORE)
-// ------------------------------------------------------------
-function renderComfortExpansion(panel, items) {
-  if (!items.length) {
-    panel.innerHTML = `<div class="hour-row">No hourly data</div>`;
-    return;
-  }
-
-  panel.innerHTML = items.map(i => `
-    <div class="hour-row">
-
-      <div class="hour-time">${i.hourLabel}</div>
-
-      <div class="hour-mainline">
-        <span class="hour-emoji">${i.emoji}</span>
-        <span class="hour-temp">${Math.round(i.temp)}°</span>
-      </div>
-
-      <div class="hour-score" style="color:${i.color}">
-        ${i.comfortScore}
-      </div>
-
-      <div class="hour-label">
-        ${i.label}
-      </div>
-
-    </div>
-  `).join("");
-}
-
-// ------------------------------------------------------------
-// NEXT 6 HOURS — RENDER
-// ------------------------------------------------------------
-export function renderNext6Hours(container, items) {
-  if (!container) return;
-
-  container.innerHTML = items.map((i, idx) => `
-    <div class="hour-block" data-idx="${idx}">
-      
-      <div class="hour-main">
-        <span class="hour-time">${i.hourLabel}</span>
-        <span class="hour-temp">${Math.round(i.temp)}°</span>
-      </div>
-
-      <div class="hour-extra hidden">
-        <span class="hour-emoji">${i.emoji}</span>
-        <span class="hour-score" style="color:${i.color}">
-          ${i.comfortScore} (${i.label})
-        </span>
-      </div>
-
-    </div>
-  `).join("");
-}
-
-// ------------------------------------------------------------
-// NEXT 6 HOURS — CLICK TO TOGGLE EMOJI
-// ------------------------------------------------------------
-export function attachNext6HourToggle(container) {
-  if (!container) return;
-
-  container.addEventListener("click", (e) => {
-    const block = e.target.closest(".hour-block");
-    if (!block) return;
-
-    const extra = block.querySelector(".hour-extra");
-    extra.classList.toggle("hidden");
-  });
 }
