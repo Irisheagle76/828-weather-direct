@@ -6,7 +6,7 @@
 import { fetchAllIntel } from "./weather-fetch.js";
 import { buildHumanActionIntel } from "./intel/human-action-intel-builder.js";
 import { computeComfort, buildFutureComfort } from "./intel/comfort.js";
-import { generateNarrative } from "./synthesizer.js";
+import { generateNarrative } from "./intel/synthesizer.js";
 
 // DOM targets
 const todayEl = document.getElementById("today-outlook");
