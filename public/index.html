@@ -132,26 +132,42 @@
 
   </div>
 
-  <!-- 828 WEATHER PULSE MODULE -->
- <section id="pulse-card" class="pulse-card pulse-collapsed">
-  <div class="pulse-header">
-    <h2 class="pulse-title">828 Weather Pulse</h2>
-    <div class="pulse-badge-pill">QUICK • LIVE • 828</div>
-    <div id="pulse-timestamp" class="pulse-timestamp"></div>
-  </div>
+    <!-- 828 WEATHER PULSE MODULE -->
+  <section id="pulse-module" class="pulse-module">
+    <div class="pulse-card pulse-collapsed" id="pulse-card">
 
-  <div class="pulse-body">
-    <div id="pulse-media" class="pulse-media"></div>
+      <!-- Header -->
+      <div class="pulse-header">
+        <h2 class="pulse-title">828 Weather Pulse</h2>
+        <span class="pulse-badge-pill">Quick • Live • 828</span>
+        <div class="pulse-timestamp" id="pulse-timestamp">Posted just now</div>
+      </div>
 
-    <div id="pulse-preview" class="pulse-preview"></div>
-  </div>
+      <!-- Body: Thumbnail + Preview -->
+      <div class="pulse-body">
+        <img 
+          id="pulse-thumb" 
+          class="pulse-thumbnail" 
+          alt="Pulse image"
+        />
 
-  <div id="pulse-full-text" class="pulse-full-text"></div>
+        <div class="pulse-preview" id="pulse-preview">
+          <!-- preview text injected via JS -->
+        </div>
+      </div>
 
-  <button id="pulse-toggle" class="pulse-toggle" aria-expanded="false">
-    Read full update
-  </button>
-</section>
+      <!-- Toggle Button -->
+      <button 
+        class="pulse-toggle" 
+        id="pulse-toggle" 
+        type="button" 
+        aria-expanded="false"
+      >
+        Read full update
+      </button>
+
+    </div>
+  </section>
 
   <!-- SUBSTACK MODULE -->
   <section id="weather-articles-module" class="module-card substack-module"></section>
