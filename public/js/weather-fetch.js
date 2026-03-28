@@ -15,11 +15,9 @@ export async function fetchAllIntel({
 }) {
   const result = {
     tempest: null,
-    wu: null,
     hourly: null,
     mrms: null,
     meta: {
-      stationId: null,
       fetchedAt: Date.now()
     }
   };
@@ -34,19 +32,7 @@ export async function fetchAllIntel({
   }
 
   // ------------------------------------------------------------
-  // 2. Weather Underground — nearest station + current obs
-  // ------------------------------------------------------------
-  try {
-    const nearest = await getNearestWUStation(lat, lon);
-    result.meta.stationId = nearest.stationId;
-
-    result.wu = await getWUCurrentConditions(nearest.stationId);
-  } catch (err) {
-    console.error("WU fetch failed:", err);
-  }
-
-  // ------------------------------------------------------------
-  // 3. Open‑Meteo hourly forecast (3 days)
+  // 2. Open‑Meteo hourly forecast (3 days)
   // ------------------------------------------------------------
   try {
     result.hourly = await getShortTermForecast(lat, lon);
@@ -55,7 +41,7 @@ export async function fetchAllIntel({
   }
 
   // ------------------------------------------------------------
-  // 4. MRMS pixel (placeholder)
+  // 3. MRMS pixel (placeholder)
   // ------------------------------------------------------------
   try {
     result.mrms = await getMRMSPixel(lat, lon);
@@ -64,24 +50,6 @@ export async function fetchAllIntel({
   }
 
   return result;
-}
-
-// ============================================================
-// WEATHER UNDERGROUND — nearest station + current conditions
-// ============================================================
-
-export async function getNearestWUStation(lat, lon) {
-  const url = `/api/wu/nearest?lat=${lat}&lon=${lon}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("WU nearest station lookup failed");
-  return res.json();
-}
-
-export async function getWUCurrentConditions(stationId) {
-  const url = `/api/wu/current?stationId=${stationId}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("WU current conditions failed");
-  return res.json();
 }
 
 // ============================================================
@@ -111,7 +79,6 @@ export async function getShortTermForecast(lat, lon) {
 // ============================================================
 
 export async function getMRMSPixel(lat, lon) {
-  // Placeholder until real MRMS endpoint is wired
   return {
     precipRate: 0,
     timestamp: Date.now()
