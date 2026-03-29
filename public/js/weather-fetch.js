@@ -28,7 +28,7 @@ export async function fetchAllIntel({
   // ------------------------------------------------------------
   try {
     const rawTempest = await getTempestDeviceObs(tempestDeviceId, tempestToken);
-    result.tempest = normalizeTempest(rawTempest); // ✅ KEY FIX
+    result.tempest = normalizeTempest(rawTempest);
   } catch (err) {
     console.error("Tempest fetch failed:", err);
   }
@@ -43,7 +43,7 @@ export async function fetchAllIntel({
   }
 
   // ------------------------------------------------------------
-  // 3. Open-Meteo hourly forecast
+  // 3. Open-Meteo hourly forecast (FIXED)
   // ------------------------------------------------------------
   try {
     result.hourly = await getShortTermForecast(lat, lon);
@@ -70,16 +70,12 @@ export async function fetchAllIntel({
 function normalizeTempest(data) {
   if (!data) return null;
 
-  // ----------------------------------------
-  // CASE 1: Already normalized (your API changed)
-  // ----------------------------------------
+  // Already normalized
   if (data.air_temperature !== undefined) {
     return data;
   }
 
-  // ----------------------------------------
-  // CASE 2: Raw obs array (standard Tempest)
-  // ----------------------------------------
+  // Raw obs array
   if (data?.obs?.[0]) {
     const o = data.obs[0];
 
@@ -99,6 +95,7 @@ function normalizeTempest(data) {
   console.warn("Unknown Tempest format:", data);
   return null;
 }
+
 // ============================================================
 // TEMPEST — raw fetch
 // ============================================================
@@ -144,14 +141,18 @@ export async function getWUObs(lat, lon) {
 }
 
 // ============================================================
-// OPEN-METEO — hourly forecast
+// OPEN-METEO — hourly forecast (FIXED)
 // ============================================================
 
 export async function getShortTermForecast(lat, lon) {
   const url = `/api/weather?type=hourly&lat=${lat}&lon=${lon}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Open-Meteo hourly forecast failed");
-  return res.json();
+
+  const data = await res.json();
+
+  // FIX: unwrap the hourly object
+  return data?.hourly ?? null;
 }
 
 // ============================================================
