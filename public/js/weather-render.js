@@ -24,59 +24,67 @@ function renderCurrentObservations(raw) {
   const wu = raw?.wu;
   const h = raw?.hourly;
 
-  const current = {
-    temp:
-      (t?.air_temperature != null ? cToF(t.air_temperature) : null) ??
-      wu?.imperial?.temp ??
-      h?.temperature_2m?.[0],
+  const cToF = c => (c != null ? (c * 9) / 5 + 32 : null);
 
-    feels:
-      (t?.feels_like != null ? cToF(t.feels_like) : null) ??
-      wu?.imperial?.heatIndex ??
-      wu?.imperial?.windChill ??
-      h?.apparent_temperature?.[0],
+  const temp =
+    (t?.air_temperature != null ? cToF(t.air_temperature) : null) ??
+    wu?.imperial?.temp ??
+    h?.temperature_2m?.[0];
 
-    dew:
-      (t?.dew_point != null ? cToF(t.dew_point) : null) ??
-      wu?.imperial?.dewpt ??
-      h?.dewpoint_2m?.[0],
+  const feels =
+    (t?.feels_like != null ? cToF(t.feels_like) : null) ??
+    wu?.imperial?.heatIndex ??
+    wu?.imperial?.windChill ??
+    h?.apparent_temperature?.[0];
 
-    humidity:
-      t?.relative_humidity ??
-      wu?.humidity ??
-      h?.relativehumidity_2m?.[0],
+  const dew =
+    (t?.dew_point != null ? cToF(t.dew_point) : null) ??
+    wu?.imperial?.dewpt ??
+    h?.dewpoint_2m?.[0];
 
-    wind:
-      t?.wind_avg ??
-      wu?.imperial?.windSpeed ??
-      h?.wind_speed_10m?.[0],
+  const humidity =
+    t?.relative_humidity ??
+    wu?.humidity ??
+    h?.relativehumidity_2m?.[0];
 
-    gust:
-      t?.wind_gust ??
-      wu?.imperial?.windGust ??
-      h?.wind_gusts_10m?.[0], // ✅ fixed
+  const wind =
+    t?.wind_avg ??
+    wu?.imperial?.windSpeed ??
+    h?.wind_speed_10m?.[0];
 
-    uv:
-      wu?.uv ??
-      h?.uv_index?.[0] ??
-      0
-  };
+  const gust =
+    t?.wind_gust ??
+    wu?.imperial?.windGust ??
+    h?.wind_gusts_10m?.[0];
 
-  const set = (id, val) => {
-    const el = document.getElementById(id);
-    if (el && val != null && !isNaN(val)) el.textContent = val;
-  };
+  const uv =
+    wu?.uv ??
+    h?.uv_index?.[0] ??
+    0;
 
-  set("wu-temp", `${Math.round(current.temp)}°`);
-  set("wu-feels", `Feels like ${Math.round(current.feels ?? current.temp)}°`);
+  console.log("FINAL CURRENT:", { temp, feels, dew, humidity, wind, gust, uv });
 
-  set("wu-dew", `${Math.round(current.dew ?? 0)}°`);
-  set("wu-humidity", `Humidity ${Math.round(current.humidity ?? 0)}%`);
+  // 🔥 FORCE WRITE (no silent fail)
+  document.getElementById("wu-temp").textContent =
+    temp != null ? `${Math.round(temp)}°` : "--";
 
-  set("wu-wind", `${Math.round(current.wind ?? 0)} mph`);
-  set("wu-wind-gust", `Gusts ${Math.round(current.gust ?? 0)} mph`);
+  document.getElementById("wu-feels").textContent =
+    feels != null ? `Feels like ${Math.round(feels)}°` : "Feels like --";
 
-  set("wu-uv", `${Math.round(current.uv ?? 0)}`);
+  document.getElementById("wu-dew").textContent =
+    dew != null ? `${Math.round(dew)}°` : "--";
+
+  document.getElementById("wu-humidity").textContent =
+    humidity != null ? `Humidity ${Math.round(humidity)}%` : "Humidity --";
+
+  document.getElementById("wu-wind").textContent =
+    wind != null ? `${Math.round(wind)} mph` : "--";
+
+  document.getElementById("wu-wind-gust").textContent =
+    gust != null ? `Gusts ${Math.round(gust)} mph` : "Gusts --";
+
+  document.getElementById("wu-uv").textContent =
+    uv != null ? `${Math.round(uv)}` : "--";
 }
 
 // ============================================================
