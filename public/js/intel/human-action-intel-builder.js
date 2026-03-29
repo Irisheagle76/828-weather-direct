@@ -1,7 +1,6 @@
 // /intel/human-action-intel-builder.js
 // ============================================================
-// HUMAN‑ACTION INTEL BUILDER — Raw → Snapshots → Engine
-// Produces { today, tomorrow } for the renderer.
+// HUMAN-ACTION INTEL BUILDER — Raw → Snapshots → Engine
 // ============================================================
 
 import { evaluateHumanActionFactors } from "../modules/human-action-2/core-engine.js";
@@ -12,24 +11,30 @@ import { normalizeOpenMeteo } from "./normalize-hourly.js";
 // ------------------------------------------------------------
 export function buildHumanActionIntel(raw) {
   if (!raw || !raw.hourly) {
- console.error("No hourly data", raw);
- return { today: null, tomorrow: null };
-}
+    console.error("No hourly data", raw);
+    return { today: null, tomorrow: null };
+  }
 
-const hourly = normalizeOpenMeteo(raw.hourly);
+  const hourly = normalizeOpenMeteo(raw.hourly);
 
+  if (!hourly.length) {
+    console.error("Normalized hourly empty");
+    return { today: null, tomorrow: null };
+  }
 
-  // ------------------------------------------------------------
-  // 1. TODAY — use the current snapshot (hour 0)
-  // ------------------------------------------------------------
-  const current = hourly[0];
+  // ----------------------------------------------------------
+  // 1. TODAY — find closest hour to NOW
+  // ----------------------------------------------------------
+  const now = Date.now();
+  const current =
+    hourly.find(h => h.timestamp >= now) || hourly[0];
+
   const todaySnapshot = normalizeSnapshot(current);
-
   const todayIntel = evaluateHumanActionFactors(todaySnapshot);
 
-  // ------------------------------------------------------------
+  // ----------------------------------------------------------
   // 2. TOMORROW — build morning + afternoon hybrid
-  // ------------------------------------------------------------
+  // ----------------------------------------------------------
   const tomorrow = buildTomorrowSnapshots(hourly);
   const tomorrowIntel = evaluateHumanActionFactors(tomorrow);
 
@@ -49,6 +54,8 @@ const hourly = normalizeOpenMeteo(raw.hourly);
 // NORMALIZE A SINGLE SNAPSHOT
 // ------------------------------------------------------------
 function normalizeSnapshot(h) {
+  if (!h) return null;
+
   return {
     temp: h.temperature,
     feelsLike: h.feels_like ?? h.apparent_temperature ?? h.temperature,
@@ -56,7 +63,10 @@ function normalizeSnapshot(h) {
     humidity: h.relative_humidity,
     windSpeed: h.wind_speed,
     windGust: h.wind_gust,
-    precipType: h.precipitation > 0 ? (h.snowfall > 0 ? "snow" : "rain") : "none",
+    precipType:
+      h.precipitation > 0
+        ? (h.snowfall > 0 ? "snow" : "rain")
+        : "none",
     precipIntensity: h.precipitation,
     uvIndex: h.uv_index,
     visibility: h.visibility,
@@ -73,10 +83,19 @@ function normalizeSnapshot(h) {
 }
 
 // ------------------------------------------------------------
-// TOMORROW SNAPSHOTS (Morning + Afternoon)
+// TOMORROW SNAPSHOTS
 // ------------------------------------------------------------
 function buildTomorrowSnapshots(hourly) {
   const tomorrowHours = hourly.slice(24, 48);
+
+  if (!tomorrowHours.length) {
+    console.warn("No tomorrow hours available");
+    return {
+      morning: null,
+      afternoon: null,
+      stats: {}
+    };
+  }
 
   const morning = averageWindow(tomorrowHours.slice(0, 6));
   const afternoon = averageWindow(tomorrowHours.slice(6, 12));
@@ -91,10 +110,35 @@ function buildTomorrowSnapshots(hourly) {
 }
 
 // ------------------------------------------------------------
-// AVERAGE A WINDOW OF HOURLY DATA
+// SAFE AVERAGE WINDOW
 // ------------------------------------------------------------
 function averageWindow(hours) {
-  const avg = (key) => hours.reduce((a, h) => a + (h[key] ?? 0), 0) / hours.length;
+  if (!hours || hours.length === 0) {
+    return {
+      temperature: null,
+      apparent_temperature: null,
+      dewpoint: null,
+      relative_humidity: null,
+      wind_speed: 0,
+      wind_gust: 0,
+      precipitation: 0,
+      snowfall: 0,
+      uv_index: null,
+      visibility: null,
+      cloud_cover: null,
+      smoke_index: 0,
+      frost_risk: 0,
+      freeze_risk: 0,
+      inversion_risk: 0,
+      black_ice_risk: 0,
+      valley_fog_risk: 0,
+      ridge_fog_risk: 0,
+      timestamp: Date.now()
+    };
+  }
+
+  const avg = key =>
+    hours.reduce((a, h) => a + (h[key] ?? 0), 0) / hours.length;
 
   return {
     temperature: avg("temperature"),
@@ -120,12 +164,14 @@ function averageWindow(hours) {
 }
 
 // ------------------------------------------------------------
-// TOMORROW STATS (Temp swing, wind impact, cold start)
+// TOMORROW STATS
 // ------------------------------------------------------------
 function computeTomorrowStats(hours) {
-  const temps = hours.map(h => h.temperature);
-  const gusts = hours.map(h => h.wind_gust);
-  const winds = hours.map(h => h.wind_speed);
+  if (!hours || !hours.length) return {};
+
+  const temps = hours.map(h => h.temperature ?? 0);
+  const gusts = hours.map(h => h.wind_gust ?? 0);
+  const winds = hours.map(h => h.wind_speed ?? 0);
 
   const tempMin = Math.min(...temps);
   const tempMax = Math.max(...temps);
@@ -134,11 +180,17 @@ function computeTomorrowStats(hours) {
   const windGustMax = Math.max(...gusts);
   const windAvg = winds.reduce((a, b) => a + b, 0) / winds.length;
 
-  const dewpointAvg = hours.reduce((a, h) => a + (h.dewpoint ?? 0), 0) / hours.length;
-  const cloudAvg = hours.reduce((a, h) => a + (h.cloud_cover ?? 0), 0) / hours.length;
+  const dewpointAvg =
+    hours.reduce((a, h) => a + (h.dewpoint ?? 0), 0) / hours.length;
 
-  const rainTotal = hours.reduce((a, h) => a + (h.precipitation ?? 0), 0);
-  const snowTotal = hours.reduce((a, h) => a + (h.snowfall ?? 0), 0);
+  const cloudAvg =
+    hours.reduce((a, h) => a + (h.cloud_cover ?? 0), 0) / hours.length;
+
+  const rainTotal =
+    hours.reduce((a, h) => a + (h.precipitation ?? 0), 0);
+
+  const snowTotal =
+    hours.reduce((a, h) => a + (h.snowfall ?? 0), 0);
 
   return {
     tempMin,
