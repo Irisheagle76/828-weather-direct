@@ -1,38 +1,43 @@
 // /js/weather-render.js
 // ============================================================
-// FINAL RENDERER — SIMPLE + WORKING
+// FINAL RENDERER — CLEAN + FIXED
 // ============================================================
 
 import { fetchAllIntel } from "./weather-fetch.js";
 import { buildHumanActionIntel } from "./intel/human-action-intel-builder.js?v=5";
 import { computeComfort, buildFutureComfort } from "./intel/comfort.js";
 import { generateNarrative } from "./intel/synthesizer.js";
+import { normalizeOpenMeteo } from "./normalize-hourly.js";
 
 // ============================================================
-// CURRENT OBSERVATIONS (ALWAYS RUNS)
+// HELPERS
+// ============================================================
+
+const cToF = c => (c != null ? (c * 9) / 5 + 32 : null);
+
+// ============================================================
+// CURRENT OBSERVATIONS
 // ============================================================
 
 function renderCurrentObservations(raw) {
-  console.log("✅ CURRENT OBS RUNNING");
-
   const t = raw?.tempest;
   const wu = raw?.wu;
   const h = raw?.hourly;
 
   const current = {
     temp:
-      t?.air_temperature ??
+      (t?.air_temperature != null ? cToF(t.air_temperature) : null) ??
       wu?.imperial?.temp ??
       h?.temperature_2m?.[0],
 
     feels:
-      t?.feels_like ??
+      (t?.feels_like != null ? cToF(t.feels_like) : null) ??
       wu?.imperial?.heatIndex ??
       wu?.imperial?.windChill ??
       h?.apparent_temperature?.[0],
 
     dew:
-      t?.dew_point ??
+      (t?.dew_point != null ? cToF(t.dew_point) : null) ??
       wu?.imperial?.dewpt ??
       h?.dewpoint_2m?.[0],
 
@@ -49,7 +54,7 @@ function renderCurrentObservations(raw) {
     gust:
       t?.wind_gust ??
       wu?.imperial?.windGust ??
-      h?.windgusts_10m?.[0],
+      h?.wind_gusts_10m?.[0], // ✅ fixed
 
     uv:
       wu?.uv ??
@@ -57,13 +62,9 @@ function renderCurrentObservations(raw) {
       0
   };
 
-  console.log("CURRENT:", current);
-
   const set = (id, val) => {
     const el = document.getElementById(id);
-    if (el && val != null && !isNaN(val)) {
-      el.textContent = val;
-    }
+    if (el && val != null && !isNaN(val)) el.textContent = val;
   };
 
   set("wu-temp", `${Math.round(current.temp)}°`);
@@ -146,19 +147,16 @@ export async function renderWeather({
     tempestToken
   });
 
-  console.log("RAW:", raw);
-
-  // 🔥 THESE ALWAYS RUN
+  // --- TOP BLOCK ---
   updateDataSourceIndicator(raw);
   renderCurrentObservations(raw);
 
-  // ---------------- HUMAN ACTION ----------------
+  // --- HUMAN ACTION ---
   const intelRaw = buildHumanActionIntel(raw);
 
   const today = mapToLegacyFields(intelRaw.today);
   const tomorrow = mapToLegacyFields(intelRaw.tomorrow);
 
-  // DOM
   const todayEmoji = document.getElementById("today-emoji");
   const todayHeadline = document.getElementById("today-headline");
   const todayText = document.getElementById("today-text");
@@ -187,14 +185,20 @@ export async function renderWeather({
       .join("");
   }
 
-  // ---------------- COMFORT ----------------
+  // --- COMFORT ---
   const comfortNow = computeComfort({
     tempest: raw.tempest,
     wu: raw.wu,
     hourly: raw.hourly
   });
 
-  const futureComfort = buildFutureComfort(raw.hourly, computeComfort);
+  // ✅ FIX: normalize before using
+  const hourlyNormalized = normalizeOpenMeteo(raw.hourly);
+
+  const futureComfort = buildFutureComfort(
+    hourlyNormalized,
+    computeComfort
+  );
 
   const comfortNowEl = document.getElementById("comfort-now-container");
   const futureComfortEl = document.getElementById("future-comfort-container");
