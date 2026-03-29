@@ -1,6 +1,6 @@
 // /js/weather-render.js
 // ============================================================
-// FINAL RENDERER — MODERNIZED TO MATCH CSS MODULES
+// FINAL RENDERER — MODERNIZED + DIAGNOSTIC LOGS
 // ============================================================
 
 import { fetchAllIntel } from "./weather-fetch.js";
@@ -15,11 +15,21 @@ import { normalizeOpenMeteo } from "./intel/normalize-hourly.js";
 
 const cToF = c => (c != null ? (c * 9) / 5 + 32 : null);
 
+function formatHourLabel(ts) {
+  const d = new Date(ts);
+  let h = d.getHours();
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12 || 12;
+  return `${h}${ampm}`;
+}
+
 // ============================================================
 // CURRENT OBSERVATIONS
 // ============================================================
 
 function renderCurrentObservations(raw) {
+  console.log("🌡️ RENDER CURRENT OBS — RAW:", raw);
+
   const t = raw?.tempest;
   const wu = raw?.wu;
   const h = raw?.hourly;
@@ -87,6 +97,8 @@ function renderCurrentObservations(raw) {
 // ============================================================
 
 function updateDataSourceIndicator(raw) {
+  console.log("📡 DATA SOURCE INDICATOR RAW:", raw);
+
   const label = document.getElementById("wu-status-label");
   const text = document.getElementById("wu-status-text");
   const dot = document.getElementById("wu-status-dot");
@@ -121,6 +133,7 @@ function mapToLegacyFields(period) {
   if (!period) return null;
 
   const narrative = generateNarrative(period);
+  console.log("🧠 NARRATIVE FOR PERIOD:", { period, narrative });
 
   return {
     ...period,
@@ -136,6 +149,9 @@ function mapToLegacyFields(period) {
 // ============================================================
 
 function renderHumanAction(today, tomorrow) {
+  console.log("🔵 HUMAN-ACTION TODAY (legacy-mapped):", today);
+  console.log("🔵 HUMAN-ACTION TOMORROW (legacy-mapped):", tomorrow);
+
   const todayEmoji = document.getElementById("today-emoji");
   const todayHeadline = document.getElementById("today-headline");
   const todayText = document.getElementById("today-text");
@@ -167,11 +183,113 @@ function renderHumanAction(today, tomorrow) {
   }
 }
 
+// simple, safe expanded panels that won’t crash even if fields are missing
+function renderHumanActionExpanded(todayIntel, tomorrowIntel) {
+  console.log("🔵 HUMAN-ACTION EXPANDED INTEL:", {
+    todayIntel,
+    tomorrowIntel
+  });
+
+  const todayPanel = document.getElementById("expanded-today");
+  const tomorrowPanel = document.getElementById("expanded-tomorrow");
+
+  if (todayIntel && todayPanel) {
+    todayPanel.innerHTML = `
+      <div class="fx-section">
+        <div class="fx-label">Today’s Forecast</div>
+        <div class="fx-grid">
+          <div class="fx-tile">
+            <div class="fx-top">
+              ${todayIntel.high != null && todayIntel.low != null
+                ? `${Math.round(todayIntel.high)}° / ${Math.round(todayIntel.low)}°`
+                : "--"}
+            </div>
+            <div class="fx-sub">High / Low</div>
+            <div class="fx-label">Temperature</div>
+          </div>
+          <div class="fx-tile">
+            <div class="fx-top">
+              ${todayIntel.dewPoint != null ? `${Math.round(todayIntel.dewPoint)}°` : "--"}
+            </div>
+            <div class="fx-sub">Dew Point</div>
+            <div class="fx-label">Moisture</div>
+          </div>
+          <div class="fx-tile">
+            <div class="fx-top">
+              ${todayIntel.windSpeed != null ? `${Math.round(todayIntel.windSpeed)} mph` : "--"}
+            </div>
+            <div class="fx-sub">
+              ${todayIntel.windGust != null ? `Gusts ${Math.round(todayIntel.windGust)} mph` : ""}
+            </div>
+            <div class="fx-label">Wind</div>
+          </div>
+          <div class="fx-tile">
+            <div class="fx-top">
+              ${todayIntel.precipChance != null ? `${todayIntel.precipChance}%` : "--"}
+            </div>
+            <div class="fx-sub">
+              ${todayIntel.precipType ?? ""}
+            </div>
+            <div class="fx-label">Precipitation</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  if (tomorrowIntel && tomorrowPanel) {
+    tomorrowPanel.innerHTML = `
+      <div class="fx-section">
+        <div class="fx-label">Tomorrow’s Forecast</div>
+        <div class="fx-grid">
+          <div class="fx-tile">
+            <div class="fx-top">
+              ${tomorrowIntel.high != null && tomorrowIntel.low != null
+                ? `${Math.round(tomorrowIntel.high)}° / ${Math.round(tomorrowIntel.low)}°`
+                : "--"}
+            </div>
+            <div class="fx-sub">High / Low</div>
+            <div class="fx-label">Temperature</div>
+          </div>
+          <div class="fx-tile">
+            <div class="fx-top">
+              ${tomorrowIntel.dewPoint != null ? `${Math.round(tomorrowIntel.dewPoint)}°` : "--"}
+            </div>
+            <div class="fx-sub">Dew Point</div>
+            <div class="fx-label">Moisture</div>
+          </div>
+          <div class="fx-tile">
+            <div class="fx-top">
+              ${tomorrowIntel.windSpeed != null ? `${Math.round(tomorrowIntel.windSpeed)} mph` : "--"}
+            </div>
+            <div class="fx-sub">
+              ${tomorrowIntel.windGust != null ? `Gusts ${Math.round(tomorrowIntel.windGust)} mph` : ""}
+            </div>
+            <div class="fx-label">Wind</div>
+          </div>
+          <div class="fx-tile">
+            <div class="fx-top">
+              ${tomorrowIntel.precipChance != null ? `${tomorrowIntel.precipChance}%` : "--"}
+            </div>
+            <div class="fx-sub">
+              ${tomorrowIntel.precipType ?? ""}
+            </div>
+            <div class="fx-label">Precipitation</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+}
+
 // ============================================================
 // COMFORT MODULE RENDERING
 // ============================================================
 
-function renderComfortNow(container, comfort) {
+function renderComfortNow(container, comfort, bestWindow) {
+  console.log("🟠 COMFORT NOW INPUT:", comfort);
+  console.log("🟠 COMFORT BEST WINDOW:", bestWindow);
+
   container.innerHTML = `
     <div class="comfort-module fade-in">
       <div class="comfort-main">
@@ -199,13 +317,47 @@ function renderComfortNow(container, comfort) {
           <span class="comfort-expand-label">Wind</span>
           <span class="comfort-expand-value">${comfort.wind ?? "--"} mph</span>
         </div>
+
+        ${
+          bestWindow
+            ? `
+        <div class="comfort-expand-row" style="margin-top:0.6rem;">
+          <span class="comfort-expand-label">Best window (next ${bestWindow.hours.length} hrs)</span>
+          <span class="comfort-expand-value">
+            ${bestWindow.hours[0].hourLabel}–${bestWindow.hours[bestWindow.hours.length - 1].hourLabel}
+          </span>
+        </div>
+
+        <div class="fc-strip">
+          ${bestWindow.hours
+            .map(
+              h => `
+            <div class="fc-hour">
+              <div class="fc-hour-label">${h.hourLabel}</div>
+              <div class="fc-hour-main">
+                <span class="fc-hour-emoji">${h.emoji}</span>
+                <span class="fc-hour-temp">${Math.round(h.temp)}°</span>
+              </div>
+              <div class="fc-hour-extra">
+                <span class="fc-hour-score">${Math.round(h.comfortScore)}/100</span>
+                <span class="fc-hour-label-text">${h.label}</span>
+              </div>
+            </div>
+          `
+            )
+            .join("")}
+        </div>
+        `
+            : ""
+        }
       </div>
     </div>
   `;
 }
 
 function renderFutureComfort(container, items) {
-  console.log("FUTURE COMFORT INPUT:", items);
+  console.log("🟣 FUTURE COMFORT INPUT TO RENDERER:", items);
+
   container.innerHTML = `
     <div class="next6-module fade-in">
       <div class="next6-header">
@@ -219,7 +371,7 @@ function renderFutureComfort(container, items) {
           <div class="next6-hour">
             <div class="next6-hour-label">${h.hourLabel}</div>
             <div class="next6-hour-emoji">${h.emoji}</div>
-            <div class="next6-hour-temp">${h.temp}°</div>
+            <div class="next6-hour-temp">${Math.round(h.temp)}°</div>
             <div class="next6-hour-factor">${h.label}</div>
           </div>
         `
@@ -235,9 +387,13 @@ function renderFutureComfort(container, items) {
 // ============================================================
 
 function initializeAccordion() {
+  console.log("🟡 INITIALIZING ACCORDION");
+
   const modules = document.querySelectorAll(
     ".comfort-module, .next6-module, .action-module"
   );
+
+  console.log("🟡 ACCORDION MODULE COUNT:", modules.length);
 
   // Remove old listeners by cloning nodes
   modules.forEach(module => {
@@ -264,6 +420,67 @@ function initializeAccordion() {
 }
 
 // ============================================================
+// COMFORT WINDOW HELPER
+// ============================================================
+
+function findBestComfortWindow(hourlyNormalized, computeComfort, windowSize = 3) {
+  console.log("🟠 FIND BEST COMFORT WINDOW — INPUT:", hourlyNormalized);
+
+  if (!hourlyNormalized || !hourlyNormalized.time) return null;
+
+  const times = hourlyNormalized.time;
+  const len = times.length;
+  if (len < windowSize) return null;
+
+  const windows = [];
+
+  for (let start = 0; start <= len - windowSize; start++) {
+    let sum = 0;
+    const hours = [];
+
+    for (let i = 0; i < windowSize; i++) {
+      const idx = start + i;
+
+      const intelForHour = {
+        tempest: null,
+        wu: {
+          temp: hourlyNormalized.temperature_2m[idx],
+          dewPoint: hourlyNormalized.dewpoint_2m[idx],
+          windSpeed: hourlyNormalized.wind_speed[idx],
+          windDir: hourlyNormalized.wind_direction_10m?.[idx] ?? "",
+          obsTimeLocal: hourlyNormalized.time[idx]
+        },
+        hourly: hourlyNormalized
+      };
+
+      const c = computeComfort(intelForHour);
+      sum += c.comfortScore;
+
+      hours.push({
+        time: hourlyNormalized.time[idx],
+        hourLabel: formatHourLabel(hourlyNormalized.time[idx]),
+        comfortScore: c.comfortScore,
+        emoji: c.emoji,
+        temp: hourlyNormalized.temperature_2m[idx],
+        label: c.label
+      });
+    }
+
+    windows.push({
+      startIndex: start,
+      avgScore: sum / windowSize,
+      hours
+    });
+  }
+
+  windows.sort((a, b) => b.avgScore - a.avgScore);
+  const best = windows[0] ?? null;
+
+  console.log("🟠 BEST COMFORT WINDOW:", best);
+  return best;
+}
+
+// ============================================================
 // MAIN ENTRY
 // ============================================================
 
@@ -273,6 +490,8 @@ export async function renderWeather({
   tempestDeviceId,
   tempestToken
 }) {
+  console.log("🌎 RENDER WEATHER START", { lat, lon });
+
   const raw = await fetchAllIntel({
     lat,
     lon,
@@ -280,14 +499,19 @@ export async function renderWeather({
     tempestToken
   });
 
+  console.log("🌎 RAW FETCHED INTEL:", raw);
+
   updateDataSourceIndicator(raw);
   renderCurrentObservations(raw);
 
   const intelRaw = buildHumanActionIntel(raw);
+  console.log("🔵 HUMAN-ACTION INTEL RAW:", intelRaw);
+
   const today = mapToLegacyFields(intelRaw.today);
   const tomorrow = mapToLegacyFields(intelRaw.tomorrow);
 
   renderHumanAction(today, tomorrow);
+  renderHumanActionExpanded(intelRaw.today, intelRaw.tomorrow);
 
   const comfortNow = computeComfort({
     tempest: raw.tempest,
@@ -295,14 +519,23 @@ export async function renderWeather({
     hourly: raw.hourly
   });
 
+  console.log("🟠 COMFORT NOW (computed):", comfortNow);
+
   const hourlyNormalized = normalizeOpenMeteo(raw.hourly);
+  console.log("🟣 NORMALIZED HOURLY:", hourlyNormalized);
+
   const futureComfort = buildFutureComfort(hourlyNormalized, computeComfort);
+  console.log("🟣 FUTURE COMFORT (computed):", futureComfort);
+
+  const bestWindow = findBestComfortWindow(hourlyNormalized, computeComfort);
 
   const comfortNowEl = document.getElementById("comfort-now-container");
   const futureComfortEl = document.getElementById("future-comfort-container");
 
-  if (comfortNowEl) renderComfortNow(comfortNowEl, comfortNow);
+  if (comfortNowEl) renderComfortNow(comfortNowEl, comfortNow, bestWindow);
   if (futureComfortEl) renderFutureComfort(futureComfortEl, futureComfort);
 
   initializeAccordion();
+
+  console.log("🌎 RENDER WEATHER COMPLETE");
 }
