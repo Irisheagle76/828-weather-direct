@@ -1,7 +1,9 @@
 // /js/pulse-render.js
 // ============================================================
-// CLEAN HTML
+// MODERNIZED PULSE RENDERER — MATCHES pulse.css EXACTLY
 // ============================================================
+
+// Clean HTML of unwanted tags
 function cleanHtml(html) {
   return (html || "")
     .replace(/<span[^>]*>/g, "")
@@ -9,9 +11,7 @@ function cleanHtml(html) {
     .replace(/&nbsp;/g, " ");
 }
 
-// ============================================================
-// HYBRID PREVIEW
-// ============================================================
+// Hybrid preview builder
 function createHybridPreview(html) {
   const textOnly = html
     .replace(/<[^>]+>/g, " ")
@@ -35,9 +35,7 @@ function createHybridPreview(html) {
   return words.slice(0, 50).join(" ") + "…";
 }
 
-// ============================================================
-// TIME AGO
-// ============================================================
+// Time-ago formatter
 function formatTimeAgo(date) {
   const now = new Date();
   const diff = (now - date) / 1000;
@@ -49,8 +47,9 @@ function formatTimeAgo(date) {
 }
 
 // ============================================================
-// MAIN RENDERER (single source of truth)
+// MAIN RENDERER — MATCHES pulse.css STRUCTURE
 // ============================================================
+
 export function renderPulse(pulse) {
   const card = document.getElementById("pulse-card");
   const timestampEl = document.getElementById("pulse-timestamp");
@@ -71,7 +70,7 @@ export function renderPulse(pulse) {
   const ts = pulse.timestamp ? new Date(pulse.timestamp) : null;
   timestampEl.textContent = ts ? formatTimeAgo(ts) : "Just now";
 
-  // MEDIA
+  // MEDIA HANDLING
   const rawSrc = pulse.mediaUrl || "/828-brand-card.png";
   const isVideo = rawSrc.includes("/video/upload") || rawSrc.endsWith(".mp4");
 
@@ -99,30 +98,39 @@ export function renderPulse(pulse) {
   const shortText = createHybridPreview(fullText);
 
   previewEl.innerHTML = shortText;
-  fullTextEl.innerHTML = pulse.text || "";
 
-  // EXPAND / COLLAPSE
+  // Default collapsed state
+  fullTextEl.innerHTML = "";
   let expanded = false;
+
+  // ============================================================
+  // EXPAND / COLLAPSE HANDLER — MATCHES pulse.css EXACTLY
+  // ============================================================
 
   function handleToggle() {
     expanded = !expanded;
 
     if (expanded) {
+      // Expanded mode
       card.classList.add("pulse-expanded");
       mediaEl.style.display = "none";
 
       const firstSentence = fullText.split(". ")[0] + ".";
       const rest = fullText.replace(firstSentence, "");
 
-    const expandedMedia = isVideo
-  ? `<div class="pulse-media">
-       <video autoplay loop muted playsinline>
-         <source src="${optimizedSrc}" type="video/mp4">
-       </video>
-     </div>`
-  : `<div class="pulse-media">
-       <img src="${optimizedSrc}" />
-     </div>`;
+      const expandedMedia = isVideo
+        ? `
+          <div class="pulse-media">
+            <video autoplay loop muted playsinline>
+              <source src="${optimizedSrc}" type="video/mp4">
+            </video>
+          </div>
+        `
+        : `
+          <div class="pulse-media">
+            <img src="${optimizedSrc}" />
+          </div>
+        `;
 
       fullTextEl.innerHTML = `
         <div class="pulse-expanded-content">
@@ -137,16 +145,19 @@ export function renderPulse(pulse) {
       toggleBtn.setAttribute("aria-expanded", "true");
 
     } else {
+      // Collapsed mode
       card.classList.remove("pulse-expanded");
       mediaEl.style.display = "block";
       previewEl.innerHTML = shortText;
-      fullTextEl.innerHTML = pulse.text || "";
+      fullTextEl.innerHTML = "";
       toggleBtn.textContent = "Read full update";
       toggleBtn.setAttribute("aria-expanded", "false");
     }
   }
 
   toggleBtn.onclick = handleToggle;
+
+  // Clicking the card toggles too (except links + button)
   card.onclick = (e) => {
     if (e.target.closest("#pulse-toggle") || e.target.closest("a")) return;
     handleToggle();

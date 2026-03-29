@@ -1,6 +1,6 @@
 // /js/weather-render.js
 // ============================================================
-// FINAL RENDERER — CLEAN + FIXED
+// FINAL RENDERER — MODERNIZED TO MATCH CSS MODULES
 // ============================================================
 
 import { fetchAllIntel } from "./weather-fetch.js";
@@ -23,8 +23,6 @@ function renderCurrentObservations(raw) {
   const t = raw?.tempest;
   const wu = raw?.wu;
   const h = raw?.hourly;
-
-  const cToF = c => (c != null ? (c * 9) / 5 + 32 : null);
 
   const temp =
     (t?.air_temperature != null ? cToF(t.air_temperature) : null) ??
@@ -62,9 +60,6 @@ function renderCurrentObservations(raw) {
     h?.uv_index?.[0] ??
     0;
 
-  console.log("FINAL CURRENT:", { temp, feels, dew, humidity, wind, gust, uv });
-
-  // 🔥 FORCE WRITE (no silent fail)
   document.getElementById("wu-temp").textContent =
     temp != null ? `${Math.round(temp)}°` : "--";
 
@@ -95,8 +90,6 @@ function updateDataSourceIndicator(raw) {
   const label = document.getElementById("wu-status-label");
   const text = document.getElementById("wu-status-text");
   const dot = document.getElementById("wu-status-dot");
-
-  if (!label || !text || !dot) return;
 
   if (raw.tempest) {
     label.textContent = "Tempest Live";
@@ -139,6 +132,105 @@ function mapToLegacyFields(period) {
 }
 
 // ============================================================
+// HUMAN-ACTION RENDERING
+// ============================================================
+
+function renderHumanAction(today, tomorrow) {
+  const todayEmoji = document.getElementById("today-emoji");
+  const todayHeadline = document.getElementById("today-headline");
+  const todayText = document.getElementById("today-text");
+  const todayBullets = document.getElementById("today-bullets");
+
+  const tomorrowEmoji = document.getElementById("tomorrow-emoji");
+  const tomorrowHeadline = document.getElementById("tomorrow-headline");
+  const tomorrowText = document.getElementById("tomorrow-text");
+  const tomorrowBullets = document.getElementById("tomorrow-bullets");
+
+  if (today) {
+    todayEmoji.textContent = today.emoji;
+    todayHeadline.textContent = today.title;
+    todayText.textContent = today.notes;
+
+    todayBullets.innerHTML = today.secondaryFactors
+      .map(b => `<li>${b}</li>`)
+      .join("");
+  }
+
+  if (tomorrow) {
+    tomorrowEmoji.textContent = tomorrow.emoji;
+    tomorrowHeadline.textContent = tomorrow.title;
+    tomorrowText.textContent = tomorrow.notes;
+
+    tomorrowBullets.innerHTML = tomorrow.secondaryFactors
+      .map(b => `<li>${b}</li>`)
+      .join("");
+  }
+}
+
+// ============================================================
+// COMFORT MODULE RENDERING — MODERNIZED TO MATCH CSS MODULES
+// ============================================================
+
+function renderComfortNow(container, comfort) {
+  container.innerHTML = `
+    <div class="comfort-module fade-in">
+      <div class="comfort-main">
+        <div class="comfort-emoji">${comfort.emoji}</div>
+
+        <div class="comfort-text-block">
+          <div class="comfort-label">Comfort Now</div>
+          <div class="comfort-text">${comfort.label}</div>
+          <div class="comfort-sub">${comfort.comfortScore} / 100</div>
+        </div>
+      </div>
+
+      <!-- Optional expansion panel -->
+      <div class="comfort-expand">
+        <div class="comfort-expand-row">
+          <span class="comfort-expand-label">Feels Like</span>
+          <span class="comfort-expand-value">${Math.round(comfort.feelsLike)}°</span>
+        </div>
+
+        <div class="comfort-expand-row">
+          <span class="comfort-expand-label">Humidity</span>
+          <span class="comfort-expand-value">${comfort.humidity ?? "--"}%</span>
+        </div>
+
+        <div class="comfort-expand-row">
+          <span class="comfort-expand-label">Wind</span>
+          <span class="comfort-expand-value">${comfort.wind ?? "--"} mph</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderFutureComfort(container, items) {
+  container.innerHTML = `
+    <div class="next6-module fade-in">
+      <div class="next6-header">
+        <div class="next6-label">Next 6 Hours</div>
+      </div>
+
+      <div class="next6-strip">
+        ${items
+          .map(
+            h => `
+          <div class="next6-hour">
+            <div class="next6-hour-label">${h.hourLabel}</div>
+            <div class="next6-hour-emoji">${h.emoji}</div>
+            <div class="next6-hour-temp">${h.temp}°</div>
+            <div class="next6-hour-factor">${h.label}</div>
+          </div>
+        `
+          )
+          .join("")}
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================
 // MAIN ENTRY
 // ============================================================
 
@@ -155,75 +247,29 @@ export async function renderWeather({
     tempestToken
   });
 
-  // --- TOP BLOCK ---
   updateDataSourceIndicator(raw);
   renderCurrentObservations(raw);
 
-  // --- HUMAN ACTION ---
+  // HUMAN ACTION
   const intelRaw = buildHumanActionIntel(raw);
-
   const today = mapToLegacyFields(intelRaw.today);
   const tomorrow = mapToLegacyFields(intelRaw.tomorrow);
 
-  const todayEmoji = document.getElementById("today-emoji");
-  const todayHeadline = document.getElementById("today-headline");
-  const todayText = document.getElementById("today-text");
-  const todayBullets = document.getElementById("today-bullets");
+  renderHumanAction(today, tomorrow);
 
-  const tomorrowEmoji = document.getElementById("tomorrow-emoji");
-  const tomorrowHeadline = document.getElementById("tomorrow-headline");
-  const tomorrowText = document.getElementById("tomorrow-text");
-  const tomorrowBullets = document.getElementById("tomorrow-bullets");
-
-  if (today && todayEmoji) {
-    todayEmoji.textContent = today.emoji;
-    todayHeadline.textContent = today.title;
-    todayText.textContent = today.notes;
-    todayBullets.innerHTML = (today.secondaryFactors || [])
-      .map(b => `<li>${b}</li>`)
-      .join("");
-  }
-
-  if (tomorrow && tomorrowEmoji) {
-    tomorrowEmoji.textContent = tomorrow.emoji;
-    tomorrowHeadline.textContent = tomorrow.title;
-    tomorrowText.textContent = tomorrow.notes;
-    tomorrowBullets.innerHTML = (tomorrow.secondaryFactors || [])
-      .map(b => `<li>${b}</li>`)
-      .join("");
-  }
-
-  // --- COMFORT ---
+  // COMFORT
   const comfortNow = computeComfort({
     tempest: raw.tempest,
     wu: raw.wu,
     hourly: raw.hourly
   });
 
-  // ✅ FIX: normalize before using
   const hourlyNormalized = normalizeOpenMeteo(raw.hourly);
-
-  const futureComfort = buildFutureComfort(
-    hourlyNormalized,
-    computeComfort
-  );
+  const futureComfort = buildFutureComfort(hourlyNormalized, computeComfort);
 
   const comfortNowEl = document.getElementById("comfort-now-container");
   const futureComfortEl = document.getElementById("future-comfort-container");
 
-  if (comfortNowEl && comfortNow) {
-    comfortNowEl.innerHTML = `
-      <div style="border-left: 6px solid ${comfortNow.color}">
-        <div>${comfortNow.emoji}</div>
-        <div>${comfortNow.comfortScore}</div>
-        <div>${comfortNow.label}</div>
-      </div>
-    `;
-  }
-
-  if (futureComfortEl && futureComfort) {
-    futureComfortEl.innerHTML = futureComfort
-      .map(c => `<div>${c.hourLabel} ${c.temp}°</div>`)
-      .join("");
-  }
+  if (comfortNowEl) renderComfortNow(comfortNowEl, comfortNow);
+  if (futureComfortEl) renderFutureComfort(futureComfortEl, futureComfort);
 }

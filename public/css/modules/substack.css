@@ -1,129 +1,60 @@
-/* ----------------------------------------------------
-   828 Substack Module — Latest Article Card
-   ---------------------------------------------------- */
+/* ============================================================
+   SUBSTACK MODULE
+   ============================================================ */
 
 .substack-card {
-  background: #111;
-  border-radius: 14px;
-  padding: 20px 22px;
-  color: #f5f5f5;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.35);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  max-width: 760px;
-  margin: 0 auto;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  background: #fafafa;
+  padding: 1rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  margin-top: 1.5rem;
 }
-
-.substack-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 22px rgba(0,0,0,0.45);
-}
-
-/* ----------------------------------------------------
-   Header
-   ---------------------------------------------------- */
 
 .substack-header {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
 }
 
 .substack-icon {
   width: 22px;
   height: 22px;
-  opacity: 0.85;
 }
 
 .substack-title {
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 600;
-  letter-spacing: 0.3px;
-}
-
-/* ----------------------------------------------------
-   Thumbnail
-   ---------------------------------------------------- */
-
-.substack-thumb {
-  width: 100%;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #000;
 }
 
 .substack-thumb img {
   width: 100%;
-  height: auto;
-  display: block;
-  border-radius: 12px;
+  border-radius: var(--radius);
+  margin-bottom: 0.75rem;
 }
-
-/* ----------------------------------------------------
-   Metadata
-   ---------------------------------------------------- */
 
 .substack-meta {
   font-size: 0.8rem;
-  opacity: 0.6;
-  margin-top: -4px;
+  opacity: 0.7;
+  margin-bottom: 0.5rem;
 }
-
-/* ----------------------------------------------------
-   Description
-   ---------------------------------------------------- */
 
 .substack-description {
   font-size: 0.95rem;
-  line-height: 1.5;
-  opacity: 0.92;
+  line-height: 1.45;
+  opacity: 0.9;
+  margin-bottom: 0.75rem;
 }
 
-/* ----------------------------------------------------
-   Read More Link
-   ---------------------------------------------------- */
-
-.substack-readmore {
-  margin-top: 6px;
-  font-size: 0.9rem;
-  color: #7ab8ff;
-  text-decoration: underline;
-  cursor: pointer;
-  transition: opacity 0.2s ease;
+.substack-readmore a {
+  color: var(--color-accent);
+  font-weight: 600;
+  text-decoration: none;
 }
 
-.substack-readmore:hover {
-  opacity: 0.7;
-}
-
-/* ----------------------------------------------------
-   Empty State
-   ---------------------------------------------------- */
-
-.substack-empty {
-  background: #111;
-  border-radius: 14px;
-  padding: 20px 22px;
-  color: #ccc;
+.substack-empty,
+.substack-error {
   text-align: center;
-  font-size: 0.95rem;
-  opacity: 0.8;
-  max-width: 760px;
-  margin: 0 auto;
-}
-
-/* ----------------------------------------------------
-   Animations
-   ---------------------------------------------------- */
-
-.fade-in {
-  opacity: 0;
-  animation: fadeIn 0.6s ease-out forwards;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  padding: 1rem;
+  opacity: 0.7;
 }

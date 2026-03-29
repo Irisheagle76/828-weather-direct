@@ -6,7 +6,7 @@
   <title>828 Weather Direct – WU Powered</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Modular CSS -->
+  <!-- Modular CSS (correct order) -->
   <link rel="stylesheet" href="css/core.css">
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
@@ -160,15 +160,18 @@
         <div id="pulse-preview" class="pulse-preview"></div>
       </div>
 
-      <div id="pulse-full-text" class="pulse-full-text"></div>
+      <!-- Corrected expanded container -->
+      <div id="pulse-full-text" class="pulse-expanded">
+        <div class="pulse-expanded-content" id="pulse-expanded-content"></div>
+      </div>
 
       <button id="pulse-toggle" class="pulse-toggle" aria-expanded="false">
         Read full update
       </button>
     </section>
 
-    <!-- SUBSTACK MODULE -->
-    <section id="weather-articles-module" class="module-card substack-module"></section>
+    <!-- SUBSTACK MODULE (correct class name) -->
+    <section id="weather-articles-module" class="substack-card"></section>
 
     <!-- FOOTER -->
     <div class="footer-note" id="wu-station-footer">
@@ -186,7 +189,7 @@
   <!-- JAVASCRIPT MODULES -->
   <script type="module" src="/js/app.js?v=5"></script>
   <script type="module" src="/js/substack-render.js"></script>
-<script type="module" src="/js/pulse-render.js"></script>
+  <script type="module" src="/js/pulse-render.js"></script>
 
 </body>
 </html>

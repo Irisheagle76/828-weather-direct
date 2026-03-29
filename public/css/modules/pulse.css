@@ -1,155 +1,76 @@
-/* ----------------------------------------------------
-   828 Weather Pulse — Core Styles
-   ---------------------------------------------------- */
-
-.pulse-module {
-  width: 100%;
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 20px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-/* ----------------------------------------------------
-   Pulse Card
-   ---------------------------------------------------- */
+/* ============================================================
+   PULSE MODULE
+   ============================================================ */
 
 .pulse-card {
-  background: #111;
-  border-radius: 14px;
-  padding: 18px 20px;
-  color: #f5f5f5;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.35);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  background: #fafafa;
+  padding: 1rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  margin-top: 1.5rem;
   cursor: pointer;
-  overflow: hidden;
 }
-
-.pulse-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 22px rgba(0,0,0,0.45);
-}
-
-/* ----------------------------------------------------
-   Header
-   ---------------------------------------------------- */
 
 .pulse-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  justify-content: space-between;
 }
 
 .pulse-title {
-  font-size: 1.15rem;
+  font-size: 1.25rem;
   font-weight: 600;
-  letter-spacing: 0.3px;
 }
 
 .pulse-badge-pill {
-  background: #2a2a2a;
-  padding: 4px 10px;
-  border-radius: 20px;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
   font-size: 0.75rem;
-  opacity: 0.85;
+  font-weight: 600;
 }
 
 .pulse-timestamp {
-  font-size: 0.75rem;
-  opacity: 0.6;
-  margin-top: 4px;
-}
-
-/* ----------------------------------------------------
-   Body
-   ---------------------------------------------------- */
-
-.pulse-body {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-/* ----------------------------------------------------
-   Media (Image or Video)
-   ---------------------------------------------------- */
-
-.pulse-media {
-  width: 100%;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #000;
+  font-size: 0.8rem;
+  opacity: 0.7;
+  margin-top: 0.25rem;
 }
 
 .pulse-media img,
-.pulse-media video {
+.pulse-media video,
+.pulse-thumbnail {
   width: 100%;
-  height: auto;
-  display: block;
-  border-radius: 12px;
+  border-radius: var(--radius);
+  margin-top: 0.75rem;
 }
 
-/* ----------------------------------------------------
-   Preview Text
-   ---------------------------------------------------- */
-
 .pulse-preview {
+  margin-top: 0.75rem;
   font-size: 0.95rem;
   line-height: 1.45;
   opacity: 0.9;
 }
 
-/* ----------------------------------------------------
-   Toggle Button
-   ---------------------------------------------------- */
-
-.pulse-toggle {
-  margin-top: 10px;
-  font-size: 0.85rem;
-  color: #7ab8ff;
-  cursor: pointer;
-  user-select: none;
-  transition: opacity 0.2s ease;
-}
-
-.pulse-toggle:hover {
-  opacity: 0.7;
-}
-
-/* ----------------------------------------------------
-   Expanded State
-   ---------------------------------------------------- */
-
 .pulse-expanded {
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid rgba(255,255,255,0.08);
-  animation: fadeIn 0.35s ease-out forwards;
+  background: #fff;
 }
 
 .pulse-expanded-content {
-  font-size: 0.95rem;
+  margin-top: 1rem;
+}
+
+.pulse-full-text {
+  margin-top: 0.75rem;
+  font-size: 1rem;
   line-height: 1.55;
-  opacity: 0.95;
 }
 
-.pulse-expanded-content a {
-  color: #8ecbff;
-  text-decoration: underline;
-}
-
-.pulse-expanded-content a:visited {
-  color: #caa8ff;
-}
-
-/* ----------------------------------------------------
-   Animations
-   ---------------------------------------------------- */
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+.pulse-toggle {
+  margin-top: 0.75rem;
+  background: none;
+  border: none;
+  color: var(--color-accent);
+  font-weight: 600;
+  cursor: pointer;
 }

@@ -1,32 +1,46 @@
+/* ============================================================
+   HUMAN-ACTION MODULE
+   ============================================================ */
+
 .action-module {
-  align-items: flex-start;
-  background: rgba(120, 180, 255, 0.10);
-  border: 2px solid rgba(120, 180, 255, 0.18);
-  border-radius: var(--module-radius);
-  display: flex;
-  gap: 0.9rem;
-  min-width: 0;
-  padding: var(--module-padding);
+  background: #fafafa;
+  padding: 1rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
 }
 
 .action-emoji {
-  font-size: 1.9rem;
-  margin-top: 20px; /* adjust to taste */
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
 }
 
 .action-label {
-  color: #8fb7ff;
-  font-size: 0.72rem;
-  letter-spacing: 0.05em;
+  font-size: 0.85rem;
+  opacity: 0.7;
   margin-bottom: 0.25rem;
-  text-transform: uppercase;
-  white-space: nowrap;
 }
 
 .action-headline {
-  color: #ffffff;
   font-size: 1.25rem;
-  font-weight: 700;
-  line-height: 1.2; /* you can adjust this */
-  margin-bottom: 0.3rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.action-text {
+  font-size: 0.95rem;
+  line-height: 1.45;
+  opacity: 0.9;
+  margin-bottom: 0.5rem;
+}
+
+.today-bullets,
+.tomorrow-bullets {
+  padding-left: 1.2rem;
+  margin-top: 0.4rem;
+}
+
+.today-bullets li,
+.tomorrow-bullets li {
+  margin-bottom: 0.25rem;
+  line-height: 1.45;
 }

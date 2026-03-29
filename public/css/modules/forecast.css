@@ -1,80 +1,33 @@
-/* ================================
-   FORECAST MODULE — NAMESPACED
-   Safe, isolated styling
-================================ */
+/* ============================================================
+   FORECAST MODULE
+   ============================================================ */
 
-/* Container */
-#forecast-container {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  padding: 1rem;
-  margin-top: 1.25rem;
+.forecast-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
 }
 
-/* Header */
-#forecast-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.75rem;
+.forecast-tile {
+  background: #fafafa;
+  padding: 0.9rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  text-align: center;
 }
 
-#forecast-title {
+.forecast-day {
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+.forecast-emoji {
+  font-size: 1.6rem;
+  margin: 0.35rem 0;
+}
+
+.forecast-temp {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #ffffff;
-  letter-spacing: 0.01em;
-}
-
-/* Hourly strip */
-#forecast-strip {
-  display: flex;
-  gap: 0.75rem;
-  overflow-x: auto;
-  padding-bottom: 0.25rem;
-  scrollbar-width: none;
-}
-
-#forecast-strip::-webkit-scrollbar {
-  display: none;
-}
-
-/* Hour tile */
-.forecast-hour {
-  flex: 0 0 auto;
-  width: 58px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 10px;
-  padding: 0.5rem 0.35rem;
-  text-align: center;
-  color: #ffffff;
-}
-
-/* Hour label */
-.forecast-hour-label {
-  font-size: 0.72rem;
-  opacity: 0.85;
-  margin-bottom: 0.25rem;
-}
-
-/* Emoji */
-.forecast-hour-emoji {
-  font-size: 1.35rem;
-  margin-bottom: 0.25rem;
-}
-
-/* Temperature */
-.forecast-hour-temp {
-  font-size: 0.95rem;
-  font-weight: 600;
-  margin-bottom: 0.15rem;
-}
-
-/* Subtext (wind, precip, etc.) */
-.forecast-hour-sub {
-  font-size: 0.65rem;
-  opacity: 0.75;
-  line-height: 1.1;
 }

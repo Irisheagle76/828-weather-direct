@@ -1,169 +1,48 @@
 /* ============================================================
-   NOTIFICATIONS BUTTON
-============================================================ */
-.enable-notifications-btn {
-  background: linear-gradient(135deg, #ffb86c, #ff7e5f);
-  color: white;
-  border: none;
-  padding: 12px 22px;
-  border-radius: 30px;
-  font-size: 15px;
+   COMPONENTS — Shared UI Elements
+   ============================================================ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #eef2ff;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
   font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(255, 126, 95, 0.35);
-  transition: all 0.25s ease;
-  letter-spacing: 0.3px;
 }
 
-.enable-notifications-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(255, 126, 95, 0.45);
+.badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #aaa;
 }
 
-.enable-notifications-btn:active {
-  transform: translateY(0px);
-  box-shadow: 0 3px 10px rgba(255, 126, 95, 0.3);
+.badge-dot.ok {
+  background: #4f7cff;
 }
 
-.enable-notifications-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.badge-dot.error {
+  background: #e63946;
 }
 
-/* ============================================================
-   TOAST
-============================================================ */
 .toast {
   position: fixed;
-  bottom: 24px;
+  bottom: 1.25rem;
   left: 50%;
-  transform: translateX(-50%) translateY(40px);
-  background: rgba(30, 30, 30, 0.85);
+  transform: translateX(-50%);
+  background: #222;
   color: white;
-  padding: 12px 20px;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 500;
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius);
   opacity: 0;
   pointer-events: none;
-  transition: all 0.35s ease;
-  z-index: 9999;
+  transition: opacity 0.3s ease;
 }
 
 .toast.show {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
 }
 
-/* ============================================================
-   EXPANDED PANEL
-============================================================ */
-.expanded-panel {
-  background: rgba(20, 26, 42, 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  border-radius: 18px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
-  color: #e8eaf6;
-  line-height: 1.45;
-  margin-top: 1rem;
-  padding: 1.2rem 1.4rem;
-  transition: all 0.25s ease;
-  min-width: 0;
-}
-
-.expanded-panel .fx-section { margin-bottom: 1.1rem; }
-.expanded-panel .fx-section:last-child { margin-bottom: 0; }
-
-.expanded-panel .fx-label {
-  color: #f0b777;
-  font-size: 0.78rem;
-  letter-spacing: 0.06em;
-  margin-bottom: 0.25rem;
-  text-transform: uppercase;
-}
-
-.expanded-panel .fx-value {
-  color: #d8dff7;
-  font-size: 0.95rem;
-}
-
-/* ============================================================
-   FORECAST TILE SYSTEM
-============================================================ */
-.fx-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-  gap: 10px;
-  margin-top: 12px;
-  overflow-x: auto;
-}
-
-.fx-tile {
-  background: linear-gradient(
-    to bottom,
-    rgba(255,255,255,0.06),
-    rgba(255,255,255,0.02)
-  );
-  border-radius: 14px;
-  padding: 12px 8px;
-  text-align: center;
-  backdrop-filter: blur(8px);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.08),
-    0 4px 10px rgba(0,0,0,0.25);
-  transition: all 0.18s ease;
-}
-
-.fx-tile:hover {
-  transform: translateY(-3px);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.12),
-    0 8px 18px rgba(0,0,0,0.35);
-}
-
-.fx-top {
-  font-size: 1.15rem;
-  font-weight: 600;
-  letter-spacing: 0.2px;
-}
-
-.fx-sub {
-  font-size: 0.7rem;
-  opacity: 0.7;
-  margin-top: 2px;
-}
-
-.fx-label {
-  font-size: 0.65rem;
-  opacity: 0.55;
-  margin-top: 4px;
-  letter-spacing: 0.5px;
-}
-
-/* Color hints */
-.fx-tile:nth-child(1) .fx-top { color: #ffb347; }
-.fx-tile:nth-child(2) .fx-top { color: #6ec6ff; }
-.fx-tile:nth-child(3) .fx-top { color: #a0e7e5; }
-.fx-tile:nth-child(4) .fx-top { color: #cfd8dc; }
-.fx-tile:nth-child(5) .fx-top { color: #64b5f6; }
-.fx-tile:nth-child(6) .fx-top { color: #e1f5fe; }
-
-/* UV index colors */
-.uv-low { color: #4caf50; }
-.uv-moderate { color: #ffeb3b; }
-.uv-high { color: #ff9800; }
-.uv-very-high { color: #f44336; }
-.uv-extreme { color: #9c27b0; }
-
-/* Temperature + dewpoint scales */
-.temp-freezing { color: #4dabf7; }
-.temp-cold { color: #74c0fc; }
-.temp-cool { color: #a5d8ff; }
-.temp-mild { color: #ffd43b; }
-.temp-warm { color: #ffa94d; }
-.temp-hot { color: #ff6b6b; }
-
-.dew-dry { color: #74c0fc; }
-.dew-comfort { color: #ffd43b; }
-.dew-humid { color: #ffa94d; }
-.dew-tropical { color: #ff6b6b; }

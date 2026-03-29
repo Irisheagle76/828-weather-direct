@@ -1,21 +1,33 @@
-// substack-render.js
+// /js/substack-render.js
+// ============================================================
+// MODERNIZED SUBSTACK RENDERER — MATCHES substack.css EXACTLY
+// ============================================================
+
 import { fetchSubstackLatestArticle } from "./substack-api.js";
 
 export async function renderSubstackArticle() {
   const container = document.getElementById("weather-articles-module");
   if (!container) return;
 
+  // Initial loading state
   container.innerHTML = `
-    <div class="module-header">From 828 Weather Update</div>
-    <div class="substack-loading">Loading…</div>
+    <div class="substack-card fade-in">
+      <div class="substack-header">
+        <img src="/substack-icon.png" class="substack-icon" alt="Substack icon">
+        <div class="substack-title">From 828 Weather Update</div>
+      </div>
+      <div class="substack-meta">Loading latest article…</div>
+    </div>
   `;
 
   try {
     const article = await fetchSubstackLatestArticle();
+
     if (!article) {
       container.innerHTML = `
-        <div class="module-header">From 828 Weather Update</div>
-        <div class="substack-empty">No recent articles found.</div>
+        <div class="substack-empty fade-in">
+          No recent articles found.
+        </div>
       `;
       return;
     }
@@ -31,53 +43,43 @@ export async function renderSubstackArticle() {
         })
       : "";
 
-    // Extract clean text
+    // Clean description → plain text
     const cleanText = (description || "")
       .replace(/<[^>]+>/g, "")
       .replace(/\s+/g, " ")
       .trim();
 
-    // Limit to ~120 characters
-    let subheadline = cleanText;
-    if (subheadline.length > 120) {
-      subheadline = subheadline.substring(0, 120).trim() + "...";
-    }
+    // Shorten to ~140 chars
+    const shortDesc =
+      cleanText.length > 140
+        ? cleanText.substring(0, 140).trim() + "…"
+        : cleanText;
 
-    // Determine if article is NEW (published within last 24 hours)
-    let isNew = false;
-    if (pubDate) {
-      const published = new Date(pubDate).getTime();
-      const now = Date.now();
-      const hours = (now - published) / (1000 * 60 * 60);
-      isNew = hours <= 24;
-    }
-
-    // Render module
+    // Render final card
     container.innerHTML = `
-      <div class="module-header">From 828 Weather Update</div>
+      <div class="substack-card fade-in">
 
-      <div class="substack-article">
-
-        <div class="substack-thumb-wrapper">
-          <img src="${ogImage}" class="substack-thumb" alt="Article thumbnail">
-          <div class="substack-thumb-gradient"></div>
+        <!-- Header -->
+        <div class="substack-header">
+          <img src="/substack-icon.png" class="substack-icon" alt="Substack icon">
+          <div class="substack-title">${title}</div>
         </div>
 
-        <div class="substack-title-row">
-          <a href="${link}" target="_blank" rel="noopener" class="substack-title">
-            ${title}
-          </a>
-
-          ${isNew ? `<span class="substack-new-badge">NEW</span>` : ""}
+        <!-- Thumbnail -->
+        <div class="substack-thumb">
+          <img src="${ogImage}" alt="Article thumbnail">
         </div>
 
-        <div class="substack-date">${formattedDate}</div>
+        <!-- Metadata -->
+        <div class="substack-meta">${formattedDate}</div>
 
-        <div class="substack-subheadline">
-          ${subheadline}
+        <!-- Description -->
+        <div class="substack-description">
+          ${shortDesc}
         </div>
 
-        <div class="substack-footer-link">
+        <!-- Read More -->
+        <div class="substack-readmore">
           <a href="${link}" target="_blank" rel="noopener">Read full article →</a>
         </div>
 
@@ -85,9 +87,11 @@ export async function renderSubstackArticle() {
     `;
   } catch (err) {
     console.error("Error rendering Substack Article:", err);
+
     container.innerHTML = `
-      <div class="module-header">From 828 Weather Update</div>
-      <div class="substack-error">Unable to load article.</div>
+      <div class="substack-error fade-in">
+        Unable to load article.
+      </div>
     `;
   }
 }
