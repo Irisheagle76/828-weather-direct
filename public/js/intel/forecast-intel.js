@@ -3,10 +3,10 @@
 // HUMAN-ACTION 2.0 — Sky-aware Today / Tonight / Tomorrow
 // ============================================================
 
-import { computeStats } from "./stats.js;
-import { computeEvents } from "./events.js;
-import { synthesizePeriod } from "./synthesizer.js;
-import { computeConfidence } from "./confidence.js;
+import { computeStats } from "./stats.js";
+import { computeEvents } from "./events.js";
+import { synthesizePeriod } from "./synthesizer.js";
+import { computeConfidence } from "./confidence.js";
 
 // ------------------------------------------------------------
 // Helper: build a snapshot from hourly indices + sky intel
