@@ -24,16 +24,18 @@ async function handleHourly(req, res) {
     return res.status(400).json({ error: "Missing lat/lon" });
   }
 
-  // ⭐ VALID Open-Meteo hourly fields
+  // ✅ CORRECT Open-Meteo fields (aligned with your app)
   const hourlyFields = [
     "temperature_2m",
+    "apparent_temperature",        // ✅ added
     "dewpoint_2m",
     "relativehumidity_2m",
-    "wind_speed_10m",
-    "wind_gusts_10m",
-    "cloudcover",
-    "rain",
+    "precipitation",               // ✅ replaces rain
     "snowfall",
+    "cloudcover",
+    "visibility",                  // ✅ added
+    "wind_speed_10m",
+    "windgusts_10m",               // ✅ FIXED (no underscore after wind)
     "uv_index"
   ].join(",");
 
@@ -59,13 +61,16 @@ async function handleHourly(req, res) {
 
     const data = await r.json();
 
-    // ⭐ HARD VALIDATION
-    if (!data?.hourly?.time || !data.hourly.temperature_2m) {
+    // ✅ HARD VALIDATION (prevents silent failure)
+    if (
+      !data?.hourly?.time ||
+      !data.hourly.temperature_2m ||
+      !data.hourly.wind_speed_10m
+    ) {
       console.error("Bad Open-Meteo payload:", data);
       return res.status(500).json({ error: "Invalid weather data structure" });
     }
 
-    // ⭐ Return ONLY the inner hourly object
     return res.status(200).json(data.hourly);
 
   } catch (err) {
