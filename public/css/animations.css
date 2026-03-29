@@ -1,0 +1,101 @@
+/* ----------------------------------------------------
+   828 Animations — Fade, Slide, Pulse, and Micro-UX
+   ---------------------------------------------------- */
+
+/* Smooth fade-in for modules, cards, and text */
+.fade-in {
+  opacity: 0;
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Delayed fade-in for staggered elements */
+.fade-in-delayed {
+  opacity: 0;
+  animation: fadeIn 0.8s ease-out forwards;
+  animation-delay: 0.15s;
+}
+
+/* Slide-up + fade combo for warm, tactile entrance */
+.slide-up {
+  opacity: 0;
+  transform: translateY(12px);
+  animation: slideUp 0.55s ease-out forwards;
+}
+
+@keyframes slideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Slight hover lift for cards (Pulse Archive, grid items) */
+.card-hover {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+}
+
+/* Soft pulse for icons or small UI elements */
+.pulse {
+  animation: pulseAnim 1.8s ease-in-out infinite;
+}
+
+@keyframes pulseAnim {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
+/* Fade mask for horizontal scroll areas (Pulse Archive) */
+.fade-mask-left,
+.fade-mask-right {
+  position: absolute;
+  top: 0;
+  width: 40px;
+  height: 100%;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.fade-mask-left {
+  left: 0;
+  background: linear-gradient(to right, rgba(255,255,255,1), rgba(255,255,255,0));
+}
+
+.fade-mask-right {
+  right: 0;
+  background: linear-gradient(to left, rgba(255,255,255,1), rgba(255,255,255,0));
+}
+
+/* Smooth opacity transition for dynamic text updates */
+.text-fade {
+  transition: opacity 0.25s ease;
+}
+
+.text-fade.hidden {
+  opacity: 0;
+}
+
+/* Micro-bounce for subtle confirmation moments */
+.bounce {
+  animation: bounceAnim 0.4s ease-out;
+}
+
+@keyframes bounceAnim {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
