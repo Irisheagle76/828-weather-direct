@@ -43,7 +43,11 @@ function mapToLegacyFields(period) {
   return {
     // ✅ CORRECT SOURCES
     emoji: period?.emoji ?? "🌤️",
-    title: period?.title || period?.dominantFactor?.toUpperCase() || "Outlook",
+    title:
+  period?.title ||
+  (period?.dominantFactor
+    ? period.dominantFactor.replace(/([A-Z])/g, " $1")
+    : "Outlook"),
     notes: narrative?.main ?? "",
     secondaryFactors: narrative?.bullets ?? [],
 
