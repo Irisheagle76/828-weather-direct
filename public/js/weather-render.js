@@ -205,6 +205,7 @@ function renderComfortNow(container, comfort) {
 }
 
 function renderFutureComfort(container, items) {
+  console.log("FUTURE COMFORT INPUT:", futureComfortData);
   container.innerHTML = `
     <div class="next6-module fade-in">
       <div class="next6-header">
