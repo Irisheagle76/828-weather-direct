@@ -4,7 +4,7 @@
 // ============================================================
 
 import { fetchAllIntel } from "./weather-fetch.js";
-import { buildHumanActionIntel } from "./intel/human-action-intel-builder.js";
+import { buildHumanActionIntel } from "./intel/human-action-intel-builder.js?v=5";
 import { computeComfort, buildFutureComfort } from "./intel/comfort.js";
 
 // TODAY DOM TARGETS
