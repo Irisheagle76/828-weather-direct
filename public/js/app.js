@@ -1,45 +1,44 @@
 // /js/app.js
 // ============================================================
-// APP ENTRY — Human‑Action 2.x Pipeline
+// APP ENTRY — Clean + Stable
 // ============================================================
 
 import { renderWeather } from "./weather-render.js";
 
 // ------------------------------------------------------------
-// STATUS + ERROR HELPERS
+// ERROR HANDLING
 // ------------------------------------------------------------
-function setWUStatus(state, label, text) {
-  const badge = document.getElementById("wu-status-badge");
-  const dot = document.getElementById("wu-status-dot");
-  const lbl = document.getElementById("wu-status-label");
-  const txt = document.getElementById("wu-status-text");
-  if (!badge || !dot || !lbl || !txt) return;
-
-  lbl.textContent = label;
-  txt.textContent = text;
-
-  dot.classList.remove("ok", "error");
-  if (state === "ok") dot.classList.add("ok");
-  if (state === "error") dot.classList.add("error");
-}
-
-function showWUError(msg) {
+function showError(msg) {
   const el = document.getElementById("wu-error");
   if (!el) return;
+
   el.style.display = "block";
   el.textContent = msg;
 }
 
 // ------------------------------------------------------------
-// INIT APP
+// LOADING STATE (lightweight only)
+// ------------------------------------------------------------
+function setLoadingState() {
+  const label = document.getElementById("wu-status-label");
+  const text = document.getElementById("wu-status-text");
+
+  if (label) label.textContent = "Detecting location…";
+  if (text) text.textContent = "Waiting for permission.";
+}
+
+// ------------------------------------------------------------
+// INIT
 // ------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", initApp);
 
 async function initApp() {
   if (!navigator.geolocation) {
-    showWUError("Geolocation is not supported by this browser.");
+    showError("Geolocation is not supported by this browser.");
     return;
   }
+
+  setLoadingState();
 
   navigator.geolocation.getCurrentPosition(
     async pos => {
@@ -51,15 +50,19 @@ async function initApp() {
           tempestToken: "838ff386-d14b-4d45-897a-18903e6970a9"
         });
 
-        setWUStatus("ok", "WU Connected", "Weather Underground data loaded.");
-      } catch {
-        setWUStatus("error", "Data Error", "Unable to load weather data.");
-        showWUError("Unable to load weather data. Please try again later.");
+        // ✅ IMPORTANT:
+        // Do NOT set status here anymore.
+        // weather-render.js now controls the data source indicator.
+
+      } catch (err) {
+        console.error("Render failed:", err);
+        showError("Unable to load weather data. Please try again.");
       }
     },
-    () => {
-      setWUStatus("error", "Location Error", "Location permission denied.");
-      showWUError(
+    err => {
+      console.error("Geolocation error:", err);
+
+      showError(
         "We couldn’t access your location. Please enable location services and reload."
       );
     }
