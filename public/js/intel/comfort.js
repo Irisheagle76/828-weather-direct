@@ -1,6 +1,6 @@
 // /intel/comfort.js
 // FULL HYBRID — Narrative Engine + Asheville Comfort Score
-// UPDATED: Tempest-first ingestion for Comfort Now + Future Comfort
+// CLEAN REWRITE — Tempest-first ingestion + array-safe future comfort
 
 import { LOCATION } from "/js/config/location.js";
 
@@ -11,9 +11,7 @@ function computeSolarElevation(timestamp, lat, lon) {
   const date = new Date(timestamp);
   const rad = Math.PI / 180;
 
-  const day = Math.floor(
-    (date - new Date(date.getFullYear(), 0, 0)) / 86400000
-  );
+  const day = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 86400000);
 
   const decl =
     23.45 * rad *
@@ -68,9 +66,7 @@ function computeComfortScore(temp, dew, wind, elev, windDir) {
   let windPenalty = Math.min(wind / 25, 1) * 0.4;
 
   const dir = String(windDir ?? "");
-  if (dir.includes("W")) {
-    windPenalty += 0.2;
-  }
+  if (dir.includes("W")) windPenalty += 0.2;
 
   let solarBonus = 0;
   if (elev > 20 && temp < 75) solarBonus = 0.15;
@@ -78,7 +74,7 @@ function computeComfortScore(temp, dew, wind, elev, windDir) {
   let score =
     (tScore * 0.5) +
     (drynessPenalty * 0.9) +
-    windPenalty - 
+    windPenalty -
     solarBonus;
 
   return Math.round(
@@ -154,7 +150,7 @@ function isSolarHelpful(intel, elev) {
 }
 
 // ------------------------------------------------------------
-// PRECIP FEEL — NOW USES TEMPEST FIRST
+// PRECIP FEEL — TEMPEST-FIRST
 // ------------------------------------------------------------
 function fallingPrecipFeel(intel) {
   const src = intel.tempest ?? intel.wu ?? {};
@@ -257,7 +253,8 @@ export function computeComfort(intel) {
       ...precipOverride,
       comfortScore,
       label: getComfortLabel(comfortScore),
-      color: getComfortColor(comfortScore)
+      color: getComfortColor(comfortScore),
+      feelsLike
     };
   }
 
@@ -290,29 +287,8 @@ export function computeComfort(intel) {
 
   const parts = [firstSentence];
 
-  const future = intel.futureComfortWindow;
-
-  if (future && future.length >= 2 && intel.hourly) {
-    const temps = intel.hourly.map(h => h.temperature);
-
-    const tStart = temps[future[0]];
-    const tEnd = temps[future[future.length - 1]];
-
-    const delta = tEnd - tStart;
-
-    if (delta <= -4) {
-      parts.push("Expect a noticeable cool-down over the next few hours.");
-    } else if (delta >= 4) {
-      parts.push("Temperatures will climb noticeably through the next few hours.");
-    }
-  }
-
   const humidText = humidityFeel(dew);
   if (humidText) parts.push(humidText);
-
-  const cloud = sky.cloud ?? src.cloudCover ?? 100;
-  const uv = sky.uv ?? intel.uv ?? src.uv ?? 0;
-  const solar = sky.solar ?? src.solarRadiation ?? null;
 
   if (isSolarHelpful(intel, elev)) {
     parts.push(sunAngleFeel(elev));
@@ -349,48 +325,53 @@ export function computeComfort(intel) {
 }
 
 // ------------------------------------------------------------
-// FUTURE COMFORT — NEXT 6 HOURS (UNCHANGED, BUT TEMPEST-FIRST)
+// FUTURE COMFORT — ARRAY-SHAPE SAFE
 // ------------------------------------------------------------
-export function buildFutureComfort(hourly, computeComfort) {
-  if (!hourly || !hourly.time) return [];
+export function buildFutureComfort(hourlyNormalized, computeComfortFn = computeComfort) {
+  if (!Array.isArray(hourlyNormalized) || hourlyNormalized.length === 0) return [];
 
   const now = Date.now();
-  const times = hourly.time;
 
-  let startIndex = times.findIndex(t => new Date(t).getTime() > now);
-  if (startIndex === -1) return [];
+  let startIndex = hourlyNormalized.findIndex(h => {
+    if (!h.time) return false;
+    return new Date(h.time).getTime() > now;
+  });
+
+  if (startIndex === -1) startIndex = 0;
 
   const items = [];
 
   for (let i = 0; i < 6; i++) {
     const idx = startIndex + i;
-    if (idx >= times.length) break;
+    if (idx >= hourlyNormalized.length) break;
+
+    const h = hourlyNormalized[idx];
 
     const intelForHour = {
-      tempest: null, // future hours use Open-Meteo only
+      tempest: null,
       wu: {
-        temp: hourly.temperature_2m[idx],
-        dewPoint: hourly.dewpoint_2m[idx],
-        windSpeed: hourly.wind_speed[idx],
-        windDir: hourly.wind_direction_10m?.[idx] ?? "",
-        obsTimeLocal: hourly.time[idx]
+        temp: h.temp,
+        dewPoint: h.dew ?? h.dewPoint ?? null,
+        windSpeed: h.windSpeed,
+        windDir: h.windDir ?? h.windDirection ?? "",
+        obsTimeLocal: h.time
       },
-      hourly
+      hourly: hourlyNormalized
     };
 
-    const c = computeComfort(intelForHour);
+    const c = computeComfortFn(intelForHour);
 
     items.push({
       index: idx,
-      time: hourly.time[idx],
-      hourLabel: formatHourLabel(hourly.time[idx]),
+      time: h.time,
+      hourLabel: h.time ? formatHourLabel(h.time) : `+${i}h`,
       comfortScore: c.comfortScore,
       color: c.color,
       label: c.label,
       emoji: c.emoji,
-     temp: hourly[idx].temperature,
-dew: hourly[idx].dewpoint,
-wind: hourly[idx].wind_speed
+      temp: h.temp,
+      dew: h.dew ?? h.dewPoint ?? null,
+      wind: h.windSpeed
     });
   }
 
