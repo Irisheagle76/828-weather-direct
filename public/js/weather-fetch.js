@@ -151,8 +151,8 @@ export async function getShortTermForecast(lat, lon) {
 
   const data = await res.json();
 
-  // FIX: unwrap the hourly object
-  return data?.hourly ?? null;
+  // FIX: backend already returns the hourly object directly
+  return data;
 }
 
 // ============================================================
