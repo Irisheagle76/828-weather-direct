@@ -30,5 +30,5 @@ async function handleHourly(req, res) {
 
   if (!r.ok) return res.status(r.status).json({ error: data });
 
-  return res.status(200).json(data);
+  return res.status(200).json(data.hourly);
 }
