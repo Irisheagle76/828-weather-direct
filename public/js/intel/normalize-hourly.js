@@ -7,53 +7,65 @@ export function normalizeOpenMeteo(hourly) {
   const out = [];
 
   for (let i = 0; i < hourly.time.length; i++) {
-    const temp = hourly.temperature_2m?.[i] ?? null;
-    const dew = hourly.dewpoint_2m?.[i] ?? null;
-    const humidity = hourly.relativehumidity_2m?.[i] ?? null;
+    // --------------------------------------------------
+    // SAFE ACCESS HELPERS
+    // --------------------------------------------------
+    const pick = (...keys) => {
+      for (const k of keys) {
+        const val = hourly[k]?.[i];
+        if (val != null) return val;
+      }
+      return null;
+    };
 
-    // ✅ WIND — resilient to both API formats
-    const windSpeed =
-      hourly.wind_speed_10m?.[i] ??
-      hourly.windspeed_10m?.[i] ??
-      0;
+    const num = v => (v != null && !isNaN(v) ? v : null);
 
-    const windGust =
-      hourly.windgusts_10m?.[i] ??
-      hourly.wind_gusts_10m?.[i] ??
-      0;
+    // --------------------------------------------------
+    // CORE INPUTS
+    // --------------------------------------------------
+    const temp = num(pick("temperature_2m"));
+    const dew = num(pick("dewpoint_2m"));
+    const humidity = num(pick("relativehumidity_2m"));
 
-    const precip = hourly.precipitation?.[i] ?? 0;
-    const snow = hourly.snowfall?.[i] ?? 0;
+    const windSpeed = num(
+      pick("wind_speed_10m", "windspeed_10m")
+    ) ?? 0;
 
-    const cloud = hourly.cloudcover?.[i] ?? null;
-    const visibility = hourly.visibility?.[i] ?? null;
+    const windGust = num(
+      pick("wind_gusts_10m", "windgusts_10m")
+    ) ?? 0;
 
-    // 🧪 DEBUG (runs once)
+    const precip = num(pick("precipitation")) ?? 0;
+    const snow = num(pick("snowfall")) ?? 0;
+
+    const cloud = num(pick("cloudcover"));
+    const visibility = num(pick("visibility"));
+
+    const apparent = num(pick("apparent_temperature")) ?? temp;
+
+    // --------------------------------------------------
+    // DEBUG (first record only)
+    // --------------------------------------------------
     if (i === 0) {
       console.log("NORMALIZE DEBUG:", {
         temp,
         humidity,
-        wind_speed_10m: hourly.wind_speed_10m?.[i],
-        windspeed_10m: hourly.windspeed_10m?.[i],
-        wind_gusts_10m: hourly.wind_gusts_10m?.[i],
-        windgusts_10m: hourly.windgusts_10m?.[i],
+        windSpeed,
+        windGust,
         precip,
         cloud,
         visibility
       });
     }
 
+    // --------------------------------------------------
+    // OUTPUT OBJECT
+    // --------------------------------------------------
     out.push({
-      // --------------------------------------------------
       // CORE
-      // --------------------------------------------------
       temperature: temp,
-
-      apparent_temperature:
-        hourly.apparent_temperature?.[i] ?? temp,
-
-      feels_like:
-        hourly.apparent_temperature?.[i] ?? temp,
+      apparent_temperature: apparent,
+      feels_like: apparent,
 
       dewpoint: dew,
       relative_humidity: humidity,
@@ -64,13 +76,12 @@ export function normalizeOpenMeteo(hourly) {
 
       precipitation: precip,
       rain: precip,
-
       snowfall: snow,
 
       cloud_cover: cloud,
       visibility: visibility,
 
-      uv_index: hourly.uv_index?.[i] ?? null,
+      uv_index: num(pick("uv_index")),
 
       // --------------------------------------------------
       // DERIVED
@@ -78,12 +89,18 @@ export function normalizeOpenMeteo(hourly) {
       smoke_index: 0,
 
       frost_risk:
-        temp != null && dew != null && temp <= 37 && dew <= 36 ? 0.6 :
-        temp != null && temp <= 34 ? 1 : 0,
+        temp != null && dew != null && temp <= 37 && dew <= 36
+          ? 0.6
+          : temp != null && temp <= 34
+          ? 1
+          : 0,
 
       freeze_risk:
-        temp != null && temp <= 32 ? 1 :
-        temp != null && temp <= 34 ? 0.5 : 0,
+        temp != null && temp <= 32
+          ? 1
+          : temp != null && temp <= 34
+          ? 0.5
+          : 0,
 
       black_ice_risk:
         temp != null && temp <= 32 && precip > 0 ? 1 : 0,
