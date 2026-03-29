@@ -234,11 +234,11 @@ function renderFutureComfort(container, items) {
 // ============================================================
 
 function initializeAccordion() {
-  // Remove any old listeners by cloning nodes
   const modules = document.querySelectorAll(
     ".comfort-module, .next6-module, .action-module"
   );
 
+  // Remove old listeners by cloning nodes
   modules.forEach(module => {
     const clone = module.cloneNode(true);
     module.parentNode.replaceChild(clone, module);
@@ -253,10 +253,8 @@ function initializeAccordion() {
     module.addEventListener("click", () => {
       const isActive = module.classList.contains("active");
 
-      // Close all modules
       freshModules.forEach(m => m.classList.remove("active"));
 
-      // Re-open clicked module
       if (!isActive) {
         module.classList.add("active");
       }
@@ -305,6 +303,5 @@ export async function renderWeather({
   if (comfortNowEl) renderComfortNow(comfortNowEl, comfortNow);
   if (futureComfortEl) renderFutureComfort(futureComfortEl, futureComfort);
 
-  // Initialize accordion AFTER rendering
   initializeAccordion();
 }
