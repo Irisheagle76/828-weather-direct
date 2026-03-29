@@ -3,7 +3,7 @@
 // APP ENTRY — Human‑Action 2.x Pipeline
 // ============================================================
 
-import { renderWeather } from "./weather-render.js";
+import { renderWeather } from "./weather-render.js?v=1.0.0";
 
 // ------------------------------------------------------------
 // STATUS + ERROR HELPERS
