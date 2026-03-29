@@ -371,7 +371,7 @@ export function buildFutureComfort(hourly, computeComfort) {
       wu: {
         temp: hourly.temperature_2m[idx],
         dewPoint: hourly.dewpoint_2m[idx],
-        windSpeed: hourly.wind_speed_10m[idx],
+        windSpeed: hourly.wind_speed[idx],
         windDir: hourly.wind_direction_10m?.[idx] ?? "",
         obsTimeLocal: hourly.time[idx]
       },

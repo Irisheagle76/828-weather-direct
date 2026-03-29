@@ -14,7 +14,7 @@ export function buildWeatherIntel(hourly) {
   const hourlyNow = {
     temperature_2m: hourly.temperature_2m[nowIndex],
     dewpoint_2m: hourly.dewpoint_2m[nowIndex],
-    wind_speed_10m: hourly.wind_speed_10m[nowIndex],
+    wind_speed: hourly.wind_speed[nowIndex],
     wind_gusts_10m: hourly.wind_gusts_10m[nowIndex]
   };
 

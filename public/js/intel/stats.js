@@ -34,7 +34,7 @@ export function computeStats(hourly, windowHours, sky) {
     const cloud = hourly.cloudcover[i];
 
     temps.push(t);
-    winds.push(hourly.wind_speed_10m[i]);
+    winds.push(hourly.wind_speed[i]);
     gusts.push(hourly.wind_gusts_10m[i]);
     rains.push(hourly.rain[i]);
     snows.push(hourly.snowfall[i]);

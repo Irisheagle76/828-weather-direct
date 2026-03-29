@@ -12,7 +12,8 @@ import { normalizeOpenMeteo } from "./normalize-hourly.js";
 // ------------------------------------------------------------
 export function buildHumanActionIntel(raw) {
   if (!raw || !raw.hourly) {
-  return { today: null, tomorrow: null };
+ console.error("No hourly data", raw);
+ return { today: null, tomorrow: null };
 }
 
 const hourly = normalizeOpenMeteo(raw.hourly);
@@ -50,7 +51,7 @@ const hourly = normalizeOpenMeteo(raw.hourly);
 function normalizeSnapshot(h) {
   return {
     temp: h.temperature,
-    feelsLike: h.apparent_temperature,
+    feelsLike: h.feels_like ?? h.apparent_temperature ?? h.temperature,
     dewpoint: h.dewpoint,
     humidity: h.relative_humidity,
     windSpeed: h.wind_speed,

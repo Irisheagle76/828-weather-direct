@@ -15,7 +15,7 @@ export function computeConfidence(stats, events, windowIndices, hourly) {
   // 2. Variance Score (0–1)
   // ------------------------------------------------------------
   const temps = windowIndices.map(i => hourly.temperature_2m[i]);
-  const winds = windowIndices.map(i => hourly.wind_speed_10m[i]);
+  const winds = windowIndices.map(i => hourly.wind_speed[i]);
   const clouds = windowIndices.map(i => hourly.cloudcover[i]);
 
   const tempVar = variance(temps);
