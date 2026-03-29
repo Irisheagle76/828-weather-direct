@@ -1,6 +1,6 @@
 // /js/weather-render.js
 // ============================================================
-// UNIFIED RENDERER — Raw Fetch → Human-Action → Comfort
+// UNIFIED RENDERER — Raw Fetch → Current → Human-Action → Comfort
 // ============================================================
 
 import { fetchAllIntel } from "./weather-fetch.js";
@@ -9,7 +9,75 @@ import { computeComfort, buildFutureComfort } from "./intel/comfort.js";
 import { generateNarrative } from "./intel/synthesizer.js";
 
 // ============================================================
-// COMPATIBILITY LAYER
+// CURRENT OBSERVATIONS (Tempest → WU → Hourly fallback)
+// ============================================================
+
+function renderCurrentObservations(raw) {
+  if (!raw) return;
+
+  const t = raw.tempest;
+  const wu = raw.wu;
+  const h = raw.hourly;
+
+  const current = {
+    temp:
+      t?.air_temperature ??
+      wu?.imperial?.temp ??
+      h?.temperature_2m?.[0],
+
+    feels:
+      t?.feels_like ??
+      wu?.imperial?.heatIndex ??
+      wu?.imperial?.windChill ??
+      h?.apparent_temperature?.[0],
+
+    dew:
+      t?.dew_point ??
+      wu?.imperial?.dewpt ??
+      h?.dewpoint_2m?.[0],
+
+    humidity:
+      t?.relative_humidity ??
+      wu?.humidity ??
+      h?.relativehumidity_2m?.[0],
+
+    wind:
+      t?.wind_avg ??
+      wu?.imperial?.windSpeed ??
+      h?.wind_speed_10m?.[0],
+
+    gust:
+      t?.wind_gust ??
+      wu?.imperial?.windGust ??
+      h?.windgusts_10m?.[0],
+
+    uv:
+      wu?.uv ??
+      h?.uv_index?.[0] ??
+      0
+  };
+
+  console.log("CURRENT OBS:", current);
+
+  const set = (id, val) => {
+    const el = document.getElementById(id);
+    if (el && val != null && !isNaN(val)) el.textContent = val;
+  };
+
+  set("wu-temp", `${Math.round(current.temp)}°`);
+  set("wu-feels", `Feels like ${Math.round(current.feels ?? current.temp)}°`);
+
+  set("wu-dew", `${Math.round(current.dew)}°`);
+  set("wu-humidity", `Humidity ${Math.round(current.humidity)}%`);
+
+  set("wu-wind", `${Math.round(current.wind)} mph`);
+  set("wu-wind-gust", `Gusts ${Math.round(current.gust ?? 0)} mph`);
+
+  set("wu-uv", `${Math.round(current.uv ?? 0)}`);
+}
+
+// ============================================================
+// COMPATIBILITY LAYER (Narrative → UI)
 // ============================================================
 
 function mapToLegacyFields(period) {
@@ -17,14 +85,9 @@ function mapToLegacyFields(period) {
 
   const narrative = generateNarrative(period);
 
-  console.log("NARRATIVE DEBUG:", narrative);
-  console.log("PERIOD DEBUG:", period);
-
   return {
-    // 🔴 spread FIRST
-    ...period,
+    ...period, // spread FIRST
 
-    // ✅ then override with correct UI values
     emoji: narrative?.emoji ?? "🌤️",
 
     title:
@@ -48,7 +111,9 @@ export async function renderWeather({
   tempestDeviceId,
   tempestToken
 }) {
-  // ✅ ENSURE DOM IS READY
+  // ----------------------------------------------------------
+  // DOM (grab at runtime)
+  // ----------------------------------------------------------
   const todayEmojiEl = document.getElementById("today-emoji");
   const todayHeadlineEl = document.getElementById("today-headline");
   const todayTextEl = document.getElementById("today-text");
@@ -63,14 +128,8 @@ export async function renderWeather({
   const futureComfortEl = document.getElementById("future-comfort-container");
   const updatedEl = document.getElementById("last-updated");
 
-  console.log("DOM CHECK:", {
-    todayEmojiEl,
-    todayHeadlineEl,
-    todayTextEl
-  });
-
   // ----------------------------------------------------------
-  // 1. FETCH
+  // FETCH
   // ----------------------------------------------------------
   const raw = await fetchAllIntel({
     lat,
@@ -79,8 +138,15 @@ export async function renderWeather({
     tempestToken
   });
 
+  console.log("RAW INTEL:", raw);
+
   // ----------------------------------------------------------
-  // 2. INTEL
+  // CURRENT OBS (THIS WAS MISSING)
+  // ----------------------------------------------------------
+  renderCurrentObservations(raw);
+
+  // ----------------------------------------------------------
+  // HUMAN ACTION
   // ----------------------------------------------------------
   const humanActionRaw = buildHumanActionIntel(raw);
 
@@ -89,11 +155,10 @@ export async function renderWeather({
     tomorrow: mapToLegacyFields(humanActionRaw.tomorrow)
   };
 
-  console.log("RAW INTEL:", raw);
-  console.log("HUMAN ACTION INTEL:", humanAction);
+  console.log("HUMAN ACTION:", humanAction);
 
   // ----------------------------------------------------------
-  // 3. COMFORT
+  // COMFORT
   // ----------------------------------------------------------
   const comfortNow = computeComfort({
     tempest: raw.tempest,
@@ -106,7 +171,7 @@ export async function renderWeather({
   const futureComfort = buildFutureComfort(raw.hourly, computeComfort);
 
   // ----------------------------------------------------------
-  // 4. RENDER TODAY
+  // TODAY
   // ----------------------------------------------------------
   if (humanAction.today && todayEmojiEl) {
     todayEmojiEl.textContent = humanAction.today.emoji;
@@ -119,7 +184,7 @@ export async function renderWeather({
   }
 
   // ----------------------------------------------------------
-  // 5. RENDER TOMORROW
+  // TOMORROW
   // ----------------------------------------------------------
   if (humanAction.tomorrow && tomorrowEmojiEl) {
     tomorrowEmojiEl.textContent = humanAction.tomorrow.emoji;
@@ -132,7 +197,7 @@ export async function renderWeather({
   }
 
   // ----------------------------------------------------------
-  // 6. COMFORT NOW
+  // COMFORT NOW
   // ----------------------------------------------------------
   if (comfortNowEl && comfortNow) {
     comfortNowEl.innerHTML = `
@@ -147,7 +212,7 @@ export async function renderWeather({
   }
 
   // ----------------------------------------------------------
-  // 7. FUTURE COMFORT
+  // FUTURE COMFORT
   // ----------------------------------------------------------
   if (futureComfortEl && futureComfort) {
     futureComfortEl.innerHTML = futureComfort
@@ -163,7 +228,7 @@ export async function renderWeather({
   }
 
   // ----------------------------------------------------------
-  // 8. TIMESTAMP
+  // TIMESTAMP
   // ----------------------------------------------------------
   if (updatedEl) {
     updatedEl.textContent = new Date(raw.meta.fetchedAt).toLocaleTimeString([], {
