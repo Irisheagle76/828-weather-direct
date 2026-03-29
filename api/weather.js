@@ -29,7 +29,7 @@ async function handleHourly(req, res) {
     "temperature_2m",
     "dewpoint_2m",
     "relativehumidity_2m",
-    "windspeed_10m",
+    "wind_speed_10m",
     "wind_gusts_10m",
     "cloudcover",
     "rain",

@@ -6,6 +6,7 @@
 import { fetchAllIntel } from "./weather-fetch.js";
 import { buildHumanActionIntel } from "./intel/human-action-intel-builder.js?v=5";
 import { computeComfort, buildFutureComfort } from "./intel/comfort.js";
+import { generateNarrative } from "./intel/synthesizer.js";
 
 // TODAY DOM TARGETS
 const todayEmojiEl = document.getElementById("today-emoji");
@@ -33,14 +34,16 @@ const updatedEl = document.getElementById("last-updated");
 function mapToLegacyFields(period) {
   if (!period) return null;
 
-  return {
-    // Legacy UI fields
-    emoji: period.sky?.primaryEmoji ?? "—",
-    title: period.sky?.headline ?? period.summary ?? "",
-    notes: period.narrative ?? "",
-    secondaryFactors: period.events?.keyEvents ?? [],
+  const narrative = generateNarrative(period);
 
-    // Preserve all original fields
+  return {
+    // UI-ready fields (now correctly derived)
+    emoji: narrative.emoji ?? "—",
+    title: narrative.title ?? "",
+    notes: narrative.main ?? "",
+    secondaryFactors: narrative.bullets ?? [],
+
+    // Preserve original data
     ...period
   };
 }
