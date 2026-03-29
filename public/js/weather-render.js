@@ -168,7 +168,7 @@ function renderHumanAction(today, tomorrow) {
 }
 
 // ============================================================
-// COMFORT MODULE RENDERING — MODERNIZED TO MATCH CSS MODULES
+// COMFORT MODULE RENDERING
 // ============================================================
 
 function renderComfortNow(container, comfort) {
@@ -184,7 +184,6 @@ function renderComfortNow(container, comfort) {
         </div>
       </div>
 
-      <!-- Optional expansion panel -->
       <div class="comfort-expand">
         <div class="comfort-expand-row">
           <span class="comfort-expand-label">Feels Like</span>
@@ -231,6 +230,41 @@ function renderFutureComfort(container, items) {
 }
 
 // ============================================================
+// ACCORDION — ONE MODULE OPEN AT A TIME (SAFE VERSION)
+// ============================================================
+
+function initializeAccordion() {
+  // Remove any old listeners by cloning nodes
+  const modules = document.querySelectorAll(
+    ".comfort-module, .next6-module, .action-module"
+  );
+
+  modules.forEach(module => {
+    const clone = module.cloneNode(true);
+    module.parentNode.replaceChild(clone, module);
+  });
+
+  // Re-select fresh nodes
+  const freshModules = document.querySelectorAll(
+    ".comfort-module, .next6-module, .action-module"
+  );
+
+  freshModules.forEach(module => {
+    module.addEventListener("click", () => {
+      const isActive = module.classList.contains("active");
+
+      // Close all modules
+      freshModules.forEach(m => m.classList.remove("active"));
+
+      // Re-open clicked module
+      if (!isActive) {
+        module.classList.add("active");
+      }
+    });
+  });
+}
+
+// ============================================================
 // MAIN ENTRY
 // ============================================================
 
@@ -250,14 +284,12 @@ export async function renderWeather({
   updateDataSourceIndicator(raw);
   renderCurrentObservations(raw);
 
-  // HUMAN ACTION
   const intelRaw = buildHumanActionIntel(raw);
   const today = mapToLegacyFields(intelRaw.today);
   const tomorrow = mapToLegacyFields(intelRaw.tomorrow);
 
   renderHumanAction(today, tomorrow);
 
-  // COMFORT
   const comfortNow = computeComfort({
     tempest: raw.tempest,
     wu: raw.wu,
@@ -272,4 +304,7 @@ export async function renderWeather({
 
   if (comfortNowEl) renderComfortNow(comfortNowEl, comfortNow);
   if (futureComfortEl) renderFutureComfort(futureComfortEl, futureComfort);
+
+  // Initialize accordion AFTER rendering
+  initializeAccordion();
 }
