@@ -36,14 +36,18 @@ function mapToLegacyFields(period) {
 
   const narrative = generateNarrative(period);
 
-  return {
-    // UI-ready fields (now correctly derived)
-    emoji: narrative.emoji ?? "—",
-    title: narrative.title ?? "",
-    notes: narrative.main ?? "",
-    secondaryFactors: narrative.bullets ?? [],
+  // 🧪 DEBUG
+  console.log("NARRATIVE DEBUG:", narrative);
+  console.log("PERIOD DEBUG:", period);
 
-    // Preserve original data
+  return {
+    // ✅ CORRECT SOURCES
+    emoji: period?.emoji ?? "🌤️",
+    title: period?.title || period?.dominantFactor?.toUpperCase() || "Outlook",
+    notes: narrative?.main ?? "",
+    secondaryFactors: narrative?.bullets ?? [],
+
+    // preserve everything
     ...period
   };
 }
