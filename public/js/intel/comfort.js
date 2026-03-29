@@ -2,7 +2,7 @@
 // FULL HYBRID — Narrative Engine + Asheville Comfort Score
 // UPDATED: Tempest-first ingestion for Comfort Now + Future Comfort
 
-import { LOCATION } from "../config/location.js;
+import { LOCATION } from "./config/location.js;
 
 // ------------------------------------------------------------
 // SOLAR ELEVATION

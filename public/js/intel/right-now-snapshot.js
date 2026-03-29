@@ -1,7 +1,7 @@
 // /intel/right-now-snapshot.js
 // Human‑Action Snapshot Builder — Tempest‑First, Asheville‑Aware
 
-import { LOCATION } from "../config/location.js;
+import { LOCATION } from "./config/location.js;
 
 // ------------------------------------------------------------
 // Solar Elevation
