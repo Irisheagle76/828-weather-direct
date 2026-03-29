@@ -68,28 +68,37 @@ export async function fetchAllIntel({
 // ============================================================
 
 function normalizeTempest(data) {
-  if (!data?.obs?.[0]) {
-    console.warn("Invalid Tempest payload", data);
-    return null;
+  if (!data) return null;
+
+  // ----------------------------------------
+  // CASE 1: Already normalized (your API changed)
+  // ----------------------------------------
+  if (data.air_temperature !== undefined) {
+    return data;
   }
 
-  const o = data.obs[0];
+  // ----------------------------------------
+  // CASE 2: Raw obs array (standard Tempest)
+  // ----------------------------------------
+  if (data?.obs?.[0]) {
+    const o = data.obs[0];
 
-  return {
-    wind_lull: o[1],
-    wind_avg: o[2],
-    wind_gust: o[3],
-    wind_direction: o[4],
-    pressure: o[6],
-    air_temperature: o[7],
-    relative_humidity: o[8],
+    return {
+      wind_lull: o[1],
+      wind_avg: o[2],
+      wind_gust: o[3],
+      wind_direction: o[4],
+      pressure: o[6],
+      air_temperature: o[7],
+      relative_humidity: o[8],
+      feels_like: o[7],
+      dew_point: null
+    };
+  }
 
-    // simple derived placeholders (can improve later)
-    feels_like: o[7],
-    dew_point: null
-  };
+  console.warn("Unknown Tempest format:", data);
+  return null;
 }
-
 // ============================================================
 // TEMPEST — raw fetch
 // ============================================================
