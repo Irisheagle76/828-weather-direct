@@ -1,76 +1,135 @@
 /* ============================================================
-   PULSE MODULE
+   828 WEATHER PULSE — TWILIGHT BRIGHTENED
    ============================================================ */
 
 .pulse-card {
-  background: #fafafa;
-  padding: 1rem;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-soft);
-  margin-top: 1.5rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 22px;
+  padding: 1rem 1.1rem 0.85rem;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(4px);
   cursor: pointer;
+  overflow: hidden;
+  transition: background 0.25s ease, border-color 0.25s ease;
 }
 
+.pulse-card:hover {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* Header */
 .pulse-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  margin-bottom: 0.55rem;
 }
 
 .pulse-title {
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #a8c6ff; /* cool twilight blue */
 }
 
 .pulse-badge-pill {
-  background: var(--color-accent-soft);
-  color: var(--color-accent);
-  padding: 0.25rem 0.6rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  display: inline-block;
+  margin-top: 0.25rem;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  background: rgba(255, 184, 102, 0.22);
+  border: 1px solid rgba(255, 184, 102, 0.55);
+  font-size: 0.72rem;
+  color: #ffb866;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .pulse-timestamp {
-  font-size: 0.8rem;
-  opacity: 0.7;
   margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: #c8d3ff;
+}
+
+/* ============================================================
+   COLLAPSED VIEW — Thumbnail + Preview
+   ============================================================ */
+
+.pulse-body {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-top: 0.65rem;
+}
+
+.pulse-media {
+  width: 160px;
+  height: 160px;
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
 }
 
 .pulse-media img,
-.pulse-media video,
-.pulse-thumbnail {
+.pulse-media video {
   width: 100%;
-  border-radius: var(--radius);
-  margin-top: 0.75rem;
+  height: 100%;
+  object-fit: cover;
 }
 
 .pulse-preview {
-  margin-top: 0.75rem;
-  font-size: 0.95rem;
+  flex: 1;
+  font-size: 0.9rem;
+  color: #c8d3ff;
   line-height: 1.45;
-  opacity: 0.9;
-}
-
-.pulse-expanded {
-  background: #fff;
-}
-
-.pulse-expanded-content {
-  margin-top: 1rem;
-}
-
-.pulse-full-text {
-  margin-top: 0.75rem;
-  font-size: 1rem;
-  line-height: 1.55;
 }
 
 .pulse-toggle {
   margin-top: 0.75rem;
-  background: none;
-  border: none;
-  color: var(--color-accent);
-  font-weight: 600;
+  padding: 4px 12px;
+  background: rgba(168, 198, 255, 0.12);
+  border: 1px solid rgba(168, 198, 255, 0.35);
+  border-radius: 999px;
+  color: #a8c6ff;
+  font-size: 0.78rem;
   cursor: pointer;
+  transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+.pulse-toggle:hover {
+  background: rgba(168, 198, 255, 0.22);
+  border-color: rgba(168, 198, 255, 0.55);
+}
+
+/* ============================================================
+   EXPANDED VIEW — Full Hero + Full Text
+   ============================================================ */
+
+.pulse-expanded .pulse-body {
+  flex-direction: column;
+}
+
+.pulse-expanded .pulse-media {
+  width: 100%;
+  height: auto;
+  max-height: 360px;
+  border-radius: 14px;
+  margin-bottom: 0.75rem;
+}
+
+.pulse-expanded .pulse-preview {
+  display: none;
+}
+
+.pulse-full-text {
+  display: none;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #f5f7ff;
+  margin-top: 0.75rem;
+}
+
+.pulse-expanded .pulse-full-text {
+  display: block;
 }

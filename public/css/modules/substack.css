@@ -1,15 +1,18 @@
 /* ============================================================
-   SUBSTACK MODULE
+   SUBSTACK MODULE — TWILIGHT BRIGHTENED
    ============================================================ */
 
 .substack-card {
-  background: #fafafa;
-  padding: 1rem;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-soft);
-  margin-top: 1.5rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 22px;
+  padding: 1rem 1.2rem;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(4px);
+  margin-top: 1.4rem;
 }
 
+/* Header */
 .substack-header {
   display: flex;
   align-items: center;
@@ -25,36 +28,55 @@
 .substack-title {
   font-size: 1.1rem;
   font-weight: 600;
+  color: #ffb866; /* warm twilight gold */
+}
+
+/* Thumbnail */
+.substack-thumb {
+  width: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
 }
 
 .substack-thumb img {
   width: 100%;
-  border-radius: var(--radius);
-  margin-bottom: 0.75rem;
+  height: 100%;
+  object-fit: cover;
 }
 
+/* Metadata */
 .substack-meta {
-  font-size: 0.8rem;
-  opacity: 0.7;
+  font-size: 0.82rem;
+  color: #c8d3ff;
   margin-bottom: 0.5rem;
 }
 
+/* Description */
 .substack-description {
   font-size: 0.95rem;
   line-height: 1.45;
-  opacity: 0.9;
+  color: #d8dff7;
   margin-bottom: 0.75rem;
 }
 
+/* Read More */
 .substack-readmore a {
-  color: var(--color-accent);
+  color: #a8c6ff;
   font-weight: 600;
   text-decoration: none;
 }
 
+.substack-readmore a:hover {
+  text-decoration: underline;
+}
+
+/* Empty / Error states */
 .substack-empty,
 .substack-error {
   text-align: center;
   padding: 1rem;
-  opacity: 0.7;
+  color: #c8d3ff;
+  opacity: 0.8;
 }

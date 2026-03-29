@@ -1,56 +1,124 @@
 /* ============================================================
-   COMFORT MODULE
+   COMFORT MODULE — TWILIGHT BRIGHTENED (Option 2)
    ============================================================ */
 
 .comfort-module {
-  background: #fafafa;
-  padding: 1rem;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+
+  background: rgba(255, 255, 255, 0.06); /* twilight slate */
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--module-radius);
+  padding: var(--module-padding);
+
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.32); /* softer, brighter */
+  backdrop-filter: blur(4px);
+
+  cursor: pointer;
+  transition: background 0.25s ease, border-color 0.25s ease;
 }
+
+.comfort-module:hover {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* ============================================================
+   TOP ROW — Comfort Now
+   ============================================================ */
 
 .comfort-main {
   display: flex;
   align-items: center;
   gap: 0.9rem;
+  min-width: 0;
 }
 
 .comfort-emoji {
   font-size: 2rem;
+  flex-shrink: 0;
 }
 
 .comfort-text-block {
   display: flex;
   flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .comfort-label {
-  font-size: 0.85rem;
-  opacity: 0.7;
+  color: #f0b777; /* warm gold */
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .comfort-text {
-  font-size: 1.1rem;
+  color: #ffb866; /* brighter warm orange */
+  font-size: 1.05rem;
   font-weight: 600;
+  line-height: 1.28;
+  word-wrap: break-word;
 }
 
 .comfort-sub {
-  font-size: 0.85rem;
-  opacity: 0.7;
+  color: #c8d3ff; /* brighter twilight blue */
+  font-size: 0.82rem;
   margin-top: 0.15rem;
 }
 
+/* ============================================================
+   EXPANSION PANEL — Restored + Brightened
+   ============================================================ */
+
 .comfort-expand {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-6px) scale(0.98);
+  transition:
+    max-height 0.4s ease,
+    opacity 0.25s ease,
+    transform 0.25s ease;
   margin-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
   padding-top: 0.75rem;
-  border-top: 1px solid #e5e5e5;
 }
 
+.comfort-module.active .comfort-expand {
+  max-height: 160px;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.comfort-module.active {
+  backdrop-filter: blur(6px);
+}
+
+/* Rows inside expansion */
 .comfort-expand-row {
   display: flex;
   justify-content: space-between;
   margin-bottom: 0.35rem;
 }
+
+.comfort-expand-label {
+  color: #c8d3ff;
+  font-size: 0.78rem;
+}
+
+.comfort-expand-value {
+  color: #ffb866;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* ============================================================
+   FUTURE COMFORT — Next 6 Hours (Mapped to new renderer)
+   ============================================================ */
 
 .next6-module {
   margin-top: 1rem;
@@ -58,43 +126,83 @@
 
 .next6-header {
   font-size: 0.9rem;
-  opacity: 0.7;
+  color: #c8d3ff;
+  opacity: 0.85;
   margin-bottom: 0.5rem;
 }
 
 .next6-strip {
   display: flex;
-  gap: 0.75rem;
+  gap: 10px;
   overflow-x: auto;
-  padding-bottom: 0.5rem;
+  padding-bottom: 6px;
 }
 
 .next6-hour {
-  background: #fafafa;
-  padding: 0.75rem;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-soft);
-  min-width: 80px;
+  min-width: 70px;
+  flex-shrink: 0;
   text-align: center;
+
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 8px 6px;
+
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
 }
 
 .next6-hour-label {
-  font-size: 0.8rem;
-  opacity: 0.7;
+  font-size: 0.75rem;
+  color: #c8d3ff;
+  margin-bottom: 4px;
 }
 
 .next6-hour-emoji {
-  font-size: 1.4rem;
-  margin: 0.25rem 0;
+  font-size: 1.35rem;
+  margin-bottom: 4px;
 }
 
 .next6-hour-temp {
   font-size: 1rem;
   font-weight: 600;
+  color: #f5f5f5;
 }
 
 .next6-hour-factor {
   font-size: 0.75rem;
-  opacity: 0.7;
-  margin-top: 0.25rem;
+  color: #ffb866;
+  margin-top: 4px;
+}
+
+/* ============================================================
+   LAYOUT — Two Column Comfort Row (Restored)
+   ============================================================ */
+
+#comfort-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.comfort-left-col,
+.comfort-right-col {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+@media (min-width: 640px) {
+  #comfort-row {
+    align-items: stretch;
+  }
+
+  .comfort-right-col .comfort-module {
+    flex: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  #comfort-row {
+    flex-direction: column;
+    gap: 10px;
+  }
 }
