@@ -42,6 +42,11 @@ export async function renderWeather({ lat, lon, tempestDeviceId, tempestToken })
   // 2. HUMAN‑ACTION INTEL (Today + Tomorrow)
   const humanAction = buildHumanActionIntel(raw);
 
+  // ⭐ SAFE DEBUG LOGS — These will not break rendering
+  console.log("RAW INTEL:", raw);
+  console.log("HUMAN ACTION INTEL:", humanAction);
+  console.log("HOURLY (raw.hourly):", raw.hourly);
+
   // 3. COMFORT NOW (Tempest-first)
   const comfortNow = computeComfort({
     tempest: raw.tempest,
@@ -136,10 +141,6 @@ function renderFutureComfortList(list) {
     })
     .join("");
 }
-
-console.log("RAW:", raw);
-console.log("HUMAN ACTION:", humanAction);
-console.log("HOURLY:", raw.hourly);
 
 // ============================================================
 // TIMESTAMP
