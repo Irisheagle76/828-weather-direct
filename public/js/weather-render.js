@@ -27,6 +27,25 @@ const futureComfortEl = document.getElementById("future-comfort-container");
 const updatedEl = document.getElementById("last-updated");
 
 // ============================================================
+// COMPATIBILITY LAYER — Map Human‑Action 2.0 → Legacy UI fields
+// ============================================================
+
+function mapToLegacyFields(period) {
+  if (!period) return null;
+
+  return {
+    // Legacy UI fields
+    emoji: period.sky?.primaryEmoji ?? "—",
+    title: period.sky?.headline ?? period.summary ?? "",
+    notes: period.narrative ?? "",
+    secondaryFactors: period.events?.keyEvents ?? [],
+
+    // Preserve all original fields
+    ...period
+  };
+}
+
+// ============================================================
 // MAIN ENTRY — called by app.js
 // ============================================================
 
@@ -40,9 +59,15 @@ export async function renderWeather({ lat, lon, tempestDeviceId, tempestToken })
   });
 
   // 2. HUMAN‑ACTION INTEL (Today + Tomorrow)
-  const humanAction = buildHumanActionIntel(raw);
+  const humanActionRaw = buildHumanActionIntel(raw);
 
-  // ⭐ SAFE DEBUG LOGS — These will not break rendering
+  // Apply compatibility wrapper
+  const humanAction = {
+    today: mapToLegacyFields(humanActionRaw.today),
+    tomorrow: mapToLegacyFields(humanActionRaw.tomorrow)
+  };
+
+  // Debug logs
   console.log("RAW INTEL:", raw);
   console.log("HUMAN ACTION INTEL:", humanAction);
   console.log("HOURLY (raw.hourly):", raw.hourly);
