@@ -21,15 +21,20 @@ function mapToLegacyFields(period) {
   console.log("PERIOD DEBUG:", period);
 
   return {
+    // 🔴 spread FIRST
+    ...period,
+
+    // ✅ then override with correct UI values
     emoji: narrative?.emoji ?? "🌤️",
+
     title:
       period?.title ||
       (period?.dominantFactor
         ? period.dominantFactor.replace(/([A-Z])/g, " $1")
         : "Outlook"),
+
     notes: narrative?.main ?? "",
-    secondaryFactors: narrative?.bullets ?? [],
-    ...period
+    secondaryFactors: narrative?.bullets ?? []
   };
 }
 
