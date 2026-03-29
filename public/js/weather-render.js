@@ -41,8 +41,8 @@ function mapToLegacyFields(period) {
   console.log("PERIOD DEBUG:", period);
 
   return {
-    // ✅ CORRECT SOURCES
-    emoji: period?.emoji ?? "🌤️",
+    // ✅ USE NARRATIVE (this is the key fix)
+    emoji: narrative?.emoji ?? "🌤️",
     title:
   period?.title ||
   (period?.dominantFactor
@@ -51,7 +51,7 @@ function mapToLegacyFields(period) {
     notes: narrative?.main ?? "",
     secondaryFactors: narrative?.bullets ?? [],
 
-    // preserve everything
+    // preserve original data
     ...period
   };
 }
