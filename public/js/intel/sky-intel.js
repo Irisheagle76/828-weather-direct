@@ -4,7 +4,7 @@
 // Tempest-first → WU → Open-Meteo
 // ============================================================
 
-import { LOCATION } from "../config/location.js?v=1.0.0";
+import { LOCATION } from "../config/location.js;
 
 // ------------------------------------------------------------
 // Solar elevation helper (same core as comfort, shared logic)

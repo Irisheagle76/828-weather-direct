@@ -1,10 +1,10 @@
 // /intel/forecast-intel.js
 
-import { computeComfort } from "./comfort.js?v=1.0.0";
-import { synthesizeOutlook, differentiateFromToday, synthesizeRemainderTodayOutlook } from "./synthesizer.js?v=1.0.0";
-import { computeStats } from "./stats.js?v=1.0.0";
-import { computeEvents } from "./events.js?v=1.0.0";
-import { getTodayWindow, getTomorrowWindow } from "./windows.js?v=1.0.0";
+import { computeComfort } from "./comfort.js;
+import { synthesizeOutlook, differentiateFromToday, synthesizeRemainderTodayOutlook } from "./synthesizer.js;
+import { computeStats } from "./stats.js;
+import { computeEvents } from "./events.js;
+import { getTodayWindow, getTomorrowWindow } from "./windows.js;
 
 export function buildWeatherIntel(hourly) {
   // -----------------------------
