@@ -5,19 +5,18 @@
 // ============================================================
 
 import { evaluateHumanActionFactors } from "../modules/human-action-2/core-engine.js";
+import { normalizeOpenMeteo } from "./normalize-hourly.js";
 
 // ------------------------------------------------------------
 // MAIN BUILDER
 // ------------------------------------------------------------
 export function buildHumanActionIntel(raw) {
-  if (!raw || !raw.hourly || !Array.isArray(raw.hourly.hourly)) {
-    return {
-      today: null,
-      tomorrow: null
-    };
-  }
+  if (!raw || !raw.hourly) {
+  return { today: null, tomorrow: null };
+}
 
-  const hourly = raw.hourly.hourly;
+const hourly = normalizeOpenMeteo(raw.hourly);
+
 
   // ------------------------------------------------------------
   // 1. TODAY — use the current snapshot (hour 0)

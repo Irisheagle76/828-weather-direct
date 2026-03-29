@@ -293,7 +293,7 @@ export function computeComfort(intel) {
   const future = intel.futureComfortWindow;
 
   if (future && future.length >= 2 && intel.hourly) {
-    const temps = intel.hourly.temperature_2m;
+    const temps = intel.hourly.map(h => h.temperature);
 
     const tStart = temps[future[0]];
     const tEnd = temps[future[future.length - 1]];
@@ -388,9 +388,9 @@ export function buildFutureComfort(hourly, computeComfort) {
       color: c.color,
       label: c.label,
       emoji: c.emoji,
-      temp: hourly.temperature_2m[idx],
-      dew: hourly.dewpoint_2m[idx],
-      wind: hourly.wind_speed_10m[idx]
+     temp: hourly[idx].temperature,
+dew: hourly[idx].dewpoint,
+wind: hourly[idx].wind_speed
     });
   }
 
