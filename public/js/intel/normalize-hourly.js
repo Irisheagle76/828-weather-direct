@@ -7,9 +7,6 @@ export function normalizeOpenMeteo(hourly) {
   const out = [];
 
   for (let i = 0; i < hourly.time.length; i++) {
-    // --------------------------------------------------
-    // SAFE ACCESS HELPERS
-    // --------------------------------------------------
     const pick = (...keys) => {
       for (const k of keys) {
         const val = hourly[k]?.[i];
@@ -20,20 +17,13 @@ export function normalizeOpenMeteo(hourly) {
 
     const num = v => (v != null && !isNaN(v) ? v : null);
 
-    // --------------------------------------------------
     // CORE INPUTS
-    // --------------------------------------------------
     const temp = num(pick("temperature_2m"));
     const dew = num(pick("dewpoint_2m"));
     const humidity = num(pick("relativehumidity_2m"));
 
-    const windSpeed = num(
-      pick("wind_speed_10m", "windspeed_10m")
-    ) ?? 0;
-
-    const windGust = num(
-      pick("wind_gusts_10m", "windgusts_10m")
-    ) ?? 0;
+    const windSpeed = num(pick("wind_speed_10m", "windspeed_10m")) ?? 0;
+    const windDir = pick("wind_direction_10m") ?? "";
 
     const precip = num(pick("precipitation")) ?? 0;
     const snow = num(pick("snowfall")) ?? 0;
@@ -43,78 +33,35 @@ export function normalizeOpenMeteo(hourly) {
 
     const apparent = num(pick("apparent_temperature")) ?? temp;
 
-    // --------------------------------------------------
-    // DEBUG (first record only)
-    // --------------------------------------------------
     if (i === 0) {
       console.log("NORMALIZE DEBUG:", {
         temp,
+        dew,
         humidity,
         windSpeed,
-        windGust,
+        windDir,
         precip,
         cloud,
         visibility
       });
     }
 
-    // --------------------------------------------------
-    // OUTPUT OBJECT
-    // --------------------------------------------------
     out.push({
-      // CORE
-      temperature: temp,
-      apparent_temperature: apparent,
-      feels_like: apparent,
+      // REQUIRED BY RENDERER + COMFORT ENGINE
+      time: hourly.time[i],
+      temp,
+      dew,
+      humidity,
+      windSpeed,
+      windDir,
 
-      dewpoint: dew,
-      relative_humidity: humidity,
-
-      wind_speed: windSpeed,
-      wind_speed_10m: windSpeed, // alias
-      wind_gust: windGust,
-
-      precipitation: precip,
-      rain: precip,
-      snowfall: snow,
-
-      cloud_cover: cloud,
-      visibility: visibility,
-
-      uv_index: num(pick("uv_index")),
-
-      // --------------------------------------------------
-      // DERIVED
-      // --------------------------------------------------
-      smoke_index: 0,
-
-      frost_risk:
-        temp != null && dew != null && temp <= 37 && dew <= 36
-          ? 0.6
-          : temp != null && temp <= 34
-          ? 1
-          : 0,
-
-      freeze_risk:
-        temp != null && temp <= 32
-          ? 1
-          : temp != null && temp <= 34
-          ? 0.5
-          : 0,
-
-      black_ice_risk:
-        temp != null && temp <= 32 && precip > 0 ? 1 : 0,
-
-      inversion_risk:
-        temp != null && temp <= 40 && windSpeed < 3 ? 0.5 : 0,
-
-      valley_fog_risk:
-        humidity != null && humidity >= 95 ? 0.6 : 0,
-
-      ridge_fog_risk:
-        humidity != null && humidity >= 98 ? 0.5 : 0,
-
-      timestamp: new Date(hourly.time[i]).getTime()
+      // OPTIONAL BUT USED BY FUTURE COMFORT
+      apparent,
+      precip,
+      snow,
+      cloud,
+      visibility,
+      uv: num(pick("uv_index"))
     });
   }
 
