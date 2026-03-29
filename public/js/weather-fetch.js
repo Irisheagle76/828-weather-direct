@@ -17,23 +17,24 @@ export async function fetchAllIntel({
     tempest: null,
     hourly: null,
     mrms: null,
-    wu: null, // ✅ ADDED
+    wu: null,
     meta: {
       fetchedAt: Date.now()
     }
   };
 
   // ------------------------------------------------------------
-  // 1. Tempest (best real-time obs)
+  // 1. Tempest (normalized)
   // ------------------------------------------------------------
   try {
-    result.tempest = await getTempestDeviceObs(tempestDeviceId, tempestToken);
+    const rawTempest = await getTempestDeviceObs(tempestDeviceId, tempestToken);
+    result.tempest = normalizeTempest(rawTempest); // ✅ KEY FIX
   } catch (err) {
     console.error("Tempest fetch failed:", err);
   }
 
   // ------------------------------------------------------------
-  // 2. Weather Underground (station obs)
+  // 2. Weather Underground
   // ------------------------------------------------------------
   try {
     result.wu = await getWUObs(lat, lon);
@@ -42,7 +43,7 @@ export async function fetchAllIntel({
   }
 
   // ------------------------------------------------------------
-  // 3. Open-Meteo hourly forecast (3 days)
+  // 3. Open-Meteo hourly forecast
   // ------------------------------------------------------------
   try {
     result.hourly = await getShortTermForecast(lat, lon);
@@ -63,7 +64,34 @@ export async function fetchAllIntel({
 }
 
 // ============================================================
-// TEMPEST — device observations
+// 🌪️ TEMPEST — normalize device observations
+// ============================================================
+
+function normalizeTempest(data) {
+  if (!data?.obs?.[0]) {
+    console.warn("Invalid Tempest payload", data);
+    return null;
+  }
+
+  const o = data.obs[0];
+
+  return {
+    wind_lull: o[1],
+    wind_avg: o[2],
+    wind_gust: o[3],
+    wind_direction: o[4],
+    pressure: o[6],
+    air_temperature: o[7],
+    relative_humidity: o[8],
+
+    // simple derived placeholders (can improve later)
+    feels_like: o[7],
+    dew_point: null
+  };
+}
+
+// ============================================================
+// TEMPEST — raw fetch
 // ============================================================
 
 export async function getTempestDeviceObs(deviceId, token) {
@@ -79,27 +107,23 @@ export async function getTempestDeviceObs(deviceId, token) {
 
 export async function getWUObs(lat, lon) {
   try {
-    // 1. Find nearest station
     const stationRes = await fetch(`/api/wu-station?lat=${lat}&lon=${lon}`);
     if (!stationRes.ok) throw new Error("WU station lookup failed");
 
     const stationData = await stationRes.json();
-
     const stationId = stationData?.location?.stationId?.[0];
+
     if (!stationId) {
       console.warn("No WU station found");
       return null;
     }
 
-    // 2. Fetch observation
     const obsRes = await fetch(`/api/wu-current?stationId=${stationId}`);
     if (!obsRes.ok) throw new Error("WU observation failed");
 
     const obsData = await obsRes.json();
-
     const obs = obsData?.observations?.[0] ?? null;
 
-    // attach station id for UI if needed
     if (obs) obs.stationID = stationId;
 
     return obs;
@@ -111,7 +135,7 @@ export async function getWUObs(lat, lon) {
 }
 
 // ============================================================
-// OPEN-METEO — short-term hourly forecast (3 days)
+// OPEN-METEO — hourly forecast
 // ============================================================
 
 export async function getShortTermForecast(lat, lon) {
@@ -122,7 +146,7 @@ export async function getShortTermForecast(lat, lon) {
 }
 
 // ============================================================
-// MRMS — placeholder pixel fetcher
+// MRMS — placeholder
 // ============================================================
 
 export async function getMRMSPixel(lat, lon) {
