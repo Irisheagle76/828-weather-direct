@@ -41,8 +41,6 @@ async function initApp() {
     return;
   }
 
-  setWUStatus("pending", "Requesting Location", "Waiting for permission…");
-
   navigator.geolocation.getCurrentPosition(
     async pos => {
       try {

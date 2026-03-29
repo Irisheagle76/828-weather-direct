@@ -1,6 +1,6 @@
 // /js/weather-render.js
 // ============================================================
-// UNIFIED RENDERER — Raw Fetch → Current → Human-Action → Comfort
+// FINAL RENDERER — Current + Human Action + Comfort + Source
 // ============================================================
 
 import { fetchAllIntel } from "./weather-fetch.js";
@@ -9,7 +9,40 @@ import { computeComfort, buildFutureComfort } from "./intel/comfort.js";
 import { generateNarrative } from "./intel/synthesizer.js";
 
 // ============================================================
-// CURRENT OBSERVATIONS (Tempest → WU → Hourly fallback)
+// DATA SOURCE INDICATOR
+// ============================================================
+
+function updateDataSourceIndicator(raw) {
+  const labelEl = document.getElementById("wu-status-label");
+  const textEl = document.getElementById("wu-status-text");
+  const dot = document.getElementById("wu-status-dot");
+
+  if (!labelEl || !textEl || !dot) return;
+
+  if (raw.tempest) {
+    labelEl.textContent = "Tempest Live";
+    textEl.textContent = "Real-time data from your Tempest station.";
+    dot.classList.add("ok");
+    dot.classList.remove("error");
+    return;
+  }
+
+  if (raw.wu) {
+    labelEl.textContent = "Nearby Station";
+    textEl.textContent = "Using nearby personal weather station.";
+    dot.classList.add("ok");
+    dot.classList.remove("error");
+    return;
+  }
+
+  labelEl.textContent = "Model Data";
+  textEl.textContent = "Using forecast model data.";
+  dot.classList.add("error");
+  dot.classList.remove("ok");
+}
+
+// ============================================================
+// CURRENT OBSERVATIONS
 // ============================================================
 
 function renderCurrentObservations(raw) {
@@ -20,44 +53,19 @@ function renderCurrentObservations(raw) {
   const h = raw.hourly;
 
   const current = {
-    temp:
-      t?.air_temperature ??
-      wu?.imperial?.temp ??
-      h?.temperature_2m?.[0],
-
+    temp: t?.air_temperature ?? wu?.imperial?.temp ?? h?.temperature_2m?.[0],
     feels:
       t?.feels_like ??
       wu?.imperial?.heatIndex ??
       wu?.imperial?.windChill ??
       h?.apparent_temperature?.[0],
-
-    dew:
-      t?.dew_point ??
-      wu?.imperial?.dewpt ??
-      h?.dewpoint_2m?.[0],
-
+    dew: t?.dew_point ?? wu?.imperial?.dewpt ?? h?.dewpoint_2m?.[0],
     humidity:
-      t?.relative_humidity ??
-      wu?.humidity ??
-      h?.relativehumidity_2m?.[0],
-
-    wind:
-      t?.wind_avg ??
-      wu?.imperial?.windSpeed ??
-      h?.wind_speed_10m?.[0],
-
-    gust:
-      t?.wind_gust ??
-      wu?.imperial?.windGust ??
-      h?.windgusts_10m?.[0],
-
-    uv:
-      wu?.uv ??
-      h?.uv_index?.[0] ??
-      0
+      t?.relative_humidity ?? wu?.humidity ?? h?.relativehumidity_2m?.[0],
+    wind: t?.wind_avg ?? wu?.imperial?.windSpeed ?? h?.wind_speed_10m?.[0],
+    gust: t?.wind_gust ?? wu?.imperial?.windGust ?? h?.windgusts_10m?.[0],
+    uv: wu?.uv ?? h?.uv_index?.[0] ?? 0
   };
-
-  console.log("CURRENT OBS:", current);
 
   const set = (id, val) => {
     const el = document.getElementById(id);
@@ -77,7 +85,7 @@ function renderCurrentObservations(raw) {
 }
 
 // ============================================================
-// COMPATIBILITY LAYER (Narrative → UI)
+// MAP ENGINE → UI
 // ============================================================
 
 function mapToLegacyFields(period) {
@@ -86,16 +94,13 @@ function mapToLegacyFields(period) {
   const narrative = generateNarrative(period);
 
   return {
-    ...period, // spread FIRST
-
+    ...period,
     emoji: narrative?.emoji ?? "🌤️",
-
     title:
       period?.title ||
       (period?.dominantFactor
         ? period.dominantFactor.replace(/([A-Z])/g, " $1")
         : "Outlook"),
-
     notes: narrative?.main ?? "",
     secondaryFactors: narrative?.bullets ?? []
   };
@@ -111,9 +116,7 @@ export async function renderWeather({
   tempestDeviceId,
   tempestToken
 }) {
-  // ----------------------------------------------------------
-  // DOM (grab at runtime)
-  // ----------------------------------------------------------
+  // DOM
   const todayEmojiEl = document.getElementById("today-emoji");
   const todayHeadlineEl = document.getElementById("today-headline");
   const todayTextEl = document.getElementById("today-text");
@@ -128,9 +131,7 @@ export async function renderWeather({
   const futureComfortEl = document.getElementById("future-comfort-container");
   const updatedEl = document.getElementById("last-updated");
 
-  // ----------------------------------------------------------
   // FETCH
-  // ----------------------------------------------------------
   const raw = await fetchAllIntel({
     lat,
     lon,
@@ -138,67 +139,52 @@ export async function renderWeather({
     tempestToken
   });
 
-  console.log("RAW INTEL:", raw);
+  console.log("RAW:", raw);
 
-  // ----------------------------------------------------------
-  // CURRENT OBS (THIS WAS MISSING)
-  // ----------------------------------------------------------
+  // 🔥 NEW: SOURCE + CURRENT
+  updateDataSourceIndicator(raw);
   renderCurrentObservations(raw);
 
-  // ----------------------------------------------------------
   // HUMAN ACTION
-  // ----------------------------------------------------------
-  const humanActionRaw = buildHumanActionIntel(raw);
+  const humanRaw = buildHumanActionIntel(raw);
 
-  const humanAction = {
-    today: mapToLegacyFields(humanActionRaw.today),
-    tomorrow: mapToLegacyFields(humanActionRaw.tomorrow)
+  const human = {
+    today: mapToLegacyFields(humanRaw.today),
+    tomorrow: mapToLegacyFields(humanRaw.tomorrow)
   };
 
-  console.log("HUMAN ACTION:", humanAction);
-
-  // ----------------------------------------------------------
   // COMFORT
-  // ----------------------------------------------------------
   const comfortNow = computeComfort({
     tempest: raw.tempest,
     wu: raw.wu,
-    hourly: raw.hourly,
-    sky: null,
-    futureComfortWindow: null
+    hourly: raw.hourly
   });
 
   const futureComfort = buildFutureComfort(raw.hourly, computeComfort);
 
-  // ----------------------------------------------------------
   // TODAY
-  // ----------------------------------------------------------
-  if (humanAction.today && todayEmojiEl) {
-    todayEmojiEl.textContent = humanAction.today.emoji;
-    todayHeadlineEl.textContent = humanAction.today.title;
-    todayTextEl.textContent = humanAction.today.notes;
+  if (human.today && todayEmojiEl) {
+    todayEmojiEl.textContent = human.today.emoji;
+    todayHeadlineEl.textContent = human.today.title;
+    todayTextEl.textContent = human.today.notes;
 
-    todayBulletsEl.innerHTML = (humanAction.today.secondaryFactors || [])
+    todayBulletsEl.innerHTML = (human.today.secondaryFactors || [])
       .map(b => `<li>${b}</li>`)
       .join("");
   }
 
-  // ----------------------------------------------------------
   // TOMORROW
-  // ----------------------------------------------------------
-  if (humanAction.tomorrow && tomorrowEmojiEl) {
-    tomorrowEmojiEl.textContent = humanAction.tomorrow.emoji;
-    tomorrowHeadlineEl.textContent = humanAction.tomorrow.title;
-    tomorrowTextEl.textContent = humanAction.tomorrow.notes;
+  if (human.tomorrow && tomorrowEmojiEl) {
+    tomorrowEmojiEl.textContent = human.tomorrow.emoji;
+    tomorrowHeadlineEl.textContent = human.tomorrow.title;
+    tomorrowTextEl.textContent = human.tomorrow.notes;
 
-    tomorrowBulletsEl.innerHTML = (humanAction.tomorrow.secondaryFactors || [])
+    tomorrowBulletsEl.innerHTML = (human.tomorrow.secondaryFactors || [])
       .map(b => `<li>${b}</li>`)
       .join("");
   }
 
-  // ----------------------------------------------------------
   // COMFORT NOW
-  // ----------------------------------------------------------
   if (comfortNowEl && comfortNow) {
     comfortNowEl.innerHTML = `
       <div class="comfort-now-card" style="border-left: 6px solid ${comfortNow.color}">
@@ -211,9 +197,7 @@ export async function renderWeather({
     `;
   }
 
-  // ----------------------------------------------------------
   // FUTURE COMFORT
-  // ----------------------------------------------------------
   if (futureComfortEl && futureComfort) {
     futureComfortEl.innerHTML = futureComfort
       .map(item => `
@@ -227,10 +211,8 @@ export async function renderWeather({
       .join("");
   }
 
-  // ----------------------------------------------------------
   // TIMESTAMP
-  // ----------------------------------------------------------
-  if (updatedEl) {
+  if (updatedEl && raw.meta?.fetchedAt) {
     updatedEl.textContent = new Date(raw.meta.fetchedAt).toLocaleTimeString([], {
       hour: "numeric",
       minute: "2-digit"
