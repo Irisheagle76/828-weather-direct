@@ -11,8 +11,16 @@ export function normalizeOpenMeteo(hourly) {
     const dew = hourly.dewpoint_2m?.[i] ?? null;
     const humidity = hourly.relativehumidity_2m?.[i] ?? null;
 
-    const windSpeed = hourly.wind_speed_10m?.[i] ?? 0; // ✅ FIXED
-    const windGust = hourly.windgusts_10m?.[i] ?? 0;
+    // ✅ WIND — resilient to both API formats
+    const windSpeed =
+      hourly.wind_speed_10m?.[i] ??
+      hourly.windspeed_10m?.[i] ??
+      0;
+
+    const windGust =
+      hourly.windgusts_10m?.[i] ??
+      hourly.wind_gusts_10m?.[i] ??
+      0;
 
     const precip = hourly.precipitation?.[i] ?? 0;
     const snow = hourly.snowfall?.[i] ?? 0;
@@ -20,21 +28,38 @@ export function normalizeOpenMeteo(hourly) {
     const cloud = hourly.cloudcover?.[i] ?? null;
     const visibility = hourly.visibility?.[i] ?? null;
 
+    // 🧪 DEBUG (runs once)
+    if (i === 0) {
+      console.log("NORMALIZE DEBUG:", {
+        temp,
+        humidity,
+        wind_speed_10m: hourly.wind_speed_10m?.[i],
+        windspeed_10m: hourly.windspeed_10m?.[i],
+        wind_gusts_10m: hourly.wind_gusts_10m?.[i],
+        windgusts_10m: hourly.windgusts_10m?.[i],
+        precip,
+        cloud,
+        visibility
+      });
+    }
+
     out.push({
+      // --------------------------------------------------
       // CORE
+      // --------------------------------------------------
       temperature: temp,
 
       apparent_temperature:
         hourly.apparent_temperature?.[i] ?? temp,
 
       feels_like:
-        hourly.apparent_temperature?.[i] ?? temp, // ✅ comma added below
+        hourly.apparent_temperature?.[i] ?? temp,
 
       dewpoint: dew,
       relative_humidity: humidity,
 
       wind_speed: windSpeed,
-      wind_speed_10m: windSpeed, // ✅ alias (important)
+      wind_speed_10m: windSpeed, // alias
       wind_gust: windGust,
 
       precipitation: precip,
@@ -47,7 +72,9 @@ export function normalizeOpenMeteo(hourly) {
 
       uv_index: hourly.uv_index?.[i] ?? null,
 
+      // --------------------------------------------------
       // DERIVED
+      // --------------------------------------------------
       smoke_index: 0,
 
       frost_risk:
