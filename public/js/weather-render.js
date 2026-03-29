@@ -137,6 +137,10 @@ function renderFutureComfortList(list) {
     .join("");
 }
 
+console.log("RAW:", raw);
+console.log("HUMAN ACTION:", humanAction);
+console.log("HOURLY:", raw.hourly);
+
 // ============================================================
 // TIMESTAMP
 // ============================================================
