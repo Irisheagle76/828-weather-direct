@@ -3,6 +3,12 @@
 // APP ENTRY — Clean + Stable
 // ============================================================
 
+// 🔥 DIAGNOSTIC MARKER — THIS MUST APPEAR IN THE CONSOLE
+console.log("APP.JS LOADED — VERSION TEST MARKER A — v6");
+
+// ------------------------------------------------------------
+// IMPORTS
+// ------------------------------------------------------------
 import { renderWeather } from "./weather-render.js";
 
 // ------------------------------------------------------------
@@ -33,6 +39,8 @@ function setLoadingState() {
 document.addEventListener("DOMContentLoaded", initApp);
 
 async function initApp() {
+  console.log("INITAPP FIRED — VERSION TEST MARKER B");
+
   if (!navigator.geolocation) {
     showError("Geolocation is not supported by this browser.");
     return;
@@ -42,6 +50,8 @@ async function initApp() {
 
   navigator.geolocation.getCurrentPosition(
     async pos => {
+      console.log("GEOLOCATION SUCCESS — VERSION TEST MARKER C", pos);
+
       try {
         await renderWeather({
           lat: pos.coords.latitude,
@@ -49,10 +59,6 @@ async function initApp() {
           tempestDeviceId: "315255",
           tempestToken: "838ff386-d14b-4d45-897a-18903e6970a9"
         });
-
-        // ✅ IMPORTANT:
-        // Do NOT set status here anymore.
-        // weather-render.js now controls the data source indicator.
 
       } catch (err) {
         console.error("Render failed:", err);
