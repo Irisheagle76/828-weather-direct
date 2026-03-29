@@ -6,15 +6,25 @@
 import { fetchAllIntel } from "./weather-fetch.js";
 import { buildHumanActionIntel } from "./intel/human-action-intel-builder.js";
 import { computeComfort, buildFutureComfort } from "./intel/comfort.js";
-import { generateNarrative } from "./intel/synthesizer.js";
 
-// DOM targets
-const todayEl = document.getElementById("today-outlook");
-const tomorrowEl = document.getElementById("tomorrow-outlook");
-const updatedEl = document.getElementById("last-updated");
+// TODAY DOM TARGETS
+const todayEmojiEl = document.getElementById("today-emoji");
+const todayHeadlineEl = document.getElementById("today-headline");
+const todayTextEl = document.getElementById("today-text");
+const todayBulletsEl = document.getElementById("today-bullets");
 
+// TOMORROW DOM TARGETS
+const tomorrowEmojiEl = document.getElementById("tomorrow-emoji");
+const tomorrowHeadlineEl = document.getElementById("tomorrow-headline");
+const tomorrowTextEl = document.getElementById("tomorrow-text");
+const tomorrowBulletsEl = document.getElementById("tomorrow-bullets");
+
+// COMFORT DOM TARGETS
 const comfortNowEl = document.getElementById("comfort-now-container");
 const futureComfortEl = document.getElementById("future-comfort-container");
+
+// TIMESTAMP
+const updatedEl = document.getElementById("last-updated");
 
 // ============================================================
 // MAIN ENTRY — called by app.js
@@ -51,38 +61,41 @@ export async function renderWeather({ lat, lon, tempestDeviceId, tempestToken })
   renderFutureComfortList(futureComfort);
 
   // 6. TIMESTAMP
-  updatedEl.textContent = formatTimestamp(raw.meta.fetchedAt);
+  if (updatedEl) {
+    updatedEl.textContent = formatTimestamp(raw.meta.fetchedAt);
+  }
 }
 
 // ============================================================
-// TODAY / TOMORROW
+// TODAY RENDERER
 // ============================================================
 
 function renderToday(intel) {
-  const narrative = generateNarrative(intel);
-  renderOutlook(todayEl, intel, narrative);
+  if (!intel) return;
+
+  todayEmojiEl.textContent = intel.emoji ?? "—";
+  todayHeadlineEl.textContent = intel.title ?? "Today";
+  todayTextEl.textContent = intel.notes ?? "";
+
+  todayBulletsEl.innerHTML = (intel.secondaryFactors ?? [])
+    .map(f => `<li>${f}</li>`)
+    .join("");
 }
+
+// ============================================================
+// TOMORROW RENDERER
+// ============================================================
 
 function renderTomorrow(intel) {
-  const narrative = generateNarrative(intel);
-  renderOutlook(tomorrowEl, intel, narrative);
-}
+  if (!intel) return;
 
-function renderOutlook(container, intel, narrative) {
-  container.innerHTML = `
-    <div class="ha-headline">
-      <span class="ha-emoji">${intel.emoji}</span>
-      <span class="ha-title">${intel.title}</span>
-    </div>
+  tomorrowEmojiEl.textContent = intel.emoji ?? "—";
+  tomorrowHeadlineEl.textContent = intel.title ?? "Tomorrow";
+  tomorrowTextEl.textContent = intel.notes ?? "";
 
-    <div class="ha-main-text">
-      ${narrative.main}
-    </div>
-
-    <ul class="ha-bullets">
-      ${narrative.bullets.map(b => `<li>${b}</li>`).join("")}
-    </ul>
-  `;
+  tomorrowBulletsEl.innerHTML = (intel.secondaryFactors ?? [])
+    .map(f => `<li>${f}</li>`)
+    .join("");
 }
 
 // ============================================================
@@ -90,7 +103,7 @@ function renderOutlook(container, intel, narrative) {
 // ============================================================
 
 function renderComfortNow(c) {
-  if (!comfortNowEl) return;
+  if (!comfortNowEl || !c) return;
 
   comfortNowEl.innerHTML = `
     <div class="comfort-now-card" style="border-left: 6px solid ${c.color}">
@@ -108,7 +121,7 @@ function renderComfortNow(c) {
 // ============================================================
 
 function renderFutureComfortList(list) {
-  if (!futureComfortEl) return;
+  if (!futureComfortEl || !list) return;
 
   futureComfortEl.innerHTML = list
     .map(item => {
