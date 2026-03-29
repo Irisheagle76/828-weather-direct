@@ -5,7 +5,7 @@
 
 import { fetchAllIntel } from "./weather-fetch.js";
 import { buildHumanActionIntel } from "./intel/human-action-intel-builder.js?v=5";
-import { computeComfort, buildFutureComfort } from "./intel/comfort.js";
+import { computeComfort, buildFutureComfort as comfortBuildFuture } from "./intel/comfort.js";
 import { generateNarrative } from "./intel/synthesizer.js";
 import { normalizeOpenMeteo } from "./intel/normalize-hourly.js";
 
@@ -183,7 +183,6 @@ function renderHumanAction(today, tomorrow) {
   }
 }
 
-// simple, safe expanded panels that won’t crash even if fields are missing
 function renderHumanActionExpanded(todayIntel, tomorrowIntel) {
   console.log("🔵 HUMAN-ACTION EXPANDED INTEL:", {
     todayIntel,
@@ -395,13 +394,11 @@ function initializeAccordion() {
 
   console.log("🟡 ACCORDION MODULE COUNT:", modules.length);
 
-  // Remove old listeners by cloning nodes
   modules.forEach(module => {
     const clone = module.cloneNode(true);
     module.parentNode.replaceChild(clone, module);
   });
 
-  // Re-select fresh nodes
   const freshModules = document.querySelectorAll(
     ".comfort-module, .next6-module, .action-module"
   );
@@ -420,35 +417,34 @@ function initializeAccordion() {
 }
 
 // ============================================================
-// COMFORT WINDOW HELPER
+// COMFORT WINDOW HELPER (ARRAY-SHAPE AWARE)
 // ============================================================
 
 function findBestComfortWindow(hourlyNormalized, computeComfort, windowSize = 3) {
   console.log("🟠 FIND BEST COMFORT WINDOW — INPUT:", hourlyNormalized);
 
-  if (!hourlyNormalized || !hourlyNormalized.time) return null;
-
-  const times = hourlyNormalized.time;
-  const len = times.length;
-  if (len < windowSize) return null;
+  if (!Array.isArray(hourlyNormalized) || hourlyNormalized.length < windowSize) {
+    return null;
+  }
 
   const windows = [];
 
-  for (let start = 0; start <= len - windowSize; start++) {
+  for (let start = 0; start <= hourlyNormalized.length - windowSize; start++) {
     let sum = 0;
     const hours = [];
 
     for (let i = 0; i < windowSize; i++) {
       const idx = start + i;
+      const h = hourlyNormalized[idx];
 
       const intelForHour = {
         tempest: null,
         wu: {
-          temp: hourlyNormalized.temperature_2m[idx],
-          dewPoint: hourlyNormalized.dewpoint_2m[idx],
-          windSpeed: hourlyNormalized.wind_speed[idx],
-          windDir: hourlyNormalized.wind_direction_10m?.[idx] ?? "",
-          obsTimeLocal: hourlyNormalized.time[idx]
+          temp: h.temp,
+          dewPoint: h.dew ?? h.dewPoint ?? null,
+          windSpeed: h.windSpeed,
+          windDir: h.windDir ?? h.windDirection ?? "",
+          obsTimeLocal: h.time
         },
         hourly: hourlyNormalized
       };
@@ -457,11 +453,11 @@ function findBestComfortWindow(hourlyNormalized, computeComfort, windowSize = 3)
       sum += c.comfortScore;
 
       hours.push({
-        time: hourlyNormalized.time[idx],
-        hourLabel: formatHourLabel(hourlyNormalized.time[idx]),
+        time: h.time,
+        hourLabel: h.time ? formatHourLabel(h.time) : `+${i}h`,
         comfortScore: c.comfortScore,
         emoji: c.emoji,
-        temp: hourlyNormalized.temperature_2m[idx],
+        temp: h.temp,
         label: c.label
       });
     }
@@ -478,6 +474,64 @@ function findBestComfortWindow(hourlyNormalized, computeComfort, windowSize = 3)
 
   console.log("🟠 BEST COMFORT WINDOW:", best);
   return best;
+}
+
+// ============================================================
+// FUTURE COMFORT BUILDER (ARRAY-SHAPE AWARE)
+// ============================================================
+
+export function buildFutureComfort(hourlyNormalized, computeComfortFn = computeComfort) {
+  console.log("🟣 BUILD FUTURE COMFORT — RAW HOURLY NORMALIZED:", hourlyNormalized);
+
+  if (!Array.isArray(hourlyNormalized) || hourlyNormalized.length === 0) return [];
+
+  const now = Date.now();
+
+  let startIndex = hourlyNormalized.findIndex(h => {
+    if (!h.time) return false;
+    return new Date(h.time).getTime() > now;
+  });
+
+  if (startIndex === -1) startIndex = 0;
+
+  const items = [];
+
+  for (let i = 0; i < 6; i++) {
+    const idx = startIndex + i;
+    if (idx >= hourlyNormalized.length) break;
+
+    const h = hourlyNormalized[idx];
+
+    const intelForHour = {
+      tempest: null,
+      wu: {
+        temp: h.temp,
+        dewPoint: h.dew ?? h.dewPoint ?? null,
+        windSpeed: h.windSpeed,
+        windDir: h.windDir ?? h.windDirection ?? "",
+        obsTimeLocal: h.time
+      },
+      hourly: hourlyNormalized
+    };
+
+    const c = computeComfortFn(intelForHour);
+
+    items.push({
+      index: idx,
+      time: h.time,
+      hourLabel: h.time ? formatHourLabel(h.time) : `+${i}h`,
+      comfortScore: c.comfortScore,
+      color: c.color,
+      label: c.label,
+      emoji: c.emoji,
+      temp: h.temp,
+      dew: h.dew ?? h.dewPoint ?? null,
+      wind: h.windSpeed
+    });
+  }
+
+  console.log("🟣 FUTURE COMFORT OUTPUT:", items);
+  return items;
 }
 
 // ============================================================
