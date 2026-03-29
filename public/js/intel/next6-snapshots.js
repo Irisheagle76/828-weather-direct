@@ -1,7 +1,7 @@
 // /intel/next6-snapshots.js
 // Human‑Action Snapshot Builder — Next 6 Hours (Open‑Meteo Only)
 
-import { LOCATION } from "./config/location.js;
+import { LOCATION } from "/js/config/location.js";
 
 // ------------------------------------------------------------
 // Solar Elevation
