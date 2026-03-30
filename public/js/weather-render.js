@@ -210,12 +210,7 @@ function renderHumanActionExpanded(todayIntel, tomorrowIntel) {
 // ------------------------------------------------------------
 
 function renderComfortNow(container, comfort, bestWindow) {
-  const hour = new Date().getHours();
-  let periodLabel = "Today";
-  if (hour >= 15) periodLabel = "Tonight";
-  if (hour >= 18) periodLabel = "This Evening";
-  if (hour < 6) periodLabel = "Early Morning";
-
+  
   const mainLine = comfort.line1 || comfort.summary || comfort.label;
   const subLine = comfort.line2 || "";
 
@@ -225,7 +220,7 @@ function renderComfortNow(container, comfort, bestWindow) {
         <div class="comfort-emoji">${comfort.emoji}</div>
 
         <div class="comfort-text-block">
-          <div class="comfort-label">${periodLabel} Comfort</div>
+          <div class="comfort-label">Comfort Now</div>
           <div class="comfort-text">${mainLine}</div>
           <div class="comfort-sub">${comfort.comfortScore} / 100</div>
         </div>
@@ -294,7 +289,7 @@ function renderFutureComfort(container, items) {
   container.innerHTML = `
     <div class="next6-module module-card">
       <div class="next6-header">
-        <div class="next6-label">Next 6 Hours</div>
+        <div class="next6-label">Future Comfort</div>
       </div>
 
       <div class="next6-strip">
@@ -430,11 +425,18 @@ export async function renderWeather({
   renderHumanActionExpanded(intelRaw.today, intelRaw.tomorrow);
 
   // COMFORT NOW
-  const comfortNow = computeComfort({
-    tempest: raw.tempest,
-    wu: raw.wu,
-    hourly: raw.hourly
-  });
+const comfortNow = computeComfort({
+  tempest: raw.tempest,
+  wu: {
+    temp: raw.wu?.imperial?.temp ?? raw.wu?.temp_f ?? null,
+    dewPoint: raw.wu?.imperial?.dewpt ?? raw.wu?.dewpt_f ?? null,
+    windSpeed: raw.wu?.imperial?.windSpeed ?? raw.wu?.wind_mph ?? 0,
+    windDir: raw.wu?.wind_dir ?? "",
+    obsTimeLocal: raw.wu?.obsTimeLocal ?? Date.now(),
+    cloudCover: raw.wu?.cloud ?? null
+  },
+  hourly: null
+});
 
   comfortNow.humidity =
     raw.tempest?.relative_humidity ??

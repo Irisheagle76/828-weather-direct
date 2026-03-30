@@ -1,5 +1,5 @@
 /* ============================================================
-   COMFORT MODULE — TWILIGHT BRIGHTENED (Option 2)
+   COMFORT MODULE — TWILIGHT BRIGHTENED (Updated)
    ============================================================ */
 
 .comfort-module {
@@ -8,12 +8,12 @@
   width: 100%;
   min-width: 0;
 
-  background: rgba(255, 255, 255, 0.06); /* twilight slate */
+  background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--module-radius);
   padding: var(--module-padding);
 
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.32); /* softer, brighter */
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.32);
   backdrop-filter: blur(4px);
 
   cursor: pointer;
@@ -49,7 +49,7 @@
 }
 
 .comfort-label {
-  color: #f0b777; /* warm gold */
+  color: #f0b777;
   font-size: 0.78rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -57,7 +57,7 @@
 }
 
 .comfort-text {
-  color: #ffb866; /* brighter warm orange */
+  color: #ffb866;
   font-size: 1.05rem;
   font-weight: 600;
   line-height: 1.28;
@@ -65,13 +65,13 @@
 }
 
 .comfort-sub {
-  color: #c8d3ff; /* brighter twilight blue */
+  color: #c8d3ff;
   font-size: 0.82rem;
   margin-top: 0.15rem;
 }
 
 /* ============================================================
-   EXPANSION PANEL — Restored + Brightened
+   EXPANSION PANEL — Variable Height, No Clipping
    ============================================================ */
 
 .comfort-expand {
@@ -80,18 +80,20 @@
   opacity: 0;
   transform: translateY(-6px) scale(0.98);
   transition:
-    max-height 0.4s ease,
-    opacity 0.25s ease,
-    transform 0.25s ease;
+    max-height 0.45s ease,
+    opacity 0.3s ease,
+    transform 0.3s ease;
+
   margin-top: 0.75rem;
   border-top: 1px solid rgba(255, 255, 255, 0.10);
   padding-top: 0.75rem;
 }
 
 .comfort-module.active .comfort-expand {
-  max-height: 160px;
+  max-height: 600px; /* large enough for long narratives */
   opacity: 1;
   transform: translateY(0) scale(1);
+  overflow: visible;
 }
 
 .comfort-module.active {
@@ -116,8 +118,15 @@
   font-weight: 600;
 }
 
+.comfort-extra-line {
+  margin-top: 0.5rem;
+  font-size: 0.82rem;
+  color: #c8d3ff;
+  line-height: 1.35;
+}
+
 /* ============================================================
-   FUTURE COMFORT — Next 6 Hours (Mapped to new renderer)
+   FUTURE COMFORT — Renamed + Styled
    ============================================================ */
 
 .next6-module {
@@ -129,6 +138,12 @@
   color: #c8d3ff;
   opacity: 0.85;
   margin-bottom: 0.5rem;
+}
+
+.next6-label {
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: #c8d3ff;
 }
 
 .next6-strip {
@@ -175,7 +190,7 @@
 }
 
 /* ============================================================
-   LAYOUT — Two Column Comfort Row (Restored)
+   LAYOUT — Two Column Comfort Row
    ============================================================ */
 
 #comfort-row {
