@@ -124,16 +124,26 @@ function updateDataSourceIndicator(raw) {
 function mapToLegacyFields(period) {
   if (!period) return null;
 
-  const narrative = generateNarrative(period);
+  // Guarantee required synthesizer fields
+  const safePeriod = {
+    factors: [],            // <— CRITICAL FIX
+    precipType: period.precipType ?? "none",
+    precipChance: period.precipChance ?? 0,
+    snapshot: period.snapshot ?? {},
+    ...period
+  };
+
+  const narrative = generateNarrative(safePeriod);
 
   return {
-    ...period,
+    ...safePeriod,
     emoji: narrative?.emoji ?? "🌤️",
     title: narrative?.title ?? "Outlook",
     notes: narrative?.main ?? "",
     secondaryFactors: narrative?.bullets ?? []
   };
 }
+
 
 // ------------------------------------------------------------
 // HUMAN-ACTION RENDERING
