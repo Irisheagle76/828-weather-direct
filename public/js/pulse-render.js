@@ -169,32 +169,6 @@ export function renderPulse(pulse) {
 // ============================================================
 
 // ------------------------------------------------------------
-// HYBRID PREVIEW BUILDER
-// ------------------------------------------------------------
-function createHybridPreview(html) {
-  const textOnly = html
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
-  const sentences = textOnly.split(/(?<=[.!?])\s+/);
-
-  if (sentences.length === 0) return textOnly.slice(0, 280) + "…";
-
-  const first = sentences[0];
-
-  if (first.split(" ").length >= 20) return first + "…";
-
-  if (sentences.length > 1) {
-    const combined = first + " " + sentences[1];
-    if (combined.split(" ").length >= 35) return combined + "…";
-  }
-
-  const words = textOnly.split(" ");
-  return words.slice(0, 50).join(" ") + "…";
-}
-
-// ------------------------------------------------------------
 // TIME AGO FORMATTER
 // ------------------------------------------------------------
 function formatTimeAgo(date) {
