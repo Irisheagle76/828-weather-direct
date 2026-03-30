@@ -595,5 +595,7 @@ export async function renderWeather({
   window._comfortNow = comfortNow;
   window._comfortNowForRender = comfortNowForRender;
   window._hourly = hourlyNormalized;
+  window._today = today;
+window._tomorrow = tomorrow;
 }
 
