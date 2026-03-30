@@ -1,11 +1,11 @@
 /* ============================================================
-   HUMAN-ACTION MODULE
+   HUMAN-ACTION MODULE — Updated for HA 2.0 DOM
    ============================================================ */
 
 .action-module {
   display: flex;
-  align-items: flex-start;
-  gap: 1rem;
+  flex-direction: column;
+  gap: 0.6rem;
   padding: var(--module-padding);
   border-radius: var(--module-radius);
 
@@ -21,39 +21,53 @@
   background: rgba(255, 255, 255, 0.10);
   border-color: rgba(255, 255, 255, 0.18);
 }
+
+.action-module.active {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+/* Emoji */
 .action-emoji {
   font-size: 2rem;
-  margin-top: 6px;
+  margin-top: 0;
   flex-shrink: 0;
 }
+
+/* Label */
 .action-label {
   color: #a8c6ff;
   font-size: 0.75rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.1rem;
   white-space: nowrap;
 }
+
+/* Headline */
 .action-headline {
   color: #f5f7ff;
   font-size: 1.28rem;
   font-weight: 700;
   line-height: 1.25;
-  margin-bottom: 0.35rem;
-  white-space: normal;
+  margin-bottom: 0.25rem;
 }
+
+/* Summary text */
 .action-text {
   color: #c8d3ff;
   font-size: 0.9rem;
   line-height: 1.45;
+  margin-bottom: 0.4rem;
   overflow-wrap: break-word;
-  word-break: break-word;
 }
+
+/* Bullets */
 .today-bullets,
 .tomorrow-bullets {
   list-style: none;
-  padding-left: 1rem;
-  margin-top: 0.45rem;
+  padding-left: 0.6rem;
+  margin-top: 0.25rem;
 }
 
 .today-bullets li,
@@ -63,18 +77,14 @@
   line-height: 1.4;
   margin-bottom: 0.3rem;
 }
-.action-module.fade {
-  opacity: 0.55;
-  filter: saturate(0.85);
-  transform: translateY(2px);
-  transition: opacity 0.4s ease, transform 0.4s ease, filter 0.4s ease;
-}
+
+/* Expanded panel */
 .expanded-panel {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 18px;
   padding: 1.2rem 1.4rem;
-  margin-top: 1rem;
+  margin-top: 0.75rem;
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.32);
   color: #e5e8ff;
   line-height: 1.45;
@@ -88,9 +98,4 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   margin-bottom: 0.25rem;
-}
-
-.expanded-panel .fx-value {
-  color: #d8dff7;
-  font-size: 0.95rem;
 }

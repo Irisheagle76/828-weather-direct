@@ -1,48 +1,145 @@
 /* ============================================================
-   COMPONENTS — Shared UI Elements
+   GLOBAL TYPOGRAPHY
+   ============================================================ */
+
+body {
+  font-family: "Inter", system-ui, sans-serif;
+  color: #e8ecff;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  margin: 0;
+  font-weight: 700;
+  color: #f5f7ff;
+}
+
+.app-title {
+  font-size: 1.8rem;
+  letter-spacing: -0.01em;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  font-size: 0.9rem;
+  color: #c8d3ff;
+  margin-bottom: 1.2rem;
+}
+
+/* ============================================================
+   METRIC GRID
+   ============================================================ */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 16px;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.metric-label {
+  font-size: 0.78rem;
+  color: #c8d3ff;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.metric-value {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.metric-sub {
+  font-size: 0.82rem;
+  color: #a8b4e6;
+}
+
+/* ============================================================
+   BADGES + STATUS
    ============================================================ */
 
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  background: #eef2ff;
-  padding: 0.25rem 0.6rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
 }
 
 .badge-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #aaa;
+  background: #ffcc66;
 }
 
 .badge-dot.ok {
-  background: #4f7cff;
+  background: #4fda7b;
 }
 
 .badge-dot.error {
-  background: #e63946;
+  background: #ff6b6b;
 }
 
-.toast {
-  position: fixed;
-  bottom: 1.25rem;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #222;
-  color: white;
-  padding: 0.75rem 1.25rem;
-  border-radius: var(--radius);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
+.status-text {
+  font-size: 0.85rem;
+  color: #c8d3ff;
+  margin-top: 4px;
 }
 
-.toast.show {
-  opacity: 1;
+/* ============================================================
+   CARD + MODULE SPACING
+   ============================================================ */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
+.module {
+  padding: var(--module-padding);
+  border-radius: var(--module-radius);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.32);
+  backdrop-filter: blur(4px);
+}
+
+/* ============================================================
+   UTILITY CLASSES
+   ============================================================ */
+
+.fade-in {
+  animation: fadeIn 0.4s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.text-muted {
+  color: #a8b4e6;
+}
+
+.text-gold {
+  color: #f0b777;
+}
+
+.text-orange {
+  color: #ffb866;
+}
+
+.text-blue {
+  color: #c8d3ff;
+}

@@ -1,56 +1,203 @@
 /* ============================================================
-   CORE — Global Tokens + Typography + Resets
+   828 WEATHER — CORE SYSTEM
+   Variables, resets, color tokens, spacing scale, shadows
    ============================================================ */
 
+/* ------------------------------------------------------------
+   ROOT VARIABLES — Twilight Theme
+   ------------------------------------------------------------ */
 :root {
-  --font-main: "Inter", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+  /* Radii */
+  --module-radius: 18px;
+  --card-radius: 20px;
 
-  --color-bg: #f7f7f9;
-  --color-card: #ffffff;
-  --color-text: #222;
-  --color-text-soft: #555;
-  --color-accent: #4f7cff;
-  --color-accent-soft: #dfe7ff;
+  /* Padding scale */
+  --module-padding: 1.2rem;
+  --card-padding: 1.4rem;
 
-  --radius: 14px;
-  --shadow: 0 4px 14px rgba(0,0,0,0.08);
-  --shadow-soft: 0 2px 8px rgba(0,0,0,0.05);
+  /* Color tokens */
+  --twilight-bg: #0f111a;
+  --twilight-panel: rgba(255, 255, 255, 0.06);
+  --twilight-border: rgba(255, 255, 255, 0.12);
+  --twilight-border-strong: rgba(255, 255, 255, 0.18);
 
-  --fade: fade-in 0.35s ease;
+  --text-bright: #ffffff;
+  --text-soft: #e8ecff;
+  --text-muted: #c8d3ff;
+  --text-faint: #a8b4e6;
+
+  --accent-gold: #f0b777;
+  --accent-orange: #ffb866;
+  --accent-blue: #4f7cff;
+
+  /* Shadows */
+  --shadow-strong: 0 12px 28px rgba(0, 0, 0, 0.32);
+  --shadow-medium: 0 8px 20px rgba(0, 0, 0, 0.28);
+  --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.22);
+
+  /* Transitions */
+  --transition-fast: 0.2s ease;
+  --transition-medium: 0.35s ease;
 }
 
+/* ------------------------------------------------------------
+   GLOBAL RESET
+   ------------------------------------------------------------ */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-body {
-  background: var(--color-bg);
-  font-family: var(--font-main);
-  color: var(--color-text);
-  padding: 1.5rem;
+html, body {
+  background: var(--twilight-bg);
+  color: var(--text-soft);
+  font-family: "Inter", system-ui, sans-serif;
+  line-height: 1.45;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
+img, video {
+  max-width: 100%;
+  display: block;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* ------------------------------------------------------------
+   GLOBAL LINKS
+   ------------------------------------------------------------ */
+a {
+  color: var(--accent-blue);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--accent-orange);
+}
+
+/* ------------------------------------------------------------
+   CARD WRAPPER
+   ------------------------------------------------------------ */
 .card {
-  background: var(--color-card);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 1.5rem;
-  max-width: 760px;
+  max-width: 680px;
   margin: 0 auto;
+  padding: var(--card-padding);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.app-title {
-  font-size: 1.9rem;
+/* ------------------------------------------------------------
+   HEADINGS
+   ------------------------------------------------------------ */
+h1, h2, h3 {
+  color: var(--text-bright);
   font-weight: 700;
-  margin-bottom: 0.25rem;
+}
+
+h1 {
+  font-size: 1.8rem;
+  letter-spacing: -0.01em;
+}
+
+h2 {
+  font-size: 1.35rem;
 }
 
 .subtitle {
-  font-size: 1rem;
-  opacity: 0.7;
-  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+/* ------------------------------------------------------------
+   BADGES + DOTS
+   ------------------------------------------------------------ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: var(--twilight-panel);
+  border: 1px solid var(--twilight-border);
+}
+
+.badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-orange);
+}
+
+.badge-dot.ok {
+  background: #4fda7b;
+}
+
+.badge-dot.error {
+  background: #ff6b6b;
+}
+
+/* ------------------------------------------------------------
+   UTILITY TEXT COLORS
+   ------------------------------------------------------------ */
+.text-bright { color: var(--text-bright); }
+.text-soft   { color: var(--text-soft); }
+.text-muted  { color: var(--text-muted); }
+.text-faint  { color: var(--text-faint); }
+
+.text-gold   { color: var(--accent-gold); }
+.text-orange { color: var(--accent-orange); }
+.text-blue   { color: var(--accent-blue); }
+
+/* ------------------------------------------------------------
+   UTILITY SPACING
+   ------------------------------------------------------------ */
+.mt-1 { margin-top: 0.25rem; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-3 { margin-top: 1rem; }
+
+.mb-1 { margin-bottom: 0.25rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-3 { margin-bottom: 1rem; }
+
+/* ------------------------------------------------------------
+   ANIMATIONS
+   ------------------------------------------------------------ */
+.fade-in {
+  animation: fadeIn 0.4s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ------------------------------------------------------------
+   SCROLLBAR (subtle twilight)
+   ------------------------------------------------------------ */
+::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.04);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.12);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.18);
 }
