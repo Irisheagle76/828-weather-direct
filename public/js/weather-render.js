@@ -442,6 +442,12 @@ export async function renderWeather({
     hourly: hourlyNormalized
   });
 
+  // TEMPORARY DEBUG HOOKS
+window._raw = raw;
+window._comfortNow = comfortNow;
+window._hourly = hourlyNormalized;
+
+
   comfortNow.humidity =
     raw.tempest?.relative_humidity ??
     raw.wu?.humidity ??
