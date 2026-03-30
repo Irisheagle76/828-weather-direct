@@ -1,6 +1,6 @@
 // /js/weather-render.js
 // ============================================================
-// FINAL RENDERER — MODERNIZED, CLEAN, AND FULLY FUNCTIONAL
+// FINAL RENDERER — SYNTHESIZER-POWERED COMFORT NOW
 // ============================================================
 
 import { fetchAllIntel } from "./weather-fetch.js";
@@ -205,21 +205,24 @@ function renderHumanActionExpanded(todayIntel, tomorrowIntel) {
 }
 
 // ------------------------------------------------------------
-// COMFORT NOW — RICHER NARRATIVE
+// COMFORT NOW — SYNTHESIZER TITLE + BULLETS
 // ------------------------------------------------------------
 
 function renderComfortNow(container, comfort, bestWindow) {
+  const mainLine = comfort.title || comfort.label || "Comfort overview";
+
   container.innerHTML = `
     <div class="comfort-module module-card">
       <div class="comfort-main">
-        <div class="comfort-emoji">${comfort.emoji}</div>
+        <div class="comfort-emoji">${comfort.emoji || "🌤️"}</div>
 
         <div class="comfort-text-block">
           <div class="comfort-label">Comfort Now</div>
-          <div class="comfort-category">${comfort.category}</div>
-          <div class="comfort-text">${comfort.title}</div>
-          <div class="comfort-long">${comfort.narrative}</div>
-          <div class="comfort-sub">${comfort.comfortScore} / 100</div>
+          <div class="comfort-category">${comfort.category || ""}</div>
+          <div class="comfort-text">${mainLine}</div>
+          <div class="comfort-sub">
+            ${comfort.comfortScore != null ? `${Math.round(comfort.comfortScore)} / 100` : "-- / 100"}
+          </div>
         </div>
       </div>
 
@@ -231,17 +234,23 @@ function renderComfortNow(container, comfort, bestWindow) {
 
         <div class="comfort-expand-row">
           <span class="comfort-expand-label">Feels Like</span>
-          <span class="comfort-expand-value">${Math.round(comfort.feelsLike)}°</span>
+          <span class="comfort-expand-value">
+            ${comfort.feelsLike != null ? `${Math.round(comfort.feelsLike)}°` : "--"}
+          </span>
         </div>
 
         <div class="comfort-expand-row">
           <span class="comfort-expand-label">Humidity</span>
-          <span class="comfort-expand-value">${comfort.humidity ?? "--"}%</span>
+          <span class="comfort-expand-value">
+            ${comfort.humidity != null ? `${Math.round(comfort.humidity)}%` : "--"}
+          </span>
         </div>
 
         <div class="comfort-expand-row">
           <span class="comfort-expand-label">Wind</span>
-          <span class="comfort-expand-value">${comfort.wind ?? "--"} mph</span>
+          <span class="comfort-expand-value">
+            ${comfort.wind != null ? `${Math.round(comfort.wind)} mph` : "--"}
+          </span>
         </div>
 
         ${
@@ -262,7 +271,7 @@ function renderComfortNow(container, comfort, bestWindow) {
               <div class="fc-hour-label">${h.hourLabel}</div>
               <div class="fc-hour-main">
                 <span class="fc-hour-emoji">${h.emoji}</span>
-                <span class="fc-hour-temp">${Math.round(h.temp)}°</span>
+                <span class="fc-hour-temp">${h.temp != null ? `${Math.round(h.temp)}°` : "--"}</span>
               </div>
               <div class="fc-hour-extra">
                 <span class="fc-hour-score">${Math.round(h.comfortScore)}/100</span>
@@ -276,6 +285,13 @@ function renderComfortNow(container, comfort, bestWindow) {
         `
             : ""
         }
+
+        ${
+          comfort.longNarrative
+            ? `<div class="comfort-long">${comfort.longNarrative}</div>`
+            : ""
+        }
+
       </div>
     </div>
   `;
@@ -428,26 +444,36 @@ export async function renderWeather({
   // NORMALIZED HOURLY
   const hourlyNormalized = normalizeOpenMeteo(raw.hourly);
 
-// COMFORT NOW (with narrative)
-const comfortNow = computeComfort({
-  tempest: raw.tempest,
-  wu: {
-    temp: raw.wu?.imperial?.temp ?? raw.wu?.temp_f ?? null,
-    dewPoint: raw.wu?.imperial?.dewpt ?? raw.wu?.dewpt_f ?? null,
-    windSpeed: raw.wu?.imperial?.windSpeed ?? raw.wu?.wind_mph ?? 0,
-    windDir: raw.wu?.wind_dir ?? "",
-    obsTimeLocal: raw.wu?.obsTimeLocal ?? Date.now(),
-    cloudCover: raw.wu?.cloud ?? null
-  },
-  hourly: hourlyNormalized
-});
+  // ------------------------------------------------------------
+  // COMFORT NOW — FIXED TEMPEST MAPPING
+  // ------------------------------------------------------------
 
-// 🔵 DEBUG HOOKS — guaranteed to work here
-window._raw = raw;
-window._comfortNow = comfortNow;
-window._hourly = hourlyNormalized;
+  const comfortNow = computeComfort({
+    tempest: raw.tempest ? {
+      temp: raw.tempest.air_temperature ?? null,
+      dewPoint: raw.tempest.dew_point ?? null,
+      feelsLike: raw.tempest.feels_like ?? null,
+      humidity: raw.tempest.relative_humidity ?? null,
+      windSpeed: raw.tempest.wind_avg ?? null,
+      windGust: raw.tempest.wind_gust ?? null,
+      windDir: raw.tempest.wind_direction ?? null,
+      pressure: raw.tempest.pressure ?? null,
+      obsTimeLocal: Date.now()
+    } : null,
 
+    wu: {
+      temp: raw.wu?.imperial?.temp ?? raw.wu?.temp_f ?? null,
+      dewPoint: raw.wu?.imperial?.dewpt ?? raw.wu?.dewpt_f ?? null,
+      windSpeed: raw.wu?.imperial?.windSpeed ?? raw.wu?.wind_mph ?? 0,
+      windDir: raw.wu?.wind_dir ?? "",
+      obsTimeLocal: raw.wu?.obsTimeLocal ?? Date.now(),
+      cloudCover: raw.wu?.cloud ?? null
+    },
 
+    hourly: hourlyNormalized
+  });
+
+  // PATCH HUMIDITY + WIND FROM BEST SOURCE
   comfortNow.humidity =
     raw.tempest?.relative_humidity ??
     raw.wu?.humidity ??
@@ -460,6 +486,7 @@ window._hourly = hourlyNormalized;
     hourlyNormalized?.[0]?.wind_speed ??
     null;
 
+  // CATEGORY
   const score = comfortNow.comfortScore;
   comfortNow.category =
     score >= 80 ? "Very Comfortable" :
@@ -468,30 +495,22 @@ window._hourly = hourlyNormalized;
     score >= 35 ? "Uncomfortable" :
     "Harsh / Poor Comfort";
 
-  const comfortNarrative = generateNarrative({
-    temp: comfortNow.temp,
-    dewpoint: comfortNow.dewpoint,
-    wind: comfortNow.wind,
-    humidity: comfortNow.humidity,
-    label: comfortNow.label,
-    comfortScore: comfortNow.comfortScore
-  });
+  // ------------------------------------------------------------
+  // SYNTHESIZER WRAPPER FOR COMFORT NOW
+  // ------------------------------------------------------------
 
-  comfortNow.narrative = comfortNarrative.main || "";
-  comfortNow.bullets = comfortNarrative.bullets || [];
-  comfortNow.title = comfortNarrative.title || (comfortNow.line1 || comfortNow.label || "Comfort overview");
-  comfortNow.emoji = comfortNarrative.emoji || comfortNow.emoji || "🌤️";
+  const comfortIntel = {
+    temp: comfortNow.temp ?? comfortNow.temperature ?? null,
+    dewpoint: comfortNow.dewpoint ?? null,
+    humidity: comfortNow.humidity ?? null,
+    windSpeed: comfortNow.wind ?? null,
+    windGust: comfortNow.windGust ?? null,
+    cloudCover: comfortNow.cloudCover ?? null,
+    precipType: "none",
+    precipChance: 0,
+    comfortScore: comfortNow.comfortScore ?? null,
+    label: comfortNow.label ?? comfortNow.summary ?? "",
+    factors: [],
 
-  // FUTURE COMFORT
-  const futureComfort = buildFutureComfort(hourlyNormalized, computeComfort);
-
-  // BEST WINDOW
-  const bestWindow = findBestComfortWindow(hourlyNormalized, computeComfort);
-
-  // RENDER MODULES
-  renderComfortNow($("comfort-now-container"), comfortNow, bestWindow);
-  renderFutureComfort($("future-comfort-container"), futureComfort);
-
-  // ACCORDION
-  initializeAccordion();
-}
+    snapshot: {
+      temp: comfortNow.temp ??
