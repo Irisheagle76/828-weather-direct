@@ -243,6 +243,13 @@ export function computeComfort(intel) {
   const src = intel.tempest ?? intel.wu ?? {};
   const temp = src.temp ?? null;          // Fahrenheit
   const dewRaw = src.dewPoint ?? null;    // Fahrenheit
+
+    // 🔍 DEBUG GUARD — catch unit corruption early
+  if (temp != null && (temp > 120 || temp < -40)) {
+    console.warn("BAD TEMP INPUT", { temp, src });
+
+ }
+ 
   const wind = src.windSpeed ?? 0;
   const windDir = src.windDir ?? "";
   const timestamp = src.obsTimeLocal ?? Date.now();
