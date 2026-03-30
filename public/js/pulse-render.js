@@ -1,7 +1,6 @@
 // /js/pulse-render.js
 // ============================================================
-// 828 WEATHER PULSE — FINAL RENDERER (2026 Edition)
-// Matches pulse.css exactly and supports image/video + hybrid preview
+// 828 WEATHER PULSE — FINAL CLEAN VERSION (2026)
 // ============================================================
 
 // ------------------------------------------------------------
@@ -30,7 +29,6 @@ function createHybridPreview(html) {
   if (sentences.length === 0) return textOnly.slice(0, 280) + "…";
 
   const first = sentences[0];
-
   if (first.split(" ").length >= 20) return first + "…";
 
   if (sentences.length > 1) {
@@ -56,7 +54,7 @@ function formatTimeAgo(date) {
 }
 
 // ============================================================
-// MAIN RENDERER — MATCHES pulse.css STRUCTURE
+// MAIN RENDERER — MATCHES pulse.css EXACTLY
 // ============================================================
 
 export function renderPulse(pulse) {
@@ -135,7 +133,7 @@ export function renderPulse(pulse) {
   let expanded = false;
 
   // ============================================================
-  // EXPAND / COLLAPSE HANDLER — MATCHES pulse.css EXACTLY
+  // EXPAND / COLLAPSE HANDLER
   // ============================================================
   function handleToggle() {
     expanded = !expanded;
@@ -178,6 +176,7 @@ export function renderPulse(pulse) {
 
       toggleBtn.textContent = "Show less";
       toggleBtn.setAttribute("aria-expanded", "true");
+
     } else {
       // COLLAPSED MODE
       card.classList.remove("pulse-expanded");
@@ -198,3 +197,4 @@ export function renderPulse(pulse) {
     handleToggle();
   };
 }
+

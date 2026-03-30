@@ -143,3 +143,33 @@ h1, h2, h3 {
 .text-blue {
   color: #c8d3ff;
 }
+/* CURRENT OBSERVATIONS MODULE */
+#current-obs-wrapper.module-card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 1.2rem 1.4rem;
+  margin-bottom: 1.2rem;
+  box-shadow: var(--card-shadow);
+}
+
+.current-obs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.8rem 1.2rem;
+}
+
+.current-obs-label {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.current-obs-value {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.current-obs-sub {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  margin-top: 2px;
+}

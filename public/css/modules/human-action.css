@@ -99,3 +99,54 @@
   text-transform: uppercase;
   margin-bottom: 0.25rem;
 }
+
+/* HUMAN-ACTION MODULE HEADERS */
+.action-header {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+  color: var(--text-strong);
+}
+
+.action-module {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 1.2rem;
+  box-shadow: var(--card-shadow);
+  cursor: pointer;
+}
+
+.action-module.active {
+  border: 1px solid var(--accent);
+}
+
+.fx-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.8rem;
+  margin-top: 0.8rem;
+}
+
+.fx-tile {
+  background: rgba(255,255,255,0.04);
+  padding: 0.6rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.fx-top {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.fx-sub {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.fx-label {
+  font-size: 0.7rem;
+  opacity: 0.6;
+  margin-top: 2px;
+}

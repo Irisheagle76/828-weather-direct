@@ -44,33 +44,35 @@
       </div>
     </div>
 
-    <!-- ROW 1 — Current Observations -->
-    <div class="metrics-row">
-      <div class="grid">
-        <div class="metric">
-          <div class="metric-label">Temperature</div>
-          <div class="metric-value" id="wu-temp">--</div>
-          <div class="metric-sub" id="wu-feels">Feels like --</div>
-        </div>
+   <!-- ROW 1 — Current Observations -->
+<div id="current-obs-wrapper" class="module-card">
+  <div class="current-obs-grid">
 
-        <div class="metric">
-          <div class="metric-label">Dew Point &amp; Humidity</div>
-          <div class="metric-value" id="wu-dew">--</div>
-          <div class="metric-sub" id="wu-humidity">Humidity --</div>
-        </div>
-
-        <div class="metric">
-          <div class="metric-label">Wind</div>
-          <div class="metric-value" id="wu-wind">--</div>
-          <div class="metric-sub" id="wu-wind-gust">Gusts --</div>
-        </div>
-
-        <div class="metric">
-          <div class="metric-label">UV Index</div>
-          <div class="metric-value" id="wu-uv">--</div>
-        </div>
-      </div>
+    <div>
+      <div class="current-obs-label">Temperature</div>
+      <div id="wu-temp" class="current-obs-value">--</div>
+      <div id="wu-feels" class="current-obs-sub">Feels like --</div>
     </div>
+
+    <div>
+      <div class="current-obs-label">Dew Point</div>
+      <div id="wu-dew" class="current-obs-value">--</div>
+      <div id="wu-humidity" class="current-obs-sub">Humidity --</div>
+    </div>
+
+    <div>
+      <div class="current-obs-label">Wind</div>
+      <div id="wu-wind" class="current-obs-value">--</div>
+      <div id="wu-wind-gust" class="current-obs-sub">Gusts --</div>
+    </div>
+
+    <div>
+      <div class="current-obs-label">UV Index</div>
+      <div id="wu-uv" class="current-obs-value">--</div>
+    </div>
+
+  </div>
+</div>
 
     <!-- ROW 2 — Combined Comfort -->
     <div id="comfort-row">

@@ -120,3 +120,42 @@
     filter: blur(0);
   }
 }
+
+/* FUTURE COMFORT STRIP */
+.next6-module {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 1.2rem;
+  box-shadow: var(--card-shadow);
+}
+
+.next6-strip {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+
+.next6-hour {
+  flex: 1;
+  background: rgba(255,255,255,0.04);
+  padding: 0.6rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.next6-hour-label {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.next6-hour-temp {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.next6-hour-factor {
+  font-size: 0.7rem;
+  opacity: 0.6;
+}
