@@ -10,17 +10,16 @@ import { normalizeOpenMeteo } from "./normalize-hourly.js";
 // SYNTHESIZER SAFETY WRAPPER
 // ------------------------------------------------------------
 function ensureSynthFields(intel, snapshot) {
+  const base = intel ?? {};   // ← prevents spreading undefined/null
+
   return {
-    ...intel,
+    // Spread AFTER defaults so intel cannot overwrite required fields
+    factors: Array.isArray(base.factors) ? base.factors : [],
+    precipType: base.precipType ?? snapshot?.precipType ?? "none",
+    precipChance: base.precipChance ?? 0,
+    snapshot: snapshot ?? base.snapshot ?? {},
 
-    // REQUIRED BY SYNTHESIZER — prevents "includes" crash
-    factors: Array.isArray(intel.factors) ? intel.factors : [],
-
-    precipType: intel.precipType ?? snapshot?.precipType ?? "none",
-    precipChance: intel.precipChance ?? 0,
-
-    // Snapshot must always exist
-    snapshot: snapshot ?? intel.snapshot ?? {}
+    ...base
   };
 }
 
