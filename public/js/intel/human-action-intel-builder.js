@@ -139,9 +139,9 @@ function buildTomorrowSnapshots(hourly) {
 function averageWindow(hours) {
   if (!hours || hours.length === 0) {
     return {
-      temperature: null,
-      apparent_temperature: null,
-      dewpoint: null,
+      temperatureF: null,
+      apparentF: null,
+      dewpointF: null,
       relative_humidity: null,
       wind_speed: 0,
       wind_gust: 0,
@@ -165,11 +165,13 @@ function averageWindow(hours) {
     hours.reduce((a, h) => a + (h[key] ?? 0), 0) / hours.length;
 
   const toF = c => (c * 9) / 5 + 32;
-  
+
   return {
-     temperatureF: toF(avgC("temperature")),
-    apparentF: toF(avgC("apparent_temperature")),
-     dewpointF: toF(avgC("dewpoint")),
+    // ✅ convert here — everything downstream stays Fahrenheit
+    temperatureF: toF(avg("temperature")),
+    apparentF: toF(avg("apparent_temperature")),
+    dewpointF: toF(avg("dewpoint")),
+
     relative_humidity: avg("relative_humidity"),
     wind_speed: avg("wind_speed"),
     wind_gust: avg("wind_gust"),
@@ -185,6 +187,7 @@ function averageWindow(hours) {
     black_ice_risk: avg("black_ice_risk"),
     valley_fog_risk: avg("valley_fog_risk"),
     ridge_fog_risk: avg("ridge_fog_risk"),
+
     timestamp: hours[0].timestamp
   };
 }
