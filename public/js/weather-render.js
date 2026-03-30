@@ -28,7 +28,7 @@ function $(id) {
 }
 
 // ------------------------------------------------------------
-// CURRENT OBSERVATIONS (now wrapped in a module card)
+// CURRENT OBSERVATIONS
 // ------------------------------------------------------------
 
 function renderCurrentObservations(raw) {
@@ -136,18 +136,16 @@ function mapToLegacyFields(period) {
 }
 
 // ------------------------------------------------------------
-// HUMAN-ACTION RENDERING (with headers + collapsed by default)
+// HUMAN-ACTION RENDERING
 // ------------------------------------------------------------
 
 function renderHumanAction(today, tomorrow) {
-  // TODAY
   $("today-header").textContent = "Today’s Outlook";
   $("today-emoji").textContent = today.emoji;
   $("today-headline").textContent = today.title;
   $("today-text").textContent = today.notes;
   $("today-bullets").innerHTML = today.secondaryFactors.map(b => `<li>${b}</li>`).join("");
 
-  // TOMORROW
   $("tomorrow-header").textContent = "Tomorrow’s Outlook";
   $("tomorrow-emoji").textContent = tomorrow.emoji;
   $("tomorrow-headline").textContent = tomorrow.title;
@@ -156,7 +154,7 @@ function renderHumanAction(today, tomorrow) {
 }
 
 // ------------------------------------------------------------
-// HUMAN-ACTION EXPANDED (REAL DATA FROM SNAPSHOT)
+// HUMAN-ACTION EXPANDED
 // ------------------------------------------------------------
 
 function renderHumanActionExpanded(todayIntel, tomorrowIntel) {
@@ -205,15 +203,12 @@ function renderHumanActionExpanded(todayIntel, tomorrowIntel) {
   $("expanded-today").innerHTML = build(todayIntel);
   $("expanded-tomorrow").innerHTML = build(tomorrowIntel);
 }
+
 // ------------------------------------------------------------
 // COMFORT NOW — RICHER NARRATIVE
 // ------------------------------------------------------------
 
 function renderComfortNow(container, comfort, bestWindow) {
-  
-  const mainLine = comfort.line1 || comfort.summary || comfort.label;
-  const subLine = comfort.line2 || "";
-
   container.innerHTML = `
     <div class="comfort-module module-card">
       <div class="comfort-main">
@@ -221,12 +216,19 @@ function renderComfortNow(container, comfort, bestWindow) {
 
         <div class="comfort-text-block">
           <div class="comfort-label">Comfort Now</div>
-          <div class="comfort-text">${mainLine}</div>
+          <div class="comfort-category">${comfort.category}</div>
+          <div class="comfort-text">${comfort.title}</div>
+          <div class="comfort-long">${comfort.narrative}</div>
           <div class="comfort-sub">${comfort.comfortScore} / 100</div>
         </div>
       </div>
 
       <div class="comfort-expand">
+
+        <ul class="comfort-bullets">
+          ${comfort.bullets.map(b => `<li>${b}</li>`).join("")}
+        </ul>
+
         <div class="comfort-expand-row">
           <span class="comfort-expand-label">Feels Like</span>
           <span class="comfort-expand-value">${Math.round(comfort.feelsLike)}°</span>
@@ -241,8 +243,6 @@ function renderComfortNow(container, comfort, bestWindow) {
           <span class="comfort-expand-label">Wind</span>
           <span class="comfort-expand-value">${comfort.wind ?? "--"} mph</span>
         </div>
-
-        ${subLine ? `<div class="comfort-extra-line">${subLine}</div>` : ""}
 
         ${
           bestWindow
@@ -341,7 +341,7 @@ function initializeAccordion() {
 }
 
 // ------------------------------------------------------------
-// BEST COMFORT WINDOW
+// BEST COMFORT WINDOW — CANONICAL WIND FIELDS
 // ------------------------------------------------------------
 
 function findBestComfortWindow(hourlyNormalized, computeComfortFn, windowSize = 3) {
@@ -367,7 +367,7 @@ function findBestComfortWindow(hourlyNormalized, computeComfortFn, windowSize = 
           temp: tempF,
           dewPoint: dewF,
           windSpeed: h.wind_speed ?? 0,
-          windDir: h.windDir ?? "",
+          windDir: h.wind_dir ?? "",
           obsTimeLocal: h.timestamp
         },
         hourly: hourlyNormalized
@@ -396,6 +396,7 @@ function findBestComfortWindow(hourlyNormalized, computeComfortFn, windowSize = 
   windows.sort((a, b) => b.avgScore - a.avgScore);
   return windows[0] ?? null;
 }
+
 // ------------------------------------------------------------
 // MAIN ENTRY
 // ------------------------------------------------------------
@@ -424,34 +425,56 @@ export async function renderWeather({
   renderHumanAction(today, tomorrow);
   renderHumanActionExpanded(intelRaw.today, intelRaw.tomorrow);
 
-  // COMFORT NOW
-const comfortNow = computeComfort({
-  tempest: raw.tempest,
-  wu: {
-    temp: raw.wu?.imperial?.temp ?? raw.wu?.temp_f ?? null,
-    dewPoint: raw.wu?.imperial?.dewpt ?? raw.wu?.dewpt_f ?? null,
-    windSpeed: raw.wu?.imperial?.windSpeed ?? raw.wu?.wind_mph ?? 0,
-    windDir: raw.wu?.wind_dir ?? "",
-    obsTimeLocal: raw.wu?.obsTimeLocal ?? Date.now(),
-    cloudCover: raw.wu?.cloud ?? null
-  },
-  hourly: null
-});
+  // NORMALIZED HOURLY
+  const hourlyNormalized = normalizeOpenMeteo(raw.hourly);
+
+  // COMFORT NOW (with narrative)
+  const comfortNow = computeComfort({
+    tempest: raw.tempest,
+    wu: {
+      temp: raw.wu?.imperial?.temp ?? raw.wu?.temp_f ?? null,
+      dewPoint: raw.wu?.imperial?.dewpt ?? raw.wu?.dewpt_f ?? null,
+      windSpeed: raw.wu?.imperial?.windSpeed ?? raw.wu?.wind_mph ?? 0,
+      windDir: raw.wu?.wind_dir ?? "",
+      obsTimeLocal: raw.wu?.obsTimeLocal ?? Date.now(),
+      cloudCover: raw.wu?.cloud ?? null
+    },
+    hourly: hourlyNormalized
+  });
 
   comfortNow.humidity =
     raw.tempest?.relative_humidity ??
     raw.wu?.humidity ??
-    raw.hourly?.relativehumidity_2m?.[0] ??
+    hourlyNormalized?.[0]?.relative_humidity ??
     null;
 
   comfortNow.wind =
     raw.tempest?.wind_avg ??
     raw.wu?.imperial?.windSpeed ??
-    raw.hourly?.wind_speed_10m?.[0] ??
+    hourlyNormalized?.[0]?.wind_speed ??
     null;
 
-  // NORMALIZED HOURLY
-  const hourlyNormalized = normalizeOpenMeteo(raw.hourly);
+  const score = comfortNow.comfortScore;
+  comfortNow.category =
+    score >= 80 ? "Very Comfortable" :
+    score >= 65 ? "Comfortable" :
+    score >= 50 ? "Slightly Uncomfortable" :
+    score >= 35 ? "Uncomfortable" :
+    "Harsh / Poor Comfort";
+
+  const comfortNarrative = generateNarrative({
+    temp: comfortNow.temp,
+    dewpoint: comfortNow.dewpoint,
+    wind: comfortNow.wind,
+    humidity: comfortNow.humidity,
+    label: comfortNow.label,
+    comfortScore: comfortNow.comfortScore
+  });
+
+  comfortNow.narrative = comfortNarrative.main || "";
+  comfortNow.bullets = comfortNarrative.bullets || [];
+  comfortNow.title = comfortNarrative.title || (comfortNow.line1 || comfortNow.label || "Comfort overview");
+  comfortNow.emoji = comfortNarrative.emoji || comfortNow.emoji || "🌤️";
 
   // FUTURE COMFORT
   const futureComfort = buildFutureComfort(hourlyNormalized, computeComfort);
