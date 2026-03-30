@@ -1,5 +1,6 @@
 // /intel/synthesizer.js
-// Human-Action 2.x Premium Narrative Generator — HARDENED EDITION
+// Human-Action 2.x Premium Narrative Generator — Synthesizer 3.0
+// Divergence-aware, HA2.2 compatible, temporal framing enabled.
 
 // ------------------------------------------------------------
 // UTILS — GLOBAL SAFETY
@@ -21,9 +22,9 @@ function safeNumber(n) {
 }
 
 // ------------------------------------------------------------
-// MAIN ENTRY
+// MAIN ENTRY — NOW TEMPORALLY AWARE
 // ------------------------------------------------------------
-export function generateNarrative(intel, isTomorrow = false) {
+export function generateNarrative(intel) {
   if (!intel) {
     return {
       emoji: "🌤️",
@@ -32,6 +33,10 @@ export function generateNarrative(intel, isTomorrow = false) {
       bullets: []
     };
   }
+
+  const isTomorrow =
+    intel.isTomorrow === true ||
+    intel.dayLabel === "tomorrow";
 
   return isTomorrow
     ? generateTomorrowNarrative(intel)
@@ -47,11 +52,12 @@ function generateTodayNarrative(intel) {
   const confidence = safeNumber(intel?.confidence) ?? 1;
   const notes = safeString(intel?.notes);
   const snap = intel?.snapshot ?? {};
+  const dayLabel = intel.dayLabel ?? "today";
 
   return {
     emoji: pickEmoji(factor, secondary, snap),
-    title: pickTitle(factor, snap),
-    main: buildMainNarrative(factor, secondary, notes, snap, confidence),
+    title: pickTitle(factor, snap, dayLabel),
+    main: buildMainNarrative(factor, secondary, notes, snap, confidence, dayLabel),
     bullets: buildBullets(factor, secondary, snap, confidence)
   };
 }
@@ -77,7 +83,26 @@ function generateTomorrowNarrative(intel) {
 }
 
 // ------------------------------------------------------------
-// TOMORROW TITLE
+// TODAY TITLE — TEMPORALLY AWARE
+// ------------------------------------------------------------
+function pickTitle(factor, snap, dayLabel = "today") {
+  const map = {
+    cold: "Cold takes the lead",
+    heat: "Heat sets the tone",
+    rain: "Rain drives the day",
+    snow: "Snow is the headline",
+    fog: "Fog trims visibility",
+    default: "A steady, uncomplicated day"
+  };
+
+  const base = map[factor] ?? map.default;
+
+  if (dayLabel === "today") return base;
+  return `Today: ${base}`;
+}
+
+// ------------------------------------------------------------
+// TOMORROW TITLE — ALWAYS FUTURE-FRAMED
 // ------------------------------------------------------------
 function pickTomorrowTitle(factor, morning, afternoon, stats) {
   const mT = safeNumber(morning?.temp) ?? 0;
@@ -88,29 +113,65 @@ function pickTomorrowTitle(factor, morning, afternoon, stats) {
     (safeNumber(afternoon?.cloudCover) ?? 0) -
     (safeNumber(morning?.cloudCover) ?? 0);
 
-  if (warmup >= 10) return "A day that warms up nicely";
-  if (warmup <= -8) return "A cooler, more settled day";
+  let title;
 
-  if (cloudShift <= -30) return "A day that brightens as it goes";
-  if (cloudShift >= 30) return "Clouds build through the afternoon";
+  if (warmup >= 10) title = "A day that warms up nicely";
+  else if (warmup <= -8) title = "A cooler, more settled day";
+  else if (cloudShift <= -30) title = "A day that brightens as it goes";
+  else if (cloudShift >= 30) title = "Clouds build through the afternoon";
+  else {
+    const map = {
+      cold: "A chilly start, steady later",
+      heat: "Warmth builds through the day",
+      rain: "Rain shapes much of the day",
+      snow: "Snowy at times",
+      fog: "Fog early, clearer later",
+      default: "A steady, uncomplicated day"
+    };
+    title = map[factor] ?? map.default;
+  }
 
-  const map = {
-    cold: "A chilly start, steady later",
-    heat: "Warmth builds through the day",
-    rain: "Rain shapes much of the day",
-    snow: "Snowy at times",
-    fog: "Fog early, clearer later",
-    default: "A steady, uncomplicated day"
-  };
-
-  return map[factor] ?? map.default;
+  return `Tomorrow: ${title}`;
 }
 
 // ------------------------------------------------------------
-// TOMORROW MAIN
+// TODAY MAIN — TEMPORALLY AWARE
+// ------------------------------------------------------------
+function buildMainNarrative(factor, secondary, notes, snap, confidence, dayLabel = "today") {
+  const parts = [];
+
+  if (dayLabel === "today") {
+    parts.push("For the rest of today:");
+  }
+
+  if (notes) parts.push(notes);
+
+  const f = safeNumber(snap?.feelsLike);
+
+  if (f != null) {
+    if (f <= 25) parts.push("It feels sharply cold.");
+    else if (f <= 40) parts.push("A chilly feel lingers.");
+    else if (f >= 85) parts.push("Warmth builds noticeably.");
+  }
+
+  if ((snap?.dewpoint ?? 0) >= 65) parts.push("Humidity adds a heavier feel.");
+  else if ((snap?.dewpoint ?? 0) <= 40) parts.push("Dry air keeps things comfortable.");
+
+  if ((snap?.windGust ?? 0) >= 30) parts.push("Gusts may feel pushy.");
+  else if ((snap?.windGust ?? 0) >= 15) parts.push("A steady breeze develops.");
+
+  if (confidence <= 0.4) {
+    parts.push("Forecast confidence is lower than usual.");
+  }
+
+  return parts.join(" ").trim();
+}
+
+// ------------------------------------------------------------
+// TOMORROW MAIN — ALWAYS FUTURE-FRAMED
 // ------------------------------------------------------------
 function buildTomorrowMain(morning, afternoon, stats, notes, factor) {
-  const parts = [];
+  const parts = ["Looking ahead to tomorrow:"];
 
   if (notes) parts.push(notes);
 
@@ -133,68 +194,6 @@ function buildTomorrowMain(morning, afternoon, stats, notes, factor) {
   if ((stats?.snowTotal ?? 0) > 0) parts.push("Snow is possible at times.");
 
   if (factor.includes("fog")) parts.push("Fog may linger early.");
-
-  return parts.join(" ").trim();
-}
-
-// ------------------------------------------------------------
-// TOMORROW BULLETS
-// ------------------------------------------------------------
-function buildTomorrowBullets(morning, afternoon, stats, factor, secondary, confidence) {
-  const bullets = [];
-
-  const mT = safeNumber(morning?.feelsLike ?? morning?.temp);
-  const aT = safeNumber(afternoon?.feelsLike ?? afternoon?.temp);
-
-  if (mT != null && mT <= 40) bullets.push("A warm layer helps early.");
-  if (aT != null && aT >= 80) bullets.push("Light clothing works best later.");
-
-  if ((stats?.windGustMax ?? 0) >= 35) bullets.push("Expect pushy gusts.");
-  else if ((stats?.windGustMax ?? 0) >= 20) bullets.push("A breezy feel develops.");
-
-  if ((stats?.rainTotal ?? 0) >= 0.25) bullets.push("Rain gear is worth having.");
-  else if ((stats?.rainTotal ?? 0) > 0) bullets.push("A quick shower is possible.");
-
-  if ((stats?.snowTotal ?? 0) > 0) bullets.push("Watch for slick spots.");
-
-  if (factor.includes("fog")) bullets.push("Visibility may be limited early.");
-
-  if (secondary.length) {
-    bullets.push(`Secondary influences: ${secondary.join(", ")}.`);
-  }
-
-  if (confidence <= 0.4) {
-    bullets.push("Expect some variability.");
-  }
-
-  return cleanArray(bullets);
-}
-
-// ------------------------------------------------------------
-// TODAY MAIN
-// ------------------------------------------------------------
-function buildMainNarrative(factor, secondary, notes, snap, confidence) {
-  const parts = [];
-
-  if (notes) parts.push(notes);
-
-  const f = safeNumber(snap?.feelsLike);
-
-  if (f != null) {
-    if (f <= 25) parts.push("It feels sharply cold.");
-    else if (f <= 40) parts.push("A chilly feel lingers.");
-    else if (f >= 85) parts.push("Warmth builds noticeably.");
-  }
-
-  if ((snap?.dewpoint ?? 0) >= 65) parts.push("Humidity adds a heavier feel.");
-  else if ((snap?.dewpoint ?? 0) <= 40) parts.push("Dry air keeps things comfortable.");
-
-  if ((snap?.windGust ?? 0) >= 30) parts.push("Gusts may feel pushy.");
-  else if ((snap?.windGust ?? 0) >= 15) parts.push("A steady breeze develops.");
-
-  if (confidence <= 0.4) {
-    parts.push("Forecast confidence is lower than usual.");
-  }
 
   return parts.join(" ").trim();
 }
@@ -240,6 +239,39 @@ function buildBullets(factor, secondary, snap, confidence) {
 }
 
 // ------------------------------------------------------------
+// TOMORROW BULLETS
+// ------------------------------------------------------------
+function buildTomorrowBullets(morning, afternoon, stats, factor, secondary, confidence) {
+  const bullets = [];
+
+  const mT = safeNumber(morning?.feelsLike ?? morning?.temp);
+  const aT = safeNumber(afternoon?.feelsLike ?? afternoon?.temp);
+
+  if (mT != null && mT <= 40) bullets.push("A warm layer helps early.");
+  if (aT != null && aT >= 80) bullets.push("Light clothing works best later.");
+
+  if ((stats?.windGustMax ?? 0) >= 35) bullets.push("Expect pushy gusts.");
+  else if ((stats?.windGustMax ?? 0) >= 20) bullets.push("A breezy feel develops.");
+
+  if ((stats?.rainTotal ?? 0) >= 0.25) bullets.push("Rain gear is worth having.");
+  else if ((stats?.rainTotal ?? 0) > 0) bullets.push("A quick shower is possible.");
+
+  if ((stats?.snowTotal ?? 0) > 0) bullets.push("Watch for slick spots.");
+
+  if (factor.includes("fog")) bullets.push("Visibility may be limited early.");
+
+  if (secondary.length) {
+    bullets.push(`Secondary influences: ${secondary.join(", ")}.`);
+  }
+
+  if (confidence <= 0.4) {
+    bullets.push("Expect some variability.");
+  }
+
+  return cleanArray(bullets);
+}
+
+// ------------------------------------------------------------
 // EMOJI + TITLE (unchanged logic but safe)
 // ------------------------------------------------------------
 function pickEmoji(factor, secondary, snap) {
@@ -255,17 +287,4 @@ function pickEmoji(factor, secondary, snap) {
 
   const list = map[factor] ?? map.default;
   return list[Math.floor(Math.random() * list.length)];
-}
-
-function pickTitle(factor) {
-  const map = {
-    cold: "Cold takes the lead",
-    heat: "Heat sets the tone",
-    rain: "Rain drives the day",
-    snow: "Snow is the headline",
-    fog: "Fog trims visibility",
-    default: "A steady, uncomplicated day"
-  };
-
-  return map[factor] ?? map.default;
 }
