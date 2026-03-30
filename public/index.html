@@ -26,10 +26,13 @@
   </button>
 
   <script>
-    window.VAPID_PUBLIC_KEY = "BDn67R8PiMYa_UcGJ1CK0RiIR8E97ht_2STTositc3p1HFsuVBPSk--3EEBk_7B9RS-WJ5Xb_ikNVqx1trql7xA";
+    window.VAPID_PUBLIC_KEY =
+      "BDn67R8PiMYa_UcGJ1CK0RiIR8E97ht_2STTositc3p1HFsuVBPSk--3EEBk_7B9RS-WJ5Xb_ikNVqx1trql7xA";
   </script>
 
   <div class="card">
+
+    <!-- TITLE -->
     <h1 class="app-title">828 Weather Direct</h1>
     <div class="subtitle">Hyper-local Asheville weather • Built by Timothy Ballisty</div>
 
@@ -44,8 +47,11 @@
       </div>
     </div>
 
-   <!-- ROW 1 — Current Observations -->
-<div id="current-obs-wrapper" class="module-card">
+ <!-- CURRENT OBSERVATIONS -->
+<div id="current-obs-wrapper" class="current-obs-card">
+
+  <div class="current-obs-header">Current Conditions</div>
+
   <div class="current-obs-grid">
 
     <div>
@@ -74,57 +80,53 @@
   </div>
 </div>
 
-    <!-- ROW 2 — Combined Comfort -->
+    <!-- COMFORT ROW -->
     <div id="comfort-row">
-
-      <!-- LEFT COLUMN -->
       <div class="comfort-left-col">
         <div id="comfort-now-container"></div>
       </div>
 
-      <!-- RIGHT COLUMN -->
       <div class="comfort-right-col">
         <div id="future-comfort-container"></div>
+      </div>
+    </div>
+
+    <!-- TODAY + TOMORROW -->
+    <div class="now-tomorrow-row">
+
+      <!-- TODAY -->
+      <div class="now-col">
+        <div class="today-module action-module" id="today-module">
+
+          <div class="action-header" id="today-header">Today’s Outlook</div>
+
+          <div class="action-emoji" id="today-emoji"></div>
+          <div class="action-headline" id="today-headline"></div>
+          <div class="action-text" id="today-text"></div>
+          <ul class="today-bullets" id="today-bullets"></ul>
+
+          <div class="expanded-panel" id="expanded-today"></div>
+        </div>
+      </div>
+
+      <!-- TOMORROW -->
+      <div class="now-col">
+        <div class="tomorrow-module action-module" id="tomorrow-module">
+
+          <div class="action-header" id="tomorrow-header">Tomorrow’s Outlook</div>
+
+          <div class="action-emoji" id="tomorrow-emoji"></div>
+          <div class="action-headline" id="tomorrow-headline"></div>
+          <div class="action-text" id="tomorrow-text"></div>
+          <ul class="tomorrow-bullets" id="tomorrow-bullets"></ul>
+
+          <div class="expanded-panel" id="expanded-tomorrow"></div>
+        </div>
       </div>
 
     </div>
 
-    <!-- ROW 3 — Today + Tomorrow -->
-<div class="now-tomorrow-row">
-
-  <!-- TODAY COLUMN -->
-  <div class="now-col">
-  <div class="today-module action-module" id="today-module">
-
-    <div class="action-header" id="today-header">Today’s Outlook</div>
-
-    <div class="action-emoji" id="today-emoji"></div>
-    <div class="action-headline" id="today-headline"></div>
-    <div class="action-text" id="today-text"></div>
-    <ul class="today-bullets" id="today-bullets"></ul>
-
-    <div class="expanded-panel" id="expanded-today"></div>
-  </div>
-</div>
-
-  <!-- TOMORROW COLUMN -->
-  <div class="now-col">
-  <div class="tomorrow-module action-module" id="tomorrow-module">
-
-    <div class="action-header" id="tomorrow-header">Tomorrow’s Outlook</div>
-
-    <div class="action-emoji" id="tomorrow-emoji"></div>
-    <div class="action-headline" id="tomorrow-headline"></div>
-    <div class="action-text" id="tomorrow-text"></div>
-    <ul class="tomorrow-bullets" id="tomorrow-bullets"></ul>
-
-    <div class="expanded-panel" id="expanded-tomorrow"></div>
-  </div>
-</div>
-
-</div> <!-- ✅ THIS was missing -->
-
-    <!-- 828 WEATHER PULSE MODULE -->
+    <!-- 828 WEATHER PULSE -->
     <section id="pulse-card" class="pulse-card pulse-collapsed">
       <div class="pulse-header">
         <h2 class="pulse-title">828 Weather Pulse</h2>
@@ -158,7 +160,7 @@
 
     <div class="error-text" id="wu-error" style="display:none;"></div>
 
-  </div> <!-- end .card wrapper -->
+  </div> <!-- end .card -->
 
   <div id="toast" class="toast"></div>
 
