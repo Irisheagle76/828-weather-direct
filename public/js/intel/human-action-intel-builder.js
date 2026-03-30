@@ -7,6 +7,24 @@ import { evaluateHumanActionFactors } from "../modules/human-action-2/core-engin
 import { normalizeOpenMeteo } from "./normalize-hourly.js";
 
 // ------------------------------------------------------------
+// SYNTHESIZER SAFETY WRAPPER
+// ------------------------------------------------------------
+function ensureSynthFields(intel, snapshot) {
+  return {
+    ...intel,
+
+    // REQUIRED BY SYNTHESIZER — prevents "includes" crash
+    factors: Array.isArray(intel.factors) ? intel.factors : [],
+
+    precipType: intel.precipType ?? snapshot?.precipType ?? "none",
+    precipChance: intel.precipChance ?? 0,
+
+    // Snapshot must always exist
+    snapshot: snapshot ?? intel.snapshot ?? {}
+  };
+}
+
+// ------------------------------------------------------------
 // MAIN BUILDER
 // ------------------------------------------------------------
 export function buildHumanActionIntel(raw) {
@@ -27,29 +45,26 @@ export function buildHumanActionIntel(raw) {
   const current = hourly.find(h => h.timestamp >= now) || hourly[0];
 
   const todaySnapshot = normalizeSnapshot(current);
-  const todayIntel = evaluateHumanActionFactors(todaySnapshot);
+  const todayIntelRaw = evaluateHumanActionFactors(todaySnapshot);
+  const todayIntel = ensureSynthFields(todayIntelRaw, todaySnapshot);
 
   // TOMORROW — morning + afternoon hybrid
   const tomorrowBundle = buildTomorrowSnapshots(hourly);
 
-  // Choose a single snapshot for UI
   const tomorrowSnapshot =
     tomorrowBundle.afternoon ??
     tomorrowBundle.morning ??
     normalizeSnapshot(hourly[24]); // fallback
 
-  const tomorrowIntel = evaluateHumanActionFactors(tomorrowSnapshot);
+  const tomorrowIntelRaw = evaluateHumanActionFactors(tomorrowSnapshot);
+  const tomorrowIntel = {
+    ...ensureSynthFields(tomorrowIntelRaw, tomorrowSnapshot),
+    stats: tomorrowBundle.stats
+  };
 
   return {
-    today: {
-      ...todayIntel,
-      snapshot: todaySnapshot
-    },
-    tomorrow: {
-      ...tomorrowIntel,
-      snapshot: tomorrowSnapshot,
-      stats: tomorrowBundle.stats
-    }
+    today: todayIntel,
+    tomorrow: tomorrowIntel
   };
 }
 
