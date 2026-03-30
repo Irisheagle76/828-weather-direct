@@ -203,7 +203,6 @@ function renderHumanActionExpanded(todayIntel, tomorrowIntel) {
   $("expanded-today").innerHTML = build(todayIntel);
   $("expanded-tomorrow").innerHTML = build(tomorrowIntel);
 }
-
 // ------------------------------------------------------------
 // COMFORT NOW — SYNTHESIZER TITLE + BULLETS
 // ------------------------------------------------------------
@@ -412,7 +411,6 @@ function findBestComfortWindow(hourlyNormalized, computeComfortFn, windowSize = 
   windows.sort((a, b) => b.avgScore - a.avgScore);
   return windows[0] ?? null;
 }
-
 // ------------------------------------------------------------
 // MAIN ENTRY
 // ------------------------------------------------------------
@@ -513,4 +511,49 @@ export async function renderWeather({
     factors: [],
 
     snapshot: {
-      temp: comfortNow.temp ??
+      temp: comfortNow.temp ?? comfortNow.temperature ?? null,
+      dewpoint: comfortNow.dewpoint ?? null,
+      humidity: comfortNow.humidity ?? null,
+      windSpeed: comfortNow.wind ?? null,
+      windGust: comfortNow.windGust ?? null,
+      cloudCover: comfortNow.cloudCover ?? null,
+      precipType: "none",
+      precipChance: 0
+    }
+  };
+
+  const comfortNarrative = generateNarrative(comfortIntel) || {};
+
+  const comfortNowForRender = {
+    ...comfortNow,
+    title: comfortNarrative.title ?? comfortNow.line1 ?? comfortNow.summary ?? "",
+    bullets: Array.isArray(comfortNarrative.bullets) ? comfortNarrative.bullets : [],
+    emoji: comfortNarrative.emoji ?? comfortNow.emoji ?? "🌤️",
+    longNarrative: comfortNarrative.main ?? comfortNow.line2 ?? ""
+  };
+
+  // ------------------------------------------------------------
+  // FUTURE COMFORT + BEST WINDOW
+  // ------------------------------------------------------------
+
+  const futureComfort = buildFutureComfort(hourlyNormalized, computeComfort);
+  const bestWindow = findBestComfortWindow(hourlyNormalized, computeComfort);
+
+  // ------------------------------------------------------------
+  // RENDER MODULES
+  // ------------------------------------------------------------
+
+  renderComfortNow($("comfort-now-container"), comfortNowForRender, bestWindow);
+  renderFutureComfort($("future-comfort-container"), futureComfort);
+
+  // ACCORDION
+  initializeAccordion();
+
+  // OPTIONAL DEBUG HOOKS
+  window._raw = raw;
+  window._comfortNow = comfortNow;
+  window._comfortNowForRender = comfortNowForRender;
+  window._hourly = hourlyNormalized;
+}
+
+
