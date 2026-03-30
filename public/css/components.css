@@ -123,7 +123,54 @@ h1, h2, h3 {
    CURRENT OBSERVATIONS — COMPACT MODULE CARD
    ============================================================ */
 
-/* Best Window Container */
+#current-obs-wrapper {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.2rem;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+
+#current-obs-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.obs-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.obs-cell {
+  display: flex;
+  justify-content: space-between;
+  width: 50%;
+  font-size: 0.82rem;
+  line-height: 1.1;
+}
+
+.obs-label {
+  color: var(--text-muted, #9aa0a6);
+  font-weight: 500;
+  margin-right: 0.25rem;
+  white-space: nowrap;
+}
+
+.obs-value {
+  color: var(--text-strong, #ffffff);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+
+/* ============================================================
+   BEST WINDOW — HOURLY STRIP
+   ============================================================ */
+
 .fc-strip {
   display: flex;
   flex-direction: row;
@@ -133,9 +180,8 @@ h1, h2, h3 {
   padding-bottom: 0.5rem;
 }
 
-/* Hour Card */
 .fc-hour {
-  flex: 0 0 90px; /* fixed width for consistency */
+  flex: 0 0 90px;
   background: rgba(255,255,255,0.08);
   border-radius: 10px;
   padding: 0.5rem;
@@ -143,14 +189,12 @@ h1, h2, h3 {
   box-shadow: 0 1px 3px rgba(0,0,0,0.15);
 }
 
-/* Hour Label */
 .fc-hour-label {
   font-size: 0.75rem;
   opacity: 0.8;
   margin-bottom: 0.25rem;
 }
 
-/* Emoji + Temp */
 .fc-hour-main {
   display: flex;
   flex-direction: column;
@@ -159,54 +203,9 @@ h1, h2, h3 {
   margin-bottom: 0.25rem;
 }
 
-/* Score + Label */
 .fc-hour-extra {
   font-size: 0.7rem;
   opacity: 0.8;
-}
-
-/* CURRENT OBS — COMPACT, QUIET, GLANCEABLE */
-#current-obs-wrapper {
-  padding: 0.75rem 1rem;
-  border-radius: 10px;
-}
-
-#current-obs-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem; /* tighter rows */
-}
-
-.obs-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.obs-cell {
-  display: flex;
-  justify-content: space-between;
-  width: 50%;
-  font-size: 0.85rem; /* smaller text */
-  line-height: 1.1;
-}
-
-.obs-label {
-  color: var(--text-muted, #999);
-  font-weight: 500;
-  margin-right: 0.25rem;
-  white-space: nowrap;
-}
-
-.obs-value {
-  color: var(--text-strong, #fff);
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-/* Reduce module-card shadow for this block only */
-#current-obs-wrapper.module-card {
-  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
 }
 
 
