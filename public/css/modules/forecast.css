@@ -121,41 +121,70 @@
   }
 }
 
-/* FUTURE COMFORT STRIP */
+/* ============================================================
+   828 WEATHER — FUTURE COMFORT (Next 6 Hours)
+   ============================================================ */
+
 .next6-module {
-  background: var(--card-bg);
-  border-radius: 12px;
-  padding: 1rem 1.2rem;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: var(--module-radius);
+  padding: 1.1rem 1.3rem;
   margin-bottom: 1.2rem;
-  box-shadow: var(--card-shadow);
+  box-shadow: var(--shadow-strong);
+  backdrop-filter: blur(6px);
 }
 
+/* HEADER */
+.next6-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.next6-label {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+/* STRIP */
 .next6-strip {
   display: flex;
   justify-content: space-between;
   gap: 0.6rem;
-  margin-top: 0.8rem;
+  margin-top: 0.9rem;
 }
 
+/* HOUR BLOCK */
 .next6-hour {
   flex: 1;
-  background: rgba(255,255,255,0.04);
+  background: rgba(255,255,255,0.05);
+  border-radius: 10px;
   padding: 0.6rem;
-  border-radius: 8px;
   text-align: center;
+  box-shadow: var(--shadow-medium);
 }
 
 .next6-hour-label {
   font-size: 0.75rem;
   opacity: 0.7;
+  margin-bottom: 0.25rem;
+}
+
+.next6-hour-emoji {
+  font-size: 1.4rem;
+  margin-bottom: 0.25rem;
 }
 
 .next6-hour-temp {
   font-size: 1.1rem;
   font-weight: 600;
+  color: var(--text-bright);
 }
 
 .next6-hour-factor {
   font-size: 0.7rem;
   opacity: 0.6;
+  margin-top: 2px;
 }

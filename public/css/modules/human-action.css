@@ -1,152 +1,109 @@
 /* ============================================================
-   HUMAN-ACTION MODULE — Updated for HA 2.0 DOM
+   828 WEATHER — HUMAN‑ACTION MODULE
+   Today + Tomorrow Outlook
    ============================================================ */
 
 .action-module {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  padding: var(--module-padding);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
   border-radius: var(--module-radius);
-
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.32);
-  backdrop-filter: blur(4px);
-
-  transition: background 0.25s ease, border-color 0.25s ease;
-}
-
-.action-module:hover {
-  background: rgba(255, 255, 255, 0.10);
-  border-color: rgba(255, 255, 255, 0.18);
+  padding: 1.1rem 1.3rem;
+  margin-bottom: 1.2rem;
+  box-shadow: var(--shadow-strong);
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+  transition: border-color 0.25s ease, background 0.25s ease;
 }
 
 .action-module.active {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.22);
+  border-color: var(--accent);
+  background: rgba(255,255,255,0.10);
 }
 
-/* Emoji */
+/* HEADER */
+.action-header {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-bright);
+  margin-bottom: 0.4rem;
+}
+
+/* EMOJI */
 .action-emoji {
   font-size: 2rem;
-  margin-top: 0;
-  flex-shrink: 0;
-}
-
-/* Label */
-.action-label {
-  color: #a8c6ff;
-  font-size: 0.75rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  margin-bottom: 0.1rem;
-  white-space: nowrap;
-}
-
-/* Headline */
-.action-headline {
-  color: #f5f7ff;
-  font-size: 1.28rem;
-  font-weight: 700;
-  line-height: 1.25;
-  margin-bottom: 0.25rem;
-}
-
-/* Summary text */
-.action-text {
-  color: #c8d3ff;
-  font-size: 0.9rem;
-  line-height: 1.45;
   margin-bottom: 0.4rem;
-  overflow-wrap: break-word;
 }
 
-/* Bullets */
+/* HEADLINE */
+.action-headline {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-bright);
+  margin-bottom: 0.35rem;
+}
+
+/* MAIN TEXT */
+.action-text {
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--text-soft);
+  margin-bottom: 0.5rem;
+}
+
+/* BULLETS */
 .today-bullets,
 .tomorrow-bullets {
-  list-style: none;
-  padding-left: 0.6rem;
-  margin-top: 0.25rem;
+  margin: 0.4rem 0 0.6rem 0;
+  padding-left: 1.1rem;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+  line-height: 1.4;
 }
 
 .today-bullets li,
 .tomorrow-bullets li {
-  color: #d8dff7;
-  font-size: 0.88rem;
-  line-height: 1.4;
-  margin-bottom: 0.3rem;
-}
-
-/* Expanded panel */
-.expanded-panel {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 18px;
-  padding: 1.2rem 1.4rem;
-  margin-top: 0.75rem;
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.32);
-  color: #e5e8ff;
-  line-height: 1.45;
-  backdrop-filter: blur(6px);
-  transition: all 0.25s ease;
-}
-
-.expanded-panel .fx-label {
-  color: #f0b777;
-  font-size: 0.78rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
   margin-bottom: 0.25rem;
 }
 
-/* HUMAN-ACTION MODULE HEADERS */
-.action-header {
-  font-size: 1rem;
-  font-weight: 700;
-  margin-bottom: 0.4rem;
-  color: var(--text-strong);
+/* EXPANDED PANEL */
+.expanded-panel {
+  display: none;
+  margin-top: 0.8rem;
 }
 
-.action-module {
-  background: var(--card-bg);
-  border-radius: 12px;
-  padding: 1rem 1.2rem;
-  margin-bottom: 1.2rem;
-  box-shadow: var(--card-shadow);
-  cursor: pointer;
+.action-module.active .expanded-panel {
+  display: block;
 }
 
-.action-module.active {
-  border: 1px solid var(--accent);
-}
-
+/* FORECAST GRID */
 .fx-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 0.8rem;
-  margin-top: 0.8rem;
 }
 
 .fx-tile {
-  background: rgba(255,255,255,0.04);
+  background: rgba(255,255,255,0.05);
+  border-radius: 10px;
   padding: 0.6rem;
-  border-radius: 8px;
   text-align: center;
+  box-shadow: var(--shadow-medium);
 }
 
 .fx-top {
   font-size: 1.1rem;
   font-weight: 600;
+  color: var(--text-bright);
 }
 
 .fx-sub {
   font-size: 0.75rem;
   opacity: 0.7;
+  margin-top: 2px;
 }
 
 .fx-label {
   font-size: 0.7rem;
   opacity: 0.6;
-  margin-top: 2px;
+  margin-top: 3px;
 }
