@@ -428,21 +428,21 @@ export async function renderWeather({
   // NORMALIZED HOURLY
   const hourlyNormalized = normalizeOpenMeteo(raw.hourly);
 
-  // COMFORT NOW (with narrative)
-  const comfortNow = computeComfort({
-    tempest: raw.tempest,
-    wu: {
-      temp: raw.wu?.imperial?.temp ?? raw.wu?.temp_f ?? null,
-      dewPoint: raw.wu?.imperial?.dewpt ?? raw.wu?.dewpt_f ?? null,
-      windSpeed: raw.wu?.imperial?.windSpeed ?? raw.wu?.wind_mph ?? 0,
-      windDir: raw.wu?.wind_dir ?? "",
-      obsTimeLocal: raw.wu?.obsTimeLocal ?? Date.now(),
-      cloudCover: raw.wu?.cloud ?? null
-    },
-    hourly: hourlyNormalized
-  });
+// COMFORT NOW (with narrative)
+const comfortNow = computeComfort({
+  tempest: raw.tempest,
+  wu: {
+    temp: raw.wu?.imperial?.temp ?? raw.wu?.temp_f ?? null,
+    dewPoint: raw.wu?.imperial?.dewpt ?? raw.wu?.dewpt_f ?? null,
+    windSpeed: raw.wu?.imperial?.windSpeed ?? raw.wu?.wind_mph ?? 0,
+    windDir: raw.wu?.wind_dir ?? "",
+    obsTimeLocal: raw.wu?.obsTimeLocal ?? Date.now(),
+    cloudCover: raw.wu?.cloud ?? null
+  },
+  hourly: hourlyNormalized
+});
 
-  // TEMPORARY DEBUG HOOKS
+// 🔵 DEBUG HOOKS — guaranteed to work here
 window._raw = raw;
 window._comfortNow = comfortNow;
 window._hourly = hourlyNormalized;
