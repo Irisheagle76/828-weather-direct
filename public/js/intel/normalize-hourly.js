@@ -20,7 +20,10 @@ export function normalizeOpenMeteo(hourly) {
       return null;
     };
 
-    const num = v => (v != null && !isNaN(v) ? v : null);
+    const num = v => {
+  const n = Number(v);
+  return typeof n === "number" && !isNaN(n) ? n : null;
+};
 
     // Core meteorological fields
     const temp = num(pick("temperature_2m"));
@@ -28,51 +31,76 @@ export function normalizeOpenMeteo(hourly) {
     const humidity = num(pick("relativehumidity_2m"));
 
     // Canonical wind fields
-    const windSpeed = num(pick("wind_speed_10m", "windspeed_10m")) ?? 0;
-    const windGust = num(pick("wind_gusts_10m", "windgusts_10m")) ?? 0;
+  const windSpeed = num(pick("wind_speed_10m", "windspeed_10m"));
+const windGust = num(pick("wind_gusts_10m", "windgusts_10m"));
 
     // NEW: Canonical wind direction
     const windDir = num(pick("winddirection_10m", "wind_dir"));
 
-    // Precipitation & visibility
-    const precip = num(pick("precipitation")) ?? 0;
-    const snow = num(pick("snowfall")) ?? 0;
-    const cloud = num(pick("cloudcover"));
-    const visibility = num(pick("visibility"));
-    const uv = num(pick("uv_index"));
+ // Precipitation & visibility (HARDENED)
+
+// Raw numeric extraction (no fake defaults)
+const precip = num(pick("precipitation"));
+const snow = num(pick("snowfall"));
+const uv = num(pick("uv_index"));
+
+// Cloud cover normalization (handle 0–100 vs 0–1)
+let cloud = num(pick("cloudcover"));
+if (cloud != null && cloud > 1) {
+  cloud = cloud / 100;
+}
+
+// Visibility normalization (meters → miles if needed)
+let visibility = num(pick("visibility"));
+if (visibility != null && visibility > 100) {
+  visibility = visibility / 1609.34;
+}
 
     // Apparent temperature fallback
-    const apparent = num(pick("apparent_temperature")) ?? temp;
+    const apparentRaw = num(pick("apparent_temperature"));
+const apparent = apparentRaw != null ? apparentRaw : temp;
 
     // Timestamp
-    const ts = new Date(hourly.time[i]).getTime();
+   const rawTs = new Date(hourly.time[i]).getTime();
+const ts = !isNaN(rawTs) ? rawTs : Date.now();
 
-    // Risk indices (unchanged)
-    const frostRisk =
-      temp != null && dew != null && temp <= 37 && dew <= 36
-        ? 0.6
-        : temp != null && temp <= 34
-        ? 1
-        : 0;
+// Risk indices
 
-    const freezeRisk =
-      temp != null && temp <= 32
-        ? 1
-        : temp != null && temp <= 34
-        ? 0.5
-        : 0;
+const frostRisk =
+  temp != null && dew != null && temp <= 37 && dew <= 36
+    ? 0.6
+    : temp != null && temp <= 34
+    ? 1
+    : 0;
 
-    const blackIceRisk =
-      temp != null && temp <= 32 && precip > 0 ? 1 : 0;
+const freezeRisk =
+  temp != null && temp <= 32
+    ? 1
+    : temp != null && temp <= 34
+    ? 0.5
+    : 0;
 
-    const inversionRisk =
-      temp != null && temp <= 40 && windSpeed < 3 ? 0.5 : 0;
+const blackIceRisk =
+  temp != null && temp <= 32 && (precip ?? 0) > 0 ? 1 : 0;
 
-    const valleyFogRisk =
-      humidity != null && humidity >= 95 ? 0.6 : 0;
+const inversionRisk =
+  temp != null && temp <= 40 && (windSpeed ?? 0) < 3 ? 0.5 : 0;
 
-    const ridgeFogRisk =
-      humidity != null && humidity >= 98 ? 0.5 : 0;
+const valleyFogRisk =
+  humidity != null &&
+  humidity >= 95 &&
+  windSpeed != null &&
+  windSpeed < 3
+    ? 0.6
+    : 0;
+
+const ridgeFogRisk =
+  humidity != null &&
+  humidity >= 98 &&
+  windSpeed != null &&
+  windSpeed < 5
+    ? 0.5
+    : 0;
 
     // Canonical normalized object
     out.push({
