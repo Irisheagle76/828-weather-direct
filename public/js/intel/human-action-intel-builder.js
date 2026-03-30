@@ -22,21 +22,23 @@ export function buildHumanActionIntel(raw) {
     return { today: null, tomorrow: null };
   }
 
-  // ----------------------------------------------------------
-  // 1. TODAY — find closest hour to NOW
-  // ----------------------------------------------------------
+  // TODAY — closest hour to now
   const now = Date.now();
-  const current =
-    hourly.find(h => h.timestamp >= now) || hourly[0];
+  const current = hourly.find(h => h.timestamp >= now) || hourly[0];
 
   const todaySnapshot = normalizeSnapshot(current);
   const todayIntel = evaluateHumanActionFactors(todaySnapshot);
 
-  // ----------------------------------------------------------
-  // 2. TOMORROW — build morning + afternoon hybrid
-  // ----------------------------------------------------------
-  const tomorrow = buildTomorrowSnapshots(hourly);
-  const tomorrowIntel = evaluateHumanActionFactors(tomorrow);
+  // TOMORROW — morning + afternoon hybrid
+  const tomorrowBundle = buildTomorrowSnapshots(hourly);
+
+  // Choose a single snapshot for UI
+  const tomorrowSnapshot =
+    tomorrowBundle.afternoon ??
+    tomorrowBundle.morning ??
+    normalizeSnapshot(hourly[24]); // fallback
+
+  const tomorrowIntel = evaluateHumanActionFactors(tomorrowSnapshot);
 
   return {
     today: {
@@ -45,7 +47,8 @@ export function buildHumanActionIntel(raw) {
     },
     tomorrow: {
       ...tomorrowIntel,
-      snapshot: tomorrow
+      snapshot: tomorrowSnapshot,
+      stats: tomorrowBundle.stats
     }
   };
 }
@@ -58,7 +61,7 @@ function normalizeSnapshot(h) {
 
   return {
     temp: h.temperature,
-    feelsLike: h.feels_like ?? h.apparent_temperature ?? h.temperature,
+    feelsLike: h.apparent_temperature ?? h.temperature,
     dewpoint: h.dewpoint,
     humidity: h.relative_humidity,
     windSpeed: h.wind_speed,

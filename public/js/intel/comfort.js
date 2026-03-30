@@ -325,18 +325,15 @@ export function computeComfort(intel) {
 }
 
 // ------------------------------------------------------------
-// FUTURE COMFORT — ARRAY-SHAPE SAFE
+// FUTURE COMFORT — ARRAY-SHAPE SAFE (FIXED VERSION)
 // ------------------------------------------------------------
 export function buildFutureComfort(hourlyNormalized, computeComfortFn = computeComfort) {
   if (!Array.isArray(hourlyNormalized) || hourlyNormalized.length === 0) return [];
 
   const now = Date.now();
 
-  let startIndex = hourlyNormalized.findIndex(h => {
-    if (!h.time) return false;
-    return new Date(h.time).getTime() > now;
-  });
-
+  // Find first future hour using timestamp
+  let startIndex = hourlyNormalized.findIndex(h => h.timestamp > now);
   if (startIndex === -1) startIndex = 0;
 
   const items = [];
@@ -347,14 +344,15 @@ export function buildFutureComfort(hourlyNormalized, computeComfortFn = computeC
 
     const h = hourlyNormalized[idx];
 
+    // Build intel object for computeComfort()
     const intelForHour = {
       tempest: null,
       wu: {
-        temp: h.temp,
-        dewPoint: h.dew ?? h.dewPoint ?? null,
-        windSpeed: h.windSpeed,
-        windDir: h.windDir ?? h.windDirection ?? "",
-        obsTimeLocal: h.time
+        temp: h.temperature,
+        dewPoint: h.dewpoint,
+        windSpeed: h.wind_speed,
+        windDir: h.wind_direction ?? "",
+        obsTimeLocal: h.timestamp
       },
       hourly: hourlyNormalized
     };
@@ -363,21 +361,20 @@ export function buildFutureComfort(hourlyNormalized, computeComfortFn = computeC
 
     items.push({
       index: idx,
-      time: h.time,
-      hourLabel: h.time ? formatHourLabel(h.time) : `+${i}h`,
+      time: h.timestamp,
+      hourLabel: h.timestamp ? formatHourLabel(h.timestamp) : `+${i}h`,
       comfortScore: c.comfortScore,
       color: c.color,
       label: c.label,
       emoji: c.emoji,
-      temp: h.temp,
-      dew: h.dew ?? h.dewPoint ?? null,
-      wind: h.windSpeed
+      temp: h.temperature,
+      dew: h.dewpoint,
+      wind: h.wind_speed
     });
   }
 
   return items;
 }
-
 // ------------------------------------------------------------
 // TIMEZONE-SAFE LABEL
 // ------------------------------------------------------------
