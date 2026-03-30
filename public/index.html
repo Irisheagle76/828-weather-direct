@@ -21,6 +21,7 @@
 
 <body>
 
+  <!-- NOTIFICATIONS BUTTON -->
   <button id="enable-notifications-btn" class="enable-notifications-btn">
     🔔 Enable Notifications
   </button>
@@ -47,40 +48,18 @@
       </div>
     </div>
 
- <!-- CURRENT OBSERVATIONS -->
-<div id="current-obs-wrapper" class="current-obs-card">
-
-  <div class="current-obs-header">Current Conditions</div>
-
-  <div class="current-obs-grid">
-
-    <div>
-      <div class="current-obs-label">Temperature</div>
-      <div id="wu-temp" class="current-obs-value">--</div>
-      <div id="wu-feels" class="current-obs-sub">Feels like --</div>
+    <!-- ============================================================
+         CURRENT OBSERVATIONS — ULTRA-COMPACT INLINE BAR
+         ============================================================ -->
+    <div id="current-obs-wrapper">
+      <div id="current-obs-inline">
+        <!-- JS will populate these two lines -->
+      </div>
     </div>
 
-    <div>
-      <div class="current-obs-label">Dew Point</div>
-      <div id="wu-dew" class="current-obs-value">--</div>
-      <div id="wu-humidity" class="current-obs-sub">Humidity --</div>
-    </div>
-
-    <div>
-      <div class="current-obs-label">Wind</div>
-      <div id="wu-wind" class="current-obs-value">--</div>
-      <div id="wu-wind-gust" class="current-obs-sub">Gusts --</div>
-    </div>
-
-    <div>
-      <div class="current-obs-label">UV Index</div>
-      <div id="wu-uv" class="current-obs-value">--</div>
-    </div>
-
-  </div>
-</div>
-
-    <!-- COMFORT ROW -->
+    <!-- ============================================================
+         COMFORT MODULES
+         ============================================================ -->
     <div id="comfort-row">
       <div class="comfort-left-col">
         <div id="comfort-now-container"></div>
@@ -91,7 +70,9 @@
       </div>
     </div>
 
-    <!-- TODAY + TOMORROW -->
+    <!-- ============================================================
+         TODAY + TOMORROW — HUMAN-ACTION 2.2
+         ============================================================ -->
     <div class="now-tomorrow-row">
 
       <!-- TODAY -->
@@ -126,7 +107,9 @@
 
     </div>
 
-    <!-- 828 WEATHER PULSE -->
+    <!-- ============================================================
+         828 WEATHER PULSE
+         ============================================================ -->
     <section id="pulse-card" class="pulse-card pulse-collapsed">
       <div class="pulse-header">
         <h2 class="pulse-title">828 Weather Pulse</h2>
@@ -148,10 +131,14 @@
       </button>
     </section>
 
-    <!-- SUBSTACK MODULE -->
+    <!-- ============================================================
+         SUBSTACK MODULE
+         ============================================================ -->
     <section id="weather-articles-module" class="substack-card"></section>
 
-    <!-- FOOTER -->
+    <!-- ============================================================
+         FOOTER
+         ============================================================ -->
     <div class="footer-note" id="wu-station-footer">
       © 2026 Timothy Ballisty • 828 Weather<br>
       Independent Asheville weather analysis<br>

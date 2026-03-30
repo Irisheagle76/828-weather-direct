@@ -226,3 +226,42 @@ h1, h2, h3 {
 .text-gold  { color: #f0b777; }
 .text-orange { color: #ffb866; }
 .text-blue { color: #c8d3ff; }
+
+/* ============================================================
+   CURRENT OBS — ULTRA-COMPACT INLINE BAR (2 LINES)
+   ============================================================ */
+
+#current-obs-wrapper {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 10px;
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 1.2rem;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+
+#current-obs-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.obs-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  line-height: 1.2;
+  color: var(--text-muted, #9aa0a6);
+}
+
+.obs-item strong {
+  color: var(--text-strong, #ffffff);
+  font-weight: 600;
+}
+
+.obs-dot {
+  opacity: 0.45;
+  margin: 0 0.1rem;
+}

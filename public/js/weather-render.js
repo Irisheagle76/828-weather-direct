@@ -37,9 +37,8 @@ function getTodayLabelFromLocalTime() {
 }
 
 // ------------------------------------------------------------
-// CURRENT OBSERVATIONS (unchanged from 6.0)
+// CURRENT OBSERVATIONS — INLINE BAR (Option B, 2 lines)
 // ------------------------------------------------------------
-
 function renderCurrentObservations(raw) {
   const wrap = $("current-obs-wrapper");
   if (wrap) wrap.classList.add("module-card");
@@ -48,6 +47,9 @@ function renderCurrentObservations(raw) {
   const wu = raw?.wu;
   const h = raw?.hourly;
 
+  // -----------------------------
+  // Extract values (same logic)
+  // -----------------------------
   const temp =
     (t?.air_temperature != null ? cToF(t.air_temperature) : null) ??
     wu?.imperial?.temp ??
@@ -84,58 +86,51 @@ function renderCurrentObservations(raw) {
     h?.uv_index?.[0] ??
     0;
 
-  const container = $("current-obs-grid");
-  if (container) {
-    container.innerHTML = `
-      <div class="obs-row">
-        <div class="obs-cell">
-          <span class="obs-label">Temperature:</span>
-          <span class="obs-value">${temp != null ? `${Math.round(temp)}°` : "--"}</span>
-        </div>
-        <div class="obs-cell">
-          <span class="obs-label">Feels like:</span>
-          <span class="obs-value">${feels != null ? `${Math.round(feels)}°` : "--"}</span>
-        </div>
-      </div>
+  // -----------------------------
+  // Wind direction (Tempest → WU → hourly)
+  // -----------------------------
+  const windDir =
+    t?.wind_direction ??
+    wu?.winddir ??
+    h?.wind_direction_10m?.[0];
 
-      <div class="obs-row">
-        <div class="obs-cell">
-          <span class="obs-label">Wind:</span>
-          <span class="obs-value">${wind != null ? `${Math.round(wind)} mph` : "--"}</span>
-        </div>
-        <div class="obs-cell">
-          <span class="obs-label">Gusts:</span>
-          <span class="obs-value">${gust != null ? `${Math.round(gust)} mph` : "--"}</span>
-        </div>
-      </div>
+  const windDirText = windDir != null ? degToCompass(windDir) : "";
 
-      <div class="obs-row">
-        <div class="obs-cell">
-          <span class="obs-label">Dew Point:</span>
-          <span class="obs-value">${dew != null ? `${Math.round(dew)}°` : "--"}</span>
-        </div>
-        <div class="obs-cell">
-          <span class="obs-label">Humidity:</span>
-          <span class="obs-value">${humidity != null ? `${Math.round(humidity)}%` : "--"}</span>
-        </div>
-      </div>
+  // -----------------------------
+  // Inject into inline bar
+  // -----------------------------
+  const inline = $("current-obs-inline");
+  if (!inline) return;
 
-      <div class="obs-row">
-        <div class="obs-cell">
-          <span class="obs-label">UV Index:</span>
-          <span class="obs-value">${uv != null ? `${Math.round(uv)}` : "--"}</span>
-        </div>
-      </div>
-    `;
-  } else {
-    $("wu-temp").textContent = temp != null ? `${Math.round(temp)}°` : "--";
-    $("wu-feels").textContent = feels != null ? `Feels like ${Math.round(feels)}°` : "Feels like --";
-    $("wu-dew").textContent = dew != null ? `${Math.round(dew)}°` : "--";
-    $("wu-humidity").textContent = humidity != null ? `Humidity ${Math.round(humidity)}%` : "Humidity --";
-    $("wu-wind").textContent = wind != null ? `${Math.round(wind)} mph` : "--";
-    $("wu-wind-gust").textContent = gust != null ? `Gusts ${Math.round(gust)} mph` : "Gusts --";
-    $("wu-uv").textContent = uv != null ? `${Math.round(uv)}` : "--";
-  }
+  inline.innerHTML = `
+    <div class="obs-line">
+      <span class="obs-item">Temp <strong>${temp != null ? `${Math.round(temp)}°` : "--"}</strong></span>
+      <span class="obs-dot">•</span>
+      <span class="obs-item">Feels <strong>${feels != null ? `${Math.round(feels)}°` : "--"}</strong></span>
+      <span class="obs-dot">•</span>
+      <span class="obs-item">Dew <strong>${dew != null ? `${Math.round(dew)}°` : "--"}</strong></span>
+      <span class="obs-dot">•</span>
+      <span class="obs-item">Humidity <strong>${humidity != null ? `${Math.round(humidity)}%` : "--"}</strong></span>
+    </div>
+
+    <div class="obs-line">
+      <span class="obs-item">Wind <strong>${windDirText} ${wind != null ? `${Math.round(wind)} mph` : "--"}</strong></span>
+      <span class="obs-dot">•</span>
+      <span class="obs-item">Gusts <strong>${gust != null ? `${Math.round(gust)} mph` : "--"}</strong></span>
+      <span class="obs-dot">•</span>
+      <span class="obs-item">UV <strong>${uv != null ? `${Math.round(uv)}` : "--"}</strong></span>
+    </div>
+  `;
+}
+
+// ------------------------------------------------------------
+// Helper: Convert degrees → compass direction
+// ------------------------------------------------------------
+function degToCompass(deg) {
+  if (deg == null || isNaN(deg)) return "";
+  const dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE",
+                "S","SSW","SW","WSW","W","WNW","NW","NNW"];
+  return dirs[Math.round(deg / 22.5) % 16];
 }
 
 // ------------------------------------------------------------
