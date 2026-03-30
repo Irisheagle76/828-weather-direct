@@ -241,13 +241,19 @@ function pickComfortEmoji(state) {
 export function computeComfort(intel) {
   const src = intel.tempest ?? intel.wu ?? {};
 
-  const temp = src.alreadyFahrenheit
-    ? src.temp ?? null
-    : src.temp != null ? cToF(src.temp) : null;
+  const temp =
+  src.temp == null
+    ? null
+    : src.alreadyFahrenheit === false
+    ? cToF(src.temp)
+    : src.temp;
 
-  const dew = src.alreadyFahrenheit
-    ? src.dewPoint ?? null
-    : src.dewPoint != null ? cToF(src.dewPoint) : null;
+ const dew =
+  src.dewPoint == null
+    ? null
+    : src.alreadyFahrenheit === false
+    ? cToF(src.dewPoint)
+    : src.dewPoint;
 
   const wind = src.windSpeed ?? 0;
   const windDir = src.windDir ?? "";
@@ -372,10 +378,10 @@ for (let i = 0; i < 6; i++) {
       windSpeed: h.wind_speed,
       windDir: h.wind_dir,
       obsTimeLocal: h.timestamp,
-      alreadyFahrenheit: false // <-- IMPORTANT FIX
+      alreadyFahrenheit: true
     }
   };
-  
+
     const c = computeComfortFn(intelForHour);
 
     items.push({
