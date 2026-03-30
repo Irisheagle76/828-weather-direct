@@ -172,8 +172,23 @@ function renderHumanActionExpanded(todayIntel, tomorrowIntel) {
 
     const s = intel.snapshot;
 
-    const high = intel.high ?? s.temp ?? null;
-    const low = intel.low ?? null;
+    // TODAY uses snapshot + next few hours
+let high = null;
+let low = null;
+
+if (intel.stats) {
+  // TOMORROW path
+  high = intel.stats.tempMax ?? s.temp ?? null;
+  low  = intel.stats.tempMin ?? s.temp ?? null;
+} else {
+  // TODAY path — compute from hourly
+  const nextHours = window._hourly?.slice(0, 12) ?? [];
+  const temps = nextHours.map(h => h.temperature).filter(t => t != null);
+
+  high = temps.length ? Math.max(...temps) : s.temp;
+  low  = temps.length ? Math.min(...temps) : s.temp;
+}
+
     const dew = s.dewpoint ?? null;
     const wind = s.windSpeed ?? null;
     const gust = s.windGust ?? null;

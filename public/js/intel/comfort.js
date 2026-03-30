@@ -236,8 +236,19 @@ export function computeComfort(intel) {
   const src = intel.tempest ?? intel.wu ?? {};
   const sky = intel.sky ?? {};
 
-  const temp = src.temp ?? 0;
-  const dew = src.dewPoint ?? 0;
+  let temp;
+let dew;
+
+if (src.alreadyFahrenheit) {
+  temp = src.temp ?? 0;
+  dew  = src.dewPoint ?? 0;
+} else {
+  // Tempest + WU path (C → F conversion)
+  temp = src.temp != null ? cToF(src.temp) : 0;
+  dew  = src.dewPoint != null ? cToF(src.dewPoint) : 0;
+}
+
+
   const wind = src.windSpeed ?? 0;
   const windDir = src.windDir ?? "";
   const timestamp = src.obsTimeLocal ?? Date.now();
@@ -346,16 +357,18 @@ export function buildFutureComfort(hourlyNormalized, computeComfortFn = computeC
 
     // Build intel object for computeComfort()
     const intelForHour = {
-      tempest: null,
-      wu: {
-        temp: h.temperature,
-        dewPoint: h.dewpoint,
-        windSpeed: h.wind_speed,
-        windDir: h.wind_direction ?? "",
-        obsTimeLocal: h.timestamp
-      },
-      hourly: hourlyNormalized
-    };
+  tempest: null,
+wu: {
+  temp: tempF,
+  dewPoint: dewF,
+  windSpeed: h.wind_speed,
+  windDir: h.wind_dir,
+  obsTimeLocal: h.timestamp,
+  alreadyFahrenheit: true
+}
+
+  hourly: null
+};
 
     const c = computeComfortFn(intelForHour);
 
