@@ -82,3 +82,11 @@
   position: relative;
   z-index: 2;
 }
+.footer-note {
+  margin-top: 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+

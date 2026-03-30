@@ -1,33 +1,122 @@
 /* ============================================================
-   FORECAST MODULE
+   828 WEATHER — FORECAST MODULE (Today + Tomorrow)
+   Matches new DOM from weather-render.js
    ============================================================ */
 
-.forecast-grid {
+/* ------------------------------------------------------------
+   FORECAST SECTION WRAPPER
+   ------------------------------------------------------------ */
+
+.fx-section {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  padding: 1.2rem 1.4rem;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(6px);
+  margin-top: 0.75rem;
+  animation: fadeInUp 0.45s ease forwards;
+}
+
+/* ------------------------------------------------------------
+   SECTION LABEL
+   ------------------------------------------------------------ */
+
+.fx-label {
+  color: #f0b777; /* warm gold */
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
+/* ------------------------------------------------------------
+   GRID LAYOUT
+   ------------------------------------------------------------ */
+
+.fx-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  gap: 1rem;
-  margin-top: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 14px;
 }
 
-.forecast-tile {
-  background: #fafafa;
-  padding: 0.9rem;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-soft);
+/* ------------------------------------------------------------
+   FORECAST TILE
+   ------------------------------------------------------------ */
+
+.fx-tile {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
   text-align: center;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(4px);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
-.forecast-day {
-  font-size: 0.9rem;
-  opacity: 0.7;
+.fx-tile:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.38);
 }
 
-.forecast-emoji {
-  font-size: 1.6rem;
-  margin: 0.35rem 0;
-}
+/* ------------------------------------------------------------
+   TILE CONTENT
+   ------------------------------------------------------------ */
 
-.forecast-temp {
-  font-size: 1.1rem;
+.fx-top {
+  font-size: 1.25rem;
   font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 0.25rem;
+}
+
+.fx-sub {
+  font-size: 0.82rem;
+  color: #c8d3ff;
+  margin-bottom: 0.35rem;
+}
+
+.fx-label {
+  font-size: 0.75rem;
+  color: #a8b4e6;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ------------------------------------------------------------
+   MOBILE RESPONSIVENESS
+   ------------------------------------------------------------ */
+
+@media (max-width: 640px) {
+  .fx-grid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+  }
+
+  .fx-tile {
+    padding: 0.8rem 0.9rem;
+  }
+
+  .fx-top {
+    font-size: 1.15rem;
+  }
+}
+
+/* ------------------------------------------------------------
+   ANIMATION (matches animations.css)
+   ------------------------------------------------------------ */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
 }
