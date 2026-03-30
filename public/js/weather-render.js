@@ -493,11 +493,26 @@ export async function renderWeather({
     score >= 35 ? "Uncomfortable" :
     "Harsh / Poor Comfort";
 
-  // ------------------------------------------------------------
-  // SYNTHESIZER WRAPPER FOR COMFORT NOW
-  // ------------------------------------------------------------
+// ------------------------------------------------------------
+// SYNTHESIZER WRAPPER FOR COMFORT NOW — FIXED
+// ------------------------------------------------------------
 
-  const comfortIntel = {
+const comfortIntel = {
+  temp: comfortNow.temp ?? comfortNow.temperature ?? null,
+  dewpoint: comfortNow.dewpoint ?? null,
+  humidity: comfortNow.humidity ?? null,
+  windSpeed: comfortNow.wind ?? null,
+  windGust: comfortNow.windGust ?? null,
+  cloudCover: comfortNow.cloudCover ?? null,
+
+  // REQUIRED FIELDS — these prevent the "includes" crash
+  precipType: "none",
+  precipChance: 0,
+  comfortScore: comfortNow.comfortScore ?? null,
+  label: comfortNow.label ?? comfortNow.summary ?? "",
+  factors: [],   // <— THIS IS THE CRITICAL FIX
+
+  snapshot: {
     temp: comfortNow.temp ?? comfortNow.temperature ?? null,
     dewpoint: comfortNow.dewpoint ?? null,
     humidity: comfortNow.humidity ?? null,
@@ -505,32 +520,20 @@ export async function renderWeather({
     windGust: comfortNow.windGust ?? null,
     cloudCover: comfortNow.cloudCover ?? null,
     precipType: "none",
-    precipChance: 0,
-    comfortScore: comfortNow.comfortScore ?? null,
-    label: comfortNow.label ?? comfortNow.summary ?? "",
-    factors: [],
+    precipChance: 0
+  }
+};
 
-    snapshot: {
-      temp: comfortNow.temp ?? comfortNow.temperature ?? null,
-      dewpoint: comfortNow.dewpoint ?? null,
-      humidity: comfortNow.humidity ?? null,
-      windSpeed: comfortNow.wind ?? null,
-      windGust: comfortNow.windGust ?? null,
-      cloudCover: comfortNow.cloudCover ?? null,
-      precipType: "none",
-      precipChance: 0
-    }
-  };
+const comfortNarrative = generateNarrative(comfortIntel) || {};
 
-  const comfortNarrative = generateNarrative(comfortIntel) || {};
+const comfortNowForRender = {
+  ...comfortNow,
+  title: comfortNarrative.title ?? comfortNow.line1 ?? comfortNow.summary ?? "",
+  bullets: Array.isArray(comfortNarrative.bullets) ? comfortNarrative.bullets : [],
+  emoji: comfortNarrative.emoji ?? comfortNow.emoji ?? "🌤️",
+  longNarrative: comfortNarrative.main ?? comfortNow.line2 ?? ""
+};
 
-  const comfortNowForRender = {
-    ...comfortNow,
-    title: comfortNarrative.title ?? comfortNow.line1 ?? comfortNow.summary ?? "",
-    bullets: Array.isArray(comfortNarrative.bullets) ? comfortNarrative.bullets : [],
-    emoji: comfortNarrative.emoji ?? comfortNow.emoji ?? "🌤️",
-    longNarrative: comfortNarrative.main ?? comfortNow.line2 ?? ""
-  };
 
   // ------------------------------------------------------------
   // FUTURE COMFORT + BEST WINDOW
