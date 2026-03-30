@@ -124,7 +124,6 @@ function updateDataSourceIndicator(raw) {
 function mapToLegacyFields(period) {
   if (!period) return null;
 
-  // Ensure synthesizer-required fields exist
   const safePeriod = {
     factors: Array.isArray(period.factors) ? period.factors : [],
     precipType: period.precipType ?? "none",
@@ -172,22 +171,19 @@ function renderHumanActionExpanded(todayIntel, tomorrowIntel) {
 
     const s = intel.snapshot;
 
-    // TODAY uses snapshot + next few hours
-let high = null;
-let low = null;
+    let high = null;
+    let low = null;
 
-if (intel.stats) {
-  // TOMORROW path
-  high = intel.stats.tempMax ?? s.temp ?? null;
-  low  = intel.stats.tempMin ?? s.temp ?? null;
-} else {
-  // TODAY path — compute from hourly
-  const nextHours = window._hourly?.slice(0, 12) ?? [];
-  const temps = nextHours.map(h => h.temperature).filter(t => t != null);
+    if (intel.stats) {
+      high = intel.stats.tempMax ?? s.temp ?? null;
+      low  = intel.stats.tempMin ?? s.temp ?? null;
+    } else {
+      const nextHours = window._hourly?.slice(0, 12) ?? [];
+      const temps = nextHours.map(h => h.temperature).filter(t => t != null);
 
-  high = temps.length ? Math.max(...temps) : s.temp;
-  low  = temps.length ? Math.min(...temps) : s.temp;
-}
+      high = temps.length ? Math.max(...temps) : s.temp;
+      low  = temps.length ? Math.min(...temps) : s.temp;
+    }
 
     const dew = s.dewpoint ?? null;
     const wind = s.windSpeed ?? null;
@@ -227,6 +223,7 @@ if (intel.stats) {
   $("expanded-today").innerHTML = build(todayIntel);
   $("expanded-tomorrow").innerHTML = build(tomorrowIntel);
 }
+
 // ============================================================
 // COMFORT NOW — SYNTHESIZER TITLE + BULLETS
 // ============================================================
@@ -280,28 +277,30 @@ function renderComfortNow(container, comfort, bestWindow) {
           bestWindow
             ? `
         <div class="comfort-expand-row" style="margin-top:0.6rem;">
-  <span class="comfort-expand-label">Best window (next ${bestWindow.hours.length} hrs)</span>
-  <span class="comfort-expand-value">
-    ${bestWindow.hours[0].hourLabel}–${bestWindow.hours.at(-1).hourLabel}
-  </span>
-</div>
+          <span class="comfort-expand-label">Best window (next ${bestWindow.hours.length} hrs)</span>
+          <span class="comfort-expand-value">
+            ${bestWindow.hours[0].hourLabel}–${bestWindow.hours.at(-1).hourLabel}
+          </span>
+        </div>
 
-<div class="fc-strip">
-  ${bestWindow.hours.map(h => `
-    <div class="fc-hour">
-      <div class="fc-hour-label">${h.hourLabel}</div>
-      <div class="fc-hour-main">
-        <span class="fc-hour-emoji">${h.emoji}</span>
-        <span class="fc-hour-temp">${h.temp != null ? `${Math.round(h.temp)}°` : "--"}</span>
-      </div>
-      <div class="fc-hour-extra">
-        <span class="fc-hour-score">${Math.round(h.comfortScore)}/100</span>
-        <span class="fc-hour-label-text">${h.label}</span>
-      </div>
-    </div>
-  `).join("")}
-</div>
+        <div class="fc-strip">
+          ${bestWindow.hours.map(h => `
+            <div class="fc-hour">
+              <div class="fc-hour-label">${h.hourLabel}</div>
+              <div class="fc-hour-main">
+                <span class="fc-hour-emoji">${h.emoji}</span>
+                <span class="fc-hour-temp">
+                  ${h.temp != null ? `${Math.round(h.temp)}°` : "--"}
+                </span>
+              </div>
 
+              <div class="fc-hour-extra">
+                <span class="fc-hour-score">${Math.round(h.comfortScore)}/100</span>
+                <span class="fc-hour-label-text">${h.label}</span>
+              </div>
+            </div>
+          `).join("")}
+        </div>
         `
             : ""
         }
@@ -356,7 +355,6 @@ function initializeAccordion() {
     ".comfort-module, .next6-module, .action-module"
   );
 
-  // Reset event listeners by cloning
   modules.forEach(module => {
     const clone = module.cloneNode(true);
     module.parentNode.replaceChild(clone, module);
@@ -395,32 +393,31 @@ function findBestComfortWindow(hourlyNormalized, computeComfortFn, windowSize = 
     for (let i = 0; i < windowSize; i++) {
       const h = hourlyNormalized[start + i];
 
-      const tempF = h.temperature != null ? cToF(h.temperature) : null;
-      const dewF = h.dewpoint != null ? cToF(h.dewpoint) : null;
+      const tempF = h.temperatureF;
+      const dewF  = h.dewpointF;
 
       const intelForHour = {
-        tempest: null,
         wu: {
           temp: tempF,
           dewPoint: dewF,
           windSpeed: h.wind_speed ?? 0,
           windDir: h.wind_dir ?? "",
           obsTimeLocal: h.timestamp
-        },
-        hourly: hourlyNormalized
+        }
       };
 
-      const c = computeComfortFn(intelForHour);
-      sum += c.comfortScore;
+      const comfort = computeComfortFn(intelForHour);
 
       hours.push({
-        time: h.timestamp,
         hourLabel: formatHourLabel(h.timestamp),
-        comfortScore: c.comfortScore,
-        emoji: c.emoji,
         temp: tempF,
-        label: c.label
+        dew: dewF,
+        comfortScore: comfort.comfortScore,
+        emoji: comfort.emoji,
+        label: comfort.label
       });
+
+      sum += comfort.comfortScore;
     }
 
     windows.push({
@@ -431,8 +428,9 @@ function findBestComfortWindow(hourlyNormalized, computeComfortFn, windowSize = 
   }
 
   windows.sort((a, b) => b.avgScore - a.avgScore);
-  return windows[0] ?? null;
+  return windows[0];
 }
+
 // ============================================================
 // MAIN ENTRY — FULL PIPELINE
 // ============================================================
@@ -470,36 +468,54 @@ export async function renderWeather({
   const hourlyNormalized = normalizeOpenMeteo(raw.hourly);
 
   // ------------------------------------------------------------
-  // COMFORT NOW — BASE INTEL
+  // COMFORT NOW — CANONICAL TEMPERATURE SOURCE
   // ------------------------------------------------------------
+  const fallback = hourlyNormalized?.[0];
+
+  const tempF =
+    (raw.tempest?.air_temperature != null
+      ? cToF(raw.tempest.air_temperature)
+      : null) ??
+    raw.wu?.imperial?.temp ??
+    fallback?.temperatureF ??
+    null;
+
+  const dewF =
+    (raw.tempest?.dew_point != null
+      ? cToF(raw.tempest.dew_point)
+      : null) ??
+    raw.wu?.imperial?.dewpt ??
+    fallback?.dewpointF ??
+    null;
+
+  const wind =
+    raw.tempest?.wind_avg ??
+    raw.wu?.imperial?.windSpeed ??
+    fallback?.wind_speed ??
+    0;
+
+  const windDir =
+    raw.tempest?.wind_direction ??
+    raw.wu?.wind_dir ??
+    fallback?.wind_dir ??
+    "";
+
+  const timestamp =
+    raw.tempest?.timestamp ??
+    raw.wu?.obsTimeLocal ??
+    fallback?.timestamp ??
+    Date.now();
+
   const comfortNow = computeComfort({
-    tempest: raw.tempest
-      ? {
-          temp: raw.tempest.air_temperature ?? null,
-          dewPoint: raw.tempest.dew_point ?? null,
-          feelsLike: raw.tempest.feels_like ?? null,
-          humidity: raw.tempest.relative_humidity ?? null,
-          windSpeed: raw.tempest.wind_avg ?? null,
-          windGust: raw.tempest.wind_gust ?? null,
-          windDir: raw.tempest.wind_direction ?? null,
-          pressure: raw.tempest.pressure ?? null,
-          obsTimeLocal: Date.now()
-        }
-      : null,
-
     wu: {
-      temp: raw.wu?.imperial?.temp ?? raw.wu?.temp_f ?? null,
-      dewPoint: raw.wu?.imperial?.dewpt ?? raw.wu?.dewpt_f ?? null,
-      windSpeed: raw.wu?.imperial?.windSpeed ?? raw.wu?.wind_mph ?? 0,
-      windDir: raw.wu?.wind_dir ?? "",
-      obsTimeLocal: raw.wu?.obsTimeLocal ?? Date.now(),
-      cloudCover: raw.wu?.cloud ?? null
-    },
-
-    hourly: hourlyNormalized
+      temp: tempF,
+      dewPoint: dewF,
+      windSpeed: wind,
+      windDir,
+      obsTimeLocal: timestamp
+    }
   });
 
-  // Patch humidity/wind from best source
   comfortNow.humidity =
     raw.tempest?.relative_humidity ??
     raw.wu?.humidity ??
@@ -512,7 +528,6 @@ export async function renderWeather({
     hourlyNormalized?.[0]?.wind_speed ??
     null;
 
-  // Comfort category
   const score = comfortNow.comfortScore;
   comfortNow.category =
     score >= 80
@@ -608,6 +623,5 @@ export async function renderWeather({
   window._comfortNowForRender = comfortNowForRender;
   window._hourly = hourlyNormalized;
   window._today = today;
-window._tomorrow = tomorrow;
+  window._tomorrow = tomorrow;
 }
-

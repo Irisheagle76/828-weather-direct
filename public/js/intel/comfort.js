@@ -240,29 +240,30 @@ function pickComfortEmoji(state) {
 // ------------------------------------------------------------
 export function computeComfort(intel) {
   const src = intel.tempest ?? intel.wu ?? {};
+  const sky = intel.sky ?? {};
 
-  const temp =
-  src.temp == null
-    ? null
-    : src.alreadyFahrenheit === false
-    ? cToF(src.temp)
-    : src.temp;
-
- const dew =
-  src.dewPoint == null
-    ? null
-    : src.alreadyFahrenheit === false
-    ? cToF(src.dewPoint)
-    : src.dewPoint;
-
+  // src.temp and src.dewPoint are ALWAYS Fahrenheit here
+  const temp = src.temp ?? 0;
+  const dew = src.dewPoint ?? 0;
   const wind = src.windSpeed ?? 0;
   const windDir = src.windDir ?? "";
   const timestamp = src.obsTimeLocal ?? Date.now();
 
   const elev = computeSolarElevation(timestamp, LOCATION.lat, LOCATION.lon);
+  const feelsLike = computeWindChill(temp, wind);
 
-  const feelsLike =
-    temp != null ? computeWindChill(temp, wind) : null;
+  const comfortScore = computeComfortScore(temp, dew, wind, elev, windDir);
+
+  const precipOverride = fallingPrecipFeel(intel);
+  if (precipOverride) {
+    return {
+      ...precipOverride,
+      comfortScore,
+      label: getComfortLabel(comfortScore),
+      color: getComfortColor(comfortScore),
+      feelsLike
+    };
+  }
 
    const comfortScore =
   temp != null
