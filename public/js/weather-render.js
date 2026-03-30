@@ -195,15 +195,28 @@ function renderHumanActionExpanded(todayIntel, tomorrowIntel) {
   const todayPanel = $("expanded-today");
   const tomorrowPanel = $("expanded-tomorrow");
 
-  if (todayIntel && todayPanel) {
-    todayPanel.innerHTML = `
+  const buildBlock = (label, intel) => {
+    if (!intel || !intel.snapshot) return "";
+
+    const s = intel.snapshot;
+
+    const high = intel.high ?? s.temp ?? null;
+    const low  = intel.low  ?? null;
+
+    const dewPoint   = s.dewpoint ?? null;
+    const windSpeed  = s.windSpeed ?? null;
+    const windGust   = s.windGust ?? null;
+    const precipType = s.precipType ?? intel.precipType ?? "";
+    const precipChance = intel.precipChance ?? null;
+
+    return `
       <div class="fx-section">
-        <div class="fx-label">Today’s Forecast</div>
+        <div class="fx-label">${label}</div>
         <div class="fx-grid">
           <div class="fx-tile">
             <div class="fx-top">
-              ${todayIntel.high != null && todayIntel.low != null
-                ? `${Math.round(todayIntel.high)}° / ${Math.round(todayIntel.low)}°`
+              ${high != null
+                ? `${Math.round(high)}°${low != null ? " / " + Math.round(low) + "°" : ""}`
                 : "--"}
             </div>
             <div class="fx-sub">High / Low</div>
@@ -211,76 +224,40 @@ function renderHumanActionExpanded(todayIntel, tomorrowIntel) {
           </div>
           <div class="fx-tile">
             <div class="fx-top">
-              ${todayIntel.dewPoint != null ? `${Math.round(todayIntel.dewPoint)}°` : "--"}
+              ${dewPoint != null ? `${Math.round(dewPoint)}°` : "--"}
             </div>
             <div class="fx-sub">Dew Point</div>
             <div class="fx-label">Moisture</div>
           </div>
           <div class="fx-tile">
             <div class="fx-top">
-              ${todayIntel.windSpeed != null ? `${Math.round(todayIntel.windSpeed)} mph` : "--"}
+              ${windSpeed != null ? `${Math.round(windSpeed)} mph` : "--"}
             </div>
             <div class="fx-sub">
-              ${todayIntel.windGust != null ? `Gusts ${Math.round(todayIntel.windGust)} mph` : ""}
+              ${windGust != null ? `Gusts ${Math.round(windGust)} mph` : ""}
             </div>
             <div class="fx-label">Wind</div>
           </div>
           <div class="fx-tile">
             <div class="fx-top">
-              ${todayIntel.precipChance != null ? `${todayIntel.precipChance}%` : "--"}
+              ${precipChance != null ? `${precipChance}%` : "--"}
             </div>
             <div class="fx-sub">
-              ${todayIntel.precipType ?? ""}
+              ${precipType}
             </div>
             <div class="fx-label">Precipitation</div>
           </div>
         </div>
       </div>
     `;
+  };
+
+  if (todayPanel) {
+    todayPanel.innerHTML = buildBlock("Today’s Forecast", todayIntel);
   }
 
-  if (tomorrowIntel && tomorrowPanel) {
-    tomorrowPanel.innerHTML = `
-      <div class="fx-section">
-        <div class="fx-label">Tomorrow’s Forecast</div>
-        <div class="fx-grid">
-          <div class="fx-tile">
-            <div class="fx-top">
-              ${tomorrowIntel.high != null && tomorrowIntel.low != null
-                ? `${Math.round(tomorrowIntel.high)}° / ${Math.round(tomorrowIntel.low)}°`
-                : "--"}
-            </div>
-            <div class="fx-sub">High / Low</div>
-            <div class="fx-label">Temperature</div>
-          </div>
-          <div class="fx-tile">
-            <div class="fx-top">
-              ${tomorrowIntel.dewPoint != null ? `${Math.round(tomorrowIntel.dewPoint)}°` : "--"}
-            </div>
-            <div class="fx-sub">Dew Point</div>
-            <div class="fx-label">Moisture</div>
-          </div>
-          <div class="fx-tile">
-            <div class="fx-top">
-              ${tomorrowIntel.windSpeed != null ? `${Math.round(tomorrowIntel.windSpeed)} mph` : "--"}
-            </div>
-            <div class="fx-sub">
-              ${tomorrowIntel.windGust != null ? `Gusts ${Math.round(tomorrowIntel.windGust)} mph` : ""}
-            </div>
-            <div class="fx-label">Wind</div>
-          </div>
-          <div class="fx-tile">
-            <div class="fx-top">
-              ${tomorrowIntel.precipChance != null ? `${tomorrowIntel.precipChance}%` : "--"}
-            </div>
-            <div class="fx-sub">
-              ${tomorrowIntel.precipType ?? ""}
-            </div>
-            <div class="fx-label">Precipitation</div>
-          </div>
-        </div>
-      </div>
-    `;
+  if (tomorrowPanel) {
+    tomorrowPanel.innerHTML = buildBlock("Tomorrow’s Forecast", tomorrowIntel);
   }
 }
 
@@ -292,12 +269,14 @@ function renderComfortNow(container, comfort, bestWindow) {
   console.log("🟠 COMFORT NOW INPUT:", comfort);
   console.log("🟠 COMFORT BEST WINDOW:", bestWindow);
 
-  // Time-aware label
   const hour = new Date().getHours();
   let periodLabel = "Today";
   if (hour >= 15) periodLabel = "Tonight";
   if (hour >= 18) periodLabel = "This Evening";
   if (hour < 6)  periodLabel = "Early Morning";
+
+  const mainLine = comfort.line1 || comfort.summary || comfort.label;
+  const subLine  = comfort.line2 || "";
 
   container.innerHTML = `
     <div class="comfort-module fade-in">
@@ -306,7 +285,7 @@ function renderComfortNow(container, comfort, bestWindow) {
 
         <div class="comfort-text-block">
           <div class="comfort-label">${periodLabel} Comfort</div>
-          <div class="comfort-text">${comfort.label}</div>
+          <div class="comfort-text">${mainLine}</div>
           <div class="comfort-sub">${comfort.comfortScore} / 100</div>
         </div>
       </div>
@@ -326,6 +305,10 @@ function renderComfortNow(container, comfort, bestWindow) {
           <span class="comfort-expand-label">Wind</span>
           <span class="comfort-expand-value">${comfort.wind ?? "--"} mph</span>
         </div>
+
+        ${subLine
+          ? `<div class="comfort-extra-line">${subLine}</div>`
+          : ""}
 
         ${
           bestWindow
@@ -379,16 +362,17 @@ function renderFutureComfort(container, items) {
 
       <div class="next6-strip">
         ${items
-          .map(
-            h => `
-          <div class="next6-hour">
-            <div class="next6-hour-label">${h.hourLabel}</div>
-            <div class="next6-hour-emoji">${h.emoji}</div>
-            <div class="next6-hour-temp">${Math.round(h.temp)}°</div>
-            <div class="next6-hour-factor">${h.label}</div>
-          </div>
-        `
-          )
+          .map(h => {
+            const temp = h.temp != null && !isNaN(h.temp) ? Math.round(h.temp) : "--";
+            return `
+              <div class="next6-hour">
+                <div class="next6-hour-label">${h.hourLabel}</div>
+                <div class="next6-hour-emoji">${h.emoji}</div>
+                <div class="next6-hour-temp">${temp}°</div>
+                <div class="next6-hour-factor">${h.label}</div>
+              </div>
+            `;
+          })
           .join("")}
       </div>
     </div>
@@ -452,14 +436,17 @@ function findBestComfortWindow(hourlyNormalized, computeComfortFn, windowSize = 
       const idx = start + i;
       const h = hourlyNormalized[idx];
 
+      const tempF = h.temperature != null ? cToF(h.temperature) : null;
+      const dewF  = h.dewpoint != null ? cToF(h.dewpoint) : null;
+
       const intelForHour = {
         tempest: null,
         wu: {
-          temp: h.temp,
-          dewPoint: h.dew ?? h.dewPoint ?? null,
-          windSpeed: h.windSpeed,
+          temp: tempF,
+          dewPoint: dewF,
+          windSpeed: h.wind_speed ?? 0,
           windDir: h.windDir ?? h.windDirection ?? "",
-          obsTimeLocal: h.time
+          obsTimeLocal: h.timestamp
         },
         hourly: hourlyNormalized
       };
@@ -468,11 +455,11 @@ function findBestComfortWindow(hourlyNormalized, computeComfortFn, windowSize = 
       sum += c.comfortScore;
 
       hours.push({
-        time: h.time,
-        hourLabel: h.time ? formatHourLabel(h.time) : `+${i}h`,
+        time: h.timestamp,
+        hourLabel: h.timestamp ? formatHourLabel(h.timestamp) : `+${i}h`,
         comfortScore: c.comfortScore,
         emoji: c.emoji,
-        temp: h.temp,
+        temp: tempF,
         label: c.label
       });
     }

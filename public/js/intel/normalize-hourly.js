@@ -29,7 +29,6 @@ export function normalizeOpenMeteo(hourly) {
     const apparent = num(pick("apparent_temperature")) ?? temp;
 
     out.push({
-      // EXACT FIELDS HUMAN-ACTION EXPECTS
       temperature: temp,
       apparent_temperature: apparent,
       dewpoint: dew,
@@ -42,7 +41,6 @@ export function normalizeOpenMeteo(hourly) {
       visibility,
       cloud_cover: cloud,
 
-      // RISKS (safe defaults)
       smoke_index: 0,
       frost_risk: temp != null && dew != null && temp <= 37 && dew <= 36 ? 0.6 : temp != null && temp <= 34 ? 1 : 0,
       freeze_risk: temp != null && temp <= 32 ? 1 : temp != null && temp <= 34 ? 0.5 : 0,
@@ -57,3 +55,4 @@ export function normalizeOpenMeteo(hourly) {
 
   return out;
 }
+
