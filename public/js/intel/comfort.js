@@ -232,32 +232,30 @@ function pickComfortEmoji(state) {
 // ------------------------------------------------------------
 // ⭐ MAIN ENGINE — TEMPEST-FIRST
 // ------------------------------------------------------------
-export function computeComfort(intel) {
-  const src = intel.tempest ?? intel.wu ?? {};
-  const sky = intel.sky ?? {};
-
-  let temp;
+let temp;
 let dew;
 
 if (src.alreadyFahrenheit) {
-  temp = src.temp ?? 0;
-  dew  = src.dewPoint ?? 0;
+  temp = src.temp ?? null;
+  dew  = src.dewPoint ?? null;
 } else {
-  // Tempest + WU path (C → F conversion)
-  temp = src.temp != null ? cToF(src.temp) : 0;
-  dew  = src.dewPoint != null ? cToF(src.dewPoint) : 0;
+  temp = src.temp != null ? cToF(src.temp) : null;
+  dew  = src.dewPoint != null ? cToF(src.dewPoint) : null;
 }
 
+const wind = src.windSpeed ?? 0;
+const windDir = src.windDir ?? "";
+const timestamp = src.obsTimeLocal ?? Date.now();
 
-  const wind = src.windSpeed ?? 0;
-  const windDir = src.windDir ?? "";
-  const timestamp = src.obsTimeLocal ?? Date.now();
+const elev = computeSolarElevation(timestamp, LOCATION.lat, LOCATION.lon);
 
-  const elev = computeSolarElevation(timestamp, LOCATION.lat, LOCATION.lon);
-  const feelsLike = computeWindChill(temp, wind);
+const feelsLike =
+  temp != null ? computeWindChill(temp, wind) : null;
 
-  const comfortScore = computeComfortScore(temp, dew, wind, elev, windDir);
-
+const comfortScore =
+  temp != null && dew != null
+    ? computeComfortScore(temp, dew, wind, elev, windDir)
+    : null;
   const precipOverride = fallingPrecipFeel(intel);
   if (precipOverride) {
     return {
@@ -268,6 +266,9 @@ if (src.alreadyFahrenheit) {
       feelsLike
     };
   }
+
+  // (rest of your function continues unchanged…)
+
 
   let state = "mild";
   if (feelsLike <= 32) state = "cold";
@@ -356,17 +357,17 @@ export function buildFutureComfort(hourlyNormalized, computeComfortFn = computeC
     const h = hourlyNormalized[idx];
 
     // Build intel object for computeComfort()
-    const intelForHour = {
+const intelForHour = {
+  const intelForHour = {
   tempest: null,
-wu: {
-  temp: tempF,
-  dewPoint: dewF,
-  windSpeed: h.wind_speed,
-  windDir: h.wind_dir,
-  obsTimeLocal: h.timestamp,
-  alreadyFahrenheit: true
-}
-
+  wu: {
+    temp: h.temperature,
+    dewPoint: h.dewpoint,
+    windSpeed: h.wind_speed,
+    windDir: h.wind_dir,
+    obsTimeLocal: h.timestamp,
+    alreadyFahrenheit: true
+  },
   hourly: null
 };
 
