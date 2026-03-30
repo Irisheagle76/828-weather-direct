@@ -1,6 +1,6 @@
 // /js/weather-render.js
 // ============================================================
-// WEATHER RENDERER — CLEAN REWRITE (SECTION A)
+// WEATHER RENDERER — CLEAN REWRITE (Render 6.0)
 // ============================================================
 
 import { fetchAllIntel } from "./weather-fetch.js";
@@ -27,8 +27,18 @@ function $(id) {
   return document.getElementById(id);
 }
 
+function getTodayLabelFromLocalTime() {
+  const now = new Date();
+  const hour = now.getHours();
+
+  if (hour < 12) return "This Morning’s Outlook";
+  if (hour < 17) return "This Afternoon’s Outlook";
+  if (hour < 21) return "This Evening’s Outlook";
+  return "Tonight’s Outlook";
+}
+
 // ------------------------------------------------------------
-// CURRENT OBSERVATIONS
+// CURRENT OBSERVATIONS (CO‑2B COMPACT GRID)
 // ------------------------------------------------------------
 
 function renderCurrentObservations(raw) {
@@ -75,13 +85,60 @@ function renderCurrentObservations(raw) {
     h?.uv_index?.[0] ??
     0;
 
-  $("wu-temp").textContent = temp != null ? `${Math.round(temp)}°` : "--";
-  $("wu-feels").textContent = feels != null ? `Feels like ${Math.round(feels)}°` : "Feels like --";
-  $("wu-dew").textContent = dew != null ? `${Math.round(dew)}°` : "--";
-  $("wu-humidity").textContent = humidity != null ? `Humidity ${Math.round(humidity)}%` : "Humidity --";
-  $("wu-wind").textContent = wind != null ? `${Math.round(wind)} mph` : "--";
-  $("wu-wind-gust").textContent = gust != null ? `Gusts ${Math.round(gust)} mph` : "Gusts --";
-  $("wu-uv").textContent = uv != null ? `${Math.round(uv)}` : "--";
+  // Compact 2‑column layout with full labels (CO‑2B)
+  const container = $("current-obs-grid");
+  if (container) {
+    container.innerHTML = `
+      <div class="obs-row">
+        <div class="obs-cell">
+          <span class="obs-label">Temperature:</span>
+          <span class="obs-value">${temp != null ? `${Math.round(temp)}°` : "--"}</span>
+        </div>
+        <div class="obs-cell">
+          <span class="obs-label">Feels like:</span>
+          <span class="obs-value">${feels != null ? `${Math.round(feels)}°` : "--"}</span>
+        </div>
+      </div>
+
+      <div class="obs-row">
+        <div class="obs-cell">
+          <span class="obs-label">Wind:</span>
+          <span class="obs-value">${wind != null ? `${Math.round(wind)} mph` : "--"}</span>
+        </div>
+        <div class="obs-cell">
+          <span class="obs-label">Gusts:</span>
+          <span class="obs-value">${gust != null ? `${Math.round(gust)} mph` : "--"}</span>
+        </div>
+      </div>
+
+      <div class="obs-row">
+        <div class="obs-cell">
+          <span class="obs-label">Dew Point:</span>
+          <span class="obs-value">${dew != null ? `${Math.round(dew)}°` : "--"}</span>
+        </div>
+        <div class="obs-cell">
+          <span class="obs-label">Humidity:</span>
+          <span class="obs-value">${humidity != null ? `${Math.round(humidity)}%` : "--"}</span>
+        </div>
+      </div>
+
+      <div class="obs-row">
+        <div class="obs-cell">
+          <span class="obs-label">UV Index:</span>
+          <span class="obs-value">${uv != null ? `${Math.round(uv)}` : "--"}</span>
+        </div>
+      </div>
+    `;
+  } else {
+    // Fallback to legacy text nodes if grid container not present
+    $("wu-temp").textContent = temp != null ? `${Math.round(temp)}°` : "--";
+    $("wu-feels").textContent = feels != null ? `Feels like ${Math.round(feels)}°` : "Feels like --";
+    $("wu-dew").textContent = dew != null ? `${Math.round(dew)}°` : "--";
+    $("wu-humidity").textContent = humidity != null ? `Humidity ${Math.round(humidity)}%` : "Humidity --";
+    $("wu-wind").textContent = wind != null ? `${Math.round(wind)} mph` : "--";
+    $("wu-wind-gust").textContent = gust != null ? `Gusts ${Math.round(gust)} mph` : "Gusts --";
+    $("wu-uv").textContent = uv != null ? `${Math.round(uv)}` : "--";
+  }
 }
 
 // ------------------------------------------------------------
@@ -148,7 +205,7 @@ function mapToLegacyFields(period) {
 // ------------------------------------------------------------
 
 function renderHumanAction(today, tomorrow) {
-  $("today-header").textContent = "Today’s Outlook";
+  $("today-header").textContent = getTodayLabelFromLocalTime();
   $("today-emoji").textContent = today.emoji;
   $("today-headline").textContent = today.title;
   $("today-text").textContent = today.notes;
@@ -179,13 +236,13 @@ function renderHumanActionExpanded(todayIntel, tomorrowIntel) {
       low  = intel.stats.tempMin ?? s.temp ?? null;
     } else {
       const nextHours = window._hourly?.slice(0, 12) ?? [];
-      const temps = nextHours.map(h => h.temperature).filter(t => t != null);
+      const temps = nextHours.map(h => h.temperatureF ?? h.temperature).filter(t => t != null);
 
       high = temps.length ? Math.max(...temps) : s.temp;
       low  = temps.length ? Math.min(...temps) : s.temp;
     }
 
-    const dew = s.dewpoint ?? null;
+    const dew = s.dewPoint ?? s.dewpoint ?? null;
     const wind = s.windSpeed ?? null;
     const gust = s.windGust ?? null;
     const precipType = s.precipType ?? intel.precipType ?? "";
@@ -230,6 +287,14 @@ function renderHumanActionExpanded(todayIntel, tomorrowIntel) {
 
 function renderComfortNow(container, comfort, bestWindow) {
   const mainLine = comfort.title || comfort.label || "Comfort overview";
+  const scoreLine =
+    comfort.comfortScore != null
+      ? `${Math.round(comfort.comfortScore)} / 100`
+      : "-- / 100";
+
+  const explainer =
+    comfort.scoreExplainer ||
+    "Comfort Score blends temperature, dew point, humidity, wind, and sun angle into a 0–100 scale (higher is better).";
 
   container.innerHTML = `
     <div class="comfort-module module-card">
@@ -241,7 +306,10 @@ function renderComfortNow(container, comfort, bestWindow) {
           <div class="comfort-category">${comfort.category || ""}</div>
           <div class="comfort-text">${mainLine}</div>
           <div class="comfort-sub">
-            ${comfort.comfortScore != null ? `${Math.round(comfort.comfortScore)} / 100` : "-- / 100"}
+            ${scoreLine}
+          </div>
+          <div class="comfort-explainer">
+            ${explainer}
           </div>
         </div>
       </div>
@@ -583,7 +651,10 @@ export async function renderWeather({
       : [],
     emoji: comfortNarrative.emoji ?? comfortNow.emoji ?? "🌤️",
     longNarrative:
-      comfortNarrative.main ?? comfortNow.line2 ?? ""
+      comfortNarrative.main ?? comfortNow.line2 ?? "",
+    scoreExplainer:
+      comfortNow.scoreExplainer ??
+      "Comfort Score blends temperature, dew point, humidity, wind, and sun angle into a 0–100 scale (higher is better)."
   };
 
   // ------------------------------------------------------------

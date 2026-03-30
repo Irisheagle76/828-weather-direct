@@ -1,4 +1,8 @@
 // /intel/comfort.js
+// ============================================================
+// COMFORT ENGINE — v2.8 (Stable, Drift-Proof, HA2.0 Compatible)
+// ============================================================
+
 import { LOCATION } from "/js/config/location.js";
 
 // ------------------------------------------------------------
@@ -241,15 +245,14 @@ function pickComfortEmoji(state) {
 // ------------------------------------------------------------
 export function computeComfort(intel) {
   const src = intel.tempest ?? intel.wu ?? {};
-  const temp = src.temp ?? null;          // Fahrenheit
-  const dewRaw = src.dewPoint ?? null;    // Fahrenheit
+  const temp = src.temp ?? null;
+  const dewRaw = src.dewPoint ?? null;
 
-    // 🔍 DEBUG GUARD — catch unit corruption early
+  // Guardrail for bad inputs
   if (temp != null && (temp > 120 || temp < -40)) {
     console.warn("BAD TEMP INPUT", { temp, src });
+  }
 
- }
- 
   const wind = src.windSpeed ?? 0;
   const windDir = src.windDir ?? "";
   const timestamp = src.obsTimeLocal ?? Date.now();
@@ -257,7 +260,7 @@ export function computeComfort(intel) {
   const elev = computeSolarElevation(timestamp, LOCATION.lat, LOCATION.lon);
   const feelsLike = computeWindChill(temp, wind);
 
-  // Fallback dew if missing: ~20°F below temp
+  // Fallback dew if missing
   const dew = dewRaw != null ? dewRaw : (temp != null ? temp - 20 : null);
 
   const comfortScore =
@@ -265,6 +268,7 @@ export function computeComfort(intel) {
       ? computeComfortScore(temp, dew, wind, elev, windDir)
       : null;
 
+  // Precip override
   const precipOverride = fallingPrecipFeel(intel);
   if (precipOverride) {
     return {
@@ -272,7 +276,11 @@ export function computeComfort(intel) {
       comfortScore,
       label: getComfortLabel(comfortScore),
       color: getComfortColor(comfortScore),
-      feelsLike
+      feelsLike,
+      temp,
+      dewpoint: dew,
+      scoreExplainer:
+        "Comfort Score blends temperature, dew point, humidity, wind, and sun angle into a 0–100 scale (higher is better)."
     };
   }
 
@@ -343,7 +351,9 @@ export function computeComfort(intel) {
     color: getComfortColor(comfortScore),
     feelsLike,
     temp,
-    dewpoint: dew
+    dewpoint: dew,
+    scoreExplainer:
+      "Comfort Score blends temperature, dew point, humidity, wind, and sun angle into a 0–100 scale (higher is better)."
   };
 }
 
@@ -372,8 +382,8 @@ export function buildFutureComfort(
 
     const intelForHour = {
       wu: {
-        temp: h.temperatureF ?? null,      // Fahrenheit from normalization
-        dewPoint: h.dewpointF ?? null,     // Fahrenheit from normalization
+        temp: h.temperatureF ?? null,
+        dewPoint: h.dewpointF ?? null,
         windSpeed: h.wind_speed ?? 0,
         windDir: h.wind_dir ?? "",
         obsTimeLocal: h.timestamp

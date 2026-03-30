@@ -1,6 +1,6 @@
 // /intel/human-action-intel-builder.js
 // ============================================================
-// HUMAN-ACTION INTEL BUILDER — Raw → Snapshots → Engine
+// HUMAN-ACTION INTEL BUILDER — HA 2.1 (Today Blend + HA2.0 Tomorrow)
 // ============================================================
 
 import { evaluateHumanActionFactors } from "../modules/human-action-2/core-engine.js";
@@ -10,15 +10,13 @@ import { normalizeOpenMeteo } from "./normalize-hourly.js";
 // SYNTHESIZER SAFETY WRAPPER
 // ------------------------------------------------------------
 function ensureSynthFields(intel, snapshot) {
-  const base = intel ?? {};   // ← prevents spreading undefined/null
+  const base = intel ?? {};
 
   return {
-    // Spread AFTER defaults so intel cannot overwrite required fields
     factors: Array.isArray(base.factors) ? base.factors : [],
     precipType: base.precipType ?? snapshot?.precipType ?? "none",
     precipChance: base.precipChance ?? 0,
     snapshot: snapshot ?? base.snapshot ?? {},
-
     ...base
   };
 }
@@ -33,49 +31,140 @@ export function buildHumanActionIntel(raw) {
   }
 
   const hourly = normalizeOpenMeteo(raw.hourly);
-
   if (!hourly.length) {
     console.error("Normalized hourly empty");
     return { today: null, tomorrow: null };
   }
 
-// TODAY — closest hour to now
-const now = Date.now();
-const current = hourly.find(h => h.timestamp >= now) || hourly[0];
+  const now = Date.now();
+  const currentIndex = hourly.findIndex(h => h.timestamp >= now);
+  const idx = currentIndex === -1 ? 0 : currentIndex;
 
-const todaySnapshot = normalizeSnapshot(current);
+  // ------------------------------------------------------------
+  // TODAY — current hour + next 3 hours blended (A1)
+  // ------------------------------------------------------------
+  const todayHours = hourly.slice(idx, idx + 4);
+  const todaySnapshot = blendHours(todayHours);
 
-// ensure evaluateHumanActionFactors() cannot break the pipeline
-const todayIntelRaw = evaluateHumanActionFactors(todaySnapshot) || {};
+  const todayIntelRaw = evaluateHumanActionFactors(todaySnapshot) || {};
+  const todayIntel = ensureSynthFields(todayIntelRaw, todaySnapshot);
 
-// enforce synthesizer-safe fields
-const todayIntel = ensureSynthFields(todayIntelRaw, todaySnapshot);
+  // ------------------------------------------------------------
+  // TOMORROW — HA 2.0 morning/afternoon hybrid
+  // ------------------------------------------------------------
+  const tomorrowBundle = buildTomorrowSnapshots(hourly);
 
-// TOMORROW — morning + afternoon hybrid
-const tomorrowBundle = buildTomorrowSnapshots(hourly);
+  const tomorrowSnapshot =
+    tomorrowBundle.afternoon ??
+    tomorrowBundle.morning ??
+    blendHours(hourly.slice(24, 28));
 
-const tomorrowSnapshot =
-  tomorrowBundle.afternoon ??
-  tomorrowBundle.morning ??
-  normalizeSnapshot(hourly[24]); // fallback
+  const tomorrowIntelRaw = evaluateHumanActionFactors(tomorrowSnapshot) || {};
+  const tomorrowIntel = {
+    ...ensureSynthFields(tomorrowIntelRaw, tomorrowSnapshot),
+    stats: tomorrowBundle.stats
+  };
 
-// same protection for tomorrow
-const tomorrowIntelRaw = evaluateHumanActionFactors(tomorrowSnapshot) || {};
-
-const tomorrowIntel = {
-  ...ensureSynthFields(tomorrowIntelRaw, tomorrowSnapshot),
-  stats: tomorrowBundle.stats
-};
-
-return {
-  today: todayIntel,
-  tomorrow: tomorrowIntel
-};
-
+  return {
+    today: todayIntel,
+    tomorrow: tomorrowIntel
+  };
 }
 
 // ------------------------------------------------------------
-// NORMALIZE A SINGLE SNAPSHOT
+// BLEND HOURS (A1)
+// ------------------------------------------------------------
+function blendHours(hours) {
+  if (!hours || !hours.length) return null;
+
+  const avg = key =>
+    hours.reduce((a, h) => a + (h[key] ?? 0), 0) / hours.length;
+
+  return {
+    temp: avg("temperatureF"),
+    feelsLike: avg("apparentF"),
+    dewPoint: avg("dewpointF"),
+    humidity: avg("relative_humidity"),
+    windSpeed: avg("wind_speed"),
+    windGust: avg("wind_gust"),
+    precipType:
+      avg("precipitation") > 0
+        ? (avg("snowfall") > 0 ? "snow" : "rain")
+        : "none",
+    precipIntensity: avg("precipitation"),
+    uvIndex: avg("uv_index"),
+    visibility: avg("visibility"),
+    cloudCover: avg("cloud_cover"),
+    smokeIndex: avg("smoke_index"),
+    frostRisk: avg("frost_risk"),
+    freezeRisk: avg("freeze_risk"),
+    inversionRisk: avg("inversion_risk"),
+    blackIceRisk: avg("black_ice_risk"),
+    valleyFogRisk: avg("valley_fog_risk"),
+    ridgeFogRisk: avg("ridge_fog_risk"),
+    timestamp: hours[0].timestamp
+  };
+}
+
+// ------------------------------------------------------------
+// TOMORROW SNAPSHOTS (HA 2.0)
+// ------------------------------------------------------------
+function buildTomorrowSnapshots(hourly) {
+  const tomorrowHours = hourly.slice(24, 48);
+
+  if (!tomorrowHours.length) {
+    return {
+      morning: null,
+      afternoon: null,
+      stats: {}
+    };
+  }
+
+  const morning = averageWindow(tomorrowHours.slice(0, 6));
+  const afternoon = averageWindow(tomorrowHours.slice(6, 12));
+  const stats = computeTomorrowStats(tomorrowHours);
+
+  return {
+    morning: normalizeSnapshot(morning),
+    afternoon: normalizeSnapshot(afternoon),
+    stats
+  };
+}
+
+// ------------------------------------------------------------
+// SAFE AVERAGE WINDOW
+// ------------------------------------------------------------
+function averageWindow(hours) {
+  if (!hours || !hours.length) return null;
+
+  const avg = key =>
+    hours.reduce((a, h) => a + (h[key] ?? 0), 0) / hours.length;
+
+  return {
+    temperatureF: avg("temperatureF"),
+    apparentF: avg("apparentF"),
+    dewpointF: avg("dewpointF"),
+    relative_humidity: avg("relative_humidity"),
+    wind_speed: avg("wind_speed"),
+    wind_gust: avg("wind_gust"),
+    precipitation: avg("precipitation"),
+    snowfall: avg("snowfall"),
+    uv_index: avg("uv_index"),
+    visibility: avg("visibility"),
+    cloud_cover: avg("cloud_cover"),
+    smoke_index: avg("smoke_index"),
+    frost_risk: avg("frost_risk"),
+    freeze_risk: avg("freeze_risk"),
+    inversion_risk: avg("inversion_risk"),
+    black_ice_risk: avg("black_ice_risk"),
+    valley_fog_risk: avg("valley_fog_risk"),
+    ridge_fog_risk: avg("ridge_fog_risk"),
+    timestamp: hours[0].timestamp
+  };
+}
+
+// ------------------------------------------------------------
+// NORMALIZE SNAPSHOT
 // ------------------------------------------------------------
 function normalizeSnapshot(h) {
   if (!h) return null;
@@ -107,95 +196,12 @@ function normalizeSnapshot(h) {
 }
 
 // ------------------------------------------------------------
-// TOMORROW SNAPSHOTS
-// ------------------------------------------------------------
-function buildTomorrowSnapshots(hourly) {
-  const tomorrowHours = hourly.slice(24, 48);
-
-  if (!tomorrowHours.length) {
-    console.warn("No tomorrow hours available");
-    return {
-      morning: null,
-      afternoon: null,
-      stats: {}
-    };
-  }
-
-  const morning = averageWindow(tomorrowHours.slice(0, 6));
-  const afternoon = averageWindow(tomorrowHours.slice(6, 12));
-
-  const stats = computeTomorrowStats(tomorrowHours);
-
-  return {
-    morning: normalizeSnapshot(morning),
-    afternoon: normalizeSnapshot(afternoon),
-    stats
-  };
-}
-
-// ------------------------------------------------------------
-// SAFE AVERAGE WINDOW
-// ------------------------------------------------------------
-function averageWindow(hours) {
-  if (!hours || hours.length === 0) {
-    return {
-      temperatureF: null,
-      apparentF: null,
-      dewpointF: null,
-      relative_humidity: null,
-      wind_speed: 0,
-      wind_gust: 0,
-      precipitation: 0,
-      snowfall: 0,
-      uv_index: null,
-      visibility: null,
-      cloud_cover: null,
-      smoke_index: 0,
-      frost_risk: 0,
-      freeze_risk: 0,
-      inversion_risk: 0,
-      black_ice_risk: 0,
-      valley_fog_risk: 0,
-      ridge_fog_risk: 0,
-      timestamp: Date.now()
-    };
-  }
-
-  const avg = key =>
-    hours.reduce((a, h) => a + (h[key] ?? 0), 0) / hours.length;
-
-return {
-  temperatureF: avg("temperatureF"),
-  apparentF: avg("apparentF"),
-  dewpointF: avg("dewpointF"),
-
-    relative_humidity: avg("relative_humidity"),
-    wind_speed: avg("wind_speed"),
-    wind_gust: avg("wind_gust"),
-    precipitation: avg("precipitation"),
-    snowfall: avg("snowfall"),
-    uv_index: avg("uv_index"),
-    visibility: avg("visibility"),
-    cloud_cover: avg("cloud_cover"),
-    smoke_index: avg("smoke_index"),
-    frost_risk: avg("frost_risk"),
-    freeze_risk: avg("freeze_risk"),
-    inversion_risk: avg("inversion_risk"),
-    black_ice_risk: avg("black_ice_risk"),
-    valley_fog_risk: avg("valley_fog_risk"),
-    ridge_fog_risk: avg("ridge_fog_risk"),
-
-    timestamp: hours[0].timestamp
-  };
-}
-
-// ------------------------------------------------------------
 // TOMORROW STATS
 // ------------------------------------------------------------
 function computeTomorrowStats(hours) {
   if (!hours || !hours.length) return {};
 
- const temps = hours.map(h => h.temperatureF ?? 0);
+  const temps = hours.map(h => h.temperatureF ?? 0);
   const gusts = hours.map(h => h.wind_gust ?? 0);
   const winds = hours.map(h => h.wind_speed ?? 0);
 
@@ -207,7 +213,7 @@ function computeTomorrowStats(hours) {
   const windAvg = winds.reduce((a, b) => a + b, 0) / winds.length;
 
   const dewpointAvg =
-    hours.reduce((a, h) => a + (h.dewpoint ?? 0), 0) / hours.length;
+    hours.reduce((a, h) => a + (h.dewpointF ?? 0), 0) / hours.length;
 
   const cloudAvg =
     hours.reduce((a, h) => a + (h.cloud_cover ?? 0), 0) / hours.length;
