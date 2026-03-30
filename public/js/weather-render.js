@@ -265,31 +265,28 @@ function renderComfortNow(container, comfort, bestWindow) {
           bestWindow
             ? `
         <div class="comfort-expand-row" style="margin-top:0.6rem;">
-          <span class="comfort-expand-label">Best window (next ${bestWindow.hours.length} hrs)</span>
-          <span class="comfort-expand-value">
-            ${bestWindow.hours[0].hourLabel}–${bestWindow.hours[bestWindow.hours.length - 1].hourLabel}
-          </span>
-        </div>
+  <span class="comfort-expand-label">Best window (next ${bestWindow.hours.length} hrs)</span>
+  <span class="comfort-expand-value">
+    ${bestWindow.hours[0].hourLabel}–${bestWindow.hours.at(-1).hourLabel}
+  </span>
+</div>
 
-        <div class="fc-strip">
-          ${bestWindow.hours
-            .map(
-              h => `
-            <div class="fc-hour">
-              <div class="fc-hour-label">${h.hourLabel}</div>
-              <div class="fc-hour-main">
-                <span class="fc-hour-emoji">${h.emoji}</span>
-                <span class="fc-hour-temp">${h.temp != null ? `${Math.round(h.temp)}°` : "--"}</span>
-              </div>
-              <div class="fc-hour-extra">
-                <span class="fc-hour-score">${Math.round(h.comfortScore)}/100</span>
-                <span class="fc-hour-label-text">${h.label}</span>
-              </div>
-            </div>
-          `
-            )
-            .join("")}
-        </div>
+<div class="fc-strip">
+  ${bestWindow.hours.map(h => `
+    <div class="fc-hour">
+      <div class="fc-hour-label">${h.hourLabel}</div>
+      <div class="fc-hour-main">
+        <span class="fc-hour-emoji">${h.emoji}</span>
+        <span class="fc-hour-temp">${h.temp != null ? `${Math.round(h.temp)}°` : "--"}</span>
+      </div>
+      <div class="fc-hour-extra">
+        <span class="fc-hour-score">${Math.round(h.comfortScore)}/100</span>
+        <span class="fc-hour-label-text">${h.label}</span>
+      </div>
+    </div>
+  `).join("")}
+</div>
+
         `
             : ""
         }

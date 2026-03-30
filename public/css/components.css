@@ -158,6 +158,48 @@ h1, h2, h3 {
   margin-top: 1px;
 }
 
+/* Best Window Container */
+.fc-strip {
+  display: flex;
+  flex-direction: row;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+/* Hour Card */
+.fc-hour {
+  flex: 0 0 90px; /* fixed width for consistency */
+  background: rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 0.5rem;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+/* Hour Label */
+.fc-hour-label {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  margin-bottom: 0.25rem;
+}
+
+/* Emoji + Temp */
+.fc-hour-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+/* Score + Label */
+.fc-hour-extra {
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
 
 /* ============================================================
    UTILITY CLASSES
