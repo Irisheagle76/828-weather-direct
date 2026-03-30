@@ -164,13 +164,10 @@ function averageWindow(hours) {
   const avg = key =>
     hours.reduce((a, h) => a + (h[key] ?? 0), 0) / hours.length;
 
-  const toF = c => (c * 9) / 5 + 32;
-
-  return {
-    // ✅ convert here — everything downstream stays Fahrenheit
-    temperatureF: toF(avg("temperature")),
-    apparentF: toF(avg("apparent_temperature")),
-    dewpointF: toF(avg("dewpoint")),
+return {
+  temperatureF: avg("temperatureF"),
+  apparentF: avg("apparentF"),
+  dewpointF: avg("dewpointF"),
 
     relative_humidity: avg("relative_humidity"),
     wind_speed: avg("wind_speed"),
@@ -198,7 +195,7 @@ function averageWindow(hours) {
 function computeTomorrowStats(hours) {
   if (!hours || !hours.length) return {};
 
-  const temps = hours.map(h => h.temperature ?? 0);
+ const temps = hours.map(h => h.temperatureF ?? 0);
   const gusts = hours.map(h => h.wind_gust ?? 0);
   const winds = hours.map(h => h.wind_speed ?? 0);
 
