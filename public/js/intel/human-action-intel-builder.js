@@ -39,32 +39,39 @@ export function buildHumanActionIntel(raw) {
     return { today: null, tomorrow: null };
   }
 
-  // TODAY — closest hour to now
-  const now = Date.now();
-  const current = hourly.find(h => h.timestamp >= now) || hourly[0];
+// TODAY — closest hour to now
+const now = Date.now();
+const current = hourly.find(h => h.timestamp >= now) || hourly[0];
 
-  const todaySnapshot = normalizeSnapshot(current);
-  const todayIntelRaw = evaluateHumanActionFactors(todaySnapshot);
-  const todayIntel = ensureSynthFields(todayIntelRaw, todaySnapshot);
+const todaySnapshot = normalizeSnapshot(current);
 
-  // TOMORROW — morning + afternoon hybrid
-  const tomorrowBundle = buildTomorrowSnapshots(hourly);
+// ensure evaluateHumanActionFactors() cannot break the pipeline
+const todayIntelRaw = evaluateHumanActionFactors(todaySnapshot) || {};
 
-  const tomorrowSnapshot =
-    tomorrowBundle.afternoon ??
-    tomorrowBundle.morning ??
-    normalizeSnapshot(hourly[24]); // fallback
+// enforce synthesizer-safe fields
+const todayIntel = ensureSynthFields(todayIntelRaw, todaySnapshot);
 
-  const tomorrowIntelRaw = evaluateHumanActionFactors(tomorrowSnapshot);
-  const tomorrowIntel = {
-    ...ensureSynthFields(tomorrowIntelRaw, tomorrowSnapshot),
-    stats: tomorrowBundle.stats
-  };
+// TOMORROW — morning + afternoon hybrid
+const tomorrowBundle = buildTomorrowSnapshots(hourly);
 
-  return {
-    today: todayIntel,
-    tomorrow: tomorrowIntel
-  };
+const tomorrowSnapshot =
+  tomorrowBundle.afternoon ??
+  tomorrowBundle.morning ??
+  normalizeSnapshot(hourly[24]); // fallback
+
+// same protection for tomorrow
+const tomorrowIntelRaw = evaluateHumanActionFactors(tomorrowSnapshot) || {};
+
+const tomorrowIntel = {
+  ...ensureSynthFields(tomorrowIntelRaw, tomorrowSnapshot),
+  stats: tomorrowBundle.stats
+};
+
+return {
+  today: todayIntel,
+  tomorrow: tomorrowIntel
+};
+
 }
 
 // ------------------------------------------------------------
