@@ -354,24 +354,28 @@ export function buildFutureComfort(hourlyNormalized, computeComfortFn = computeC
 
   const items = [];
 
-  for (let i = 0; i < 6; i++) {
-    const idx = startIndex + i;
-    if (idx >= hourlyNormalized.length) break;
+for (let i = 0; i < 6; i++) {
+  const idx = startIndex + i;
+  if (idx >= hourlyNormalized.length) break;
 
-    const h = hourlyNormalized[idx];
+  const h = hourlyNormalized[idx];
 
-    const intelForHour = {
-      tempest: null,
-      wu: {
-        temp: h.temperature,
-        dewPoint: h.dewpoint,
-        windSpeed: h.wind_speed,
-        windDir: h.wind_dir,
-        obsTimeLocal: h.timestamp,
-        alreadyFahrenheit: false
-      }
-    };
+  console.log("TEMP DEBUG", {
+    raw: h.temperature,
+    fahrenheit: cToF(h.temperature)
+  });
 
+  const intelForHour = {
+    wu: {
+      temp: h.temperature,
+      dewPoint: h.dewpoint,
+      windSpeed: h.wind_speed,
+      windDir: h.wind_dir,
+      obsTimeLocal: h.timestamp,
+      alreadyFahrenheit: false // <-- IMPORTANT FIX
+    }
+  };
+  
     const c = computeComfortFn(intelForHour);
 
     items.push({
