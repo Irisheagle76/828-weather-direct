@@ -123,41 +123,6 @@ h1, h2, h3 {
    CURRENT OBSERVATIONS — COMPACT MODULE CARD
    ============================================================ */
 
-.current-obs-card {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 12px;
-  padding: 0.9rem 1.1rem;
-  margin-bottom: 1.2rem;
-  box-shadow: var(--shadow-medium);
-  backdrop-filter: blur(6px);
-}
-
-.current-obs-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.6rem 1rem;
-}
-
-.current-obs-label {
-  font-size: 0.72rem;
-  opacity: 0.65;
-  margin-bottom: 2px;
-}
-
-.current-obs-value {
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: var(--text-bright);
-  line-height: 1.1;
-}
-
-.current-obs-sub {
-  font-size: 0.72rem;
-  opacity: 0.6;
-  margin-top: 1px;
-}
-
 /* Best Window Container */
 .fc-strip {
   display: flex;
@@ -198,6 +163,50 @@ h1, h2, h3 {
 .fc-hour-extra {
   font-size: 0.7rem;
   opacity: 0.8;
+}
+
+/* CURRENT OBS — COMPACT, QUIET, GLANCEABLE */
+#current-obs-wrapper {
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+}
+
+#current-obs-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem; /* tighter rows */
+}
+
+.obs-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.obs-cell {
+  display: flex;
+  justify-content: space-between;
+  width: 50%;
+  font-size: 0.85rem; /* smaller text */
+  line-height: 1.1;
+}
+
+.obs-label {
+  color: var(--text-muted, #999);
+  font-weight: 500;
+  margin-right: 0.25rem;
+  white-space: nowrap;
+}
+
+.obs-value {
+  color: var(--text-strong, #fff);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Reduce module-card shadow for this block only */
+#current-obs-wrapper.module-card {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
 }
 
 
