@@ -81,9 +81,9 @@ function normalizeSnapshot(h) {
   if (!h) return null;
 
   return {
-    temp: h.temperature,
+    temp: h.temperatureF,
     feelsLike: h.apparent_temperature ?? h.temperature,
-    dewpoint: h.dewpoint,
+    dewPoint: h.dewpointF,
     humidity: h.relative_humidity,
     windSpeed: h.wind_speed,
     windGust: h.wind_gust,
