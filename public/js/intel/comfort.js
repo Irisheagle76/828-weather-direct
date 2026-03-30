@@ -258,10 +258,10 @@ export function computeComfort(intel) {
   const feelsLike =
     temp != null ? computeWindChill(temp, wind) : null;
 
-  const comfortScore =
-    temp != null && dew != null
-      ? computeComfortScore(temp, dew, wind, elev, windDir)
-      : null;
+   const comfortScore =
+  temp != null
+    ? computeComfortScore(temp, dew ?? temp - 20, wind, elev, windDir)
+    : null;
 
   // Precip override
   const precipOverride = fallingPrecipFeel(intel);
@@ -368,7 +368,7 @@ export function buildFutureComfort(hourlyNormalized, computeComfortFn = computeC
         windSpeed: h.wind_speed,
         windDir: h.wind_dir,
         obsTimeLocal: h.timestamp,
-        alreadyFahrenheit: true
+        alreadyFahrenheit: false
       }
     };
 
