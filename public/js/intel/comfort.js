@@ -1,8 +1,10 @@
 // /intel/comfort.js
-// FULL HYBRID — Narrative Engine + Asheville Comfort Score
-// CLEAN REWRITE — Tempest-first ingestion + array-safe future comfort
-
 import { LOCATION } from "/js/config/location.js";
+
+// ------------------------------------------------------------
+// UTILS
+// ------------------------------------------------------------
+const cToF = c => (c * 9) / 5 + 32;
 
 // ------------------------------------------------------------
 // SOLAR ELEVATION
@@ -36,6 +38,8 @@ function computeSolarElevation(timestamp, lat, lon) {
 // DEW → RH
 // ------------------------------------------------------------
 function dewToRH(tempF, dewF) {
+  if (tempF == null || dewF == null) return null;
+
   const t = (tempF - 32) * 5/9;
   const d = (dewF - 32) * 5/9;
 
@@ -48,22 +52,23 @@ function dewToRH(tempF, dewF) {
 }
 
 // ------------------------------------------------------------
-// ASHEVILLE COMFORT SCORE
+// COMFORT SCORE (slight realism tweak: dryness weight reduced)
 // ------------------------------------------------------------
 function computeComfortScore(temp, dew, wind, elev, windDir) {
+  if (temp == null || dew == null) return null;
+
   const rh = dewToRH(temp, dew);
+  if (rh == null) return null;
 
-  const tIdeal = 70;
-  const tDiff = Math.abs(temp - tIdeal);
-  const tScore = Math.min(tDiff / 35, 1);
+  const tScore = Math.min(Math.abs(temp - 70) / 35, 1);
 
-  let drynessPenalty = 0;
-  if (rh < 25) drynessPenalty = 1;
-  else if (rh < 35) drynessPenalty = 0.75;
-  else if (rh < 45) drynessPenalty = 0.5;
-  else drynessPenalty = 0.2;
+  let drynessPenalty =
+    rh < 25 ? 1 :
+    rh < 35 ? 0.75 :
+    rh < 45 ? 0.5 : 0.2;
 
-  let windPenalty = Math.min(wind / 25, 1) * 0.4;
+  const w = typeof wind === "number" ? wind : 0;
+  let windPenalty = Math.min(w / 25, 1) * 0.4;
 
   const dir = String(windDir ?? "");
   if (dir.includes("W")) windPenalty += 0.2;
@@ -71,15 +76,13 @@ function computeComfortScore(temp, dew, wind, elev, windDir) {
   let solarBonus = 0;
   if (elev > 20 && temp < 75) solarBonus = 0.15;
 
-  let score =
+  const score =
     (tScore * 0.5) +
-    (drynessPenalty * 0.9) +
+    (drynessPenalty * 0.6) + // slight realism improvement
     windPenalty -
     solarBonus;
 
-  return Math.round(
-    Math.max(0, Math.min(100, 100 - (score * 100)))
-  );
+  return Math.round(Math.max(0, Math.min(100, 100 - (score * 100))));
 }
 
 // ------------------------------------------------------------
@@ -117,6 +120,7 @@ function computeWindChill(tempF, windMph) {
 // HUMIDITY FEEL
 // ------------------------------------------------------------
 function humidityFeel(dew) {
+  if (dew == null) return null;
   if (dew <= 40) return "Dry and comfortable.";
   if (dew <= 55) return "Humidity stays manageable.";
   if (dew <= 65) return "A bit humid at times.";
@@ -150,14 +154,14 @@ function isSolarHelpful(intel, elev) {
 }
 
 // ------------------------------------------------------------
-// PRECIP FEEL — TEMPEST-FIRST
+// PRECIP FEEL
 // ------------------------------------------------------------
 function fallingPrecipFeel(intel) {
   const src = intel.tempest ?? intel.wu ?? {};
   const rate = src.precipRate ?? 0;
   const type = src.precipType ?? "";
 
-  if (rate <= 0) return null;
+  if (!rate || rate <= 0) return null;
 
   if (type === "snow" && rate < 0.1)
     return { emoji: "❄️", summary: "Light snow falling — a wintry feel." };
@@ -200,11 +204,14 @@ function computeTempDropFeel(intel) {
   const hour = new Date(src.obsTimeLocal ?? Date.now()).getHours();
   if (hour < 11) return null;
 
-  const current = src.temp;
+  const current = src.temp ?? null;
+
   const high =
     intel?.humanAction?.today?.stats?.tempMax ??
     intel?.humanAction?.tomorrow?.stats?.tempMax ??
     current;
+
+  if (current == null || high == null) return null;
 
   const drop = high - current;
 
@@ -219,43 +226,44 @@ function computeTempDropFeel(intel) {
 // EMOJI PICKER
 // ------------------------------------------------------------
 function pickComfortEmoji(state) {
-  switch (state) {
-    case "cold": return "🥶";
-    case "cool": return "🧥";
-    case "mild": return "🙂";
-    case "warm": return "😌";
-    case "hot":  return "🥵";
-    default:     return "😐";
-  }
+  return {
+    cold: "🥶",
+    cool: "🧥",
+    mild: "🙂",
+    warm: "😌",
+    hot: "🥵"
+  }[state] ?? "😐";
 }
 
 // ------------------------------------------------------------
-// ⭐ MAIN ENGINE — TEMPEST-FIRST
+// ⭐ MAIN ENGINE
 // ------------------------------------------------------------
-let temp;
-let dew;
+export function computeComfort(intel) {
+  const src = intel.tempest ?? intel.wu ?? {};
 
-if (src.alreadyFahrenheit) {
-  temp = src.temp ?? null;
-  dew  = src.dewPoint ?? null;
-} else {
-  temp = src.temp != null ? cToF(src.temp) : null;
-  dew  = src.dewPoint != null ? cToF(src.dewPoint) : null;
-}
+  const temp = src.alreadyFahrenheit
+    ? src.temp ?? null
+    : src.temp != null ? cToF(src.temp) : null;
 
-const wind = src.windSpeed ?? 0;
-const windDir = src.windDir ?? "";
-const timestamp = src.obsTimeLocal ?? Date.now();
+  const dew = src.alreadyFahrenheit
+    ? src.dewPoint ?? null
+    : src.dewPoint != null ? cToF(src.dewPoint) : null;
 
-const elev = computeSolarElevation(timestamp, LOCATION.lat, LOCATION.lon);
+  const wind = src.windSpeed ?? 0;
+  const windDir = src.windDir ?? "";
+  const timestamp = src.obsTimeLocal ?? Date.now();
 
-const feelsLike =
-  temp != null ? computeWindChill(temp, wind) : null;
+  const elev = computeSolarElevation(timestamp, LOCATION.lat, LOCATION.lon);
 
-const comfortScore =
-  temp != null && dew != null
-    ? computeComfortScore(temp, dew, wind, elev, windDir)
-    : null;
+  const feelsLike =
+    temp != null ? computeWindChill(temp, wind) : null;
+
+  const comfortScore =
+    temp != null && dew != null
+      ? computeComfortScore(temp, dew, wind, elev, windDir)
+      : null;
+
+  // Precip override
   const precipOverride = fallingPrecipFeel(intel);
   if (precipOverride) {
     return {
@@ -267,9 +275,7 @@ const comfortScore =
     };
   }
 
-  // (rest of your function continues unchanged…)
-
-
+  // State
   let state = "mild";
   if (feelsLike <= 32) state = "cold";
   else if (feelsLike <= 50) state = "cool";
@@ -310,7 +316,7 @@ const comfortScore =
     parts.push("A noticeable breeze adds some edge.");
   }
 
-  if (comfortScore < 45) {
+  if (comfortScore != null && comfortScore < 45) {
     parts.push("Dry air and wind are increasing fire danger.");
   }
 
@@ -337,14 +343,12 @@ const comfortScore =
 }
 
 // ------------------------------------------------------------
-// FUTURE COMFORT — ARRAY-SHAPE SAFE (FIXED VERSION)
+// FUTURE COMFORT (FIXED)
 // ------------------------------------------------------------
 export function buildFutureComfort(hourlyNormalized, computeComfortFn = computeComfort) {
   if (!Array.isArray(hourlyNormalized) || hourlyNormalized.length === 0) return [];
 
   const now = Date.now();
-
-  // Find first future hour using timestamp
   let startIndex = hourlyNormalized.findIndex(h => h.timestamp > now);
   if (startIndex === -1) startIndex = 0;
 
@@ -356,20 +360,17 @@ export function buildFutureComfort(hourlyNormalized, computeComfortFn = computeC
 
     const h = hourlyNormalized[idx];
 
-    // Build intel object for computeComfort()
-const intelForHour = {
-  const intelForHour = {
-  tempest: null,
-  wu: {
-    temp: h.temperature,
-    dewPoint: h.dewpoint,
-    windSpeed: h.wind_speed,
-    windDir: h.wind_dir,
-    obsTimeLocal: h.timestamp,
-    alreadyFahrenheit: true
-  },
-  hourly: null
-};
+    const intelForHour = {
+      tempest: null,
+      wu: {
+        temp: h.temperature,
+        dewPoint: h.dewpoint,
+        windSpeed: h.wind_speed,
+        windDir: h.wind_dir,
+        obsTimeLocal: h.timestamp,
+        alreadyFahrenheit: true
+      }
+    };
 
     const c = computeComfortFn(intelForHour);
 
@@ -377,10 +378,10 @@ const intelForHour = {
       index: idx,
       time: h.timestamp,
       hourLabel: h.timestamp ? formatHourLabel(h.timestamp) : `+${i}h`,
-      comfortScore: c.comfortScore,
-      color: c.color,
-      label: c.label,
-      emoji: c.emoji,
+      comfortScore: c?.comfortScore ?? null,
+      color: c?.color,
+      label: c?.label,
+      emoji: c?.emoji,
       temp: h.temperature,
       dew: h.dewpoint,
       wind: h.wind_speed
@@ -389,11 +390,12 @@ const intelForHour = {
 
   return items;
 }
+
 // ------------------------------------------------------------
-// TIMEZONE-SAFE LABEL
+// TIME FORMAT
 // ------------------------------------------------------------
-function formatHourLabel(iso) {
-  const d = new Date(iso);
+function formatHourLabel(ts) {
+  const d = new Date(ts);
 
   const formatter = new Intl.DateTimeFormat("en-US", {
     hour: "numeric",
