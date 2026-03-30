@@ -81,9 +81,9 @@ function normalizeSnapshot(h) {
   if (!h) return null;
 
   return {
-    temp: h.temperatureF,
-    feelsLike: h.apparent_temperature ?? h.temperature,
-    dewPoint: h.dewpointF,
+    temp: h.temperatureF ?? null,
+    feelsLike: h.apparentF ?? h.temperatureF ?? null,
+    dewPoint: h.dewpointF ?? null,
     humidity: h.relative_humidity,
     windSpeed: h.wind_speed,
     windGust: h.wind_gust,
@@ -164,10 +164,12 @@ function averageWindow(hours) {
   const avg = key =>
     hours.reduce((a, h) => a + (h[key] ?? 0), 0) / hours.length;
 
+  const toF = c => (c * 9) / 5 + 32;
+  
   return {
-    temperature: avg("temperature"),
-    apparent_temperature: avg("apparent_temperature"),
-    dewpoint: avg("dewpoint"),
+     temperatureF: toF(avgC("temperature")),
+    apparentF: toF(avgC("apparent_temperature")),
+     dewpointF: toF(avgC("dewpoint")),
     relative_humidity: avg("relative_humidity"),
     wind_speed: avg("wind_speed"),
     wind_gust: avg("wind_gust"),
