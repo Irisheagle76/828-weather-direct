@@ -1,6 +1,6 @@
 // /intel/human-action-intel-builder.js
 // ============================================================
-// HUMAN-ACTION INTEL BUILDER — HA 2.1 (Today Blend + HA2.0 Tomorrow)
+// HUMAN-ACTION INTEL BUILDER — HA 2.2 (Divergence-Fixed)
 // ============================================================
 
 import { evaluateHumanActionFactors } from "../modules/human-action-2/core-engine.js";
@@ -41,16 +41,21 @@ export function buildHumanActionIntel(raw) {
   const idx = currentIndex === -1 ? 0 : currentIndex;
 
   // ------------------------------------------------------------
-  // TODAY — current hour + next 3 hours blended (A1)
+  // TODAY — current hour + next 3 hours, with slight forward blend
   // ------------------------------------------------------------
-  const todayHours = hourly.slice(idx, idx + 4);
-  const todaySnapshot = blendHours(todayHours);
+  const todayCore = hourly.slice(idx, idx + 4);      // current + next 3
+  const todayExtended = hourly.slice(idx, idx + 8);  // add a bit more horizon
+  const todaySnapshot = blendHoursWithForwardBias(todayCore, todayExtended);
+
+  // mark as "today" for synthesizer framing
+  todaySnapshot.dayLabel = "today";
+  todaySnapshot.isTomorrow = false;
 
   const todayIntelRaw = evaluateHumanActionFactors(todaySnapshot) || {};
   const todayIntel = ensureSynthFields(todayIntelRaw, todaySnapshot);
 
   // ------------------------------------------------------------
-  // TOMORROW — HA 2.0 morning/afternoon hybrid
+  // TOMORROW — HA 2.0 morning/afternoon hybrid, with explicit tomorrow flag
   // ------------------------------------------------------------
   const tomorrowBundle = buildTomorrowSnapshots(hourly);
 
@@ -58,6 +63,12 @@ export function buildHumanActionIntel(raw) {
     tomorrowBundle.afternoon ??
     tomorrowBundle.morning ??
     blendHours(hourly.slice(24, 28));
+
+  // mark as "tomorrow" for synthesizer framing
+  if (tomorrowSnapshot) {
+    tomorrowSnapshot.dayLabel = "tomorrow";
+    tomorrowSnapshot.isTomorrow = true;
+  }
 
   const tomorrowIntelRaw = evaluateHumanActionFactors(tomorrowSnapshot) || {};
   const tomorrowIntel = {
@@ -72,7 +83,7 @@ export function buildHumanActionIntel(raw) {
 }
 
 // ------------------------------------------------------------
-// BLEND HOURS (A1)
+// BLEND HOURS (simple average)
 // ------------------------------------------------------------
 function blendHours(hours) {
   if (!hours || !hours.length) return null;
@@ -103,6 +114,46 @@ function blendHours(hours) {
     valleyFogRisk: avg("valley_fog_risk"),
     ridgeFogRisk: avg("ridge_fog_risk"),
     timestamp: hours[0].timestamp
+  };
+}
+
+// ------------------------------------------------------------
+// BLEND HOURS WITH FORWARD BIAS (Today divergence helper)
+// ------------------------------------------------------------
+function blendHoursWithForwardBias(coreHours, extendedHours) {
+  if (!coreHours || !coreHours.length) {
+    return blendHours(extendedHours) ?? null;
+  }
+
+  const core = blendHours(coreHours);
+  if (!extendedHours || !extendedHours.length) return core;
+
+  const ext = blendHours(extendedHours);
+
+  // 70% weight on near-term, 30% on slightly farther horizon
+  const mix = (a, b) =>
+    a != null && b != null ? (0.7 * a + 0.3 * b) : (a ?? b ?? null);
+
+  return {
+    temp: mix(core.temp, ext.temp),
+    feelsLike: mix(core.feelsLike, ext.feelsLike),
+    dewPoint: mix(core.dewPoint, ext.dewPoint),
+    humidity: mix(core.humidity, ext.humidity),
+    windSpeed: mix(core.windSpeed, ext.windSpeed),
+    windGust: mix(core.windGust, ext.windGust),
+    precipType: core.precipType, // keep near-term precip type
+    precipIntensity: mix(core.precipIntensity, ext.precipIntensity),
+    uvIndex: mix(core.uvIndex, ext.uvIndex),
+    visibility: mix(core.visibility, ext.visibility),
+    cloudCover: mix(core.cloudCover, ext.cloudCover),
+    smokeIndex: mix(core.smokeIndex, ext.smokeIndex),
+    frostRisk: mix(core.frostRisk, ext.frostRisk),
+    freezeRisk: mix(core.freezeRisk, ext.freezeRisk),
+    inversionRisk: mix(core.inversionRisk, ext.inversionRisk),
+    blackIceRisk: mix(core.blackIceRisk, ext.blackIceRisk),
+    valleyFogRisk: mix(core.valleyFogRisk, ext.valleyFogRisk),
+    ridgeFogRisk: mix(core.ridgeFogRisk, ext.ridgeFogRisk),
+    timestamp: core.timestamp
   };
 }
 

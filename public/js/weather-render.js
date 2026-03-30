@@ -2,7 +2,6 @@
 // ============================================================
 // WEATHER RENDERER — CLEAN REWRITE (Render 6.0)
 // ============================================================
-
 import { fetchAllIntel } from "./weather-fetch.js";
 import { buildHumanActionIntel } from "./intel/human-action-intel-builder.js?v=5";
 import { computeComfort, buildFutureComfort } from "./intel/comfort.js";
@@ -38,7 +37,7 @@ function getTodayLabelFromLocalTime() {
 }
 
 // ------------------------------------------------------------
-// CURRENT OBSERVATIONS (CO‑2B COMPACT GRID)
+// CURRENT OBSERVATIONS (unchanged from 6.0)
 // ------------------------------------------------------------
 
 function renderCurrentObservations(raw) {
@@ -85,7 +84,6 @@ function renderCurrentObservations(raw) {
     h?.uv_index?.[0] ??
     0;
 
-  // Compact 2‑column layout with full labels (CO‑2B)
   const container = $("current-obs-grid");
   if (container) {
     container.innerHTML = `
@@ -130,7 +128,6 @@ function renderCurrentObservations(raw) {
       </div>
     `;
   } else {
-    // Fallback to legacy text nodes if grid container not present
     $("wu-temp").textContent = temp != null ? `${Math.round(temp)}°` : "--";
     $("wu-feels").textContent = feels != null ? `Feels like ${Math.round(feels)}°` : "Feels like --";
     $("wu-dew").textContent = dew != null ? `${Math.round(dew)}°` : "--";
@@ -142,7 +139,7 @@ function renderCurrentObservations(raw) {
 }
 
 // ------------------------------------------------------------
-// DATA SOURCE INDICATOR
+// DATA SOURCE INDICATOR (unchanged)
 // ------------------------------------------------------------
 
 function updateDataSourceIndicator(raw) {
@@ -186,6 +183,9 @@ function mapToLegacyFields(period) {
     precipType: period.precipType ?? "none",
     precipChance: period.precipChance ?? 0,
     snapshot: period.snapshot ?? {},
+    // pass temporal framing through to synthesizer
+    dayLabel: period.dayLabel ?? (period.isTomorrow ? "tomorrow" : "today"),
+    isTomorrow: !!period.isTomorrow,
     ...period
   };
 
@@ -201,7 +201,7 @@ function mapToLegacyFields(period) {
 }
 
 // ------------------------------------------------------------
-// HUMAN-ACTION RENDERING
+// HUMAN-ACTION RENDERING (unchanged except header text)
 // ------------------------------------------------------------
 
 function renderHumanAction(today, tomorrow) {
@@ -446,28 +446,28 @@ function initializeAccordion() {
 // ============================================================
 // BEST COMFORT WINDOW — 3-HOUR SLIDING WINDOW
 // ============================================================
-
 function findBestComfortWindow(hourlyNormalized, computeComfortFn, windowSize = 3) {
   if (!Array.isArray(hourlyNormalized) || hourlyNormalized.length < windowSize) {
     return null;
   }
 
+  const now = Date.now();
+  let startIndex = hourlyNormalized.findIndex(h => h.timestamp > now);
+  if (startIndex === -1) startIndex = 0;
+
   const windows = [];
 
-  for (let start = 0; start <= hourlyNormalized.length - windowSize; start++) {
+  for (let start = startIndex; start <= hourlyNormalized.length - windowSize; start++) {
     let sum = 0;
     const hours = [];
 
     for (let i = 0; i < windowSize; i++) {
       const h = hourlyNormalized[start + i];
 
-      const tempF = h.temperatureF;
-      const dewF  = h.dewpointF;
-
       const intelForHour = {
         wu: {
-          temp: tempF,
-          dewPoint: dewF,
+          temp: h.temperatureF,
+          dewPoint: h.dewpointF,
           windSpeed: h.wind_speed ?? 0,
           windDir: h.wind_dir ?? "",
           obsTimeLocal: h.timestamp
@@ -478,8 +478,8 @@ function findBestComfortWindow(hourlyNormalized, computeComfortFn, windowSize = 
 
       hours.push({
         hourLabel: formatHourLabel(h.timestamp),
-        temp: tempF,
-        dew: dewF,
+        temp: h.temperatureF,
+        dew: h.dewpointF,
         comfortScore: comfort.comfortScore,
         emoji: comfort.emoji,
         label: comfort.label
