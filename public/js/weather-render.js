@@ -37,7 +37,7 @@ function getTodayLabelFromLocalTime() {
 }
 
 // ------------------------------------------------------------
-// CURRENT OBSERVATIONS (unchanged from 6.0)
+// CURRENT OBSERVATIONS
 // ------------------------------------------------------------
 
 function renderCurrentObservations(raw) {
@@ -84,51 +84,51 @@ function renderCurrentObservations(raw) {
     h?.uv_index?.[0] ??
     0;
 
-  const container = $("current-obs-inline");
-  if (container) {
-    container.innerHTML = `
-      <div class="obs-row">
-        <div class="obs-cell">
-          <span class="obs-label">Temperature:</span>
-          <span class="obs-value">${temp != null ? `${Math.round(temp)}°` : "--"}</span>
-        </div>
-        <div class="obs-cell">
-          <span class="obs-label">Feels like:</span>
-          <span class="obs-value">${feels != null ? `${Math.round(feels)}°` : "--"}</span>
-        </div>
-      </div>
+const container = $("current-obs-inline");
+if (!container) return;
 
-      <div class="obs-row">
-        <div class="obs-cell">
-          <span class="obs-label">Wind:</span>
-          <span class="obs-value">${wind != null ? `${Math.round(wind)} mph` : "--"}</span>
-        </div>
-        <div class="obs-cell">
-          <span class="obs-label">Gusts:</span>
-          <span class="obs-value">${gust != null ? `${Math.round(gust)} mph` : "--"}</span>
-        </div>
-      </div>
-
-      <div class="obs-row">
-        <div class="obs-cell">
-          <span class="obs-label">Dew Point:</span>
-          <span class="obs-value">${dew != null ? `${Math.round(dew)}°` : "--"}</span>
-        </div>
-        <div class="obs-cell">
-          <span class="obs-label">Humidity:</span>
-          <span class="obs-value">${humidity != null ? `${Math.round(humidity)}%` : "--"}</span>
-        </div>
-      </div>
-
-      <div class="obs-row">
-        <div class="obs-cell">
-          <span class="obs-label">UV Index:</span>
-          <span class="obs-value">${uv != null ? `${Math.round(uv)}` : "--"}</span>
-        </div>
-      </div>
-    `;
+// Live Tempest pulse indicator
+if (t) {
+  wrap.classList.add("live");
+} else {
+  wrap.classList.remove("live");
 }
+
+container.innerHTML = `
+  <div class="obs-line">
+    <span class="obs-item" data-type="temp" data-icon="🌡️">
+      Temp <strong>${temp != null ? `${Math.round(temp)}°` : "--"}</strong>
+    </span>
+    <span class="obs-dot">•</span>
+    <span class="obs-item" data-type="feels" data-icon="🔥">
+      Feels <strong>${feels != null ? `${Math.round(feels)}°` : "--"}</strong>
+    </span>
+    <span class="obs-dot">•</span>
+    <span class="obs-item" data-type="dew" data-icon="💧">
+      Dew <strong>${dew != null ? `${Math.round(dew)}°` : "--"}</strong>
+    </span>
+    <span class="obs-dot">•</span>
+    <span class="obs-item" data-type="humidity" data-icon="💦">
+      Humidity <strong>${humidity != null ? `${Math.round(humidity)}%` : "--"}</strong>
+    </span>
+  </div>
+
+  <div class="obs-line">
+    <span class="obs-item" data-type="wind" data-icon="🌬️">
+      Wind <strong>${wind != null ? `${Math.round(wind)} mph` : "--"}</strong>
+    </span>
+    <span class="obs-dot">•</span>
+    <span class="obs-item" data-type="wind" data-icon="💨">
+      Gusts <strong>${gust != null ? `${Math.round(gust)} mph` : "--"}</strong>
+    </span>
+    <span class="obs-dot">•</span>
+    <span class="obs-item" data-type="uv" data-icon="☀️">
+      UV <strong>${uv != null ? `${Math.round(uv)}` : "--"}</strong>
+    </span>
+  </div>
+`;
 }
+
 // ------------------------------------------------------------
 // Narrative Debug
 // ------------------------------------------------------------
