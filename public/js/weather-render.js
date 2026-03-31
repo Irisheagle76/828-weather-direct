@@ -127,15 +127,6 @@ function renderCurrentObservations(raw) {
         </div>
       </div>
     `;
-  } else {
-    $("wu-temp").textContent = temp != null ? `${Math.round(temp)}°` : "--";
-    $("wu-feels").textContent = feels != null ? `Feels like ${Math.round(feels)}°` : "Feels like --";
-    $("wu-dew").textContent = dew != null ? `${Math.round(dew)}°` : "--";
-    $("wu-humidity").textContent = humidity != null ? `Humidity ${Math.round(humidity)}%` : "Humidity --";
-    $("wu-wind").textContent = wind != null ? `${Math.round(wind)} mph` : "--";
-    $("wu-wind-gust").textContent = gust != null ? `Gusts ${Math.round(gust)} mph` : "Gusts --";
-    $("wu-uv").textContent = uv != null ? `${Math.round(uv)}` : "--";
-  }
 }
 
 // ------------------------------------------------------------
