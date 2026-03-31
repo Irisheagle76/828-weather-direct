@@ -79,7 +79,10 @@
       <div class="now-col">
         <div class="today-module action-module" id="today-module">
 
-          <div class="action-header" id="today-header">Today’s Outlook</div>
+          <div class="action-header">
+  <span id="today-header">Today’s Outlook</span>
+  <span id="today-goldilocks" class="gold-badge" style="display:none;">🌟 Goldilocks</span>
+</div>
 
           <div class="action-emoji" id="today-emoji"></div>
           <div class="action-headline" id="today-headline"></div>
@@ -94,7 +97,10 @@
       <div class="now-col">
         <div class="tomorrow-module action-module" id="tomorrow-module">
 
-          <div class="action-header" id="tomorrow-header">Tomorrow’s Outlook</div>
+          <div class="action-header">
+  <span id="tomorrow-header">Tomorrow’s Outlook</span>
+  <span id="tomorrow-goldilocks" class="gold-badge" style="display:none;">🌟 Goldilocks</span>
+</div>
 
           <div class="action-emoji" id="tomorrow-emoji"></div>
           <div class="action-headline" id="tomorrow-headline"></div>
@@ -148,6 +154,11 @@
     <div class="error-text" id="wu-error" style="display:none;"></div>
 
   </div> <!-- end .card -->
+
+  <div id="narrative-debug" class="debug-panel" style="display:none;">
+  <h3>Narrative Debug</h3>
+  <pre id="debug-content"></pre>
+</div>
 
   <div id="toast" class="toast"></div>
 

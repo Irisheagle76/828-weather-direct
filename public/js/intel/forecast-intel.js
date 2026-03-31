@@ -5,7 +5,7 @@
 
 import { computeStats } from "./stats.js";
 import { computeEvents } from "./events.js";
-import { synthesizePeriod } from "./synthesizer.js";
+import { synthesizePeriod } from "./intel/synthesizer/index.js";
 import { computeConfidence } from "./confidence.js";
 
 // ------------------------------------------------------------

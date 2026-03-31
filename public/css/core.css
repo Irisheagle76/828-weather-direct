@@ -94,6 +94,18 @@ a:hover {
   flex-direction: column;
   gap: 20px;
 }
+/* ------------------------------------------------------------
+   GOLDILOCKS
+   ------------------------------------------------------------ */
+.gold-badge {
+  margin-left: 0.4rem;
+  padding: 0.15rem 0.4rem;
+  background: #ffe9a8;
+  color: #7a5a00;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
 
 /* ------------------------------------------------------------
    HEADINGS
@@ -200,4 +212,18 @@ h2 {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255,255,255,0.18);
+}
+/* ------------------------------------------------------------
+   DEBUG
+   ------------------------------------------------------------ */
+.debug-panel {
+  background: #1e1e1e;
+  color: #e0e0e0;
+  padding: 1rem;
+  margin-top: 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  max-height: 300px;
+  overflow-y: auto;
+  box-shadow: 0 0 10px rgba(0,0,0,0.4);
 }

@@ -1,11 +1,11 @@
 // /js/weather-render.js
 // ============================================================
-// WEATHER RENDERER — CLEAN REWRITE (Render 6.0)
+// WEATHER RENDERER — CLEAN REWRITE (Render 6.1, Synthesizer-integrated)
 // ============================================================
 import { fetchAllIntel } from "./weather-fetch.js";
 import { buildHumanActionIntel } from "./intel/human-action-intel-builder.js?v=5";
 import { computeComfort, buildFutureComfort } from "./intel/comfort.js";
-import { generateNarrative } from "./intel/synthesizer.js";
+import { generateNarrative } from "./intel/synthesizer/index.js";
 import { normalizeOpenMeteo } from "./intel/normalize-hourly.js";
 
 // ------------------------------------------------------------
@@ -37,8 +37,9 @@ function getTodayLabelFromLocalTime() {
 }
 
 // ------------------------------------------------------------
-// CURRENT OBSERVATIONS — INLINE BAR (Option B, 2 lines)
+// CURRENT OBSERVATIONS (unchanged from 6.0)
 // ------------------------------------------------------------
+
 function renderCurrentObservations(raw) {
   const wrap = $("current-obs-wrapper");
   if (wrap) wrap.classList.add("module-card");
@@ -47,9 +48,6 @@ function renderCurrentObservations(raw) {
   const wu = raw?.wu;
   const h = raw?.hourly;
 
-  // -----------------------------
-  // Extract values (same logic)
-  // -----------------------------
   const temp =
     (t?.air_temperature != null ? cToF(t.air_temperature) : null) ??
     wu?.imperial?.temp ??
@@ -86,51 +84,77 @@ function renderCurrentObservations(raw) {
     h?.uv_index?.[0] ??
     0;
 
-  // -----------------------------
-  // Wind direction (Tempest → WU → hourly)
-  // -----------------------------
-  const windDir =
-    t?.wind_direction ??
-    wu?.winddir ??
-    h?.wind_direction_10m?.[0];
+  const container = $("current-obs-grid");
+  if (container) {
+    container.innerHTML = `
+      <div class="obs-row">
+        <div class="obs-cell">
+          <span class="obs-label">Temperature:</span>
+          <span class="obs-value">${temp != null ? `${Math.round(temp)}°` : "--"}</span>
+        </div>
+        <div class="obs-cell">
+          <span class="obs-label">Feels like:</span>
+          <span class="obs-value">${feels != null ? `${Math.round(feels)}°` : "--"}</span>
+        </div>
+      </div>
 
-  const windDirText = windDir != null ? degToCompass(windDir) : "";
+      <div class="obs-row">
+        <div class="obs-cell">
+          <span class="obs-label">Wind:</span>
+          <span class="obs-value">${wind != null ? `${Math.round(wind)} mph` : "--"}</span>
+        </div>
+        <div class="obs-cell">
+          <span class="obs-label">Gusts:</span>
+          <span class="obs-value">${gust != null ? `${Math.round(gust)} mph` : "--"}</span>
+        </div>
+      </div>
 
-  // -----------------------------
-  // Inject into inline bar
-  // -----------------------------
-  const inline = $("current-obs-inline");
-  if (!inline) return;
+      <div class="obs-row">
+        <div class="obs-cell">
+          <span class="obs-label">Dew Point:</span>
+          <span class="obs-value">${dew != null ? `${Math.round(dew)}°` : "--"}</span>
+        </div>
+        <div class="obs-cell">
+          <span class="obs-label">Humidity:</span>
+          <span class="obs-value">${humidity != null ? `${Math.round(humidity)}%` : "--"}</span>
+        </div>
+      </div>
 
-  inline.innerHTML = `
-    <div class="obs-line">
-      <span class="obs-item">Temp <strong>${temp != null ? `${Math.round(temp)}°` : "--"}</strong></span>
-      <span class="obs-dot">•</span>
-      <span class="obs-item">Feels <strong>${feels != null ? `${Math.round(feels)}°` : "--"}</strong></span>
-      <span class="obs-dot">•</span>
-      <span class="obs-item">Dew <strong>${dew != null ? `${Math.round(dew)}°` : "--"}</strong></span>
-      <span class="obs-dot">•</span>
-      <span class="obs-item">Humidity <strong>${humidity != null ? `${Math.round(humidity)}%` : "--"}</strong></span>
-    </div>
-
-    <div class="obs-line">
-      <span class="obs-item">Wind <strong>${windDirText} ${wind != null ? `${Math.round(wind)} mph` : "--"}</strong></span>
-      <span class="obs-dot">•</span>
-      <span class="obs-item">Gusts <strong>${gust != null ? `${Math.round(gust)} mph` : "--"}</strong></span>
-      <span class="obs-dot">•</span>
-      <span class="obs-item">UV <strong>${uv != null ? `${Math.round(uv)}` : "--"}</strong></span>
-    </div>
-  `;
+      <div class="obs-row">
+        <div class="obs-cell">
+          <span class="obs-label">UV Index:</span>
+          <span class="obs-value">${uv != null ? `${Math.round(uv)}` : "--"}</span>
+        </div>
+      </div>
+    `;
+  } else {
+    $("wu-temp").textContent = temp != null ? `${Math.round(temp)}°` : "--";
+    $("wu-feels").textContent = feels != null ? `Feels like ${Math.round(feels)}°` : "Feels like --";
+    $("wu-dew").textContent = dew != null ? `${Math.round(dew)}°` : "--";
+    $("wu-humidity").textContent = humidity != null ? `Humidity ${Math.round(humidity)}%` : "Humidity --";
+    $("wu-wind").textContent = wind != null ? `${Math.round(wind)} mph` : "--";
+    $("wu-wind-gust").textContent = gust != null ? `Gusts ${Math.round(gust)} mph` : "Gusts --";
+    $("wu-uv").textContent = uv != null ? `${Math.round(uv)}` : "--";
+  }
 }
 
 // ------------------------------------------------------------
-// Helper: Convert degrees → compass direction
+// Narrative Debug
 // ------------------------------------------------------------
-function degToCompass(deg) {
-  if (deg == null || isNaN(deg)) return "";
-  const dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE",
-                "S","SSW","SW","WSW","W","WNW","NW","NNW"];
-  return dirs[Math.round(deg / 22.5) % 16];
+function renderNarrativeDebug(todayIntel, tomorrowIntel, todayNarr, tomorrowNarr) {
+  const panel = $("narrative-debug");
+  const content = $("debug-content");
+  if (!panel || !content) return;
+
+  const debugObj = {
+    todayIntel,
+    tomorrowIntel,
+    todayNarr,
+    tomorrowNarr
+  };
+
+  content.textContent = JSON.stringify(debugObj, null, 2);
+  panel.style.display = "block";
 }
 
 // ------------------------------------------------------------
@@ -167,54 +191,33 @@ function updateDataSourceIndicator(raw) {
 }
 
 // ------------------------------------------------------------
-// MAP HUMAN-ACTION TO SYNTHESIZER-SAFE LEGACY UI
+// HUMAN-ACTION RENDERING (wired to NEW synthesizer)
 // ------------------------------------------------------------
 
-function mapToLegacyFields(period) {
-  if (!period) return null;
-
-  const safePeriod = {
-    factors: Array.isArray(period.factors) ? period.factors : [],
-    precipType: period.precipType ?? "none",
-    precipChance: period.precipChance ?? 0,
-    snapshot: period.snapshot ?? {},
-    // pass temporal framing through to synthesizer
-    dayLabel: period.dayLabel ?? (period.isTomorrow ? "tomorrow" : "today"),
-    isTomorrow: !!period.isTomorrow,
-    ...period
-  };
-
-  const narrative = generateNarrative(safePeriod);
-
-  return {
-    ...safePeriod,
-    emoji: narrative?.emoji ?? "🌤️",
-    title: narrative?.title ?? "Outlook",
-    notes: narrative?.main ?? "",
-    secondaryFactors: narrative?.bullets ?? []
-  };
-}
-
-// ------------------------------------------------------------
-// HUMAN-ACTION RENDERING (unchanged except header text)
-// ------------------------------------------------------------
-
-function renderHumanAction(today, tomorrow) {
+function renderHumanAction(todayNarr, tomorrowNarr) {
   $("today-header").textContent = getTodayLabelFromLocalTime();
-  $("today-emoji").textContent = today.emoji;
-  $("today-headline").textContent = today.title;
-  $("today-text").textContent = today.notes;
-  $("today-bullets").innerHTML = today.secondaryFactors.map(b => `<li>${b}</li>`).join("");
+  $("today-emoji").textContent = todayNarr.emoji;
+  $("today-headline").textContent = todayNarr.title;
+  $("today-text").textContent = todayNarr.narrative;
+  $("today-bullets").innerHTML = todayNarr.bullets
+    .map(b => `<li>${b}</li>`)
+    .join("");
 
   $("tomorrow-header").textContent = "Tomorrow’s Outlook";
-  $("tomorrow-emoji").textContent = tomorrow.emoji;
-  $("tomorrow-headline").textContent = tomorrow.title;
-  $("tomorrow-text").textContent = tomorrow.notes;
-  $("tomorrow-bullets").innerHTML = tomorrow.secondaryFactors.map(b => `<li>${b}</li>`).join("");
+  $("tomorrow-emoji").textContent = tomorrowNarr.emoji;
+  $("tomorrow-headline").textContent = tomorrowNarr.title;
+  $("tomorrow-text").textContent = tomorrowNarr.narrative;
+  $("tomorrow-bullets").innerHTML = tomorrowNarr.bullets
+    .map(b => `<li>${b}</li>`)
+    .join("");
+
+    $("today-goldilocks").style.display = todayNarr.isGoldilocks ? "inline-block" : "none";
+$("tomorrow-goldilocks").style.display = tomorrowNarr.isGoldilocks ? "inline-block" : "none";
+
 }
 
 // ------------------------------------------------------------
-// HUMAN-ACTION EXPANDED
+// HUMAN-ACTION EXPANDED (unchanged, uses raw intel)
 // ------------------------------------------------------------
 
 function renderHumanActionExpanded(todayIntel, tomorrowIntel) {
@@ -231,7 +234,9 @@ function renderHumanActionExpanded(todayIntel, tomorrowIntel) {
       low  = intel.stats.tempMin ?? s.temp ?? null;
     } else {
       const nextHours = window._hourly?.slice(0, 12) ?? [];
-      const temps = nextHours.map(h => h.temperatureF ?? h.temperature).filter(t => t != null);
+      const temps = nextHours
+        .map(h => h.temperatureF ?? h.temperature)
+        .filter(t => t != null);
 
       high = temps.length ? Math.max(...temps) : s.temp;
       low  = temps.length ? Math.min(...temps) : s.temp;
@@ -277,7 +282,7 @@ function renderHumanActionExpanded(todayIntel, tomorrowIntel) {
 }
 
 // ============================================================
-// COMFORT NOW — SYNTHESIZER TITLE + BULLETS
+// COMFORT NOW — MODULE RENDERER (no synthesizer dependency)
 // ============================================================
 
 function renderComfortNow(container, comfort, bestWindow) {
@@ -441,6 +446,7 @@ function initializeAccordion() {
 // ============================================================
 // BEST COMFORT WINDOW — 3-HOUR SLIDING WINDOW
 // ============================================================
+
 function findBestComfortWindow(hourlyNormalized, computeComfortFn, windowSize = 3) {
   if (!Array.isArray(hourlyNormalized) || hourlyNormalized.length < windowSize) {
     return null;
@@ -519,10 +525,13 @@ export async function renderWeather({
   // ------------------------------------------------------------
   const intelRaw = buildHumanActionIntel(raw);
 
-  const today = mapToLegacyFields(intelRaw.today);
-  const tomorrow = mapToLegacyFields(intelRaw.tomorrow);
+  // NEW SYNTHESIZER: generate Today/Tomorrow narratives
+  const { today: todayNarr, tomorrow: tomorrowNarr } = generateNarrative(
+    intelRaw.today,
+    intelRaw.tomorrow
+  );
 
-  renderHumanAction(today, tomorrow);
+  renderHumanAction(todayNarr, tomorrowNarr);
   renderHumanActionExpanded(intelRaw.today, intelRaw.tomorrow);
 
   // ------------------------------------------------------------
@@ -604,52 +613,21 @@ export async function renderWeather({
       : "Harsh / Poor Comfort";
 
   // ------------------------------------------------------------
-  // COMFORT NOW — SYNTHESIZER WRAPPER
+  // COMFORT NOW — SIMPLE NARRATIVE WRAPPER (no synthesizer)
   // ------------------------------------------------------------
-  const comfortIntel = {
-    temp: comfortNow.temp ?? comfortNow.temperature ?? null,
-    dewpoint: comfortNow.dewpoint ?? null,
-    humidity: comfortNow.humidity ?? null,
-    windSpeed: comfortNow.wind ?? null,
-    windGust: comfortNow.windGust ?? null,
-    cloudCover: comfortNow.cloudCover ?? null,
-
-    precipType: "none",
-    precipChance: 0,
-    comfortScore: comfortNow.comfortScore ?? null,
-    label: comfortNow.label ?? comfortNow.summary ?? "",
-    factors: [],
-
-    snapshot: {
-      temp: comfortNow.temp ?? comfortNow.temperature ?? null,
-      dewpoint: comfortNow.dewpoint ?? null,
-      humidity: comfortNow.humidity ?? null,
-      windSpeed: comfortNow.wind ?? null,
-      windGust: comfortNow.windGust ?? null,
-      cloudCover: comfortNow.cloudCover ?? null,
-      precipType: "none",
-      precipChance: 0
-    }
-  };
-
-  const comfortNarrative = generateNarrative(comfortIntel) || {};
-
   const comfortNowForRender = {
     ...comfortNow,
     title:
-      comfortNarrative.title ??
       comfortNow.line1 ??
       comfortNow.summary ??
-      "",
-    bullets: Array.isArray(comfortNarrative.bullets)
-      ? comfortNarrative.bullets
+      "Comfort overview",
+    bullets: Array.isArray(comfortNow.bullets)
+      ? comfortNow.bullets
       : [],
-    emoji: comfortNarrative.emoji ?? comfortNow.emoji ?? "🌤️",
+    emoji: comfortNow.emoji ?? "🌤️",
     longNarrative:
-      comfortNarrative.main ?? comfortNow.line2 ?? "",
-    scoreExplainer:
-      comfortNow.scoreExplainer ??
-      "Comfort Score blends temperature, dew point, humidity, wind, and sun angle into a 0–100 scale (higher is better)."
+      comfortNow.line2 ??
+      ""
   };
 
   // ------------------------------------------------------------
@@ -688,6 +666,8 @@ export async function renderWeather({
   window._comfortNow = comfortNow;
   window._comfortNowForRender = comfortNowForRender;
   window._hourly = hourlyNormalized;
-  window._today = today;
-  window._tomorrow = tomorrow;
+  window._todayNarr = todayNarr;
+  window._tomorrowNarr = tomorrowNarr;
+  window._haToday = intelRaw.today;
+  window._haTomorrow = intelRaw.tomorrow;
 }

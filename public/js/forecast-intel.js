@@ -1,7 +1,7 @@
 // /intel/forecast-intel.js
 
 import { computeComfort } from "./comfort.js";
-import { synthesizeOutlook, differentiateFromToday, synthesizeRemainderTodayOutlook } from "./synthesizer.js";
+import { synthesizeOutlook, differentiateFromToday, synthesizeRemainderTodayOutlook } from "./intel/synthesizer/index.js";
 import { computeStats } from "./stats.js";
 import { computeEvents } from "./events.js";
 import { getTodayWindow, getTomorrowWindow } from "./windows.js";
