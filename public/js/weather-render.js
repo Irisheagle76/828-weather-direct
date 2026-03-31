@@ -84,7 +84,7 @@ function renderCurrentObservations(raw) {
     h?.uv_index?.[0] ??
     0;
 
-  const container = $("current-obs-grid");
+  const container = $("current-obs-inline");
   if (container) {
     container.innerHTML = `
       <div class="obs-row">
