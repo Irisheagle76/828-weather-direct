@@ -3,10 +3,10 @@
 
 <head>
   <meta charset="UTF-8" />
-  <title>828 Weather Direct – WU Powered</title>
+  <title>828 Weather Direct – Asheville Hyperlocal Forecast</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Modular CSS (correct order) -->
+  <!-- Modular CSS (existing files preserved) -->
   <link rel="stylesheet" href="css/core.css">
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
@@ -31,134 +31,152 @@
       "BDn67R8PiMYa_UcGJ1CK0RiIR8E97ht_2STTositc3p1HFsuVBPSk--3EEBk_7B9RS-WJ5Xb_ikNVqx1trql7xA";
   </script>
 
-  <div class="card">
-
-    <!-- TITLE -->
-    <h1 class="app-title">828 Weather Direct</h1>
-    <div class="subtitle">Hyper-local Asheville weather • Built by Timothy Ballisty</div>
-
-    <!-- STATUS BLOCK -->
-    <div class="status-row">
-      <div class="badge" id="wu-status-badge">
-        <span class="badge-dot" id="wu-status-dot"></span>
-        <span id="wu-status-label">Detecting location…</span>
-      </div>
-      <div class="status-text" id="wu-status-text">
-        Waiting for browser location permission.
-      </div>
-    </div>
+  <!-- ============================================================
+       APP SHELL (Modernized Layout)
+       ============================================================ -->
+  <div class="app-shell">
 
     <!-- ============================================================
-         CURRENT OBSERVATIONS — ULTRA-COMPACT INLINE BAR
+         HEADER
          ============================================================ -->
-    <div id="current-obs-wrapper">
-      <div id="current-obs-inline">
-        <!-- JS will populate these two lines -->
-      </div>
-    </div>
+    <header class="app-header">
+      <h1 class="app-title">828 Weather Direct</h1>
+      <div class="subtitle">Hyper-local Asheville weather • Built by Timothy Ballisty</div>
 
-    <!-- ============================================================
-         COMFORT MODULES
-         ============================================================ -->
-    <div id="comfort-row">
-      <div class="comfort-left-col">
-        <div id="comfort-now-container"></div>
-      </div>
-
-      <div class="comfort-right-col">
-        <div id="future-comfort-container"></div>
-      </div>
-    </div>
-
-    <!-- ============================================================
-         TODAY + TOMORROW — HUMAN-ACTION 2.2
-         ============================================================ -->
-    <div class="now-tomorrow-row">
-
-      <!-- TODAY -->
-      <div class="now-col">
-        <div class="today-module action-module" id="today-module">
-
-          <div class="action-header">
-  <span id="today-header">Today’s Outlook</span>
-  <span id="today-goldilocks" class="gold-badge" style="display:none;">🌟 Goldilocks</span>
-</div>
-
-          <div class="action-emoji" id="today-emoji"></div>
-          <div class="action-headline" id="today-headline"></div>
-          <div class="action-text" id="today-text"></div>
-          <ul class="today-bullets" id="today-bullets"></ul>
-
-          <div class="expanded-panel" id="expanded-today"></div>
+      <!-- STATUS BLOCK -->
+      <div class="status-row">
+        <div class="badge" id="wu-status-badge">
+          <span class="badge-dot" id="wu-status-dot"></span>
+          <span id="wu-status-label">Detecting location…</span>
+        </div>
+        <div class="status-text" id="wu-status-text">
+          Waiting for browser location permission.
         </div>
       </div>
-
-      <!-- TOMORROW -->
-      <div class="now-col">
-        <div class="tomorrow-module action-module" id="tomorrow-module">
-
-          <div class="action-header">
-  <span id="tomorrow-header">Tomorrow’s Outlook</span>
-  <span id="tomorrow-goldilocks" class="gold-badge" style="display:none;">🌟 Goldilocks</span>
-</div>
-
-          <div class="action-emoji" id="tomorrow-emoji"></div>
-          <div class="action-headline" id="tomorrow-headline"></div>
-          <div class="action-text" id="tomorrow-text"></div>
-          <ul class="tomorrow-bullets" id="tomorrow-bullets"></ul>
-
-          <div class="expanded-panel" id="expanded-tomorrow"></div>
-        </div>
-      </div>
-
-    </div>
+    </header>
 
     <!-- ============================================================
-         828 WEATHER PULSE
+         CURRENT OBSERVATIONS — FULL WIDTH
          ============================================================ -->
-    <section id="pulse-card" class="pulse-card pulse-collapsed">
-      <div class="pulse-header">
-        <h2 class="pulse-title">828 Weather Pulse</h2>
-        <div class="pulse-badge-pill">QUICK • LIVE • 828</div>
-        <div id="pulse-timestamp" class="pulse-timestamp"></div>
+    <section id="current-obs-section">
+      <div id="current-obs-wrapper">
+        <div id="current-obs-inline"></div>
       </div>
-
-      <div class="pulse-body">
-        <div id="pulse-media" class="pulse-media"></div>
-        <div id="pulse-preview" class="pulse-preview"></div>
-      </div>
-
-      <div id="pulse-full-text" class="pulse-expanded">
-        <div class="pulse-expanded-content" id="pulse-expanded-content"></div>
-      </div>
-
-      <button id="pulse-toggle" class="pulse-toggle" aria-expanded="false">
-        Read full update
-      </button>
     </section>
 
     <!-- ============================================================
-         SUBSTACK MODULE
+         SYNTH HEALTH PANEL — FULL WIDTH
          ============================================================ -->
-    <section id="weather-articles-module" class="substack-card"></section>
+    <section id="synth-health" class="synth-health-section"></section>
 
     <!-- ============================================================
-         FOOTER
+         MAIN CONTENT (Centered)
          ============================================================ -->
-    <div class="footer-note" id="wu-station-footer">
+    <main class="main-centered">
+
+      <!-- ============================================================
+           COMFORT MODULES (Centered)
+           ============================================================ -->
+      <div id="comfort-row">
+        <div class="comfort-left-col">
+          <div id="comfort-now-container"></div>
+        </div>
+
+        <div class="comfort-right-col">
+          <div id="future-comfort-container"></div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           HUMAN-ACTION — TODAY + TOMORROW (Side-by-side desktop)
+           ============================================================ -->
+      <section class="now-tomorrow-row">
+
+        <!-- TODAY -->
+        <div class="now-col">
+          <div class="today-module action-module" id="ha-today-card" data-accordion="ha">
+            <div class="action-header">
+              <span id="ha-today-header">Today’s Outlook</span>
+              <span id="ha-today-goldilocks" class="gold-badge" style="display:none;">🌟 Goldilocks</span>
+            </div>
+
+            <div class="action-emoji" id="ha-today-emoji"></div>
+            <div class="action-headline" id="ha-today-title"></div>
+            <div class="action-text" id="ha-today-body"></div>
+            <ul class="today-bullets" id="ha-today-bullets"></ul>
+
+            <div class="expanded-panel" id="ha-today-expanded"></div>
+          </div>
+        </div>
+
+        <!-- TOMORROW -->
+        <div class="now-col">
+          <div class="tomorrow-module action-module" id="ha-tomorrow-card" data-accordion="ha">
+            <div class="action-header">
+              <span id="ha-tomorrow-header">Tomorrow’s Outlook</span>
+              <span id="ha-tomorrow-goldilocks" class="gold-badge" style="display:none;">🌟 Goldilocks</span>
+            </div>
+
+            <div class="action-emoji" id="ha-tomorrow-emoji"></div>
+            <div class="action-headline" id="ha-tomorrow-title"></div>
+            <div class="action-text" id="ha-tomorrow-body"></div>
+            <ul class="tomorrow-bullets" id="ha-tomorrow-bullets"></ul>
+
+            <div class="expanded-panel" id="ha-tomorrow-expanded"></div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ============================================================
+           828 WEATHER PULSE — FULL WIDTH
+           ============================================================ -->
+      <section id="pulse-card" class="pulse-card pulse-collapsed">
+        <div class="pulse-header">
+          <h2 class="pulse-title">828 Weather Pulse</h2>
+          <div class="pulse-badge-pill">QUICK • LIVE • 828</div>
+          <div id="pulse-timestamp" class="pulse-timestamp"></div>
+        </div>
+
+        <div class="pulse-body">
+          <div id="pulse-media" class="pulse-media"></div>
+          <div id="pulse-preview" class="pulse-preview"></div>
+        </div>
+
+        <div id="pulse-full-text" class="pulse-expanded">
+          <div class="pulse-expanded-content" id="pulse-expanded-content"></div>
+        </div>
+
+        <button id="pulse-toggle" class="pulse-toggle" aria-expanded="false">
+          Read full update
+        </button>
+      </section>
+
+      <!-- ============================================================
+           SUBSTACK MODULE (Centered)
+           ============================================================ -->
+      <section id="weather-articles-module" class="substack-card"></section>
+
+    </main>
+
+    <!-- ============================================================
+         FOOTER (Centered)
+         ============================================================ -->
+    <footer class="footer-note" id="wu-station-footer">
       © 2026 Timothy Ballisty • 828 Weather<br>
       Independent Asheville weather analysis<br>
       Not official NWS guidance
-    </div>
+    </footer>
 
     <div class="error-text" id="wu-error" style="display:none;"></div>
 
-  </div> <!-- end .card -->
+  </div> <!-- end .app-shell -->
 
+  <!-- DEBUG PANEL -->
   <div id="narrative-debug" class="debug-panel" style="display:none;">
-  <h3>Narrative Debug</h3>
-  <pre id="debug-content"></pre>
-</div>
+    <h3>Narrative Debug</h3>
+    <pre id="debug-content"></pre>
+  </div>
 
   <div id="toast" class="toast"></div>
 

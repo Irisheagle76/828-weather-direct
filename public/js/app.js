@@ -3,8 +3,8 @@
 // APP ENTRY — Clean + Stable
 // ============================================================
 
-// 🔥 DIAGNOSTIC MARKER — THIS MUST APPEAR IN THE CONSOLE
-console.log("APP.JS LOADED — VERSION TEST MARKER A — v6");
+// 🔥 DIAGNOSTIC MARKER — CONFIRM LOAD
+console.log("APP.JS LOADED — VERSION TEST MARKER A — v7");
 
 // ------------------------------------------------------------
 // IMPORTS
@@ -23,14 +23,14 @@ function showError(msg) {
 }
 
 // ------------------------------------------------------------
-// LOADING STATE (lightweight only)
+// LOADING STATE
 // ------------------------------------------------------------
 function setLoadingState() {
   const label = document.getElementById("wu-status-label");
   const text = document.getElementById("wu-status-text");
 
   if (label) label.textContent = "Detecting location…";
-  if (text) text.textContent = "Waiting for permission.";
+  if (text) text.textContent = "Waiting for browser location permission.";
 }
 
 // ------------------------------------------------------------
