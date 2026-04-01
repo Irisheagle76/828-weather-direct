@@ -664,4 +664,12 @@ export async function renderWeather({
   window._tomorrowNarr = tomorrowNarr;
   window._haToday = intelRaw.today;
   window._haTomorrow = intelRaw.tomorrow;
+
+   // DEBUG
+  window._raw = raw;
+  window._current = current;
+  window._hourly = hourly;
+  window._todayNarr = today;
+  window._tomorrowNarr = tomorrow;
+  
 }
