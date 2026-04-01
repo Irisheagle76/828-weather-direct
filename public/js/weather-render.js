@@ -1,6 +1,6 @@
 // /js/weather-render.js
 
-console.log("RENDER v9 LOADED FROM:", import.meta.url);
+console.log("RENDER v10 LOADED FROM:", import.meta.url);
 
 // ============================================================
 // IMPORTS
@@ -19,7 +19,7 @@ const $ = id => document.getElementById(id);
 
 function safeSet(id, prop, value) {
   const el = $(id);
-  if (el) el[prop] = value;
+  if (el && value != null) el[prop] = value;
 }
 
 function safeHTML(id, html) {
@@ -189,8 +189,8 @@ function renderSynthHealth(today, tomorrow) {
       <div><strong>Tomorrow Category:</strong> ${tomorrow.category ?? "n/a"}</div>
       <div><strong>Today Bullets:</strong> ${Array.isArray(today.bullets) ? today.bullets.length : 0}</div>
       <div><strong>Tomorrow Bullets:</strong> ${Array.isArray(tomorrow.bullets) ? tomorrow.bullets.length : 0}</div>
-      <div><strong>Goldilocks Today:</strong> ${today.isGoldilocks ? "Yes" : "No"}</div>
-      <div><strong>Goldilocks Tomorrow:</strong> ${tomorrow.isGoldilocks ? "Yes" : "No"}</div>
+      <div><strong>Goldilocks Today:</strong> ${today.goldilocks ? "Yes" : "No"}</div>
+      <div><strong>Goldilocks Tomorrow:</strong> ${tomorrow.goldilocks ? "Yes" : "No"}</div>
     </div>
   `;
 
@@ -205,8 +205,8 @@ function renderHumanAction(today, tomorrow) {
   // Today
   safeSet("ha-today-header", "textContent", getTodayLabelFromLocalTime());
   safeSet("ha-today-emoji", "textContent", today.emoji);
-  safeSet("ha-today-title", "textContent", today.title);
-  safeSet("ha-today-body", "textContent", today.narrative);
+  safeSet("ha-today-title", "textContent", today.headline);
+  safeSet("ha-today-body", "textContent", today.notes);
   safeHTML(
     "ha-today-bullets",
     (today.bullets || []).map(b => `<li>${b}</li>`).join("")
@@ -214,14 +214,14 @@ function renderHumanAction(today, tomorrow) {
 
   const todayGold = $("ha-today-goldilocks");
   if (todayGold) {
-    todayGold.style.display = today.isGoldilocks ? "inline-block" : "none";
+    todayGold.style.display = today.goldilocks ? "inline-block" : "none";
   }
 
   // Tomorrow
   safeSet("ha-tomorrow-header", "textContent", "Tomorrow’s Outlook");
   safeSet("ha-tomorrow-emoji", "textContent", tomorrow.emoji);
-  safeSet("ha-tomorrow-title", "textContent", tomorrow.title);
-  safeSet("ha-tomorrow-body", "textContent", tomorrow.narrative);
+  safeSet("ha-tomorrow-title", "textContent", tomorrow.headline);
+  safeSet("ha-tomorrow-body", "textContent", tomorrow.notes);
   safeHTML(
     "ha-tomorrow-bullets",
     (tomorrow.bullets || []).map(b => `<li>${b}</li>`).join("")
@@ -229,7 +229,7 @@ function renderHumanAction(today, tomorrow) {
 
   const tomorrowGold = $("ha-tomorrow-goldilocks");
   if (tomorrowGold) {
-    tomorrowGold.style.display = tomorrow.isGoldilocks ? "inline-block" : "none";
+    tomorrowGold.style.display = tomorrow.goldilocks ? "inline-block" : "none";
   }
 
   renderSynthHealth(today, tomorrow);
@@ -581,3 +581,4 @@ export async function renderWeather({ lat, lon, tempestDeviceId, tempestToken })
   window._haToday = intelRaw.today;
   window._haTomorrow = intelRaw.tomorrow;
 }
+
