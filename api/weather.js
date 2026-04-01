@@ -44,6 +44,8 @@ async function handleHourly(req, res) {
   `?latitude=${lat}&longitude=${lon}` +
   `&hourly=${hourlyFields}` +
   `&forecast_days=3` +
+  `&temperature_unit=fahrenheit` +      // ⭐ ADD THIS
+  `&dewpoint_unit=fahrenheit` +         // ⭐ ADD THIS
   `&timezone=America/New_York` +
   `&wind_speed_unit=mph` +
   `&precipitation_unit=inch`;
