@@ -15,16 +15,60 @@ h1, h2, h3 {
   color: #f5f7ff;
 }
 
+/* Unified, tightened header block */
 .app-title {
   font-size: 1.8rem;
   letter-spacing: -0.01em;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0rem;
+  line-height: 1.1;
+  position: relative;
+  padding-bottom: 0.25rem;
+}
+
+/* Twilight underline */
+.app-title::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 42px;
+  height: 2px;
+  background: linear-gradient(
+    to right,
+    var(--accent-orange),
+    rgba(255,255,255,0.0)
+  );
+  border-radius: 2px;
+  opacity: 0.85;
+}
+
+/* Optional 828 glyph */
+.app-title::before {
+  content: "⛰️";
+  margin-right: 0.35rem;
+  font-size: 1.25rem;
+  opacity: 0.9;
+  vertical-align: -2px;
 }
 
 .subtitle {
   font-size: 0.9rem;
   color: #c8d3ff;
-  margin-bottom: 1.2rem;
+  margin-top: 0.15rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.25;
+}
+
+/* Header animation */
+.header-animate {
+  opacity: 0;
+  transform: translateY(6px);
+  animation: headerFadeUp 0.6s ease forwards;
+}
+
+@keyframes headerFadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 
@@ -106,7 +150,7 @@ h1, h2, h3 {
 .card {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px; /* tightened from 20px */
 }
 
 .module {
@@ -279,4 +323,3 @@ h1, h2, h3 {
 .text-gold  { color: #f0b777; }
 .text-orange { color: #ffb866; }
 .text-blue { color: #c8d3ff; }
-
