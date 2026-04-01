@@ -1,11 +1,12 @@
 // /js/weather-fetch.js
 // ============================================================
-// RAW WEATHER FETCH LAYER — Unified fetchAllIntel()
+// RAW WEATHER FETCH LAYER — Clean Unified Fetch (2026 Edition)
 // ============================================================
 
 /**
- * Unified raw intel fetcher.
- * Returns ONLY raw, normalized data — no sky logic.
+ * fetchAllIntel()
+ * Returns ONLY raw, normalized data.
+ * No sky logic. No comfort logic. No narrative logic.
  */
 export async function fetchAllIntel({
   lat,
@@ -15,16 +16,16 @@ export async function fetchAllIntel({
 }) {
   const result = {
     tempest: null,
+    wu: null,
     hourly: null,
     mrms: null,
-    wu: null,
     meta: {
       fetchedAt: Date.now()
     }
   };
 
   // ------------------------------------------------------------
-  // 1. Tempest (normalized)
+  // 1. Tempest
   // ------------------------------------------------------------
   try {
     const rawTempest = await getTempestDeviceObs(tempestDeviceId, tempestToken);
@@ -34,16 +35,16 @@ export async function fetchAllIntel({
   }
 
   // ------------------------------------------------------------
-  // 2. Weather Underground
+  // 2. Weather Underground (ALL: nearest + current + history)
   // ------------------------------------------------------------
   try {
-    result.wu = await getWUObs(lat, lon);
+    result.wu = await getWUAll(lat, lon);
   } catch (err) {
     console.error("WU fetch failed:", err);
   }
 
   // ------------------------------------------------------------
-  // 3. Open-Meteo hourly forecast (FIXED)
+  // 3. Open-Meteo hourly forecast
   // ------------------------------------------------------------
   try {
     result.hourly = await getShortTermForecast(lat, lon);
@@ -52,7 +53,7 @@ export async function fetchAllIntel({
   }
 
   // ------------------------------------------------------------
-  // 4. MRMS pixel (placeholder)
+  // 4. MRMS (placeholder)
   // ------------------------------------------------------------
   try {
     result.mrms = await getMRMSPixel(lat, lon);
@@ -108,32 +109,36 @@ export async function getTempestDeviceObs(deviceId, token) {
 }
 
 // ============================================================
-// WEATHER UNDERGROUND — nearest station + observation
+// WEATHER UNDERGROUND — unified ALL endpoint
+// nearest + current + history
 // ============================================================
 
-export async function getWUObs(lat, lon) {
+export async function getWUAll(lat, lon) {
   try {
-    const stationRes = await fetch(`/api/wu/nearest?lat=${lat}&lon=${lon}`);
+    const res = await fetch(`/api/wu/all?lat=${lat}&lon=${lon}`);
 
-    if (!stationRes.ok) throw new Error("WU station lookup failed");
+    if (!res.ok) throw new Error("WU all fetch failed");
 
-    const stationData = await stationRes.json();
-    const stationId = stationData?.location?.stationId?.[0];
+    const data = await res.json();
 
-    if (!stationId) {
+    // Expected shape:
+    // {
+    //   stationId,
+    //   current,
+    //   history
+    // }
+
+    if (!data.stationId) {
       console.warn("No WU station found");
       return null;
     }
 
-    const obsRes = await fetch(`/api/wu-current?stationId=${stationId}`);
-    if (!obsRes.ok) throw new Error("WU observation failed");
+    // Attach station ID to current obs for consistency
+    if (data.current) {
+      data.current.stationID = data.stationId;
+    }
 
-    const obsData = await obsRes.json();
-    const obs = obsData?.observations?.[0] ?? null;
-
-    if (obs) obs.stationID = stationId;
-
-    return obs;
+    return data;
 
   } catch (err) {
     console.warn("WU fetch error:", err);
@@ -142,7 +147,7 @@ export async function getWUObs(lat, lon) {
 }
 
 // ============================================================
-// OPEN-METEO — hourly forecast (FIXED)
+// OPEN-METEO — hourly forecast
 // ============================================================
 
 export async function getShortTermForecast(lat, lon) {
@@ -152,7 +157,7 @@ export async function getShortTermForecast(lat, lon) {
 
   const data = await res.json();
 
-  // FIX: backend already returns the hourly object directly
+  // Backend already returns the hourly object directly
   return data;
 }
 
