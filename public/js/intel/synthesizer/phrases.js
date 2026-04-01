@@ -1,17 +1,11 @@
 // phrases.js
 // ============================================================
 // MASTER PHRASE LIBRARY — Asheville-aware, diverse, modular
-// Used by: categories.js, assemble.js, contrast.js
-// Tone: Warm + professional hybrid
-// Flavor: Medium Asheville microclimate
-// Diversity: Strong (Option C)
 // ============================================================
 
 export const phrases = {
 
-  // ------------------------------------------------------------
   // TEMPERATURE PHRASES
-  // ------------------------------------------------------------
   temperature: [
     "crisp morning air",
     "balanced midday warmth",
@@ -30,9 +24,7 @@ export const phrases = {
     "a comfortable band of warmth holding steady"
   ],
 
-  // ------------------------------------------------------------
   // MOISTURE / DEWPOINT PHRASES
-  // ------------------------------------------------------------
   moisture: [
     "dry continental flow keeps the feel clean",
     "dewpoint drift adds a hint of heaviness",
@@ -48,9 +40,7 @@ export const phrases = {
     "a pleasantly dry feel overall"
   ],
 
-  // ------------------------------------------------------------
   // WIND PHRASES
-  // ------------------------------------------------------------
   wind: [
     "a gentle southerly drift",
     "pushy westerlies at times",
@@ -65,9 +55,7 @@ export const phrases = {
     "a manageable wind pattern overall"
   ],
 
-  // ------------------------------------------------------------
   // CLOUD / LIGHT PHRASES
-  // ------------------------------------------------------------
   light: [
     "filtered mountain light",
     "muted sky texture through the afternoon",
@@ -81,9 +69,7 @@ export const phrases = {
     "steady light without harsh glare"
   ],
 
-  // ------------------------------------------------------------
-  // MICROCLIMATE PHRASES (Asheville-aware)
-  // ------------------------------------------------------------
+  // MICROCLIMATE PHRASES
   microclimate: [
     "valley chill lingering longer than expected",
     "ridge-top mixing staying light",
@@ -97,9 +83,7 @@ export const phrases = {
     "a balanced setup across the Blue Ridge terrain"
   ],
 
-  // ------------------------------------------------------------
-  // ATMOSPHERIC PATTERN PHRASES
-  // ------------------------------------------------------------
+  // PATTERN / ATMOSPHERIC PHRASES
   pattern: [
     "a stable, quiet air mass",
     "a simple, uneventful stretch overall",

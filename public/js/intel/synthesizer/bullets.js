@@ -1,17 +1,11 @@
 // bullets.js
 // ============================================================
 // MICRO-BULLET LIBRARY — Asheville-aware, diverse, modular
-// Used by: assemble.js, contrast.js
-// Tone: Warm + professional hybrid
-// Flavor: Medium Asheville microclimate
-// Diversity: Strong (Option C)
 // ============================================================
 
 export const bulletPools = {
 
-  // ------------------------------------------------------------
   // TEMPERATURE BULLETS
-  // ------------------------------------------------------------
   temperature: [
     "Balanced warmth holds through the afternoon.",
     "Crisp air keeps the feel clean and steady.",
@@ -23,9 +17,7 @@ export const bulletPools = {
     "Valley chill fades quickly as the day unfolds."
   ],
 
-  // ------------------------------------------------------------
   // MOISTURE / DEWPOINT BULLETS
-  // ------------------------------------------------------------
   moisture: [
     "Dry air keeps the feel crisp and comfortable.",
     "Humidity stays in a manageable band.",
@@ -37,9 +29,7 @@ export const bulletPools = {
     "Crisp, low-dew air dominates much of the day."
   ],
 
-  // ------------------------------------------------------------
   // WIND BULLETS
-  // ------------------------------------------------------------
   wind: [
     "A gentle breeze adds a touch of freshness.",
     "Pushy gusts appear briefly in exposed areas.",
@@ -51,9 +41,7 @@ export const bulletPools = {
     "A soft southerly drift adds mild warmth."
   ],
 
-  // ------------------------------------------------------------
   // CLOUD / LIGHT BULLETS
-  // ------------------------------------------------------------
   light: [
     "Filtered mountain light keeps the feel even.",
     "Muted sky texture softens the afternoon.",
@@ -65,9 +53,7 @@ export const bulletPools = {
     "A blend of sun and thin cloud adds warmth."
   ],
 
-  // ------------------------------------------------------------
-  // MICROCLIMATE BULLETS (Asheville-aware)
-  // ------------------------------------------------------------
+  // MICROCLIMATE BULLETS
   microclimate: [
     "Valley and ridge temperatures stay surprisingly aligned.",
     "Thermal mixing along the slopes remains gentle.",
@@ -79,9 +65,7 @@ export const bulletPools = {
     "Elevation differences remain minimal today."
   ],
 
-  // ------------------------------------------------------------
   // PATTERN / ATMOSPHERE BULLETS
-  // ------------------------------------------------------------
   pattern: [
     "A stable air mass keeps conditions predictable.",
     "A quiet pattern holds with minimal forcing.",
@@ -93,9 +77,7 @@ export const bulletPools = {
     "A calm, steady pattern shapes the day."
   ],
 
-  // ------------------------------------------------------------
-  // GOLDILOCKS BULLETS — PREMIUM MODE
-  // ------------------------------------------------------------
+  // GOLDILOCKS BULLETS
   goldilocks: [
     "Humidity sits in the ideal comfort band.",
     "Air feels clean, crisp, and balanced.",

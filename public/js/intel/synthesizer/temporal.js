@@ -1,75 +1,58 @@
 // temporal.js
 // ============================================================
-// TEMPORAL FRAMING ENGINE
-// Provides day-aware opening phrases for Today vs Tomorrow
-// Tone: Warm + professional hybrid
-// Flavor: Medium Asheville microclimate
-// Diversity: Strong (Option C)
-// Goldilocks: Premium mode
+// TEMPORAL FRAMING LIBRARY
+// ============================================================
+//
+// Provides short lead-in phrases for:
+//  - Today vs Tomorrow
+//  - Goldilocks vs normal
 // ============================================================
 
 export const temporal = {
 
-  // ------------------------------------------------------------
-  // TODAY — STRONG FRAMING
-  // ------------------------------------------------------------
+  // Standard today framing
   today: [
-    "This afternoon brings",
-    "Later today features",
-    "As the day unfolds, expect",
-    "Through the afternoon hours, look for",
-    "As the day settles in, conditions show",
-    "This evening trends toward",
-    "As the day winds down, expect",
-    "Through the rest of today, anticipate"
+    "Through the rest of today,",
+    "For the rest of today,",
+    "As today unfolds,",
+    "Through today’s daylight hours,",
+    "Across much of today,"
   ],
 
-  // ------------------------------------------------------------
-  // TOMORROW — STRONG FRAMING
-  // ------------------------------------------------------------
+  // Standard tomorrow framing
   tomorrow: [
-    "Tomorrow morning starts with",
-    "By midday tomorrow, expect",
-    "Tomorrow brings",
-    "As tomorrow unfolds, look for",
-    "Tomorrow afternoon trends toward",
-    "Through the day tomorrow, anticipate",
-    "Tomorrow evening leans toward",
-    "Early tomorrow, conditions show"
+    "Tomorrow overall,",
+    "As tomorrow unfolds,",
+    "Through much of tomorrow,",
+    "Tomorrow’s pattern leans toward",
+    "Looking ahead to tomorrow,"
   ],
 
-  // ------------------------------------------------------------
-  // GOLDILOCKS — PREMIUM FRAMING
-  // ------------------------------------------------------------
+  // Goldilocks today framing
   goldilocksToday: [
-    "This afternoon settles into a rare just-right feel with",
-    "Later today brings a beautifully balanced setup with",
-    "As the day unfolds, conditions land squarely in the Goldilocks zone with",
-    "Through the afternoon, expect a remarkably even feel with",
-    "This evening trends toward a smooth, just-right pattern with"
+    "Through the rest of today, conditions land in a rare sweet spot —",
+    "For the rest of today, everything lines up just right —",
+    "As today unfolds, the setup stays remarkably balanced —"
   ],
 
+  // Goldilocks tomorrow framing
   goldilocksTomorrow: [
-    "Tomorrow morning opens in the Goldilocks zone with",
-    "By midday tomorrow, conditions stay beautifully balanced with",
-    "Tomorrow brings another just-right setup with",
-    "As tomorrow unfolds, expect a remarkably even feel with",
-    "Tomorrow afternoon trends toward a smooth, just-right pattern with"
+    "Tomorrow brings another Goldilocks-style setup —",
+    "Looking ahead to tomorrow, conditions stay beautifully balanced —",
+    "Tomorrow continues the just-right pattern —"
   ],
 
-  // ------------------------------------------------------------
-  // UTILITY — SELECTOR
-  // ------------------------------------------------------------
-  choose(dayType, isGoldilocks = false) {
+  // ----------------------------------------------------------
+  // CHOOSER
+  // ----------------------------------------------------------
+  choose(dayType, isGoldilocks) {
     if (dayType === "today") {
       if (isGoldilocks) {
         return this.goldilocksToday[
           Math.floor(Math.random() * this.goldilocksToday.length)
         ];
       }
-      return this.today[
-        Math.floor(Math.random() * this.today.length)
-      ];
+      return this.today[Math.floor(Math.random() * this.today.length)];
     }
 
     if (dayType === "tomorrow") {
@@ -78,12 +61,10 @@ export const temporal = {
           Math.floor(Math.random() * this.goldilocksTomorrow.length)
         ];
       }
-      return this.tomorrow[
-        Math.floor(Math.random() * this.tomorrow.length)
-      ];
+      return this.tomorrow[Math.floor(Math.random() * this.tomorrow.length)];
     }
 
-    // fallback (should never hit)
-    return "Conditions show";
+    // Fallback
+    return "Through the period,";
   }
 };
