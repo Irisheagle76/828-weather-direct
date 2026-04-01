@@ -113,7 +113,8 @@ export async function getTempestDeviceObs(deviceId, token) {
 
 export async function getWUObs(lat, lon) {
   try {
-    const stationRes = await fetch(`/api/wu-station?lat=${lat}&lon=${lon}`);
+    const stationRes = await fetch(`/api/wu/nearest?lat=${lat}&lon=${lon}`);
+
     if (!stationRes.ok) throw new Error("WU station lookup failed");
 
     const stationData = await stationRes.json();
