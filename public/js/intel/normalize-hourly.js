@@ -26,14 +26,17 @@ export function normalizeOpenMeteo(hourly) {
     };
 
     // ------------------------------------------------------------
-    // CORE METEOROLOGICAL FIELDS (CELSIUS)
+    // CORE METEOROLOGICAL FIELDS
     // ------------------------------------------------------------
-    const tempC = num(pick("temperature_2m"));
-    const dewC = num(pick("dewpoint_2m"));
+    // IMPORTANT:
+    // temperature_2m and apparent_temperature are already Fahrenheit
+    // dewpoint_2m is ALWAYS Celsius (Open-Meteo does not support dewpoint_unit)
+    const tempF_raw = num(pick("temperature_2m"));
+    const dewC_raw = num(pick("dewpoint_2m"));
     const humidity = num(pick("relativehumidity_2m"));
 
     // ------------------------------------------------------------
-    // WIND (m/s or km/h depending on API — normalized to mph)
+    // WIND (already normalized by backend to mph)
     // ------------------------------------------------------------
     const windSpeed = num(pick("wind_speed_10m", "windspeed_10m"));
     const windGust = num(pick("wind_gusts_10m", "windgusts_10m"));
@@ -56,9 +59,9 @@ export function normalizeOpenMeteo(hourly) {
       visibility = visibility / 1609.34;
     }
 
-    // Apparent temperature fallback
-    const apparentRaw = num(pick("apparent_temperature"));
-    const apparentC = apparentRaw != null ? apparentRaw : tempC;
+    // Apparent temperature (already Fahrenheit)
+    const apparentF_raw = num(pick("apparent_temperature"));
+    const apparentF = apparentF_raw != null ? apparentF_raw : tempF_raw;
 
     // Timestamp
     const rawTs = new Date(hourly.time[i]).getTime();
@@ -67,6 +70,10 @@ export function normalizeOpenMeteo(hourly) {
     // ------------------------------------------------------------
     // RISK INDICES (computed in Celsius)
     // ------------------------------------------------------------
+    // Convert tempF_raw back to C for risk logic
+    const tempC = tempF_raw != null ? fToC(tempF_raw) : null;
+    const dewC = dewC_raw;
+
     const frostRisk =
       tempC != null && dewC != null && tempC <= 37 && dewC <= 36
         ? 0.6
@@ -104,18 +111,28 @@ export function normalizeOpenMeteo(hourly) {
         : 0;
 
     // ------------------------------------------------------------
+    // SAFE DEWPOINT FIX (NO DRIFT)
+    // ------------------------------------------------------------
+    // dewpoint_2m is ALWAYS Celsius from Open-Meteo.
+    // Convert ONLY if value is clearly Celsius (< 60°F).
+    let dewpointF = null;
+    if (dewC_raw != null) {
+      dewpointF = dewC_raw < 60 ? cToF(dewC_raw) : dewC_raw;
+    }
+
+    // ------------------------------------------------------------
     // CANONICAL NORMALIZED OBJECT
     // ------------------------------------------------------------
     out.push({
-      // Celsius (raw)
+      // Raw Celsius values (for risk logic)
       temperature: tempC,
       dewpoint: dewC,
-      apparent_temperature: apparentC,
+      apparent_temperature: fToC(apparentF),
 
-      // Fahrenheit (canonical for comfort engine)
-      temperatureF: tempC != null ? cToF(tempC) : null,
-      dewpointF: dewC != null ? cToF(dewC) : null,
-      apparentF: apparentC != null ? cToF(apparentC) : null,
+      // Canonical Fahrenheit (for comfort engine)
+      temperatureF: tempF_raw,
+      dewpointF,
+      apparentF,
 
       // Humidity
       relative_humidity: humidity,
@@ -149,7 +166,12 @@ export function normalizeOpenMeteo(hourly) {
   return out;
 }
 
-// Celsius → Fahrenheit helper
+// Celsius → Fahrenheit
 function cToF(c) {
   return (c * 9) / 5 + 32;
+}
+
+// Fahrenheit → Celsius
+function fToC(f) {
+  return ((f - 32) * 5) / 9;
 }
