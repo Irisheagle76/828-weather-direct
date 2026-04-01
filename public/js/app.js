@@ -52,10 +52,16 @@ async function initApp() {
     async pos => {
       console.log("GEOLOCATION SUCCESS — VERSION TEST MARKER C", pos);
 
+      // ⭐ TEMPORARY OVERRIDE WHILE TRAVELING ⭐
+      const FORCE_ASHEVILLE = true;
+
+      const lat = FORCE_ASHEVILLE ? 35.5951 : pos.coords.latitude;
+      const lon = FORCE_ASHEVILLE ? -82.5515 : pos.coords.longitude;
+
       try {
         await renderWeather({
-          lat: pos.coords.latitude,
-          lon: pos.coords.longitude,
+          lat,
+          lon,
           tempestDeviceId: "315255",
           tempestToken: "838ff386-d14b-4d45-897a-18903e6970a9"
         });
@@ -65,6 +71,7 @@ async function initApp() {
         showError("Unable to load weather data. Please try again.");
       }
     },
+
     err => {
       console.error("Geolocation error:", err);
 
