@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 🔍 DEBUG: Confirm whether Vercel is passing the API key
+    // 🔍 DEBUG: Confirm whether Vercel is passing API key
   console.log("WU ALL ROUTE HIT");
 console.log("WU_API_KEY length:", process.env.WU_API_KEY?.length);
 
