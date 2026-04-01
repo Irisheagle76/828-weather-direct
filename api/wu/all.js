@@ -28,14 +28,12 @@ export default async function handler(req, res) {
     // 2. Current observation
     const currentUrl = `https://api.weather.com/v2/pws/observations/current?stationId=${stationId}&format=json&units=e&apiKey=${process.env.WU_API_KEY}`;
     const currentRes = await fetch(currentUrl);
-
     const currentData = currentRes.ok ? await currentRes.json() : null;
     const currentObs = currentData?.observations?.[0] ?? null;
 
     // 3. 7-day hourly history
     const historyUrl = `https://api.weather.com/v2/pws/observations/hourly/7day?stationId=${stationId}&format=json&units=e&apiKey=${process.env.WU_API_KEY}`;
     const historyRes = await fetch(historyUrl);
-
     const historyData = historyRes.ok ? await historyRes.json() : null;
 
     // 4. Unified response
@@ -49,3 +47,4 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "WU all fetch failed" });
   }
 }
+
