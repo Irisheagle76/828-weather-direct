@@ -6,6 +6,9 @@ export default async function handler(req, res) {
   }
 
   try {
+    // 🔍 DEBUG: Confirm whether Vercel is passing the API key
+    console.log("WU_API_KEY length:", process.env.WU_API_KEY?.length);
+
     // 1. Nearest station lookup
     const nearestUrl = `https://api.weather.com/v3/location/near?geocode=${lat},${lon}&product=pws&format=json&apiKey=${process.env.WU_API_KEY}`;
     const nearestRes = await fetch(nearestUrl);
