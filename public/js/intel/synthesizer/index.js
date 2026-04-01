@@ -10,6 +10,7 @@
 //  - Applies strong diversity rules via contrast.js
 //  - Returns final narrative object
 // ============================================================
+console.log("SYNTHESIZER VERSION: NEW v4");
 
 import { assemble } from "./assemble.js";
 import { contrast } from "./contrast.js";
