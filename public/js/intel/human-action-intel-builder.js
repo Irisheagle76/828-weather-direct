@@ -1,6 +1,6 @@
 // /intel/human-action-intel-builder.js
 // ============================================================
-// HUMAN-ACTION INTEL BUILDER — HA 2.2 (Divergence-Fixed)
+// HUMAN-ACTION INTEL BUILDER — HA 2.3 (Synthesizer-Ready)
 // ============================================================
 
 import { evaluateHumanActionFactors } from "../modules/human-action-2/core-engine.js";
@@ -8,6 +8,7 @@ import { normalizeOpenMeteo } from "./normalize-hourly.js";
 
 // ------------------------------------------------------------
 // SYNTHESIZER SAFETY WRAPPER
+// Ensures required fields exist even if HA engine omits them
 // ------------------------------------------------------------
 function ensureSynthFields(intel, snapshot) {
   const base = intel ?? {};
@@ -43,19 +44,23 @@ export function buildHumanActionIntel(raw) {
   // ------------------------------------------------------------
   // TODAY — current hour + next 3 hours, with slight forward blend
   // ------------------------------------------------------------
-  const todayCore = hourly.slice(idx, idx + 4);      // current + next 3
-  const todayExtended = hourly.slice(idx, idx + 8);  // add a bit more horizon
+  const todayCore = hourly.slice(idx, idx + 4);
+  const todayExtended = hourly.slice(idx, idx + 8);
   const todaySnapshot = blendHoursWithForwardBias(todayCore, todayExtended);
 
-  // mark as "today" for synthesizer framing
   todaySnapshot.dayLabel = "today";
   todaySnapshot.isTomorrow = false;
 
   const todayIntelRaw = evaluateHumanActionFactors(todaySnapshot) || {};
-  const todayIntel = ensureSynthFields(todayIntelRaw, todaySnapshot);
+
+  // ⭐ NEW: Merge snapshot meteorology into HA intel
+  const todayIntel = {
+    ...ensureSynthFields(todayIntelRaw, todaySnapshot),
+    ...todaySnapshot
+  };
 
   // ------------------------------------------------------------
-  // TOMORROW — HA 2.0 morning/afternoon hybrid, with explicit tomorrow flag
+  // TOMORROW — HA 2.0 morning/afternoon hybrid
   // ------------------------------------------------------------
   const tomorrowBundle = buildTomorrowSnapshots(hourly);
 
@@ -64,15 +69,17 @@ export function buildHumanActionIntel(raw) {
     tomorrowBundle.morning ??
     blendHours(hourly.slice(24, 28));
 
-  // mark as "tomorrow" for synthesizer framing
   if (tomorrowSnapshot) {
     tomorrowSnapshot.dayLabel = "tomorrow";
     tomorrowSnapshot.isTomorrow = true;
   }
 
   const tomorrowIntelRaw = evaluateHumanActionFactors(tomorrowSnapshot) || {};
+
+  // ⭐ NEW: Merge snapshot meteorology + tomorrow stats
   const tomorrowIntel = {
     ...ensureSynthFields(tomorrowIntelRaw, tomorrowSnapshot),
+    ...tomorrowSnapshot,
     stats: tomorrowBundle.stats
   };
 
@@ -130,7 +137,6 @@ function blendHoursWithForwardBias(coreHours, extendedHours) {
 
   const ext = blendHours(extendedHours);
 
-  // 70% weight on near-term, 30% on slightly farther horizon
   const mix = (a, b) =>
     a != null && b != null ? (0.7 * a + 0.3 * b) : (a ?? b ?? null);
 
@@ -141,7 +147,7 @@ function blendHoursWithForwardBias(coreHours, extendedHours) {
     humidity: mix(core.humidity, ext.humidity),
     windSpeed: mix(core.windSpeed, ext.windSpeed),
     windGust: mix(core.windGust, ext.windGust),
-    precipType: core.precipType, // keep near-term precip type
+    precipType: core.precipType,
     precipIntensity: mix(core.precipIntensity, ext.precipIntensity),
     uvIndex: mix(core.uvIndex, ext.uvIndex),
     visibility: mix(core.visibility, ext.visibility),
