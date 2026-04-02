@@ -52,6 +52,16 @@ function resolveCurrentConditions(raw, hourly) {
   const idx = hourly.findIndex(h => h.timestamp >= now);
   const fallback = idx !== -1 ? hourly[idx] : hourly[0];
 
+  // ⭐ DEBUG: Inspect all dewpoint sources
+  console.log("DEWPOINT DEBUG SOURCES:", {
+    tempest_raw: raw.tempest?.dew_point,
+    tempest_cToF: raw.tempest?.dew_point != null ? cToF(raw.tempest.dew_point) : null,
+    wu_dewpt: raw.wu?.imperial?.dewpt,
+    hourly_dewpointF: fallback?.dewpointF,
+    hourly_snapshot: fallback
+  });
+
+  
   // TEMP
   const tempF =
     (raw.tempest?.air_temperature != null
