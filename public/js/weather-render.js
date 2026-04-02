@@ -199,14 +199,15 @@ function renderSynthHealth(today, tomorrow) {
 }
 
 // ============================================================
-// HUMAN ACTION (TODAY + TOMORROW)
+// HUMAN ACTION (TODAY + TOMORROW) — NEW SYNTH WIRED
 // ============================================================
 function renderHumanAction(today, tomorrow) {
   // Today
   safeSet("ha-today-header", "textContent", getTodayLabelFromLocalTime());
   safeSet("ha-today-emoji", "textContent", today.emoji);
   safeSet("ha-today-title", "textContent", today.headline);
-  safeSet("ha-today-body", "textContent", today.notes);
+  // 🔁 use synthesizer narrative, not legacy notes
+  safeSet("ha-today-body", "textContent", today.narrative);
   safeHTML(
     "ha-today-bullets",
     (today.bullets || []).map(b => `<li>${b}</li>`).join("")
@@ -221,7 +222,8 @@ function renderHumanAction(today, tomorrow) {
   safeSet("ha-tomorrow-header", "textContent", "Tomorrow’s Outlook");
   safeSet("ha-tomorrow-emoji", "textContent", tomorrow.emoji);
   safeSet("ha-tomorrow-title", "textContent", tomorrow.headline);
-  safeSet("ha-tomorrow-body", "textContent", tomorrow.notes);
+  // 🔁 use synthesizer narrative, not legacy notes
+  safeSet("ha-tomorrow-body", "textContent", tomorrow.narrative);
   safeHTML(
     "ha-tomorrow-bullets",
     (tomorrow.bullets || []).map(b => `<li>${b}</li>`).join("")
@@ -581,4 +583,3 @@ export async function renderWeather({ lat, lon, tempestDeviceId, tempestToken })
   window._haToday = intelRaw.today;
   window._haTomorrow = intelRaw.tomorrow;
 }
-
