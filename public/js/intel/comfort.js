@@ -244,43 +244,40 @@ return parts.length ? parts.join(", ") + "." : null;
 // ============================================================
 
 export function computeComfort(intel) {
-const src = intel?.tempest ?? intel?.wu ?? {};
+  const src = intel?.tempest ?? intel?.wu ?? {};
 
-const temp = num(src.temp);
-const dew = ensureDew(temp, num(src.dewPoint));
-const wind = num(src.windSpeed) ?? 0;
-const windDir = src.windDir ?? "";
-const timestamp = normalizeTimestamp(src.obsTimeLocal);
+  const temp = num(src.temp);
+  const dew = ensureDew(temp, num(src.dewPoint));
+  const wind = num(src.windSpeed) ?? 0;
+  const windDir = src.windDir ?? "";
+  const timestamp = normalizeTimestamp(src.obsTimeLocal);
 
-const elev = computeSolarElevation(timestamp, LOCATION.lat, LOCATION.lon);
-const feelsLike = computeWindChill(temp, wind);
+  const elev = computeSolarElevation(timestamp, LOCATION.lat, LOCATION.lon);
+  const feelsLike = computeWindChill(temp, wind);
 
-const rawScore = computeComfortScore(temp, dew, wind, elev, windDir);
-const score = rawScore ?? 0;
+  const rawScore = computeComfortScore(temp, dew, wind, elev, windDir);
+  const score = rawScore ?? 0;
 
-const category = getCategory(score);
+  const category = getCategory(score);
 
-return {
-category,
-emoji: getEmoji(category),
-comfortScore: score,
-feelsLike,
+  return {
+    category,
+    emoji: getEmoji(category),
+    comfortScore: score,
+    feelsLike,
 
-```
-temp,
-dewpoint: dew,
-humidity: dewToRH(temp, dew),
-windSpeed: wind,
+    temp,
+    dewpoint: dew,
+    humidity: dewToRH(temp, dew),
+    windSpeed: wind,
 
-color: getComfortColor(score),
-headline: buildHeadline(category, dew),
-narrative: buildNarrative(temp, dew, wind, elev),
+    color: getComfortColor(score),
+    headline: buildHeadline(category, dew),
+    narrative: buildNarrative(temp, dew, wind, elev),
 
-scoreExplainer:
-  "Comfort Score blends temperature, humidity, wind, and sun angle into a 0–100 scale."
-```
-
-};
+    scoreExplainer:
+      "Comfort Score blends temperature, humidity, wind, and sun angle into a 0–100 scale."
+  };
 }
 
 // ============================================================
