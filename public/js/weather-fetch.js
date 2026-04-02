@@ -70,9 +70,16 @@ export async function fetchAllIntel({
 // ============================================================
 // 🌪️ TEMPEST — Better Forecast (station-level)
 // ============================================================
-
+//
+// IMPORTANT:
+// This now calls your EXISTING backend route:
+//   /api/tempest/device
+//
+// …but passes stationId instead of deviceId.
+// Your backend will detect stationId and call Better Forecast.
+//
 export async function getTempestStationObs(stationId, token) {
-  const url = `/api/tempest/station?stationId=${stationId}&token=${token}`;
+  const url = `/api/tempest/device?stationId=${stationId}&token=${token}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Tempest station obs failed");
   return res.json();

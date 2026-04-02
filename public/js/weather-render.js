@@ -1,7 +1,5 @@
 // /js/weather-render.js
 
-console.log("RENDER v10 LOADED FROM:", import.meta.url);
-
 // ============================================================
 // IMPORTS
 // ============================================================
@@ -44,96 +42,67 @@ function getTodayLabelFromLocalTime() {
 }
 
 // ============================================================
-// CANONICAL CURRENT CONDITIONS
+// CANONICAL CURRENT CONDITIONS — TEMPEST FIRST
 // ============================================================
 function resolveCurrentConditions(raw, hourly) {
-  // pick the closest hourly snapshot to "now"
   const now = Date.now();
   const idx = hourly.findIndex(h => h.timestamp >= now);
   const fallback = idx !== -1 ? hourly[idx] : hourly[0];
 
-  // ⭐ DEBUG: Inspect all dewpoint sources
-  console.log("DEWPOINT DEBUG SOURCES:", {
-    tempest_raw: raw.tempest?.dew_point,
-    tempest_cToF: raw.tempest?.dew_point != null ? cToF(raw.tempest.dew_point) : null,
-    wu_dewpt: raw.wu?.imperial?.dewpt,
-    hourly_dewpointF: fallback?.dewpointF,
-    hourly_snapshot: fallback
-  });
-
-  
   // TEMP
   const tempF =
     (raw.tempest?.air_temperature != null
       ? cToF(raw.tempest.air_temperature)
       : null) ??
-    raw.wu?.imperial?.temp ??
     fallback?.temperatureF ??
     null;
 
-  // DEWPOINT — sanity check (dewpoint cannot exceed temp or be > 85F in spring)
-  let dewF = null;
+  // DEWPOINT
+  const dewF =
+    (raw.tempest?.dew_point != null
+      ? cToF(raw.tempest.dew_point)
+      : null) ??
+    fallback?.dewpointF ??
+    null;
 
-  if (raw.tempest?.dew_point != null) {
-    const dp = cToF(raw.tempest.dew_point);
-    if (dp > -40 && dp < 85) dewF = dp;
-  }
+  // HUMIDITY
+  const humidity =
+    raw.tempest?.relative_humidity ??
+    fallback?.relative_humidity ??
+    null;
 
-  if (dewF == null && raw.wu?.imperial?.dewpt != null) {
-    dewF = raw.wu.imperial.dewpt;
-  }
+  // WIND (Tempest m/s → mph)
+  const wind =
+    raw.tempest?.wind_avg != null
+      ? raw.tempest.wind_avg * 2.23694
+      : fallback?.wind_speed ?? null;
 
-  if (dewF == null) {
-    dewF = fallback?.dewpointF ?? null;
-  }
-
-  // WIND — convert Tempest m/s → mph
-  let wind = null;
-  if (raw.tempest?.wind_avg != null) {
-    wind = raw.tempest.wind_avg * 2.23694;
-  } else if (raw.wu?.imperial?.windSpeed != null) {
-    wind = raw.wu.imperial.windSpeed;
-  } else {
-    wind = fallback?.wind_speed ?? null;
-  }
-
-  // GUST
-  let gust = null;
-  if (raw.tempest?.wind_gust != null) {
-    gust = raw.tempest.wind_gust * 2.23694;
-  } else if (raw.wu?.imperial?.windGust != null) {
-    gust = raw.wu.imperial.windGust;
-  } else {
-    gust = fallback?.wind_gust ?? null;
-  }
-
-  // HUMIDITY — sanity check (1–100)
-  let humidity = raw.tempest?.relative_humidity;
-  if (!(humidity > 0 && humidity <= 100)) {
-    humidity = raw.wu?.humidity ?? fallback?.relative_humidity ?? null;
-  }
-
-  // UV
-  const uv =
-    raw.wu?.uv ??
-    fallback?.uv_index ??
-    0;
+  const gust =
+    raw.tempest?.wind_gust != null
+      ? raw.tempest.wind_gust * 2.23694
+      : fallback?.wind_gust ?? null;
 
   // WIND DIRECTION
   const windDir =
     raw.tempest?.wind_direction ??
-    raw.wu?.wind_dir ??
     fallback?.wind_dir ??
     "";
 
+  // UV
+  const uv =
+    raw.tempest?.uv ??
+    fallback?.uv_index ??
+    0;
+
+  // TIMESTAMP
   const timestamp =
     raw.tempest?.timestamp ??
-    raw.wu?.obsTimeLocal ??
     fallback?.timestamp ??
     Date.now();
 
   return { tempF, dewF, wind, gust, humidity, uv, windDir, timestamp };
 }
+
 // ============================================================
 // COMFORT WRAPPER
 // ============================================================
@@ -150,7 +119,7 @@ function computeComfort(input) {
 }
 
 // ============================================================
-// CURRENT OBSERVATIONS
+// CURRENT OBSERVATIONS — EMOJI-RICH, ASHEVILLE-WARM
 // ============================================================
 function renderCurrentObservations(current) {
   const wrap = $("current-obs-wrapper");
@@ -161,19 +130,19 @@ function renderCurrentObservations(current) {
 
   container.innerHTML = `
     <div class="obs-line">
-      <span class="obs-item">Temp <strong>${current.tempF != null ? Math.round(current.tempF) + "°" : "--"}</strong></span>
+      <span class="obs-item">🌡️ <strong>${current.tempF != null ? Math.round(current.tempF) + "°" : "--"}</strong></span>
       <span class="obs-dot">•</span>
-      <span class="obs-item">Dew <strong>${current.dewF != null ? Math.round(current.dewF) + "°" : "--"}</strong></span>
+      <span class="obs-item">💧 Dew <strong>${current.dewF != null ? Math.round(current.dewF) + "°" : "--"}</strong></span>
       <span class="obs-dot">•</span>
-      <span class="obs-item">Humidity <strong>${current.humidity != null ? Math.round(current.humidity) + "%" : "--"}</strong></span>
+      <span class="obs-item">💦 <strong>${current.humidity != null ? Math.round(current.humidity) + "%" : "--"}</strong></span>
     </div>
 
     <div class="obs-line">
-      <span class="obs-item">Wind <strong>${current.wind != null ? Math.round(current.wind) + " mph" : "--"}</strong></span>
+      <span class="obs-item">🌬️ <strong>${current.wind != null ? Math.round(current.wind) + " mph" : "--"}</strong></span>
       <span class="obs-dot">•</span>
-      <span class="obs-item">Gusts <strong>${current.gust != null ? Math.round(current.gust) + " mph" : "--"}</strong></span>
+      <span class="obs-item">💨 Gusts <strong>${current.gust != null ? Math.round(current.gust) + " mph" : "--"}</strong></span>
       <span class="obs-dot">•</span>
-      <span class="obs-item">UV <strong>${current.uv}</strong></span>
+      <span class="obs-item">🔆 UV <strong>${current.uv}</strong></span>
     </div>
   `;
 }
@@ -228,20 +197,16 @@ function renderSynthHealth(today, tomorrow) {
       <div><strong>Goldilocks Tomorrow:</strong> ${tomorrow.goldilocks ? "Yes" : "No"}</div>
     </div>
   `;
-
-  console.log("ACTIVE SYNTH VERSION (TODAY):", today.version);
-  console.log("ACTIVE SYNTH VERSION (TOMORROW):", tomorrow.version);
 }
 
 // ============================================================
-// HUMAN ACTION (TODAY + TOMORROW) — NEW SYNTH WIRED
+// HUMAN ACTION (TODAY + TOMORROW)
 // ============================================================
 function renderHumanAction(today, tomorrow) {
   // Today
   safeSet("ha-today-header", "textContent", getTodayLabelFromLocalTime());
   safeSet("ha-today-emoji", "textContent", today.emoji);
   safeSet("ha-today-title", "textContent", today.headline);
-  // 🔁 use synthesizer narrative, not legacy notes
   safeSet("ha-today-body", "textContent", today.narrative);
   safeHTML(
     "ha-today-bullets",
@@ -257,7 +222,6 @@ function renderHumanAction(today, tomorrow) {
   safeSet("ha-tomorrow-header", "textContent", "Tomorrow’s Outlook");
   safeSet("ha-tomorrow-emoji", "textContent", tomorrow.emoji);
   safeSet("ha-tomorrow-title", "textContent", tomorrow.headline);
-  // 🔁 use synthesizer narrative, not legacy notes
   safeSet("ha-tomorrow-body", "textContent", tomorrow.narrative);
   safeHTML(
     "ha-tomorrow-bullets",
@@ -281,14 +245,8 @@ function renderHumanActionExpanded(todayIntel, tomorrowIntel) {
 
     const s = intel.snapshot;
 
-    let high = null;
-    let low = null;
-
-    if (intel.stats) {
-      high = intel.stats.tempMax ?? s.temp ?? null;
-      low = intel.stats.tempMin ?? s.temp ?? null;
-    }
-
+    const high = intel.stats?.tempMax ?? s.temp ?? null;
+    const low = intel.stats?.tempMin ?? s.temp ?? null;
     const dew = s.dewPoint ?? s.dewpoint ?? null;
     const wind = s.windSpeed ?? null;
     const gust = s.windGust ?? null;
@@ -550,8 +508,8 @@ function initializeAccordion() {
 // ============================================================
 // MAIN ENTRY — FULL PIPELINE
 // ============================================================
-export async function renderWeather({ lat, lon, tempestDeviceId, tempestToken }) {
-  const raw = await fetchAllIntel({ lat, lon, tempestDeviceId, tempestToken });
+export async function renderWeather({ lat, lon, tempestStationId, tempestToken }) {
+  const raw = await fetchAllIntel({ lat, lon, tempestStationId, tempestToken });
 
   const hourlyNormalized = normalizeOpenMeteo(raw.hourly);
   const current = resolveCurrentConditions(raw, hourlyNormalized);
@@ -606,15 +564,103 @@ export async function renderWeather({ lat, lon, tempestDeviceId, tempestToken })
   renderFutureComfort($("future-comfort-container"), futureComfort);
 
   initializeAccordion();
+}
+// ============================================================
+// ACCORDION — ONE MODULE OPEN AT A TIME
+// ============================================================
+function initializeAccordion() {
+  document.addEventListener("click", e => {
+    const mod = e.target.closest("[data-accordion]");
+    if (!mod) return;
 
-  // DEBUG
-  window._raw = raw;
-  window._hourly = hourlyNormalized;
-  window._current = current;
-  window._comfortNow = comfortNow;
-  window._comfortNowForRender = comfortNowForRender;
-  window._todayNarr = todayNarr;
-  window._tomorrowNarr = tomorrowNarr;
-  window._haToday = intelRaw.today;
-  window._haTomorrow = intelRaw.tomorrow;
+    const group = mod.getAttribute("data-accordion");
+    const all = document.querySelectorAll("[data-accordion]");
+    const isActive = mod.classList.contains("active");
+
+    all.forEach(m => {
+      if (m.getAttribute("data-accordion") === group) {
+        m.classList.remove("active");
+      }
+    });
+
+    if (!isActive) {
+      mod.classList.add("active");
+    }
+  });
+}
+
+// ============================================================
+// MAIN ENTRY — FULL PIPELINE (CLEANED)
+// ============================================================
+export async function renderWeather({ lat, lon, tempestStationId, tempestToken }) {
+  // ⭐ Corrected signature + correct fetch call
+  const raw = await fetchAllIntel({ lat, lon, tempestStationId, tempestToken });
+
+  // Normalize hourly forecast
+  const hourlyNormalized = normalizeOpenMeteo(raw.hourly);
+
+  // Resolve canonical current conditions (Tempest-first)
+  const current = resolveCurrentConditions(raw, hourlyNormalized);
+
+  // Render current obs + data source indicator
+  updateDataSourceIndicator(raw);
+  renderCurrentObservations(current);
+
+  // ============================================================
+  // HUMAN ACTION INTEL + SYNTHESIZER
+  // ============================================================
+  const intelRaw = buildHumanActionIntel(raw);
+
+  const { today: todayNarr, tomorrow: tomorrowNarr } = generateNarrative(
+    intelRaw.today,
+    intelRaw.tomorrow
+  );
+
+  renderHumanAction(todayNarr, tomorrowNarr);
+  renderHumanActionExpanded(intelRaw.today, intelRaw.tomorrow);
+
+  // ============================================================
+  // COMFORT NOW — CLEANED
+  // ============================================================
+  const comfortNow = computeComfort(current);
+
+  comfortNow.humidity = current.humidity;
+  comfortNow.wind = current.wind;
+
+  const score = comfortNow.comfortScore;
+
+  comfortNow.category =
+    score >= 80
+      ? "Very Comfortable"
+      : score >= 65
+      ? "Comfortable"
+      : score >= 50
+      ? "Slightly Uncomfortable"
+      : score >= 35
+      ? "Uncomfortable"
+      : "Harsh / Poor Comfort";
+
+  const comfortNowForRender = {
+    ...comfortNow,
+    title: comfortNow.line1 ?? comfortNow.summary ?? "Comfort overview",
+    bullets: Array.isArray(comfortNow.bullets) ? comfortNow.bullets : [],
+    emoji: comfortNow.emoji ?? "🌤️",
+    longNarrative: comfortNow.line2 ?? ""
+  };
+
+  const bestWindow = findBestComfortWindow(hourlyNormalized);
+
+  // ============================================================
+  // FUTURE COMFORT — NEXT 6 HOURS
+  // ============================================================
+  const futureComfort = buildFutureComfort(hourlyNormalized, computeComfortLegacy);
+
+  // ============================================================
+  // RENDER MODULES
+  // ============================================================
+  renderComfortNow($("comfort-now-container"), comfortNowForRender, bestWindow);
+  renderFutureComfort($("future-comfort-container"), futureComfort);
+
+  // Accordion behavior
+  initializeAccordion();
 }
