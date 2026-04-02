@@ -52,6 +52,15 @@ function dewToRH(tempF, dewF) {
   return Math.max(0, Math.min(100, rh));
 }
 
+function humidityHeadlinePhrase(dew) {
+  if (dew == null) return null;
+  if (dew <= 40) return "dry, comfortable air";
+  if (dew <= 55) return "manageable humidity";
+  if (dew <= 65) return "a bit of humidity";
+  if (dew <= 70) return "noticeable humidity";
+  return "very humid air";
+}
+
 // ------------------------------------------------------------
 // COMFORT SCORE
 // ------------------------------------------------------------
@@ -279,30 +288,29 @@ export function computeComfort(intel) {
   };
   const emoji = emojiMap[category] ?? "😐";
 
-  // ------------------------------------------------------------
-  // HEADLINE (Tone 2 — human-warm, concise)
-  // ------------------------------------------------------------
-  let headline = "";
-  const rhFeel = humidityFeel(dew);
+ // ------------------------------------------------------------
+// HEADLINE (Tone 2 — human-warm, concise)
+// ------------------------------------------------------------
+let headline = "";
+const rhPhrase = humidityHeadlinePhrase(dew);
 
-  if (category === "Comfortable") {
-    headline = rhFeel
-      ? `Comfortable with ${rhFeel.replace(".", "").toLowerCase()}.`
-      : "Comfortable overall.";
-  } else if (category === "Slightly Uncomfortable") {
-    headline = rhFeel
-      ? `Slightly uncomfortable with ${rhFeel.replace(".", "").toLowerCase()}.`
-      : "Slightly uncomfortable overall.";
-  } else if (category === "Uncomfortable") {
-    headline = rhFeel
-      ? `Uncomfortable due to ${rhFeel.replace(".", "").toLowerCase()}.`
-      : "Uncomfortable overall.";
-  } else {
-    headline = rhFeel
-      ? `Harsh conditions with ${rhFeel.replace(".", "").toLowerCase()}.`
-      : "Harsh conditions overall.";
-  }
-
+if (category === "Comfortable") {
+  headline = rhPhrase
+    ? `Comfortable with ${rhPhrase}.`
+    : "Comfortable overall.";
+} else if (category === "Slightly Uncomfortable") {
+  headline = rhPhrase
+    ? `Slightly uncomfortable with ${rhPhrase}.`
+    : "Slightly uncomfortable overall.";
+} else if (category === "Uncomfortable") {
+  headline = rhPhrase
+    ? `Uncomfortable due to ${rhPhrase}.`
+    : "Uncomfortable overall.";
+} else {
+  headline = rhPhrase
+    ? `Harsh conditions with ${rhPhrase}.`
+    : "Harsh conditions overall.";
+}
   // ------------------------------------------------------------
   // LONG NARRATIVE (Tone 2 — warm, Asheville-aware, not verbose)
   // ------------------------------------------------------------

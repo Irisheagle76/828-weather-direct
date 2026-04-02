@@ -49,17 +49,13 @@ function resolveCurrentConditions(raw, hourly) {
   const idx = hourly.findIndex(h => h.timestamp >= now);
   const fallback = idx !== -1 ? hourly[idx] : hourly[0];
 
-  const tempF =
-    (raw.tempest?.air_temperature != null
-      ? cToF(raw.tempest.air_temperature)
-      : null) ??
+  const temp =
+    raw.tempest?.air_temperature ??
     fallback?.temperatureF ??
     null;
 
-  const dewF =
-    (raw.tempest?.dew_point != null
-      ? cToF(raw.tempest.dew_point)
-      : null) ??
+  const dewPoint =
+    raw.tempest?.dew_point ??
     fallback?.dewpointF ??
     null;
 
@@ -68,12 +64,12 @@ function resolveCurrentConditions(raw, hourly) {
     fallback?.relative_humidity ??
     null;
 
-  const wind =
+  const windSpeed =
     raw.tempest?.wind_avg != null
       ? raw.tempest.wind_avg * 2.23694
       : fallback?.wind_speed ?? null;
 
-  const gust =
+  const windGust =
     raw.tempest?.wind_gust != null
       ? raw.tempest.wind_gust * 2.23694
       : fallback?.wind_gust ?? null;
@@ -88,14 +84,22 @@ function resolveCurrentConditions(raw, hourly) {
     fallback?.uv_index ??
     0;
 
-  const timestamp =
+  const obsTimeLocal =
     raw.tempest?.timestamp ??
     fallback?.timestamp ??
     Date.now();
 
-  return { tempF, dewF, wind, gust, humidity, uv, windDir, timestamp };
+  return {
+    temp,
+    dewPoint,
+    humidity,
+    windSpeed,
+    windGust,
+    windDir,
+    uv,
+    obsTimeLocal
+  };
 }
-
 // ============================================================
 // COMFORT WRAPPER
 // ============================================================
