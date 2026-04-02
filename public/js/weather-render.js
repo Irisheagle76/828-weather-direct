@@ -326,7 +326,7 @@ function renderComfortNow(container, comfort, bestWindow) {
         <div class="comfort-expand-row">
           <span class="comfort-expand-label">Wind</span>
           <span class="comfort-expand-value">
-            ${comfort.wind != null ? `${Math.round(comfort.wind)} mph` : "--"}
+           ${comfort.windSpeed != null ? `${Math.round(comfort.windSpeed)} mph` : "--"}
           </span>
         </div>
 
@@ -421,7 +421,7 @@ function findBestComfortWindow(hourlyNormalized, windowSize = 3) {
     for (let i = 0; i < windowSize; i++) {
       const h = hourlyNormalized[start + i];
 
-     const comfort = computeComfort({
+ const comfort = computeComfort({
   wu: {
     temp: h.temperatureF ?? null,
     dewPoint: h.dewpointF ?? null,
@@ -431,14 +431,14 @@ function findBestComfortWindow(hourlyNormalized, windowSize = 3) {
   }
 });
 
-      hours.push({
-        hourLabel: formatHourLabel(h.timestamp),
-        temp: h.temperatureF,
-        dew: h.dewpointF,
-        comfortScore: comfort.comfortScore,
-        emoji: comfort.emoji,
-        label: comfort.category
-      });
+    hours.push({
+  hourLabel: formatHourLabel(h.timestamp),
+  temp: h.temperatureF,
+  dew: h.dewpointF,
+  comfortScore: comfort.comfortScore,
+  emoji: comfort.emoji,
+  label: comfort.category
+});
 
       sum += comfort.comfortScore;
     }
