@@ -1,6 +1,7 @@
 // /intel/human-action-intel-builder.js
 // ============================================================
 // HUMAN-ACTION INTEL BUILDER — HA 2.3 (Synthesizer-Ready)
+// With diagnostic console logs
 // ============================================================
 
 import { evaluateHumanActionFactors } from "../modules/human-action-2/core-engine.js";
@@ -8,7 +9,6 @@ import { normalizeOpenMeteo } from "./normalize-hourly.js";
 
 // ------------------------------------------------------------
 // SYNTHESIZER SAFETY WRAPPER
-// Ensures required fields exist even if HA engine omits them
 // ------------------------------------------------------------
 function ensureSynthFields(intel, snapshot) {
   const base = intel ?? {};
@@ -22,21 +22,23 @@ function ensureSynthFields(intel, snapshot) {
   };
 }
 
-console.log("HA TODAY", intel.today);
-console.log("HA TOMORROW", intel.tomorrow);
-
 // ------------------------------------------------------------
 // MAIN BUILDER
 // ------------------------------------------------------------
 export function buildHumanActionIntel(raw) {
+  console.log("🔵 HA BUILDER START");
+
   if (!raw || !raw.hourly) {
-    console.error("No hourly data", raw);
+    console.error("❌ No hourly data:", raw);
     return { today: null, tomorrow: null };
   }
 
+  // Normalize
   const hourly = normalizeOpenMeteo(raw.hourly);
+  console.log(`🔵 Normalized hourly count: ${hourly.length}`);
+
   if (!hourly.length) {
-    console.error("Normalized hourly empty");
+    console.error("❌ Normalized hourly empty");
     return { today: null, tomorrow: null };
   }
 
@@ -44,26 +46,32 @@ export function buildHumanActionIntel(raw) {
   const currentIndex = hourly.findIndex(h => h.timestamp >= now);
   const idx = currentIndex === -1 ? 0 : currentIndex;
 
+  console.log(`🔵 Current hour index: ${idx}`);
+
   // ------------------------------------------------------------
-  // TODAY — current hour + next 3 hours, with slight forward blend
+  // TODAY SNAPSHOT
   // ------------------------------------------------------------
   const todayCore = hourly.slice(idx, idx + 4);
   const todayExtended = hourly.slice(idx, idx + 8);
-  const todaySnapshot = blendHoursWithForwardBias(todayCore, todayExtended);
 
+  const todaySnapshot = blendHoursWithForwardBias(todayCore, todayExtended);
   todaySnapshot.dayLabel = "today";
   todaySnapshot.isTomorrow = false;
 
-  const todayIntelRaw = evaluateHumanActionFactors(todaySnapshot) || {};
+  console.log("🟢 TODAY SNAPSHOT:", todaySnapshot);
 
-  // ⭐ NEW: Merge snapshot meteorology into HA intel
+  const todayIntelRaw = evaluateHumanActionFactors(todaySnapshot) || {};
+  console.log("🟢 TODAY RAW FACTORS:", todayIntelRaw);
+
   const todayIntel = {
     ...ensureSynthFields(todayIntelRaw, todaySnapshot),
     ...todaySnapshot
   };
 
+  console.log("🟢 TODAY FINAL INTEL:", todayIntel);
+
   // ------------------------------------------------------------
-  // TOMORROW — HA 2.0 morning/afternoon hybrid
+  // TOMORROW SNAPSHOT
   // ------------------------------------------------------------
   const tomorrowBundle = buildTomorrowSnapshots(hourly);
 
@@ -77,14 +85,21 @@ export function buildHumanActionIntel(raw) {
     tomorrowSnapshot.isTomorrow = true;
   }
 
-  const tomorrowIntelRaw = evaluateHumanActionFactors(tomorrowSnapshot) || {};
+  console.log("🟣 TOMORROW SNAPSHOT:", tomorrowSnapshot);
+  console.log("🟣 TOMORROW STATS:", tomorrowBundle.stats);
 
-  // ⭐ NEW: Merge snapshot meteorology + tomorrow stats
+  const tomorrowIntelRaw = evaluateHumanActionFactors(tomorrowSnapshot) || {};
+  console.log("🟣 TOMORROW RAW FACTORS:", tomorrowIntelRaw);
+
   const tomorrowIntel = {
     ...ensureSynthFields(tomorrowIntelRaw, tomorrowSnapshot),
     ...tomorrowSnapshot,
     stats: tomorrowBundle.stats
   };
+
+  console.log("🟣 TOMORROW FINAL INTEL:", tomorrowIntel);
+
+  console.log("🔵 HA BUILDER END");
 
   return {
     today: todayIntel,
@@ -128,7 +143,7 @@ function blendHours(hours) {
 }
 
 // ------------------------------------------------------------
-// BLEND HOURS WITH FORWARD BIAS (Today divergence helper)
+// BLEND HOURS WITH FORWARD BIAS
 // ------------------------------------------------------------
 function blendHoursWithForwardBias(coreHours, extendedHours) {
   if (!coreHours || !coreHours.length) {
@@ -167,7 +182,7 @@ function blendHoursWithForwardBias(coreHours, extendedHours) {
 }
 
 // ------------------------------------------------------------
-// TOMORROW SNAPSHOTS (HA 2.0)
+// TOMORROW SNAPSHOTS
 // ------------------------------------------------------------
 function buildTomorrowSnapshots(hourly) {
   const tomorrowHours = hourly.slice(24, 48);
