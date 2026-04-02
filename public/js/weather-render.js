@@ -107,11 +107,13 @@ function resolveCurrentConditions(raw, hourly) {
 function computeComfort(input) {
   return computeComfortLegacy({
     wu: {
-      temp: input.tempF,
-      dewPoint: input.dewF,
-      windSpeed: input.wind ?? 0,
+      temp: input.temp ?? null,
+      dewPoint: input.dewPoint ?? null,
+      windSpeed: input.windSpeed ?? 0,
       windDir: input.windDir ?? "",
-      obsTimeLocal: input.timestamp
+      humidity: input.humidity ?? null,
+      uv: input.uv ?? null,
+      obsTimeLocal: input.obsTimeLocal
     }
   });
 }
