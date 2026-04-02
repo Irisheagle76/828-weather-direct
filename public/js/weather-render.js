@@ -119,19 +119,30 @@ function resolveCurrentConditions(raw, hourly) {
 }
 
 // ============================================================
-// COMFORT WRAPPER
+// COMFORT WRAPPER — STABLE + SAFE
 // ============================================================
 function computeComfortWrapped(input) {
+  if (!input) return null;
+
+  const temp = input.temp ?? null;
+
+  // Ensure dew point ALWAYS exists (prevents null comfortScore)
+  let dewPoint = input.dewPoint;
+
+  if (dewPoint == null && temp != null) {
+    // fallback approximation (simple + stable)
+    dewPoint = temp - 20;
+  }
 
   return computeComfortLegacy({
     wu: {
-      temp: input.temp ?? null,
-      dewPoint: input.dewPoint ?? null,
+      temp,
+      dewPoint,
       windSpeed: input.windSpeed ?? 0,
       windDir: input.windDir ?? "",
       humidity: input.humidity ?? null,
       uv: input.uv ?? null,
-      obsTimeLocal: input.obsTimeLocal
+      obsTimeLocal: input.obsTimeLocal ?? Date.now()
     }
   });
 }

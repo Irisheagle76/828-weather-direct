@@ -1,10 +1,10 @@
 // /js/app.js
 // ============================================================
-// APP ENTRY — Clean + Stable
+// APP ENTRY — STABLE, REFRESHING, DEBUGGABLE
 // ============================================================
 
-// 🔥 DIAGNOSTIC MARKER — CONFIRM LOAD
-console.log("APP.JS LOADED — VERSION TEST MARKER A — v7");
+// 🔥 VERSION MARKER
+console.log("APP.JS LOADED — STABLE BUILD v1");
 
 // ------------------------------------------------------------
 // IMPORTS
@@ -12,25 +12,136 @@ console.log("APP.JS LOADED — VERSION TEST MARKER A — v7");
 import { renderWeather } from "./weather-render.js";
 
 // ------------------------------------------------------------
+// CONFIG
+// ------------------------------------------------------------
+const CONFIG = {
+FORCE_LOCATION: true,
+
+// Asheville fallback (safe default)
+DEFAULT_LAT: 35.5951,
+DEFAULT_LON: -82.5515,
+
+// Tempest
+TEMPEST_STATION_ID: "315255",
+TEMPEST_TOKEN: "838ff386-d14b-4d45-897a-18903e6970a9",
+
+// Refresh interval (ms)
+REFRESH_INTERVAL: 5 * 60 * 1000 // 5 minutes
+};
+
+// ------------------------------------------------------------
+// STATE
+// ------------------------------------------------------------
+let currentLocation = {
+lat: CONFIG.DEFAULT_LAT,
+lon: CONFIG.DEFAULT_LON
+};
+
+let refreshTimer = null;
+
+// ------------------------------------------------------------
 // ERROR HANDLING
 // ------------------------------------------------------------
 function showError(msg) {
-  const el = document.getElementById("wu-error");
-  if (!el) return;
+console.error("APP ERROR:", msg);
 
-  el.style.display = "block";
-  el.textContent = msg;
+const el = document.getElementById("wu-error");
+if (!el) return;
+
+el.style.display = "block";
+el.textContent = msg;
 }
 
 // ------------------------------------------------------------
 // LOADING STATE
 // ------------------------------------------------------------
 function setLoadingState() {
-  const label = document.getElementById("wu-status-label");
-  const text = document.getElementById("wu-status-text");
+const label = document.getElementById("wu-status-label");
+const text = document.getElementById("wu-status-text");
 
-  if (label) label.textContent = "Detecting location…";
-  if (text) text.textContent = "Waiting for browser location permission.";
+if (label) label.textContent = "Loading weather…";
+if (text) text.textContent = "Fetching latest conditions…";
+
+const comfort = document.getElementById("comfort-now-container");
+const future = document.getElementById("future-comfort-container");
+const obs = document.getElementById("current-obs-inline");
+
+if (comfort) comfort.innerHTML = "Loading comfort…";
+if (future) future.innerHTML = "Loading forecast…";
+if (obs) obs.innerHTML = "Loading observations…";
+}
+
+// ------------------------------------------------------------
+// CORE RENDER
+// ------------------------------------------------------------
+async function runRender() {
+try {
+console.log("RENDER START", currentLocation);
+
+```
+await renderWeather({
+  lat: currentLocation.lat,
+  lon: currentLocation.lon,
+  tempestStationId: CONFIG.TEMPEST_STATION_ID, // ✅ correct key
+  tempestToken: CONFIG.TEMPEST_TOKEN
+});
+
+console.log("RENDER COMPLETE");
+```
+
+} catch (err) {
+console.error("RENDER FAILED:", err);
+showError("Unable to load weather data.");
+}
+}
+
+// ------------------------------------------------------------
+// AUTO REFRESH
+// ------------------------------------------------------------
+function startAutoRefresh() {
+if (refreshTimer) {
+clearInterval(refreshTimer);
+}
+
+refreshTimer = setInterval(() => {
+console.log("AUTO REFRESH TRIGGERED");
+runRender();
+}, CONFIG.REFRESH_INTERVAL);
+}
+
+// ------------------------------------------------------------
+// LOCATION HANDLING
+// ------------------------------------------------------------
+function resolveLocation() {
+return new Promise((resolve, reject) => {
+
+```
+if (CONFIG.FORCE_LOCATION) {
+  console.log("USING FORCED LOCATION");
+  return resolve({
+    lat: CONFIG.DEFAULT_LAT,
+    lon: CONFIG.DEFAULT_LON
+  });
+}
+
+if (!navigator.geolocation) {
+  return reject("Geolocation not supported.");
+}
+
+navigator.geolocation.getCurrentPosition(
+  pos => {
+    resolve({
+      lat: pos.coords.latitude,
+      lon: pos.coords.longitude
+    });
+  },
+  err => {
+    reject("Location access denied.");
+  }
+);
+```
+
+});
 }
 
 // ------------------------------------------------------------
@@ -39,45 +150,27 @@ function setLoadingState() {
 document.addEventListener("DOMContentLoaded", initApp);
 
 async function initApp() {
-  console.log("INITAPP FIRED — VERSION TEST MARKER B");
+console.log("INIT START");
 
-  if (!navigator.geolocation) {
-    showError("Geolocation is not supported by this browser.");
-    return;
-  }
+setLoadingState();
 
-  setLoadingState();
+try {
+const loc = await resolveLocation();
 
-  navigator.geolocation.getCurrentPosition(
-    async pos => {
-      console.log("GEOLOCATION SUCCESS — VERSION TEST MARKER C", pos);
+```
+currentLocation = loc;
 
-      // ⭐ TEMPORARY OVERRIDE WHILE TRAVELING ⭐
-      const FORCE_ASHEVILLE = true;
+console.log("LOCATION RESOLVED:", loc);
 
-      const lat = FORCE_ASHEVILLE ? 35.5951 : pos.coords.latitude;
-      const lon = FORCE_ASHEVILLE ? -82.5515 : pos.coords.longitude;
+// Initial render
+await runRender();
 
-      try {
-        await renderWeather({
-          lat,
-          lon,
-          tempestDeviceId: "315255",
-          tempestToken: "838ff386-d14b-4d45-897a-18903e6970a9"
-        });
+// Start refresh loop
+startAutoRefresh();
+```
 
-      } catch (err) {
-        console.error("Render failed:", err);
-        showError("Unable to load weather data. Please try again.");
-      }
-    },
-
-    err => {
-      console.error("Geolocation error:", err);
-
-      showError(
-        "We couldn’t access your location. Please enable location services and reload."
-      );
-    }
-  );
+} catch (err) {
+console.error("INIT FAILED:", err);
+showError(err || "Failed to initialize app.");
+}
 }
