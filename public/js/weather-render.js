@@ -12,7 +12,6 @@ import { normalizeOpenMeteo } from "./intel/normalize-hourly.js";
 // ============================================================
 // HELPERS
 // ============================================================
-const cToF = c => (c != null ? (c * 9) / 5 + 32 : null);
 const $ = id => document.getElementById(id);
 
 function safeSet(id, prop, value) {
@@ -46,8 +45,26 @@ function getTodayLabelFromLocalTime() {
 // ============================================================
 function resolveCurrentConditions(raw, hourly) {
   const now = Date.now();
-  const idx = hourly.findIndex(h => h.timestamp >= now);
-  const fallback = idx !== -1 ? hourly[idx] : hourly[0];
+
+  if (!Array.isArray(hourly) || hourly.length === 0) {
+    return null; // or safe default object
+  }
+
+  // Normalize timestamps if needed (seconds → ms)
+  const getTs = h =>
+    h.timestamp < 1e12 ? h.timestamp * 1000 : h.timestamp;
+
+  // Find first future datapoint
+  let idx = hourly.findIndex(h => getTs(h) >= now);
+
+  let fallback;
+
+  if (idx !== -1) {
+    fallback = hourly[idx];
+  } else {
+    // Use most recent past (last item)
+    fallback = hourly[hourly.length - 1];
+  }
 
   const temp =
     raw.tempest?.air_temperature ??
@@ -104,7 +121,8 @@ function resolveCurrentConditions(raw, hourly) {
 // ============================================================
 // COMFORT WRAPPER
 // ============================================================
-function computeComfort(input) {
+function computeComfortWrapped(input) {
+
   return computeComfortLegacy({
     wu: {
       temp: input.temp ?? null,
@@ -338,7 +356,9 @@ function renderComfortNow(container, comfort, bestWindow) {
         <div class="comfort-expand-row" style="margin-top:0.6rem;">
           <span class="comfort-expand-label">Best window (next ${bestWindow.hours.length} hrs)</span>
           <span class="comfort-expand-value">
-            ${bestWindow.hours[0].hourLabel}–${bestWindow.hours.at(-1).hourLabel}
+         ${bestWindow?.hours?.length
+  ? `${bestWindow.hours[0].hourLabel}–${bestWindow.hours[bestWindow.hours.length - 1].hourLabel}`
+  : "--"}
           </span>
         </div>
 
@@ -353,7 +373,9 @@ function renderComfortNow(container, comfort, bestWindow) {
                 <span class="fc-hour-temp">${h.temp != null ? `${Math.round(h.temp)}°` : "--"}</span>
               </div>
               <div class="fc-hour-extra">
-                <span class="fc-hour-score">${Math.round(h.comfortScore)}/100</span>
+                <span class="fc-hour-score">
+  ${h.comfortScore != null ? Math.round(h.comfortScore) : "--"}/100
+</span>
                 <span class="fc-hour-label-text">${h.label}</span>
               </div>
             </div>
@@ -403,7 +425,7 @@ function renderFutureComfort(container, items) {
 }
 
 // ============================================================
-// BEST COMFORT WINDOW — 3-HOUR SLIDING WINDOW
+// BEST COMFORT WINDOW — 3-HOUR SLIDING WINDOW (FIXED)
 // ============================================================
 function findBestComfortWindow(hourlyNormalized, windowSize = 3) {
   if (!Array.isArray(hourlyNormalized) || hourlyNormalized.length < windowSize) {
@@ -411,8 +433,18 @@ function findBestComfortWindow(hourlyNormalized, windowSize = 3) {
   }
 
   const now = Date.now();
-  let startIndex = hourlyNormalized.findIndex(h => h.timestamp > now);
-  if (startIndex === -1) startIndex = 0;
+
+  // Normalize timestamps (handles seconds vs ms)
+  const getTs = h =>
+    h.timestamp < 1e12 ? h.timestamp * 1000 : h.timestamp;
+
+  // Find first hour at/after now
+  let startIndex = hourlyNormalized.findIndex(h => getTs(h) >= now);
+
+  // If all data is in the past → start at last valid window
+  if (startIndex === -1) {
+    startIndex = hourlyNormalized.length - windowSize;
+  }
 
   const windows = [];
 
@@ -422,27 +454,30 @@ function findBestComfortWindow(hourlyNormalized, windowSize = 3) {
 
     for (let i = 0; i < windowSize; i++) {
       const h = hourlyNormalized[start + i];
+      const ts = getTs(h);
 
- const comfort = computeComfort({
-  wu: {
-    temp: h.temperatureF ?? null,
-    dewPoint: h.dewpointF ?? null,
-    windSpeed: h.wind_speed ?? 0,
-    windDir: h.wind_dir ?? "",
-    obsTimeLocal: h.timestamp
-  }
-});
+      const comfort = computeComfortWrapped({
+        temp: h.temperatureF ?? null,
+        dewPoint: h.dewpointF ?? null,
+        humidity: h.relative_humidity ?? null,
+        uv: h.uv_index ?? null,
+        windSpeed: h.wind_speed ?? 0,
+        windDir: h.wind_dir ?? "",
+        obsTimeLocal: ts
+      });
 
-    hours.push({
-  hourLabel: formatHourLabel(h.timestamp),
-  temp: h.temperatureF,
-  dew: h.dewpointF,
-  comfortScore: comfort.comfortScore,
-  emoji: comfort.emoji,
-  label: comfort.category
-});
+      const score = comfort?.comfortScore ?? 0;
 
-      sum += comfort.comfortScore;
+      hours.push({
+        hourLabel: formatHourLabel(ts),
+        temp: h.temperatureF,
+        dew: h.dewpointF,
+        comfortScore: score,
+        emoji: comfort?.emoji ?? "—",
+        label: comfort?.category ?? ""
+      });
+
+      sum += score;
     }
 
     windows.push({
@@ -452,8 +487,10 @@ function findBestComfortWindow(hourlyNormalized, windowSize = 3) {
     });
   }
 
+  // Highest comfort window first
   windows.sort((a, b) => b.avgScore - a.avgScore);
-  return windows[0];
+
+  return windows[0] ?? null;
 }
 
 // ============================================================
@@ -481,18 +518,37 @@ function initializeAccordion() {
 }
 
 // ============================================================
-// MAIN ENTRY — FULL PIPELINE (CLEANED + DEBUG EXPORTS)
+// MAIN ENTRY — FULL PIPELINE (STABLE)
 // ============================================================
 export async function renderWeather({ lat, lon, tempestStationId, tempestToken }) {
   const raw = await fetchAllIntel({ lat, lon, tempestStationId, tempestToken });
 
   const hourlyNormalized = normalizeOpenMeteo(raw.hourly);
+
+  // (Optional but recommended safety)
+  hourlyNormalized.sort((a, b) => a.timestamp - b.timestamp);
+
   const current = resolveCurrentConditions(raw, hourlyNormalized);
 
   updateDataSourceIndicator(raw);
-  renderCurrentObservations(current);
 
+  // ------------------------------------------------------------
+  // CURRENT OBS — FIX SHAPE MISMATCH + NULL GUARD
+  // ------------------------------------------------------------
+  if (current) {
+    renderCurrentObservations({
+      tempF: current.temp,
+      dewF: current.dewPoint,
+      humidity: current.humidity,
+      wind: current.windSpeed,
+      gust: current.windGust,
+      uv: current.uv
+    });
+  }
+
+  // ------------------------------------------------------------
   // HUMAN ACTION INTEL + SYNTH
+  // ------------------------------------------------------------
   const intelRaw = buildHumanActionIntel(raw);
   const { today: todayNarr, tomorrow: tomorrowNarr } = generateNarrative(
     intelRaw.today,
@@ -503,46 +559,55 @@ export async function renderWeather({ lat, lon, tempestStationId, tempestToken }
   renderHumanActionExpanded(intelRaw.today, intelRaw.tomorrow);
 
   // ------------------------------------------------------------
- // COMFORT NOW — NEW ENGINE (wrap current in wu-style intel)
-// ------------------------------------------------------------
-const comfortNow = computeComfort({
-  wu: {
-    temp: current.temp,
-    dewPoint: current.dewPoint,
-    windSpeed: current.windSpeed,
-    windDir: current.windDir,
-    humidity: current.humidity,
-    uv: current.uv,
-    obsTimeLocal: current.obsTimeLocal
-  }
-});
+  // COMFORT NOW — SAFE GUARD
+  // ------------------------------------------------------------
+  let comfortNow = null;
 
-  const comfortNowForRender = {
-    ...comfortNow,
-    title: comfortNow.headline ?? "Comfort overview",
-    bullets: [], // Comfort Now no longer uses bullets
-    longNarrative: comfortNow.narrative ?? ""
-  };
+  if (current) {
+    comfortNow = computeComfortWrapped({
+      temp: current.temp,
+      dewPoint: current.dewPoint,
+      windSpeed: current.windSpeed,
+      windDir: current.windDir,
+      humidity: current.humidity,
+      uv: current.uv,
+      obsTimeLocal: current.obsTimeLocal
+    });
+  }
+
+  const comfortNowForRender = comfortNow
+    ? {
+        ...comfortNow,
+        title: comfortNow.headline ?? "Comfort overview",
+        bullets: [],
+        longNarrative: comfortNow.narrative ?? ""
+      }
+    : null;
 
   // ------------------------------------------------------------
-  // BEST COMFORT WINDOW — USE NEW ENGINE
+  // BEST COMFORT WINDOW
   // ------------------------------------------------------------
   const bestWindow = findBestComfortWindow(hourlyNormalized);
 
   // ------------------------------------------------------------
-  // FUTURE COMFORT — USE NEW ENGINE
+  // FUTURE COMFORT
   // ------------------------------------------------------------
-  const futureComfort = buildFutureComfort(hourlyNormalized, computeComfort);
+  const futureComfort = buildFutureComfort(hourlyNormalized, computeComfortWrapped);
 
   // ------------------------------------------------------------
-  // RENDER MODULES
+  // RENDER MODULES (GUARDED)
   // ------------------------------------------------------------
-  renderComfortNow($("comfort-now-container"), comfortNowForRender, bestWindow);
+  if (comfortNowForRender) {
+    renderComfortNow($("comfort-now-container"), comfortNowForRender, bestWindow);
+  }
+
   renderFutureComfort($("future-comfort-container"), futureComfort);
 
   initializeAccordion();
 
+  // ------------------------------------------------------------
   // DEBUG
+  // ------------------------------------------------------------
   window._raw = raw;
   window._hourly = hourlyNormalized;
   window._current = current;
