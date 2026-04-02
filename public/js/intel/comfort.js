@@ -285,76 +285,53 @@ export function computeComfort(intel) {
 // ============================================================
 
 export function buildFutureComfort(hourlyNormalized, computeComfortFn = computeComfort) {
-if (!Array.isArray(hourlyNormalized) || hourlyNormalized.length === 0) {
-return [];
-}
-
-const now = Date.now();
-
-const getTs = h =>
-h.timestamp < 1e12 ? h.timestamp * 1000 : h.timestamp;
-
-let startIndex = hourlyNormalized.findIndex(h => getTs(h) >= now);
-
-if (startIndex === -1) {
-startIndex = hourlyNormalized.length - 1;
-}
-
-const items = [];
-
-for (let i = 0; i < 6; i++) {
-const idx = startIndex + i;
-if (idx >= hourlyNormalized.length) break;
-
-```
-const h = hourlyNormalized[idx];
-const ts = getTs(h);
-
-const c = computeComfortFn({
-  wu: {
-    temp: h.temperatureF ?? null,
-    dewPoint: h.dewpointF ?? null,
-    windSpeed: h.wind_speed ?? 0,
-    windDir: h.wind_dir ?? "",
-    obsTimeLocal: ts
+  if (!Array.isArray(hourlyNormalized) || hourlyNormalized.length === 0) {
+    return [];
   }
-});
 
-items.push({
-  index: idx,
-  time: ts,
-  hourLabel: formatHourLabel(ts),
-  comfortScore: c?.comfortScore ?? 0,
-  color: c?.color,
-  label: c?.category,
-  emoji: c?.emoji,
-  temp: h.temperatureF ?? null,
-  dew: h.dewpointF ?? null,
-  wind: h.wind_speed ?? null
-});
-```
+  const now = Date.now();
 
-}
+  const getTs = h =>
+    h.timestamp < 1e12 ? h.timestamp * 1000 : h.timestamp;
 
-return items;
-}
+  let startIndex = hourlyNormalized.findIndex(h => getTs(h) >= now);
 
-// ============================================================
-// TIME FORMAT
-// ============================================================
+  if (startIndex === -1) {
+    startIndex = hourlyNormalized.length - 1;
+  }
 
-function formatHourLabel(ts) {
-const d = new Date(ts);
+  const items = [];
 
-const formatter = new Intl.DateTimeFormat("en-US", {
-hour: "numeric",
-hour12: true,
-timeZone: "America/New_York"
-});
+  for (let i = 0; i < 6; i++) {
+    const idx = startIndex + i;
+    if (idx >= hourlyNormalized.length) break;
 
-const parts = formatter.formatToParts(d);
-const hour = parts.find(p => p.type === "hour")?.value ?? "";
-const suffix = parts.find(p => p.type === "dayPeriod")?.value?.toUpperCase() ?? "";
+    const h = hourlyNormalized[idx];
+    const ts = getTs(h);
 
-return `${hour} ${suffix}`;
+    const c = computeComfortFn({
+      wu: {
+        temp: h.temperatureF ?? null,
+        dewPoint: h.dewpointF ?? null,
+        windSpeed: h.wind_speed ?? 0,
+        windDir: h.wind_dir ?? "",
+        obsTimeLocal: ts
+      }
+    });
+
+    items.push({
+      index: idx,
+      time: ts,
+      hourLabel: formatHourLabel(ts),
+      comfortScore: c?.comfortScore ?? 0,
+      color: c?.color,
+      label: c?.category,
+      emoji: c?.emoji,
+      temp: h.temperatureF ?? null,
+      dew: h.dewpointF ?? null,
+      wind: h.wind_speed ?? null
+    });
+  }
+
+  return items;
 }
