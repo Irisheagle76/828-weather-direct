@@ -28,12 +28,27 @@ export function normalizeOpenMeteo(hourly) {
     // ------------------------------------------------------------
     // CORE METEOROLOGICAL FIELDS
     // ------------------------------------------------------------
-    // IMPORTANT:
     // temperature_2m and apparent_temperature are already Fahrenheit
     // dewpoint_2m is ALWAYS Celsius (Open-Meteo does not support dewpoint_unit)
     const tempF_raw = num(pick("temperature_2m"));
-    const dewC_raw = num(pick("dewpoint_2m"));
+    let dewC_raw = num(pick("dewpoint_2m"));
     const humidity = num(pick("relativehumidity_2m"));
+
+    // ------------------------------------------------------------
+    // SANITY CHECK — DEW POINT MUST BE REALISTIC
+    // ------------------------------------------------------------
+    // Dew point in Celsius should never exceed ~40°C (104°F)
+    // If it does, the value is corrupted and must be discarded.
+    let dewC = dewC_raw;
+    if (dewC != null && dewC > 40) {
+      dewC = null;
+    }
+
+    // Convert to Fahrenheit only if valid
+    let dewpointF = null;
+    if (dewC != null) {
+      dewpointF = cToF(dewC);
+    }
 
     // ------------------------------------------------------------
     // WIND (already normalized by backend to mph)
@@ -70,9 +85,7 @@ export function normalizeOpenMeteo(hourly) {
     // ------------------------------------------------------------
     // RISK INDICES (computed in Celsius)
     // ------------------------------------------------------------
-    // Convert tempF_raw back to C for risk logic
     const tempC = tempF_raw != null ? fToC(tempF_raw) : null;
-    const dewC = dewC_raw;
 
     const frostRisk =
       tempC != null && dewC != null && tempC <= 37 && dewC <= 36
@@ -109,14 +122,6 @@ export function normalizeOpenMeteo(hourly) {
       windSpeed < 5
         ? 0.5
         : 0;
-
-    // ------------------------------------------------------------
-// DEWPOINT — ALWAYS CELSIUS FROM OPEN-METEO
-// ------------------------------------------------------------
-let dewpointF = null;
-if (dewC_raw != null) {
-  dewpointF = cToF(dewC_raw);
-}
 
     // ------------------------------------------------------------
     // CANONICAL NORMALIZED OBJECT

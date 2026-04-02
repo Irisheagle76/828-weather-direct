@@ -42,15 +42,14 @@ async function handleHourly(req, res) {
   ].join(",");
 
   const url =
-    `https://api.open-meteo.com/v1/forecast` +
-    `?latitude=${lat}&longitude=${lon}` +
-    `&hourly=${hourlyFields}` +
-    `&forecast_days=3` +
-    `&temperature_unit=fahrenheit` +
-    `&dewpoint_unit=fahrenheit` +
-    `&timezone=America/New_York` +
-    `&wind_speed_unit=mph` +
-    `&precipitation_unit=inch`;
+  `https://api.open-meteo.com/v1/forecast` +
+  `?latitude=${lat}&longitude=${lon}` +
+  `&hourly=${hourlyFields}` +
+  `&forecast_days=3` +
+  `&temperature_unit=fahrenheit` +
+  `&timezone=America/New_York` +
+  `&wind_speed_unit=mph` +
+  `&precipitation_unit=inch`;
 
   try {
     const r = await fetch(url);
