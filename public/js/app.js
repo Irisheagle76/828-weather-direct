@@ -75,24 +75,22 @@ if (obs) obs.innerHTML = "Loading observations…";
 // CORE RENDER
 // ------------------------------------------------------------
 async function runRender() {
-try {
-console.log("RENDER START", currentLocation);
+  try {
+    console.log("RENDER START", currentLocation);
 
-```
-await renderWeather({
-  lat: currentLocation.lat,
-  lon: currentLocation.lon,
-  tempestStationId: CONFIG.TEMPEST_STATION_ID, // ✅ correct key
-  tempestToken: CONFIG.TEMPEST_TOKEN
-});
+    await renderWeather({
+      lat: currentLocation.lat,
+      lon: currentLocation.lon,
+      tempestStationId: CONFIG.TEMPEST_STATION_ID,
+      tempestToken: CONFIG.TEMPEST_TOKEN
+    });
 
-console.log("RENDER COMPLETE");
-```
+    console.log("RENDER COMPLETE");
 
-} catch (err) {
-console.error("RENDER FAILED:", err);
-showError("Unable to load weather data.");
-}
+  } catch (err) {
+    console.error("RENDER FAILED:", err);
+    showError("Unable to load weather data.");
+  }
 }
 
 // ------------------------------------------------------------
@@ -113,35 +111,35 @@ runRender();
 // LOCATION HANDLING
 // ------------------------------------------------------------
 function resolveLocation() {
-return new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
 
-```
-if (CONFIG.FORCE_LOCATION) {
-  console.log("USING FORCED LOCATION");
-  return resolve({
-    lat: CONFIG.DEFAULT_LAT,
-    lon: CONFIG.DEFAULT_LON
+    if (CONFIG.FORCE_LOCATION) {
+      console.log("USING FORCED LOCATION");
+      resolve({
+        lat: CONFIG.DEFAULT_LAT,
+        lon: CONFIG.DEFAULT_LON
+      });
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      reject("Geolocation not supported.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        resolve({
+          lat: pos.coords.latitude,
+          lon: pos.coords.longitude
+        });
+      },
+      err => {
+        reject("Location access denied.");
+      }
+    );
+
   });
-}
-
-if (!navigator.geolocation) {
-  return reject("Geolocation not supported.");
-}
-
-navigator.geolocation.getCurrentPosition(
-  pos => {
-    resolve({
-      lat: pos.coords.latitude,
-      lon: pos.coords.longitude
-    });
-  },
-  err => {
-    reject("Location access denied.");
-  }
-);
-```
-
-});
 }
 
 // ------------------------------------------------------------
@@ -150,27 +148,25 @@ navigator.geolocation.getCurrentPosition(
 document.addEventListener("DOMContentLoaded", initApp);
 
 async function initApp() {
-console.log("INIT START");
+  console.log("INIT START");
 
-setLoadingState();
+  setLoadingState();
 
-try {
-const loc = await resolveLocation();
+  try {
+    const loc = await resolveLocation();
 
-```
-currentLocation = loc;
+    currentLocation = loc;
 
-console.log("LOCATION RESOLVED:", loc);
+    console.log("LOCATION RESOLVED:", loc);
 
-// Initial render
-await runRender();
+    // Initial render
+    await runRender();
 
-// Start refresh loop
-startAutoRefresh();
-```
+    // Start refresh loop
+    startAutoRefresh();
 
-} catch (err) {
-console.error("INIT FAILED:", err);
-showError(err || "Failed to initialize app.");
-}
+  } catch (err) {
+    console.error("INIT FAILED:", err);
+    showError(err || "Failed to initialize app.");
+  }
 }
