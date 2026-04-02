@@ -297,27 +297,24 @@ parts.push(`Expect conditions to be ${trend} soon.`);
 }
 
 return {
-category,
-emoji,
-headline: buildHeadline(category, dew),
-narrative: parts.length ? parts.join(" ") : null,
+  category,
+  emoji,
+  headline: buildHeadline(category, dew),
+  narrative: parts.length ? parts.join(" ") : null,
 
-```
-comfortScore: score,
-feelsLike,
+  comfortScore: score,
+  feelsLike,
 
-temp,
-dewpoint: dew,
-humidity: dewToRH(temp, dew),
-windSpeed: wind,
+  temp,
+  dewpoint: dew,
+  humidity: dewToRH(temp, dew),
+  windSpeed: wind,
 
-color: getComfortColor(score),
-label: getComfortLabel(score),
+  color: getComfortColor(score),
+  label: getComfortLabel(score),
 
-scoreExplainer:
-  "Comfort Score blends temperature, humidity, wind, and sun angle into a 0–100 scale."
-```
-
+  scoreExplainer:
+    "Comfort Score blends temperature, humidity, wind, and sun angle into a 0–100 scale."
 };
 }
 

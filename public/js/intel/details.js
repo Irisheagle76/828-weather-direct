@@ -2,7 +2,7 @@
 // DETAIL PANEL BUILDERS — Today + Tomorrow
 // ============================================================
 
-import { to12Hour } from "./core.js;
+import { to12Hour } from "./core.js";
 
 // ------------------------------------------------------------
 // TODAY DETAIL
