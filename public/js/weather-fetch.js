@@ -11,7 +11,7 @@
 export async function fetchAllIntel({
   lat,
   lon,
-  tempestDeviceId,
+  tempestStationId,
   tempestToken
 }) {
   const result = {
@@ -25,10 +25,13 @@ export async function fetchAllIntel({
   };
 
   // ------------------------------------------------------------
-  // 1. Tempest
+  // 1. Tempest — Better Forecast (station-level)
   // ------------------------------------------------------------
   try {
-    const rawTempest = await getTempestDeviceObs(tempestDeviceId, tempestToken);
+    const rawTempest = await getTempestStationObs(
+      tempestStationId,
+      tempestToken
+    );
     result.tempest = normalizeTempest(rawTempest);
   } catch (err) {
     console.error("Tempest fetch failed:", err);
@@ -65,47 +68,34 @@ export async function fetchAllIntel({
 }
 
 // ============================================================
-// 🌪️ TEMPEST — normalize device observations
+// 🌪️ TEMPEST — Better Forecast (station-level)
 // ============================================================
 
-function normalizeTempest(data) {
-  if (!data) return null;
-
-  // Already normalized
-  if (data.air_temperature !== undefined) {
-    return data;
-  }
-
-  // Raw obs array
-  if (data?.obs?.[0]) {
-    const o = data.obs[0];
-
-    return {
-      wind_lull: o[1],
-      wind_avg: o[2],
-      wind_gust: o[3],
-      wind_direction: o[4],
-      pressure: o[6],
-      air_temperature: o[7],
-      relative_humidity: o[8],
-      feels_like: o[7],
-      dew_point: null
-    };
-  }
-
-  console.warn("Unknown Tempest format:", data);
-  return null;
+export async function getTempestStationObs(stationId, token) {
+  const url = `/api/tempest/station?stationId=${stationId}&token=${token}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Tempest station obs failed");
+  return res.json();
 }
 
-// ============================================================
-// TEMPEST — raw fetch
-// ============================================================
+function normalizeTempest(data) {
+  if (!data?.current_conditions) return null;
 
-export async function getTempestDeviceObs(deviceId, token) {
-  const url = `/api/tempest/device?deviceId=${deviceId}&token=${token}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("Tempest device obs failed");
-  return res.json();
+  const c = data.current_conditions;
+
+  return {
+    air_temperature: c.air_temperature ?? null,
+    dew_point: c.dew_point ?? null,
+    relative_humidity: c.relative_humidity ?? null,
+    wind_avg: c.wind_avg ?? null,
+    wind_gust: c.wind_gust ?? null,
+    wind_direction: c.wind_direction ?? null,
+    pressure: c.pressure ?? null,
+    feels_like: c.feels_like ?? c.air_temperature ?? null,
+    uv: c.uv ?? null,
+    solar_radiation: c.solar_radiation ?? null,
+    timestamp: c.timestamp ?? Date.now()
+  };
 }
 
 // ============================================================
@@ -121,25 +111,16 @@ export async function getWUAll(lat, lon) {
 
     const data = await res.json();
 
-    // Expected shape:
-    // {
-    //   stationId,
-    //   current,
-    //   history
-    // }
-
     if (!data.stationId) {
       console.warn("No WU station found");
       return null;
     }
 
-    // Attach station ID to current obs for consistency
     if (data.current) {
       data.current.stationID = data.stationId;
     }
 
     return data;
-
   } catch (err) {
     console.warn("WU fetch error:", err);
     return null;
@@ -156,9 +137,7 @@ export async function getShortTermForecast(lat, lon) {
   if (!res.ok) throw new Error("Open-Meteo hourly forecast failed");
 
   const data = await res.json();
-
-  // Backend already returns the hourly object directly
-  return data;
+  return data; // backend already returns hourly object
 }
 
 // ============================================================
