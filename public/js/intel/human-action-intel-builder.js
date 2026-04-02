@@ -3,6 +3,9 @@
 // HUMAN-ACTION INTEL BUILDER — HA 2.3 (Synthesizer-Ready)
 // ============================================================
 
+console.log("HA TODAY", intel.today);
+console.log("HA TOMORROW", intel.tomorrow);
+
 import { evaluateHumanActionFactors } from "../modules/human-action-2/core-engine.js";
 import { normalizeOpenMeteo } from "./normalize-hourly.js";
 
