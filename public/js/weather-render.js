@@ -100,6 +100,7 @@ function resolveCurrentConditions(raw, hourly) {
     obsTimeLocal
   };
 }
+
 // ============================================================
 // COMFORT WRAPPER
 // ============================================================
@@ -497,39 +498,31 @@ export async function renderWeather({ lat, lon, tempestStationId, tempestToken }
   renderHumanAction(todayNarr, tomorrowNarr);
   renderHumanActionExpanded(intelRaw.today, intelRaw.tomorrow);
 
-  // COMFORT NOW
+  // ------------------------------------------------------------
+  // COMFORT NOW — NEW ENGINE (no overrides, no legacy fields)
+  // ------------------------------------------------------------
   const comfortNow = computeComfort(current);
-
-  comfortNow.humidity = current.humidity;
-  comfortNow.wind = current.wind;
-
-  const score = comfortNow.comfortScore;
-
-  comfortNow.category =
-    score >= 80
-      ? "Very Comfortable"
-      : score >= 65
-      ? "Comfortable"
-      : score >= 50
-      ? "Slightly Uncomfortable"
-      : score >= 35
-      ? "Uncomfortable"
-      : "Harsh / Poor Comfort";
 
   const comfortNowForRender = {
     ...comfortNow,
-    title: comfortNow.line1 ?? comfortNow.summary ?? "Comfort overview",
-    bullets: Array.isArray(comfortNow.bullets) ? comfortNow.bullets : [],
-    emoji: comfortNow.emoji ?? "🌤️",
-    longNarrative: comfortNow.line2 ?? ""
+    title: comfortNow.headline ?? "Comfort overview",
+    bullets: [], // Comfort Now no longer uses bullets
+    longNarrative: comfortNow.narrative ?? ""
   };
 
+  // ------------------------------------------------------------
+  // BEST COMFORT WINDOW — USE NEW ENGINE
+  // ------------------------------------------------------------
   const bestWindow = findBestComfortWindow(hourlyNormalized);
 
-  // FUTURE COMFORT
-  const futureComfort = buildFutureComfort(hourlyNormalized, computeComfortLegacy);
+  // ------------------------------------------------------------
+  // FUTURE COMFORT — USE NEW ENGINE
+  // ------------------------------------------------------------
+  const futureComfort = buildFutureComfort(hourlyNormalized, computeComfort);
 
+  // ------------------------------------------------------------
   // RENDER MODULES
+  // ------------------------------------------------------------
   renderComfortNow($("comfort-now-container"), comfortNowForRender, bestWindow);
   renderFutureComfort($("future-comfort-container"), futureComfort);
 
