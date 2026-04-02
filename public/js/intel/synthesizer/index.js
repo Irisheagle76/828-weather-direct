@@ -1,16 +1,10 @@
 // index.js
 // ============================================================
-// SYNTHESIZER ORCHESTRATOR
-// This is the main entry point for narrative generation.
-// It:
-//  - Receives intel from your Human-Action engine
-//  - Determines comfort category
-//  - Detects Goldilocks
-//  - Generates Today/Tomorrow narratives via assemble.js
-//  - Applies strong diversity rules via contrast.js
-//  - Returns final narrative object
+// SYNTHESIZER ORCHESTRATOR (v4.1)
+// Human‑Action category engine + Goldilocks + narrative assembly
 // ============================================================
-console.log("SYNTHESIZER VERSION: NEW v4");
+
+console.log("SYNTHESIZER VERSION: 4.1");
 
 import { assemble } from "./assemble.js";
 import { contrast } from "./contrast.js";
@@ -20,25 +14,104 @@ import { temporal } from "./temporal.js";
 import { bulletPools } from "./bullets.js";
 
 // ------------------------------------------------------------
-// CATEGORY DETECTION
+// HUMAN‑ACTION CATEGORY DETECTOR (v2.3)
 // ------------------------------------------------------------
 function detectCategory(intel) {
-  const score = intel?.comfortScore ?? 0;
+  if (!intel || !intel.snapshot) return "comfortable";
 
-  if (intel?.isGoldilocks) return "goldilocks";
+  const s = intel.snapshot;
 
-  if (score >= 85) return "veryComfortable";
-  if (score >= 65) return "comfortable";
-  if (score >= 45) return "slightlyUncomfortable";
-  if (score >= 25) return "uncomfortable";
-  return "harsh";
+  const temp = s.temp ?? null;
+  const dew = s.dewPoint ?? null;
+  const humidity = s.humidity ?? null;
+  const wind = s.windSpeed ?? null;
+  const gust = s.windGust ?? null;
+  const precip = s.precipType ?? "";
+  const fogValley = intel.valleyFogRisk ?? false;
+  const fogRidge = intel.ridgeFogRisk ?? false;
+  const smoke = intel.smokeIndex ?? 0;
+  const frost = intel.frostRisk ?? false;
+  const freeze = intel.freezeRisk ?? false;
+  const blackIce = intel.blackIceRisk ?? false;
+
+  // GOLDILOCKS (premium mode)
+  const isGoldilocks =
+    wind < 5 &&
+    humidity < 60 &&
+    dew < 55 &&
+    !precip &&
+    !fogValley &&
+    !fogRidge &&
+    smoke < 20 &&
+    !frost &&
+    !freeze &&
+    !blackIce;
+
+  if (isGoldilocks) return "veryComfortable";
+
+  // HARSH (any impactful hazard)
+  if (
+    wind >= 30 ||
+    gust >= 40 ||
+    dew >= 70 ||
+    humidity >= 90 ||
+    precip === "heavy" ||
+    fogRidge ||
+    smoke >= 60 ||
+    frost ||
+    freeze ||
+    blackIce
+  ) {
+    return "harsh";
+  }
+
+  // UNCOMFORTABLE (clear, persistent stressors)
+  if (
+    wind >= 20 ||
+    dew >= 65 ||
+    humidity >= 80 ||
+    precip === "moderate" ||
+    fogValley ||
+    smoke >= 40
+  ) {
+    return "uncomfortable";
+  }
+
+  // SLIGHTLY UNCOMFORTABLE (mild stressors)
+  if (
+    wind >= 10 ||
+    dew >= 60 ||
+    humidity >= 70 ||
+    precip === "light" ||
+    smoke >= 20
+  ) {
+    return "slightlyUncomfortable";
+  }
+
+  // COMFORTABLE (default)
+  return "comfortable";
 }
 
 // ------------------------------------------------------------
-// GOLDILOCKS DETECTION
+// GOLDILOCKS DETECTOR (boolean flag)
 // ------------------------------------------------------------
 function detectGoldilocks(intel) {
-  return intel?.isGoldilocks === true;
+  if (!intel || !intel.snapshot) return false;
+
+  const s = intel.snapshot;
+
+  return (
+    s.windSpeed < 5 &&
+    s.humidity < 60 &&
+    s.dewPoint < 55 &&
+    !s.precipType &&
+    !intel.valleyFogRisk &&
+    !intel.ridgeFogRisk &&
+    (intel.smokeIndex ?? 0) < 20 &&
+    !intel.frostRisk &&
+    !intel.freezeRisk &&
+    !intel.blackIceRisk
+  );
 }
 
 // ------------------------------------------------------------
@@ -76,7 +149,7 @@ function buildContrastPools(category, isGoldilocks) {
 // MASTER GENERATOR
 // ------------------------------------------------------------
 export function generateNarrative(intelToday, intelTomorrow) {
-  // 1. Detect categories
+  // 1. Detect categories (Human‑Action v2.3)
   const categoryToday = detectCategory(intelToday);
   const categoryTomorrow = detectCategory(intelTomorrow);
 
