@@ -49,7 +49,6 @@ function resolveCurrentConditions(raw, hourly) {
   const idx = hourly.findIndex(h => h.timestamp >= now);
   const fallback = idx !== -1 ? hourly[idx] : hourly[0];
 
-  // TEMP
   const tempF =
     (raw.tempest?.air_temperature != null
       ? cToF(raw.tempest.air_temperature)
@@ -57,7 +56,6 @@ function resolveCurrentConditions(raw, hourly) {
     fallback?.temperatureF ??
     null;
 
-  // DEWPOINT
   const dewF =
     (raw.tempest?.dew_point != null
       ? cToF(raw.tempest.dew_point)
@@ -65,13 +63,11 @@ function resolveCurrentConditions(raw, hourly) {
     fallback?.dewpointF ??
     null;
 
-  // HUMIDITY
   const humidity =
     raw.tempest?.relative_humidity ??
     fallback?.relative_humidity ??
     null;
 
-  // WIND (Tempest m/s → mph)
   const wind =
     raw.tempest?.wind_avg != null
       ? raw.tempest.wind_avg * 2.23694
@@ -82,19 +78,16 @@ function resolveCurrentConditions(raw, hourly) {
       ? raw.tempest.wind_gust * 2.23694
       : fallback?.wind_gust ?? null;
 
-  // WIND DIRECTION
   const windDir =
     raw.tempest?.wind_direction ??
     fallback?.wind_dir ??
     "";
 
-  // UV
   const uv =
     raw.tempest?.uv ??
     fallback?.uv_index ??
     0;
 
-  // TIMESTAMP
   const timestamp =
     raw.tempest?.timestamp ??
     fallback?.timestamp ??
@@ -203,35 +196,23 @@ function renderSynthHealth(today, tomorrow) {
 // HUMAN ACTION (TODAY + TOMORROW)
 // ============================================================
 function renderHumanAction(today, tomorrow) {
-  // Today
   safeSet("ha-today-header", "textContent", getTodayLabelFromLocalTime());
   safeSet("ha-today-emoji", "textContent", today.emoji);
   safeSet("ha-today-title", "textContent", today.headline);
   safeSet("ha-today-body", "textContent", today.narrative);
-  safeHTML(
-    "ha-today-bullets",
-    (today.bullets || []).map(b => `<li>${b}</li>`).join("")
-  );
+  safeHTML("ha-today-bullets", (today.bullets || []).map(b => `<li>${b}</li>`).join(""));
 
   const todayGold = $("ha-today-goldilocks");
-  if (todayGold) {
-    todayGold.style.display = today.goldilocks ? "inline-block" : "none";
-  }
+  if (todayGold) todayGold.style.display = today.goldilocks ? "inline-block" : "none";
 
-  // Tomorrow
   safeSet("ha-tomorrow-header", "textContent", "Tomorrow’s Outlook");
   safeSet("ha-tomorrow-emoji", "textContent", tomorrow.emoji);
   safeSet("ha-tomorrow-title", "textContent", tomorrow.headline);
   safeSet("ha-tomorrow-body", "textContent", tomorrow.narrative);
-  safeHTML(
-    "ha-tomorrow-bullets",
-    (tomorrow.bullets || []).map(b => `<li>${b}</li>`).join("")
-  );
+  safeHTML("ha-tomorrow-bullets", (tomorrow.bullets || []).map(b => `<li>${b}</li>`).join(""));
 
   const tomorrowGold = $("ha-tomorrow-goldilocks");
-  if (tomorrowGold) {
-    tomorrowGold.style.display = tomorrow.goldilocks ? "inline-block" : "none";
-  }
+  if (tomorrowGold) tomorrowGold.style.display = tomorrow.goldilocks ? "inline-block" : "none";
 
   renderSynthHealth(today, tomorrow);
 }
@@ -247,7 +228,7 @@ function renderHumanActionExpanded(todayIntel, tomorrowIntel) {
 
     const high = intel.stats?.tempMax ?? s.temp ?? null;
     const low = intel.stats?.tempMin ?? s.temp ?? null;
-    const dew = s.dewPoint ?? s.dewpoint ?? null;
+    const dew = s.dewPoint ?? null;
     const wind = s.windSpeed ?? null;
     const gust = s.windGust ?? null;
     const precipType = s.precipType ?? intel.precipType ?? "";
@@ -257,11 +238,7 @@ function renderHumanActionExpanded(todayIntel, tomorrowIntel) {
       <div class="fx-grid">
         <div class="fx-tile">
           <div class="fx-top">
-            ${
-              high != null
-                ? `${Math.round(high)}°${low != null ? " / " + Math.round(low) + "°" : ""}`
-                : "--"
-            }
+            ${high != null ? `${Math.round(high)}° / ${Math.round(low)}°` : "--"}
           </div>
           <div class="fx-sub">High / Low</div>
           <div class="fx-label">Temperature</div>
@@ -306,7 +283,7 @@ function renderComfortNow(container, comfort, bestWindow) {
 
   const explainer =
     comfort.scoreExplainer ||
-    "Comfort Score blends temperature, dew point, humidity, wind, and sun angle into a 0–100 scale (higher is better).";
+    "Comfort Score blends temperature, dew point, humidity, wind, and sun angle into a 0–100 scale.";
 
   container.innerHTML = `
     <div class="comfort-card module-card" data-accordion="comfort-now">
@@ -317,12 +294,8 @@ function renderComfortNow(container, comfort, bestWindow) {
           <div class="comfort-label">Comfort Now</div>
           <div class="comfort-category">${comfort.category || ""}</div>
           <div class="comfort-text">${mainLine}</div>
-          <div class="comfort-sub">
-            ${scoreLine}
-          </div>
-          <div class="comfort-explainer">
-            ${explainer}
-          </div>
+          <div class="comfort-sub">${scoreLine}</div>
+          <div class="comfort-explainer">${explainer}</div>
         </div>
       </div>
 
@@ -370,11 +343,8 @@ function renderComfortNow(container, comfort, bestWindow) {
               <div class="fc-hour-label">${h.hourLabel}</div>
               <div class="fc-hour-main">
                 <span class="fc-hour-emoji">${h.emoji}</span>
-                <span class="fc-hour-temp">
-                  ${h.temp != null ? `${Math.round(h.temp)}°` : "--"}
-                </span>
+                <span class="fc-hour-temp">${h.temp != null ? `${Math.round(h.temp)}°` : "--"}</span>
               </div>
-
               <div class="fc-hour-extra">
                 <span class="fc-hour-score">${Math.round(h.comfortScore)}/100</span>
                 <span class="fc-hour-label-text">${h.label}</span>
@@ -388,11 +358,7 @@ function renderComfortNow(container, comfort, bestWindow) {
             : ""
         }
 
-        ${
-          comfort.longNarrative
-            ? `<div class="comfort-long">${comfort.longNarrative}</div>`
-            : ""
-        }
+        ${comfort.longNarrative ? `<div class="comfort-long">${comfort.longNarrative}</div>` : ""}
       </div>
     </div>
   `;
@@ -506,7 +472,7 @@ function initializeAccordion() {
 }
 
 // ============================================================
-// MAIN ENTRY — FULL PIPELINE
+// MAIN ENTRY — FULL PIPELINE (CLEANED + DEBUG EXPORTS)
 // ============================================================
 export async function renderWeather({ lat, lon, tempestStationId, tempestToken }) {
   const raw = await fetchAllIntel({ lat, lon, tempestStationId, tempestToken });
@@ -564,103 +530,15 @@ export async function renderWeather({ lat, lon, tempestStationId, tempestToken }
   renderFutureComfort($("future-comfort-container"), futureComfort);
 
   initializeAccordion();
-}
-// ============================================================
-// ACCORDION — ONE MODULE OPEN AT A TIME
-// ============================================================
-function initializeAccordion() {
-  document.addEventListener("click", e => {
-    const mod = e.target.closest("[data-accordion]");
-    if (!mod) return;
 
-    const group = mod.getAttribute("data-accordion");
-    const all = document.querySelectorAll("[data-accordion]");
-    const isActive = mod.classList.contains("active");
-
-    all.forEach(m => {
-      if (m.getAttribute("data-accordion") === group) {
-        m.classList.remove("active");
-      }
-    });
-
-    if (!isActive) {
-      mod.classList.add("active");
-    }
-  });
-}
-
-// ============================================================
-// MAIN ENTRY — FULL PIPELINE (CLEANED)
-// ============================================================
-export async function renderWeather({ lat, lon, tempestStationId, tempestToken }) {
-  // ⭐ Corrected signature + correct fetch call
-  const raw = await fetchAllIntel({ lat, lon, tempestStationId, tempestToken });
-
-  // Normalize hourly forecast
-  const hourlyNormalized = normalizeOpenMeteo(raw.hourly);
-
-  // Resolve canonical current conditions (Tempest-first)
-  const current = resolveCurrentConditions(raw, hourlyNormalized);
-
-  // Render current obs + data source indicator
-  updateDataSourceIndicator(raw);
-  renderCurrentObservations(current);
-
-  // ============================================================
-  // HUMAN ACTION INTEL + SYNTHESIZER
-  // ============================================================
-  const intelRaw = buildHumanActionIntel(raw);
-
-  const { today: todayNarr, tomorrow: tomorrowNarr } = generateNarrative(
-    intelRaw.today,
-    intelRaw.tomorrow
-  );
-
-  renderHumanAction(todayNarr, tomorrowNarr);
-  renderHumanActionExpanded(intelRaw.today, intelRaw.tomorrow);
-
-  // ============================================================
-  // COMFORT NOW — CLEANED
-  // ============================================================
-  const comfortNow = computeComfort(current);
-
-  comfortNow.humidity = current.humidity;
-  comfortNow.wind = current.wind;
-
-  const score = comfortNow.comfortScore;
-
-  comfortNow.category =
-    score >= 80
-      ? "Very Comfortable"
-      : score >= 65
-      ? "Comfortable"
-      : score >= 50
-      ? "Slightly Uncomfortable"
-      : score >= 35
-      ? "Uncomfortable"
-      : "Harsh / Poor Comfort";
-
-  const comfortNowForRender = {
-    ...comfortNow,
-    title: comfortNow.line1 ?? comfortNow.summary ?? "Comfort overview",
-    bullets: Array.isArray(comfortNow.bullets) ? comfortNow.bullets : [],
-    emoji: comfortNow.emoji ?? "🌤️",
-    longNarrative: comfortNow.line2 ?? ""
-  };
-
-  const bestWindow = findBestComfortWindow(hourlyNormalized);
-
-  // ============================================================
-  // FUTURE COMFORT — NEXT 6 HOURS
-  // ============================================================
-  const futureComfort = buildFutureComfort(hourlyNormalized, computeComfortLegacy);
-
-  // ============================================================
-  // RENDER MODULES
-  // ============================================================
-  renderComfortNow($("comfort-now-container"), comfortNowForRender, bestWindow);
-  renderFutureComfort($("future-comfort-container"), futureComfort);
-
-  // Accordion behavior
-  initializeAccordion();
+  // DEBUG
+  window._raw = raw;
+  window._hourly = hourlyNormalized;
+  window._current = current;
+  window._comfortNow = comfortNow;
+  window._comfortNowForRender = comfortNowForRender;
+  window._todayNarr = todayNarr;
+  window._tomorrowNarr = tomorrowNarr;
+  window._haToday = intelRaw.today;
+  window._haTomorrow = intelRaw.tomorrow;
 }
