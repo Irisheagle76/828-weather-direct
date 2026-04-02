@@ -295,11 +295,14 @@ function renderHumanActionExpanded(todayIntel, tomorrowIntel) {
 }
 
 // ============================================================
-// COMFORT NOW
+// COMFORT NOW — CLEAN, SAFE, MODERN
 // ============================================================
 function renderComfortNow(container, comfort, bestWindow) {
   if (!container) return;
 
+  // -----------------------------
+  // Derived display fields
+  // -----------------------------
   const mainLine = comfort.title || comfort.label || "Comfort overview";
   const scoreLine =
     comfort.comfortScore != null
@@ -310,8 +313,72 @@ function renderComfortNow(container, comfort, bestWindow) {
     comfort.scoreExplainer ||
     "Comfort Score blends temperature, dew point, humidity, wind, and sun angle into a 0–100 scale.";
 
+  // -----------------------------
+  // Build Best Window block (if any)
+  // -----------------------------
+  let bestWindowHTML = "";
+
+  if (bestWindow && Array.isArray(bestWindow.hours) && bestWindow.hours.length > 0) {
+    const first = bestWindow.hours[0];
+    const last = bestWindow.hours[bestWindow.hours.length - 1];
+
+    const windowLabel = `${first.hourLabel}–${last.hourLabel}`;
+
+    const hourBlocks = bestWindow.hours
+      .map(h => {
+        const temp = h.temp != null ? `${Math.round(h.temp)}°` : "--";
+        const score = h.comfortScore != null ? Math.round(h.comfortScore) : "--";
+
+        return `
+          <div class="fc-hour">
+            <div class="fc-hour-label">${h.hourLabel}</div>
+
+            <div class="fc-hour-main">
+              <span class="fc-hour-emoji">${h.emoji}</span>
+              <span class="fc-hour-temp">${temp}</span>
+            </div>
+
+            <div class="fc-hour-extra">
+              <span class="fc-hour-score">${score}/100</span>
+              <span class="fc-hour-label-text">${h.label}</span>
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+
+    bestWindowHTML = `
+      <div class="comfort-expand-row" style="margin-top:0.6rem;">
+        <span class="comfort-expand-label">Best window (next ${bestWindow.hours.length} hrs)</span>
+        <span class="comfort-expand-value">${windowLabel}</span>
+      </div>
+
+      <div class="fc-strip">
+        ${hourBlocks}
+      </div>
+    `;
+  }
+
+  // -----------------------------
+  // Build bullets (if any)
+  // -----------------------------
+  const bulletsHTML = (comfort.bullets || [])
+    .map(b => `<li>${b}</li>`)
+    .join("");
+
+  // -----------------------------
+  // Build long narrative (if any)
+  // -----------------------------
+  const longHTML = comfort.longNarrative
+    ? `<div class="comfort-long">${comfort.longNarrative}</div>`
+    : "";
+
+  // -----------------------------
+  // FINAL RENDER
+  // -----------------------------
   container.innerHTML = `
     <div class="comfort-card module-card" data-accordion="comfort-now">
+
       <div class="comfort-main">
         <div class="comfort-emoji">${comfort.emoji || "🌤️"}</div>
 
@@ -325,8 +392,9 @@ function renderComfortNow(container, comfort, bestWindow) {
       </div>
 
       <div class="comfort-expand">
+
         <ul class="comfort-bullets">
-          ${(comfort.bullets || []).map(b => `<li>${b}</li>`).join("")}
+          ${bulletsHTML}
         </ul>
 
         <div class="comfort-expand-row">
@@ -346,48 +414,13 @@ function renderComfortNow(container, comfort, bestWindow) {
         <div class="comfort-expand-row">
           <span class="comfort-expand-label">Wind</span>
           <span class="comfort-expand-value">
-           ${comfort.windSpeed != null ? `${Math.round(comfort.windSpeed)} mph` : "--"}
+            ${comfort.windSpeed != null ? `${Math.round(comfort.windSpeed)} mph` : "--"}
           </span>
         </div>
 
-        ${
-          bestWindow
-            ? `
-        <div class="comfort-expand-row" style="margin-top:0.6rem;">
-          <span class="comfort-expand-label">Best window (next ${bestWindow.hours.length} hrs)</span>
-          <span class="comfort-expand-value">
-         ${bestWindow?.hours?.length
-  ? `${bestWindow.hours[0].hourLabel}–${bestWindow.hours[bestWindow.hours.length - 1].hourLabel}`
-  : "--"}
-          </span>
-        </div>
+        ${bestWindowHTML}
+        ${longHTML}
 
-        <div class="fc-strip">
-          ${bestWindow.hours
-            .map(
-              h => `
-            <div class="fc-hour">
-              <div class="fc-hour-label">${h.hourLabel}</div>
-              <div class="fc-hour-main">
-                <span class="fc-hour-emoji">${h.emoji}</span>
-                <span class="fc-hour-temp">${h.temp != null ? `${Math.round(h.temp)}°` : "--"}</span>
-              </div>
-              <div class="fc-hour-extra">
-                <span class="fc-hour-score">
-  ${h.comfortScore != null ? Math.round(h.comfortScore) : "--"}/100
-</span>
-                <span class="fc-hour-label-text">${h.label}</span>
-              </div>
-            </div>
-          `
-            )
-            .join("")}
-        </div>
-        `
-            : ""
-        }
-
-        ${comfort.longNarrative ? `<div class="comfort-long">${comfort.longNarrative}</div>` : ""}
       </div>
     </div>
   `;
