@@ -40,24 +40,46 @@ async function handleHourly(req, res) {
       const text = await r.text();
       console.error("Open-Meteo error:", text);
 
-      // ⭐ SAFE FALLBACK
-      return res.status(200).json({
-        time: [],
-        temperature_2m: [],
-        dewpoint_2m: [],
-        relativehumidity_2m: [],
-        precipitation: [],
-        snowfall: [],
-        cloudcover: [],
-        visibility: [],
-        wind_speed_10m: [],
-        windgusts_10m: [],
-        uv_index: [],
-        _fallback: true,
-        _reason: "open-meteo-bad-status"
-      });
+      return res.status(200).json(buildFallbackHourly("bad-status"));
     }
 
+    const data = await r.json();
+
+    if (!data?.hourly || !Array.isArray(data.hourly.time)) {
+      console.error("Bad Open-Meteo payload:", data);
+
+      return res.status(200).json(buildFallbackHourly("malformed"));
+    }
+
+    return res.status(200).json(data.hourly);
+
+  } catch (err) {
+    console.error("Fetch failed:", err);
+
+    return res.status(200).json(buildFallbackHourly("exception"));
+  }
+}
+
+// ------------------------------------------------------------
+// SAFE FALLBACK HOURLY STRUCTURE
+// ------------------------------------------------------------
+function buildFallbackHourly(reason) {
+  return {
+    time: [],
+    temperature_2m: [],
+    dewpoint_2m: [],
+    relativehumidity_2m: [],
+    precipitation: [],
+    snowfall: [],
+    cloudcover: [],
+    visibility: [],
+    wind_speed_10m: [],
+    windgusts_10m: [],
+    uv_index: [],
+    _fallback: true,
+    _reason: reason
+  };
+}
     const data = await r.json();
 
     // ⭐ If hourly is missing or malformed, return safe fallback
