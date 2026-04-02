@@ -29,26 +29,14 @@ export function normalizeOpenMeteo(hourly) {
     // CORE METEOROLOGICAL FIELDS
     // ------------------------------------------------------------
     // temperature_2m and apparent_temperature are already Fahrenheit
-    // dewpoint_2m is ALWAYS Celsius (Open-Meteo does not support dewpoint_unit)
+    // dewpoint_2m is ALSO Fahrenheit (confirmed by backend test)
     const tempF_raw = num(pick("temperature_2m"));
-    let dewC_raw = num(pick("dewpoint_2m"));
+    const dewpointF_raw = num(pick("dewpoint_2m"));
+    const dewpointF = dewpointF_raw != null ? dewpointF_raw : null;
     const humidity = num(pick("relativehumidity_2m"));
 
-    // ------------------------------------------------------------
-    // SANITY CHECK — DEW POINT MUST BE REALISTIC
-    // ------------------------------------------------------------
-    // Dew point in Celsius should never exceed ~40°C (104°F)
-    // If it does, the value is corrupted and must be discarded.
-    let dewC = dewC_raw;
-    if (dewC != null && dewC > 40) {
-      dewC = null;
-    }
-
-    // Convert to Fahrenheit only if valid
-    let dewpointF = null;
-    if (dewC != null) {
-      dewpointF = cToF(dewC);
-    }
+    // Convert dew point to Celsius for risk logic
+    const dewC = dewpointF != null ? fToC(dewpointF) : null;
 
     // ------------------------------------------------------------
     // WIND (already normalized by backend to mph)
