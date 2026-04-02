@@ -47,43 +47,69 @@ function getTodayLabelFromLocalTime() {
 // CANONICAL CURRENT CONDITIONS
 // ============================================================
 function resolveCurrentConditions(raw, hourly) {
-  const fallback = hourly?.[0];
+  // pick the closest hourly snapshot to "now"
+  const now = Date.now();
+  const idx = hourly.findIndex(h => h.timestamp >= now);
+  const fallback = idx !== -1 ? hourly[idx] : hourly[0];
 
+  // TEMP
   const tempF =
-    (raw.tempest?.air_temperature != null ? cToF(raw.tempest.air_temperature) : null) ??
+    (raw.tempest?.air_temperature != null
+      ? cToF(raw.tempest.air_temperature)
+      : null) ??
     raw.wu?.imperial?.temp ??
     fallback?.temperatureF ??
     null;
 
-  const dewF =
-    (raw.tempest?.dew_point != null ? cToF(raw.tempest.dew_point) : null) ??
-    raw.wu?.imperial?.dewpt ??
-    fallback?.dewpointF ??
-    null;
+  // DEWPOINT — sanity check (dewpoint cannot exceed temp or be > 85F in spring)
+  let dewF = null;
 
-  const wind =
-    raw.tempest?.wind_avg ??
-    raw.wu?.imperial?.windSpeed ??
-    fallback?.wind_speed ??
-    null;
+  if (raw.tempest?.dew_point != null) {
+    const dp = cToF(raw.tempest.dew_point);
+    if (dp > -40 && dp < 85) dewF = dp;
+  }
 
-  const gust =
-    raw.tempest?.wind_gust ??
-    raw.wu?.imperial?.windGust ??
-    fallback?.wind_gust ??
-    null;
+  if (dewF == null && raw.wu?.imperial?.dewpt != null) {
+    dewF = raw.wu.imperial.dewpt;
+  }
 
-  const humidity =
-    raw.tempest?.relative_humidity ??
-    raw.wu?.humidity ??
-    fallback?.relative_humidity ??
-    null;
+  if (dewF == null) {
+    dewF = fallback?.dewpointF ?? null;
+  }
 
+  // WIND — convert Tempest m/s → mph
+  let wind = null;
+  if (raw.tempest?.wind_avg != null) {
+    wind = raw.tempest.wind_avg * 2.23694;
+  } else if (raw.wu?.imperial?.windSpeed != null) {
+    wind = raw.wu.imperial.windSpeed;
+  } else {
+    wind = fallback?.wind_speed ?? null;
+  }
+
+  // GUST
+  let gust = null;
+  if (raw.tempest?.wind_gust != null) {
+    gust = raw.tempest.wind_gust * 2.23694;
+  } else if (raw.wu?.imperial?.windGust != null) {
+    gust = raw.wu.imperial.windGust;
+  } else {
+    gust = fallback?.wind_gust ?? null;
+  }
+
+  // HUMIDITY — sanity check (1–100)
+  let humidity = raw.tempest?.relative_humidity;
+  if (!(humidity > 0 && humidity <= 100)) {
+    humidity = raw.wu?.humidity ?? fallback?.relative_humidity ?? null;
+  }
+
+  // UV
   const uv =
     raw.wu?.uv ??
     fallback?.uv_index ??
     0;
 
+  // WIND DIRECTION
   const windDir =
     raw.tempest?.wind_direction ??
     raw.wu?.wind_dir ??
@@ -98,7 +124,6 @@ function resolveCurrentConditions(raw, hourly) {
 
   return { tempF, dewF, wind, gust, humidity, uv, windDir, timestamp };
 }
-
 // ============================================================
 // COMFORT WRAPPER
 // ============================================================
