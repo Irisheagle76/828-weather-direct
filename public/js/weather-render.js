@@ -421,13 +421,15 @@ function findBestComfortWindow(hourlyNormalized, windowSize = 3) {
     for (let i = 0; i < windowSize; i++) {
       const h = hourlyNormalized[start + i];
 
-      const comfort = computeComfort({
-        tempF: h.temperatureF,
-        dewF: h.dewpointF,
-        wind: h.wind_speed,
-        windDir: h.wind_dir,
-        timestamp: h.timestamp
-      });
+     const comfort = computeComfort({
+  wu: {
+    temp: h.temperatureF ?? null,
+    dewPoint: h.dewpointF ?? null,
+    windSpeed: h.wind_speed ?? 0,
+    windDir: h.wind_dir ?? "",
+    obsTimeLocal: h.timestamp
+  }
+});
 
       hours.push({
         hourLabel: formatHourLabel(h.timestamp),
@@ -435,7 +437,7 @@ function findBestComfortWindow(hourlyNormalized, windowSize = 3) {
         dew: h.dewpointF,
         comfortScore: comfort.comfortScore,
         emoji: comfort.emoji,
-        label: comfort.label
+        label: comfort.category
       });
 
       sum += comfort.comfortScore;
@@ -499,9 +501,19 @@ export async function renderWeather({ lat, lon, tempestStationId, tempestToken }
   renderHumanActionExpanded(intelRaw.today, intelRaw.tomorrow);
 
   // ------------------------------------------------------------
-  // COMFORT NOW — NEW ENGINE (no overrides, no legacy fields)
-  // ------------------------------------------------------------
-  const comfortNow = computeComfort(current);
+ // COMFORT NOW — NEW ENGINE (wrap current in wu-style intel)
+// ------------------------------------------------------------
+const comfortNow = computeComfort({
+  wu: {
+    temp: current.temp,
+    dewPoint: current.dewPoint,
+    windSpeed: current.windSpeed,
+    windDir: current.windDir,
+    humidity: current.humidity,
+    uv: current.uv,
+    obsTimeLocal: current.obsTimeLocal
+  }
+});
 
   const comfortNowForRender = {
     ...comfortNow,

@@ -396,7 +396,7 @@ export function buildFutureComfort(
       hourLabel: h.timestamp ? formatHourLabel(h.timestamp) : `+${i}h`,
       comfortScore: c?.comfortScore ?? null,
       color: c?.color,
-      label: c?.label,
+      label: c?.category,
       emoji: c?.emoji,
       temp: h.temperatureF ?? null,
       dew: h.dewpointF ?? null,
