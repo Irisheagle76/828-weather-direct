@@ -241,18 +241,12 @@ function pickComfortEmoji(state) {
 }
 
 // ------------------------------------------------------------
-// ⭐ MAIN ENGINE
+// ⭐ COMFORT NOW — v3.0 (Unified, Human-Warm, No Bullets)
 // ------------------------------------------------------------
 export function computeComfort(intel) {
   const src = intel.tempest ?? intel.wu ?? {};
   const temp = src.temp ?? null;
-  const dewRaw = src.dewPoint ?? null;
-
-  // Guardrail for bad inputs
-  if (temp != null && (temp > 120 || temp < -40)) {
-    console.warn("BAD TEMP INPUT", { temp, src });
-  }
-
+  const dew = src.dewPoint ?? (temp != null ? temp - 20 : null);
   const wind = src.windSpeed ?? 0;
   const windDir = src.windDir ?? "";
   const timestamp = src.obsTimeLocal ?? Date.now();
@@ -260,103 +254,99 @@ export function computeComfort(intel) {
   const elev = computeSolarElevation(timestamp, LOCATION.lat, LOCATION.lon);
   const feelsLike = computeWindChill(temp, wind);
 
-  // Fallback dew if missing
-  const dew = dewRaw != null ? dewRaw : (temp != null ? temp - 20 : null);
-
+  // Compute score
   const comfortScore =
     temp != null
       ? computeComfortScore(temp, dew, wind, elev, windDir)
       : null;
 
-  // Precip override
-  const precipOverride = fallingPrecipFeel(intel);
-  if (precipOverride) {
-    return {
-      ...precipOverride,
-      comfortScore,
-      label: getComfortLabel(comfortScore),
-      color: getComfortColor(comfortScore),
-      feelsLike,
-      temp,
-      dewpoint: dew,
-      scoreExplainer:
-        "Comfort Score blends temperature, dew point, humidity, wind, and sun angle into a 0–100 scale (higher is better)."
-    };
+  // ------------------------------------------------------------
+  // CATEGORY (Unified with Human-Action)
+  // ------------------------------------------------------------
+  let category = "Harsh";
+  if (comfortScore >= 80) category = "Comfortable";
+  else if (comfortScore >= 65) category = "Slightly Uncomfortable";
+  else if (comfortScore >= 45) category = "Uncomfortable";
+
+  // ------------------------------------------------------------
+  // EMOJI (aligned with category)
+  // ------------------------------------------------------------
+  const emojiMap = {
+    Comfortable: "🙂",
+    "Slightly Uncomfortable": "😐",
+    Uncomfortable: "😣",
+    Harsh: "🤯"
+  };
+  const emoji = emojiMap[category] ?? "😐";
+
+  // ------------------------------------------------------------
+  // HEADLINE (Tone 2 — human-warm, concise)
+  // ------------------------------------------------------------
+  let headline = "";
+  const rhFeel = humidityFeel(dew);
+
+  if (category === "Comfortable") {
+    headline = rhFeel
+      ? `Comfortable with ${rhFeel.replace(".", "").toLowerCase()}.`
+      : "Comfortable overall.";
+  } else if (category === "Slightly Uncomfortable") {
+    headline = rhFeel
+      ? `Slightly uncomfortable with ${rhFeel.replace(".", "").toLowerCase()}.`
+      : "Slightly uncomfortable overall.";
+  } else if (category === "Uncomfortable") {
+    headline = rhFeel
+      ? `Uncomfortable due to ${rhFeel.replace(".", "").toLowerCase()}.`
+      : "Uncomfortable overall.";
+  } else {
+    headline = rhFeel
+      ? `Harsh conditions with ${rhFeel.replace(".", "").toLowerCase()}.`
+      : "Harsh conditions overall.";
   }
 
-  // State
-  let state = "mild";
-  if (feelsLike != null) {
-    if (feelsLike <= 32) state = "cold";
-    else if (feelsLike <= 50) state = "cool";
-    else if (feelsLike <= 70) state = "mild";
-    else if (feelsLike <= 85) state = "warm";
-    else state = "hot";
+  // ------------------------------------------------------------
+  // LONG NARRATIVE (Tone 2 — warm, Asheville-aware, not verbose)
+  // ------------------------------------------------------------
+  const parts = [];
+
+  // Wind
+  if (wind >= 15) {
+    parts.push("A noticeable breeze adds some edge.");
+  } else if (wind >= 8) {
+    parts.push("A light breeze moves through at times.");
   }
 
-  const emoji = pickComfortEmoji(state);
-
-  let baseFeel =
-    state === "cold" ? "Cold with a noticeable chill" :
-    state === "cool" ? "Cool and manageable" :
-    state === "warm" ? "Warm with a gentle edge" :
-    state === "hot" ? "Hot and energetic" :
-    "Comfortable overall";
-
-  const dropFeel = computeTempDropFeel(intel);
-  const trend = computeShortTermTrend(intel);
-
-  let firstSentence = `${baseFeel}.`;
-
-  if (dropFeel) {
-    firstSentence = `${baseFeel} — ${dropFeel}.`;
-  } else if (trend) {
-    firstSentence = `${baseFeel} — ${trend} over the next few hours.`;
-  }
-
-  const parts = [firstSentence];
-
-  const humidText = humidityFeel(dew);
-  if (humidText) parts.push(humidText);
-
+  // Sun angle
   if (isSolarHelpful(intel, elev)) {
     parts.push(sunAngleFeel(elev));
   }
 
-  if (wind >= 15) {
-    parts.push("A noticeable breeze adds some edge.");
+  // Trend
+  const trend = computeShortTermTrend(intel);
+  if (trend) {
+    parts.push(`Expect conditions to be ${trend} soon.`);
   }
 
-  if (comfortScore != null && comfortScore < 45) {
-    parts.push("Dry air and wind are increasing fire danger.");
-  }
+  const narrative = parts.length > 0 ? parts.join(" ") : null;
 
-  const summary = parts.join(" ");
-
-  const sentences = summary.split(". ").filter(Boolean);
-
-  const line1 = sentences[0]
-    ? sentences[0] + (sentences[0].endsWith(".") ? "" : ".")
-    : "";
-
-  const line2 = sentences.slice(1).join(". ");
-
+  // ------------------------------------------------------------
+  // FINAL SHAPE (clean, predictable, renderer-friendly)
+  // ------------------------------------------------------------
   return {
+    category,
     emoji,
-    summary,
-    line1,
-    line2,
+    headline,
+    narrative,
     comfortScore,
-    label: getComfortLabel(comfortScore),
-    color: getComfortColor(comfortScore),
     feelsLike,
     temp,
     dewpoint: dew,
+    humidity: dewToRH(temp, dew),
+    wind,
+    color: getComfortColor(comfortScore),
     scoreExplainer:
       "Comfort Score blends temperature, dew point, humidity, wind, and sun angle into a 0–100 scale (higher is better)."
   };
 }
-
 // ------------------------------------------------------------
 // FUTURE COMFORT
 // ------------------------------------------------------------
