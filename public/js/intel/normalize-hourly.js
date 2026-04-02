@@ -111,14 +111,12 @@ export function normalizeOpenMeteo(hourly) {
         : 0;
 
     // ------------------------------------------------------------
-    // SAFE DEWPOINT FIX (NO DRIFT)
-    // ------------------------------------------------------------
-    // dewpoint_2m is ALWAYS Celsius from Open-Meteo.
-    // Convert ONLY if value is clearly Celsius (< 60°F).
-    let dewpointF = null;
-    if (dewC_raw != null) {
-      dewpointF = dewC_raw < 60 ? cToF(dewC_raw) : dewC_raw;
-    }
+// DEWPOINT — ALWAYS CELSIUS FROM OPEN-METEO
+// ------------------------------------------------------------
+let dewpointF = null;
+if (dewC_raw != null) {
+  dewpointF = cToF(dewC_raw);
+}
 
     // ------------------------------------------------------------
     // CANONICAL NORMALIZED OBJECT
