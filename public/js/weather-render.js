@@ -286,36 +286,6 @@ function renderHumanActionExpanded(todayIntel, tomorrowIntel) {
   safeHTML("ha-tomorrow-expanded", build(tomorrowIntel));
 }
 
-// ============================================================
-// FUTURE COMFORT — NEXT 6 HOURS
-// ============================================================
-function renderFutureComfort(container, items) {
-  if (!container) return;
-
-  container.innerHTML = `
-    <div class="future-comfort-card module-card" data-accordion="future-comfort">
-      <div class="next6-header">
-        <div class="next6-label">Future Comfort</div>
-      </div>
-
-      <div class="next6-strip">
-        ${items
-          .map(h => {
-            const temp = h.temp != null && !isNaN(h.temp) ? Math.round(h.temp) : "--";
-            return `
-              <div class="next6-hour">
-                <div class="next6-hour-label">${h.hourLabel}</div>
-                <div class="next6-hour-emoji">${h.emoji}</div>
-                <div class="next6-hour-temp">${temp}°</div>
-                <div class="next6-hour-factor">${h.label}</div>
-              </div>
-            `;
-          })
-          .join("")}
-      </div>
-    </div>
-  `;
-}
 
 // ============================================================
 // BEST COMFORT WINDOW — 3-HOUR SLIDING WINDOW (FIXED)
