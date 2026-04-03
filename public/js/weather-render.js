@@ -179,7 +179,8 @@ export async function renderWeather(config) {
   hourly.sort((a, b) => a.timestamp - b.timestamp);
 
   const current = resolveCurrentConditions(raw, hourly);
-const current = resolve
+  
+renderCurrentObs(current);
   // ------------------------------------------------------------
   // COMFORT
   // ------------------------------------------------------------
