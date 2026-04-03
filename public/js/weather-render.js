@@ -209,26 +209,6 @@ function updateDataSourceIndicator(raw) {
 }
 
 // ============================================================
-// SYNTH HEALTH PANEL
-// ============================================================
-function renderSynthHealth(today, tomorrow) {
-  const panel = $("synth-health");
-  if (!panel) return;
-
-  panel.innerHTML = `
-    <div class="synth-health-card">
-      <div><strong>Synth Version:</strong> ${today.version ?? "n/a"}</div>
-      <div><strong>Today Category:</strong> ${today.category ?? "n/a"}</div>
-      <div><strong>Tomorrow Category:</strong> ${tomorrow.category ?? "n/a"}</div>
-      <div><strong>Today Bullets:</strong> ${Array.isArray(today.bullets) ? today.bullets.length : 0}</div>
-      <div><strong>Tomorrow Bullets:</strong> ${Array.isArray(tomorrow.bullets) ? tomorrow.bullets.length : 0}</div>
-      <div><strong>Goldilocks Today:</strong> ${today.goldilocks ? "Yes" : "No"}</div>
-      <div><strong>Goldilocks Tomorrow:</strong> ${tomorrow.goldilocks ? "Yes" : "No"}</div>
-    </div>
-  `;
-}
-
-// ============================================================
 // HUMAN ACTION (TODAY + TOMORROW)
 // ============================================================
 function renderHumanAction(today, tomorrow) {
