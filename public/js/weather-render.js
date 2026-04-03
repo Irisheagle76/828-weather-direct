@@ -230,7 +230,7 @@ renderCurrentObs(current);
   const comfortForRender = comfort
     ? {
         ...comfort,
-        bullets: [], // (we'll improve later)
+        bullets: buildComfortBullets(current),
       }
     : null;
 
@@ -239,7 +239,50 @@ renderCurrentObs(current);
   if (comfortForRender) {
     renderComfortNow($("comfort-now-container"), comfortForRender, bestWindow);
   }
+// ------------------------------------------------------------
+  // Comfort Bullets
+  // ------------------------------------------------------------
 
+function buildComfortBullets(current) {
+  if (!current) return [];
+
+  const bullets = [];
+
+  const temp = current.temp;
+  const dew = current.dewPoint;
+  const wind = current.windSpeed;
+
+  // humidity
+  if (dew != null) {
+    if (dew >= 65) {
+      bullets.push("Humidity is high and adds a sticky feel.");
+    } else if (dew >= 55) {
+      bullets.push("Humidity is noticeable but still manageable.");
+    } else {
+      bullets.push("Dry air keeps conditions feeling comfortable.");
+    }
+  }
+
+  // wind
+  if (wind != null) {
+    if (wind >= 12) {
+      bullets.push("Breezes provide some relief from warmth.");
+    } else if (wind <= 4) {
+      bullets.push("Light winds limit cooling and air movement.");
+    }
+  }
+
+  // temperature
+  if (temp != null) {
+    if (temp >= 85) {
+      bullets.push("Warm temperatures are a primary discomfort factor.");
+    } else if (temp <= 55) {
+      bullets.push("Cool air may feel brisk, especially in shade.");
+    }
+  }
+
+  return bullets.slice(0, 3);
+}
   // ------------------------------------------------------------
   // FUTURE COMFORT
   // ------------------------------------------------------------
