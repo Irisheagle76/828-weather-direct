@@ -6,6 +6,27 @@
 import { LOCATION } from "/js/config/location.js";
 
 // ============================================================
+// TIME FORMAT
+// ============================================================
+
+function formatHourLabel(ts) {
+  const d = new Date(ts);
+
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    hour12: true,
+    timeZone: "America/New_York"
+  });
+
+  const parts = formatter.formatToParts(d);
+
+  const hour = parts.find(p => p.type === "hour")?.value ?? "";
+  const suffix = parts.find(p => p.type === "dayPeriod")?.value?.toUpperCase() ?? "";
+
+  return `${hour} ${suffix}`;
+}
+
+// ============================================================
 // CONSTANTS
 // ============================================================
 
@@ -334,24 +355,4 @@ export function buildFutureComfort(hourlyNormalized, computeComfortFn = computeC
   }
 
   return items;
-}
-// ============================================================
-// TIME FORMAT
-// ============================================================
-
-function formatHourLabel(ts) {
-  const d = new Date(ts);
-
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    hour: "numeric",
-    hour12: true,
-    timeZone: "America/New_York"
-  });
-
-  const parts = formatter.formatToParts(d);
-
-  const hour = parts.find(p => p.type === "hour")?.value ?? "";
-  const suffix = parts.find(p => p.type === "dayPeriod")?.value?.toUpperCase() ?? "";
-
-  return `${hour} ${suffix}`;
 }
