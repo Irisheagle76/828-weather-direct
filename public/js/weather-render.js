@@ -230,7 +230,6 @@ function renderHumanAction(today, tomorrow) {
   const tomorrowGold = $("ha-tomorrow-goldilocks");
   if (tomorrowGold) tomorrowGold.style.display = tomorrow.goldilocks ? "inline-block" : "none";
 
-  renderSynthHealth(today, tomorrow);
 }
 
 // ============================================================
