@@ -178,9 +178,13 @@ export async function renderWeather(config) {
   const hourly = normalizeOpenMeteo(raw.hourly);
   hourly.sort((a, b) => a.timestamp - b.timestamp);
 
-  const current = resolveCurrentConditions(raw, hourly);
-  
+const current = resolveCurrentConditions(raw, hourly);
+
+console.log("CURRENT:", current);
+console.log("ELEMENT:", document.getElementById("current-conditions"));
+
 renderCurrentObs(current);
+
   // ------------------------------------------------------------
   // COMFORT
   // ------------------------------------------------------------
