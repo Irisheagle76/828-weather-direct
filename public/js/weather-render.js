@@ -64,18 +64,54 @@ function renderCurrentObs(current) {
 
   el.innerHTML = `
     <div class="obs-row">
-      🌡️ ${fmt(current.temp)}
-      • 💧 Dew ${fmt(current.dewPoint)}
-      • 💦 ${pct(current.humidity)}
-      • 💨 ${wind(current.windSpeed)}
-      ${current.windGust ? `• Gusts ${Math.round(current.windGust)} mph` : ""}
-      • ☀️ UV ${current.uv != null ? current.uv.toFixed(1) : "--"}
+
+      <div class="obs-item">
+        <span class="obs-emoji">🌡️</span>
+        <span class="obs-value">${fmt(current.temp)}</span>
+      </div>
+
+      <div class="obs-item">
+        <span class="obs-emoji">💧</span>
+        <span class="obs-label">Dew</span>
+        <span class="obs-value">${fmt(current.dewPoint)}</span>
+      </div>
+
+      <div class="obs-item">
+        <span class="obs-emoji">💦</span>
+        <span class="obs-value">${pct(current.humidity)}</span>
+      </div>
+
+      <div class="obs-item">
+        <span class="obs-emoji">💨</span>
+        <span class="obs-value">${wind(current.windSpeed)}</span>
+      </div>
+
+      ${
+        current.windGust
+          ? `
+        <div class="obs-item">
+          <span class="obs-label">Gusts</span>
+          <span class="obs-value">${Math.round(current.windGust)} mph</span>
+        </div>
+      `
+          : ""
+      }
+
+      <div class="obs-item">
+        <span class="obs-emoji">☀️</span>
+        <span class="obs-label">UV</span>
+        <span class="obs-value">
+          ${current.uv != null ? current.uv.toFixed(1) : "--"}
+        </span>
+      </div>
+
     </div>
   `;
 }
+// ----------------------------------------------------------
+//Render Current Obs Helpers
 // ------------------------------------------------------------
-// Render Current Obs Helpers
-// ------------------------------------------------------------
+
 function fmt(v) {
   return v != null ? Math.round(v) + "°" : "--";
 }

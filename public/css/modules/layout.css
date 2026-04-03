@@ -57,6 +57,40 @@
 }
 
 /* ============================================================
+   OBS BAR — POLISHED
+   ============================================================ */
+
+.obs-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.obs-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.03);
+}
+
+.obs-emoji {
+  font-size: 0.9rem;
+}
+
+.obs-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.obs-value {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+/* ============================================================
    TODAY + TOMORROW ROW
    ============================================================ */
 
