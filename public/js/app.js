@@ -4,7 +4,7 @@
 // ============================================================
 
 // 🔥 VERSION MARKER
-console.log("APP.JS LOADED — STABLE BUILD v1");
+console.log("APP.JS LOADED — STABLE BUILD v2");
 
 // ------------------------------------------------------------
 // IMPORTS
@@ -15,26 +15,26 @@ import { renderWeather } from "./weather-render.js";
 // CONFIG
 // ------------------------------------------------------------
 const CONFIG = {
-FORCE_LOCATION: true,
+  FORCE_LOCATION: true,
 
-// Asheville fallback (safe default)
-DEFAULT_LAT: 35.5951,
-DEFAULT_LON: -82.5515,
+  // Asheville fallback
+  DEFAULT_LAT: 35.5951,
+  DEFAULT_LON: -82.5515,
 
-// Tempest
-TEMPEST_STATION_ID: "315255",
-TEMPEST_TOKEN: "838ff386-d14b-4d45-897a-18903e6970a9",
+  // Tempest
+  TEMPEST_STATION_ID: "315255",
+  TEMPEST_TOKEN: "838ff386-d14b-4d45-897a-18903e6970a9",
 
-// Refresh interval (ms)
-REFRESH_INTERVAL: 5 * 60 * 1000 // 5 minutes
+  // Refresh interval (ms)
+  REFRESH_INTERVAL: 5 * 60 * 1000 // 5 min
 };
 
 // ------------------------------------------------------------
 // STATE
 // ------------------------------------------------------------
 let currentLocation = {
-lat: CONFIG.DEFAULT_LAT,
-lon: CONFIG.DEFAULT_LON
+  lat: CONFIG.DEFAULT_LAT,
+  lon: CONFIG.DEFAULT_LON
 };
 
 let refreshTimer = null;
@@ -43,32 +43,50 @@ let refreshTimer = null;
 // ERROR HANDLING
 // ------------------------------------------------------------
 function showError(msg) {
-console.error("APP ERROR:", msg);
+  console.error("APP ERROR:", msg);
 
-const el = document.getElementById("wu-error");
-if (!el) return;
+  const el = document.getElementById("wu-error");
+  if (!el) return;
 
-el.style.display = "block";
-el.textContent = msg;
+  el.style.display = "block";
+  el.textContent = msg;
 }
 
 // ------------------------------------------------------------
 // LOADING STATE
 // ------------------------------------------------------------
 function setLoadingState() {
-const label = document.getElementById("wu-status-label");
-const text = document.getElementById("wu-status-text");
+  const label = document.getElementById("wu-status-label");
+  const text = document.getElementById("wu-status-text");
 
-if (label) label.textContent = "Loading weather…";
-if (text) text.textContent = "Fetching latest conditions…";
+  if (label) label.textContent = "Loading weather…";
+  if (text) text.textContent = "Fetching latest conditions…";
 
-const comfort = document.getElementById("comfort-now-container");
-const future = document.getElementById("future-comfort-container");
-const obs = document.getElementById("current-obs-inline");
+  const comfort = document.getElementById("comfort-now-container");
+  const future = document.getElementById("future-comfort-container");
+  const obs = document.getElementById("current-obs-inline");
 
-if (comfort) comfort.innerHTML = "Loading comfort…";
-if (future) future.innerHTML = "Loading forecast…";
-if (obs) obs.innerHTML = "Loading observations…";
+  if (comfort) comfort.innerHTML = "Loading comfort…";
+  if (future) future.innerHTML = "Loading forecast…";
+  if (obs) obs.innerHTML = "Loading observations…";
+}
+
+// ------------------------------------------------------------
+// READY STATE (NEW)
+// ------------------------------------------------------------
+function setReadyState() {
+  const label = document.getElementById("wu-status-label");
+  const text = document.getElementById("wu-status-text");
+
+  if (label) label.textContent = "Live conditions";
+
+  if (text) {
+    const now = new Date();
+    text.textContent = `Updated ${now.toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit"
+    })}`;
+  }
 }
 
 // ------------------------------------------------------------
@@ -85,6 +103,9 @@ async function runRender() {
       tempestToken: CONFIG.TEMPEST_TOKEN
     });
 
+    // ✅ NEW: update UI status
+    setReadyState();
+
     console.log("RENDER COMPLETE");
 
   } catch (err) {
@@ -97,14 +118,12 @@ async function runRender() {
 // AUTO REFRESH
 // ------------------------------------------------------------
 function startAutoRefresh() {
-if (refreshTimer) {
-clearInterval(refreshTimer);
-}
+  if (refreshTimer) clearInterval(refreshTimer);
 
-refreshTimer = setInterval(() => {
-console.log("AUTO REFRESH TRIGGERED");
-runRender();
-}, CONFIG.REFRESH_INTERVAL);
+  refreshTimer = setInterval(() => {
+    console.log("AUTO REFRESH TRIGGERED");
+    runRender();
+  }, CONFIG.REFRESH_INTERVAL);
 }
 
 // ------------------------------------------------------------
@@ -134,9 +153,7 @@ function resolveLocation() {
           lon: pos.coords.longitude
         });
       },
-      err => {
-        reject("Location access denied.");
-      }
+      () => reject("Location access denied.")
     );
 
   });
@@ -154,7 +171,6 @@ async function initApp() {
 
   try {
     const loc = await resolveLocation();
-
     currentLocation = loc;
 
     console.log("LOCATION RESOLVED:", loc);
