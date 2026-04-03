@@ -69,6 +69,48 @@
   font-size: 0.82rem;
   margin-top: 0.15rem;
 }
+/* ============================================================
+   COMFORT SCORE COLORS
+   ============================================================ */
+
+.comfort-score {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+/* Great */
+.comfort-score.great {
+  color: #4ade80; /* green */
+}
+
+/* Good */
+.comfort-score.good {
+  color: #a3e635; /* yellow-green */
+}
+
+/* Okay */
+.comfort-score.okay {
+  color: #facc15; /* yellow */
+}
+
+/* Poor */
+.comfort-score.poor {
+  color: #fb923c; /* orange */
+}
+
+/* Bad */
+.comfort-score.bad {
+  color: #f87171; /* red */
+}
+
+/* Neutral fallback */
+.comfort-score.neutral {
+  color: #9ca3af;
+}
+
+.comfort-score.great {
+  text-shadow: 0 0 6px rgba(74, 222, 128, 0.4);
+}
 
 /* ============================================================
    EXPANSION PANEL — Variable Height, No Clipping

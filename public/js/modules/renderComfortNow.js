@@ -23,13 +23,19 @@ export function renderComfortNow(container, comfort, bestWindow) {
         <div class="comfort-text-block">
           <div class="comfort-label">Comfort Now</div>
 
-          <div class="comfort-score">
-            ${score}
-          </div>
+          <div class="comfort-score-row">
+  <div class="comfort-score ${scoreClass}">
+    ${score}
+  </div>
 
-          <div class="comfort-explainer">
-            Blends temperature, humidity, wind, and sun into a 0–100 comfort score
-          </div>
+  <button class="comfort-info-btn" aria-expanded="false">
+    ⓘ
+  </button>
+</div>
+
+<div class="comfort-explainer hidden">
+  Blends temperature, humidity, wind, and sun into a 0–100 comfort score.
+</div>
 
           <div class="comfort-text">
             ${comfort.headline || "Comfort overview"}
@@ -74,6 +80,7 @@ export function renderComfortNow(container, comfort, bestWindow) {
 
     </div>
   `;
+  attachComfortInfoToggle(container);
 }
 
 // ============================================================
@@ -98,4 +105,16 @@ function renderBestWindow(bestWindow) {
       Most comfortable stretch based on lower humidity, lighter wind, and better temperature balance.
     </div>
   `;
+}
+function attachComfortInfoToggle(container) {
+  const btn = container.querySelector(".comfort-info-btn");
+  const explainer = container.querySelector(".comfort-explainer");
+
+  if (!btn || !explainer) return;
+
+  btn.addEventListener("click", () => {
+    const isOpen = explainer.classList.toggle("hidden");
+
+    btn.setAttribute("aria-expanded", !isOpen);
+  });
 }
