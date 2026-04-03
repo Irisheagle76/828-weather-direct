@@ -4,6 +4,7 @@
 // IMPORTS
 // ============================================================
 import { renderComfortNow } from "./modules/renderComfortNow.js";
+import { renderFutureComfort } from "./modules/renderFutureComfort.js";
 import { fetchAllIntel } from "./weather-fetch.js";
 import { buildHumanActionIntel } from "./intel/human-action-intel-builder.js?v=5";
 import { computeComfort as computeComfortLegacy, buildFutureComfort } from "./intel/comfort.js";
