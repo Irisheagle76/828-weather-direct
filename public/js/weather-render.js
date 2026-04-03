@@ -55,7 +55,38 @@ function resolveCurrentConditions(raw, hourly) {
     obsTimeLocal: raw.tempest?.timestamp ?? fallback.timestamp ?? Date.now()
   };
 }
+// ------------------------------------------------------------
+// Render Current Obs
+// ------------------------------------------------------------
+function renderCurrentObs(current) {
+  const el = document.getElementById("current-conditions");
+  if (!el || !current) return;
 
+  el.innerHTML = `
+    <div class="obs-row">
+      🌡️ ${fmt(current.temp)}
+      • 💧 Dew ${fmt(current.dewPoint)}
+      • 💦 ${pct(current.humidity)}
+      • 💨 ${wind(current.windSpeed)}
+      ${current.windGust ? `• Gusts ${Math.round(current.windGust)} mph` : ""}
+      • ☀️ UV ${current.uv != null ? current.uv.toFixed(1) : "--"}
+    </div>
+  `;
+}
+// ------------------------------------------------------------
+// Render Current Obs Helpers
+// ------------------------------------------------------------
+function fmt(v) {
+  return v != null ? Math.round(v) + "°" : "--";
+}
+
+function pct(v) {
+  return v != null ? Math.round(v) + "%" : "--";
+}
+
+function wind(v) {
+  return v != null ? Math.round(v) + " mph" : "--";
+}
 // ------------------------------------------------------------
 // SAFE COMFORT WRAPPER
 // ------------------------------------------------------------
@@ -148,7 +179,7 @@ export async function renderWeather(config) {
   hourly.sort((a, b) => a.timestamp - b.timestamp);
 
   const current = resolveCurrentConditions(raw, hourly);
-
+const current = resolve
   // ------------------------------------------------------------
   // COMFORT
   // ------------------------------------------------------------
