@@ -59,7 +59,7 @@ function resolveCurrentConditions(raw, hourly) {
 // Render Current Obs
 // ------------------------------------------------------------
 function renderCurrentObs(current) {
-  const el = document.getElementById("current-conditions");
+  const el = document.getElementById("current-obs-inline");
   if (!el || !current) return;
 
   el.innerHTML = `
