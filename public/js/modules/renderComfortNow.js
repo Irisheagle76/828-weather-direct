@@ -3,10 +3,17 @@
 export function renderComfortNow(container, comfort, bestWindow) {
   if (!container || !comfort) return;
 
-  const score =
-    comfort.comfortScore != null
-      ? `${Math.round(comfort.comfortScore)} / 100`
-      : "-- / 100";
+ const scoreValue =
+  comfort.comfortScore != null
+    ? Math.round(comfort.comfortScore)
+    : null;
+
+const score =
+  scoreValue != null
+    ? `${scoreValue} / 100`
+    : "-- / 100";
+
+const scoreClass = getComfortClass(scoreValue);
 
   const bulletsHTML = (comfort.bullets || [])
     .slice(0, 3)
@@ -117,4 +124,13 @@ function attachComfortInfoToggle(container) {
 
     btn.setAttribute("aria-expanded", !isOpen);
   });
+}
+function getComfortClass(score) {
+  if (score == null) return "neutral";
+
+  if (score >= 80) return "great";
+  if (score >= 65) return "good";
+  if (score >= 50) return "okay";
+  if (score >= 35) return "poor";
+  return "bad";
 }
