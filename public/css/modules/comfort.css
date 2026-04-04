@@ -370,6 +370,7 @@
 }
 
 .comfort-explainer {
-  margin-top: 2px;   /* was likely ~6–8px */
-  line-height: 1.25;
+  margin-top: 2px;
+  font-size: 0.75rem;
+  opacity: 0.65;
 }
