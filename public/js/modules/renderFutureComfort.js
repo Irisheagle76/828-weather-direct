@@ -6,11 +6,10 @@ export function renderFutureComfort(container, items, trend){
   container.innerHTML = `
     <div class="comfort-module next6-module" data-accordion="future">
 
-      <div class="next6-header">
-        <div class="next6-trend ${trend}">
-          ${getTrendText(trend)}
-        </div>
-      </div>
+     <button class="next6-trend-chip ${trend}" aria-label="Comfort trend">
+  <span class="trend-arrow">${getTrendArrow(trend)}</span>
+  <span class="trend-text">${getTrendText(trend)}</span>
+</button>
 
       <div class="next6-strip">
         ${items
@@ -75,7 +74,12 @@ function getScoreClass(score) {
 }
 
 function getTrendText(trend) {
-  if (trend === "improving") return "Improving ↑";
-  if (trend === "worsening") return "Worsening ↓";
-  return "Steady →";
+  if (trend === "improving") return "Getting more comfortable ↑";
+  if (trend === "worsening") return "Getting less comfortable ↓";
+  return "Comfort holding steady →";
+}
+function getTrendArrow(trend) {
+  if (trend === "improving") return "↑";
+  if (trend === "worsening") return "↓";
+  return "→";
 }
