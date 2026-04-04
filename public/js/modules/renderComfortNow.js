@@ -88,6 +88,8 @@ const scoreClass = getComfortClass(scoreValue);
     </div>
   `;
   attachComfortInfoToggle(container);
+  attachComfortAccordion(container);
+
 }
 
 // ============================================================
@@ -120,9 +122,8 @@ function attachComfortInfoToggle(container) {
   if (!btn || !explainer) return;
 
   btn.addEventListener("click", () => {
-    const isOpen = explainer.classList.toggle("hidden");
-
-    btn.setAttribute("aria-expanded", !isOpen);
+  const isHidden = explainer.classList.toggle("hidden");
+btn.setAttribute("aria-expanded", !isHidden);
   });
 }
 function getComfortClass(score) {
@@ -133,4 +134,19 @@ function getComfortClass(score) {
   if (score >= 50) return "okay";
   if (score >= 35) return "poor";
   return "bad";
+}
+// ============================================================
+// Comfort Now Accordion
+// ============================================================
+
+function attachComfortAccordion(container) {
+  const module = container.querySelector(".comfort-module");
+  if (!module) return;
+
+  module.addEventListener("click", (e) => {
+    // ignore clicks on info button
+    if (e.target.closest(".comfort-info-btn")) return;
+
+    module.classList.toggle("active");
+  });
 }

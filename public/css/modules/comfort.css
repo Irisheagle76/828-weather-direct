@@ -132,7 +132,7 @@
 }
 
 .comfort-module.active .comfort-expand {
-  max-height: 600px; /* large enough for long narratives */
+  max-height: 999px; /* large enough for long narratives */
   opacity: 1;
   transform: translateY(0) scale(1);
   overflow: visible;
@@ -315,4 +315,13 @@
   bottom: 0;
   width: 40px;
   background: linear-gradient(to right, transparent, rgba(0,0,0,0.4));
+}
+/* ============================================================
+   COMFORT NOW EXPLAINER
+   ============================================================ */
+.comfort-explainer {
+  font-size: 0.75rem;
+  opacity: 0.65;
+  margin-top: 6px;
+  max-width: 260px;
 }

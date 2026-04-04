@@ -282,7 +282,7 @@ renderCurrentObs(current);
   // Comfort Bullets
   // ------------------------------------------------------------
 
-function buildComfortBullets(current) {
+function buildComfortBullets(current, score) {
   if (!current) return [];
 
   const bullets = [];
@@ -291,30 +291,39 @@ function buildComfortBullets(current) {
   const dew = current.dewPoint;
   const wind = current.windSpeed;
 
-  // humidity
+  // --- primary driver (based on score) ---
+  if (score != null) {
+    if (score < 40) {
+      bullets.push("Conditions are being driven by discomfort factors.");
+    } else if (score < 60) {
+      bullets.push("Conditions are mixed with some limiting factors.");
+    } else {
+      bullets.push("Conditions are generally supportive for outdoor activity.");
+    }
+  }
+
+  // --- humidity ---
   if (dew != null) {
     if (dew >= 65) {
       bullets.push("Humidity is high and adds a sticky feel.");
     } else if (dew >= 55) {
-      bullets.push("Humidity is noticeable but still manageable.");
-    } else {
-      bullets.push("Dry air keeps conditions feeling comfortable.");
+      bullets.push("Humidity is noticeable but not the main issue.");
     }
   }
 
-  // wind
+  // --- wind ---
   if (wind != null) {
-    if (wind >= 12) {
-      bullets.push("Breezes provide some relief from warmth.");
-    } else if (wind <= 4) {
+    if (wind <= 4) {
       bullets.push("Light winds limit cooling and air movement.");
+    } else if (wind >= 12) {
+      bullets.push("Breezes provide some relief from warmth.");
     }
   }
 
-  // temperature
+  // --- temperature ---
   if (temp != null) {
     if (temp >= 85) {
-      bullets.push("Warm temperatures are a primary discomfort factor.");
+      bullets.push("Warm temperatures are the main source of discomfort.");
     } else if (temp <= 55) {
       bullets.push("Cool air may feel brisk, especially in shade.");
     }
