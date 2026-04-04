@@ -404,3 +404,7 @@
 .comfort-info-btn:hover {
   opacity: 1;
 }
+
+.hidden {
+  display: none;
+}

@@ -114,6 +114,7 @@ function renderBestWindow(bestWindow) {
       Most comfortable stretch based on lower humidity, lighter wind, and better temperature balance.
     </div>
   `;
+
 }
 function attachComfortInfoToggle(container) {
   const btn = container.querySelector(".comfort-info-btn");
@@ -121,11 +122,14 @@ function attachComfortInfoToggle(container) {
 
   if (!btn || !explainer) return;
 
-  btn.addEventListener("click", () => {
-  const isHidden = explainer.classList.toggle("hidden");
-btn.setAttribute("aria-expanded", !isHidden);
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation(); // 🔥 VERY IMPORTANT
+
+    const isHidden = explainer.classList.toggle("hidden");
+    btn.setAttribute("aria-expanded", !isHidden);
   });
 }
+
 function getComfortClass(score) {
   if (score == null) return "neutral";
 
@@ -135,6 +139,7 @@ function getComfortClass(score) {
   if (score >= 35) return "poor";
   return "bad";
 }
+
 // ============================================================
 // Comfort Now Accordion
 // ============================================================
