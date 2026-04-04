@@ -124,6 +124,29 @@ function wind(v) {
   return v != null ? Math.round(v) + " mph" : "--";
 }
 // ------------------------------------------------------------
+// Future Comfort Helper
+// ------------------------------------------------------------
+function getComfortEmoji(score) {
+  if (score == null) return "—";
+
+  if (score >= 80) return "😌";
+  if (score >= 65) return "🙂";
+  if (score >= 50) return "😐";
+  if (score >= 35) return "😕";
+  return "🥵";
+}
+
+function getComfortLabel(score) {
+  if (score == null) return "";
+
+  if (score >= 80) return "Great";
+  if (score >= 65) return "Good";
+  if (score >= 50) return "Fair";
+  if (score >= 35) return "Poor";
+  return "Harsh";
+}
+
+// ------------------------------------------------------------
 // SAFE COMFORT WRAPPER
 // ------------------------------------------------------------
 
@@ -287,12 +310,26 @@ function buildComfortBullets(current) {
   // FUTURE COMFORT
   // ------------------------------------------------------------
 
-  const future = hourly.slice(0, 6).map(h => ({
+  const future = hourly.slice(0, 6).map(h => {
+  const comfort = computeComfortSafe({
+    temp: h.temperatureF,
+    dewPoint: h.dewpointF,
+    humidity: h.relative_humidity,
+    windSpeed: h.wind_speed,
+    windDir: h.wind_dir,
+    obsTimeLocal: h.timestamp
+  });
+
+  const score = comfort?.comfortScore ?? null;
+
+  return {
     hourLabel: new Date(h.timestamp).toLocaleTimeString([], { hour: "numeric" }),
     temp: h.temperatureF,
-    emoji: "—",
-    label: ""
-  }));
+    score,
+    emoji: getComfortEmoji(score),
+    label: getComfortLabel(score)
+  };
+});
 
   renderFutureComfort($("future-comfort-container"), future);
 

@@ -263,3 +263,25 @@
     gap: 10px;
   }
 }
+/* FUTURE COMFORT — SCORE */
+
+.next6-hour-score {
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-top: 2px;
+  opacity: 0.8;
+}
+
+/* reuse same color system as comfort */
+.next6-hour-score.great { color: #4ade80; }
+.next6-hour-score.good { color: #a3e635; }
+.next6-hour-score.okay { color: #facc15; }
+.next6-hour-score.poor { color: #fb923c; }
+.next6-hour-score.bad { color: #f87171; }
+.next6-hour-score.neutral { color: #9ca3af; }
+
+/* tighten label */
+.next6-hour-factor {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
