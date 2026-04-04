@@ -366,11 +366,41 @@
 /* tighten score → explainer spacing */
 
 .comfort-score-row {
-  margin-bottom: 2px;
+  display: flex;
+  align-items: center;   /* 🔥 important */
+  gap: 6px;
 }
 
 .comfort-explainer {
   margin-top: 2px;
   font-size: 0.75rem;
   opacity: 0.65;
+}
+.comfort-info-btn {
+  display: inline-flex;   /* 🔥 prevents line break */
+  align-items: center;
+
+  background: none;
+  border: none;
+
+  font-size: 0.75rem;
+  line-height: 1;
+
+  padding: 0;
+  margin: 0;
+
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.comfort-score {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.comfort-info-btn {
+  opacity: 0.7;
+}
+
+.comfort-info-btn:hover {
+  opacity: 1;
 }
