@@ -146,6 +146,22 @@ function getComfortLabel(score) {
   return "Harsh";
 }
 
+function getComfortTrend(items) {
+  const scores = items
+    .map(i => i.score)
+    .filter(s => s != null);
+
+  if (scores.length < 2) return "steady";
+
+  const first = scores[0];
+  const last = scores[scores.length - 1];
+  const diff = last - first;
+
+  if (diff >= 8) return "improving";
+  if (diff <= -8) return "worsening";
+  return "steady";
+}
+
 // ------------------------------------------------------------
 // SAFE COMFORT WRAPPER
 // ------------------------------------------------------------
@@ -331,7 +347,9 @@ function buildComfortBullets(current) {
   };
 });
 
-  renderFutureComfort($("future-comfort-container"), future);
+const trend = getComfortTrend(future);
+
+renderFutureComfort($("future-comfort-container"), future, trend);
 
   // ------------------------------------------------------------
   // HUMAN ACTION
