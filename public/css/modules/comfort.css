@@ -320,9 +320,9 @@
    COMFORT NOW EXPLAINER
    ============================================================ */
 .comfort-explainer {
+  margin-top: 2px;
   font-size: 0.75rem;
   opacity: 0.65;
-  margin-top: 6px;
   max-width: 260px;
 }
 /* ============================================================
@@ -371,11 +371,6 @@
   gap: 6px;
 }
 
-.comfort-explainer {
-  margin-top: 2px;
-  font-size: 0.75rem;
-  opacity: 0.65;
-}
 .comfort-info-btn {
   display: inline-flex;   /* 🔥 prevents line break */
   align-items: center;
@@ -407,4 +402,7 @@
 
 .hidden {
   display: none;
+}
+.comfort-explainer.hidden {
+  display: none !important;
 }
