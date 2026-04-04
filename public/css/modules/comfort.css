@@ -363,3 +363,13 @@
 .trend-arrow {
   font-weight: 700;
 }
+/* tighten score → explainer spacing */
+
+.comfort-score-row {
+  margin-bottom: 2px;
+}
+
+.comfort-explainer {
+  margin-top: 2px;   /* was likely ~6–8px */
+  line-height: 1.25;
+}
