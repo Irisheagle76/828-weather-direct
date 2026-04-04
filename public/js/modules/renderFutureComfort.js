@@ -7,15 +7,11 @@ export function renderFutureComfort(container, items, trend){
     <div class="comfort-module next6-module" data-accordion="future">
 
       <div class="next6-header">
-        <div class="next6-label">Future Comfort</div>
+        <div class="next6-trend ${trend}">
+          ${getTrendText(trend)}
+        </div>
       </div>
-<div class="next6-header">
-  <div class="next6-label">Future Comfort</div>
 
-  <div class="next6-trend ${trend}">
-    ${getTrendText(trend)}
-  </div>
-</div>
       <div class="next6-strip">
         ${items
           .map(h => {
