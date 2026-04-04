@@ -406,3 +406,18 @@
 .comfort-explainer.hidden {
   display: none !important;
 }
+/* single supporting line */
+.comfort-support {
+  margin-top: 4px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
+/* bullet list refinement */
+.comfort-bullets {
+  margin-top: 6px;
+  padding-left: 16px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}

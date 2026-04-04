@@ -15,10 +15,12 @@ const score =
 
 const scoreClass = getComfortClass(scoreValue);
 
-  const bulletsHTML = (comfort.bullets || [])
-    .slice(0, 3)
-    .map(b => `<li>${b}</li>`)
-    .join("");
+const bullets = (comfort.bullets || []).slice(0, 3);
+
+const bulletsHTML =
+  bullets.length === 1
+    ? `<div class="comfort-support">${bullets[0]}</div>`
+    : bullets.map(b => `<li>${b}</li>`).join("");
 
   container.innerHTML = `
     <div class="comfort-module" data-accordion="comfort">
@@ -52,9 +54,11 @@ const scoreClass = getComfortClass(scoreValue);
 
       <!-- BULLETS -->
       <div class="comfort-body">
-        <ul class="comfort-bullets">
-          ${bulletsHTML}
-        </ul>
+        ${
+  bullets.length === 1
+    ? bulletsHTML
+    : `<ul class="comfort-bullets">${bulletsHTML}</ul>`
+}
       </div>
 
       <!-- EXPANDED PANEL -->
