@@ -1,6 +1,6 @@
 // /js/modules/renderFutureComfort.js
 
-export function renderFutureComfort(container, items) {
+export function renderFutureComfort(container, items, trend){
   if (!container || !Array.isArray(items)) return;
 
   container.innerHTML = `
@@ -9,7 +9,13 @@ export function renderFutureComfort(container, items) {
       <div class="next6-header">
         <div class="next6-label">Future Comfort</div>
       </div>
+<div class="next6-header">
+  <div class="next6-label">Future Comfort</div>
 
+  <div class="next6-trend ${trend}">
+    ${getTrendText(trend)}
+  </div>
+</div>
       <div class="next6-strip">
         ${items
           .map(h => {
@@ -70,4 +76,10 @@ function getScoreClass(score) {
   if (score >= 50) return "okay";
   if (score >= 35) return "poor";
   return "bad";
+}
+
+function getTrendText(trend) {
+  if (trend === "improving") return "Improving ↑";
+  if (trend === "worsening") return "Worsening ↓";
+  return "Steady →";
 }
