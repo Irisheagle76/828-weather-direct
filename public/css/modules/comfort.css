@@ -217,51 +217,133 @@
 }
 
 /* ============================================================
-   FUTURE COMFORT (NEXT 6 HOURS)
+   FUTURE COMFORT (NEXT 6 HOURS) — CLEAN + ENHANCED
    ============================================================ */
 
 .next6-module {
   margin-top: 1rem;
 }
 
+/* ------------------------------------------------------------
+   HEADER
+------------------------------------------------------------ */
+
 .next6-header {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
   color: #c8d3ff;
-  opacity: 0.85;
-  margin-bottom: 0.5rem;
+  opacity: 0.95;
+  margin-bottom: 6px;
+  letter-spacing: 0.03em;
 }
+
+/* ------------------------------------------------------------
+   TREND CHIP (FIXES VISIBILITY ISSUE)
+------------------------------------------------------------ */
+
+.next6-trend-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  font-size: 0.75rem;
+  font-weight: 600;
+
+  padding: 4px 10px;
+  border-radius: 999px;
+
+  margin-bottom: 8px;
+
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+
+  backdrop-filter: blur(4px);
+}
+
+/* Trend states */
+.next6-trend-chip.improving {
+  color: #4ade80;
+  border-color: rgba(74, 222, 128, 0.35);
+  background: rgba(74, 222, 128, 0.08);
+}
+
+.next6-trend-chip.worsening {
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.35);
+  background: rgba(248, 113, 113, 0.08);
+}
+
+.next6-trend-chip.steady {
+  color: #c8d3ff;
+  border-color: rgba(200, 211, 255, 0.25);
+}
+
+/* ------------------------------------------------------------
+   SCROLL STRIP
+------------------------------------------------------------ */
 
 .next6-strip {
   display: flex;
   gap: 10px;
   overflow-x: auto;
   padding-bottom: 6px;
+
   position: relative;
+  scroll-snap-type: x mandatory;
 }
 
+/* smooth scroll feel */
+.next6-strip::-webkit-scrollbar {
+  display: none;
+}
+
+/* ------------------------------------------------------------
+   HOUR TILE
+------------------------------------------------------------ */
+
 .next6-hour {
-  min-width: 70px;
+  min-width: 72px;
   text-align: center;
 
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 14px;
-  padding: 8px 6px;
+
+  padding: 10px 6px;
 
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+
+  scroll-snap-align: start;
+
+  transition: transform 0.2s ease, background 0.2s ease;
 }
 
+.next6-hour:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* ------------------------------------------------------------
+   CONTENT
+------------------------------------------------------------ */
+
 .next6-hour-label {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: #c8d3ff;
+  opacity: 0.9;
 }
 
 .next6-hour-emoji {
-  font-size: 1.35rem;
+  font-size: 1.4rem;
 }
 
 .next6-hour-temp {
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 600;
   color: #f5f5f5;
 }
@@ -274,17 +356,31 @@
 .next6-hour-score.bad { color: #f87171; }
 .next6-hour-score.neutral { color: #9ca3af; }
 
-/* fade edge */
+.next6-hour-factor {
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+/* ------------------------------------------------------------
+   EDGE FADE (cleaner)
+------------------------------------------------------------ */
+
 .next6-strip::after {
   content: "";
   position: absolute;
   right: 0;
   top: 0;
   bottom: 0;
-  width: 40px;
-  background: linear-gradient(to right, transparent, rgba(0,0,0,0.4));
-}
+  width: 36px;
 
+  pointer-events: none;
+
+  background: linear-gradient(
+    to right,
+    rgba(0,0,0,0),
+    rgba(0,0,0,0.45)
+  );
+}
 /* ============================================================
    LAYOUT
    ============================================================ */
