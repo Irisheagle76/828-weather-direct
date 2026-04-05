@@ -1,64 +1,73 @@
 // /js/modules/renderFutureComfort.js
 
+// /js/modules/renderFutureComfort.js
+
 export function renderFutureComfort(container, items, trend){
-  if (!container || !Array.isArray(items)) return;
+  if (!container || !Array.isArray(items) || items.length === 0) return;
+
+  const startLabel = items?.[0]?.hourLabel || "";
+  const headerText = startLabel
+    ? `Next 6 Hours • starting ${startLabel}`
+    : "Next 6 Hours";
 
   container.innerHTML = `
-    <div class="comfort-module next6-module" data-accordion="future">
+    <div class="comfort-module next6-module">
 
-     <button class="next6-trend-chip ${trend}" aria-label="Comfort trend">
-  <span class="trend-arrow">${getTrendArrow(trend)}</span>
-  <span class="trend-text">${getTrendText(trend)}</span>
-</button>
+      <!-- ✅ HEADER (this is what you're missing) -->
+      <div class="next6-header">
+        ${headerText}
+      </div>
+
+      <button class="next6-trend-chip ${trend}">
+        <span class="trend-arrow">${getTrendArrow(trend)}</span>
+        <span class="trend-text">${getTrendText(trend)}</span>
+      </button>
 
       <div class="next6-strip">
-        ${items
-          .map(h => {
-            const temp =
-              h.temp != null && !isNaN(h.temp)
-                ? Math.round(h.temp) + "°"
-                : "--";
+        ${items.map(h => {
+          const temp =
+            h.temp != null && !isNaN(h.temp)
+              ? Math.round(h.temp) + "°"
+              : "--";
 
-            const score =
-              h.score != null && !isNaN(h.score)
-                ? Math.round(h.score)
-                : null;
+          const score =
+            h.score != null && !isNaN(h.score)
+              ? Math.round(h.score)
+              : null;
 
-            const scoreClass = getScoreClass(score);
+          const scoreClass = getScoreClass(score);
 
-            return `
-              <div class="next6-hour">
+          return `
+            <div class="next6-hour">
 
-                <div class="next6-hour-label">${h.hourLabel}</div>
+              <div class="next6-hour-label">${h.hourLabel}</div>
 
-                <div class="next6-hour-emoji">
-                  ${h.emoji || "—"}
-                </div>
-
-                <div class="next6-hour-temp">${temp}</div>
-
-                ${
-                  score != null
-                    ? `<div class="next6-hour-score ${scoreClass}">
-                        ${score}
-                       </div>`
-                    : ""
-                }
-
-                <div class="next6-hour-factor">
-                  ${h.label || ""}
-                </div>
-
+              <div class="next6-hour-emoji">
+                ${h.emoji || "—"}
               </div>
-            `;
-          })
-          .join("")}
+
+              <div class="next6-hour-temp">${temp}</div>
+
+              ${
+                score != null
+                  ? `<div class="next6-hour-score ${scoreClass}">
+                       ${score}
+                     </div>`
+                  : ""
+              }
+
+              <div class="next6-hour-factor">
+                ${h.label || ""}
+              </div>
+
+            </div>
+          `;
+        }).join("")}
       </div>
 
     </div>
   `;
 }
-
 // ============================================================
 // SCORE COLOR HELPER
 // ============================================================
