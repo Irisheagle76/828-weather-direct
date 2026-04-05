@@ -1,263 +1,154 @@
-// /intel/comfort.js
-// ============================================================
-// COMFORT ENGINE — v4.0 FULL REWRITE (ROBUST + FEATURE COMPLETE)
-// ============================================================
+// /js/intel/comfort.js
 
 import { LOCATION } from "/js/config/location.js";
-
-// ============================================================
-// TIME FORMAT
-// ============================================================
-
-function formatHourLabel(ts) {
-  const d = new Date(ts);
-
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    hour: "numeric",
-    hour12: true,
-    timeZone: "America/New_York"
-  });
-
-  const parts = formatter.formatToParts(d);
-
-  const hour = parts.find(p => p.type === "hour")?.value ?? "";
-  const suffix = parts.find(p => p.type === "dayPeriod")?.value?.toUpperCase() ?? "";
-
-  return `${hour} ${suffix}`;
-}
-
-// ============================================================
-// CONSTANTS
-// ============================================================
-
-const IDEAL_TEMP = 70;
-const MAX_WIND_EFFECT = 25;
 
 // ============================================================
 // UTILITIES
 // ============================================================
 
 function clamp(val, min, max) {
-if (!Number.isFinite(val)) return min;
-return Math.max(min, Math.min(max, val));
+  if (!Number.isFinite(val)) return min;
+  return Math.max(min, Math.min(max, val));
 }
 
 function num(v) {
-const n = Number(v);
-return Number.isFinite(n) ? n : null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
 }
 
 function normalizeTimestamp(ts) {
-if (!ts) return Date.now();
-return ts < 1e12 ? ts * 1000 : ts;
+  if (!ts) return Date.now();
+  return ts < 1e12 ? ts * 1000 : ts;
 }
 
 // ============================================================
-// SOLAR ENGINE
+// SOLAR
 // ============================================================
 
 function computeSolarElevation(timestamp, lat, lon) {
-const date = new Date(timestamp);
-const rad = Math.PI / 180;
+  const date = new Date(timestamp);
+  const rad = Math.PI / 180;
 
-const day = Math.floor(
-(date - new Date(date.getFullYear(), 0, 0)) / 86400000
-);
+  const day = Math.floor(
+    (date - new Date(date.getFullYear(), 0, 0)) / 86400000
+  );
 
-const decl =
-23.45 * rad *
-Math.sin(rad * ((360 / 365) * (day - 81)));
+  const decl =
+    23.45 * rad *
+    Math.sin(rad * ((360 / 365) * (day - 81)));
 
-const time = date.getHours() + date.getMinutes() / 60;
-const solarTime = time + (lon / 15);
+  const time = date.getHours() + date.getMinutes() / 60;
+  const solarTime = time + (lon / 15);
 
-const hourAngle = rad * (15 * (solarTime - 12));
-const latRad = lat * rad;
+  const hourAngle = rad * (15 * (solarTime - 12));
+  const latRad = lat * rad;
 
-const elevation =
-Math.asin(
-Math.sin(latRad) * Math.sin(decl) +
-Math.cos(latRad) * Math.cos(decl) * Math.cos(hourAngle)
-);
+  const elevation =
+    Math.asin(
+      Math.sin(latRad) * Math.sin(decl) +
+      Math.cos(latRad) * Math.cos(decl) * Math.cos(hourAngle)
+    );
 
-return elevation * (180 / Math.PI);
+  return elevation * (180 / Math.PI);
 }
 
 // ============================================================
-// HUMIDITY + DEW LOGIC
+// CORE COMFORT MODEL (DEW-BASED)
 // ============================================================
 
-function dewToRH(tempF, dewF) {
-if (tempF == null || dewF == null) return null;
+function computeTemperaturePenalty(temp) {
+  if (temp == null) return 0.5;
 
-const t = (tempF - 32) * 5 / 9;
-const d = (dewF - 32) * 5 / 9;
+  // GOLDILOCKS
+  if (temp >= 65 && temp <= 75) return 0;
 
-const rh =
-100 *
-(Math.exp((17.625 * d) / (243.04 + d)) /
-Math.exp((17.625 * t) / (243.04 + t)));
+  // COOL (pleasant in mountains)
+  if (temp >= 50) return (65 - temp) / 40;
 
-return clamp(rh, 0, 100);
+  // COLD
+  if (temp < 50) return clamp((50 - temp) / 25, 0, 1);
+
+  // HOT (stronger penalty)
+  if (temp > 75) return clamp((temp - 75) / 20, 0, 1);
+
+  return 0;
 }
 
-function ensureDew(temp, dew) {
-if (dew != null) return dew;
+function computeDewPenalty(dew) {
+  if (dew == null) return 0.2;
 
-if (temp != null) {
-// fallback estimate
-return temp - 18;
+  if (dew < 45) return 0.05;     // crisp
+  if (dew < 55) return 0.02;     // 🔥 ideal
+  if (dew < 60) return 0.08;
+  if (dew < 65) return 0.2;
+  if (dew < 70) return 0.4;
+
+  return 0.7; // oppressive
 }
 
-return null;
-}
+function computeWindPenalty(wind) {
+  if (!Number.isFinite(wind)) return 0;
 
-// ============================================================
-// WIND CHILL / FEELS LIKE
-// ============================================================
+  if (wind < 5) return 0;
+  if (wind < 12) return 0.05;
+  if (wind < 20) return 0.15;
 
-function computeWindChill(tempF, windMph) {
-if (tempF == null) return null;
-if (tempF > 50 || windMph < 3) return tempF;
-
-return (
-35.74 +
-0.6215 * tempF -
-35.75 * Math.pow(windMph, 0.16) +
-0.4275 * tempF * Math.pow(windMph, 0.16)
-);
-}
-
-// ============================================================
-// SCORING ENGINE
-// ============================================================
-
-function computeTemperatureScore(temp) {
-if (temp == null) return 1;
-return Math.min(Math.abs(temp - IDEAL_TEMP) / 35, 1);
-}
-
-function computeHumidityPenalty(rh) {
-if (rh == null) return 0.5;
-
-if (rh < 25) return 1;
-if (rh < 35) return 0.75;
-if (rh < 45) return 0.5;
-return 0.2;
-}
-
-function computeWindPenalty(wind, windDir) {
-const w = Number.isFinite(wind) ? wind : 0;
-let penalty = Math.min(w / MAX_WIND_EFFECT, 1) * 0.4;
-
-if (String(windDir ?? "").includes("W")) {
-penalty += 0.2;
-}
-
-return penalty;
+  return 0.3;
 }
 
 function computeSolarBonus(temp, elev) {
-if (elev > 20 && temp < 75) return 0.15;
-return 0;
-}
-
-function computeComfortScore(temp, dew, wind, elev, windDir) {
-if (temp == null || dew == null) return null;
-
-const rh = dewToRH(temp, dew);
-if (rh == null) return null;
-
-const tScore = computeTemperatureScore(temp);
-const humidityPenalty = computeHumidityPenalty(rh);
-const windPenalty = computeWindPenalty(wind, windDir);
-const solarBonus = computeSolarBonus(temp, elev);
-
-const raw =
-(tScore * 0.5) +
-(humidityPenalty * 0.6) +
-windPenalty -
-solarBonus;
-
-return Math.round(clamp(100 - raw * 100, 0, 100));
+  if (elev > 20 && temp < 75) return 0.15;
+  return 0;
 }
 
 // ============================================================
-// CATEGORY + VISUALS
+// SCORE
+// ============================================================
+
+function computeComfortScore(temp, dew, wind, elev) {
+  if (temp == null || dew == null) return null;
+
+  const t = computeTemperaturePenalty(temp);
+  const d = computeDewPenalty(dew);
+  const w = computeWindPenalty(wind);
+  const s = computeSolarBonus(temp, elev);
+
+  const raw =
+    (t * 0.5) +
+    (d * 0.7) +
+    w -
+    s;
+
+  const score = Math.round(clamp(100 - raw * 100, 0, 100));
+
+  // prevent unrealistic 0s
+  return Math.max(score, 10);
+}
+
+// ============================================================
+// CATEGORY
 // ============================================================
 
 function getCategory(score) {
-if (score >= 80) return "Comfortable";
-if (score >= 65) return "Slightly Uncomfortable";
-if (score >= 45) return "Uncomfortable";
-return "Harsh";
+  if (score >= 75) return "Comfortable";
+  if (score >= 60) return "Slightly Uncomfortable";
+  if (score >= 40) return "Uncomfortable";
+  return "Harsh";
+}
+
+function getEmoji(score) {
+  if (score >= 80) return "😌";
+  if (score >= 65) return "🙂";
+  if (score >= 50) return "😐";
+  if (score >= 35) return "😕";
+  return "🥵";
 }
 
 export function getComfortColor(score) {
-if (score >= 80) return "#4f7cff";
-if (score >= 65) return "#2ec4b6";
-if (score >= 45) return "#ff9f1c";
-return "#e63946";
-}
-
-function getEmoji(category) {
-return {
-Comfortable: "🙂",
-"Slightly Uncomfortable": "😐",
-Uncomfortable: "😣",
-Harsh: "🤯"
-}[category] || "😐";
-}
-
-// ============================================================
-// HUMAN NARRATIVE ENGINE
-// ============================================================
-
-function humidityPhrase(dew) {
-if (dew == null) return null;
-if (dew <= 40) return "dry air";
-if (dew <= 55) return "comfortable humidity";
-if (dew <= 65) return "slightly humid air";
-if (dew <= 70) return "humid air";
-return "very humid conditions";
-}
-
-function sunPhrase(elev) {
-if (elev <= 0) return "nighttime calm";
-if (elev < 10) return "low-angle sunlight";
-if (elev < 30) return "morning sunlight";
-if (elev < 60) return "daytime sunshine";
-return "strong overhead sun";
-}
-
-function windPhrase(wind) {
-if (wind >= 20) return "strong winds";
-if (wind >= 12) return "noticeable breeze";
-if (wind >= 6) return "light breeze";
-return null;
-}
-
-function buildHeadline(category, dew) {
-const phrase = humidityPhrase(dew);
-
-if (!phrase) return `${category}.`;
-
-if (category === "Comfortable") return `Comfortable with ${phrase}.`;
-if (category === "Slightly Uncomfortable") return `Slightly uncomfortable with ${phrase}.`;
-if (category === "Uncomfortable") return `Uncomfortable due to ${phrase}.`;
-return `Harsh conditions with ${phrase}.`;
-}
-
-function buildNarrative(temp, dew, wind, elev) {
-const parts = [];
-
-const windText = windPhrase(wind);
-if (windText) parts.push(windText);
-
-const sunText = sunPhrase(elev);
-if (sunText) parts.push(sunText);
-
-return parts.length ? parts.join(", ") + "." : null;
+  if (score >= 80) return "#4f7cff";
+  if (score >= 65) return "#2ec4b6";
+  if (score >= 45) return "#ff9f1c";
+  return "#e63946";
 }
 
 // ============================================================
@@ -268,120 +159,82 @@ export function computeComfort(intel) {
   const src = intel?.tempest ?? intel?.wu ?? {};
 
   const temp = num(src.temp);
-  const dew = ensureDew(temp, num(src.dewPoint));
+  const dew = num(src.dewPoint) ?? (temp != null ? temp - 18 : null);
   const wind = num(src.windSpeed) ?? 0;
-  const windDir = src.windDir ?? "";
   const timestamp = normalizeTimestamp(src.obsTimeLocal);
 
   const elev = computeSolarElevation(timestamp, LOCATION.lat, LOCATION.lon);
-  const feelsLike = computeWindChill(temp, wind);
 
-  const rawScore = computeComfortScore(temp, dew, wind, elev, windDir);
-  const score = rawScore ?? 0;
-
-  const category = getCategory(score);
+  const score = computeComfortScore(temp, dew, wind, elev) ?? 0;
 
   return {
-    category,
-    emoji: getEmoji(category),
     comfortScore: score,
-    feelsLike,
+    category: getCategory(score),
+    emoji: getEmoji(score),
+    color: getComfortColor(score),
 
     temp,
     dewpoint: dew,
-    humidity: dewToRH(temp, dew),
     windSpeed: wind,
 
-    color: getComfortColor(score),
-    headline: buildHeadline(category, dew),
-    narrative: buildNarrative(temp, dew, wind, elev),
-
-    scoreExplainer:
-      "Comfort Score blends temperature, humidity, wind, and sun angle into a 0–100 scale."
+    headline: buildHeadline(score, dew),
+    narrative: buildNarrative(temp, dew, wind, elev)
   };
 }
 
 // ============================================================
-// FUTURE COMFORT
+// NARRATIVE
 // ============================================================
 
-export function buildFutureComfort(hourlyNormalized, computeComfortFn = computeComfort) {
-  if (!Array.isArray(hourlyNormalized) || hourlyNormalized.length === 0) {
-    return [];
-  }
-
-  const now = Date.now();
-
-  const getTs = h =>
-    h.timestamp < 1e12 ? h.timestamp * 1000 : h.timestamp;
-
-  let startIndex = hourlyNormalized.findIndex(h => getTs(h) >= now);
-
-  if (startIndex === -1) {
-    startIndex = hourlyNormalized.length - 1;
-  }
-
-  const items = [];
-
-  for (let i = 0; i < 6; i++) {
-    const idx = startIndex + i;
-    if (idx >= hourlyNormalized.length) break;
-
-    const h = hourlyNormalized[idx];
-    const ts = getTs(h);
-
-    const c = computeComfortFn({
-      wu: {
-        temp: h.temperatureF ?? null,
-        dewPoint: h.dewpointF ?? null,
-        windSpeed: h.wind_speed ?? 0,
-        windDir: h.wind_dir ?? "",
-        obsTimeLocal: ts
-      }
-    });
-
-    items.push({
-      index: idx,
-      time: ts,
-      hourLabel: formatHourLabel(ts),
-      comfortScore: c?.comfortScore ?? 0,
-      color: c?.color,
-      label: c?.category,
-      emoji: c?.emoji,
-      temp: h.temperatureF ?? null,
-      dew: h.dewpointF ?? null,
-      wind: h.wind_speed ?? null
-    });
-  }
-
-  return items;
+function buildHeadline(score, dew) {
+  if (score >= 80) return "Comfortable";
+  if (score >= 65) return "Pleasant";
+  if (score >= 50) return "Fair";
+  if (score >= 35) return "Uncomfortable";
+  return "Harsh";
 }
 
-export const calculateComfort = (data, options = {}) => {
-  const result = computeComfort(data);
+function buildNarrative(temp, dew, wind, elev) {
+  const parts = [];
 
+  if (dew < 55) parts.push("Crisp mountain air");
+  if (dew >= 65) parts.push("Sticky humidity");
+
+  if (wind >= 12) parts.push("Noticeable breeze");
+  if (elev > 40) parts.push("Strong sun");
+
+  return parts.join(", ");
+}
+
+// ============================================================
+// MODERN INTERFACE (YOUR APP USES THIS)
+// ============================================================
+
+export function calculateComfort(data, options = {}) {
+  const result = computeComfort(data);
   if (!result) return null;
 
-  // 🔥 ADAPT OLD STRUCTURE → NEW SYSTEM
   return {
-    score: result.comfortScore / 10, // normalize to 0–10
+    score: result.comfortScore / 10,
     label: result.category,
     color: result.color,
+
     temp: result.temp,
     dewPoint: result.dewpoint,
 
-    // 🔥 NEW FLAGS (derived)
     flags: {
       veryHot: result.temp >= 85,
       veryHumid: result.dewpoint >= 65,
       crisp: result.dewpoint < 55,
       windy: result.windSpeed >= 10,
-      harshSun: false // (can upgrade later with solar)
+      harshSun: false
     },
 
     goldilocks:
-      result.comfortScore >= 85 &&
+      result.temp >= 65 &&
+      result.temp <= 75 &&
       result.dewpoint >= 50 &&
-      result.dewpoint <= 60
+      result.dewpoint <= 60 &&
+      result.windSpeed < 12
   };
-};
+}
