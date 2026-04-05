@@ -418,3 +418,29 @@
     gap: 10px;
   }
 }
+
+/* BASE */
+.comfort-mode-note {
+  font-size: 12px;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.9;
+}
+
+/* TRAIL BETTER (green/teal) */
+.comfort-mode-note.better-trail {
+  color: rgba(80, 200, 140, 0.95);
+}
+
+/* CITY BETTER (warm tone) */
+.comfort-mode-note.better-city {
+  color: rgba(255, 170, 90, 0.95);
+}
+
+/* ARROW */
+.mode-arrow {
+  font-size: 13px;
+  opacity: 0.85;
+}

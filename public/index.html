@@ -6,8 +6,7 @@
   <title>828 Weather Direct – Asheville Hyperlocal Forecast</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Modular CSS (existing files preserved) -->
-
+  <!-- CSS -->
   <link rel="stylesheet" href="css/modules/core.css">
   <link rel="stylesheet" href="css/modules/layout.css">
   <link rel="stylesheet" href="css/modules/components.css">
@@ -22,7 +21,7 @@
 
 <body>
 
-  <!-- NOTIFICATIONS BUTTON -->
+  <!-- NOTIFICATIONS -->
   <button id="enable-notifications-btn" class="enable-notifications-btn">
     🔔 Enable Notifications
   </button>
@@ -32,19 +31,13 @@
       "BDn67R8PiMYa_UcGJ1CK0RiIR8E97ht_2STTositc3p1HFsuVBPSk--3EEBk_7B9RS-WJ5Xb_ikNVqx1trql7xA";
   </script>
 
-  <!-- ============================================================
-       APP SHELL (Modernized Layout)
-       ============================================================ -->
   <div class="app-shell">
 
-    <!-- ============================================================
-         HEADER
-         ============================================================ -->
+    <!-- HEADER -->
     <header class="app-header">
       <h1 class="app-title">828 Weather Direct</h1>
       <div class="subtitle">Hyper-local Asheville weather • Built by Timothy Ballisty</div>
 
-      <!-- STATUS BLOCK -->
       <div class="status-row">
         <div class="badge" id="wu-status-badge">
           <span class="badge-dot" id="wu-status-dot"></span>
@@ -56,28 +49,30 @@
       </div>
     </header>
 
-    <!-- ============================================================
-         CURRENT OBSERVATIONS — FULL WIDTH
-         ============================================================ -->
+    <!-- CURRENT OBS -->
     <section id="current-obs-section">
       <div id="current-obs-wrapper">
         <div id="current-obs-inline"></div>
       </div>
     </section>
 
-    <!-- ============================================================
-         SYNTH HEALTH PANEL — FULL WIDTH
-         ============================================================ -->
+    <!-- SYNTH HEALTH -->
     <section id="synth-health" class="synth-health-section"></section>
 
-    <!-- ============================================================
-         MAIN CONTENT (Centered)
-         ============================================================ -->
+    <!-- MAIN -->
     <main class="main-centered">
 
-      <!-- ============================================================
-           COMFORT MODULES (Centered)
-           ============================================================ -->
+      <!-- =========================
+           MODE TOGGLE (NEW)
+           ========================= -->
+      <div class="mode-toggle">
+        <button class="mode-btn active" data-mode="downtown">🏙 Downtown</button>
+        <button class="mode-btn" data-mode="trail">🌲 Trail</button>
+      </div>
+
+      <!-- =========================
+           COMFORT ROW
+           ========================= -->
       <div id="comfort-row">
         <div class="comfort-left-col">
           <div id="comfort-now-container"></div>
@@ -88,68 +83,56 @@
         </div>
       </div>
 
-<!-- ============================================================
-     HUMAN-ACTION — TODAY + TOMORROW
-     ============================================================ -->
-<section class="now-tomorrow-row" data-accordion="ha">
+      <!-- =========================
+           HUMAN ACTION
+           ========================= -->
+      <section class="now-tomorrow-row" data-accordion="ha">
 
-  <!-- TODAY -->
-  <div class="now-col">
-    <div
-      class="today-module action-module"
-      id="ha-today-card"
-      data-accordion-item
-    >
-      <div class="action-header">
-        <span id="ha-today-header">Today’s Outlook</span>
-        <span id="ha-today-goldilocks" class="gold-badge" style="display:none;">🌟 Goldilocks</span>
-      </div>
+        <!-- TODAY -->
+        <div class="now-col">
+          <div class="today-module action-module" id="ha-today-card" data-accordion-item>
 
-      <div class="action-emoji" id="ha-today-emoji"></div>
-      <div class="action-headline" id="ha-today-title"></div>
-      <div class="action-text" id="ha-today-body"></div>
-      <ul class="today-bullets" id="ha-today-bullets"></ul>
+            <div class="action-header">
+              <span id="ha-today-header">Today’s Outlook</span>
+              <span id="ha-today-goldilocks" class="gold-badge" style="display:none;">
+                🌟 Goldilocks
+              </span>
+            </div>
 
-      <!-- EXPANDABLE -->
-      <div
-        class="expanded-panel"
-        id="ha-today-expanded"
-        data-accordion-content
-      ></div>
-    </div>
-  </div>
+            <div class="action-emoji" id="ha-today-emoji"></div>
+            <div class="action-headline" id="ha-today-title"></div>
+            <div class="action-text" id="ha-today-body"></div>
+            <ul class="today-bullets" id="ha-today-bullets"></ul>
 
-  <!-- TOMORROW -->
-  <div class="now-col">
-    <div
-      class="tomorrow-module action-module"
-      id="ha-tomorrow-card"
-      data-accordion-item
-    >
-      <div class="action-header">
-        <span id="ha-tomorrow-header">Tomorrow’s Outlook</span>
-        <span id="ha-tomorrow-goldilocks" class="gold-badge" style="display:none;">🌟 Goldilocks</span>
-      </div>
+            <div class="expanded-panel" id="ha-today-expanded" data-accordion-content></div>
+          </div>
+        </div>
 
-      <div class="action-emoji" id="ha-tomorrow-emoji"></div>
-      <div class="action-headline" id="ha-tomorrow-title"></div>
-      <div class="action-text" id="ha-tomorrow-body"></div>
-      <ul class="tomorrow-bullets" id="ha-tomorrow-bullets"></ul>
+        <!-- TOMORROW -->
+        <div class="now-col">
+          <div class="tomorrow-module action-module" id="ha-tomorrow-card" data-accordion-item>
 
-      <!-- EXPANDABLE -->
-      <div
-        class="expanded-panel"
-        id="ha-tomorrow-expanded"
-        data-accordion-content
-      ></div>
-    </div>
-  </div>
+            <div class="action-header">
+              <span id="ha-tomorrow-header">Tomorrow’s Outlook</span>
+              <span id="ha-tomorrow-goldilocks" class="gold-badge" style="display:none;">
+                🌟 Goldilocks
+              </span>
+            </div>
 
-</section>
+            <div class="action-emoji" id="ha-tomorrow-emoji"></div>
+            <div class="action-headline" id="ha-tomorrow-title"></div>
+            <div class="action-text" id="ha-tomorrow-body"></div>
+            <ul class="tomorrow-bullets" id="ha-tomorrow-bullets"></ul>
 
-      <!-- ============================================================
-           828 WEATHER PULSE — FULL WIDTH
-           ============================================================ -->
+            <div class="expanded-panel" id="ha-tomorrow-expanded" data-accordion-content></div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- =========================
+           PULSE
+           ========================= -->
       <section id="pulse-card" class="pulse-card pulse-collapsed">
         <div class="pulse-header">
           <h2 class="pulse-title">828 Weather Pulse</h2>
@@ -171,16 +154,12 @@
         </button>
       </section>
 
-      <!-- ============================================================
-           SUBSTACK MODULE (Centered)
-           ============================================================ -->
+      <!-- SUBSTACK -->
       <section id="weather-articles-module" class="substack-card"></section>
 
     </main>
 
-    <!-- ============================================================
-         FOOTER (Centered)
-         ============================================================ -->
+    <!-- FOOTER -->
     <footer class="footer-note" id="wu-station-footer">
       © 2026 Timothy Ballisty • 828 Weather<br>
       Independent Asheville weather analysis<br>
@@ -189,9 +168,9 @@
 
     <div class="error-text" id="wu-error" style="display:none;"></div>
 
-  </div> <!-- end .app-shell -->
+  </div>
 
-  <!-- DEBUG PANEL -->
+  <!-- DEBUG -->
   <div id="narrative-debug" class="debug-panel" style="display:none;">
     <h3>Narrative Debug</h3>
     <pre id="debug-content"></pre>
@@ -199,7 +178,29 @@
 
   <div id="toast" class="toast"></div>
 
-  <!-- JAVASCRIPT MODULES -->
+  <!-- =========================
+       GLOBAL MODE SCRIPT (NEW)
+       ========================= -->
+  <script>
+    window.APP_STATE = {
+      mode: "downtown"
+    };
+
+    document.querySelectorAll(".mode-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        window.APP_STATE.mode = btn.dataset.mode;
+
+        if (window.updateComfortModules) {
+          window.updateComfortModules();
+        }
+      });
+    });
+  </script>
+
+  <!-- JS MODULES -->
   <script type="module" src="/js/app.js"></script>
   <script type="module" src="/js/substack-render.js"></script>
   <script type="module" src="/js/pulse-render.js"></script>
