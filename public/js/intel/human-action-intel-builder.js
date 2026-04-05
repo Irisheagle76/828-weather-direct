@@ -1,82 +1,49 @@
 // /intel/human-action-intel-builder.js
 // ============================================================
-// HUMAN-ACTION INTEL BUILDER — HA 2.3 (Synthesizer-Ready)
-// With diagnostic console logs
+// HUMAN-ACTION INTEL BUILDER — STABLE + TIME-CORRECT
 // ============================================================
 
 import { evaluateHumanActionFactors } from "../modules/human-action-2/core-engine.js";
 import { normalizeOpenMeteo } from "./normalize-hourly.js";
 
 // ------------------------------------------------------------
-// SYNTHESIZER SAFETY WRAPPER
+// MAIN BUILDER
 // ------------------------------------------------------------
-function ensureSynthFields(intel, snapshot) {
-  const base = intel ?? {};
+export function buildHumanActionIntel(raw) {
+  console.log("🔵 HA BUILDER START");
 
-  return {
-    factors: Array.isArray(base.factors) ? base.factors : [],
-    precipType: base.precipType ?? snapshot?.precipType ?? "none",
-    precipChance: base.precipChance ?? 0,
-    snapshot: snapshot ?? base.snapshot ?? {},
-    ...base
-  };
-}
-
-// ------------------------------------------------------------
-// CURRENT HOUR INDEX (ROBUST + TIME-SAFE)
-// ------------------------------------------------------------
-const now = Date.now();
-
-const currentIndex = hourly.findIndex(h => {
-  // Ensure timestamp is in milliseconds
-  let ts = h.timestamp;
-
-  if (typeof ts === "number" && ts < 1e12) {
-    ts = ts * 1000; // convert seconds → ms
-  } else if (typeof ts === "string") {
-    ts = new Date(ts).getTime(); // handle ISO strings
+  if (!raw || !raw.hourly) {
+    console.error("❌ No hourly data:", raw);
+    return { today: null, tomorrow: null };
   }
 
-  // Allow slight buffer so we don't skip current hour
-  return ts > now - (30 * 60 * 1000);
-});
+  const hourly = normalizeOpenMeteo(raw.hourly);
 
-// Safe fallback if something goes wrong
-const idx = currentIndex === -1
-  ? Math.max(0, hourly.length - 6)
-  : currentIndex;
+  if (!hourly.length) {
+    console.error("❌ Normalized hourly empty");
+    return { today: null, tomorrow: null };
+  }
 
-console.log(`🔵 Current hour index: ${idx}`);
+  // ------------------------------------------------------------
+  // CURRENT TIME INDEX (CORRECTED)
+  // ------------------------------------------------------------
+  const now = Date.now();
 
-// ------------------------------------------------------------
-// NEXT 6 HOURS SLICE (THE ACTUAL FIX FOR MIDNIGHT BUG)
-// ------------------------------------------------------------
-const next6Hours = hourly.slice(idx, idx + 6);
+  let idx = hourly.findIndex(h => h.timestamp > now) - 1;
 
-// ------------------------------------------------------------
-// DEBUG — VERIFY TIME ALIGNMENT
-// ------------------------------------------------------------
-console.log(
-  "🕒 Selected hours:",
-  next6Hours.map(h => {
-    let ts = h.timestamp;
-    if (typeof ts === "number" && ts < 1e12) ts *= 1000;
-    return new Date(ts).toLocaleTimeString([], { hour: 'numeric' });
-  })
-);
+  if (idx < 0) idx = 0;
+  if (idx >= hourly.length) idx = hourly.length - 1;
 
-// ------------------------------------------------------------
-// OPTIONAL: DYNAMIC TITLE (fixes missing/misaligned header)
-// ------------------------------------------------------------
-const startTs = (() => {
-  let ts = next6Hours[0]?.timestamp;
-  if (typeof ts === "number" && ts < 1e12) ts *= 1000;
-  return ts;
-})();
+  console.log(`🔵 Current hour index: ${idx}`);
 
-const futureTitle = startTs
-  ? `Next 6 Hours (starting ${new Date(startTs).toLocaleTimeString([], { hour: 'numeric' })})`
-  : "Next 6 Hours";
+  const next6Hours = hourly.slice(idx, idx + 6);
+
+  console.log(
+    "🕒 Selected hours:",
+    next6Hours.map(h =>
+      new Date(h.timestamp).toLocaleTimeString([], { hour: "numeric" })
+    )
+  );
 
   // ------------------------------------------------------------
   // TODAY SNAPSHOT
@@ -85,20 +52,18 @@ const futureTitle = startTs
   const todayExtended = hourly.slice(idx, idx + 8);
 
   const todaySnapshot = blendHoursWithForwardBias(todayCore, todayExtended);
-  todaySnapshot.dayLabel = "today";
-  todaySnapshot.isTomorrow = false;
 
-  console.log("🟢 TODAY SNAPSHOT:", todaySnapshot);
+  if (todaySnapshot) {
+    todaySnapshot.dayLabel = "today";
+    todaySnapshot.isTomorrow = false;
+  }
 
   const todayIntelRaw = evaluateHumanActionFactors(todaySnapshot) || {};
-  console.log("🟢 TODAY RAW FACTORS:", todayIntelRaw);
 
   const todayIntel = {
     ...ensureSynthFields(todayIntelRaw, todaySnapshot),
     ...todaySnapshot
   };
-
-  console.log("🟢 TODAY FINAL INTEL:", todayIntel);
 
   // ------------------------------------------------------------
   // TOMORROW SNAPSHOT
@@ -115,11 +80,7 @@ const futureTitle = startTs
     tomorrowSnapshot.isTomorrow = true;
   }
 
-  console.log("🟣 TOMORROW SNAPSHOT:", tomorrowSnapshot);
-  console.log("🟣 TOMORROW STATS:", tomorrowBundle.stats);
-
   const tomorrowIntelRaw = evaluateHumanActionFactors(tomorrowSnapshot) || {};
-  console.log("🟣 TOMORROW RAW FACTORS:", tomorrowIntelRaw);
 
   const tomorrowIntel = {
     ...ensureSynthFields(tomorrowIntelRaw, tomorrowSnapshot),
@@ -127,13 +88,27 @@ const futureTitle = startTs
     stats: tomorrowBundle.stats
   };
 
-  console.log("🟣 TOMORROW FINAL INTEL:", tomorrowIntel);
-
   console.log("🔵 HA BUILDER END");
 
   return {
     today: todayIntel,
-    tomorrow: tomorrowIntel
+    tomorrow: tomorrowIntel,
+    next6Hours // ← available for UI if needed
+  };
+}
+
+// ------------------------------------------------------------
+// SYNTH SAFETY
+// ------------------------------------------------------------
+function ensureSynthFields(intel, snapshot) {
+  const base = intel ?? {};
+
+  return {
+    factors: Array.isArray(base.factors) ? base.factors : [],
+    precipType: base.precipType ?? snapshot?.precipType ?? "none",
+    precipChance: base.precipChance ?? 0,
+    snapshot: snapshot ?? base.snapshot ?? {},
+    ...base
   };
 }
 
@@ -155,7 +130,7 @@ function blendHours(hours) {
     windGust: avg("wind_gust"),
     precipType:
       avg("precipitation") > 0
-        ? (avg("snowfall") > 0 ? "snow" : "rain")
+        ? avg("snowfall") > 0 ? "snow" : "rain"
         : "none",
     precipIntensity: avg("precipitation"),
     uvIndex: avg("uv_index"),
@@ -173,40 +148,36 @@ function blendHours(hours) {
 }
 
 // ------------------------------------------------------------
-// BLEND HOURS WITH FORWARD BIAS
+// FORWARD-BIAS BLEND
 // ------------------------------------------------------------
 function blendHoursWithForwardBias(coreHours, extendedHours) {
-  if (!coreHours || !coreHours.length) {
-    return blendHours(extendedHours) ?? null;
-  }
+  if (!coreHours?.length) return blendHours(extendedHours);
 
   const core = blendHours(coreHours);
-  if (!extendedHours || !extendedHours.length) return core;
-
-  const ext = blendHours(extendedHours);
+  const ext = extendedHours?.length ? blendHours(extendedHours) : null;
 
   const mix = (a, b) =>
-    a != null && b != null ? (0.7 * a + 0.3 * b) : (a ?? b ?? null);
+    a != null && b != null ? 0.7 * a + 0.3 * b : a ?? b ?? null;
 
   return {
-    temp: mix(core.temp, ext.temp),
-    feelsLike: mix(core.feelsLike, ext.feelsLike),
-    dewPoint: mix(core.dewPoint, ext.dewPoint),
-    humidity: mix(core.humidity, ext.humidity),
-    windSpeed: mix(core.windSpeed, ext.windSpeed),
-    windGust: mix(core.windGust, ext.windGust),
+    temp: mix(core.temp, ext?.temp),
+    feelsLike: mix(core.feelsLike, ext?.feelsLike),
+    dewPoint: mix(core.dewPoint, ext?.dewPoint),
+    humidity: mix(core.humidity, ext?.humidity),
+    windSpeed: mix(core.windSpeed, ext?.windSpeed),
+    windGust: mix(core.windGust, ext?.windGust),
     precipType: core.precipType,
-    precipIntensity: mix(core.precipIntensity, ext.precipIntensity),
-    uvIndex: mix(core.uvIndex, ext.uvIndex),
-    visibility: mix(core.visibility, ext.visibility),
-    cloudCover: mix(core.cloudCover, ext.cloudCover),
-    smokeIndex: mix(core.smokeIndex, ext.smokeIndex),
-    frostRisk: mix(core.frostRisk, ext.frostRisk),
-    freezeRisk: mix(core.freezeRisk, ext.freezeRisk),
-    inversionRisk: mix(core.inversionRisk, ext.inversionRisk),
-    blackIceRisk: mix(core.blackIceRisk, ext.blackIceRisk),
-    valleyFogRisk: mix(core.valleyFogRisk, ext.valleyFogRisk),
-    ridgeFogRisk: mix(core.ridgeFogRisk, ext.ridgeFogRisk),
+    precipIntensity: mix(core.precipIntensity, ext?.precipIntensity),
+    uvIndex: mix(core.uvIndex, ext?.uvIndex),
+    visibility: mix(core.visibility, ext?.visibility),
+    cloudCover: mix(core.cloudCover, ext?.cloudCover),
+    smokeIndex: mix(core.smokeIndex, ext?.smokeIndex),
+    frostRisk: mix(core.frostRisk, ext?.frostRisk),
+    freezeRisk: mix(core.freezeRisk, ext?.freezeRisk),
+    inversionRisk: mix(core.inversionRisk, ext?.inversionRisk),
+    blackIceRisk: mix(core.blackIceRisk, ext?.blackIceRisk),
+    valleyFogRisk: mix(core.valleyFogRisk, ext?.valleyFogRisk),
+    ridgeFogRisk: mix(core.ridgeFogRisk, ext?.ridgeFogRisk),
     timestamp: core.timestamp
   };
 }
@@ -218,29 +189,21 @@ function buildTomorrowSnapshots(hourly) {
   const tomorrowHours = hourly.slice(24, 48);
 
   if (!tomorrowHours.length) {
-    return {
-      morning: null,
-      afternoon: null,
-      stats: {}
-    };
+    return { morning: null, afternoon: null, stats: {} };
   }
 
-  const morning = averageWindow(tomorrowHours.slice(0, 6));
-  const afternoon = averageWindow(tomorrowHours.slice(6, 12));
+  const morning = normalizeSnapshot(averageWindow(tomorrowHours.slice(0, 6)));
+  const afternoon = normalizeSnapshot(averageWindow(tomorrowHours.slice(6, 12)));
   const stats = computeTomorrowStats(tomorrowHours);
 
-  return {
-    morning: normalizeSnapshot(morning),
-    afternoon: normalizeSnapshot(afternoon),
-    stats
-  };
+  return { morning, afternoon, stats };
 }
 
 // ------------------------------------------------------------
-// SAFE AVERAGE WINDOW
+// AVERAGE WINDOW
 // ------------------------------------------------------------
 function averageWindow(hours) {
-  if (!hours || !hours.length) return null;
+  if (!hours?.length) return null;
 
   const avg = key =>
     hours.reduce((a, h) => a + (h[key] ?? 0), 0) / hours.length;
@@ -275,15 +238,15 @@ function normalizeSnapshot(h) {
   if (!h) return null;
 
   return {
-    temp: h.temperatureF ?? null,
-    feelsLike: h.apparentF ?? h.temperatureF ?? null,
-    dewPoint: h.dewpointF ?? null,
+    temp: h.temperatureF,
+    feelsLike: h.apparentF ?? h.temperatureF,
+    dewPoint: h.dewpointF,
     humidity: h.relative_humidity,
     windSpeed: h.wind_speed,
     windGust: h.wind_gust,
     precipType:
       h.precipitation > 0
-        ? (h.snowfall > 0 ? "snow" : "rain")
+        ? h.snowfall > 0 ? "snow" : "rain"
         : "none",
     precipIntensity: h.precipitation,
     uvIndex: h.uv_index,
@@ -304,42 +267,23 @@ function normalizeSnapshot(h) {
 // TOMORROW STATS
 // ------------------------------------------------------------
 function computeTomorrowStats(hours) {
-  if (!hours || !hours.length) return {};
+  if (!hours?.length) return {};
 
   const temps = hours.map(h => h.temperatureF ?? 0);
   const gusts = hours.map(h => h.wind_gust ?? 0);
   const winds = hours.map(h => h.wind_speed ?? 0);
 
-  const tempMin = Math.min(...temps);
-  const tempMax = Math.max(...temps);
-  const tempSwing = tempMax - tempMin;
-
-  const windGustMax = Math.max(...gusts);
-  const windAvg = winds.reduce((a, b) => a + b, 0) / winds.length;
-
-  const dewpointAvg =
-    hours.reduce((a, h) => a + (h.dewpointF ?? 0), 0) / hours.length;
-
-  const cloudAvg =
-    hours.reduce((a, h) => a + (h.cloud_cover ?? 0), 0) / hours.length;
-
-  const rainTotal =
-    hours.reduce((a, h) => a + (h.precipitation ?? 0), 0);
-
-  const snowTotal =
-    hours.reduce((a, h) => a + (h.snowfall ?? 0), 0);
-
   return {
-    tempMin,
-    tempMax,
-    tempSwing,
-    windGustMax,
-    windAvg,
-    dewpointAvg,
-    cloudAvg,
-    rainTotal,
-    snowTotal,
-    coldStart: tempMin <= 40,
-    windImpact: windGustMax >= 30
+    tempMin: Math.min(...temps),
+    tempMax: Math.max(...temps),
+    tempSwing: Math.max(...temps) - Math.min(...temps),
+    windGustMax: Math.max(...gusts),
+    windAvg: winds.reduce((a, b) => a + b, 0) / winds.length,
+    dewpointAvg: hours.reduce((a, h) => a + (h.dewpointF ?? 0), 0) / hours.length,
+    cloudAvg: hours.reduce((a, h) => a + (h.cloud_cover ?? 0), 0) / hours.length,
+    rainTotal: hours.reduce((a, h) => a + (h.precipitation ?? 0), 0),
+    snowTotal: hours.reduce((a, h) => a + (h.snowfall ?? 0), 0),
+    coldStart: Math.min(...temps) <= 40,
+    windImpact: Math.max(...gusts) >= 30
   };
 }
