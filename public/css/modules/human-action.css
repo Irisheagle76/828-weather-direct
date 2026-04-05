@@ -1,6 +1,5 @@
 /* ============================================================
-   828 WEATHER — HUMAN‑ACTION MODULE
-   Today + Tomorrow Outlook
+   828 WEATHER — HUMAN-ACTION MODULE
    ============================================================ */
 
 .action-module {
@@ -65,17 +64,31 @@
   margin-bottom: 0.25rem;
 }
 
-/* EXPANDED PANEL */
+/* ============================================================
+   EXPANDED PANEL — CLEAN AUTO HEIGHT SYSTEM
+   ============================================================ */
+
 .expanded-panel {
-  display: none;
-  margin-top: 0.8rem;
+  height: 0;
+  overflow: hidden;
+  opacity: 0;
+  margin-top: 0;
+
+  transition:
+    height 0.35s ease,
+    opacity 0.25s ease,
+    margin-top 0.25s ease;
 }
 
 .action-module.active .expanded-panel {
-  display: block;
+  opacity: 1;
+  margin-top: 0.8rem;
 }
 
-/* FORECAST GRID */
+/* ============================================================
+   FORECAST GRID
+   ============================================================ */
+
 .fx-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -106,15 +119,4 @@
   font-size: 0.7rem;
   opacity: 0.6;
   margin-top: 3px;
-}
-.expanded-panel {
-  max-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  transition: max-height 0.35s ease, opacity 0.25s ease;
-}
-
-.action-module.active .expanded-panel {
-  max-height: 500px;
-  opacity: 1;
 }

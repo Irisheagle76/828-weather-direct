@@ -153,49 +153,39 @@ function resolveLocation() {
 }
 
 // ------------------------------------------------------------
-// GLOBAL ACCORDION HANDLER
+// UNIVERSAL ACCORDION SYSTEM (CLEAN)
 // ------------------------------------------------------------
 function setupAccordion() {
   document.addEventListener("click", function (e) {
 
-    // Ignore info buttons
     if (e.target.closest(".comfort-info-btn")) return;
 
-    // ------------------------------------------------------------
-    // HUMAN ACTION MODULES (FULL CARD CLICK)
-    // ------------------------------------------------------------
-    const actionModule = e.target.closest(".action-module");
+    const item = e.target.closest("[data-accordion-item]");
+    if (!item) return;
 
-    if (actionModule) {
-      const isActive = actionModule.classList.contains("active");
+    const group = item.closest("[data-accordion]");
+    if (!group) return;
 
-      document.querySelectorAll(".action-module.active").forEach(el => {
-        el.classList.remove("active");
-      });
+    const content = item.querySelector("[data-accordion-content]");
+    if (!content) return;
 
-      if (!isActive) actionModule.classList.add("active");
+    const isActive = item.classList.contains("active");
 
-      return; // ✅ now legal (inside function)
+    // CLOSE ALL IN GROUP
+    group.querySelectorAll("[data-accordion-item].active").forEach(el => {
+      el.classList.remove("active");
+
+      const c = el.querySelector("[data-accordion-content]");
+      if (c) c.style.height = "0px";
+    });
+
+    // OPEN CURRENT
+    if (!isActive) {
+      item.classList.add("active");
+
+      // measure and animate
+      content.style.height = content.scrollHeight + "px";
     }
-
-    // ------------------------------------------------------------
-    // COMFORT MODULES (keep if needed)
-    // ------------------------------------------------------------
-    const comfortHeader = e.target.closest(".comfort-main");
-
-    if (comfortHeader) {
-      const module = comfortHeader.closest(".comfort-module");
-      if (!module) return;
-
-      const isActive = module.classList.contains("active");
-
-      document.querySelectorAll(".comfort-module.active").forEach(el => {
-        el.classList.remove("active");
-      });
-
-      if (!isActive) module.classList.add("active");
-    }
-
   });
 }
 

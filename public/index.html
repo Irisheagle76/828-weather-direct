@@ -88,46 +88,64 @@
         </div>
       </div>
 
-      <!-- ============================================================
-           HUMAN-ACTION — TODAY + TOMORROW (Side-by-side desktop)
-           ============================================================ -->
-      <section class="now-tomorrow-row">
+<!-- ============================================================
+     HUMAN-ACTION — TODAY + TOMORROW
+     ============================================================ -->
+<section class="now-tomorrow-row" data-accordion="ha">
 
-        <!-- TODAY -->
-        <div class="now-col">
-          <div class="today-module action-module" id="ha-today-card" data-accordion="ha">
-            <div class="action-header">
-              <span id="ha-today-header">Today’s Outlook</span>
-              <span id="ha-today-goldilocks" class="gold-badge" style="display:none;">🌟 Goldilocks</span>
-            </div>
+  <!-- TODAY -->
+  <div class="now-col">
+    <div
+      class="today-module action-module"
+      id="ha-today-card"
+      data-accordion-item
+    >
+      <div class="action-header">
+        <span id="ha-today-header">Today’s Outlook</span>
+        <span id="ha-today-goldilocks" class="gold-badge" style="display:none;">🌟 Goldilocks</span>
+      </div>
 
-            <div class="action-emoji" id="ha-today-emoji"></div>
-            <div class="action-headline" id="ha-today-title"></div>
-            <div class="action-text" id="ha-today-body"></div>
-            <ul class="today-bullets" id="ha-today-bullets"></ul>
+      <div class="action-emoji" id="ha-today-emoji"></div>
+      <div class="action-headline" id="ha-today-title"></div>
+      <div class="action-text" id="ha-today-body"></div>
+      <ul class="today-bullets" id="ha-today-bullets"></ul>
 
-            <div class="expanded-panel" id="ha-today-expanded"></div>
-          </div>
-        </div>
+      <!-- EXPANDABLE -->
+      <div
+        class="expanded-panel"
+        id="ha-today-expanded"
+        data-accordion-content
+      ></div>
+    </div>
+  </div>
 
-        <!-- TOMORROW -->
-        <div class="now-col">
-          <div class="tomorrow-module action-module" id="ha-tomorrow-card" data-accordion="ha">
-            <div class="action-header">
-              <span id="ha-tomorrow-header">Tomorrow’s Outlook</span>
-              <span id="ha-tomorrow-goldilocks" class="gold-badge" style="display:none;">🌟 Goldilocks</span>
-            </div>
+  <!-- TOMORROW -->
+  <div class="now-col">
+    <div
+      class="tomorrow-module action-module"
+      id="ha-tomorrow-card"
+      data-accordion-item
+    >
+      <div class="action-header">
+        <span id="ha-tomorrow-header">Tomorrow’s Outlook</span>
+        <span id="ha-tomorrow-goldilocks" class="gold-badge" style="display:none;">🌟 Goldilocks</span>
+      </div>
 
-            <div class="action-emoji" id="ha-tomorrow-emoji"></div>
-            <div class="action-headline" id="ha-tomorrow-title"></div>
-            <div class="action-text" id="ha-tomorrow-body"></div>
-            <ul class="tomorrow-bullets" id="ha-tomorrow-bullets"></ul>
+      <div class="action-emoji" id="ha-tomorrow-emoji"></div>
+      <div class="action-headline" id="ha-tomorrow-title"></div>
+      <div class="action-text" id="ha-tomorrow-body"></div>
+      <ul class="tomorrow-bullets" id="ha-tomorrow-bullets"></ul>
 
-            <div class="expanded-panel" id="ha-tomorrow-expanded"></div>
-          </div>
-        </div>
+      <!-- EXPANDABLE -->
+      <div
+        class="expanded-panel"
+        id="ha-tomorrow-expanded"
+        data-accordion-content
+      ></div>
+    </div>
+  </div>
 
-      </section>
+</section>
 
       <!-- ============================================================
            828 WEATHER PULSE — FULL WIDTH
