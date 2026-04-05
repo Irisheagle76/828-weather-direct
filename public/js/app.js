@@ -167,6 +167,35 @@ document.addEventListener("DOMContentLoaded", initApp);
 async function initApp() {
   console.log("INIT START");
 
+  // ------------------------------------------------------------
+  // 🔥 ACCORDION HANDLER (persistent across re-renders)
+  // ------------------------------------------------------------
+  document.addEventListener('click', function (e) {
+
+    // 🚫 Ignore clicks on info buttons (so they don't toggle accordion)
+    if (e.target.closest('.comfort-info-btn')) return;
+
+    const header = e.target.closest('.comfort-main');
+    if (!header) return;
+
+    const module = header.closest('.comfort-module');
+    if (!module) return;
+
+    const isOpen = module.classList.contains('open');
+
+    // Close all (remove this block if you want multi-open)
+    document.querySelectorAll('.comfort-module.open').forEach(el => {
+      el.classList.remove('open');
+    });
+
+    // Open clicked one
+    if (!isOpen) {
+      module.classList.add('open');
+    }
+  });
+
+  // ------------------------------------------------------------
+
   setLoadingState();
 
   try {

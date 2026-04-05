@@ -1,5 +1,5 @@
 /* ============================================================
-   COMFORT MODULE — TWILIGHT BRIGHTENED (Updated)
+   COMFORT MODULE — CLEAN + STABLE VERSION
    ============================================================ */
 
 .comfort-module {
@@ -26,7 +26,7 @@
 }
 
 /* ============================================================
-   TOP ROW — Comfort Now
+   HEADER (CLICKABLE AREA)
    ============================================================ */
 
 .comfort-main {
@@ -34,6 +34,7 @@
   align-items: center;
   gap: 0.9rem;
   min-width: 0;
+  cursor: pointer;
 }
 
 .comfort-emoji {
@@ -61,7 +62,6 @@
   font-size: 1.05rem;
   font-weight: 600;
   line-height: 1.28;
-  word-wrap: break-word;
 }
 
 .comfort-sub {
@@ -69,51 +69,57 @@
   font-size: 0.82rem;
   margin-top: 0.15rem;
 }
+
 /* ============================================================
-   COMFORT SCORE COLORS
+   SCORE
    ============================================================ */
 
+.comfort-score-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .comfort-score {
+  font-size: 1.2rem;
   font-weight: 700;
-  font-size: 1.1rem;
 }
 
-/* Great */
-.comfort-score.great {
-  color: #4ade80; /* green */
-}
+/* Score colors */
+.comfort-score.great { color: #4ade80; }
+.comfort-score.good { color: #a3e635; }
+.comfort-score.okay { color: #facc15; }
+.comfort-score.poor { color: #fb923c; }
+.comfort-score.bad { color: #f87171; }
+.comfort-score.neutral { color: #9ca3af; }
 
-/* Good */
-.comfort-score.good {
-  color: #a3e635; /* yellow-green */
-}
-
-/* Okay */
-.comfort-score.okay {
-  color: #facc15; /* yellow */
-}
-
-/* Poor */
-.comfort-score.poor {
-  color: #fb923c; /* orange */
-}
-
-/* Bad */
-.comfort-score.bad {
-  color: #f87171; /* red */
-}
-
-/* Neutral fallback */
-.comfort-score.neutral {
-  color: #9ca3af;
-}
-
+/* subtle glow for great */
 .comfort-score.great {
   text-shadow: 0 0 6px rgba(74, 222, 128, 0.4);
 }
 
 /* ============================================================
-   EXPANSION PANEL — Variable Height, No Clipping
+   INFO BUTTON
+   ============================================================ */
+
+.comfort-info-btn {
+  display: inline-flex;
+  align-items: center;
+  background: none;
+  border: none;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  opacity: 0.7;
+  cursor: pointer;
+  padding: 0;
+}
+
+.comfort-info-btn:hover {
+  opacity: 1;
+}
+
+/* ============================================================
+   EXPANSION PANEL (ACCORDION CORE)
    ============================================================ */
 
 .comfort-expand {
@@ -121,28 +127,37 @@
   overflow: hidden;
   opacity: 0;
   transform: translateY(-6px) scale(0.98);
-  transition:
-    max-height 0.45s ease,
-    opacity 0.3s ease,
-    transform 0.3s ease;
 
-  margin-top: 0.75rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.10);
-  padding-top: 0.75rem;
+  transition:
+    max-height 0.4s ease,
+    opacity 0.25s ease,
+    transform 0.25s ease;
+
+  margin-top: 0;
+  border-top: 1px solid transparent;
+  padding-top: 0;
 }
 
+/* ACTIVE STATE */
 .comfort-module.active .comfort-expand {
-  max-height: 999px; /* large enough for long narratives */
+  max-height: 1000px; /* large enough */
   opacity: 1;
   transform: translateY(0) scale(1);
-  overflow: visible;
+
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
 }
 
+/* subtle emphasis when open */
 .comfort-module.active {
   backdrop-filter: blur(6px);
 }
 
-/* Rows inside expansion */
+/* ============================================================
+   EXPAND CONTENT
+   ============================================================ */
+
 .comfort-expand-row {
   display: flex;
   justify-content: space-between;
@@ -168,7 +183,41 @@
 }
 
 /* ============================================================
-   FUTURE COMFORT — Renamed + Styled
+   EXPLAINER (SAFE — WON’T BREAK ACCORDION)
+   ============================================================ */
+
+.comfort-explainer {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  opacity: 0.65;
+  max-width: 260px;
+}
+
+/* Only hide when explicitly hidden */
+.comfort-explainer.hidden {
+  display: none !important;
+}
+
+/* ============================================================
+   SUPPORT TEXT + BULLETS
+   ============================================================ */
+
+.comfort-support {
+  margin-top: 4px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
+.comfort-bullets {
+  margin-top: 6px;
+  padding-left: 16px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+/* ============================================================
+   FUTURE COMFORT (NEXT 6 HOURS)
    ============================================================ */
 
 .next6-module {
@@ -182,22 +231,16 @@
   margin-bottom: 0.5rem;
 }
 
-.next6-label {
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  color: #c8d3ff;
-}
-
 .next6-strip {
   display: flex;
   gap: 10px;
   overflow-x: auto;
   padding-bottom: 6px;
+  position: relative;
 }
 
 .next6-hour {
   min-width: 70px;
-  flex-shrink: 0;
   text-align: center;
 
   background: rgba(255, 255, 255, 0.08);
@@ -211,12 +254,10 @@
 .next6-hour-label {
   font-size: 0.75rem;
   color: #c8d3ff;
-  margin-bottom: 4px;
 }
 
 .next6-hour-emoji {
   font-size: 1.35rem;
-  margin-bottom: 4px;
 }
 
 .next6-hour-temp {
@@ -225,14 +266,27 @@
   color: #f5f5f5;
 }
 
-.next6-hour-factor {
-  font-size: 0.75rem;
-  color: #ffb866;
-  margin-top: 4px;
+/* score colors reused */
+.next6-hour-score.great { color: #4ade80; }
+.next6-hour-score.good { color: #a3e635; }
+.next6-hour-score.okay { color: #facc15; }
+.next6-hour-score.poor { color: #fb923c; }
+.next6-hour-score.bad { color: #f87171; }
+.next6-hour-score.neutral { color: #9ca3af; }
+
+/* fade edge */
+.next6-strip::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 40px;
+  background: linear-gradient(to right, transparent, rgba(0,0,0,0.4));
 }
 
 /* ============================================================
-   LAYOUT — Two Column Comfort Row
+   LAYOUT
    ============================================================ */
 
 #comfort-row {
@@ -247,177 +301,9 @@
   min-width: 0;
 }
 
-@media (min-width: 640px) {
-  #comfort-row {
-    align-items: stretch;
-  }
-
-  .comfort-right-col .comfort-module {
-    flex: 1;
-  }
-}
-
 @media (max-width: 640px) {
   #comfort-row {
     flex-direction: column;
     gap: 10px;
   }
-}
-/* FUTURE COMFORT — SCORE */
-
-.next6-hour-score {
-  font-size: 0.7rem;
-  font-weight: 600;
-  margin-top: 2px;
-  opacity: 0.8;
-}
-
-/* reuse same color system as comfort */
-.next6-hour-score.great { color: #4ade80; }
-.next6-hour-score.good { color: #a3e635; }
-.next6-hour-score.okay { color: #facc15; }
-.next6-hour-score.poor { color: #fb923c; }
-.next6-hour-score.bad { color: #f87171; }
-.next6-hour-score.neutral { color: #9ca3af; }
-
-/* tighten label */
-.next6-hour-factor {
-  font-size: 0.65rem;
-  color: var(--text-muted);
-}
-.next6-trend {
-  font-size: 0.75rem;
-  font-weight: 500;
-  margin-top: 2px;
-}
-
-/* colors */
-.next6-trend.improving {
-  color: #4ade80;
-}
-
-.next6-trend.worsening {
-  color: #f87171;
-}
-
-.next6-trend.steady {
-  color: #9ca3af;
-}
-.next6-strip {
-  position: relative;
-}
-
-.next6-strip::after {
-  content: "";
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: 40px;
-  background: linear-gradient(to right, transparent, rgba(0,0,0,0.4));
-}
-/* ============================================================
-   COMFORT NOW EXPLAINER
-   ============================================================ */
-.comfort-explainer {
-  margin-top: 2px;
-  font-size: 0.75rem;
-  opacity: 0.65;
-  max-width: 260px;
-}
-/* ============================================================
-   TREND CHIP
-   ============================================================ */
-
-.next6-trend-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-
-  padding: 4px 10px;
-  border-radius: 999px;
-
-  font-size: 0.75rem;
-  font-weight: 500;
-
-  border: none;
-  cursor: default;
-
-  background: rgba(255,255,255,0.05);
-}
-
-/* colors */
-.next6-trend-chip.improving {
-  color: #4ade80;
-}
-
-.next6-trend-chip.worsening {
-  color: #f87171;
-}
-
-.next6-trend-chip.steady {
-  color: #9ca3af;
-}
-
-/* arrow slightly emphasized */
-.trend-arrow {
-  font-weight: 700;
-}
-/* tighten score → explainer spacing */
-
-.comfort-score-row {
-  display: flex;
-  align-items: center;   /* 🔥 important */
-  gap: 6px;
-}
-
-.comfort-info-btn {
-  display: inline-flex;   /* 🔥 prevents line break */
-  align-items: center;
-
-  background: none;
-  border: none;
-
-  font-size: 0.75rem;
-  line-height: 1;
-
-  padding: 0;
-  margin: 0;
-
-  color: var(--text-muted);
-  cursor: pointer;
-}
-.comfort-score {
-  font-size: 1.2rem;
-  font-weight: 700;
-}
-
-.comfort-info-btn {
-  opacity: 0.7;
-}
-
-.comfort-info-btn:hover {
-  opacity: 1;
-}
-
-.hidden {
-  display: none;
-}
-.comfort-explainer.hidden {
-  display: none !important;
-}
-/* single supporting line */
-.comfort-support {
-  margin-top: 4px;
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  line-height: 1.3;
-}
-
-/* bullet list refinement */
-.comfort-bullets {
-  margin-top: 6px;
-  padding-left: 16px;
-  font-size: 0.82rem;
-  color: var(--text-muted);
 }
