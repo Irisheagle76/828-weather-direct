@@ -356,3 +356,32 @@ export function buildFutureComfort(hourlyNormalized, computeComfortFn = computeC
 
   return items;
 }
+
+export const calculateComfort = (data, options = {}) => {
+  const result = computeComfort(data);
+
+  if (!result) return null;
+
+  // 🔥 ADAPT OLD STRUCTURE → NEW SYSTEM
+  return {
+    score: result.comfortScore / 10, // normalize to 0–10
+    label: result.category,
+    color: result.color,
+    temp: result.temp,
+    dewPoint: result.dewpoint,
+
+    // 🔥 NEW FLAGS (derived)
+    flags: {
+      veryHot: result.temp >= 85,
+      veryHumid: result.dewpoint >= 65,
+      crisp: result.dewpoint < 55,
+      windy: result.windSpeed >= 10,
+      harshSun: false // (can upgrade later with solar)
+    },
+
+    goldilocks:
+      result.comfortScore >= 85 &&
+      result.dewpoint >= 50 &&
+      result.dewpoint <= 60
+  };
+};
