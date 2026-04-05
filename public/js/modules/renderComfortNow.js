@@ -1,6 +1,6 @@
 // /js/modules/renderComfortNow.js
 
-import { calculateComfort } from "./intel/comfort.js";
+import { calculateComfort } from "../intel/comfort.js";
 
 //
 // =========================
