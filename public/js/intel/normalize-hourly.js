@@ -1,4 +1,3 @@
-// /js/intel/normalize-hourly.js
 // ============================================================
 // NORMALIZE OPEN-METEO HOURLY PAYLOAD INTO CANONICAL FORMAT
 // ============================================================
@@ -10,8 +9,12 @@ export function normalizeOpenMeteo(hourly) {
   }
 
   const out = [];
+  const len = hourly.time.length;
 
-  for (let i = 0; i < hourly.time.length; i++) {
+  for (let i = 0; i < len; i++) {
+    // ------------------------------------------------------------
+    // HELPERS
+    // ------------------------------------------------------------
     const pick = (...keys) => {
       for (const k of keys) {
         const val = hourly[k]?.[i];
@@ -21,60 +24,64 @@ export function normalizeOpenMeteo(hourly) {
     };
 
     const num = v => {
+      if (v == null) return null;
       const n = Number(v);
-      return typeof n === "number" && !isNaN(n) ? n : null;
+      return Number.isFinite(n) ? n : null;
+    };
+
+    const toMiles = m => (m != null ? m / 1609.34 : null);
+    const normalizeCloud = c =>
+      c != null ? (c > 1 ? c / 100 : c) : null;
+
+    const toTimestamp = t => {
+      const ts = new Date(t).getTime();
+      return Number.isFinite(ts) ? ts : Date.now();
     };
 
     // ------------------------------------------------------------
     // CORE METEOROLOGICAL FIELDS
     // ------------------------------------------------------------
-    // temperature_2m and apparent_temperature are already Fahrenheit
-    // dewpoint_2m is ALSO Fahrenheit (confirmed by backend test)
-    const tempF_raw = num(pick("temperature_2m"));
-    const dewpointF_raw = num(pick("dewpoint_2m"));
-    const dewpointF = dewpointF_raw != null ? dewpointF_raw : null;
+    const tempF = num(pick("temperature_2m"));
+    const dewpointF = num(pick("dewpoint_2m"));
     const humidity = num(pick("relativehumidity_2m"));
 
-    // Convert dew point to Celsius for risk logic
+    const apparentF_raw = num(pick("apparent_temperature"));
+    const apparentF = apparentF_raw ?? tempF;
+
+    // Convert to Celsius for internal logic
+    const tempC = tempF != null ? fToC(tempF) : null;
     const dewC = dewpointF != null ? fToC(dewpointF) : null;
+    const apparentC = apparentF != null ? fToC(apparentF) : null;
 
     // ------------------------------------------------------------
-    // WIND (already normalized by backend to mph)
+    // WIND (already mph from backend)
     // ------------------------------------------------------------
     const windSpeed = num(pick("wind_speed_10m", "windspeed_10m"));
     const windGust = num(pick("wind_gusts_10m", "windgusts_10m"));
     const windDir = num(pick("winddirection_10m", "wind_dir"));
 
     // ------------------------------------------------------------
-    // PRECIP, CLOUD, VISIBILITY, UV
+    // PRECIP / CLOUD / VISIBILITY / UV
     // ------------------------------------------------------------
     const precip = num(pick("precipitation"));
     const snow = num(pick("snowfall"));
     const uv = num(pick("uv_index"));
 
-    // Cloud cover normalization (0–100 → 0–1)
-    let cloud = num(pick("cloudcover"));
-    if (cloud != null && cloud > 1) cloud = cloud / 100;
-
-    // Visibility normalization (meters → miles)
-    let visibility = num(pick("visibility"));
-    if (visibility != null && visibility > 100) {
-      visibility = visibility / 1609.34;
-    }
-
-    // Apparent temperature (already Fahrenheit)
-    const apparentF_raw = num(pick("apparent_temperature"));
-    const apparentF = apparentF_raw != null ? apparentF_raw : tempF_raw;
-
-    // Timestamp
-    const rawTs = new Date(hourly.time[i]).getTime();
-    const ts = !isNaN(rawTs) ? rawTs : Date.now();
+    const cloud = normalizeCloud(num(pick("cloudcover")));
+    const visibilityRaw = num(pick("visibility"));
+    const visibility =
+      visibilityRaw != null && visibilityRaw > 100
+        ? toMiles(visibilityRaw)
+        : visibilityRaw;
 
     // ------------------------------------------------------------
-    // RISK INDICES (computed in Celsius)
+    // TIMESTAMP (CRITICAL FOR ALL DOWNSTREAM LOGIC)
     // ------------------------------------------------------------
-    const tempC = tempF_raw != null ? fToC(tempF_raw) : null;
+    const ts = toTimestamp(hourly.time[i]);
 
+    // ------------------------------------------------------------
+    // RISK INDICES (UNCHANGED LOGIC, CLEANED STRUCTURE)
+    // ------------------------------------------------------------
     const frostRisk =
       tempC != null && dewC != null && tempC <= 37 && dewC <= 36
         ? 0.6
@@ -112,16 +119,16 @@ export function normalizeOpenMeteo(hourly) {
         : 0;
 
     // ------------------------------------------------------------
-    // CANONICAL NORMALIZED OBJECT
+    // OUTPUT OBJECT (UNCHANGED STRUCTURE)
     // ------------------------------------------------------------
     out.push({
-      // Raw Celsius values (for risk logic)
+      // Celsius (internal logic)
       temperature: tempC,
       dewpoint: dewC,
-      apparent_temperature: fToC(apparentF),
+      apparent_temperature: apparentC,
 
-      // Canonical Fahrenheit (for comfort engine)
-      temperatureF: tempF_raw,
+      // Fahrenheit (UI / comfort engine)
+      temperatureF: tempF,
       dewpointF,
       apparentF,
 
@@ -133,7 +140,7 @@ export function normalizeOpenMeteo(hourly) {
       wind_gust: windGust,
       wind_dir: windDir,
 
-      // Precip / cloud / visibility / UV
+      // Atmospherics
       precipitation: precip,
       snowfall: snow,
       uv_index: uv,
@@ -149,7 +156,7 @@ export function normalizeOpenMeteo(hourly) {
       valley_fog_risk: valleyFogRisk,
       ridge_fog_risk: ridgeFogRisk,
 
-      // Timestamp
+      // Timestamp (ms, guaranteed valid)
       timestamp: ts
     });
   }
@@ -157,12 +164,13 @@ export function normalizeOpenMeteo(hourly) {
   return out;
 }
 
-// Celsius → Fahrenheit
-function cToF(c) {
-  return (c * 9) / 5 + 32;
-}
-
-// Fahrenheit → Celsius
+// ------------------------------------------------------------
+// UNIT HELPERS
+// ------------------------------------------------------------
 function fToC(f) {
   return ((f - 32) * 5) / 9;
+}
+
+function cToF(c) {
+  return (c * 9) / 5 + 32;
 }

@@ -23,30 +23,60 @@ function ensureSynthFields(intel, snapshot) {
 }
 
 // ------------------------------------------------------------
-// MAIN BUILDER
+// CURRENT HOUR INDEX (ROBUST + TIME-SAFE)
 // ------------------------------------------------------------
-export function buildHumanActionIntel(raw) {
-  console.log("🔵 HA BUILDER START");
+const now = Date.now();
 
-  if (!raw || !raw.hourly) {
-    console.error("❌ No hourly data:", raw);
-    return { today: null, tomorrow: null };
+const currentIndex = hourly.findIndex(h => {
+  // Ensure timestamp is in milliseconds
+  let ts = h.timestamp;
+
+  if (typeof ts === "number" && ts < 1e12) {
+    ts = ts * 1000; // convert seconds → ms
+  } else if (typeof ts === "string") {
+    ts = new Date(ts).getTime(); // handle ISO strings
   }
 
-  // Normalize
-  const hourly = normalizeOpenMeteo(raw.hourly);
-  console.log(`🔵 Normalized hourly count: ${hourly.length}`);
+  // Allow slight buffer so we don't skip current hour
+  return ts > now - (30 * 60 * 1000);
+});
 
-  if (!hourly.length) {
-    console.error("❌ Normalized hourly empty");
-    return { today: null, tomorrow: null };
-  }
+// Safe fallback if something goes wrong
+const idx = currentIndex === -1
+  ? Math.max(0, hourly.length - 6)
+  : currentIndex;
 
-  const now = Date.now();
-  const currentIndex = hourly.findIndex(h => h.timestamp >= now);
-  const idx = currentIndex === -1 ? 0 : currentIndex;
+console.log(`🔵 Current hour index: ${idx}`);
 
-  console.log(`🔵 Current hour index: ${idx}`);
+// ------------------------------------------------------------
+// NEXT 6 HOURS SLICE (THE ACTUAL FIX FOR MIDNIGHT BUG)
+// ------------------------------------------------------------
+const next6Hours = hourly.slice(idx, idx + 6);
+
+// ------------------------------------------------------------
+// DEBUG — VERIFY TIME ALIGNMENT
+// ------------------------------------------------------------
+console.log(
+  "🕒 Selected hours:",
+  next6Hours.map(h => {
+    let ts = h.timestamp;
+    if (typeof ts === "number" && ts < 1e12) ts *= 1000;
+    return new Date(ts).toLocaleTimeString([], { hour: 'numeric' });
+  })
+);
+
+// ------------------------------------------------------------
+// OPTIONAL: DYNAMIC TITLE (fixes missing/misaligned header)
+// ------------------------------------------------------------
+const startTs = (() => {
+  let ts = next6Hours[0]?.timestamp;
+  if (typeof ts === "number" && ts < 1e12) ts *= 1000;
+  return ts;
+})();
+
+const futureTitle = startTs
+  ? `Next 6 Hours (starting ${new Date(startTs).toLocaleTimeString([], { hour: 'numeric' })})`
+  : "Next 6 Hours";
 
   // ------------------------------------------------------------
   // TODAY SNAPSHOT
