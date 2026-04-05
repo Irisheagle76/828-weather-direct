@@ -150,14 +150,16 @@ export function getComfortColor(score) {
   if (score >= 45) return "#ff9f1c";
   return "#e63946";
 }
-
 // ============================================================
-// MAIN ENGINE
+// MAIN ENGINE (ROBUST VERSION)
 // ============================================================
 
 export function computeComfort(intel) {
   const src = intel?.tempest ?? intel?.wu ?? {};
 
+  // ---------------------------
+  // INPUT NORMALIZATION
+  // ---------------------------
   const temp = num(src.temp);
   const dew = num(src.dewPoint) ?? (temp != null ? temp - 18 : null);
   const wind = num(src.windSpeed) ?? 0;
@@ -165,8 +167,45 @@ export function computeComfort(intel) {
 
   const elev = computeSolarElevation(timestamp, LOCATION.lat, LOCATION.lon);
 
-  const score = computeComfortScore(temp, dew, wind, elev) ?? 0;
+  // ---------------------------
+  // VALIDATION (🔥 critical fix)
+  // ---------------------------
+  if (temp == null || dew == null) {
+    console.warn("⚠️ Invalid comfort inputs", {
+      temp,
+      dew,
+      wind,
+      src
+    });
 
+    return {
+      comfortScore: 50, // neutral fallback instead of 0
+      category: "Unknown",
+      emoji: "❓",
+      color: "#888",
+
+      temp: temp ?? null,
+      dewpoint: dew ?? null,
+      windSpeed: wind,
+
+      headline: "Conditions unclear",
+      narrative: null
+    };
+  }
+
+  // ---------------------------
+  // SCORE CALCULATION
+  // ---------------------------
+  const rawScore = computeComfortScore(temp, dew, wind, elev);
+
+  const score =
+    rawScore != null
+      ? rawScore
+      : 50; // fallback (prevents 0 bug)
+
+  // ---------------------------
+  // OUTPUT
+  // ---------------------------
   return {
     comfortScore: score,
     category: getCategory(score),
