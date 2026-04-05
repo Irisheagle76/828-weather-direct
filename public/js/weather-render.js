@@ -331,24 +331,46 @@ function buildComfortBullets(current, score) {
 
   return bullets.slice(0, 3);
 }
-  // ------------------------------------------------------------
-  // FUTURE COMFORT
-  // ------------------------------------------------------------
 
-  const future = hourly.slice(0, 6).map(h => {
+// ------------------------------------------------------------
+// FUTURE COMFORT (FIXED — STARTS FROM NOW)
+// ------------------------------------------------------------
+
+const now = Date.now();
+const getTs = h => (h.timestamp < 1e12 ? h.timestamp * 1000 : h.timestamp);
+
+// Find current hour index (same logic you already use elsewhere)
+let startIdx = hourly.findIndex(h => getTs(h) >= now);
+if (startIdx === -1) startIdx = hourly.length - 6;
+
+// Step back one hour so it includes "current hour"
+startIdx = Math.max(0, startIdx - 1);
+
+const slice = hourly.slice(startIdx, startIdx + 6);
+
+console.log(
+  "🕒 FUTURE HOURS:",
+  slice.map(h =>
+    new Date(getTs(h)).toLocaleTimeString([], { hour: "numeric" })
+  )
+);
+
+const future = slice.map(h => {
+  const ts = getTs(h);
+
   const comfort = computeComfortSafe({
     temp: h.temperatureF,
     dewPoint: h.dewpointF,
     humidity: h.relative_humidity,
     windSpeed: h.wind_speed,
     windDir: h.wind_dir,
-    obsTimeLocal: h.timestamp
+    obsTimeLocal: ts
   });
 
   const score = comfort?.comfortScore ?? null;
 
   return {
-    hourLabel: new Date(h.timestamp).toLocaleTimeString([], { hour: "numeric" }),
+    hourLabel: new Date(ts).toLocaleTimeString([], { hour: "numeric" }),
     temp: h.temperatureF,
     score,
     emoji: getComfortEmoji(score),

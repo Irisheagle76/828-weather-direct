@@ -1,10 +1,9 @@
 // /js/app.js
 // ============================================================
-// APP ENTRY — STABLE, REFRESHING, DEBUGGABLE
+// APP ENTRY — STABLE, REFRESHING, DEBUGGABLE (FIXED)
 // ============================================================
 
-// 🔥 VERSION MARKER
-console.log("APP.JS LOADED — STABLE BUILD v2");
+console.log("APP.JS LOADED — STABLE BUILD v3");
 
 // ------------------------------------------------------------
 // IMPORTS
@@ -17,16 +16,13 @@ import { renderWeather } from "./weather-render.js";
 const CONFIG = {
   FORCE_LOCATION: true,
 
-  // Asheville fallback
   DEFAULT_LAT: 35.5951,
   DEFAULT_LON: -82.5515,
 
-  // Tempest
   TEMPEST_STATION_ID: "315255",
   TEMPEST_TOKEN: "838ff386-d14b-4d45-897a-18903e6970a9",
 
-  // Refresh interval (ms)
-  REFRESH_INTERVAL: 5 * 60 * 1000 // 5 min
+  REFRESH_INTERVAL: 5 * 60 * 1000
 };
 
 // ------------------------------------------------------------
@@ -72,7 +68,7 @@ function setLoadingState() {
 }
 
 // ------------------------------------------------------------
-// READY STATE (NEW)
+// READY STATE
 // ------------------------------------------------------------
 function setReadyState() {
   const label = document.getElementById("wu-status-label");
@@ -103,7 +99,6 @@ async function runRender() {
       tempestToken: CONFIG.TEMPEST_TOKEN
     });
 
-    // ✅ NEW: update UI status
     setReadyState();
 
     console.log("RENDER COMPLETE");
@@ -127,7 +122,7 @@ function startAutoRefresh() {
 }
 
 // ------------------------------------------------------------
-// LOCATION HANDLING
+// LOCATION
 // ------------------------------------------------------------
 function resolveLocation() {
   return new Promise((resolve, reject) => {
@@ -147,16 +142,54 @@ function resolveLocation() {
     }
 
     navigator.geolocation.getCurrentPosition(
-      pos => {
-        resolve({
-          lat: pos.coords.latitude,
-          lon: pos.coords.longitude
-        });
-      },
+      pos => resolve({
+        lat: pos.coords.latitude,
+        lon: pos.coords.longitude
+      }),
       () => reject("Location access denied.")
     );
 
   });
+}
+
+function setupAccordion() {
+  document.addEventListener("click", function (e) {
+
+    // ------------------------------------------------------------
+    // HUMAN ACTION MODULES (FULL CARD CLICK)
+    // ------------------------------------------------------------
+    const actionModule = e.target.closest(".action-module");
+
+    if (actionModule) {
+      const isActive = actionModule.classList.contains("active");
+
+      document.querySelectorAll(".action-module.active").forEach(el => {
+        el.classList.remove("active");
+      });
+
+      if (!isActive) actionModule.classList.add("active");
+
+      return;
+    }
+
+  });
+}
+
+// ------------------------------------------------------------
+// HUMAN ACTION MODULES (FULL CARD CLICK)
+// ------------------------------------------------------------
+const actionModule = e.target.closest(".action-module");
+
+if (actionModule) {
+  const isActive = actionModule.classList.contains("active");
+
+  document.querySelectorAll(".action-module.active").forEach(el => {
+    el.classList.remove("active");
+  });
+
+  if (!isActive) actionModule.classList.add("active");
+
+  return;
 }
 
 // ------------------------------------------------------------
@@ -167,34 +200,7 @@ document.addEventListener("DOMContentLoaded", initApp);
 async function initApp() {
   console.log("INIT START");
 
-  // ------------------------------------------------------------
-  // 🔥 ACCORDION HANDLER (persistent across re-renders)
-  // ------------------------------------------------------------
-  document.addEventListener('click', function (e) {
-
-    // 🚫 Ignore clicks on info buttons (so they don't toggle accordion)
-    if (e.target.closest('.comfort-info-btn')) return;
-
-    const header = e.target.closest('.comfort-main');
-    if (!header) return;
-
-    const module = header.closest('.comfort-module');
-    if (!module) return;
-
-    const isOpen = module.classList.contains('open');
-
-    // Close all (remove this block if you want multi-open)
-    document.querySelectorAll('.comfort-module.open').forEach(el => {
-      el.classList.remove('open');
-    });
-
-    // Open clicked one
-    if (!isOpen) {
-      module.classList.add('open');
-    }
-  });
-
-  // ------------------------------------------------------------
+  setupAccordion(); // 🔥 clean separation
 
   setLoadingState();
 
@@ -204,10 +210,7 @@ async function initApp() {
 
     console.log("LOCATION RESOLVED:", loc);
 
-    // Initial render
     await runRender();
-
-    // Start refresh loop
     startAutoRefresh();
 
   } catch (err) {

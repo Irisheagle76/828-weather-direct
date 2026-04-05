@@ -107,3 +107,14 @@
   opacity: 0.6;
   margin-top: 3px;
 }
+.expanded-panel {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.35s ease, opacity 0.25s ease;
+}
+
+.action-module.active .expanded-panel {
+  max-height: 500px;
+  opacity: 1;
+}
