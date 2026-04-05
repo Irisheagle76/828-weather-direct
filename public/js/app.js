@@ -152,8 +152,14 @@ function resolveLocation() {
   });
 }
 
+// ------------------------------------------------------------
+// GLOBAL ACCORDION HANDLER
+// ------------------------------------------------------------
 function setupAccordion() {
   document.addEventListener("click", function (e) {
+
+    // Ignore info buttons
+    if (e.target.closest(".comfort-info-btn")) return;
 
     // ------------------------------------------------------------
     // HUMAN ACTION MODULES (FULL CARD CLICK)
@@ -169,27 +175,28 @@ function setupAccordion() {
 
       if (!isActive) actionModule.classList.add("active");
 
-      return;
+      return; // ✅ now legal (inside function)
+    }
+
+    // ------------------------------------------------------------
+    // COMFORT MODULES (keep if needed)
+    // ------------------------------------------------------------
+    const comfortHeader = e.target.closest(".comfort-main");
+
+    if (comfortHeader) {
+      const module = comfortHeader.closest(".comfort-module");
+      if (!module) return;
+
+      const isActive = module.classList.contains("active");
+
+      document.querySelectorAll(".comfort-module.active").forEach(el => {
+        el.classList.remove("active");
+      });
+
+      if (!isActive) module.classList.add("active");
     }
 
   });
-}
-
-// ------------------------------------------------------------
-// HUMAN ACTION MODULES (FULL CARD CLICK)
-// ------------------------------------------------------------
-const actionModule = e.target.closest(".action-module");
-
-if (actionModule) {
-  const isActive = actionModule.classList.contains("active");
-
-  document.querySelectorAll(".action-module.active").forEach(el => {
-    el.classList.remove("active");
-  });
-
-  if (!isActive) actionModule.classList.add("active");
-
-  return;
 }
 
 // ------------------------------------------------------------
