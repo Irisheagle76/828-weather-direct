@@ -229,12 +229,27 @@
 ------------------------------------------------------------ */
 
 .next6-header {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #c8d3ff;
-  opacity: 0.95;
+  position: relative;
+  padding-bottom: 6px;
   margin-bottom: 6px;
-  letter-spacing: 0.03em;
+}
+
+.next6-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+
+  width: 50px;
+  height: 2px;
+
+  background: linear-gradient(
+    to right,
+    rgba(200, 211, 255, 0.6),
+    rgba(200, 211, 255, 0)
+  );
+
+  filter: blur(0.5px);
 }
 
 /* ------------------------------------------------------------
