@@ -79,17 +79,68 @@ function renderCurrentObs(current) {
 
   el.innerHTML = `
     <div class="obs-row">
-      <div class="obs-item">🌡️ ${fmt(current.temp)}</div>
-      <div class="obs-item">💧 ${fmt(current.dewPoint)}</div>
-      <div class="obs-item">💦 ${pct(current.humidity)}</div>
-      <div class="obs-item">💨 ${wind(current.wind)}</div>
+
+      <div class="obs-item">
+        🌡️ ${fmt(current.temp)}
+        <span class="obs-label">${describeTemp(current.temp)}</span>
+      </div>
+
+      <div class="obs-item">
+        💧 ${fmt(current.dewPoint)}
+        <span class="obs-label">${describeDew(current.dewPoint)}</span>
+      </div>
+
+      <div class="obs-item">
+        💦 ${pct(current.humidity)}
+        <span class="obs-label">${describeHumidity(current.humidity)}</span>
+      </div>
+
+      <div class="obs-item">
+        💨 ${wind(current.wind)}
+        <span class="obs-label">${describeWind(current.wind)}</span>
+      </div>
+
     </div>
   `;
 }
+function describeTemp(t) {
+  if (t == null) return "";
+  if (t < 40) return "Cold";
+  if (t < 55) return "Chilly";
+  if (t < 68) return "Cool";
+  if (t < 78) return "Comfortable";
+  if (t < 86) return "Warm";
+  if (t < 93) return "Hot";
+  return "Sweltering";
+}
 
-const fmt = v => (v != null ? Math.round(v) + "°" : "--");
-const pct = v => (v != null ? Math.round(v) + "%" : "--");
-const wind = v => (v != null ? Math.round(v) + " mph" : "--");
+function describeDew(d) {
+  if (d == null) return "";
+  if (d < 45) return "Dry";
+  if (d < 55) return "Pleasant";
+  if (d < 62) return "Slightly humid";
+  if (d < 68) return "Humid";
+  if (d < 72) return "Sticky";
+  return "Oppressive"; // Asheville summer trigger
+}
+
+function describeHumidity(h) {
+  if (h == null) return "";
+  if (h < 35) return "Dry";
+  if (h < 55) return "Balanced";
+  if (h < 70) return "Humid";
+  if (h < 85) return "Heavy";
+  return "Soupy";
+}
+
+function describeWind(w) {
+  if (w == null) return "";
+  if (w < 3) return "Still";
+  if (w < 7) return "Light";
+  if (w < 12) return "Breezy";
+  if (w < 20) return "Windy";
+  return "Gusty";
+}
 
 // ------------------------------------------------------------
 // BEST WINDOW
