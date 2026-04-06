@@ -77,7 +77,7 @@ export function buildHumanActionIntel(raw) {
   // ------------------------------------------------------------
   // TOMORROW
   // ------------------------------------------------------------
-  const tomorrowHours = next48;
+ const tomorrowHours = sliceByHoursAhead(hourly, 24, 48);
   const tomorrowSnapshot = blendHours(tomorrowHours);
 
   if (tomorrowSnapshot) {
