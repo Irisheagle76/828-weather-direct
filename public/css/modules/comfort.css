@@ -435,6 +435,8 @@
   align-items: center;
   gap: 6px;
   opacity: 0.9;
+
+  color: rgba(200, 211, 255, 0.75); /* 🔥 THIS FIXES YOUR ISSUE */
 }
 
 /* TRAIL BETTER (green/teal) */
