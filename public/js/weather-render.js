@@ -6,7 +6,7 @@
 
 import { fetchAllIntel } from "./weather-fetch.js";
 import { normalizeOpenMeteo } from "./intel/normalize-hourly.js";
-import { calculateComfort } from "./intel/comfort.js";
+import { calculateComfort } from "../intel/comfort.js";
 
 import { buildHumanActionIntel } from "./intel/human-action-intel-builder.js?v=5";
 import { generateNarrative } from "./intel/synthesizer/index.js";
@@ -24,8 +24,61 @@ import {
 
 const $ = id => document.getElementById(id);
 
+// ---------------- FORMATTERS (HOISTED SAFE) ----------------
+function fmt(v) {
+  return v != null ? Math.round(v) + "°" : "--";
+}
+
+function pct(v) {
+  return v != null ? Math.round(v) + "%" : "--";
+}
+
+function windFmt(v) {
+  return v != null ? Math.round(v) + " mph" : "--";
+}
+
+// ---------------- DESCRIPTORS ----------------
+function describeTemp(t) {
+  if (t == null) return "";
+  if (t < 40) return "Cold";
+  if (t < 55) return "Chilly";
+  if (t < 68) return "Cool";
+  if (t < 78) return "Comfortable";
+  if (t < 86) return "Warm";
+  if (t < 93) return "Hot";
+  return "Sweltering";
+}
+
+function describeDew(d) {
+  if (d == null) return "";
+  if (d < 45) return "Dry";
+  if (d < 55) return "Pleasant";
+  if (d < 62) return "Slightly humid";
+  if (d < 68) return "Humid";
+  if (d < 72) return "Sticky";
+  return "Oppressive";
+}
+
+function describeHumidity(h) {
+  if (h == null) return "";
+  if (h < 35) return "Dry";
+  if (h < 55) return "Balanced";
+  if (h < 70) return "Humid";
+  if (h < 85) return "Heavy";
+  return "Soupy";
+}
+
+function describeWind(w) {
+  if (w == null) return "";
+  if (w < 3) return "Still";
+  if (w < 7) return "Light";
+  if (w < 12) return "Breezy";
+  if (w < 20) return "Windy";
+  return "Gusty";
+}
+
 // ------------------------------------------------------------
-// MODE ADJUSTMENT (shared)
+// MODE ADJUSTMENT
 // ------------------------------------------------------------
 function applyModeAdjustments(data, mode) {
   const adjusted = { ...data };
@@ -96,54 +149,16 @@ function renderCurrentObs(current) {
       </div>
 
       <div class="obs-item">
-        💨 ${wind(current.wind)}
+        💨 ${windFmt(current.wind)}
         <span class="obs-label">${describeWind(current.wind)}</span>
       </div>
 
     </div>
   `;
 }
-function describeTemp(t) {
-  if (t == null) return "";
-  if (t < 40) return "Cold";
-  if (t < 55) return "Chilly";
-  if (t < 68) return "Cool";
-  if (t < 78) return "Comfortable";
-  if (t < 86) return "Warm";
-  if (t < 93) return "Hot";
-  return "Sweltering";
-}
-
-function describeDew(d) {
-  if (d == null) return "";
-  if (d < 45) return "Dry";
-  if (d < 55) return "Pleasant";
-  if (d < 62) return "Slightly humid";
-  if (d < 68) return "Humid";
-  if (d < 72) return "Sticky";
-  return "Oppressive"; // Asheville summer trigger
-}
-
-function describeHumidity(h) {
-  if (h == null) return "";
-  if (h < 35) return "Dry";
-  if (h < 55) return "Balanced";
-  if (h < 70) return "Humid";
-  if (h < 85) return "Heavy";
-  return "Soupy";
-}
-
-function describeWind(w) {
-  if (w == null) return "";
-  if (w < 3) return "Still";
-  if (w < 7) return "Light";
-  if (w < 12) return "Breezy";
-  if (w < 20) return "Windy";
-  return "Gusty";
-}
 
 // ------------------------------------------------------------
-// BEST WINDOW
+// BEST COMFORT WINDOW
 // ------------------------------------------------------------
 function findBestComfortWindow(hourly, mode, isDay) {
   if (!hourly?.length) return null;
@@ -168,7 +183,6 @@ function findBestComfortWindow(hourly, mode, isDay) {
       }, mode);
 
       const c = calculateComfort(adjusted, { isDay });
-
       const score = c?.score ?? 0;
 
       hours.push({
@@ -195,13 +209,11 @@ function findBestComfortWindow(hourly, mode, isDay) {
 export async function renderWeather(config) {
 
   const mode = config.mode || "downtown";
-  const isDay = true; // (you can refine later)
+  const isDay = true;
 
   let raw;
 
-  // ------------------------------------------------------------
-  // FETCH OR REUSE
-  // ------------------------------------------------------------
+  // FETCH
   if (!config.skipFetch) {
     raw = await fetchAllIntel(config);
   } else {
@@ -213,11 +225,10 @@ export async function renderWeather(config) {
 
   const current = resolveCurrentConditions(raw, hourly);
 
+  // CURRENT OBS
   renderCurrentObs(current);
 
-  // ------------------------------------------------------------
   // COMFORT NOW
-  // ------------------------------------------------------------
   renderComfortNow(
     $("comfort-now-container"),
     current,
@@ -225,9 +236,7 @@ export async function renderWeather(config) {
     { mode, isDay }
   );
 
-  // ------------------------------------------------------------
   // FUTURE COMFORT
-  // ------------------------------------------------------------
   const now = Date.now();
   const getTs = h => (h.timestamp < 1e12 ? h.timestamp * 1000 : h.timestamp);
 
@@ -259,9 +268,7 @@ export async function renderWeather(config) {
 
   renderFutureComfort($("future-comfort-container"), future);
 
-  // ------------------------------------------------------------
   // HUMAN ACTION
-  // ------------------------------------------------------------
   const intelRaw = buildHumanActionIntel(raw);
   const { today, tomorrow } = generateNarrative(
     intelRaw.today,
@@ -271,12 +278,10 @@ export async function renderWeather(config) {
   renderHumanAction(today, tomorrow);
   renderHumanActionExpanded(intelRaw.today, intelRaw.tomorrow);
 
-  // ------------------------------------------------------------
   // DEBUG
-  // ------------------------------------------------------------
   window._raw = raw;
   window._hourly = hourly;
   window._current = current;
 
-  return raw; // 🔥 REQUIRED for app.js caching
+  return raw;
 }
