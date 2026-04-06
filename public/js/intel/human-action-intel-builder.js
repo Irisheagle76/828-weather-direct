@@ -74,6 +74,8 @@ export function buildHumanActionIntel(raw) {
 
   const todayIntel = addSignalFields(todayIntelBase, todaySnapshot);
 
+  console.log("🔍 RAW hourly sample:", hourly.slice(0, 3));
+  
   // ------------------------------------------------------------
   // TOMORROW
   // ------------------------------------------------------------
