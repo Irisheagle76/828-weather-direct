@@ -439,21 +439,6 @@
   color: rgba(200, 211, 255, 0.75); /* 🔥 THIS FIXES YOUR ISSUE */
 }
 
-/* TRAIL BETTER (green/teal) */
-.comfort-mode-note.better-trail {
-  color: rgba(80, 200, 140, 0.95);
-}
-
-/* CITY BETTER (warm tone) */
-.comfort-mode-note.better-city {
-  color: rgba(255, 170, 90, 0.95);
-}
-
-/* ARROW */
-.mode-arrow {
-  font-size: 13px;
-  opacity: 0.85;
-}
 /* HEADER CONTAINER */
 .next6-header {
   display: flex;

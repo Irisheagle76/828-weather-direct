@@ -53,6 +53,25 @@ function mapScoreToCategory(score) {
   if (score >= 3.5) return "uncomfortable";
   return "harsh";
 }
+// ============================================================
+// Mode Helper for Trail vs. Downtown
+// ============================================================
+function getModeNoteFromSelection() {
+  const active = document.querySelector('.mode-btn.active');
+  if (!active) return "Conditions are balanced";
+
+  const mode = active.dataset.mode;
+
+  if (mode === "trail") {
+    return "🌲 Better conditions on trails";
+  }
+
+  if (mode === "downtown") {
+    return "🏙 Better conditions downtown";
+  }
+
+  return "Conditions are balanced";
+}
 
 // ============================================================
 // MAIN RENDER
@@ -89,21 +108,7 @@ export function renderComfortNow(container, current, bestWindow, options = {}) {
     { isDay }
   );
 
-  const diff = Math.round(trail.score - downtown.score);
-
-  let modeNote = "";
-  let modeClass = "";
-  let modeArrow = "";
-
-  if (diff >= 2) {
-    modeNote = `+${diff} better on trails`;
-    modeClass = "better-trail";
-    modeArrow = "↗";
-  } else if (diff <= -2) {
-    modeNote = `${diff} better downtown`;
-    modeClass = "better-city";
-    modeArrow = "↘";
-  }
+ const modeNote = getModeNoteFromSelection();
 
   // ------------------------------------------------------------
   // SCORE
@@ -162,14 +167,9 @@ export function renderComfortNow(container, current, bestWindow, options = {}) {
 
           <div class="comfort-text">${headline}</div>
 
-        ${
-  (modeNote || true)
-    ? `<div class="comfort-mode-note ${modeClass || ""}">
-        <span class="mode-arrow">${modeArrow || ""}</span>
-        ${modeNote || "🏙 Downtown 🌲 Trail"}
-      </div>`
-    : ""
-}
+       <div class="comfort-mode-note">
+  ${modeNote}
+</div>
         </div>
       </div>
 
