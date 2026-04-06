@@ -53,24 +53,24 @@ function buildHourlySnapshot(hourly, idx) {
   const cloud = hourly.cloudcover?.[idx] ?? null;
   const precip = hourly.precipitation?.[idx] ?? 0;
   const visibility = hourly.visibility?.[idx] ?? null;
-  const timestamp = hourly.time[idx];
+  const timestamp = new Date(hourly.time[idx]).getTime();
 
   const solarElevation = computeSolarElevation(timestamp, LOCATION.lat, LOCATION.lon);
   const rh = dewToRH(temp, dew);
 
-  return {
-    temp,
-    dewpoint: dew,
-    rh,
-    wind,
-    gust,
-    cloudCover: cloud,
-    precipAmount: precip,
-    visibility,
-    solarElevation,
-    feelsLike: temp, // factor engine will adjust if needed
-    timestamp
-  };
+ return {
+  temperatureF: temp,
+  dewpointF: dew,
+  relative_humidity: rh,
+  wind_speed: wind,
+  wind_gust: gust,
+  cloud_cover: cloud,
+  precipitation: precip,
+  visibility,
+  solarElevation,
+  apparentF: temp,
+  timestamp
+};
 }
 
 // ------------------------------------------------------------
