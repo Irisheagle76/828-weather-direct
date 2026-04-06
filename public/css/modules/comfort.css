@@ -229,27 +229,35 @@
 ------------------------------------------------------------ */
 
 .next6-header {
-  position: relative;
-  padding-bottom: 6px;
+  display: inline-block;
+  position: relative; /* FIXES underline */
+
+  color: #fff;
+  font-weight: 600;
+
+  text-shadow: 0 2px 6px rgba(0,0,0,0.75);
+  background: rgba(0,0,0,0.35);
+
+  padding: 4px 10px;
+  border-radius: 6px;
+
   margin-bottom: 6px;
 }
 
 .next6-header::after {
   content: "";
   position: absolute;
-  left: 0;
-  bottom: 0;
+  left: 10px;
+  bottom: -2px;
 
-  width: 50px;
+  width: 40px;
   height: 2px;
 
   background: linear-gradient(
     to right,
-    rgba(200, 211, 255, 0.6),
+    rgba(200, 211, 255, 0.7),
     rgba(200, 211, 255, 0)
   );
-
-  filter: blur(0.5px);
 }
 
 /* ------------------------------------------------------------
