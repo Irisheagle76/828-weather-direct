@@ -118,18 +118,24 @@ const tomorrowSnapshot = blendHours(tomorrowHours);
 // TIME SLICING
 // ------------------------------------------------------------
 function sliceByHoursAhead(hourly, startHr, endHr) {
-  const now = Date.now();
+  if (!hourly?.length) return [];
 
-  console.log("🟠 sample timestamp:", hourly[0]?.timestamp);
+  // ✅ anchor to dataset, not real time
+  let base = hourly[0].timestamp;
+
+  if (typeof base === "string") base = new Date(base).getTime();
+  if (base < 1e12) base = base * 1000;
+
+  console.log("🟡 tomorrowHours length:", tomorrowHours.length);
   
   return hourly.filter(h => {
     let ts = h.timestamp;
 
-    // 🛠 normalize timestamp
+    // ✅ normalize each timestamp
     if (typeof ts === "string") ts = new Date(ts).getTime();
-    if (ts < 1e12) ts = ts * 1000; // seconds → ms
+    if (ts < 1e12) ts = ts * 1000;
 
-    const diff = (ts - now) / 36e5;
+    const diff = (ts - base) / 36e5;
 
     return diff >= startHr && diff < endHr;
   });
