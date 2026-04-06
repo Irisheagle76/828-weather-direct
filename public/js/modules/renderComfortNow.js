@@ -118,12 +118,12 @@ export function renderComfortNow(container, current, bestWindow, options = {}) {
   const intel = adaptComfortToIntel(comfort);
   const category = mapScoreToCategory(comfort.score);
 
-  const narrative = assemble(
-    intel,
-    "today",
-    category,
-    comfort.goldilocks
-  );
+  const narrative = assemble.assemble(
+  intel,
+  "today",
+  category,
+  comfort.goldilocks
+);
 
   const headline = narrative?.headline || "Comfort conditions";
   const bullets = narrative?.bullets || [];
