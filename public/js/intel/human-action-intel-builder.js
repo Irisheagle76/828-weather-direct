@@ -305,23 +305,28 @@ function buildEmptyIntel() {
 function computeTomorrowStats(hours) {
   if (!hours?.length) {
     return {
-      avgTemp: null,
-      maxTemp: null,
-      minTemp: null,
-      avgWind: null,
-      totalPrecip: 0
+      high: null,
+      low: null,
+      dewPoint: null,
+      wind: null,
+      gust: null,
+      precipProb: 0
     };
   }
 
   const temps = hours.map(h => h.temperatureF).filter(v => v != null);
+  const dew = hours.map(h => h.dewpointF).filter(v => v != null);
   const winds = hours.map(h => h.wind_speed).filter(v => v != null);
+  const gusts = hours.map(h => h.wind_gust).filter(v => v != null);
+  const precipProb = hours.map(h => h.precip_probability ?? 0);
 
   return {
-    avgTemp: avg(temps),
-    maxTemp: max(temps),
-    minTemp: min(temps),
-    avgWind: avg(winds),
-    totalPrecip: hours.reduce((a, h) => a + (h.precipitation ?? 0), 0)
+    high: max(temps),
+    low: min(temps),
+    dewPoint: avg(dew),
+    wind: avg(winds),
+    gust: max(gusts),
+    precipProb: max(precipProb)
   };
 }
 
