@@ -113,12 +113,45 @@ const trailScore = trail.score;
 
 const diff = Math.round((trailScore - downtownScore) * 10);
 
+function getWhyMessage(trail, downtown) {
+  const reasons = [];
+
+  // Dew point / humidity (most important)
+  if (trail.dewPoint < downtown.dewPoint - 2) {
+    reasons.push("less humid");
+  } else if (trail.dewPoint > downtown.dewPoint + 2) {
+    reasons.push("more humid");
+  }
+
+  // Wind
+  if (trail.windSpeed > downtown.windSpeed + 2) {
+    reasons.push("more breeze");
+  } else if (trail.windSpeed < downtown.windSpeed - 2) {
+    reasons.push("calmer wind");
+  }
+
+  // Temperature
+  if (trail.temp < downtown.temp - 2) {
+    reasons.push("cooler air");
+  } else if (trail.temp > downtown.temp + 2) {
+    reasons.push("warmer air");
+  }
+
+  return reasons.slice(0, 2).join(" and ");
+}
+
+const why = getWhyMessage(trail, downtown);
+
 let modeNote = "";
 
 if (diff >= 2) {
-  modeNote = "🌲 Trails feel better right now";
+  modeNote = why
+    ? `🌲 Trails feel better — ${why}`
+    : "🌲 Trails feel better right now";
 } else if (diff <= -2) {
-  modeNote = "🏙 Downtown feels better right now";
+  modeNote = why
+    ? `🏙 Downtown feels better — ${why}`
+    : "🏙 Downtown feels better right now";
 } else {
   modeNote = "⚖️ Conditions are similar across locations";
 }
@@ -182,6 +215,7 @@ if (diff >= 2) {
 
        <div class="comfort-mode-note">
   ${modeNote}
+  <span class="mode-info" title="Trail = cooler, breezier, more exposed conditions. Downtown = warmer, more sheltered.">ⓘ</span>
 </div>
         </div>
       </div>

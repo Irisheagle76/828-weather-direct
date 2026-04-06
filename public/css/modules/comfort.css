@@ -502,3 +502,10 @@
   background: rgba(255,255,255,0.18);
   border-color: rgba(255,255,255,0.25);
 }
+
+.mode-info {
+  margin-left: 6px;
+  font-size: 0.7rem;
+  opacity: 0.6;
+  cursor: help;
+}
