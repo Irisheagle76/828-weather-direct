@@ -336,3 +336,41 @@ function buildSummaryNotes(dominant, secondary, confidence) {
 
   return bullets.slice(0, 3);
 }
+
+// ------------------------------------------------------------
+// FALLBACK: TOMORROW STATS
+// ------------------------------------------------------------
+function computeTomorrowStats(hours) {
+  if (!Array.isArray(hours) || !hours.length) {
+    return {
+      avgTemp: null,
+      maxTemp: null,
+      minTemp: null,
+      avgWind: null,
+      totalPrecip: 0
+    };
+  }
+
+  let temps = [];
+  let winds = [];
+  let precip = 0;
+
+  for (const h of hours) {
+    if (h.temperatureF != null) temps.push(h.temperatureF);
+    if (h.wind_speed != null) winds.push(h.wind_speed);
+    if (h.precipitation != null) precip += h.precipitation;
+  }
+
+  return {
+    avgTemp: avg(temps),
+    maxTemp: max(temps),
+    minTemp: min(temps),
+    avgWind: avg(winds),
+    totalPrecip: precip
+  };
+}
+
+// helpers
+const avg = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null;
+const max = arr => arr.length ? Math.max(...arr) : null;
+const min = arr => arr.length ? Math.min(...arr) : null;
