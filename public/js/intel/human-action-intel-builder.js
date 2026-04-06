@@ -80,6 +80,9 @@ export function buildHumanActionIntel(raw) {
 const tomorrowHours = sliceByHoursAhead(hourly, 24, 48);
 
 console.log("🟡 tomorrowHours length:", tomorrowHours.length);
+console.log("🟠 hourly length:", hourly.length);
+console.log("🟠 first hour:", new Date(hourly[0]?.timestamp));
+console.log("🟠 last hour:", new Date(hourly.at(-1)?.timestamp));
 
 const tomorrowSnapshot = blendHours(tomorrowHours);
 
