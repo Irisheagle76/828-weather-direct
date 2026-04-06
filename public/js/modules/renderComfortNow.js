@@ -162,14 +162,14 @@ export function renderComfortNow(container, current, bestWindow, options = {}) {
 
           <div class="comfort-text">${headline}</div>
 
-          ${
-            modeNote
-              ? `<div class="comfort-mode-note ${modeClass}">
-                  <span class="mode-arrow">${modeArrow}</span>
-                  ${modeNote}
-                </div>`
-              : ""
-          }
+        ${
+  (modeNote || true)
+    ? `<div class="comfort-mode-note ${modeClass || ""}">
+        <span class="mode-arrow">${modeArrow || ""}</span>
+        ${modeNote || "🏙 Downtown 🌲 Trail"}
+      </div>`
+    : ""
+}
         </div>
       </div>
 
