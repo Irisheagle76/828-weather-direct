@@ -6,7 +6,7 @@
 
 import { fetchAllIntel } from "./weather-fetch.js";
 import { normalizeOpenMeteo } from "./intel/normalize-hourly.js";
-import { calculateComfort } from "../intel/comfort.js";
+import { calculateComfort } from "./intel/comfort.js";
 
 import { buildHumanActionIntel } from "./intel/human-action-intel-builder.js?v=5";
 import { generateNarrative } from "./intel/synthesizer/index.js";
