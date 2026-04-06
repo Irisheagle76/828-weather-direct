@@ -15,60 +15,62 @@ export function normalizeOpenMeteo(hourly) {
   // ============================================================
   // ✅ CASE 1: ARRAY INPUT (already object-based)
   // ============================================================
-  if (Array.isArray(hourly)) {
-    return hourly
-      .map(h => {
-        const ts = new Date(h.time).getTime();
+if (Array.isArray(hourly)) {
+  return hourly
+    .map(h => {
+      const ts =
+        h.timestamp ??
+        (h.time ? new Date(h.time).getTime() : null);
 
-        return {
-          // Temps
-          temperature: h.temperature ?? null,
-          dewpoint: h.dewpoint ?? null,
-          apparent_temperature: h.apparent_temperature ?? null,
+      return {
+        // Temps
+        temperature: h.temperature ?? null,
+        dewpoint: h.dewpoint ?? null,
+        apparent_temperature: h.apparent_temperature ?? null,
 
-          temperatureF: h.temperatureF ?? h.temperature ?? null,
-          dewpointF: h.dewpointF ?? null,
-          apparentF: h.apparentF ?? null,
+        temperatureF: h.temperatureF ?? h.temperature ?? null,
+        dewpointF: h.dewpointF ?? null,
+        apparentF: h.apparentF ?? null,
 
-          // Atmosphere
-          relative_humidity: h.relative_humidity ?? null,
+        // Atmosphere
+        relative_humidity: h.relative_humidity ?? null,
 
-          // Wind
-          wind_speed: h.wind_speed ?? h.wind ?? 0,
-          wind_gust: h.wind_gust ?? 0,
-          wind_dir: h.wind_dir ?? null,
+        // Wind
+        wind_speed: h.wind_speed ?? h.wind ?? 0,
+        wind_gust: h.wind_gust ?? 0,
+        wind_dir: h.wind_dir ?? null,
 
-          // Precip
-          precipitation: h.precipitation ?? 0,
-          snowfall: h.snowfall ?? 0,
-          precipType:
-            h.precipType ??
-            (h.snowfall > 0
-              ? "snow"
-              : h.precipitation > 0
-              ? "rain"
-              : "none"),
+        // Precip
+        precipitation: h.precipitation ?? 0,
+        snowfall: h.snowfall ?? 0,
+        precipType:
+          h.precipType ??
+          (h.snowfall > 0
+            ? "snow"
+            : h.precipitation > 0
+            ? "rain"
+            : "none"),
 
-          // Environment
-          uv_index: h.uv_index ?? 0,
-          visibility: h.visibility ?? null,
-          cloud_cover: h.cloud_cover ?? null,
+        // Environment
+        uv_index: h.uv_index ?? 0,
+        visibility: h.visibility ?? null,
+        cloud_cover: h.cloud_cover ?? null,
 
-          // Risks (pass-through if present)
-          smoke_index: h.smoke_index ?? 0,
-          frost_risk: h.frost_risk ?? 0,
-          freeze_risk: h.freeze_risk ?? 0,
-          black_ice_risk: h.black_ice_risk ?? 0,
-          inversion_risk: h.inversion_risk ?? 0,
-          valley_fog_risk: h.valley_fog_risk ?? 0,
-          ridge_fog_risk: h.ridge_fog_risk ?? 0,
+        // Risks
+        smoke_index: h.smoke_index ?? 0,
+        frost_risk: h.frost_risk ?? 0,
+        freeze_risk: h.freeze_risk ?? 0,
+        black_ice_risk: h.black_ice_risk ?? 0,
+        inversion_risk: h.inversion_risk ?? 0,
+        valley_fog_risk: h.valley_fog_risk ?? 0,
+        ridge_fog_risk: h.ridge_fog_risk ?? 0,
 
-          // Time
-          timestamp: Number.isFinite(ts) ? ts : Date.now()
-        };
-      })
-      .filter(h => h.timestamp && h.temperatureF != null);
-  }
+        // ✅ FIXED
+        timestamp: Number.isFinite(ts) ? ts : null
+      };
+    })
+    .filter(h => h.timestamp && h.temperatureF != null);
+}
 
   // ============================================================
   // ❌ INVALID INPUT
