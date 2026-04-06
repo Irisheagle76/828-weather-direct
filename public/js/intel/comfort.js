@@ -155,14 +155,28 @@ export function getComfortColor(score) {
 // ============================================================
 
 export function computeComfort(intel) {
-  const src = intel?.tempest ?? intel?.wu ?? {};
+ const src =
+  intel?.tempest ??
+  intel?.wu ??
+  intel ?? {};   // 🔥 THIS IS THE FIX
 
   // ---------------------------
   // INPUT NORMALIZATION
   // ---------------------------
-  const temp = num(src.temp);
-  const dew = num(src.dewPoint) ?? (temp != null ? temp - 18 : null);
-  const wind = num(src.windSpeed) ?? 0;
+ const temp =
+  num(src.temp) ??
+  num(src.temperatureF);
+
+const dew =
+  num(src.dewPoint) ??
+  num(src.dewpointF) ??
+  (temp != null ? temp - 18 : null);
+
+const wind =
+  num(src.windSpeed) ??
+  num(src.wind_speed) ??
+  0;
+  
   const timestamp = normalizeTimestamp(src.obsTimeLocal);
 
   const elev = computeSolarElevation(timestamp, LOCATION.lat, LOCATION.lon);
