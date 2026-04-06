@@ -452,3 +452,35 @@
   font-size: 13px;
   opacity: 0.85;
 }
+/* HEADER CONTAINER */
+.next6-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 8px;
+}
+
+/* SMALL LABEL (matches comfort-label but softer) */
+.next6-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  color: rgba(200, 211, 255, 0.55); /* softer than comfort-label */
+}
+
+/* MAIN TEXT (matches comfort-text but toned down) */
+.next6-text {
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.2;
+
+  color: #e6ecff; /* slightly dimmer than pure white */
+}
+
+/* "from 3 PM" part */
+.next6-from {
+  font-weight: 400;
+  opacity: 0.7;
+  margin-left: 4px;
+}

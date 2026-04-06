@@ -13,10 +13,13 @@ export function renderFutureComfort(container, items, trend) {
   container.innerHTML = `
     <div class="comfort-module next6-module">
 
-      <!-- HEADER -->
-      <div class="next6-header">
-        ${headerText}
-      </div>
+    <div class="next6-header">
+  <div class="next6-label">NEXT 6 HOURS</div>
+  <div class="next6-text">
+    🏙 Downtown 🌲 Trail
+    ${startLabel ? `<span class="next6-from">• from ${startLabel}</span>` : ""}
+  </div>
+</div>
 
       <!-- TREND -->
       <button class="next6-trend-chip ${safeTrend}">
