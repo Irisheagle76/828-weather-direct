@@ -249,17 +249,71 @@ function aggregateHumanAction(evals) {
   const avgConfidence =
     evals.reduce((a, e) => a + e.confidence, 0) / evals.length;
 
-  const representative = evals
-    .filter(e => e.dominantFactor === dominant)
-    .sort((a, b) => b.confidence - a.confidence)[0];
+// ------------------------------------------------------------
+// BUILD SUMMARY NOTES (aligned with aggregation)
+// ------------------------------------------------------------
+function buildSummaryNotes(dominant, secondary, confidence) {
+  const bullets = [];
 
-  return {
-    dominantFactor: dominant,
-    confidence: avgConfidence,
-    secondaryFactors: secondary,
-    notes: representative?.notes || "Conditions vary."
-  };
+  switch (dominant) {
+    case "rain":
+      bullets.push("Rain plays a consistent role through the period.");
+      break;
+    case "wind":
+      bullets.push("Wind is a steady influence on how it feels.");
+      break;
+    case "heat":
+      bullets.push("Warm conditions shape the overall feel.");
+      break;
+    case "cold":
+      bullets.push("Cool conditions dominate much of the period.");
+      break;
+    case "muggy":
+      bullets.push("Moisture in the air adds a heavier feel.");
+      break;
+    case "fog":
+      bullets.push("Reduced visibility is a recurring factor.");
+      break;
+    default:
+      bullets.push("Multiple subtle factors shape the overall feel.");
+  }
+
+  if (secondary.includes("wind")) {
+    bullets.push("Breezes add some variability at times.");
+  }
+
+  if (secondary.includes("rain")) {
+    bullets.push("Periods of precipitation mix into the pattern.");
+  }
+
+  if (secondary.includes("muggy")) {
+    bullets.push("Humidity occasionally adds a touch of heaviness.");
+  }
+
+  if (secondary.includes("cold")) {
+    bullets.push("Cool undertones appear at times.");
+  }
+
+  if (secondary.includes("heat")) {
+    bullets.push("Warmer moments develop intermittently.");
+  }
+
+  if (confidence < 0.4) {
+    bullets.push("Conditions shift rather than staying consistent.");
+  }
+
+  return bullets.slice(0, 3);
 }
+
+// ------------------------------------------------------------
+// RETURN (aligned output)
+// ------------------------------------------------------------
+return {
+  dominantFactor: dominant,
+  confidence: avgConfidence,
+  secondaryFactors: secondary,
+  notes: buildSummaryNotes(dominant, secondary, avgConfidence)
+};
 
 // ------------------------------------------------------------
 // TOMORROW STATS (UNCHANGED)
@@ -284,4 +338,5 @@ function computeTomorrowStats(hours) {
     coldStart: Math.min(...temps) <= 40,
     windImpact: Math.max(...gusts) >= 30
   };
+}
 }

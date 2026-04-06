@@ -1,5 +1,6 @@
 // ============================================================
-// NORMALIZE OPEN-METEO HOURLY PAYLOAD INTO CANONICAL FORMAT
+// NORMALIZE OPEN-METEO HOURLY PAYLOAD INTO CANONICAL FORMAT (v2)
+// Fully aligned with Human Action Engine
 // ============================================================
 
 export function normalizeOpenMeteo(hourly) {
@@ -30,6 +31,7 @@ export function normalizeOpenMeteo(hourly) {
     };
 
     const toMiles = m => (m != null ? m / 1609.34 : null);
+
     const normalizeCloud = c =>
       c != null ? (c > 1 ? c / 100 : c) : null;
 
@@ -38,8 +40,17 @@ export function normalizeOpenMeteo(hourly) {
       return Number.isFinite(ts) ? ts : Date.now();
     };
 
+    const fToC = f => (f != null ? ((f - 32) * 5) / 9 : null);
+
     // ------------------------------------------------------------
-    // CORE METEOROLOGICAL FIELDS
+    // TIMESTAMP (FIRST — used downstream)
+    // ------------------------------------------------------------
+    const ts = toTimestamp(hourly.time[i]);
+    const hour = new Date(ts).getHours();
+    const isNight = hour >= 18 || hour <= 6;
+
+    // ------------------------------------------------------------
+    // CORE METEOROLOGY
     // ------------------------------------------------------------
     const tempF = num(pick("temperature_2m"));
     const dewpointF = num(pick("dewpoint_2m"));
@@ -48,39 +59,46 @@ export function normalizeOpenMeteo(hourly) {
     const apparentF_raw = num(pick("apparent_temperature"));
     const apparentF = apparentF_raw ?? tempF;
 
-    // Convert to Celsius for internal logic
-    const tempC = tempF != null ? fToC(tempF) : null;
-    const dewC = dewpointF != null ? fToC(dewpointF) : null;
-    const apparentC = apparentF != null ? fToC(apparentF) : null;
+    const tempC = fToC(tempF);
+    const dewC = fToC(dewpointF);
+    const apparentC = fToC(apparentF);
 
     // ------------------------------------------------------------
-    // WIND (already mph from backend)
+    // WIND (SAFE DEFAULTS)
     // ------------------------------------------------------------
-    const windSpeed = num(pick("wind_speed_10m", "windspeed_10m"));
-    const windGust = num(pick("wind_gusts_10m", "windgusts_10m"));
+    const windSpeed = num(pick("wind_speed_10m", "windspeed_10m")) ?? 0;
+    const windGust = num(pick("wind_gusts_10m", "windgusts_10m")) ?? 0;
     const windDir = num(pick("winddirection_10m", "wind_dir"));
 
     // ------------------------------------------------------------
-    // PRECIP / CLOUD / VISIBILITY / UV
+    // PRECIP
     // ------------------------------------------------------------
-    const precip = num(pick("precipitation"));
-    const snow = num(pick("snowfall"));
-    const uv = num(pick("uv_index"));
+    const precip = num(pick("precipitation")) ?? 0;
+    const snow = num(pick("snowfall")) ?? 0;
 
+    let precipType = "none";
+    if (snow > 0) precipType = "snow";
+    else if (precip > 0) precipType = "rain";
+
+    // ------------------------------------------------------------
+    // UV (SUPPRESS AT NIGHT)
+    // ------------------------------------------------------------
+    const uvRaw = num(pick("uv_index"));
+    const uv = isNight ? 0 : uvRaw;
+
+    // ------------------------------------------------------------
+    // CLOUD / VISIBILITY
+    // ------------------------------------------------------------
     const cloud = normalizeCloud(num(pick("cloudcover")));
+
     const visibilityRaw = num(pick("visibility"));
     const visibility =
-      visibilityRaw != null && visibilityRaw > 100
-        ? toMiles(visibilityRaw)
-        : visibilityRaw;
+      visibilityRaw != null
+        ? (visibilityRaw > 1000 ? toMiles(visibilityRaw) : visibilityRaw)
+        : null;
 
     // ------------------------------------------------------------
-    // TIMESTAMP (CRITICAL FOR ALL DOWNSTREAM LOGIC)
-    // ------------------------------------------------------------
-    const ts = toTimestamp(hourly.time[i]);
-
-    // ------------------------------------------------------------
-    // RISK INDICES (UNCHANGED LOGIC, CLEANED STRUCTURE)
+    // RISK INDICES (UNCHANGED LOGIC, CLEANED INPUTS)
     // ------------------------------------------------------------
     const frostRisk =
       tempC != null && dewC != null && tempC <= 37 && dewC <= 36
@@ -97,15 +115,14 @@ export function normalizeOpenMeteo(hourly) {
         : 0;
 
     const blackIceRisk =
-      tempC != null && tempC <= 32 && (precip ?? 0) > 0 ? 1 : 0;
+      tempC != null && tempC <= 32 && precip > 0 ? 1 : 0;
 
     const inversionRisk =
-      tempC != null && tempC <= 40 && (windSpeed ?? 0) < 3 ? 0.5 : 0;
+      tempC != null && tempC <= 40 && windSpeed < 3 ? 0.5 : 0;
 
     const valleyFogRisk =
       humidity != null &&
       humidity >= 95 &&
-      windSpeed != null &&
       windSpeed < 3
         ? 0.6
         : 0;
@@ -113,36 +130,35 @@ export function normalizeOpenMeteo(hourly) {
     const ridgeFogRisk =
       humidity != null &&
       humidity >= 98 &&
-      windSpeed != null &&
       windSpeed < 5
         ? 0.5
         : 0;
 
     // ------------------------------------------------------------
-    // OUTPUT OBJECT (UNCHANGED STRUCTURE)
+    // OUTPUT (ENGINE-READY SHAPE)
     // ------------------------------------------------------------
     out.push({
-      // Celsius (internal logic)
+      // Celsius (internal)
       temperature: tempC,
       dewpoint: dewC,
       apparent_temperature: apparentC,
 
-      // Fahrenheit (UI / comfort engine)
+      // Fahrenheit (engine expects these)
       temperatureF: tempF,
       dewpointF,
       apparentF,
 
-      // Humidity
+      // Core atmosphere
       relative_humidity: humidity,
 
-      // Wind
       wind_speed: windSpeed,
       wind_gust: windGust,
       wind_dir: windDir,
 
-      // Atmospherics
       precipitation: precip,
       snowfall: snow,
+      precipType, // 🔥 CRITICAL FIX
+
       uv_index: uv,
       visibility,
       cloud_cover: cloud,
@@ -156,21 +172,10 @@ export function normalizeOpenMeteo(hourly) {
       valley_fog_risk: valleyFogRisk,
       ridge_fog_risk: ridgeFogRisk,
 
-      // Timestamp (ms, guaranteed valid)
+      // Time
       timestamp: ts
     });
   }
 
   return out;
-}
-
-// ------------------------------------------------------------
-// UNIT HELPERS
-// ------------------------------------------------------------
-function fToC(f) {
-  return ((f - 32) * 5) / 9;
-}
-
-function cToF(c) {
-  return (c * 9) / 5 + 32;
 }

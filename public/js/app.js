@@ -1,9 +1,9 @@
-// /js/app.js
 // ============================================================
-// APP ENTRY — ENHANCED (MODE-AWARE + FAST RE-RENDER)
+// APP ENTRY — v5 (STABLE + CONTRACT-CLEAN)
+// Clear separation: fetch → cache → render
 // ============================================================
 
-console.log("APP.JS LOADED — ENHANCED BUILD v4");
+console.log("APP.JS LOADED — v5 CLEAN");
 
 // ------------------------------------------------------------
 // IMPORTS
@@ -35,10 +35,10 @@ let currentLocation = {
 
 let refreshTimer = null;
 
-// 🔥 NEW: cache last weather data for instant UI updates
-let lastWeatherPayload = null;
+// 🔥 CACHE: always store FINAL PAYLOAD ONLY
+let lastWeatherData = null;
 
-// 🔥 NEW: global mode (synced with index.html toggle)
+// 🔥 GLOBAL MODE
 window.APP_STATE = window.APP_STATE || {
   mode: "downtown"
 };
@@ -56,8 +56,13 @@ function showError(msg) {
   el.textContent = msg;
 }
 
+function clearError() {
+  const el = document.getElementById("wu-error");
+  if (el) el.style.display = "none";
+}
+
 // ------------------------------------------------------------
-// LOADING STATE
+// LOADING / READY STATES
 // ------------------------------------------------------------
 function setLoadingState() {
   const label = document.getElementById("wu-status-label");
@@ -75,10 +80,9 @@ function setLoadingState() {
   if (obs) obs.innerHTML = "Loading observations…";
 }
 
-// ------------------------------------------------------------
-// READY STATE
-// ------------------------------------------------------------
 function setReadyState() {
+  clearError();
+
   const label = document.getElementById("wu-status-label");
   const text = document.getElementById("wu-status-text");
 
@@ -94,22 +98,27 @@ function setReadyState() {
 }
 
 // ------------------------------------------------------------
-// CORE RENDER (FETCH + DRAW)
+// CORE: FETCH + RENDER
 // ------------------------------------------------------------
 async function runRender() {
   try {
-    console.log("RENDER START", currentLocation);
+    console.log("RENDER START", currentLocation, window.APP_STATE.mode);
+
+    setLoadingState();
 
     const payload = await renderWeather({
       lat: currentLocation.lat,
       lon: currentLocation.lon,
       tempestStationId: CONFIG.TEMPEST_STATION_ID,
       tempestToken: CONFIG.TEMPEST_TOKEN,
-      mode: window.APP_STATE.mode // 🔥 pass mode through
+      mode: window.APP_STATE.mode
     });
 
-    // 🔥 cache data for instant re-render
-    lastWeatherPayload = payload;
+    // ✅ Store ONLY render-ready payload
+    lastWeatherData = {
+      payload,
+      mode: window.APP_STATE.mode
+    };
 
     setReadyState();
 
@@ -122,23 +131,38 @@ async function runRender() {
 }
 
 // ------------------------------------------------------------
-// 🔥 FAST RE-RENDER (NO FETCH)
+// FAST RE-RENDER (NO FETCH)
 // ------------------------------------------------------------
+let rerenderTimeout = null;
+
 window.updateComfortModules = function () {
-  if (!lastWeatherPayload) {
-    console.warn("No cached weather yet, doing full render");
-    runRender();
-    return;
-  }
+  clearTimeout(rerenderTimeout);
 
-  console.log("FAST RE-RENDER (mode change)");
+  rerenderTimeout = setTimeout(() => {
 
-  // Re-render using cached data
-  renderWeather({
-    ...lastWeatherPayload,
-    mode: window.APP_STATE.mode,
-    skipFetch: true // 🔥 optional flag if you support it
-  });
+    // No cache → full render
+    if (!lastWeatherData?.payload) {
+      console.warn("No cached data — full render fallback");
+      runRender();
+      return;
+    }
+
+    // Mode mismatch → full re-fetch
+    if (lastWeatherData.mode !== window.APP_STATE.mode) {
+      console.log("Mode changed → full render required");
+      runRender();
+      return;
+    }
+
+    console.log("FAST RE-RENDER");
+
+    renderWeather({
+      ...lastWeatherData.payload,
+      mode: window.APP_STATE.mode,
+      skipFetch: true
+    });
+
+  }, 50);
 };
 
 // ------------------------------------------------------------
@@ -148,13 +172,13 @@ function startAutoRefresh() {
   if (refreshTimer) clearInterval(refreshTimer);
 
   refreshTimer = setInterval(() => {
-    console.log("AUTO REFRESH TRIGGERED");
+    console.log("AUTO REFRESH");
     runRender();
   }, CONFIG.REFRESH_INTERVAL);
 }
 
 // ------------------------------------------------------------
-// LOCATION
+// LOCATION RESOLUTION
 // ------------------------------------------------------------
 function resolveLocation() {
   return new Promise((resolve, reject) => {

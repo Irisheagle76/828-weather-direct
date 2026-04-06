@@ -1,207 +1,236 @@
-// assemble.js
 // ============================================================
-// NARRATIVE ASSEMBLER — HA Synthesizer v4
-// Builds the 2–3 sentence narrative using:
-// - temporal framing
-// - category templates
-// - Goldilocks templates
-// - micro-phrases (temp, moisture, wind, light, microclimate, pattern)
-// - medium-length structure
-// - strong diversity (Option C)
+// NARRATIVE ASSEMBLER — v6 (FULLY INTEL-DRIVEN)
 // ============================================================
 
 import { phrases } from "./phrases.js";
 import { categories } from "./categories.js";
 import { temporal } from "./temporal.js";
-import { bulletPools } from "./bullets.js";
-import { emojiPools } from "./emojis.js";
 
+// ------------------------------------------------------------
+// HELPERS
+// ------------------------------------------------------------
+const random = arr => arr[Math.floor(Math.random() * arr.length)];
+
+// ------------------------------------------------------------
+// PHRASE HELPERS (INTEL-DRIVEN)
+// ------------------------------------------------------------
+function pickTempPhrase(intel) {
+  const f = intel.dominantFactor;
+
+  if (f === "cold") return random(phrases.temperature.cold);
+  if (f === "heat") return random(phrases.temperature.hot);
+
+  return random(phrases.temperature.neutral);
+}
+
+function pickMoisturePhrase(intel) {
+  const f = intel.dominantFactor;
+
+  if (f === "muggy") return random(phrases.moisture.muggy);
+  if (f === "humidity") return random(phrases.moisture.humid);
+
+  return random(phrases.moisture.neutral);
+}
+
+function pickWindPhrase(intel) {
+  if (intel.secondaryFactors?.includes("wind")) {
+    return random(phrases.wind.breezy);
+  }
+
+  return random(phrases.wind.calm);
+}
+
+function pickLightPhrase(intel) {
+  const f = intel.dominantFactor;
+
+  if (f === "rain" || f === "fog") {
+    return random(phrases.light.overcast);
+  }
+
+  if (f === "sun") {
+    return random(phrases.light.sunny);
+  }
+
+  return random(phrases.light.filtered);
+}
+
+function pickPatternPhrase(intel) {
+  if (intel.confidence < 0.4) {
+    return random(phrases.pattern.variable);
+  }
+
+  if (intel.confidence > 0.7) {
+    return random(phrases.pattern.stable);
+  }
+
+  return random(phrases.pattern.transitional);
+}
+
+// ------------------------------------------------------------
+// CATEGORY TEMPLATE (tone only)
+// ------------------------------------------------------------
+function getCategoryTemplate(category, isGoldilocks) {
+  if (isGoldilocks) return categories.goldilocks;
+  return categories[category] || categories.comfortable;
+}
+
+// ------------------------------------------------------------
+// EMOJI
+// ------------------------------------------------------------
+function buildEmoji(intel) {
+  switch (intel.dominantFactor) {
+    case "rain": return "🌧️";
+    case "snow": return "❄️";
+    case "wind": return "💨";
+    case "heat": return "🥵";
+    case "cold": return "🥶";
+    case "muggy": return "😓";
+    case "fog": return "🌫️";
+    case "sun": return "😎";
+    default: return "😐";
+  }
+}
+
+// ------------------------------------------------------------
+// HEADLINE
+// ------------------------------------------------------------
+function buildHeadline(intel, category, isGoldilocks) {
+  const base = getCategoryTemplate(category, isGoldilocks);
+  const baseHeadline = random(base.headlines);
+
+  const f = intel.dominantFactor;
+
+  if (f === "rain") return `${baseHeadline} with steady rain`;
+  if (f === "wind") return `${baseHeadline} with noticeable wind`;
+  if (f === "heat") return `${baseHeadline} with building warmth`;
+  if (f === "cold") return `${baseHeadline} with a cool edge`;
+
+  return baseHeadline;
+}
+
+// ------------------------------------------------------------
+// BULLETS
+// ------------------------------------------------------------
+function buildBullets(intel) {
+  const { dominantFactor, secondaryFactors, confidence } = intel;
+
+  const bullets = [];
+
+  // Primary
+  switch (dominantFactor) {
+    case "rain":
+      bullets.push("Rain plays a steady role through the period.");
+      break;
+    case "wind":
+      bullets.push("Wind is a consistent factor affecting comfort.");
+      break;
+    case "heat":
+      bullets.push("Warm temperatures shape the overall feel.");
+      break;
+    case "cold":
+      bullets.push("Cool conditions dominate much of the time.");
+      break;
+    case "muggy":
+      bullets.push("Moisture in the air adds a heavier feel.");
+      break;
+    case "fog":
+      bullets.push("Reduced visibility is a recurring feature.");
+      break;
+    default:
+      bullets.push("Conditions are shaped by multiple subtle factors.");
+  }
+
+  // Secondary
+  if (secondaryFactors?.includes("wind")) {
+    bullets.push("Breezes add variability at times.");
+  }
+
+  if (secondaryFactors?.includes("rain")) {
+    bullets.push("Occasional precipitation mixes in.");
+  }
+
+  if (secondaryFactors?.includes("muggy")) {
+    bullets.push("Humidity adds a slight heaviness at times.");
+  }
+
+  // Variability
+  if (confidence < 0.4) {
+    bullets.push("Conditions shift rather than staying consistent.");
+  }
+
+  return bullets.slice(0, 3);
+}
+
+// ------------------------------------------------------------
+// NARRATIVE
+// ------------------------------------------------------------
+function buildNarrative(intel, dayType, category, isGoldilocks) {
+  const temporalFrame = temporal.choose(dayType, isGoldilocks);
+
+  const tempPhrase = pickTempPhrase(intel);
+  const moisturePhrase = pickMoisturePhrase(intel);
+  const windPhrase = pickWindPhrase(intel);
+  const lightPhrase = pickLightPhrase(intel);
+  const patternPhrase = pickPatternPhrase(intel);
+
+  const f = intel.dominantFactor;
+
+  let driverLine;
+
+  switch (f) {
+    case "rain":
+      driverLine = "Rain is the main driver of how it feels.";
+      break;
+    case "wind":
+      driverLine = "Wind plays a major role in the overall feel.";
+      break;
+    case "heat":
+      driverLine = "Warmth is the defining feature of the period.";
+      break;
+    case "cold":
+      driverLine = "Cool conditions define much of the experience.";
+      break;
+    case "muggy":
+      driverLine = "Humidity shapes the feel of the air.";
+      break;
+    case "fog":
+      driverLine = "Low visibility influences conditions.";
+      break;
+    default:
+      driverLine = "No single factor dominates completely.";
+  }
+
+  const sentence1 = `${temporalFrame} ${tempPhrase} and ${moisturePhrase}.`;
+  const sentence2 = `${driverLine}`;
+  const sentence3 = `${lightPhrase} and ${windPhrase}, with ${patternPhrase}.`;
+
+  return {
+    narrative: `${sentence1} ${sentence2} ${sentence3}`,
+    temporal: temporalFrame
+  };
+}
+
+// ------------------------------------------------------------
+// MASTER
+// ------------------------------------------------------------
 export const assemble = {
-
-  // ------------------------------------------------------------
-  // RANDOM PICKER
-  // ------------------------------------------------------------
-  pick(arr) {
-    return arr[Math.floor(Math.random() * arr.length)];
-  },
-
-  // ------------------------------------------------------------
-  // SELECT CATEGORY TEMPLATE
-  // ------------------------------------------------------------
-  getCategoryTemplate(category, isGoldilocks) {
-    if (isGoldilocks) return categories.goldilocks;
-
-    switch (category) {
-      case "veryComfortable":
-        return categories.veryComfortable;
-      case "comfortable":
-        return categories.comfortable;
-      case "slightlyUncomfortable":
-        return categories.slightlyUncomfortable;
-      case "uncomfortable":
-        return categories.uncomfortable;
-      case "harsh":
-        return categories.harsh;
-      default:
-        return categories.comfortable;
-    }
-  },
-
-  // ------------------------------------------------------------
-  // SELECT EMOJI POOL
-  // ------------------------------------------------------------
-  getEmojiPool(category, isGoldilocks) {
-    if (isGoldilocks) return emojiPools.goldilocks;
-
-    switch (category) {
-      case "veryComfortable":
-        return emojiPools.veryComfortable;
-      case "comfortable":
-        return emojiPools.comfortable;
-      case "slightlyUncomfortable":
-        return emojiPools.slightlyUncomfortable;
-      case "uncomfortable":
-        return emojiPools.uncomfortable;
-      case "harsh":
-        return emojiPools.harsh;
-      default:
-        return emojiPools.comfortable;
-    }
-  },
-
-  // ------------------------------------------------------------
-  // SELECT BULLET POOL
-  // ------------------------------------------------------------
-  getBulletPool(category, isGoldilocks) {
-    if (isGoldilocks) return bulletPools.goldilocks;
-
-    switch (category) {
-      case "veryComfortable":
-        return [
-          ...bulletPools.temperature,
-          ...bulletPools.moisture,
-          ...bulletPools.light,
-          ...bulletPools.microclimate
-        ];
-      case "comfortable":
-        return [
-          ...bulletPools.temperature,
-          ...bulletPools.moisture,
-          ...bulletPools.light,
-          ...bulletPools.pattern
-        ];
-      case "slightlyUncomfortable":
-        return [
-          ...bulletPools.temperature,
-          ...bulletPools.moisture,
-          ...bulletPools.wind,
-          ...bulletPools.light
-        ];
-      case "uncomfortable":
-        return [
-          ...bulletPools.wind,
-          ...bulletPools.moisture,
-          ...bulletPools.temperature
-        ];
-      case "harsh":
-        return [
-          ...bulletPools.wind,
-          ...bulletPools.moisture,
-          ...bulletPools.pattern
-        ];
-      default:
-        return bulletPools.temperature;
-    }
-  },
-
-  // ------------------------------------------------------------
-  // BUILD MAIN NARRATIVE (2–3 sentences)
-  // ------------------------------------------------------------
-  buildNarrative(intel, dayType, category, isGoldilocks) {
-    const template = this.getCategoryTemplate(category, isGoldilocks);
-
-    // 1. Temporal framing
-    const temporalFrame = temporal.choose(dayType, isGoldilocks);
-
-    // 2. Category narrative template
-    const mainTemplate = this.pick(template.narratives);
-
-    // 3. Micro-phrases
-    const tempPhrase = this.pick(phrases.temperature);
-    const moisturePhrase = this.pick(phrases.moisture);
-    const windPhrase = this.pick(phrases.wind);
-    const lightPhrase = this.pick(phrases.light);
-    const microPhrase = this.pick(phrases.microclimate);
-    const patternPhrase = this.pick(phrases.pattern);
-
-    // 4. Build 2–3 sentence structure
-    const sentence1 = `${temporalFrame} ${tempPhrase} and ${moisturePhrase}.`;
-    const sentence2 = `${lightPhrase} and ${windPhrase}, creating ${microPhrase}.`;
-    const sentence3 = `${patternPhrase}.`;
-
-    // Goldilocks uses its own middle template
-    const narrative = isGoldilocks
-      ? `${temporalFrame} ${tempPhrase} and ${moisturePhrase}. ${mainTemplate} ${patternPhrase}.`
-      : `${sentence1} ${sentence2} ${sentence3}`;
-
-    return {
-      temporal: temporalFrame,
-      mainTemplate,
-      narrative
-    };
-  },
-
-  // ------------------------------------------------------------
-  // BUILD BULLETS
-  // ------------------------------------------------------------
-  buildBullets(category, isGoldilocks, count = 3) {
-    const pool = this.getBulletPool(category, isGoldilocks);
-    const shuffled = [...pool].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, count);
-  },
-
-  // ------------------------------------------------------------
-  // BUILD EMOJI
-  // ------------------------------------------------------------
-  buildEmoji(category, isGoldilocks) {
-    const pool = this.getEmojiPool(category, isGoldilocks);
-    return this.pick(pool);
-  },
-
-  // ------------------------------------------------------------
-  // BUILD HEADLINE
-  // ------------------------------------------------------------
-  buildHeadline(category, isGoldilocks) {
-    const template = this.getCategoryTemplate(category, isGoldilocks);
-    return this.pick(template.headlines);
-  },
-
-  // ------------------------------------------------------------
-  // MASTER ASSEMBLER — FIXED FIELD NAMES
-  // ------------------------------------------------------------
   assemble(intel, dayType, category, isGoldilocks) {
-    const narrativeObj = this.buildNarrative(intel, dayType, category, isGoldilocks);
+    const narrativeObj = buildNarrative(intel, dayType, category, isGoldilocks);
 
     return {
-      emoji: this.buildEmoji(category, isGoldilocks),
+      emoji: buildEmoji(intel),
 
-      // FIXED: renderer expects "headline"
-      headline: this.buildHeadline(category, isGoldilocks),
+      headline: buildHeadline(intel, category, isGoldilocks),
 
-      // FIXED: renderer expects "notes"
       notes: narrativeObj.narrative,
 
-      // unchanged
-      bullets: this.buildBullets(category, isGoldilocks),
+      bullets: buildBullets(intel),
 
-      // pass-through metadata
       category,
       goldilocks: isGoldilocks,
-      version: "4.0",
+      version: "6.0",
 
-      // optional debug fields
-      temporal: narrativeObj.temporal,
-      mainTemplate: narrativeObj.mainTemplate
+      temporal: narrativeObj.temporal
     };
   }
 };

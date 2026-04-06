@@ -1,10 +1,9 @@
-// index.js
 // ============================================================
-// SYNTHESIZER ORCHESTRATOR (v4.1)
-// Human‑Action category engine + Goldilocks + narrative assembly
+// SYNTHESIZER ORCHESTRATOR — v5 (INTEL-ALIGNED)
+// Fully aligned with engine → aggregate → assemble pipeline
 // ============================================================
 
-console.log("SYNTHESIZER VERSION: 4.1");
+console.log("SYNTHESIZER VERSION: 5.0");
 
 import { assemble } from "./assemble.js";
 import { contrast } from "./contrast.js";
@@ -14,125 +13,70 @@ import { temporal } from "./temporal.js";
 import { bulletPools } from "./bullets.js";
 
 // ------------------------------------------------------------
-// HUMAN‑ACTION CATEGORY DETECTOR (v2.3)
+// CATEGORY DETECTOR (INTEL-DRIVEN)
 // ------------------------------------------------------------
 function detectCategory(intel) {
-  if (!intel || !intel.snapshot) return "comfortable";
+  if (!intel) return "comfortable";
 
-  const s = intel.snapshot;
+  const f = intel.dominantFactor;
+  const confidence = intel.confidence ?? 0.5;
 
-  const temp = s.temp ?? null;
-  const dew = s.dewPoint ?? null;
-  const humidity = s.humidity ?? null;
-  const wind = s.windSpeed ?? null;
-  const gust = s.windGust ?? null;
-  const precip = s.precipType ?? "";
-  const fogValley = intel.valleyFogRisk ?? false;
-  const fogRidge = intel.ridgeFogRisk ?? false;
-  const smoke = intel.smokeIndex ?? 0;
-  const frost = intel.frostRisk ?? false;
-  const freeze = intel.freezeRisk ?? false;
-  const blackIce = intel.blackIceRisk ?? false;
-
-  // GOLDILOCKS (premium mode)
-  const isGoldilocks =
-    wind < 5 &&
-    humidity < 60 &&
-    dew < 55 &&
-    !precip &&
-    !fogValley &&
-    !fogRidge &&
-    smoke < 20 &&
-    !frost &&
-    !freeze &&
-    !blackIce;
-
-  if (isGoldilocks) return "veryComfortable";
-
-  // HARSH (any impactful hazard)
+  // HARSH — strong hazards or high confidence signal
   if (
-    wind >= 30 ||
-    gust >= 40 ||
-    dew >= 70 ||
-    humidity >= 90 ||
-    precip === "heavy" ||
-    fogRidge ||
-    smoke >= 60 ||
-    frost ||
-    freeze ||
-    blackIce
+    ["blackIce", "freeze", "freezingFog", "snow", "storms"].includes(f) ||
+    confidence > 0.75
   ) {
     return "harsh";
   }
 
-  // UNCOMFORTABLE (clear, persistent stressors)
+  // UNCOMFORTABLE — persistent disruptive factors
   if (
-    wind >= 20 ||
-    dew >= 65 ||
-    humidity >= 80 ||
-    precip === "moderate" ||
-    fogValley ||
-    smoke >= 40
+    ["rain", "coldRain", "warmRain", "mountainWind", "wind"].includes(f)
   ) {
     return "uncomfortable";
   }
 
-  // SLIGHTLY UNCOMFORTABLE (mild stressors)
+  // SLIGHTLY UNCOMFORTABLE — moderate influence
   if (
-    wind >= 10 ||
-    dew >= 60 ||
-    humidity >= 70 ||
-    precip === "light" ||
-    smoke >= 20
+    ["cold", "heat", "humidity", "muggy", "fog"].includes(f)
   ) {
     return "slightlyUncomfortable";
   }
 
-  // COMFORTABLE (default)
+  // VERY COMFORTABLE — pleasant dominant conditions
+  if (f === "sun" && confidence > 0.5) {
+    return "veryComfortable";
+  }
+
   return "comfortable";
 }
 
 // ------------------------------------------------------------
-// GOLDILOCKS DETECTOR (boolean flag)
+// GOLDILOCKS FLAG (DERIVED, NOT DUPLICATED)
 // ------------------------------------------------------------
-function detectGoldilocks(intel) {
-  if (!intel || !intel.snapshot) return false;
-
-  const s = intel.snapshot;
-
-  return (
-    s.windSpeed < 5 &&
-    s.humidity < 60 &&
-    s.dewPoint < 55 &&
-    !s.precipType &&
-    !intel.valleyFogRisk &&
-    !intel.ridgeFogRisk &&
-    (intel.smokeIndex ?? 0) < 20 &&
-    !intel.frostRisk &&
-    !intel.freezeRisk &&
-    !intel.blackIceRisk
-  );
+function isGoldilocks(category) {
+  return category === "veryComfortable";
 }
 
 // ------------------------------------------------------------
-// POOL BUNDLER FOR CONTRAST ENGINE
+// POOL BUNDLER (FOR CONTRAST ENGINE ONLY)
 // ------------------------------------------------------------
-function buildContrastPools(category, isGoldilocks) {
-  const cat = isGoldilocks ? categories.goldilocks : categories[category];
+function buildContrastPools(category, isGoldilocksFlag) {
+  const cat = isGoldilocksFlag ? categories.goldilocks : categories[category];
 
   return {
-    emojiPool: isGoldilocks
+    emojiPool: isGoldilocksFlag
       ? emojiPools.goldilocks
       : emojiPools[category],
 
     headlinePool: cat.headlines,
     narrativePool: cat.narratives,
 
-    temporalPool: isGoldilocks
+    temporalPool: isGoldilocksFlag
       ? [...temporal.goldilocksToday, ...temporal.goldilocksTomorrow]
       : [...temporal.today, ...temporal.tomorrow],
 
-    bulletPool: isGoldilocks
+    bulletPool: isGoldilocksFlag
       ? bulletPools.goldilocks
       : [
           ...bulletPools.temperature,
@@ -149,15 +93,16 @@ function buildContrastPools(category, isGoldilocks) {
 // MASTER GENERATOR
 // ------------------------------------------------------------
 export function generateNarrative(intelToday, intelTomorrow) {
-  // 1. Detect categories (Human‑Action v2.3)
+
+  // 1. CATEGORY (INTEL-DRIVEN)
   const categoryToday = detectCategory(intelToday);
   const categoryTomorrow = detectCategory(intelTomorrow);
 
-  // 2. Detect Goldilocks
-  const goldToday = detectGoldilocks(intelToday);
-  const goldTomorrow = detectGoldilocks(intelTomorrow);
+  // 2. GOLDILOCKS (DERIVED FROM CATEGORY)
+  const goldToday = isGoldilocks(categoryToday);
+  const goldTomorrow = isGoldilocks(categoryTomorrow);
 
-  // 3. Generate raw narratives
+  // 3. BUILD BASE NARRATIVES (FULLY INTEL-DRIVEN)
   const todayRaw = assemble.assemble(
     intelToday,
     "today",
@@ -172,11 +117,11 @@ export function generateNarrative(intelToday, intelTomorrow) {
     goldTomorrow
   );
 
-  // 4. Apply strong contrast rules
+  // 4. APPLY CONTRAST (OPTIONAL LAYER)
   const pools = buildContrastPools(categoryTomorrow, goldTomorrow);
   const tomorrowFinal = contrast.applyContrast(todayRaw, tomorrowRaw, pools);
 
-  // 5. Return final objects
+  // 5. RETURN FINAL OUTPUT
   return {
     today: todayRaw,
     tomorrow: tomorrowFinal
