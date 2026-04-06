@@ -336,38 +336,3 @@ function buildSummaryNotes(dominant, secondary, confidence) {
 
   return bullets.slice(0, 3);
 }
-
-// ------------------------------------------------------------
-// RETURN (aligned output)
-// ------------------------------------------------------------
-return {
-  dominantFactor: dominant,
-  confidence: avgConfidence,
-  secondaryFactors: secondary,
-  notes: buildSummaryNotes(dominant, secondary, avgConfidence)
-};
-
-// ------------------------------------------------------------
-// TOMORROW STATS (UNCHANGED)
-// ------------------------------------------------------------
-function computeTomorrowStats(hours) {
-  if (!hours?.length) return {};
-
-  const temps = hours.map(h => h.temperatureF ?? 0);
-  const gusts = hours.map(h => h.wind_gust ?? 0);
-  const winds = hours.map(h => h.wind_speed ?? 0);
-
-  return {
-    tempMin: Math.min(...temps),
-    tempMax: Math.max(...temps),
-    tempSwing: Math.max(...temps) - Math.min(...temps),
-    windGustMax: Math.max(...gusts),
-    windAvg: winds.reduce((a, b) => a + b, 0) / winds.length,
-    dewpointAvg: hours.reduce((a, h) => a + (h.dewpointF ?? 0), 0) / hours.length,
-    cloudAvg: hours.reduce((a, h) => a + (h.cloud_cover ?? 0), 0) / hours.length,
-    rainTotal: hours.reduce((a, h) => a + (h.precipitation ?? 0), 0),
-    snowTotal: hours.reduce((a, h) => a + (h.snowfall ?? 0), 0),
-    coldStart: Math.min(...temps) <= 40,
-    windImpact: Math.max(...gusts) >= 30
-  };
-}
