@@ -77,8 +77,11 @@ export function buildHumanActionIntel(raw) {
   // ------------------------------------------------------------
   // TOMORROW
   // ------------------------------------------------------------
- const tomorrowHours = sliceByHoursAhead(hourly, 24, 48);
-  const tomorrowSnapshot = blendHours(tomorrowHours);
+const tomorrowHours = sliceByHoursAhead(hourly, 24, 48);
+
+console.log("🟡 tomorrowHours length:", tomorrowHours.length);
+
+const tomorrowSnapshot = blendHours(tomorrowHours);
 
   if (tomorrowSnapshot) {
     tomorrowSnapshot.dayLabel = "tomorrow";
