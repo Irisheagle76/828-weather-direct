@@ -62,12 +62,17 @@ export function buildHumanActionIntel(raw) {
     todaySnapshot.isTomorrow = false;
   }
 
-  const todayIntelRaw = evaluateHumanActionFactors(todaySnapshot) || {};
+  const todayEvaluations = todayHours.map(h =>
+  evaluateHumanActionFactors(h)
+);
 
-  const todayIntel = {
-    ...ensureSynthFields(todayIntelRaw, todaySnapshot),
-    ...todaySnapshot
-  };
+const todayIntelCore = aggregateHumanAction(todayEvaluations);
+
+const todayIntel = {
+  ...ensureSynthFields(todayIntelCore, todaySnapshot),
+  ...todaySnapshot,
+  hourlyEvaluations: todayEvaluations // optional but useful
+};
 
   // ------------------------------------------------------------
   // TOMORROW (24–48 WINDOW)
@@ -83,13 +88,18 @@ export function buildHumanActionIntel(raw) {
 
   const tomorrowStats = computeTomorrowStats(tomorrowHours);
 
-  const tomorrowIntelRaw = evaluateHumanActionFactors(tomorrowSnapshot) || {};
+ const tomorrowEvaluations = tomorrowHours.map(h =>
+  evaluateHumanActionFactors(h)
+);
 
-  const tomorrowIntel = {
-    ...ensureSynthFields(tomorrowIntelRaw, tomorrowSnapshot),
-    ...tomorrowSnapshot,
-    stats: tomorrowStats
-  };
+const tomorrowIntelCore = aggregateHumanAction(tomorrowEvaluations);
+
+const tomorrowIntel = {
+  ...ensureSynthFields(tomorrowIntelCore, tomorrowSnapshot),
+  ...tomorrowSnapshot,
+  stats: tomorrowStats,
+  hourlyEvaluations: tomorrowEvaluations
+};
 
   console.log("🔵 HA BUILDER END");
 
@@ -194,6 +204,60 @@ function blendHoursWithForwardBias(coreHours, extendedHours) {
     valleyFogRisk: mix(core.valleyFogRisk, ext?.valleyFogRisk),
     ridgeFogRisk: mix(core.ridgeFogRisk, ext?.ridgeFogRisk),
     timestamp: core.timestamp
+  };
+}
+
+function aggregateHumanAction(evals) {
+  if (!evals || !evals.length) {
+    return {
+      dominantFactor: "default",
+      confidence: 0.2,
+      secondaryFactors: [],
+      notes: "No strong signal."
+    };
+  }
+
+  const factorStats = {};
+
+  for (const e of evals) {
+    const f = e.dominantFactor;
+
+    if (!factorStats[f]) {
+      factorStats[f] = {
+        count: 0,
+        totalConfidence: 0
+      };
+    }
+
+    factorStats[f].count++;
+    factorStats[f].totalConfidence += e.confidence;
+  }
+
+  const ranked = Object.entries(factorStats)
+    .map(([factor, stats]) => ({
+      factor,
+      score: stats.totalConfidence * stats.count
+    }))
+    .sort((a, b) => b.score - a.score);
+
+  const dominant = ranked[0]?.factor || "default";
+
+  const secondary = ranked
+    .slice(1, 3)
+    .map(r => r.factor);
+
+  const avgConfidence =
+    evals.reduce((a, e) => a + e.confidence, 0) / evals.length;
+
+  const representative = evals
+    .filter(e => e.dominantFactor === dominant)
+    .sort((a, b) => b.confidence - a.confidence)[0];
+
+  return {
+    dominantFactor: dominant,
+    confidence: avgConfidence,
+    secondaryFactors: secondary,
+    notes: representative?.notes || "Conditions vary."
   };
 }
 
