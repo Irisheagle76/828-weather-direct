@@ -120,8 +120,17 @@ const tomorrowSnapshot = blendHours(tomorrowHours);
 function sliceByHoursAhead(hourly, startHr, endHr) {
   const now = Date.now();
 
+  console.log("🟠 sample timestamp:", hourly[0]?.timestamp);
+  
   return hourly.filter(h => {
-    const diff = (h.timestamp - now) / 36e5;
+    let ts = h.timestamp;
+
+    // 🛠 normalize timestamp
+    if (typeof ts === "string") ts = new Date(ts).getTime();
+    if (ts < 1e12) ts = ts * 1000; // seconds → ms
+
+    const diff = (ts - now) / 36e5;
+
     return diff >= startHr && diff < endHr;
   });
 }
