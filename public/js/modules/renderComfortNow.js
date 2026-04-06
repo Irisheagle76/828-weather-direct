@@ -108,7 +108,20 @@ export function renderComfortNow(container, current, bestWindow, options = {}) {
     { isDay }
   );
 
- const modeNote = getModeNoteFromSelection();
+const downtownScore = downtown.score;
+const trailScore = trail.score;
+
+const diff = Math.round((trailScore - downtownScore) * 10);
+
+let modeNote = "";
+
+if (diff >= 2) {
+  modeNote = "🌲 Trails feel better right now";
+} else if (diff <= -2) {
+  modeNote = "🏙 Downtown feels better right now";
+} else {
+  modeNote = "⚖️ Conditions are similar across locations";
+}
 
   // ------------------------------------------------------------
   // SCORE
