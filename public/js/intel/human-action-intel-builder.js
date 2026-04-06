@@ -123,6 +123,29 @@ function sliceByHoursAhead(hourly, startHr, endHr) {
 }
 
 // ------------------------------------------------------------
+// SIGNAL LAYER (🔥 NEW — KEY UPGRADE)
+// ------------------------------------------------------------
+function addSignalFields(intel, snapshot) {
+  if (!snapshot) return intel;
+
+  return {
+    ...intel,
+
+    signals: {
+      temp: snapshot.temp,
+      feelsLike: snapshot.feelsLike,
+      dewPoint: snapshot.dewPoint,
+      humidity: snapshot.humidity,
+      windSpeed: snapshot.windSpeed,
+      windGust: snapshot.windGust,
+      cloudCover: snapshot.cloudCover,
+      visibility: snapshot.visibility,
+      precipIntensity: snapshot.precipIntensity
+    }
+  };
+}
+
+// ------------------------------------------------------------
 // SYNTH SAFETY
 // ------------------------------------------------------------
 function ensureSynthFields(intel, snapshot) {
@@ -207,47 +230,56 @@ function blendHoursWithForwardBias(coreHours, extendedHours) {
   };
 }
 
+// ------------------------------------------------------------
+// AGGREGATION (IMPROVED SECONDARY FILTERING)
+// ------------------------------------------------------------
+
 function aggregateHumanAction(evals) {
   if (!evals || !evals.length) {
     return {
       dominantFactor: "default",
       confidence: 0.2,
-      secondaryFactors: [],
-      notes: "No strong signal."
+      secondaryFactors: []
     };
   }
 
-  const factorStats = {};
+  const stats = {};
 
   for (const e of evals) {
     const f = e.dominantFactor;
 
-    if (!factorStats[f]) {
-      factorStats[f] = {
-        count: 0,
-        totalConfidence: 0
-      };
+    if (!stats[f]) {
+      stats[f] = { count: 0, total: 0 };
     }
 
-    factorStats[f].count++;
-    factorStats[f].totalConfidence += e.confidence;
+    stats[f].count++;
+    stats[f].total += e.confidence;
   }
 
-  const ranked = Object.entries(factorStats)
-    .map(([factor, stats]) => ({
+  const ranked = Object.entries(stats)
+    .map(([factor, s]) => ({
       factor,
-      score: stats.totalConfidence * stats.count
+      score: s.total * s.count
     }))
     .sort((a, b) => b.score - a.score);
 
   const dominant = ranked[0]?.factor || "default";
 
+  // 🔥 smarter secondary selection
   const secondary = ranked
+    .filter(r => r.score > ranked[0].score * 0.25)
     .slice(1, 3)
     .map(r => r.factor);
 
-  const avgConfidence =
+  const confidence =
     evals.reduce((a, e) => a + e.confidence, 0) / evals.length;
+
+  return {
+    dominantFactor: dominant,
+    confidence,
+    secondaryFactors: secondary
+  };
+}
 
 // ------------------------------------------------------------
 // BUILD SUMMARY NOTES (aligned with aggregation)
@@ -338,5 +370,4 @@ function computeTomorrowStats(hours) {
     coldStart: Math.min(...temps) <= 40,
     windImpact: Math.max(...gusts) >= 30
   };
-}
 }

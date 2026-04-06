@@ -1,159 +1,192 @@
 // ============================================================
-// PHRASE SYSTEM — v2 (INTEL-DRIVEN + REGIONALLY TUNED)
-// Asheville-aware + condition-aware selection
+// PHRASE SYSTEM — v3 (REFINED + INTENSITY-AWARE)
+// Asheville-tuned | Composable | Hybrid-engine ready
 // ============================================================
 
 export const phrases = {
 
   // ------------------------------------------------------------
-  // TEMPERATURE
+  // TEMPERATURE (WITH INTENSITY GRADIENT)
   // ------------------------------------------------------------
   temperature: {
     cold: [
-      "a noticeable chill holding in place",
-      "cool air settling into the valleys",
-      "a crisp, cold feel dominating the period",
-      "a lingering chill that doesn’t fully lift"
+      "a sharp chill holding in place",
+      "cold air settling into lower elevations",
+      "a firm, persistent chill through the period",
+      "a biting cold that lingers"
     ],
     cool: [
-      "a light chill early, easing with time",
+      "a light chill early on",
       "cool, steady air across the region",
-      "a mild but distinctly cool setup"
+      "a mild but distinctly cool setup",
+      "a cooler edge that holds in spots"
     ],
     neutral: [
-      "a balanced, comfortable temperature profile",
-      "a steady and moderate feel overall",
-      "a clean, even band of temperatures"
+      "a balanced temperature profile",
+      "a steady, moderate feel overall",
+      "an even band of temperatures",
+      "temperatures holding in a comfortable range"
     ],
     warm: [
-      "a gentle warmth building through the period",
-      "a modest warm edge developing later",
-      "a steady, comfortable warmth in place"
+      "a gentle warmth building",
+      "a modest warm edge developing",
+      "steady warmth settling in",
+      "temperatures trending comfortably warm"
     ],
     hot: [
-      "heat becoming a defining feature",
-      "a strong warmth that builds through the day",
-      "temperatures pushing into a noticeably hot range"
+      "heat becoming more pronounced",
+      "a strong warmth building through the day",
+      "temperatures pushing into a hot range",
+      "heat settling in with more intensity"
     ]
   },
 
   // ------------------------------------------------------------
-  // MOISTURE / HUMIDITY
+  // MOISTURE / HUMIDITY (GRADIENT ADDED)
   // ------------------------------------------------------------
   moisture: {
     dry: [
-      "dry air keeps the feel crisp and clean",
-      "low moisture maintains a comfortable edge",
-      "a clean, continental air mass dominates"
+      "dry air in place",
+      "low moisture keeping things crisp",
+      "a clean, dry feel to the air",
+      "dry conditions holding steady"
     ],
     neutral: [
-      "moisture stays in a manageable range",
-      "humidity remains balanced and unobtrusive",
-      "air feels steady and well-regulated"
+      "moisture staying in a manageable range",
+      "humidity remaining balanced",
+      "air feeling steady and controlled",
+      "a neutral moisture profile overall"
     ],
     humid: [
-      "humidity adds a slight heaviness",
-      "moisture builds subtly through the period",
-      "a noticeable uptick in humidity develops"
+      "humidity becoming noticeable",
+      "moisture building slightly",
+      "a subtle heaviness developing",
+      "humidity creeping in through the period"
     ],
     muggy: [
-      "thick moisture creates a heavier feel",
-      "humid air lingers and adds weight",
-      "a muggy layer settles into the region"
+      "thick moisture creating a heavier feel",
+      "humid air lingering and adding weight",
+      "a muggy layer settling in",
+      "a dense, moisture-rich feel taking hold"
     ]
   },
 
   // ------------------------------------------------------------
-  // WIND
+  // WIND (BETTER SCALING)
   // ------------------------------------------------------------
   wind: {
     calm: [
-      "winds stay light and unobtrusive",
-      "a mostly calm air pattern holds",
-      "little movement in the air overall"
+      "winds staying light and unobtrusive",
+      "a mostly calm air pattern",
+      "little movement in the air",
+      "minimal wind overall"
     ],
     breezy: [
-      "a steady breeze adds a touch of movement",
-      "light winds move through without disruption",
-      "a gentle flow keeps things from feeling stagnant"
+      "a light breeze adding gentle movement",
+      "subtle airflow keeping things from feeling still",
+      "a steady but mild breeze",
+      "light winds moving through at times"
     ],
     windy: [
-      "winds play a noticeable role at times",
-      "a more active wind pattern develops",
-      "gusts add variability through the period"
+      "winds becoming more noticeable",
+      "a more active wind pattern developing",
+      "consistent movement in the air",
+      "winds adding a persistent presence"
     ],
     gusty: [
-      "strong gusts become a defining factor",
-      "wind surges at times with sharper bursts",
-      "a pushy wind pattern shapes the experience"
+      "strong gusts shaping the experience",
+      "wind surging at times with sharper bursts",
+      "a pushy, uneven wind pattern",
+      "gusts creating brief spikes in intensity"
     ]
   },
 
   // ------------------------------------------------------------
-  // LIGHT / SKY
+  // LIGHT / SKY (MORE VARIETY)
   // ------------------------------------------------------------
   light: {
     sunny: [
-      "bright conditions dominate much of the period",
-      "sunlight breaks through cleanly at times",
-      "a mostly open sky drives the feel"
+      "bright conditions dominating",
+      "sun breaking through cleanly at times",
+      "a mostly open sky driving the feel",
+      "sunlight holding strong through much of the period"
     ],
     filtered: [
-      "filtered light softens the overall feel",
-      "a mix of sun and thin cloud moderates things",
-      "light remains soft and diffused"
+      "filtered light softening the overall feel",
+      "a mix of sun and thin cloud moderating things",
+      "light staying soft and diffused",
+      "sun breaking through at times without fully taking over"
     ],
     overcast: [
-      "cloud cover keeps things muted",
-      "a flatter sky reduces contrast and warmth",
-      "overcast conditions hold steady"
+      "cloud cover keeping things muted",
+      "a flatter sky reducing contrast",
+      "overcast conditions holding steady",
+      "a uniform gray layer limiting brightness"
     ]
   },
 
   // ------------------------------------------------------------
-  // MICROCLIMATE (REGIONAL CHARACTER)
+  // MICROCLIMATE (ALREADY STRONG — SLIGHTLY EXPANDED)
   // ------------------------------------------------------------
   microclimate: {
     stable: [
-      "conditions stay fairly consistent from valley to ridge",
-      "a stable setup holds across elevations",
-      "little variation across terrain"
+      "conditions staying fairly consistent from valley to ridge",
+      "a stable setup across elevations",
+      "little variation across terrain",
+      "elevation differences remaining minimal"
     ],
     mixed: [
-      "subtle elevation differences show up at times",
-      "valley and ridge conditions drift slightly apart",
-      "terrain introduces small variations"
+      "subtle elevation differences showing up",
+      "valley and ridge conditions drifting apart at times",
+      "terrain introducing small variations",
+      "conditions varying slightly with elevation"
     ],
     valley: [
-      "cooler air lingers in lower spots",
-      "valley pockets hold onto cooler conditions",
-      "low areas retain a slightly heavier feel"
+      "cooler air lingering in lower spots",
+      "valley pockets holding onto heavier air",
+      "low areas retaining a slightly cooler feel",
+      "sheltered areas holding onto denser air"
     ],
     ridge: [
-      "ridge-top mixing keeps things more open",
-      "higher elevations stay a touch more exposed",
-      "ridgetops feel slightly more active"
+      "ridge-top mixing keeping things more open",
+      "higher elevations staying more exposed",
+      "ridgetops feeling a bit more active",
+      "elevated areas seeing more movement"
     ]
   },
 
   // ------------------------------------------------------------
-  // PATTERN / OVERALL FEEL
+  // PATTERN / OVERALL FEEL (MORE HUMAN)
   // ------------------------------------------------------------
   pattern: {
     stable: [
-      "a quiet, stable pattern dominates",
-      "conditions remain steady without major shifts",
-      "a predictable stretch overall"
+      "a quiet, stable pattern",
+      "conditions holding steady without major shifts",
+      "a predictable stretch overall",
+      "little overall change through the period"
     ],
     variable: [
-      "conditions shift subtly over time",
-      "a slightly unsettled pattern develops",
-      "variability keeps things from locking in"
+      "conditions shifting subtly over time",
+      "a slightly unsettled pattern developing",
+      "variability keeping things from locking in",
+      "the feel changing in small but noticeable ways"
     ],
     transitional: [
-      "a gradual shift in the pattern begins",
-      "conditions evolve through the period",
-      "a transition unfolds without sharp changes"
+      "a gradual shift unfolding",
+      "conditions evolving through the period",
+      "a transition taking shape without sharp swings",
+      "changes developing steadily over time"
     ]
-  }
+  },
+
+  // ------------------------------------------------------------
+  // EDGE / VARIABILITY (NEW — HIGH VALUE)
+  // ------------------------------------------------------------
+  edges: [
+    "brief spikes in discomfort show up at times",
+    "conditions shift quickly in spots",
+    "short-lived changes add to the uneven feel",
+    "occasional swings break up otherwise steady conditions",
+    "momentary changes create a less consistent feel"
+  ]
 };

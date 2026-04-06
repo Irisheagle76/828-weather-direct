@@ -1,138 +1,137 @@
 // categories.js
 // ============================================================
-// CATEGORY-BASED NARRATIVE TEMPLATES
+// CATEGORY-BASED NARRATIVE TEMPLATES (REFINED)
 // Tone: Warm + professional hybrid
-// Flavor: Medium Asheville microclimate
-// Diversity: Strong (Option C)
-// Goldilocks: First-class mode
+// Flavor: Asheville microclimate-aware
+// Goldilocks: Exclusive alignment language
 // ============================================================
 
 export const categories = {
 
   // ------------------------------------------------------------
-  // GOLDILOCKS — PREMIUM MODE
+  // GOLDILOCKS — PREMIUM MODE (RARE ALIGNMENT)
   // ------------------------------------------------------------
   goldilocks: {
     headlines: [
-      "A Goldilocks Day — everything feels just right",
-      "Perfectly balanced conditions today",
-      "A rare just-right setup across the region",
-      "A beautifully even, effortless day ahead",
-      "Conditions land squarely in the Goldilocks zone",
-      "A remarkably balanced feel from morning to evening"
+      "A Goldilocks Day — everything clicks into place",
+      "A rare stretch where everything aligns",
+      "Near-perfect balance settles in today",
+      "One of those just-right mountain days",
+      "Everything lands in sync across the region",
+      "A truly effortless setup from start to finish"
     ],
 
     narratives: [
-      "Temperature, dew point, and wind all line up in a rare sweet spot. Filtered mountain light keeps the feel even, and no major comfort factors compete. A genuinely effortless setup overall.",
-      "Air feels clean, crisp, and balanced with gentle movement and steady warmth. Valley and ridge conditions stay surprisingly aligned, creating a smooth, low-stress day.",
-      "Humidity sits in the ideal band while the breeze stays non-intrusive. A stable, quiet air mass keeps everything predictable and pleasantly simple.",
-      "A beautifully balanced pattern settles in with no major drivers pushing conditions around. Soft mountain light and clean air make for an easy, just-right feel.",
-      "Crisp air, steady warmth, and gentle wind combine for a rare Goldilocks alignment. A smooth, even feel holds from lower valleys to higher ridges."
+      "Temperature, dew point, and wind fall into near-perfect alignment. Nothing dominates or disrupts, creating a rare, fully balanced feel from valley to ridge.",
+      "All major comfort factors settle into sync. Air feels clean, movement stays gentle, and the entire region holds a smooth, uninterrupted balance.",
+      "A rare atmospheric sweet spot develops with no competing influences. Conditions stay steady and cohesive, creating an unusually effortless day.",
+      "Warmth, dryness, and airflow align cleanly with no rough edges. The result is a seamless, stable feel that holds across elevations.",
+      "Everything works together instead of competing — steady warmth, controlled humidity, and quiet wind create a truly dialed-in day."
     ]
   },
 
   // ------------------------------------------------------------
-  // VERY COMFORTABLE
+  // VERY COMFORTABLE (EASY, CLEAN, LOW-FRICTION)
   // ------------------------------------------------------------
   veryComfortable: {
     headlines: [
-      "A smooth, easygoing day ahead",
-      "Comfort stays high with crisp, clean air",
-      "A pleasant, low-stress setup across the region",
-      "A beautifully mild and balanced stretch",
-      "Ideal comfort with gentle movement and clean air"
+      "An easy, comfortable day overall",
+      "Comfort runs high with little interference",
+      "A clean, low-friction setup",
+      "Little stands in the way of comfort today",
+      "A relaxed and steady feel across the region"
     ],
 
     narratives: [
-      "Crisp air and balanced warmth create a simple, pleasant feel. Filtered mountain light keeps conditions steady through the afternoon. A smooth, low-impact day overall.",
-      "Humidity stays low and the breeze remains gentle, making for an easygoing setup. Ridge and valley temperatures stay surprisingly aligned, adding to the comfort.",
-      "A mild, steady pattern holds with no major drivers in play. Clean air and soft lighting keep the feel relaxed and uncomplicated.",
-      "A stable air mass and gentle movement create a consistently pleasant day. Subtle warming later on adds a touch of softness without tipping the balance.",
-      "Dry air and balanced temperatures make for a comfortable stretch. Light breezes and muted sky texture keep things predictable and easy."
+      "Humidity stays in check and temperatures settle into a comfortable range. Light air movement keeps things feeling fresh without drawing attention.",
+      "A stable pattern keeps conditions smooth and easy. Minor variations between valley and ridge remain subtle and manageable.",
+      "Air feels clean and temperatures stay well-controlled. Nothing pushes hard enough to disrupt the overall comfort.",
+      "A mild, steady setup holds through the day with gentle movement and balanced warmth. Conditions remain easy to settle into.",
+      "Comfort stays consistent with only small shifts through the day. Light breezes and stable air keep things simple and pleasant."
     ]
   },
 
   // ------------------------------------------------------------
-  // COMFORTABLE
+  // COMFORTABLE (BASELINE GOOD)
   // ------------------------------------------------------------
   comfortable: {
     headlines: [
-      "A mild, manageable day",
-      "Comfortable conditions with only minor nuisances",
-      "A simple, easygoing setup overall",
-      "A steady, uncomplicated stretch",
-      "A balanced feel with gentle movement"
+      "A mild and manageable day",
+      "Generally comfortable with minor variation",
+      "A steady, workable setup",
+      "Comfort holds with a few small quirks",
+      "A balanced day overall"
     ],
 
     narratives: [
-      "Temperatures stay in a comfortable band with only small shifts through the day. A touch of filtered mountain light keeps the feel even. A mild, low-stress setup overall.",
-      "Humidity remains controlled and the breeze stays manageable. Valley chill fades quickly, giving way to steady warmth. A simple, pleasant day.",
-      "A quiet pattern holds with no major forcing. Subtle warming later adds a gentle edge, but conditions stay broadly comfortable.",
-      "Dry air and soft lighting create a clean, balanced feel. A light breeze adds freshness without becoming intrusive.",
-      "A modest warm-up unfolds through the afternoon with manageable humidity. Ridge-top mixing stays light, keeping conditions predictable."
+      "Temperatures stay in a comfortable band with only minor swings. A bit of variability shows up, but nothing becomes disruptive.",
+      "Humidity remains controlled and the breeze stays manageable. A few uneven moments develop, but the overall feel stays pleasant.",
+      "A quiet pattern holds with modest warming through the day. Conditions remain broadly comfortable despite small shifts.",
+      "Air stays fairly dry with occasional movement adding a touch of variation. The setup remains stable enough to feel easy overall.",
+      "A gradual warm-up combines with light mixing, creating a mostly comfortable feel with a few minor inconsistencies."
     ]
   },
 
   // ------------------------------------------------------------
-  // SLIGHTLY UNCOMFORTABLE
+  // SLIGHTLY UNCOMFORTABLE (NOTICEABLE FRICTION)
   // ------------------------------------------------------------
   slightlyUncomfortable: {
     headlines: [
-      "A few small annoyances today",
-      "Some minor discomfort at times",
-      "A slightly uneven feel overall",
-      "A day with a few rough edges",
-      "A mix of comfort and mild nuisances"
+      "A few noticeable rough edges today",
+      "Comfort dips at times",
+      "An uneven feel develops through the day",
+      "Some minor but noticeable discomfort",
+      "A mix of decent stretches and friction"
     ],
 
     narratives: [
-      "A touch of humidity or uneven warmth may creep in at times. Breezes stay mostly manageable, but occasional gusts could add brief disruption. Still, much of the day remains workable.",
-      "Temperatures wobble a bit and moisture rises slightly, creating a mildly uneven feel. Filtered light helps soften the edges, keeping things from tipping too far.",
-      "A subtle rise in dew point adds a hint of heaviness. Wind stays mostly tame, though exposed spots may feel a bit pushy at times.",
-      "A modest warm edge develops later, paired with a slight uptick in humidity. Conditions remain manageable but not perfectly smooth.",
-      "Some minor discomfort factors appear, especially during peak hours. Still, a stable pattern keeps things from becoming truly unpleasant."
+      "Humidity begins to creep in and temperatures turn uneven at times. Breezes occasionally pick up, adding brief pockets of disruption.",
+      "A subtle heaviness develops as moisture increases. Conditions shift enough to feel inconsistent, especially during peak hours.",
+      "Warmth builds unevenly and the air starts to feel slightly weighted. Movement picks up in spots, creating a mildly unsettled feel.",
+      "A few competing factors emerge — rising humidity, uneven warmth, and occasional gusts. The day stays workable but no longer smooth.",
+      "Conditions lose some of their balance as the day progresses. Short stretches of discomfort become more noticeable, especially in exposed areas."
     ]
   },
 
   // ------------------------------------------------------------
-  // UNCOMFORTABLE
+  // UNCOMFORTABLE (CLEAR IMPACTS)
   // ------------------------------------------------------------
   uncomfortable: {
     headlines: [
-      "Noticeable discomfort at times",
-      "A day leaning unpleasant",
-      "A challenging feel during peak hours",
-      "A rougher stretch with clear impacts",
-      "Conditions trend toward the unpleasant side"
+      "Discomfort becomes noticeable",
+      "A rougher feel takes hold",
+      "Conditions trend clearly uncomfortable",
+      "A challenging stretch during peak hours",
+      "Comfort breaks down at times"
     ],
 
     narratives: [
-      "Humidity or warmth may become intrusive, especially during peak hours. Breezes could feel pushy in exposed areas, adding to the discomfort. A noticeably uneven day overall.",
-      "A heavier feel develops as moisture rises and warmth builds. Ridge-top gusts may mix down at times, creating brief spikes in discomfort.",
-      "A warm, sticky pattern holds with limited relief. Soft lighting helps at times, but the broader setup leans unpleasant.",
-      "A challenging combination of warmth, moisture, and wind creates a rougher feel. Conditions may ease slightly later, but the day carries clear impacts.",
-      "A stubborn warm edge and rising humidity create a demanding setup. Breezes stay inconsistent, adding to the uneven feel."
+      "Humidity and warmth begin to dominate, creating a heavier, more intrusive feel. Breezes turn inconsistent, adding to the instability.",
+      "A warm, sticky pattern develops with limited relief. Movement increases at times, producing spikes in discomfort.",
+      "Moisture builds alongside rising temperatures, creating a persistent unevenness. The overall feel becomes noticeably strained.",
+      "A combination of warmth and humidity creates a demanding setup. Conditions fluctuate enough to feel disruptive rather than manageable.",
+      "The atmosphere turns heavier and less forgiving. Brief relief is possible, but the broader pattern remains uncomfortable."
     ]
   },
 
   // ------------------------------------------------------------
-  // HARSH / POOR COMFORT
+  // HARSH / POOR COMFORT (STACKED + PERSISTENT)
   // ------------------------------------------------------------
   harsh: {
     headlines: [
-      "A demanding stretch with multiple discomfort factors",
-      "Harsh conditions with clear impacts",
-      "A tough, uneven day ahead",
-      "A challenging setup across the region",
-      "Conditions feel harsh and intrusive"
+      "A harsh and demanding setup",
+      "Multiple factors combine to create a tough day",
+      "Persistent discomfort dominates",
+      "A difficult, high-impact stretch",
+      "Conditions feel overwhelming at times"
     ],
 
     narratives: [
-      "A combination of heat, humidity, or wind creates a demanding feel. Exposed areas may feel especially rough as gusts mix down. Relief is limited through much of the day.",
-      "A harsh pattern holds with multiple discomfort drivers competing at once. Moisture and warmth build together, creating a heavy, intrusive feel.",
-      "Wind, warmth, and moisture combine for a challenging setup. Soft lighting offers only brief relief in sheltered spots.",
-      "A tough stretch unfolds with little balance in the atmosphere. Conditions stay uneven from valley to ridge, with limited breaks.",
-      "A heavy, intrusive pattern dominates with few moments of ease. Expect a demanding feel across elevations."
+      "Heat, humidity, and wind stack together, creating a persistent and hard-to-escape discomfort. Relief remains limited across elevations.",
+      "Multiple drivers combine at once, producing a heavy and intrusive atmosphere that lingers through much of the day.",
+      "A dense, unbalanced pattern takes hold with little recovery. Conditions remain consistently rough from valley to ridge.",
+      "Discomfort becomes sustained rather than occasional. The atmosphere feels loaded, with few breaks in intensity.",
+      "A stubborn, high-impact setup dominates with overlapping stressors. The overall feel is demanding and difficult to avoid."
     ]
   }
 };
