@@ -211,6 +211,9 @@ function evaluateSingleSnapshotRich(data) {
     timestamp
   } = data;
 
+  const hour = new Date(timestamp).getHours();
+const isNight = hour >= 18 || hour <= 6;
+
   const seasonal = getSeasonalContext(timestamp);
   const scores = [];
 
@@ -311,34 +314,50 @@ function evaluateSingleSnapshotRich(data) {
   // -----------------------------
   // Fog / Visibility
   // -----------------------------
-  if (typeof visibility === "number") {
-    if (visibility <= 2) {
-      scores.push({
-        factor: "fog",
-        score: clamp((2 - visibility) / 2)
-      });
-    }
-    if (visibility <= 1 && typeof temp === "number" && temp <= 32) {
-      scores.push({
-        factor: "freezingFog",
-        score: clamp(0.7 + (32 - temp) / 40)
-      });
-    }
-  }
 
-  if (typeof valleyFogRisk === "number" && valleyFogRisk >= 0.4) {
+if (typeof visibility === "number") {
+  if (visibility <= 2) {
+    let fogScore = clamp((2 - visibility) / 2);
+
+    if (isNight) fogScore *= 1.1;
+
     scores.push({
-      factor: "valleyFog",
-      score: clamp(valleyFogRisk)
+      factor: "fog",
+      score: clamp(fogScore)
     });
   }
 
-  if (typeof ridgeFogRisk === "number" && ridgeFogRisk >= 0.4) {
+  if (visibility <= 1 && typeof temp === "number" && temp <= 32) {
+    let freezeFogScore = clamp(0.7 + (32 - temp) / 40);
+
+    if (isNight) freezeFogScore *= 1.1;
+
     scores.push({
-      factor: "ridgeFog",
-      score: clamp(ridgeFogRisk)
+      factor: "freezingFog",
+      score: clamp(freezeFogScore)
     });
   }
+}
+
+ if (typeof valleyFogRisk === "number" && valleyFogRisk >= 0.4) {
+  let score = clamp(valleyFogRisk);
+  if (isNight) score *= 1.1;
+
+  scores.push({
+    factor: "valleyFog",
+    score: clamp(score)
+  });
+}
+
+if (typeof ridgeFogRisk === "number" && ridgeFogRisk >= 0.4) {
+  let score = clamp(ridgeFogRisk);
+  if (isNight) score *= 1.1;
+
+  scores.push({
+    factor: "ridgeFog",
+    score: clamp(score)
+  });
+}
 
   // -----------------------------
   // Winter hazards
@@ -374,15 +393,16 @@ function evaluateSingleSnapshotRich(data) {
     });
   }
 
-  // -----------------------------
-  // UV / Sun / Clouds
-  // -----------------------------
-  if (typeof uvIndex === "number" && uvIndex >= 6) {
-    scores.push({
-      factor: "uv",
-      score: clamp((uvIndex - 6) / 6)
-    });
-  }
+ // -----------------------------
+// UV / Sun / Clouds
+// -----------------------------
+// suppress UV at night
+if (!isNight && typeof uvIndex === "number" && uvIndex >= 6) {
+  scores.push({
+    factor: "uv",
+    score: clamp((uvIndex - 6) / 6)
+  });
+}
 
   if (typeof cloudCover === "number") {
     if (cloudCover <= 0.2) {
@@ -409,41 +429,82 @@ function evaluateSingleSnapshotRich(data) {
     });
   }
 
-  // ---------------------------------------------------------
-  // Filter + sort + determine dominant factor
-  // ---------------------------------------------------------
-  const meaningful = scores.filter(s => s.score > 0.05);
+// ---------------------------------------------------------
+// Filter + weight + determine dominant factor (stabilized)
+// ---------------------------------------------------------
+const meaningful = scores
+  .filter(s => s.score > 0.05)
+  .map(s => ({
+    ...s,
+    weightedScore: s.score // ready for future time-weighting
+  }));
 
-  if (meaningful.length === 0) {
-    return {
-      dominantFactor: "default",
-      confidence: 0.2,
-      secondaryFactors: [],
-      notes: "No single factor stands out strongly; conditions are fairly balanced."
-    };
-  }
-
-  meaningful.sort((a, b) => b.score - a.score);
-
-  const top = meaningful[0];
-  const second = meaningful[1];
-  const third = meaningful[2];
-
-  const confidence = clamp(top.score);
-
-  const secondaryFactors = [];
-  if (second && second.score >= 0.3) secondaryFactors.push(second.factor);
-  if (third && third.score >= 0.3) secondaryFactors.push(third.factor);
-
-  const notes = buildNotes(top, secondaryFactors, data);
-
+if (meaningful.length === 0) {
   return {
-    dominantFactor: top.factor,
-    confidence,
-    secondaryFactors,
-    notes
+    dominantFactor: "default",
+    confidence: 0.2,
+    secondaryFactors: [],
+    notes: "No single factor stands out strongly; conditions are fairly balanced."
   };
 }
+
+// sort by weighted score (not raw score)
+meaningful.sort((a, b) => b.weightedScore - a.weightedScore);
+
+const top = meaningful[0];
+const second = meaningful[1];
+const third = meaningful[2];
+
+// ---------------------------------------------------------
+// Stabilize dominant factor (prevents jitter)
+// ---------------------------------------------------------
+let dominant = top;
+
+if (second && Math.abs(top.weightedScore - second.weightedScore) < 0.15) {
+  dominant = {
+    factor: pickDominantFactor([top.factor, second.factor]),
+    score: top.weightedScore
+  };
+}
+
+// ---------------------------------------------------------
+// Confidence (smoothed, less jumpy)
+// ---------------------------------------------------------
+const confidence = clamp(
+  dominant.score * 0.85 + meaningful.length * 0.05
+);
+
+// ---------------------------------------------------------
+// Secondary factors (clear + intentional)
+// ---------------------------------------------------------
+const secondaryFactors = [];
+
+if (second && second.score >= 0.3 && second.factor !== dominant.factor) {
+  secondaryFactors.push(second.factor);
+}
+
+if (third && third.score >= 0.3 && third.factor !== dominant.factor) {
+  secondaryFactors.push(third.factor);
+}
+
+// ---------------------------------------------------------
+// Notes (based on dominant)
+// ---------------------------------------------------------
+const notes = buildNotes(
+  { factor: dominant.factor, score: dominant.score },
+  secondaryFactors,
+  data
+);
+
+// ---------------------------------------------------------
+// Return
+// ---------------------------------------------------------
+return {
+  dominantFactor: dominant.factor,
+  confidence,
+  secondaryFactors,
+  notes
+};
 
 // =========================================================
 // HYBRID DAYPART COMBINER
@@ -661,4 +722,5 @@ function buildNotes(top, secondaryFactors, data) {
   }
 
   return pieces.join(" ");
+}
 }
