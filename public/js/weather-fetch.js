@@ -144,18 +144,19 @@ async function getHourlySafe(lat, lon) {
         continue;
       }
 
-      const data = await res.json();
+    const data = await res.json();
 
-      console.log("📦 Raw data keys:", Object.keys(data || {}));
-      console.log("📦 Sample time length:", data?.time?.length);
+console.log("Raw data keys:", Object.keys(data));
 
-      // --------------------------------------------------------
-      // API fallback flag
-      // --------------------------------------------------------
-      if (data?._fallback) {
-        console.warn("⚠️ API fallback triggered:", data._reason);
-        continue;
-      }
+// ✅ FIX: new schema uses data.hourly.time
+const timeArr = data.hourly?.time;
+
+console.log("Sample time length:", timeArr?.length);
+
+if (!timeArr || timeArr.length === 0) {
+  console.warn("❌ Data missing hourly.time array or empty");
+  continue;
+}
 
       // --------------------------------------------------------
       // ✅ VALID DATA CHECK (CRITICAL)
