@@ -30,7 +30,7 @@ async function handleHourly(req, res) {
   const hourlyFields = [
     "temperature_2m",
     "apparent_temperature",
-    "dewpoint_2m",
+    "dew_point_2m",
     "relativehumidity_2m",
     "precipitation",
     "snowfall",
@@ -57,9 +57,11 @@ async function handleHourly(req, res) {
     if (!r.ok) {
       const text = await r.text();
       console.error("Open-Meteo error:", text);
-      return res.status(200).json(buildFallbackHourly("bad-status"));
+      return res.status(200).json(buildFallbackHourly(`bad-status-${r.status}`));
     }
 
+    console.log("OPENMETEO URL:", url);
+    
     const data = await r.json();
 
     // Validate structure
@@ -83,7 +85,7 @@ function buildFallbackHourly(reason) {
   return {
     time: [],
     temperature_2m: [],
-    dewpoint_2m: [],
+    dew_point_2m: [],
     relativehumidity_2m: [],
     precipitation: [],
     snowfall: [],

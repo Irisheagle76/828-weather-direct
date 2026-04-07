@@ -47,7 +47,7 @@ function dewToRH(tempF, dewF) {
 // ------------------------------------------------------------
 function buildHourlySnapshot(hourly, idx) {
   const temp = hourly.temperature_2m[idx];
-  const dew = hourly.dewpoint_2m[idx];
+  const dew = hourly.dew_point_2m[idx];
   const wind = hourly.wind_speed[idx];
   const gust = hourly.wind_gusts_10m?.[idx] ?? null;
   const cloud = hourly.cloudcover?.[idx] ?? null;

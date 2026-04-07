@@ -127,7 +127,7 @@ if (Array.isArray(hourly)) {
     // METEOROLOGY
     // -------------------------
     const tempF = num(pick("temperature_2m"));
-    const dewpointF = num(pick("dewpoint_2m"));
+   const dewpointF = num(pick("dew_point_2m", "dewpoint_2m"));
     const humidity = num(pick("relativehumidity_2m"));
 
     const apparentF_raw = num(pick("apparent_temperature"));
