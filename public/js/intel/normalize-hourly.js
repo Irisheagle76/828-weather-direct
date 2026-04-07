@@ -69,7 +69,7 @@ if (Array.isArray(hourly)) {
         timestamp: Number.isFinite(ts) ? ts : null
       };
     })
-    .filter(h => h.timestamp && h.temperatureF != null);
+  .filter(h => h.timestamp != null);
 }
 
   // ============================================================
@@ -101,7 +101,7 @@ if (Array.isArray(hourly)) {
     const num = v => {
       if (v == null) return null;
       const n = Number(v);
-      return Number.isFinite(n) ? n : null;
+      return Number.isFinite(ts) ? ts : null;
     };
 
     const toMiles = m => (m != null ? m / 1609.34 : null);
@@ -166,12 +166,7 @@ if (Array.isArray(hourly)) {
     const cloud = normalizeCloud(num(pick("cloudcover")));
 
     const visibilityRaw = num(pick("visibility"));
-    const visibility =
-      visibilityRaw != null
-        ? visibilityRaw > 1000
-          ? toMiles(visibilityRaw)
-          : visibilityRaw
-        : null;
+    const visibility = visibilityRaw != null ? toMiles(visibilityRaw) : null;
 
     // -------------------------
     // RISKS
