@@ -164,7 +164,9 @@ async function fetchTempest() {
     if (!obs) return null;
 
     return {
-      temp: Math.round(obs.air_temperature),
+      const cToF = c => (c * 9) / 5 + 32;
+
+temp: Math.round(cToF(obs.air_temperature)),
       humidity: obs.relative_humidity,
       wind: obs.wind_avg,
       ts: obs.timestamp
