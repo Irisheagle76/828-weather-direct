@@ -127,7 +127,6 @@ function setText(id, text) {
 // ============================================================
 // CURRENT CONDITIONS (TEMPEST-FIRST, FULLY FIXED)
 // ============================================================
-console.log("CURRENT FROM API:", data.current);
 
 function resolveCurrent(data) {
   const obs = data.current;
@@ -154,8 +153,6 @@ function resolveCurrent(data) {
 function renderCurrentObs(current) {
   const el = $("current-obs-inline");
   if (!el) return;
-
-console.log("CURRENT DEBUG:", current);
 
   if (!current || current.temp == null) {
     el.innerHTML = "Observations unavailable";
