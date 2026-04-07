@@ -24,10 +24,13 @@ export default async function handler(req, res) {
 
     return res.status(400).json({ error: "Invalid type" });
 
-  } catch (err) {
-    console.error("🚨 Weather API error:", err);
-    return res.status(200).json(buildFallback("router-exception"));
-  }
+ } catch (err) {
+  console.error("🚨 FULL ERROR:", err);
+
+  return res.status(500).json({
+    error: err.message,
+    stack: err.stack
+  });
 }
 
 // ------------------------------------------------------------
