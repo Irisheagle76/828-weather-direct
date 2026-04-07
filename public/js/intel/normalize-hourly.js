@@ -129,7 +129,19 @@ export function normalizeOpenMeteo(hourly) {
     // -------------------------
     // METEOROLOGY (Celsius native)
     // -------------------------
-    const tempF = toNumber(pick(hourly, i, "temperature_2m"));
+   const tempRaw = toNumber(pick(hourly, i, "temperature_2m"));
+const dewRaw = toNumber(pick(hourly, i, "dew_point_2m", "dewpoint_2m"));
+
+const isCelsius = tempRaw != null && tempRaw < 60;
+
+const tempF = tempRaw != null
+  ? (isCelsius ? toF(tempRaw) : tempRaw)
+  : null;
+
+const dewpointF = dewRaw != null
+  ? (isCelsius ? toF(dewRaw) : dewRaw)
+  : null;
+
 const dewpointF = toNumber(pick(hourly, i, "dew_point_2m", "dewpoint_2m"));
 const humidity = toNumber(pick(hourly, i, "relative_humidity_2m"));
 
@@ -140,6 +152,17 @@ const apparentF = apparentF_raw ?? tempF;
 const tempC = tempF != null ? (tempF - 32) * 5 / 9 : null;
 const dewC = dewpointF != null ? (dewpointF - 32) * 5 / 9 : null;
 const apparentC = apparentF != null ? (apparentF - 32) * 5 / 9 : null;
+
+if (tempF != null && dewpointF != null) {
+  if (dewpointF > tempF) {
+    console.warn("🔥 UNIT BUG DETECTED", {
+      tempRaw,
+      dewRaw,
+      tempF,
+      dewpointF
+    });
+  }
+}
 
     // -------------------------
     // WIND
