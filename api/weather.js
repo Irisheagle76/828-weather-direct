@@ -141,6 +141,7 @@ async function fetchTempest() {
     const stationId = process.env.TEMPEST_STATION_ID;
     const token = process.env.TEMPEST_TOKEN;
 
+
     if (!stationId || !token) {
       console.warn("⚠️ Tempest not configured");
       return null;
