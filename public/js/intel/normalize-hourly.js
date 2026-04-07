@@ -129,17 +129,17 @@ export function normalizeOpenMeteo(hourly) {
     // -------------------------
     // METEOROLOGY (Celsius native)
     // -------------------------
-    const tempC = toNumber(pick(hourly, i, "temperature_2m"));
-    const dewC = toNumber(pick(hourly, i, "dew_point_2m", "dewpoint_2m"));
-    const humidity = toNumber(pick(hourly, i, "relative_humidity_2m"));
+    const tempF = toNumber(pick(hourly, i, "temperature_2m"));
+const dewpointF = toNumber(pick(hourly, i, "dew_point_2m", "dewpoint_2m"));
+const humidity = toNumber(pick(hourly, i, "relative_humidity_2m"));
 
-    const apparentC_raw = toNumber(pick(hourly, i, "apparent_temperature"));
-    const apparentC = apparentC_raw ?? tempC;
+const apparentF_raw = toNumber(pick(hourly, i, "apparent_temperature"));
+const apparentF = apparentF_raw ?? tempF;
 
-    const temp = toNumber(pick(hourly, i, "temperature_2m"));
-   const tempF = temp;
-const dewpointF = dewC;
-const apparentF = apparentC;
+// derive Celsius ONLY if needed
+const tempC = tempF != null ? (tempF - 32) * 5 / 9 : null;
+const dewC = dewpointF != null ? (dewpointF - 32) * 5 / 9 : null;
+const apparentC = apparentF != null ? (apparentF - 32) * 5 / 9 : null;
 
     // -------------------------
     // WIND
@@ -147,8 +147,8 @@ const apparentF = apparentC;
     const windSpeed =
       toNumber(pick(hourly, i, "wind_speed_10m", "windspeed_10m")) ?? 0;
 
-    const windGust =
-      toNumber(pick(hourly, i, "wind_gusts_10m", "wind_gusts_10m")) ?? 0;
+  const windGust =
+  toNumber(pick(hourly, i, "wind_gusts_10m")) ?? 0;
 
     const windDir = toNumber(pick(hourly, i, "winddirection_10m"));
 
