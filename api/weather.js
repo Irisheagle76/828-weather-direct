@@ -79,14 +79,14 @@ async function handleHourly(req, res) {
   ].join(",");
 
   const url =
-    `https://api.open-meteo.com/v1/forecast` +
-    `?latitude=${lat}&longitude=${lon}` +
-    `&hourly=${hourlyFields}` +
-    `&forecast_days=3` +
-    `&temperature_unit=fahrenheit` +
-    `&timezone=auto` +
-    `&wind_speed_unit=mph` +
-    `&precipitation_unit=inch`;
+  `https://api.open-meteo.com/v1/forecast` +
+  `?latitude=${lat}&longitude=${lon}` +
+  `&hourly=${hourlyFields}` +
+  `&forecast_days=3` +
+  `&temperature_unit=fahrenheit` +   // 🔥 REQUIRED
+  `&wind_speed_unit=mph` +
+  `&precipitation_unit=inch` +
+  `&timezone=auto`;
 
   console.log("🌐 OPENMETEO:", url);
 
@@ -175,7 +175,8 @@ async function fetchTempest() {
     // Tempest is usually already °F
     // Only convert if clearly Celsius
     // --------------------------------------------------------
-    const isProbablyCelsius = tempRaw < 60; // heuristic
+    const temp = Math.round(tempRaw);
+const dew_point = dewRaw ?? null;
 
     const toF = c => (c * 9) / 5 + 32;
 

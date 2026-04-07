@@ -238,12 +238,13 @@ function findBestWindow(hourly, mode, isDay) {
     for (let j = 0; j < 3; j++) {
       const h = hourly[i + j];
 
-      const c = calculateComfort({
-        temp: h.temperatureF,
-        humidity: h.relative_humidity,
-        wind: h.wind_speed,
-        clouds: h.cloud_cover
-      }, { isDay });
+const c = calculateComfort({
+  temp: h.temperatureF,
+  dewpointF: h.dewpointF,   // 🔥 ADD THIS
+  humidity: h.relative_humidity,
+  wind: h.wind_speed,
+  clouds: h.cloud_cover
+});
 
       sum += c?.score ?? 0;
     }
