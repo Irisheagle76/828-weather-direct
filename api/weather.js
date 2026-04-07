@@ -140,7 +140,7 @@ async function handleHourly(req, res) {
 }
 
 // ------------------------------------------------------------
-// TEMPEST FETCH (YOUR STATION)
+// TEMPEST FETCH YOUR STATION
 // ------------------------------------------------------------
 async function fetchTempest() {
   try {
