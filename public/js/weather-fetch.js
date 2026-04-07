@@ -240,7 +240,7 @@ export async function getMRMSPixel() {
 // UTILITIES
 // ============================================================
 
-async function fetchWithTimeout(url, timeout = 5000) {
+async function fetchWithTimeout(url, timeout = 9000) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
 
