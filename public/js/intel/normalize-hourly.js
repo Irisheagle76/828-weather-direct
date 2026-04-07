@@ -126,26 +126,30 @@ export function normalizeOpenMeteo(hourly) {
     const hour = new Date(ts).getHours();
     const isNight = hour >= 18 || hour <= 6;
 
-    // -------------------------
-    // METEOROLOGY (Open-Meteo = Celsius)
-    // -------------------------
-const tempC = toNumber(pick(hourly, i, "temperature_2m"));
-const dewC  = toNumber(pick(hourly, i, "dew_point_2m", "dewpoint_2m"));
-const appC_raw = toNumber(pick(hourly, i, "apparent_temperature"));
+// ============================================================
+// METEOROLOGY (API = Fahrenheit — DO NOT CONVERT)
+// ============================================================
+const temperatureF = toNumber(pick(hourly, i, "temperature_2m"));
+const dewpointF    = toNumber(pick(hourly, i, "dew_point_2m", "dewpoint_2m"));
 
-const apparentC = appC_raw ?? tempC;
-
-const temperatureF = cToF(tempC);
-const dewpointF    = cToF(dewC);
-const apparentF    = cToF(apparentC);
+const apparentRaw  = toNumber(pick(hourly, i, "apparent_temperature"));
+const apparentF    = apparentRaw ?? temperatureF;
 
 const humidity = toNumber(pick(hourly, i, "relative_humidity_2m"));
 
-// sanity check
-if (tempC != null && dewC != null && dewC > tempC) {
-  warnOnce("🔥 UNIT BUG DETECTED (dewpoint > temp)", { tempC, dewC });
+// -------------------------
+// 🔥 HARD SANITY CHECK
+// -------------------------
+if (
+  temperatureF != null &&
+  dewpointF != null &&
+  dewpointF > temperatureF
+) {
+  warnOnce("🔥 BAD DATA (dew > temp)", {
+    temperatureF,
+    dewpointF
+  });
 }
-
     // -------------------------
     // WIND
     // -------------------------
@@ -184,34 +188,39 @@ if (tempC != null && dewC != null && dewC > tempC) {
     const visibility =
       visibilityRaw != null ? toMiles(visibilityRaw) : null;
 
-    // -------------------------
-    // RISKS (Celsius logic)
-    // -------------------------
-    const frost_risk =
-      tempC != null && dewC != null && tempC <= 3 && dewC <= 2
-        ? 0.6
-        : tempC != null && tempC <= 1
-        ? 1
-        : 0;
+// -------------------------
+// RISKS (Fahrenheit-safe)
+// -------------------------
+const frost_risk =
+  temperatureF != null &&
+  dewpointF != null &&
+  temperatureF <= 37 &&   // ~3°C
+  dewpointF <= 36         // ~2°C
+    ? 0.6
+    : temperatureF != null && temperatureF <= 34
+    ? 1
+    : 0;
 
-    const freeze_risk =
-      tempC != null && tempC <= 0
-        ? 1
-        : tempC != null && tempC <= 1
-        ? 0.5
-        : 0;
+const freeze_risk =
+  temperatureF != null && temperatureF <= 32
+    ? 1
+    : temperatureF != null && temperatureF <= 34
+    ? 0.5
+    : 0;
 
-    const black_ice_risk =
-      tempC != null && tempC <= 0 && precipitation > 0 ? 1 : 0;
+const black_ice_risk =
+  temperatureF != null &&
+  temperatureF <= 32 &&
+  precipitation > 0
+    ? 1
+    : 0;
 
-    const inversion_risk =
-      tempC != null && tempC <= 4 && wind_speed < 3 ? 0.5 : 0;
-
-    const valley_fog_risk =
-      humidity != null && humidity >= 95 && wind_speed < 3 ? 0.6 : 0;
-
-    const ridge_fog_risk =
-      humidity != null && humidity >= 98 && wind_speed < 5 ? 0.5 : 0;
+const inversion_risk =
+  temperatureF != null &&
+  temperatureF <= 40 &&
+  wind_speed < 3
+    ? 0.5
+    : 0;
 
     // -------------------------
     // OUTPUT
