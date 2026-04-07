@@ -176,9 +176,9 @@ async function fetchTempest() {
       return null;
     }
 
-// Tempest station observations return Celsius → convert to Fahrenheit
-const tempF = Math.round((tempRaw * 9) / 5 + 32);
-const dewF  = dewRaw != null ? Math.round((dewRaw * 9) / 5 + 32) : null;
+// Tempest already returns Fahrenheit
+const tempF = Math.round(tempRaw);
+const dewF  = dewRaw != null ? Math.round(dewRaw) : null;
 
 return {
   temp: tempF,

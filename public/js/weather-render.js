@@ -128,44 +128,17 @@ function setText(id, text) {
 // CURRENT CONDITIONS (TEMPEST-FIRST, FULLY FIXED)
 // ============================================================
 
-function resolveCurrent(data, hourly) {
-  if (!hourly?.length) return null;
+function resolveCurrent(data) {
+  const obs = data.current;
 
-  const fallback = hourly[0];
-
-  const obs =
-    data.current_conditions ||   // Tempest Better Forecast
-    data.current ||              // optional wrapper
-    data.tempest ||              // legacy Tempest
-    data.wu?.current ||          // WU legacy
-    null;
+  if (!obs) return null;
 
   return {
-    temp:
-      obs?.air_temperature ??        // Tempest
-      fallback.temperatureF ??       // Open-Meteo fallback
-      null,
-
-    dewPoint:
-      obs?.dew_point ??              // Tempest
-      fallback.dewpointF ??          // Open-Meteo fallback
-      null,
-
-    humidity:
-      obs?.relative_humidity ??      // Tempest
-      fallback.relative_humidity ??
-      null,
-
-    wind:
-      obs?.wind_avg ??               // Tempest
-      obs?.wind ??                   // legacy
-      fallback.wind_speed ??
-      0,
-
-    timestamp:
-      obs?.ts ??                     // Tempest epoch seconds
-      obs?.timestamp ??              // legacy
-      fallback.timestamp
+    temp: obs.temp ?? null,                 // ✅ FIXED
+    dewPoint: obs.dew_point ?? null,        // ✅ FIXED
+    humidity: obs.humidity ?? null,
+    wind: obs.wind ?? 0,
+    timestamp: obs.ts ?? null
   };
 }
 
