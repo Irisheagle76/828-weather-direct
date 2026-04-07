@@ -132,6 +132,11 @@ async function handleHourly(req, res) {
 // TEMPEST (SAFE + SIMPLE)
 // ------------------------------------------------------------
 async function fetchTempest() {
+  console.log("ENV CHECK:", {
+    station: process.env.TEMPEST_STATION_ID,
+    token: process.env.TEMPEST_TOKEN ? "present" : "missing"
+  });
+
   try {
     const stationId = process.env.TEMPEST_STATION_ID;
     const token = process.env.TEMPEST_TOKEN;
@@ -140,6 +145,7 @@ async function fetchTempest() {
       console.warn("⚠️ Tempest not configured");
       return null;
     }
+
 
     const url =
       `https://swd.weatherflow.com/swd/rest/observations/station/` +
