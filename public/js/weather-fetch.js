@@ -1,12 +1,14 @@
 // /js/weather-fetch.js
 // ============================================================
-// RAW WEATHER FETCH LAYER — Clean Unified Fetch (2026 Edition)
+// RAW WEATHER FETCH LAYER — v2 (STABLE + RESILIENT)
+// Always returns safe, normalized structures
 // ============================================================
 
 /**
  * fetchAllIntel()
- * Returns ONLY raw, normalized data.
- * No sky logic. No comfort logic. No narrative logic.
+ * - Fetches all sources in parallel
+ * - Never throws
+ * - Always returns consistent shape
  */
 export async function fetchAllIntel({
   lat,
@@ -14,114 +16,139 @@ export async function fetchAllIntel({
   tempestStationId,
   tempestToken
 }) {
+  const start = Date.now();
+
   const result = {
     tempest: null,
     wu: null,
     hourly: null,
     mrms: null,
     meta: {
-      fetchedAt: Date.now()
+      fetchedAt: start,
+      durationMs: null,
+      sources: {}
     }
   };
 
   // ------------------------------------------------------------
-  // 1. Tempest — Better Forecast (station-level)
+  // PARALLEL FETCH (key upgrade)
   // ------------------------------------------------------------
-  try {
-    const rawTempest = await getTempestStationObs(
-      tempestStationId,
-      tempestToken
-    );
-    result.tempest = normalizeTempest(rawTempest);
-  } catch (err) {
-    console.error("Tempest fetch failed:", err);
+  const [tempestRes, wuRes, hourlyRes, mrmsRes] = await Promise.allSettled([
+    getTempestStationObs(tempestStationId, tempestToken),
+    getWUAll(lat, lon),
+    getShortTermForecast(lat, lon),
+    getMRMSPixel(lat, lon)
+  ]);
+
+  // ------------------------------------------------------------
+  // TEMPEST
+  // ------------------------------------------------------------
+  if (tempestRes.status === "fulfilled") {
+    result.tempest = normalizeTempest(tempestRes.value);
+    result.meta.sources.tempest = !!result.tempest;
+  } else {
+    console.warn("Tempest failed:", tempestRes.reason);
   }
 
   // ------------------------------------------------------------
-  // 2. Weather Underground (ALL: nearest + current + history)
+  // WU
   // ------------------------------------------------------------
-  try {
-    result.wu = await getWUAll(lat, lon);
-  } catch (err) {
-    console.error("WU fetch failed:", err);
+  if (wuRes.status === "fulfilled") {
+    result.wu = wuRes.value;
+    result.meta.sources.wu = !!result.wu;
+  } else {
+    console.warn("WU failed:", wuRes.reason);
   }
 
   // ------------------------------------------------------------
-  // 3. Open-Meteo hourly forecast
+  // OPEN-METEO
   // ------------------------------------------------------------
-  try {
-    result.hourly = await getShortTermForecast(lat, lon);
-  } catch (err) {
-    console.error("Open-Meteo fetch failed:", err);
+  if (hourlyRes.status === "fulfilled") {
+    result.hourly = hourlyRes.value;
+    result.meta.sources.hourly = !!result.hourly;
+  } else {
+    console.warn("Open-Meteo failed:", hourlyRes.reason);
   }
 
   // ------------------------------------------------------------
-  // 4. MRMS (placeholder)
+  // MRMS
   // ------------------------------------------------------------
-  try {
-    result.mrms = await getMRMSPixel(lat, lon);
-  } catch (err) {
-    console.error("MRMS fetch failed:", err);
+  if (mrmsRes.status === "fulfilled") {
+    result.mrms = mrmsRes.value;
+    result.meta.sources.mrms = true;
+  } else {
+    console.warn("MRMS failed:", mrmsRes.reason);
   }
+
+  result.meta.durationMs = Date.now() - start;
 
   return result;
 }
 
+//
 // ============================================================
-// 🌪️ TEMPEST — Better Forecast (station-level)
+// 🌪️ TEMPEST — UNIFIED FETCH
 // ============================================================
 //
-// IMPORTANT:
-// This now calls your EXISTING backend route:
-//   /api/tempest/device
-//
-// …but passes stationId instead of deviceId.
-// Your backend will detect stationId and call Better Forecast.
-//
+
 export async function getTempestStationObs(stationId, token) {
+  if (!stationId || !token) return null;
+
   const url = `/api/tempest/device?stationId=${stationId}&token=${token}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("Tempest station obs failed");
+
+  const res = await fetchWithTimeout(url, 4000);
+
+  if (!res || !res.ok) {
+    console.warn("Tempest bad response:", res?.status);
+    return null;
+  }
+
   return res.json();
 }
 
+// ------------------------------------------------------------
+// TEMPEST NORMALIZER (FIXED + SAFE)
+// ------------------------------------------------------------
 function normalizeTempest(data) {
   if (!data?.current_conditions) return null;
 
   const c = data.current_conditions;
 
   return {
-    air_temperature: c.air_temperature ?? null,
-    dew_point: c.dew_point ?? null,
-    relative_humidity: c.relative_humidity ?? null,
-    wind_avg: c.wind_avg ?? null,
-    wind_gust: c.wind_gust ?? null,
-    wind_direction: c.wind_direction ?? null,
-    pressure: c.pressure ?? null,
-    feels_like: c.feels_like ?? c.air_temperature ?? null,
-    uv: c.uv ?? null,
-    solar_radiation: c.solar_radiation ?? null,
-    timestamp: c.timestamp ?? Date.now()
+    air_temperature: safeNum(c.air_temperature),
+    dew_point: safeNum(c.dew_point),
+    relative_humidity: safeNum(c.relative_humidity),
+    wind_avg: safeNum(c.wind_avg),
+    wind_gust: safeNum(c.wind_gust),
+    wind_direction: safeNum(c.wind_direction),
+    pressure: safeNum(c.pressure),
+    feels_like: safeNum(c.feels_like ?? c.air_temperature),
+    uv: safeNum(c.uv),
+    solar_radiation: safeNum(c.solar_radiation),
+    timestamp: normalizeTs(c.timestamp)
   };
 }
 
+//
 // ============================================================
-// WEATHER UNDERGROUND — unified ALL endpoint
-// nearest + current + history
+// WEATHER UNDERGROUND
 // ============================================================
+//
 
 export async function getWUAll(lat, lon) {
-  try {
-    const res = await fetch(`/api/wu/all?lat=${lat}&lon=${lon}`);
+  if (!lat || !lon) return null;
 
-    if (!res.ok) throw new Error("WU all fetch failed");
+  try {
+    const res = await fetchWithTimeout(
+      `/api/wu/all?lat=${lat}&lon=${lon}`,
+      4000
+    );
+
+    if (!res || !res.ok) return null;
 
     const data = await res.json();
 
-    if (!data.stationId) {
-      console.warn("No WU station found");
-      return null;
-    }
+    if (!data?.stationId) return null;
 
     if (data.current) {
       data.current.stationID = data.stationId;
@@ -134,26 +161,87 @@ export async function getWUAll(lat, lon) {
   }
 }
 
+//
 // ============================================================
-// OPEN-METEO — hourly forecast
+// OPEN-METEO
 // ============================================================
+//
 
 export async function getShortTermForecast(lat, lon) {
-  const url = `/api/weather?type=hourly&lat=${lat}&lon=${lon}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("Open-Meteo hourly forecast failed");
+  if (!lat || !lon) return null;
 
-  const data = await res.json();
-  return data; // backend already returns hourly object
+  try {
+    const res = await fetchWithTimeout(
+      `/api/weather?type=hourly&lat=${lat}&lon=${lon}`,
+      5000
+    );
+
+    if (!res || !res.ok) return null;
+
+    const data = await res.json();
+
+    if (data?._fallback) {
+      console.warn("Open-Meteo fallback:", data._reason);
+      return null;
+    }
+
+    return data;
+  } catch (err) {
+    console.warn("Open-Meteo error:", err);
+    return null;
+  }
 }
 
+//
 // ============================================================
-// MRMS — placeholder
+// MRMS (stub)
 // ============================================================
+//
 
 export async function getMRMSPixel(lat, lon) {
   return {
     precipRate: 0,
     timestamp: Date.now()
   };
+}
+
+//
+// ============================================================
+// UTILITIES
+// ============================================================
+//
+
+// ------------------------------------------------------------
+// FETCH WITH TIMEOUT (CRITICAL)
+// ------------------------------------------------------------
+async function fetchWithTimeout(url, timeout = 5000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(id);
+    return res;
+  } catch (err) {
+    clearTimeout(id);
+    console.warn("Fetch timeout:", url);
+    return null;
+  }
+}
+
+// ------------------------------------------------------------
+// SAFE NUMBER (prevents NaN / garbage)
+// ------------------------------------------------------------
+function safeNum(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+// ------------------------------------------------------------
+// TIMESTAMP NORMALIZER
+// ------------------------------------------------------------
+function normalizeTs(ts) {
+  if (!ts) return Date.now();
+  if (ts < 1e12) return ts * 1000;
+  return ts;
 }
