@@ -104,18 +104,40 @@ const hourlyFields = [
   // ----------------------------------------------------------
   // BAD STATUS
   // ----------------------------------------------------------
-  if (!response.ok) {
-    const text = await response.text();
-    console.error("Open-Meteo error:", text);
+// BAD STATUS
+if (!response.ok) {
+  const text = await response.text();
+  console.error("Open-Meteo error:", text);
 
-    if (lastGood[key]) {
-      return res.status(200).json(lastGood[key]);
+  // --------------------------------------------------
+  // 🔥 TRY NWS FALLBACK
+  // --------------------------------------------------
+  const nwsPeriods = await fetchNWS(lat, lon);
+
+  if (nwsPeriods) {
+    console.warn("Using NWS fallback");
+
+    const nwsData = normalizeNWS(nwsPeriods);
+
+    if (nwsData?.time?.length) {
+      nwsData._source = "nws";
+      lastGood[key] = nwsData;
+
+      return res.status(200).json(nwsData);
     }
-
-    return res.status(200).json(
-      buildFallbackHourly(`bad-status-${response.status}`)
-    );
   }
+
+  // --------------------------------------------------
+  // EXISTING FALLBACK
+  // --------------------------------------------------
+  if (lastGood[key]) {
+    return res.status(200).json(lastGood[key]);
+  }
+
+  return res.status(200).json(
+    buildFallbackHourly(`bad-status-${response.status}`)
+  );
+}
 
   // ----------------------------------------------------------
   // PARSE DATA
@@ -183,5 +205,97 @@ function buildFallbackHourly(reason) {
     uv_index: [],
     _fallback: true,
     _reason: reason
+  };
+}
+// --------------------------------------------------
+// NWS Integration begin
+// --------------------------------------------------
+async function fetchNWS(lat, lon) {
+  const headers = {
+    "User-Agent": "828-weather-app"
+  };
+
+  try {
+    // --------------------------------------------------
+    // STEP 1: GET GRID
+    // --------------------------------------------------
+    const pointsRes = await fetch(
+      `https://api.weather.gov/points/${lat},${lon}`,
+      { headers }
+    );
+
+    if (!pointsRes.ok) return null;
+
+    const points = await pointsRes.json();
+    const { gridId, gridX, gridY } = points.properties;
+
+    // --------------------------------------------------
+    // STEP 2: GET HOURLY FORECAST
+    // --------------------------------------------------
+    const forecastRes = await fetch(
+      `https://api.weather.gov/gridpoints/${gridId}/${gridX},${gridY}/forecast/hourly`,
+      { headers }
+    );
+
+    if (!forecastRes.ok) return null;
+
+    const forecast = await forecastRes.json();
+
+    return forecast?.properties?.periods ?? null;
+
+  } catch (err) {
+    console.warn("NWS fetch failed:", err);
+    return null;
+  }
+}
+// ------------------------------------------------------------
+// NWS NORMALIZER → MATCHES OPEN-METEO SHAPE
+// ------------------------------------------------------------
+function normalizeNWS(periods) {
+  if (!Array.isArray(periods)) return null;
+
+  const parseWind = str => {
+    if (!str) return 0;
+    const match = str.match(/\d+/);
+    return match ? Number(match[0]) : 0;
+  };
+
+  const estimateCloud = text => {
+    if (!text) return 0.5;
+    const t = text.toLowerCase();
+
+    if (t.includes("clear")) return 0.1;
+    if (t.includes("partly")) return 0.4;
+    if (t.includes("mostly cloudy")) return 0.8;
+    if (t.includes("cloudy")) return 0.9;
+
+    return 0.5;
+  };
+
+  return {
+    time: periods.map(p => p.startTime),
+
+    temperature_2m: periods.map(p => p.temperature),
+
+    dew_point_2m: Array(periods.length).fill(null),
+   relativehumidity_2m: Array(periods.length).fill(null),
+
+    precipitation: periods.map(
+      p => (p.probabilityOfPrecipitation?.value ?? 0) / 100
+    ),
+
+    apparent_temperature: periods.map(p => p.temperature),
+    
+    snowfall: Array(periods.length).fill(0),
+
+    cloudcover: periods.map(p => estimateCloud(p.shortForecast)),
+
+    visibility: Array(periods.length).fill(null),
+
+    wind_speed_10m: periods.map(p => parseWind(p.windSpeed)),
+
+    wind_gusts_10m: Array(periods.length).fill(null),
+
+    uv_index: Array(periods.length).fill(0)
   };
 }
