@@ -1,154 +1,161 @@
 // ============================================================
-// NORMALIZE OPEN-METEO HOURLY PAYLOAD INTO CANONICAL FORMAT (v3)
-// Supports BOTH:
-//   1) Open-Meteo column format (API raw)
-//   2) Array-of-objects format (already processed)
-// Never returns null — always safe for downstream use
+// NORMALIZE OPEN-METEO HOURLY → CANONICAL FORMAT (v4)
+// - Supports array OR columnar input
+// - Never throws
+// - Never returns malformed objects
+// - Logs once per issue type (no spam)
+// - Correct unit handling (Open-Meteo = Celsius)
 // ============================================================
 
+let warned = new Set();
+const warnOnce = (msg, data) => {
+  if (!warned.has(msg)) {
+    console.warn(msg, data ?? "");
+    warned.add(msg);
+  }
+};
+
+// ------------------------------------------------------------
+// HELPERS
+// ------------------------------------------------------------
+const toNumber = v => {
+  if (v == null) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+};
+
+const cToF = c => (c != null ? (c * 9) / 5 + 32 : null);
+
+const toMiles = m => (m != null ? m / 1609.34 : null);
+
+const normalizeCloud = c =>
+  c != null ? (c > 1 ? c / 100 : c) : null;
+
+const toTimestamp = t => {
+  const ts = new Date(t).getTime();
+  return Number.isFinite(ts) ? ts : null;
+};
+
+const pick = (src, i, ...keys) => {
+  for (const k of keys) {
+    const val = src[k]?.[i];
+    if (val != null) return val;
+  }
+  return null;
+};
+
+// ------------------------------------------------------------
+// MAIN
+// ------------------------------------------------------------
 export function normalizeOpenMeteo(hourly) {
   if (!hourly) {
-    console.error("normalizeOpenMeteo: missing hourly input");
+    warnOnce("normalizeOpenMeteo: missing hourly input");
     return [];
   }
 
   // ============================================================
-  // ✅ CASE 1: ARRAY INPUT (already object-based)
+  // CASE 1: ARRAY INPUT (already object-based)
   // ============================================================
-if (Array.isArray(hourly)) {
-  return hourly
-    .map(h => {
-      const ts =
-        h.timestamp ??
-        (h.time ? new Date(h.time).getTime() : null);
+  if (Array.isArray(hourly)) {
+    return hourly
+      .map(h => {
+        const ts =
+          h.timestamp ??
+          (h.time ? toTimestamp(h.time) : null);
 
-      return {
-        // Temps
-        temperature: h.temperature ?? null,
-        dewpoint: h.dewpoint ?? null,
-        apparent_temperature: h.apparent_temperature ?? null,
+        if (ts == null) return null;
 
-        temperatureF: h.temperatureF ?? h.temperature ?? null,
-        dewpointF: h.dewpointF ?? null,
-        apparentF: h.apparentF ?? null,
+        return {
+          temperature: h.temperature ?? null,
+          dewpoint: h.dewpoint ?? null,
+          apparent_temperature: h.apparent_temperature ?? null,
 
-        // Atmosphere
-        relative_humidity: h.relative_humidity ?? null,
+          temperatureF: h.temperatureF ?? cToF(h.temperature),
+          dewpointF: h.dewpointF ?? cToF(h.dewpoint),
+          apparentF: h.apparentF ?? cToF(h.apparent_temperature),
 
-        // Wind
-        wind_speed: h.wind_speed ?? h.wind ?? 0,
-        wind_gust: h.wind_gust ?? 0,
-        wind_dir: h.wind_dir ?? null,
+          relative_humidity: h.relative_humidity ?? null,
 
-        // Precip
-        precipitation: h.precipitation ?? 0,
-        snowfall: h.snowfall ?? 0,
-        precipType:
-          h.precipType ??
-          (h.snowfall > 0
-            ? "snow"
-            : h.precipitation > 0
-            ? "rain"
-            : "none"),
+          wind_speed: h.wind_speed ?? h.wind ?? 0,
+          wind_gust: h.wind_gust ?? 0,
+          wind_dir: h.wind_dir ?? null,
 
-        // Environment
-        uv_index: h.uv_index ?? 0,
-        visibility: h.visibility ?? null,
-        cloud_cover: h.cloud_cover ?? null,
+          precipitation: h.precipitation ?? 0,
+          snowfall: h.snowfall ?? 0,
+          precipType:
+            h.precipType ??
+            (h.snowfall > 0
+              ? "snow"
+              : h.precipitation > 0
+              ? "rain"
+              : "none"),
 
-        // Risks
-        smoke_index: h.smoke_index ?? 0,
-        frost_risk: h.frost_risk ?? 0,
-        freeze_risk: h.freeze_risk ?? 0,
-        black_ice_risk: h.black_ice_risk ?? 0,
-        inversion_risk: h.inversion_risk ?? 0,
-        valley_fog_risk: h.valley_fog_risk ?? 0,
-        ridge_fog_risk: h.ridge_fog_risk ?? 0,
+          uv_index: h.uv_index ?? 0,
+          visibility: h.visibility ?? null,
+          cloud_cover: h.cloud_cover ?? null,
 
-        // ✅ FIXED
-        timestamp: Number.isFinite(ts) ? ts : null
-      };
-    })
-  .filter(h => h.timestamp != null);
-}
+          smoke_index: h.smoke_index ?? 0,
+          frost_risk: h.frost_risk ?? 0,
+          freeze_risk: h.freeze_risk ?? 0,
+          black_ice_risk: h.black_ice_risk ?? 0,
+          inversion_risk: h.inversion_risk ?? 0,
+          valley_fog_risk: h.valley_fog_risk ?? 0,
+          ridge_fog_risk: h.ridge_fog_risk ?? 0,
+
+          timestamp: ts
+        };
+      })
+      .filter(Boolean);
+  }
 
   // ============================================================
-  // ❌ INVALID INPUT
+  // CASE 2: COLUMNAR (RAW OPEN-METEO)
   // ============================================================
   if (!hourly?.time?.length) {
-    console.error("normalizeOpenMeteo: invalid hourly payload", hourly);
+    warnOnce("normalizeOpenMeteo: invalid hourly payload", hourly);
     return [];
   }
 
-  // ============================================================
-  // ✅ CASE 2: COLUMNAR OPEN-METEO FORMAT (API RAW)
-  // ============================================================
   const out = [];
   const len = hourly.time.length;
 
   for (let i = 0; i < len; i++) {
-    // -------------------------
-    // HELPERS
-    // -------------------------
-    const pick = (...keys) => {
-      for (const k of keys) {
-        const val = hourly[k]?.[i];
-        if (val != null) return val;
-      }
-      return null;
-    };
-
-    const num = v => {
-      if (v == null) return null;
-      const n = Number(v);
-      return Number.isFinite(ts) ? ts : null;
-    };
-
-    const toMiles = m => (m != null ? m / 1609.34 : null);
-
-    const normalizeCloud = c =>
-      c != null ? (c > 1 ? c / 100 : c) : null;
-
-    const toTimestamp = t => {
-      const ts = new Date(t).getTime();
-      return Number.isFinite(ts) ? ts : Date.now();
-    };
-
-    const fToC = f => (f != null ? ((f - 32) * 5) / 9 : null);
-
-    // -------------------------
-    // TIME
-    // -------------------------
     const ts = toTimestamp(hourly.time[i]);
+    if (ts == null) continue;
+
     const hour = new Date(ts).getHours();
     const isNight = hour >= 18 || hour <= 6;
 
     // -------------------------
-    // METEOROLOGY
+    // METEOROLOGY (Celsius native)
     // -------------------------
-    const tempF = num(pick("temperature_2m"));
-   const dewpointF = num(pick("dew_point_2m", "dewpoint_2m"));
-    const humidity = num(pick("relativehumidity_2m"));
+    const tempC = toNumber(pick(hourly, i, "temperature_2m"));
+    const dewC = toNumber(pick(hourly, i, "dew_point_2m", "dewpoint_2m"));
+    const humidity = toNumber(pick(hourly, i, "relative_humidity_2m"));
 
-    const apparentF_raw = num(pick("apparent_temperature"));
-    const apparentF = apparentF_raw ?? tempF;
+    const apparentC_raw = toNumber(pick(hourly, i, "apparent_temperature"));
+    const apparentC = apparentC_raw ?? tempC;
 
-    const tempC = fToC(tempF);
-    const dewC = fToC(dewpointF);
-    const apparentC = fToC(apparentF);
+    const tempF = cToF(tempC);
+    const dewpointF = cToF(dewC);
+    const apparentF = cToF(apparentC);
 
     // -------------------------
     // WIND
     // -------------------------
-    const windSpeed = num(pick("wind_speed_10m", "windspeed_10m")) ?? 0;
-    const windGust = num(pick("wind_gusts_10m", "windgusts_10m")) ?? 0;
-    const windDir = num(pick("winddirection_10m", "wind_dir"));
+    const windSpeed =
+      toNumber(pick(hourly, i, "wind_speed_10m", "windspeed_10m")) ?? 0;
+
+    const windGust =
+      toNumber(pick(hourly, i, "wind_gusts_10m", "windgusts_10m")) ?? 0;
+
+    const windDir = toNumber(pick(hourly, i, "winddirection_10m"));
 
     // -------------------------
     // PRECIP
     // -------------------------
-    const precip = num(pick("precipitation")) ?? 0;
-    const snow = num(pick("snowfall")) ?? 0;
+    const precip = toNumber(pick(hourly, i, "precipitation")) ?? 0;
+    const snow = toNumber(pick(hourly, i, "snowfall")) ?? 0;
 
     let precipType = "none";
     if (snow > 0) precipType = "snow";
@@ -157,39 +164,42 @@ if (Array.isArray(hourly)) {
     // -------------------------
     // UV
     // -------------------------
-    const uvRaw = num(pick("uv_index"));
-    const uv = isNight ? 0 : uvRaw;
+    const uvRaw = toNumber(pick(hourly, i, "uv_index"));
+    const uv = isNight ? 0 : uvRaw ?? 0;
 
     // -------------------------
     // CLOUD / VISIBILITY
     // -------------------------
-    const cloud = normalizeCloud(num(pick("cloudcover")));
+    const cloud = normalizeCloud(
+      toNumber(pick(hourly, i, "cloudcover"))
+    );
 
-    const visibilityRaw = num(pick("visibility"));
-    const visibility = visibilityRaw != null ? toMiles(visibilityRaw) : null;
+    const visibilityRaw = toNumber(pick(hourly, i, "visibility"));
+    const visibility =
+      visibilityRaw != null ? toMiles(visibilityRaw) : null;
 
     // -------------------------
     // RISKS
     // -------------------------
     const frostRisk =
-      tempC != null && dewC != null && tempC <= 37 && dewC <= 36
+      tempC != null && dewC != null && tempC <= 3 && dewC <= 2
         ? 0.6
-        : tempC != null && tempC <= 34
+        : tempC != null && tempC <= 1
         ? 1
         : 0;
 
     const freezeRisk =
-      tempC != null && tempC <= 32
+      tempC != null && tempC <= 0
         ? 1
-        : tempC != null && tempC <= 34
+        : tempC != null && tempC <= 1
         ? 0.5
         : 0;
 
     const blackIceRisk =
-      tempC != null && tempC <= 32 && precip > 0 ? 1 : 0;
+      tempC != null && tempC <= 0 && precip > 0 ? 1 : 0;
 
     const inversionRisk =
-      tempC != null && tempC <= 40 && windSpeed < 3 ? 0.5 : 0;
+      tempC != null && tempC <= 4 && windSpeed < 3 ? 0.5 : 0;
 
     const valleyFogRisk =
       humidity != null && humidity >= 95 && windSpeed < 3 ? 0.6 : 0;
