@@ -77,10 +77,11 @@ async function getWeatherUnified(lat, lon) {
       console.log("Raw keys:", Object.keys(json));
 
       const hourly = json.hourly;
-      const current =
-        json.current ||
-        json.current_conditions ||   // Tempest Better Forecast
-        null;
+     const current =
+  json.tempest ||              // <-- NEW: explicit Tempest support
+  json.current ||              // fallback
+  json.current_conditions ||   // Tempest Better Forecast
+  null;
 
       const timeArr = hourly?.time;
 

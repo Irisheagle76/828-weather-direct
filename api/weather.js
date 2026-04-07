@@ -112,11 +112,13 @@ async function handleHourly(req, res) {
   // ----------------------------------------------------------
   // FINAL PAYLOAD
   // ----------------------------------------------------------
-  const payload = {
-    hourly: data.hourly,
-    current: tempest,
-    _source: "open-meteo"
-  };
+const payload = {
+  hourly: data.hourly,
+  current: tempest,   // still here for compatibility
+  tempest,            // <-- ADD THIS LINE
+  _source: "open-meteo"
+};
+
 
   cache[key] = {
     ts: Date.now(),
@@ -176,7 +178,7 @@ async function fetchTempest() {
 
 // Tempest station observations return Celsius → convert to Fahrenheit
 const tempF = Math.round((tempRaw * 9) / 5 + 32);
-const dewF = dewRaw != null ? Math.round((dewRaw * 9) / 5 + 32) : null;
+const dewF  = dewRaw != null ? Math.round((dewRaw * 9) / 5 + 32) : null;
 
 return {
   temp: tempF,
