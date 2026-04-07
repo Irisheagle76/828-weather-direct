@@ -189,33 +189,51 @@ export function evaluateHumanActionFactors(data) {
 // SINGLE SNAPSHOT EVALUATOR (original logic, extracted)
 // =========================================================
 function evaluateSingleSnapshotRich(data) {
-  const {
-    temp,
-    feelsLike,
-    dewpoint,
-    humidity,
-    windSpeed,
-    windGust,
-    precipType,
-    precipIntensity,
-    uvIndex,
-    visibility,
-    cloudCover,
-    smokeIndex,
-    frostRisk,
-    freezeRisk,
-    inversionRisk,
-    blackIceRisk,
-    valleyFogRisk,
-    ridgeFogRisk,
-    timestamp
-  } = data;
+  const safeNum = (v, def = null) =>
+  typeof v === "number" && Number.isFinite(v) ? v : def;
 
-  const hour = new Date(timestamp).getHours();
+const temp = safeNum(data.temp);
+const feelsLike = safeNum(data.feelsLike);
+const dewpoint = safeNum(data.dewpoint);
+const humidity = safeNum(data.humidity);
+
+const windSpeed = safeNum(data.windSpeed, 0);
+const windGust = safeNum(data.windGust, 0);
+
+const precipType = data.precipType || "none";
+const precipIntensity = safeNum(data.precipIntensity, 0);
+
+const uvIndex = safeNum(data.uvIndex, 0);
+const visibility = safeNum(data.visibility);
+const cloudCover = safeNum(data.cloudCover);
+
+const smokeIndex = safeNum(data.smokeIndex, 0);
+const frostRisk = safeNum(data.frostRisk, 0);
+const freezeRisk = safeNum(data.freezeRisk, 0);
+const inversionRisk = safeNum(data.inversionRisk, 0);
+const blackIceRisk = safeNum(data.blackIceRisk, 0);
+const valleyFogRisk = safeNum(data.valleyFogRisk, 0);
+const ridgeFogRisk = safeNum(data.ridgeFogRisk, 0);
+
+const timestamp = safeNum(data.timestamp, Date.now());
+
+const date = new Date(timestamp);
+const hour = Number.isFinite(date.getTime()) ? date.getHours() : 12;
 const isNight = hour >= 18 || hour <= 6;
 
   const seasonal = getSeasonalContext(timestamp);
   const scores = [];
+
+  const validInputs = [
+  temp,
+  feelsLike,
+  dewpoint,
+  humidity,
+  visibility,
+  cloudCover
+].filter(v => v !== null).length;
+
+const dataQuality = validInputs / 6; // 0 → 1
 
   // -----------------------------
   // Temperature factors
@@ -257,24 +275,22 @@ const isNight = hour >= 18 || hour <= 6;
   // -----------------------------
   // Wind
   // -----------------------------
-  if (typeof windSpeed === "number" || typeof windGust === "number") {
-    const ws = windSpeed || 0;
-    const wg = windGust || 0;
+const ws = typeof windSpeed === "number" && Number.isFinite(windSpeed) ? windSpeed : 0;
+const wg = typeof windGust === "number" && Number.isFinite(windGust) ? windGust : 0;
 
-    if (ws >= 15 || wg >= 25) {
-      scores.push({
-        factor: "wind",
-        score: clamp((ws + wg * 0.5) / 40)
-      });
-    }
+if (ws >= 15 || wg >= 25) {
+  scores.push({
+    factor: "wind",
+    score: clamp((ws + wg * 0.5) / 40)
+  });
+}
 
-    if (wg >= 35) {
-      scores.push({
-        factor: "mountainWind",
-        score: clamp(wg / 50)
-      });
-    }
-  }
+if (wg >= 35) {
+  scores.push({
+    factor: "mountainWind",
+    score: clamp(wg / 50)
+  });
+}
 
   // -----------------------------
   // Precipitation
@@ -471,7 +487,8 @@ if (second && Math.abs(top.weightedScore - second.weightedScore) < 0.15) {
 // Confidence (smoothed, less jumpy)
 // ---------------------------------------------------------
 const confidence = clamp(
-  dominant.score * 0.85 + meaningful.length * 0.05
+  (dominant.score * 0.85 + meaningful.length * 0.05) *
+  (0.6 + dataQuality * 0.4)
 );
 
 // ---------------------------------------------------------

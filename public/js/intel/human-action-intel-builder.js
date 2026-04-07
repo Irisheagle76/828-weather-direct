@@ -1,37 +1,48 @@
 // ============================================================
-// HUMAN-ACTION INTEL BUILDER — v4 (HARDENED + CLEAN)
+// HUMAN-ACTION INTEL BUILDER — v5 (FULLY RESILIENT)
+// - Never crashes
+// - Handles empty / partial data
+// - Clean aggregation + slicing
 // ============================================================
 
 import { evaluateHumanActionFactors } from "../modules/human-action-2/core-engine.js";
 import { normalizeOpenMeteo } from "./normalize-hourly.js";
 
 // ------------------------------------------------------------
-// MAIN BUILDER
+// MAIN ENTRY
 // ------------------------------------------------------------
 export function buildHumanActionIntel(raw) {
   console.log("🔵 HA BUILDER START");
 
-  if (!raw?.hourly) {
-    console.error("❌ No hourly data:", raw);
-    return buildEmptyIntel();
-  }
+  const hourlyRaw = raw?.hourly;
+  const hourly = normalizeOpenMeteo(hourlyRaw);
 
-  const hourly = normalizeOpenMeteo(raw.hourly);
-
+  // ------------------------------------------------------------
+  // 🚨 NO DATA → DEGRADED MODE (NOT ERROR)
+  // ------------------------------------------------------------
   if (!hourly.length) {
-    console.error("❌ Normalized hourly empty");
-    return buildEmptyIntel();
+    console.warn("No hourly data — degraded mode");
+
+    return {
+      today: buildFallbackIntel("today"),
+      tomorrow: buildFallbackIntel("tomorrow"),
+      next6Hours: []
+    };
   }
 
+  // ------------------------------------------------------------
+  // TIME CONTEXT
+  // ------------------------------------------------------------
+  const now = Date.now();
   const currentHour = new Date().getHours();
   const isTonightMode = currentHour >= 15;
 
   // ------------------------------------------------------------
   // TIME SLICES
   // ------------------------------------------------------------
-  const next6Hours = sliceByHoursAhead(hourly, 0, 6);
-  const next24 = sliceByHoursAhead(hourly, 0, 24);
-  const next48 = sliceByHoursAhead(hourly, 24, 48);
+  const next6 = sliceHours(hourly, now, 0, 6);
+  const next24 = sliceHours(hourly, now, 0, 24);
+  const next48 = sliceHours(hourly, now, 24, 48);
 
   // ------------------------------------------------------------
   // TODAY / TONIGHT
@@ -45,13 +56,7 @@ export function buildHumanActionIntel(raw) {
 
   if (!todayHours.length) todayHours = next24;
 
-  const todaySnapshot = blendHoursSafe(todayHours);
-  const todayEval = todayHours.map(evaluateHumanActionFactors);
-  const todayCore = aggregateHumanAction(todayEval);
-
-  const todayIntel = buildIntelPackage({
-    core: todayCore,
-    snapshot: todaySnapshot,
+  const todayIntel = buildPeriodIntel({
     hours: todayHours,
     label: isTonightMode ? "tonight" : "today",
     isTomorrow: false
@@ -60,15 +65,8 @@ export function buildHumanActionIntel(raw) {
   // ------------------------------------------------------------
   // TOMORROW
   // ------------------------------------------------------------
-  const tomorrowHours = next48;
-  const tomorrowSnapshot = blendHoursSafe(tomorrowHours);
-  const tomorrowEval = tomorrowHours.map(evaluateHumanActionFactors);
-  const tomorrowCore = aggregateHumanAction(tomorrowEval);
-
-  const tomorrowIntel = buildIntelPackage({
-    core: tomorrowCore,
-    snapshot: tomorrowSnapshot,
-    hours: tomorrowHours,
+  const tomorrowIntel = buildPeriodIntel({
+    hours: next48,
     label: "tomorrow",
     isTomorrow: true
   });
@@ -78,29 +76,54 @@ export function buildHumanActionIntel(raw) {
   return {
     today: todayIntel,
     tomorrow: tomorrowIntel,
-    next6Hours
+    next6Hours: next6
   };
 }
 
 // ------------------------------------------------------------
-// SAFE BLEND (CRITICAL FIX)
+// PERIOD INTEL (CORE PIPELINE)
 // ------------------------------------------------------------
-function blendHoursSafe(hours) {
-  if (!hours?.length) return null;
+function buildPeriodIntel({ hours, label, isTomorrow }) {
+  if (!hours?.length) {
+    return buildFallbackIntel(label, isTomorrow);
+  }
 
-  const safeVals = (key) =>
+  const snapshot = blendHours(hours);
+  const evals = hours.map(evaluateHumanActionFactors);
+  const core = aggregate(evals);
+
+  return {
+    dominantFactor: core.dominantFactor,
+    confidence: core.confidence,
+    secondaryFactors: core.secondaryFactors,
+
+    dayLabel: label,
+    isTomorrow,
+
+    ...snapshot,
+
+    signals: buildSignals(snapshot),
+    hourlyEvaluations: evals
+  };
+}
+
+// ------------------------------------------------------------
+// BLEND HOURS (SAFE AVG)
+// ------------------------------------------------------------
+function blendHours(hours) {
+  const vals = key =>
     hours
       .map(h => h[key])
-      .filter(v => typeof v === "number" && v > -100 && v < 200); // 🚨 strict bounds
+      .filter(v => typeof v === "number" && Number.isFinite(v));
 
   const avg = key => {
-    const vals = safeVals(key);
-    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+    const v = vals(key);
+    return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
   };
 
   const max = key => {
-    const vals = safeVals(key);
-    return vals.length ? Math.max(...vals) : null;
+    const v = vals(key);
+    return v.length ? Math.max(...v) : null;
   };
 
   return {
@@ -108,6 +131,7 @@ function blendHoursSafe(hours) {
     feelsLike: avg("apparentF"),
     dewPoint: avg("dewpointF"),
     humidity: avg("relative_humidity"),
+
     windSpeed: avg("wind_speed"),
     windGust: max("wind_gust"),
 
@@ -126,66 +150,40 @@ function blendHoursSafe(hours) {
 }
 
 // ------------------------------------------------------------
-// INTEL PACKAGING
+// SIGNALS (UI SAFE DEFAULTS)
 // ------------------------------------------------------------
-function buildIntelPackage({ core, snapshot, hours, label, isTomorrow }) {
-  const safe = snapshot ?? {};
-
+function buildSignals(s) {
   return {
-    dominantFactor: core?.dominantFactor ?? "default",
-    confidence: core?.confidence ?? 0.3,
-    secondaryFactors: core?.secondaryFactors ?? [],
-
-    dayLabel: label,
-    isTomorrow,
-
-    ...safe,
-
-    signals: {
-      temp: safe.temp ?? 70,
-      feelsLike: safe.feelsLike ?? 70,
-      dewPoint: safe.dewPoint ?? 55,
-      humidity: safe.humidity ?? 50,
-      windSpeed: safe.windSpeed ?? 5,
-      windGust: safe.windGust ?? 8,
-      cloudCover: safe.cloudCover ?? 50,
-      visibility: safe.visibility ?? 10,
-      precipIntensity: safe.precipIntensity ?? 0
-    },
-
-    hourlyEvaluations: hours.map(evaluateHumanActionFactors)
+    temp: s.temp ?? 70,
+    feelsLike: s.feelsLike ?? 70,
+    dewPoint: s.dewPoint ?? 55,
+    humidity: s.humidity ?? 50,
+    windSpeed: s.windSpeed ?? 5,
+    windGust: s.windGust ?? 8,
+    cloudCover: s.cloudCover ?? 50,
+    visibility: s.visibility ?? 10,
+    precipIntensity: s.precipIntensity ?? 0
   };
 }
 
 // ------------------------------------------------------------
-// TIME SLICING (CLEAN)
+// TIME SLICING
 // ------------------------------------------------------------
-function sliceByHoursAhead(hourly, startHr, endHr) {
-  if (!hourly?.length) return [];
-
-  const base = normalizeTs(hourly[0].timestamp);
-
+function sliceHours(hourly, now, startHr, endHr) {
   return hourly.filter(h => {
-    const ts = normalizeTs(h.timestamp);
-    const diff = (ts - base) / 36e5;
+    const diff = (h.timestamp - now) / 36e5;
     return diff >= startHr && diff < endHr;
   });
 }
 
-function normalizeTs(ts) {
-  if (typeof ts === "string") ts = new Date(ts).getTime();
-  if (ts < 1e12) ts *= 1000;
-  return ts;
-}
-
 // ------------------------------------------------------------
-// AGGREGATION (UNCHANGED CORE LOGIC)
+// AGGREGATION
 // ------------------------------------------------------------
-function aggregateHumanAction(evals) {
+function aggregate(evals) {
   if (!evals?.length) {
     return {
-      dominantFactor: "default",
-      confidence: 0.3,
+      dominantFactor: "stable",
+      confidence: 0.2,
       secondaryFactors: []
     };
   }
@@ -195,6 +193,7 @@ function aggregateHumanAction(evals) {
   for (const e of evals) {
     const f = e.dominantFactor;
     if (!stats[f]) stats[f] = { count: 0, total: 0 };
+
     stats[f].count++;
     stats[f].total += e.confidence;
   }
@@ -207,36 +206,37 @@ function aggregateHumanAction(evals) {
     .sort((a, b) => b.score - a.score);
 
   return {
-    dominantFactor: ranked[0]?.factor ?? "default",
-    confidence: evals.reduce((a, e) => a + e.confidence, 0) / evals.length,
+    dominantFactor: ranked[0]?.factor ?? "stable",
+    confidence:
+      evals.reduce((a, e) => a + e.confidence, 0) / evals.length,
     secondaryFactors: ranked.slice(1, 3).map(r => r.factor)
   };
 }
 
 // ------------------------------------------------------------
-// EMPTY FALLBACK
+// FALLBACK INTEL (CRITICAL)
 // ------------------------------------------------------------
-function buildEmptyIntel() {
+function buildFallbackIntel(label, isTomorrow = false) {
   return {
-    today: baseFallback(),
-    tomorrow: baseFallback(),
-    next6Hours: []
-  };
-}
-
-function baseFallback() {
-  return {
-    dominantFactor: "default",
-    confidence: 0.3,
+    dominantFactor: "stable",
+    confidence: 0.2,
     secondaryFactors: [],
+
+    dayLabel: label,
+    isTomorrow,
+
     signals: {
       temp: 70,
+      feelsLike: 70,
       dewPoint: 55,
+      humidity: 50,
       windSpeed: 5,
       windGust: 8,
       cloudCover: 50,
       visibility: 10,
       precipIntensity: 0
-    }
+    },
+
+    hourlyEvaluations: []
   };
 }
