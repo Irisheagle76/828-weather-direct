@@ -1,7 +1,5 @@
 // ============================================================
-// WEATHER RENDER — v7 (PURE RENDER LAYER)
-// Input: { data, isLoading, mode }
-// No fetching. No side effects outside UI.
+// WEATHER RENDER — v8 (TEMPEST-CORRECT + TIME-AWARE)
 // ============================================================
 
 // ------------------------------------------------------------
@@ -37,17 +35,11 @@ const windFmt = v => (v != null ? Math.round(v) + " mph" : "--");
 // ------------------------------------------------------------
 export function renderWeather({ data, isLoading, mode = "downtown" }) {
 
-  // ------------------------------------------------------------
-  // LOADING STATE (CRITICAL FIX)
-  // ------------------------------------------------------------
   if (isLoading) {
     setLoadingUI();
     return;
   }
 
-  // ------------------------------------------------------------
-  // NO DATA STATE
-  // ------------------------------------------------------------
   if (!data) {
     setUnavailableUI();
     return;
@@ -60,7 +52,7 @@ export function renderWeather({ data, isLoading, mode = "downtown" }) {
   hourly.sort((a, b) => a.timestamp - b.timestamp);
 
   // ------------------------------------------------------------
-  // CURRENT CONDITIONS
+  // CURRENT CONDITIONS (FIXED)
   // ------------------------------------------------------------
   const current = resolveCurrent(data, hourly);
   renderCurrentObs(current);
@@ -79,7 +71,7 @@ export function renderWeather({ data, isLoading, mode = "downtown" }) {
   );
 
   // ------------------------------------------------------------
-  // FUTURE COMFORT
+  // FUTURE COMFORT (FIXED TIME ALIGNMENT)
   // ------------------------------------------------------------
   const future = buildFutureSlice(hourly, isDay);
   renderFutureComfort($("future-comfort-container"), future);
@@ -123,7 +115,7 @@ function setText(id, text) {
 }
 
 // ============================================================
-// CURRENT CONDITIONS (FIXED)
+// CURRENT CONDITIONS (TEMPEST-FIRST, FULLY FIXED)
 // ============================================================
 
 function resolveCurrent(data, hourly) {
@@ -131,22 +123,52 @@ function resolveCurrent(data, hourly) {
 
   const fallback = hourly[0];
 
-  const obs = data.tempest || data.wu?.current || null;
+  // 🔥 Correct priority order
+  const obs =
+    data.current ||        // ✅ NEW (Tempest)
+    data.tempest ||        // legacy
+    data.wu?.current ||    // legacy
+    null;
 
   return {
-    temp: obs?.air_temperature ?? fallback.temperatureF ?? null,
-    dewPoint: obs?.dew_point ?? fallback.dewpointF ?? null,
-    humidity: obs?.relative_humidity ?? fallback.relative_humidity ?? null,
-    wind: obs?.wind_avg ?? fallback.wind_speed ?? 0,
-    timestamp: obs?.timestamp ?? fallback.timestamp
+    temp:
+      obs?.temp ??
+      obs?.air_temperature ??
+      fallback.temperatureF ??
+      null,
+
+    dewPoint:
+      obs?.dew_point ??
+      fallback.dewpointF ??
+      null,
+
+    humidity:
+      obs?.humidity ??
+      obs?.relative_humidity ??
+      fallback.relative_humidity ??
+      null,
+
+    wind:
+      obs?.wind ??
+      obs?.wind_avg ??
+      fallback.wind_speed ??
+      0,
+
+    timestamp:
+      obs?.ts ??
+      obs?.timestamp ??
+      fallback.timestamp
   };
 }
 
+// ------------------------------------------------------------
+// CURRENT OBS RENDER
+// ------------------------------------------------------------
 function renderCurrentObs(current) {
   const el = $("current-obs-inline");
   if (!el) return;
 
-  if (!current) {
+  if (!current || current.temp == null) {
     el.innerHTML = "Observations unavailable";
     return;
   }
@@ -162,11 +184,20 @@ function renderCurrentObs(current) {
 }
 
 // ============================================================
-// FUTURE + COMFORT
+// FUTURE (TIME-ALIGNED FIX)
 // ============================================================
 
 function buildFutureSlice(hourly, isDay) {
-  return hourly.slice(0, 6).map(h => {
+  const now = Date.now();
+
+  const startIndex = hourly.findIndex(h => getTs(h) >= now);
+
+  const slice =
+    startIndex === -1
+      ? hourly.slice(0, 6)
+      : hourly.slice(startIndex, startIndex + 6);
+
+  return slice.map(h => {
     const c = calculateComfort({
       temp: h.temperatureF,
       humidity: h.relative_humidity,
@@ -181,6 +212,10 @@ function buildFutureSlice(hourly, isDay) {
     };
   });
 }
+
+// ============================================================
+// BEST WINDOW (UNCHANGED)
+// ============================================================
 
 function findBestWindow(hourly, mode, isDay) {
   let best = null;
