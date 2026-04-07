@@ -134,22 +134,22 @@ export function normalizeOpenMeteo(hourly) {
     // -------------------------
     // METEOROLOGY (Open-Meteo = Celsius)
     // -------------------------
-    const tempC = toNumber(pick(hourly, i, "temperature_2m"));
-    const dewC  = toNumber(pick(hourly, i, "dew_point_2m", "dewpoint_2m"));
-    const appC_raw = toNumber(pick(hourly, i, "apparent_temperature"));
+const tempC = toNumber(pick(hourly, i, "temperature_2m"));
+const dewC  = toNumber(pick(hourly, i, "dew_point_2m", "dewpoint_2m"));
+const appC_raw = toNumber(pick(hourly, i, "apparent_temperature"));
 
-    const apparentC = appC_raw ?? tempC;
+const apparentC = appC_raw ?? tempC;
 
-    const temperatureF = cToF(tempC);
-    const dewpointF    = cToF(dewC);
-    const apparentF    = cToF(apparentC);
+const temperatureF = cToF(tempC);
+const dewpointF    = cToF(dewC);
+const apparentF    = cToF(apparentC);
 
-    const humidity = toNumber(pick(hourly, i, "relative_humidity_2m"));
+const humidity = toNumber(pick(hourly, i, "relative_humidity_2m"));
 
-    // sanity check
-    if (tempC != null && dewC != null && dewC > tempC) {
-      warnOnce("🔥 UNIT BUG DETECTED (dewpoint > temp)", { tempC, dewC });
-    }
+// sanity check
+if (tempC != null && dewC != null && dewC > tempC) {
+  warnOnce("🔥 UNIT BUG DETECTED (dewpoint > temp)", { tempC, dewC });
+}
 
     // -------------------------
     // WIND
