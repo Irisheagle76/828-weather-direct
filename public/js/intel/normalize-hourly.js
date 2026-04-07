@@ -189,6 +189,23 @@ if (
       visibilityRaw != null ? toMiles(visibilityRaw) : null;
 
 // -------------------------
+// FOG RISKS (Fahrenheit-safe)
+// -------------------------
+const valley_fog_risk =
+  humidity != null &&
+  humidity >= 95 &&
+  wind_speed < 3
+    ? 0.6
+    : 0;
+
+const ridge_fog_risk =
+  humidity != null &&
+  humidity >= 98 &&
+  wind_speed < 5
+    ? 0.5
+    : 0;
+
+// -------------------------
 // RISKS (Fahrenheit-safe)
 // -------------------------
 const frost_risk =
