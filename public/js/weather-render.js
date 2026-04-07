@@ -168,6 +168,8 @@ function renderCurrentObs(current) {
   const el = $("current-obs-inline");
   if (!el) return;
 
+console.log("CURRENT DEBUG:", current);
+
   if (!current || current.temp == null) {
     el.innerHTML = "Observations unavailable";
     return;
