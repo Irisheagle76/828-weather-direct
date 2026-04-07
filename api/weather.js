@@ -1,8 +1,8 @@
 // ============================================================
-// WEATHER API — FINAL STABLE
+// WEATHER API — v7 (Stable + Predictable)
 // - Tempest = current (F)
 // - Open-Meteo = forecast (forced F)
-// - No unit guessing anywhere
+// - No unit guessing
 // - No duplicate vars
 // - No silent crashes
 // ============================================================
@@ -58,7 +58,11 @@ async function handleHourly(req, res) {
   if (cache[key] && Date.now() - cache[key].ts < CACHE_TTL) {
     return res.status(200).json({
       ...cache[key].data,
-      current: tempest || cache[key].data.current || lastGood[key]?.current || null
+      current:
+        tempest ||
+        cache[key].data.current ||
+        lastGood[key]?.current ||
+        null
     });
   }
 
@@ -137,7 +141,9 @@ async function fetchTempest() {
       return null;
     }
 
-    const url = `https://swd.weatherflow.com/swd/rest/observations/station/${stationId}?token=${token}`;
+    const url =
+      `https://swd.weatherflow.com/swd/rest/observations/station/` +
+      `${stationId}?token=${token}`;
 
     const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) {
@@ -161,13 +167,10 @@ async function fetchTempest() {
       return null;
     }
 
-    // 🔒 Tempest is already Fahrenheit
-    const temp = Math.round(tempRaw);
-    const dew_point = dewRaw ?? null;
-
+    // Tempest is already Fahrenheit
     return {
-      temp,
-      dew_point,
+      temp: Math.round(tempRaw),
+      dew_point: dewRaw ?? null,
       humidity: obs.relative_humidity ?? null,
       wind: obs.wind_avg ?? 0,
       ts: obs.timestamp
@@ -211,6 +214,9 @@ function respondWithFallback(res, key, reason, tempest) {
 
   return res.status(200).json({
     ...fallback,
-    current: tempest || lastGood[key]?.current || null
+    current:
+      tempest ||
+      lastGood[key]?.current ||
+      null
   });
 }

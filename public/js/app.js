@@ -1,8 +1,8 @@
 // ============================================================
-// APP ENTRY — v6 (EXPLICIT STATE + CLEAN FLOW)
+// APP ENTRY — v7 (CLEAN FLOW + RESILIENT STATE)
 // ============================================================
 
-console.log("APP.JS LOADED — v6");
+console.log("APP.JS LOADED — v7");
 
 // ------------------------------------------------------------
 // IMPORTS
@@ -37,6 +37,7 @@ let appState = {
   data: null
 };
 
+// UI mode (downtown/trail/etc.)
 window.APP_STATE = window.APP_STATE || {
   mode: "downtown"
 };
@@ -58,9 +59,7 @@ function setStatus(labelText, subText) {
 async function runRender() {
   console.log("RENDER START");
 
-  // ----------------------------------------------------------
   // 1. LOADING STATE
-  // ----------------------------------------------------------
   appState.isLoading = true;
 
   renderWeather({
@@ -72,9 +71,7 @@ async function runRender() {
   setStatus("Loading weather…", "Fetching latest conditions…");
 
   try {
-    // ----------------------------------------------------------
     // 2. FETCH
-    // ----------------------------------------------------------
     const data = await fetchAllIntel({
       lat: currentLocation.lat,
       lon: currentLocation.lon,
@@ -82,17 +79,13 @@ async function runRender() {
       tempestToken: CONFIG.TEMPEST_TOKEN
     });
 
-    // ----------------------------------------------------------
     // 3. UPDATE STATE
-    // ----------------------------------------------------------
     appState = {
       isLoading: false,
       data
     };
 
-    // ----------------------------------------------------------
     // 4. RENDER WITH DATA
-    // ----------------------------------------------------------
     renderWeather({
       data,
       isLoading: false,
@@ -144,7 +137,6 @@ window.updateComfortModules = function () {
       isLoading: false,
       mode: window.APP_STATE.mode
     });
-
   }, 50);
 };
 
@@ -165,7 +157,6 @@ function startAutoRefresh() {
 // ------------------------------------------------------------
 function resolveLocation() {
   return new Promise((resolve, reject) => {
-
     if (CONFIG.FORCE_LOCATION) {
       resolve({
         lat: CONFIG.DEFAULT_LAT,
@@ -180,13 +171,13 @@ function resolveLocation() {
     }
 
     navigator.geolocation.getCurrentPosition(
-      pos => resolve({
-        lat: pos.coords.latitude,
-        lon: pos.coords.longitude
-      }),
+      pos =>
+        resolve({
+          lat: pos.coords.latitude,
+          lon: pos.coords.longitude
+        }),
       () => reject("Location access denied.")
     );
-
   });
 }
 

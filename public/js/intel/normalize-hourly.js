@@ -4,7 +4,7 @@
 // - Never throws
 // - Never returns malformed objects
 // - Logs once per issue type (no spam)
-// - Correct unit handling (Open-Meteo = Celsius)
+// - Correct unit handling (Open-Meteo = Celsius → Fahrenheit)
 // ============================================================
 
 let warned = new Set();
@@ -54,7 +54,7 @@ export function normalizeOpenMeteo(hourly) {
   }
 
   // ============================================================
-  // CASE 1: ARRAY INPUT (already object-based)
+  // CASE 1: ARRAY INPUT (already object-based, canonical-ish)
   // ============================================================
   if (Array.isArray(hourly)) {
     return hourly
@@ -65,34 +65,53 @@ export function normalizeOpenMeteo(hourly) {
 
         if (ts == null) return null;
 
+        const tempC = toNumber(h.temperature);
+        const dewC  = toNumber(h.dewpoint);
+        const appC  = toNumber(h.apparent_temperature);
+
+        const temperatureF = h.temperatureF ?? cToF(tempC);
+        const dewpointF    = h.dewpointF ?? cToF(dewC);
+        const apparentF    = h.apparentF ?? cToF(appC);
+
+        const humidity = toNumber(h.relative_humidity);
+
+        const wind_speed = toNumber(h.wind_speed ?? h.wind) ?? 0;
+        const wind_gust  = toNumber(h.wind_gust) ?? 0;
+        const wind_dir   = toNumber(h.wind_dir);
+
+        const precipitation = toNumber(h.precipitation) ?? 0;
+        const snowfall      = toNumber(h.snowfall) ?? 0;
+
+        const precipType =
+          h.precipType ??
+          (snowfall > 0
+            ? "snow"
+            : precipitation > 0
+            ? "rain"
+            : "none");
+
+        const uv_index  = toNumber(h.uv_index) ?? 0;
+        const visibility = h.visibility ?? null;
+        const cloud_cover = h.cloud_cover ?? null;
+
         return {
-          temperature: h.temperature ?? null,
-          dewpoint: h.dewpoint ?? null,
-          apparent_temperature: h.apparent_temperature ?? null,
+          temperatureF,
+          dewpointF,
+          apparentF,
 
-          temperatureF: h.temperatureF ?? cToF(h.temperature),
-          dewpointF: h.dewpointF ?? cToF(h.dewpoint),
-          apparentF: h.apparentF ?? cToF(h.apparent_temperature),
+          relative_humidity: humidity,
 
-          relative_humidity: h.relative_humidity ?? null,
+          wind_speed,
+          wind_gust,
+          wind_dir,
 
-          wind_speed: h.wind_speed ?? h.wind ?? 0,
-          wind_gust: h.wind_gust ?? 0,
-          wind_dir: h.wind_dir ?? null,
+          precipitation,
+          snowfall,
+          precipType,
 
-          precipitation: h.precipitation ?? 0,
-          snowfall: h.snowfall ?? 0,
-          precipType:
-            h.precipType ??
-            (h.snowfall > 0
-              ? "snow"
-              : h.precipitation > 0
-              ? "rain"
-              : "none"),
-
-          uv_index: h.uv_index ?? 0,
-          visibility: h.visibility ?? null,
-          cloud_cover: h.cloud_cover ?? null,
+          uv_index,
+          visibility,
+          cloud_cover,
 
           smoke_index: h.smoke_index ?? 0,
           frost_risk: h.frost_risk ?? 0,
@@ -109,7 +128,7 @@ export function normalizeOpenMeteo(hourly) {
   }
 
   // ============================================================
-  // CASE 2: COLUMNAR (RAW OPEN-METEO)
+  // CASE 2: COLUMNAR (RAW OPEN-METEO, CELSIUS INPUTS)
   // ============================================================
   if (!hourly?.time?.length) {
     warnOnce("normalizeOpenMeteo: invalid hourly payload", hourly);
@@ -126,28 +145,26 @@ export function normalizeOpenMeteo(hourly) {
     const hour = new Date(ts).getHours();
     const isNight = hour >= 18 || hour <= 6;
 
-// ============================================================
-// METEOROLOGY (Fahrenheit — TRUST API)
-// ============================================================
-const temperatureF = toNumber(pick(hourly, i, "temperature_2m"));
-const dewpointF    = toNumber(pick(hourly, i, "dew_point_2m", "dewpoint_2m"));
+    // -------------------------
+    // METEOROLOGY (Open-Meteo = Celsius)
+    // -------------------------
+    const tempC = toNumber(pick(hourly, i, "temperature_2m"));
+    const dewC  = toNumber(pick(hourly, i, "dew_point_2m", "dewpoint_2m"));
+    const appC_raw = toNumber(pick(hourly, i, "apparent_temperature"));
 
-const apparentRaw  = toNumber(pick(hourly, i, "apparent_temperature"));
-const apparentF    = apparentRaw ?? temperatureF;
+    const apparentC = appC_raw ?? tempC;
 
-const humidity = toNumber(pick(hourly, i, "relative_humidity_2m"));
+    const temperatureF = cToF(tempC);
+    const dewpointF    = cToF(dewC);
+    const apparentF    = cToF(apparentC);
 
-// sanity check (only physics, no unit guessing)
-if (
-  temperatureF != null &&
-  dewpointF != null &&
-  dewpointF > temperatureF
-) {
-  warnOnce("🔥 BAD DATA (dew > temp)", {
-    temperatureF,
-    dewpointF
-  });
-}
+    const humidity = toNumber(pick(hourly, i, "relative_humidity_2m"));
+
+    // sanity check (physics only, no unit guessing)
+    if (tempC != null && dewC != null && dewC > tempC) {
+      warnOnce("🔥 UNIT BUG DETECTED (dewpoint > temp)", { tempC, dewC });
+    }
+
     // -------------------------
     // WIND
     // -------------------------
@@ -163,7 +180,7 @@ if (
     // PRECIP
     // -------------------------
     const precipitation = toNumber(pick(hourly, i, "precipitation")) ?? 0;
-    const snowfall = toNumber(pick(hourly, i, "snowfall")) ?? 0;
+    const snowfall      = toNumber(pick(hourly, i, "snowfall")) ?? 0;
 
     let precipType = "none";
     if (snowfall > 0) precipType = "snow";
@@ -186,56 +203,34 @@ if (
     const visibility =
       visibilityRaw != null ? toMiles(visibilityRaw) : null;
 
+    // -------------------------
+    // RISKS (Celsius logic)
 // -------------------------
-// FOG RISKS (Fahrenheit-safe)
-// -------------------------
-const valley_fog_risk =
-  humidity != null &&
-  humidity >= 95 &&
-  wind_speed < 3
-    ? 0.6
-    : 0;
+    const frost_risk =
+      tempC != null && dewC != null && tempC <= 3 && dewC <= 2
+        ? 0.6
+        : tempC != null && tempC <= 1
+        ? 1
+        : 0;
 
-const ridge_fog_risk =
-  humidity != null &&
-  humidity >= 98 &&
-  wind_speed < 5
-    ? 0.5
-    : 0;
+    const freeze_risk =
+      tempC != null && tempC <= 0
+        ? 1
+        : tempC != null && tempC <= 1
+        ? 0.5
+        : 0;
 
-// -------------------------
-// RISKS (Fahrenheit-safe)
-// -------------------------
-const frost_risk =
-  temperatureF != null &&
-  dewpointF != null &&
-  temperatureF <= 37 &&   // ~3°C
-  dewpointF <= 36         // ~2°C
-    ? 0.6
-    : temperatureF != null && temperatureF <= 34
-    ? 1
-    : 0;
+    const black_ice_risk =
+      tempC != null && tempC <= 0 && precipitation > 0 ? 1 : 0;
 
-const freeze_risk =
-  temperatureF != null && temperatureF <= 32
-    ? 1
-    : temperatureF != null && temperatureF <= 34
-    ? 0.5
-    : 0;
+    const inversion_risk =
+      tempC != null && tempC <= 4 && wind_speed < 3 ? 0.5 : 0;
 
-const black_ice_risk =
-  temperatureF != null &&
-  temperatureF <= 32 &&
-  precipitation > 0
-    ? 1
-    : 0;
+    const valley_fog_risk =
+      humidity != null && humidity >= 95 && wind_speed < 3 ? 0.6 : 0;
 
-const inversion_risk =
-  temperatureF != null &&
-  temperatureF <= 40 &&
-  wind_speed < 3
-    ? 0.5
-    : 0;
+    const ridge_fog_risk =
+      humidity != null && humidity >= 98 && wind_speed < 5 ? 0.5 : 0;
 
     // -------------------------
     // OUTPUT

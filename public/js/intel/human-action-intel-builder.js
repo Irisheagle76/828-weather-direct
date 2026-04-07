@@ -1,8 +1,9 @@
 // ============================================================
-// HUMAN-ACTION INTEL BUILDER — v5 (FULLY RESILIENT)
+// HUMAN-ACTION INTEL BUILDER — v6 (CLEAN + RESILIENT)
 // - Never crashes
 // - Handles empty / partial data
-// - Clean aggregation + slicing
+// - Canonical hourly → stable intel
+// - Today/Tonight/Tomorrow logic fixed
 // ============================================================
 
 import { evaluateHumanActionFactors } from "../modules/human-action-2/core-engine.js";
@@ -18,7 +19,7 @@ export function buildHumanActionIntel(raw) {
   const hourly = normalizeOpenMeteo(hourlyRaw);
 
   // ------------------------------------------------------------
-  // 🚨 NO DATA → DEGRADED MODE (NOT ERROR)
+  // NO DATA → DEGRADED MODE
   // ------------------------------------------------------------
   if (!hourly.length) {
     console.warn("No hourly data — degraded mode");
@@ -40,19 +41,24 @@ export function buildHumanActionIntel(raw) {
   // ------------------------------------------------------------
   // TIME SLICES
   // ------------------------------------------------------------
-  const next6 = sliceHours(hourly, now, 0, 6);
+  const next6  = sliceHours(hourly, now, 0, 6);
   const next24 = sliceHours(hourly, now, 0, 24);
   const next48 = sliceHours(hourly, now, 24, 48);
 
   // ------------------------------------------------------------
   // TODAY / TONIGHT
   // ------------------------------------------------------------
-  let todayHours = isTonightMode
-    ? hourly.filter(h => {
-        const hr = new Date(h.timestamp).getHours();
-        return hr >= 18 || hr <= 6;
-      })
-    : next24;
+  let todayHours;
+
+  if (isTonightMode) {
+    // 6 PM → 6 AM
+    todayHours = hourly.filter(h => {
+      const hr = new Date(h.timestamp).getHours();
+      return hr >= 18 || hr <= 6;
+    });
+  } else {
+    todayHours = next24;
+  }
 
   if (!todayHours.length) todayHours = next24;
 
@@ -214,7 +220,7 @@ function aggregate(evals) {
 }
 
 // ------------------------------------------------------------
-// FALLBACK INTEL (CRITICAL)
+// FALLBACK INTEL
 // ------------------------------------------------------------
 function buildFallbackIntel(label, isTomorrow = false) {
   return {

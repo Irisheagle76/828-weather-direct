@@ -1,8 +1,9 @@
 // ============================================================
-// WEATHER FETCH LAYER — v4 (CLEAN + SINGLE SOURCE)
-// - Uses /api/weather as source of truth
-// - Tempest comes from API (no separate route)
+// WEATHER FETCH LAYER — v5 (Unified + Tempest-Correct)
+// - Single source: /api/weather
 // - Stable shape: { hourly, current }
+// - Tempest Better Forecast supported via current_conditions
+// - 5-minute cache with safe fallback
 // ============================================================
 
 // ------------------------------------------------------------
@@ -13,7 +14,7 @@ let lastGood = {
   timestamp: 0
 };
 
-const CACHE_TTL = 5 * 60 * 1000; // 5 min
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 // ------------------------------------------------------------
 // MAIN ENTRY
@@ -26,7 +27,7 @@ export async function fetchAllIntel({ lat, lon }) {
   return {
     ...data,
 
-    // keep compatibility for rest of app
+    // compatibility for older modules
     tempest: data.current || null,
     wu: null,
     mrms: null,
@@ -57,32 +58,29 @@ async function getWeatherUnified(lat, lon) {
   // ----------------------------------------------------------
   // CACHE HIT
   // ----------------------------------------------------------
-  if (
-    lastGood.data &&
-    Date.now() - lastGood.timestamp < CACHE_TTL
-  ) {
+  if (lastGood.data && Date.now() - lastGood.timestamp < CACHE_TTL) {
     console.log("🟢 Using cached weather");
     return lastGood.data;
   }
 
   // ----------------------------------------------------------
-  // RETRY
+  // RETRY LOOP
   // ----------------------------------------------------------
   for (let attempt = 1; attempt <= 2; attempt++) {
     console.log(`🔁 Attempt ${attempt}`);
 
     try {
       const res = await fetchWithTimeout(url, 5000);
-
-      if (!res) continue;
-      if (!res.ok) continue;
+      if (!res || !res.ok) continue;
 
       const json = await res.json();
-
       console.log("Raw keys:", Object.keys(json));
 
       const hourly = json.hourly;
-      const current = json.current;
+      const current =
+        json.current ||
+        json.current_conditions ||   // Tempest Better Forecast
+        null;
 
       const timeArr = hourly?.time;
 
@@ -91,10 +89,7 @@ async function getWeatherUnified(lat, lon) {
         continue;
       }
 
-      const payload = {
-        hourly,
-        current: current || null
-      };
+      const payload = { hourly, current };
 
       // cache it
       lastGood = {
