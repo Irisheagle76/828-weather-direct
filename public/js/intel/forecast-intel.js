@@ -16,9 +16,9 @@ function buildSnapshot(hourly, indices, sky) {
 
   const t = indices.map(i => hourly.temperature_2m?.[i]).filter(v => v != null);
   const dew = indices.map(i => hourly.dew_point_2m?.[i]).filter(v => v != null);
-  const hum = indices.map(i => hourly.relativehumidity_2m?.[i]).filter(v => v != null);
+  const hum = indices.map(i => hourly.relative_humidity_2m?.[i]).filter(v => v != null);
   const wind = indices.map(i => hourly.windspeed_10m?.[i]).filter(v => v != null);
-  const gust = indices.map(i => hourly.windgusts_10m?.[i]).filter(v => v != null);
+  const gust = indices.map(i => hourly.wind_gusts_10m?.[i]).filter(v => v != null);
   const cloud = indices.map(i => hourly.cloudcover?.[i]).filter(v => v != null);
   const rain = indices.map(i => hourly.rain?.[i]).filter(v => v != null);
   const snow = indices.map(i => hourly.snowfall?.[i]).filter(v => v != null);

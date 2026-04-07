@@ -56,19 +56,19 @@ async function handleHourly(req, res) {
   // ----------------------------------------------------------
   // BUILD URL
   // ----------------------------------------------------------
-  const hourlyFields = [
-    "temperature_2m",
-    "apparent_temperature",
-    "dew_point_2m",
-    "relativehumidity_2m",
-    "precipitation",
-    "snowfall",
-    "cloudcover",
-    "visibility",
-    "wind_speed_10m",
-    "windgusts_10m",
-    "uv_index"
-  ].join(",");
+const hourlyFields = [
+  "temperature_2m",
+  "apparent_temperature",
+  "dew_point_2m",
+  "relative_humidity_2m",
+  "precipitation",
+  "snowfall",
+  "cloudcover",
+  "visibility",
+  "wind_speed_10m",
+  "wind_gusts_10m",
+  "uv_index"
+].join(",");
 
   const url =
     `https://api.open-meteo.com/v1/forecast` +
@@ -85,7 +85,7 @@ async function handleHourly(req, res) {
   // ----------------------------------------------------------
   // FETCH WITH TIMEOUT
   // ----------------------------------------------------------
-  const response = await fetchWithTimeout(url, 3500);
+  const response = await fetchWithTimeout(url, 5000);
 
   // ----------------------------------------------------------
   // TIMEOUT / NETWORK FAILURE
@@ -173,13 +173,13 @@ function buildFallbackHourly(reason) {
     time: [],
     temperature_2m: [],
     dew_point_2m: [],
-    relativehumidity_2m: [],
+    relative_humidity_2m: [],
     precipitation: [],
     snowfall: [],
     cloudcover: [],
     visibility: [],
     wind_speed_10m: [],
-    windgusts_10m: [],
+    wind_gusts_10m: [],
     uv_index: [],
     _fallback: true,
     _reason: reason

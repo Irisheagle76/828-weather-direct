@@ -147,7 +147,7 @@ export function normalizeOpenMeteo(hourly) {
       toNumber(pick(hourly, i, "wind_speed_10m", "windspeed_10m")) ?? 0;
 
     const windGust =
-      toNumber(pick(hourly, i, "wind_gusts_10m", "windgusts_10m")) ?? 0;
+      toNumber(pick(hourly, i, "wind_gusts_10m", "wind_gusts_10m")) ?? 0;
 
     const windDir = toNumber(pick(hourly, i, "winddirection_10m"));
 

@@ -28,7 +28,7 @@ export function computeStats(hourly, windowHours, sky) {
 
   for (const i of windowHours) {
     const t = hourly.temperature_2m[i];
-    const h = hourly.relativehumidity_2m?.[i] ?? null;
+    const h = hourly.relative_humidity_2m?.[i] ?? null;
     const d = hourly.dew_point_2m?.[i] ?? null;
     const uv = hourly.uv_index?.[i] ?? null;
     const cloud = hourly.cloudcover[i];
