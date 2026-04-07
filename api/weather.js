@@ -1,4 +1,8 @@
 // /api/weather.js
+
+let cache = {};
+const CACHE_TTL = 60 * 1000; // 1 minute
+
 export default async function handler(req, res) {
   const { type } = req.query;
 
@@ -22,6 +26,19 @@ export default async function handler(req, res) {
 // ------------------------------------------------------------
 async function handleHourly(req, res) {
   const { lat, lon } = req.query;
+  const key = `${lat},${lon}`;
+
+  if (cache[key] && Date.now() - cache[key].ts < CACHE_TTL) {
+    return res.status(200).json(cache[key].data);
+  }
+
+  const r = await fetch(url);
+  const data = await r.json();
+
+  cache[key] = {
+    ts: Date.now(),
+    data: data.hourly
+  };
 
   if (!lat || !lon) {
     return res.status(400).json({ error: "Missing lat/lon" });
@@ -61,7 +78,7 @@ async function handleHourly(req, res) {
     }
 
     console.log("OPENMETEO URL:", url);
-    
+
     const data = await r.json();
 
     // Validate structure
