@@ -85,21 +85,26 @@ const hourlyFields = [
   // ----------------------------------------------------------
   // FETCH WITH TIMEOUT
   // ----------------------------------------------------------
-  const response = await fetchWithTimeout(url, 5000);
+const response = await fetchWithTimeout(url);
 
-  // ----------------------------------------------------------
-  // TIMEOUT / NETWORK FAILURE
-  // ----------------------------------------------------------
-  if (!response) {
-    console.warn("⚠️ Open-Meteo timeout");
+if (!response) {
+  console.warn("Open-Meteo timeout → trying NWS");
 
-    if (lastGood[key]) {
-      console.warn("⚠️ Using last known good forecast");
-      return res.status(200).json(lastGood[key]);
+  const nwsPeriods = await fetchNWS(lat, lon);
+
+  if (nwsPeriods) {
+    const nwsData = normalizeNWS(nwsPeriods);
+
+    if (nwsData?.time?.length) {
+      nwsData._source = "nws";
+      return res.status(200).json(nwsData);
     }
-
-    return res.status(200).json(buildFallbackHourly("timeout"));
   }
+
+  return res.status(200).json(
+    buildFallbackHourly("timeout")
+  );
+}
 
   // ----------------------------------------------------------
   // BAD STATUS
