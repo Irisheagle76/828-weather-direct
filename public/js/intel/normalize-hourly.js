@@ -136,9 +136,10 @@ export function normalizeOpenMeteo(hourly) {
     const apparentC_raw = toNumber(pick(hourly, i, "apparent_temperature"));
     const apparentC = apparentC_raw ?? tempC;
 
-    const tempF = cToF(tempC);
-    const dewpointF = cToF(dewC);
-    const apparentF = cToF(apparentC);
+    const temp = toNumber(pick(hourly, i, "temperature_2m"));
+   const tempF = temp;
+const dewpointF = dewC;
+const apparentF = apparentC;
 
     // -------------------------
     // WIND
