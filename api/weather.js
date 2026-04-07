@@ -104,20 +104,22 @@ const hourlyFields = [
   // ----------------------------------------------------------
   // BAD STATUS
   // ----------------------------------------------------------
-// BAD STATUS
 if (!response.ok) {
+  console.log("🚨 ENTERED BAD STATUS BLOCK");
+
   const text = await response.text();
   console.error("Open-Meteo error:", text);
 
-  // --------------------------------------------------
-  // 🔥 TRY NWS FALLBACK
-  // --------------------------------------------------
+  console.log("➡️ Trying NWS fallback...");
+
   const nwsPeriods = await fetchNWS(lat, lon);
+  console.log("NWS periods:", nwsPeriods?.length);
 
   if (nwsPeriods) {
     console.warn("Using NWS fallback");
 
     const nwsData = normalizeNWS(nwsPeriods);
+    console.log("NWS normalized:", nwsData?.time?.length);
 
     if (nwsData?.time?.length) {
       nwsData._source = "nws";
@@ -127,9 +129,6 @@ if (!response.ok) {
     }
   }
 
-  // --------------------------------------------------
-  // EXISTING FALLBACK
-  // --------------------------------------------------
   if (lastGood[key]) {
     return res.status(200).json(lastGood[key]);
   }
@@ -249,15 +248,24 @@ async function fetchNWS(lat, lon) {
   }
 }
 // ------------------------------------------------------------
-// NWS NORMALIZER → MATCHES OPEN-METEO SHAPE
+// NWS NORMALIZER → ENHANCED (ENGINE-COMPATIBLE)
 // ------------------------------------------------------------
 function normalizeNWS(periods) {
   if (!Array.isArray(periods)) return null;
 
+  // ----------------------------------------------------------
+  // HELPERS
+  // ----------------------------------------------------------
+
   const parseWind = str => {
     if (!str) return 0;
-    const match = str.match(/\d+/);
-    return match ? Number(match[0]) : 0;
+    const nums = str.match(/\d+/g);
+    if (!nums) return 0;
+
+    const values = nums.map(Number);
+    return values.length === 2
+      ? (values[0] + values[1]) / 2
+      : values[0];
   };
 
   const estimateCloud = text => {
@@ -272,30 +280,81 @@ function normalizeNWS(periods) {
     return 0.5;
   };
 
+  const estimateDewpoint = temp => {
+    if (temp == null) return null;
+    return temp - 10; // simple but effective
+  };
+
+  const estimateHumidity = (temp, dew) => {
+    if (temp == null || dew == null) return null;
+    return Math.max(30, Math.min(95, 100 - (temp - dew) * 2));
+  };
+
+  const estimateUV = (temp, cloud) => {
+    if (cloud == null) return 0;
+    if (cloud < 0.3 && temp > 75) return 7;
+    if (cloud < 0.5) return 5;
+    return 2;
+  };
+
+  // ----------------------------------------------------------
+  // BUILD ARRAYS
+  // ----------------------------------------------------------
+
+  const time = periods.map(p => p.startTime);
+
+  const temperature = periods.map(p => p.temperature);
+
+  const dewpoint = temperature.map(t => estimateDewpoint(t));
+
+  const humidity = temperature.map((t, i) =>
+    estimateHumidity(t, dewpoint[i])
+  );
+
+  const cloud = periods.map(p =>
+    estimateCloud(p.shortForecast)
+  );
+
+  const wind = periods.map(p =>
+    parseWind(p.windSpeed)
+  );
+
+  const precipitation = periods.map(p => {
+    const prob = p.probabilityOfPrecipitation?.value ?? 0;
+
+    if (prob >= 70) return 0.15;
+    if (prob >= 50) return 0.08;
+    if (prob >= 30) return 0.03;
+    return 0;
+  });
+
+  const uv = temperature.map((t, i) =>
+    estimateUV(t, cloud[i])
+  );
+
+  // ----------------------------------------------------------
+  // RETURN (MATCHES OPEN-METEO SHAPE)
+  // ----------------------------------------------------------
+
   return {
-    time: periods.map(p => p.startTime),
+    time,
 
-    temperature_2m: periods.map(p => p.temperature),
+    temperature_2m: temperature,
 
-    dew_point_2m: Array(periods.length).fill(null),
-   relativehumidity_2m: Array(periods.length).fill(null),
+    dew_point_2m: dewpoint,
+    relativehumidity_2m: humidity,
 
-    precipitation: periods.map(
-      p => (p.probabilityOfPrecipitation?.value ?? 0) / 100
-    ),
+    apparent_temperature: temperature,
 
-    apparent_temperature: periods.map(p => p.temperature),
-    
+    precipitation,
     snowfall: Array(periods.length).fill(0),
 
-    cloudcover: periods.map(p => estimateCloud(p.shortForecast)),
-
+    cloudcover: cloud,
     visibility: Array(periods.length).fill(null),
 
-    wind_speed_10m: periods.map(p => parseWind(p.windSpeed)),
-
+    wind_speed_10m: wind,
     wind_gusts_10m: Array(periods.length).fill(null),
 
-    uv_index: Array(periods.length).fill(0)
+    uv_index: uv
   };
 }
