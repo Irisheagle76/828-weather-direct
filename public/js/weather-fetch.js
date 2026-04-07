@@ -128,21 +128,21 @@ async function getHourlySafe(lat, lon) {
         continue;
       }
 
-      const data = await res.json();
+     const data = await res.json();
 
-      // API fallback flag
-      if (data?._fallback) {
-        console.warn("Open-Meteo fallback:", data._reason);
-        continue;
-      }
+if (data?._fallback) {
+  console.warn("Open-Meteo fallback:", data._reason);
+  continue;
+}
 
-      if (data?.hourly?.time?.length) {
-        lastGood = {
-          hourly: data.hourly,
-          timestamp: Date.now()
-        };
-        return data.hourly;
-      }
+// ✅ THIS is the fix
+if (data?.time?.length) {
+  lastGood = {
+    hourly: data,
+    timestamp: Date.now()
+  };
+  return data;
+}
 
     } catch (err) {
       console.warn(`Hourly error (attempt ${attempt})`, err);
