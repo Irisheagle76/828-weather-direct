@@ -174,14 +174,18 @@ async function fetchTempest() {
       return null;
     }
 
-    // Tempest is already Fahrenheit
-    return {
-      temp: Math.round(tempRaw),
-      dew_point: dewRaw ?? null,
-      humidity: obs.relative_humidity ?? null,
-      wind: obs.wind_avg ?? 0,
-      ts: obs.timestamp
-    };
+// Tempest station observations return Celsius → convert to Fahrenheit
+const tempF = Math.round((tempRaw * 9) / 5 + 32);
+const dewF = dewRaw != null ? Math.round((dewRaw * 9) / 5 + 32) : null;
+
+return {
+  temp: tempF,
+  dew_point: dewF,
+  humidity: obs.relative_humidity ?? null,
+  wind: obs.wind_avg ?? 0,
+  ts: obs.timestamp
+};
+
 
   } catch (err) {
     console.warn("❌ Tempest fetch failed:", err);

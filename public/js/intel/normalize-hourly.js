@@ -4,7 +4,9 @@
 // - Never throws
 // - Never returns malformed objects
 // - Logs once per issue type (no spam)
-// - Correct unit handling (Open-Meteo = Celsius → Fahrenheit)
+// - Correct unit handling
+//   - Array input: may be Celsius → uses cToF if needed
+//   - Columnar Open-Meteo: already Fahrenheit → NO conversion
 // ============================================================
 
 let warned = new Set();
@@ -69,6 +71,7 @@ export function normalizeOpenMeteo(hourly) {
         const dewC  = toNumber(h.dewpoint);
         const appC  = toNumber(h.apparent_temperature);
 
+        // For array input we still allow Celsius → Fahrenheit
         const temperatureF = h.temperatureF ?? cToF(tempC);
         const dewpointF    = h.dewpointF ?? cToF(dewC);
         const apparentF    = h.apparentF ?? cToF(appC);
@@ -128,7 +131,7 @@ export function normalizeOpenMeteo(hourly) {
   }
 
   // ============================================================
-  // CASE 2: COLUMNAR (RAW OPEN-METEO, CELSIUS INPUTS)
+  // CASE 2: COLUMNAR (RAW OPEN-METEO, NOW FAHRENHEIT INPUTS)
   // ============================================================
   if (!hourly?.time?.length) {
     warnOnce("normalizeOpenMeteo: invalid hourly payload", hourly);
@@ -146,23 +149,25 @@ export function normalizeOpenMeteo(hourly) {
     const isNight = hour >= 18 || hour <= 6;
 
     // -------------------------
-    // METEOROLOGY (Open-Meteo = Celsius)
+    // METEOROLOGY (Open-Meteo = Fahrenheit now)
     // -------------------------
-    const tempC = toNumber(pick(hourly, i, "temperature_2m"));
-    const dewC  = toNumber(pick(hourly, i, "dew_point_2m", "dewpoint_2m"));
-    const appC_raw = toNumber(pick(hourly, i, "apparent_temperature"));
+    const tempF = toNumber(pick(hourly, i, "temperature_2m"));
+    const dewF  = toNumber(pick(hourly, i, "dew_point_2m", "dewpoint_2m"));
+    const appF_raw = toNumber(pick(hourly, i, "apparent_temperature"));
 
-    const apparentC = appC_raw ?? tempC;
+    const apparentF = appF_raw ?? tempF;
 
-    const temperatureF = cToF(tempC);
-    const dewpointF    = cToF(dewC);
-    const apparentF    = cToF(apparentC);
+    const temperatureF = tempF;
+    const dewpointF    = dewF;
 
     const humidity = toNumber(pick(hourly, i, "relative_humidity_2m"));
 
-    // sanity check (physics only, no unit guessing)
-    if (tempC != null && dewC != null && dewC > tempC) {
-      warnOnce("🔥 UNIT BUG DETECTED (dewpoint > temp)", { tempC, dewC });
+    // sanity check (physics only, still valid in °F)
+    if (temperatureF != null && dewpointF != null && dewpointF > temperatureF) {
+      warnOnce("🔥 UNIT BUG DETECTED (dewpoint > temp)", {
+        temperatureF,
+        dewpointF
+      });
     }
 
     // -------------------------
@@ -204,27 +209,29 @@ export function normalizeOpenMeteo(hourly) {
       visibilityRaw != null ? toMiles(visibilityRaw) : null;
 
     // -------------------------
-    // RISKS (Celsius logic)
-// -------------------------
+    // RISKS (still using thresholds, now on °F inputs)
+    // -------------------------
+    // You can later convert to °C internally if you want,
+    // but this keeps behavior simple and avoids unit guessing.
     const frost_risk =
-      tempC != null && dewC != null && tempC <= 3 && dewC <= 2
+      temperatureF != null && dewpointF != null && temperatureF <= 38 && dewpointF <= 36
         ? 0.6
-        : tempC != null && tempC <= 1
+        : temperatureF != null && temperatureF <= 34
         ? 1
         : 0;
 
     const freeze_risk =
-      tempC != null && tempC <= 0
+      temperatureF != null && temperatureF <= 32
         ? 1
-        : tempC != null && tempC <= 1
+        : temperatureF != null && temperatureF <= 34
         ? 0.5
         : 0;
 
     const black_ice_risk =
-      tempC != null && tempC <= 0 && precipitation > 0 ? 1 : 0;
+      temperatureF != null && temperatureF <= 32 && precipitation > 0 ? 1 : 0;
 
     const inversion_risk =
-      tempC != null && tempC <= 4 && wind_speed < 3 ? 0.5 : 0;
+      temperatureF != null && temperatureF <= 40 && wind_speed < 3 ? 0.5 : 0;
 
     const valley_fog_risk =
       humidity != null && humidity >= 95 && wind_speed < 3 ? 0.6 : 0;
