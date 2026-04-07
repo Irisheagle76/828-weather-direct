@@ -99,12 +99,18 @@ export async function fetchAllIntel({
 }
 
 // ============================================================
-// HOURLY SAFE FETCH (CORE FIX)
+// HOURLY SAFE FETCH (DEBUG ENABLED)
 // ============================================================
 async function getHourlySafe(lat, lon) {
-  if (!lat || !lon) return safeHourlyFallback();
+  console.log("🟦 getHourlySafe START", { lat, lon });
+
+  if (!lat || !lon) {
+    console.warn("❌ Missing lat/lon");
+    return safeHourlyFallback();
+  }
 
   const url = `/api/weather?type=hourly&lat=${lat}&lon=${lon}`;
+  console.log("🌐 Fetching:", url);
 
   // ------------------------------------------------------------
   // CACHE HIT
@@ -113,6 +119,7 @@ async function getHourlySafe(lat, lon) {
     lastGood.hourly &&
     Date.now() - lastGood.timestamp < CACHE_TTL
   ) {
+    console.log("🟢 Using cached hourly");
     return lastGood.hourly;
   }
 
@@ -120,32 +127,54 @@ async function getHourlySafe(lat, lon) {
   // RETRY (2 attempts)
   // ------------------------------------------------------------
   for (let attempt = 1; attempt <= 2; attempt++) {
+    console.log(`🔁 Attempt ${attempt}`);
+
     try {
       const res = await fetchWithTimeout(url, 5000);
 
-      if (!res || !res.ok) {
-        console.warn(`Hourly bad response (attempt ${attempt})`);
+      if (!res) {
+        console.warn("❌ No response (timeout)");
         continue;
       }
 
-     const data = await res.json();
+      console.log("📡 Status:", res.status);
 
-if (data?._fallback) {
-  console.warn("Open-Meteo fallback:", data._reason);
-  continue;
-}
+      if (!res.ok) {
+        console.warn(`❌ Bad response (attempt ${attempt})`);
+        continue;
+      }
 
-// ✅ THIS is the fix
-if (data?.time?.length) {
-  lastGood = {
-    hourly: data,
-    timestamp: Date.now()
-  };
-  return data;
-}
+      const data = await res.json();
+
+      console.log("📦 Raw data keys:", Object.keys(data || {}));
+      console.log("📦 Sample time length:", data?.time?.length);
+
+      // --------------------------------------------------------
+      // API fallback flag
+      // --------------------------------------------------------
+      if (data?._fallback) {
+        console.warn("⚠️ API fallback triggered:", data._reason);
+        continue;
+      }
+
+      // --------------------------------------------------------
+      // ✅ VALID DATA CHECK (CRITICAL)
+      // --------------------------------------------------------
+      if (data?.time?.length) {
+        console.log("✅ VALID HOURLY DATA RECEIVED");
+
+        lastGood = {
+          hourly: data,
+          timestamp: Date.now()
+        };
+
+        return data;
+      }
+
+      console.warn("❌ Data missing time array or empty");
 
     } catch (err) {
-      console.warn(`Hourly error (attempt ${attempt})`, err);
+      console.warn(`❌ Hourly error (attempt ${attempt})`, err);
     }
   }
 
@@ -153,14 +182,14 @@ if (data?.time?.length) {
   // FALLBACK: CACHE
   // ------------------------------------------------------------
   if (lastGood.hourly) {
-    console.warn("Using cached hourly");
+    console.warn("🟡 Using cached fallback hourly");
     return lastGood.hourly;
   }
 
   // ------------------------------------------------------------
   // FINAL FALLBACK
   // ------------------------------------------------------------
-  console.warn("Using safe hourly fallback");
+  console.warn("🔴 Using safe hourly fallback (EMPTY)");
   return safeHourlyFallback();
 }
 
