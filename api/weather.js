@@ -1,15 +1,15 @@
 // ============================================================
-// WEATHER API — v4 (TEMPEST-FIRST, STABLE)
-// - Tempest = current truth
-// - Open-Meteo = forecast
-// - Persistent current conditions
-// - Cache-safe + fallback-safe
+// WEATHER API — v5 (TEMPEST-STRICT + CLEAN)
+// - Tempest = ONLY source for current
+// - Open-Meteo = forecast only
+// - No unit mismatches
+// - Stable + predictable
 // ============================================================
 
 let cache = {};
 let lastGood = {};
 
-const CACHE_TTL = 60 * 1000; // 1 minute
+const CACHE_TTL = 60 * 1000; // 1 min
 
 // ------------------------------------------------------------
 // ROUTER
@@ -26,7 +26,6 @@ export default async function handler(req, res) {
 
   } catch (err) {
     console.error("🚨 Weather API error:", err);
-
     return res.status(200).json(buildFallback("router-exception"));
   }
 }
@@ -44,12 +43,16 @@ async function handleHourly(req, res) {
   const key = `${lat},${lon}`;
 
   // ----------------------------------------------------------
-  // ALWAYS FETCH TEMPEST (DO THIS FIRST)
+  // 🔥 ALWAYS GET TEMPEST FIRST
   // ----------------------------------------------------------
   const tempest = await fetchTempest();
 
+  if (!tempest) {
+    console.error("🚨 TEMPEST FAILED — no current conditions");
+  }
+
   // ----------------------------------------------------------
-  // CACHE HIT → merge Tempest into cached data
+  // CACHE HIT (but refresh current)
   // ----------------------------------------------------------
   if (cache[key] && Date.now() - cache[key].ts < CACHE_TTL) {
     return res.status(200).json({
@@ -59,7 +62,7 @@ async function handleHourly(req, res) {
   }
 
   // ----------------------------------------------------------
-  // BUILD OPEN-METEO URL
+  // OPEN-METEO (FORECAST ONLY)
   // ----------------------------------------------------------
   const hourlyFields = [
     "temperature_2m",
@@ -78,7 +81,6 @@ async function handleHourly(req, res) {
   const url =
     `https://api.open-meteo.com/v1/forecast` +
     `?latitude=${lat}&longitude=${lon}` +
-    `&current_weather=true` +
     `&hourly=${hourlyFields}` +
     `&forecast_days=3` +
     `&temperature_unit=fahrenheit` +
@@ -88,21 +90,12 @@ async function handleHourly(req, res) {
 
   console.log("🌐 OPENMETEO:", url);
 
-  // ----------------------------------------------------------
-  // FETCH WITH TIMEOUT
-  // ----------------------------------------------------------
   const response = await fetchWithTimeout(url);
 
-  if (!response) {
-    console.warn("Open-Meteo timeout");
+  if (!response || !response.ok) {
+    console.warn("Open-Meteo failed");
 
-    return respondWithFallback(res, key, "timeout", tempest);
-  }
-
-  if (!response.ok) {
-    console.warn("Open-Meteo bad status:", response.status);
-
-    return respondWithFallback(res, key, `bad-status-${response.status}`, tempest);
+    return respondWithFallback(res, key, "forecast-failed", tempest);
   }
 
   const data = await response.json();
@@ -114,20 +107,19 @@ async function handleHourly(req, res) {
   }
 
   // ----------------------------------------------------------
-  // BUILD FINAL PAYLOAD
+  // FINAL PAYLOAD
   // ----------------------------------------------------------
   const payload = {
     hourly: data.hourly,
-    current_weather: data.current_weather,
 
-    // 🔥 authoritative current
-    current: tempest || lastGood[key]?.current || null,
+    // 🔥 STRICT: Tempest only (no fallback to forecast)
+    current: tempest,
 
     _source: "open-meteo"
   };
 
   // ----------------------------------------------------------
-  // CACHE + LAST GOOD
+  // CACHE
   // ----------------------------------------------------------
   cache[key] = {
     ts: Date.now(),
@@ -140,7 +132,7 @@ async function handleHourly(req, res) {
 }
 
 // ------------------------------------------------------------
-// TEMPEST FETCH YOUR STATION
+// TEMPEST (CORRECT + UNIT SAFE)
 // ------------------------------------------------------------
 async function fetchTempest() {
   try {
@@ -163,23 +155,29 @@ async function fetchTempest() {
     const obs = data?.obs?.[0];
     if (!obs) return null;
 
-    return {
-      const cToF = c => (c * 9) / 5 + 32;
+    const cToF = c => (c * 9) / 5 + 32;
 
-temp: Math.round(cToF(obs.air_temperature)),
+    const tempF = cToF(obs.air_temperature);
+
+    console.log("🌡️ TEMPEST RAW C:", obs.air_temperature);
+    console.log("🌡️ TEMPEST F:", tempF);
+
+    return {
+      temp: Math.round(tempF),
+      dew_point: obs.dew_point != null ? cToF(obs.dew_point) : null,
       humidity: obs.relative_humidity,
       wind: obs.wind_avg,
       ts: obs.timestamp
     };
 
   } catch (err) {
-    console.warn("Tempest fetch failed");
+    console.warn("Tempest fetch failed:", err);
     return null;
   }
 }
 
 // ------------------------------------------------------------
-// FALLBACK RESPONSE (WITH TEMPEST)
+// FALLBACK
 // ------------------------------------------------------------
 function respondWithFallback(res, key, reason, tempest) {
   const fallback = buildFallback(reason);
@@ -191,7 +189,7 @@ function respondWithFallback(res, key, reason, tempest) {
 }
 
 // ------------------------------------------------------------
-// TIMEOUT FETCH
+// FETCH TIMEOUT
 // ------------------------------------------------------------
 async function fetchWithTimeout(url, timeout = 4000) {
   const controller = new AbortController();
