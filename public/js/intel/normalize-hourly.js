@@ -127,18 +127,40 @@ export function normalizeOpenMeteo(hourly) {
     const isNight = hour >= 18 || hour <= 6;
 
 // ============================================================
-// METEOROLOGY (API = Fahrenheit — DO NOT CONVERT)
+// METEOROLOGY (UNIT-SAFE — DETECT + NORMALIZE)
 // ============================================================
-const temperatureF = toNumber(pick(hourly, i, "temperature_2m"));
-const dewpointF    = toNumber(pick(hourly, i, "dew_point_2m", "dewpoint_2m"));
+const tempRaw = toNumber(pick(hourly, i, "temperature_2m"));
+const dewRaw  = toNumber(pick(hourly, i, "dew_point_2m", "dewpoint_2m"));
+const appRaw  = toNumber(pick(hourly, i, "apparent_temperature"));
 
-const apparentRaw  = toNumber(pick(hourly, i, "apparent_temperature"));
-const apparentF    = apparentRaw ?? temperatureF;
+const toF = c => (c * 9) / 5 + 32;
+
+// 🔥 Detect unit (robust, no API trust)
+const isCelsius =
+  tempRaw != null &&
+  tempRaw > -30 &&
+  tempRaw < 60;
+
+// Normalize → ALWAYS Fahrenheit
+const temperatureF =
+  tempRaw != null
+    ? (isCelsius ? toF(tempRaw) : tempRaw)
+    : null;
+
+const dewpointF =
+  dewRaw != null
+    ? (isCelsius ? toF(dewRaw) : dewRaw)
+    : null;
+
+const apparentF =
+  appRaw != null
+    ? (isCelsius ? toF(appRaw) : appRaw)
+    : temperatureF;
 
 const humidity = toNumber(pick(hourly, i, "relative_humidity_2m"));
 
 // -------------------------
-// 🔥 HARD SANITY CHECK
+// 🔥 SANITY CHECK
 // -------------------------
 if (
   temperatureF != null &&
@@ -146,8 +168,11 @@ if (
   dewpointF > temperatureF
 ) {
   warnOnce("🔥 BAD DATA (dew > temp)", {
+    tempRaw,
+    dewRaw,
     temperatureF,
-    dewpointF
+    dewpointF,
+    isCelsius
   });
 }
     // -------------------------
