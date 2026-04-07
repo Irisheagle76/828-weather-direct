@@ -54,6 +54,10 @@ export function renderWeather({ data, isLoading, mode = "downtown" }) {
   // ------------------------------------------------------------
   // CURRENT CONDITIONS (FIXED)
   // ------------------------------------------------------------
+
+  console.log("DATA KEYS AT RENDER:", Object.keys(data));
+console.log("DATA FULL:", data);
+
   const current = resolveCurrent(data, hourly);
   renderCurrentObs(current);
 
