@@ -127,53 +127,30 @@ function setText(id, text) {
 // ============================================================
 // CURRENT CONDITIONS (TEMPEST-FIRST, FULLY FIXED)
 // ============================================================
+console.log("CURRENT FROM API:", data.current);
 
-function resolveCurrent(data, hourly) {
-  if (!hourly?.length) return null;
+function resolveCurrent(data) {
+  const obs = data.current;
 
-  const fallback = hourly[0];
-
-  // 🔥 Correct priority order
-  const obs =
-    data.current ||        // ✅ NEW (Tempest)
-    data.tempest ||        // legacy
-    data.wu?.current ||    // legacy
-    null;
+  // 🔒 HARD RULE: only use Tempest
+  if (!obs || obs.temp == null) {
+    console.error("❌ NO VALID TEMPEST CURRENT", obs);
+    return null;
+  }
 
   return {
-    temp:
-      obs?.temp ??
-      obs?.air_temperature ??
-      fallback.temperatureF ??
-      null,
-
-    dewPoint:
-      obs?.dew_point ??
-      fallback.dewpointF ??
-      null,
-
-    humidity:
-      obs?.humidity ??
-      obs?.relative_humidity ??
-      fallback.relative_humidity ??
-      null,
-
-    wind:
-      obs?.wind ??
-      obs?.wind_avg ??
-      fallback.wind_speed ??
-      0,
-
-    timestamp:
-      obs?.ts ??
-      obs?.timestamp ??
-      fallback.timestamp
+    temp: obs.temp,
+    dewPoint: obs.dew_point ?? null,
+    humidity: obs.humidity ?? null,
+    wind: obs.wind ?? 0,
+    timestamp: obs.ts ?? null
   };
 }
 
 // ------------------------------------------------------------
 // CURRENT OBS RENDER
 // ------------------------------------------------------------
+
 function renderCurrentObs(current) {
   const el = $("current-obs-inline");
   if (!el) return;
