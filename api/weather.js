@@ -1,10 +1,5 @@
 // ============================================================
-// WEATHER API — v7 (Stable + Predictable)
-// - Tempest = current (F)
-// - Open-Meteo = forecast (forced F)
-// - No unit guessing
-// - No duplicate vars
-// - No silent crashes
+// WEATHER API — FINAL (STABLE + CORRECT UNITS)
 // ============================================================
 
 let cache = {};
@@ -27,7 +22,6 @@ export default async function handler(req, res) {
 
   } catch (err) {
     console.error("🚨 TOP LEVEL ERROR:", err);
-
     return res.status(500).json({
       error: err.message,
       stack: err.stack
@@ -48,7 +42,7 @@ async function handleHourly(req, res) {
   const key = `${lat},${lon}`;
 
   // ----------------------------------------------------------
-  // TEMPEST (CURRENT CONDITIONS)
+  // CURRENT (TEMPEST)
   // ----------------------------------------------------------
   const tempest = await fetchTempest();
 
@@ -58,16 +52,12 @@ async function handleHourly(req, res) {
   if (cache[key] && Date.now() - cache[key].ts < CACHE_TTL) {
     return res.status(200).json({
       ...cache[key].data,
-      current:
-        tempest ||
-        cache[key].data.current ||
-        lastGood[key]?.current ||
-        null
+      current: tempest || cache[key].data.current || null
     });
   }
 
   // ----------------------------------------------------------
-  // OPEN-METEO (FORECAST)
+  // FORECAST (OPEN-METEO — ALREADY FAHRENHEIT)
   // ----------------------------------------------------------
   const hourlyFields = [
     "temperature_2m",
@@ -93,32 +83,27 @@ async function handleHourly(req, res) {
     `&precipitation_unit=inch` +
     `&timezone=auto`;
 
-  console.log("🌐 OPENMETEO:", url);
-
   const response = await fetchWithTimeout(url);
 
   if (!response || !response.ok) {
-    console.warn("❌ Open-Meteo failed");
     return respondWithFallback(res, key, "forecast-failed", tempest);
   }
 
   const data = await response.json();
 
   if (!data?.hourly?.time?.length) {
-    console.warn("❌ Malformed Open-Meteo payload");
     return respondWithFallback(res, key, "malformed", tempest);
   }
 
   // ----------------------------------------------------------
   // FINAL PAYLOAD
   // ----------------------------------------------------------
-const payload = {
-  hourly: data.hourly,
-  current: tempest,   // still here for compatibility
-  tempest,            // <-- ADD THIS LINE
-  _source: "open-meteo"
-};
-
+  const payload = {
+    hourly: data.hourly,
+    current: tempest,
+    tempest, // explicit (helps frontend clarity)
+    _source: "open-meteo"
+  };
 
   cache[key] = {
     ts: Date.now(),
@@ -131,66 +116,48 @@ const payload = {
 }
 
 // ------------------------------------------------------------
-// TEMPEST (SAFE + SIMPLE)
+// TEMPEST (C → F NORMALIZATION — ONLY PLACE WE CONVERT)
 // ------------------------------------------------------------
 async function fetchTempest() {
-  console.log("ENV CHECK:", {
-    station: process.env.TEMPEST_STATION_ID,
-    token: process.env.TEMPEST_TOKEN ? "present" : "missing"
-  });
-
   try {
     const stationId = process.env.TEMPEST_STATION_ID;
     const token = process.env.TEMPEST_TOKEN;
 
-
     if (!stationId || !token) {
-      console.warn("⚠️ Tempest not configured");
       return null;
     }
-
 
     const url =
       `https://swd.weatherflow.com/swd/rest/observations/station/` +
       `${stationId}?token=${token}`;
 
     const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) {
-      console.warn("❌ Tempest bad response:", res.status);
-      return null;
-    }
+    if (!res.ok) return null;
 
     const data = await res.json();
     const obs = data?.obs?.[0];
-
-    if (!obs) {
-      console.warn("❌ Tempest missing obs");
-      return null;
-    }
+    if (!obs) return null;
 
     const tempRaw = obs.air_temperature;
     const dewRaw = obs.dew_point;
 
-    if (tempRaw == null) {
-      console.warn("❌ Tempest missing temp");
-      return null;
-    }
+    if (tempRaw == null) return null;
 
-// Tempest already returns Fahrenheit
-const tempF = Math.round(tempRaw);
-const dewF  = dewRaw != null ? Math.round(dewRaw) : null;
+    // 🔥 CONFIRMED: Tempest is returning Celsius → convert ONCE
+    const toF = c => (c * 9) / 5 + 32;
 
-return {
-  temp: tempF,
-  dew_point: dewF,
-  humidity: obs.relative_humidity ?? null,
-  wind: obs.wind_avg ?? 0,
-  ts: obs.timestamp
-};
+    const tempF = Math.round(toF(tempRaw));
+    const dewF  = dewRaw != null ? Math.round(toF(dewRaw)) : null;
 
+    return {
+      temp: tempF,
+      dew_point: dewF,
+      humidity: obs.relative_humidity ?? null,
+      wind: obs.wind_avg ?? 0,
+      ts: obs.timestamp
+    };
 
-  } catch (err) {
-    console.warn("❌ Tempest fetch failed:", err);
+  } catch {
     return null;
   }
 }
@@ -216,20 +183,13 @@ async function fetchWithTimeout(url, timeout = 4000) {
 // FALLBACK
 // ------------------------------------------------------------
 function respondWithFallback(res, key, reason, tempest) {
-  const fallback = {
+  return res.status(200).json({
     hourly: {
       time: [],
       temperature_2m: []
     },
     _fallback: true,
-    _reason: reason
-  };
-
-  return res.status(200).json({
-    ...fallback,
-    current:
-      tempest ||
-      lastGood[key]?.current ||
-      null
+    _reason: reason,
+    current: tempest || lastGood[key]?.current || null
   });
 }
