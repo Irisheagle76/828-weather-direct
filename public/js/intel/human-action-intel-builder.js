@@ -1,5 +1,5 @@
 // ============================================================
-// HUMAN-ACTION INTEL BUILDER — v3 (FULLY SAFE + STABLE)
+// HUMAN-ACTION INTEL BUILDER — v4 (HARDENED + CLEAN)
 // ============================================================
 
 import { evaluateHumanActionFactors } from "../modules/human-action-2/core-engine.js";
@@ -11,7 +11,7 @@ import { normalizeOpenMeteo } from "./normalize-hourly.js";
 export function buildHumanActionIntel(raw) {
   console.log("🔵 HA BUILDER START");
 
-  if (!raw || !raw.hourly) {
+  if (!raw?.hourly) {
     console.error("❌ No hourly data:", raw);
     return buildEmptyIntel();
   }
@@ -23,92 +23,55 @@ export function buildHumanActionIntel(raw) {
     return buildEmptyIntel();
   }
 
-  const now = Date.now();
   const currentHour = new Date().getHours();
   const isTonightMode = currentHour >= 15;
 
   // ------------------------------------------------------------
-  // TIME SLICING
+  // TIME SLICES
   // ------------------------------------------------------------
+  const next6Hours = sliceByHoursAhead(hourly, 0, 6);
   const next24 = sliceByHoursAhead(hourly, 0, 24);
   const next48 = sliceByHoursAhead(hourly, 24, 48);
-  const next6Hours = sliceByHoursAhead(hourly, 0, 6);
 
   // ------------------------------------------------------------
   // TODAY / TONIGHT
   // ------------------------------------------------------------
-  let todayHours;
+  let todayHours = isTonightMode
+    ? hourly.filter(h => {
+        const hr = new Date(h.timestamp).getHours();
+        return hr >= 18 || hr <= 6;
+      })
+    : next24;
 
-  if (isTonightMode) {
-    todayHours = hourly.filter(h => {
-      const hr = new Date(h.timestamp).getHours();
-      return hr >= 18 || hr <= 6;
-    });
+  if (!todayHours.length) todayHours = next24;
 
-    if (!todayHours.length) {
-      todayHours = next24;
-    }
-  } else {
-    todayHours = next24;
-  }
+  const todaySnapshot = blendHoursSafe(todayHours);
+  const todayEval = todayHours.map(evaluateHumanActionFactors);
+  const todayCore = aggregateHumanAction(todayEval);
 
-  const todayExtended = sliceByHoursAhead(hourly, 0, 36);
-  const todaySnapshot = blendHoursWithForwardBias(todayHours, todayExtended);
+  const todayIntel = buildIntelPackage({
+    core: todayCore,
+    snapshot: todaySnapshot,
+    hours: todayHours,
+    label: isTonightMode ? "tonight" : "today",
+    isTomorrow: false
+  });
 
-  if (todaySnapshot) {
-    todaySnapshot.dayLabel = isTonightMode ? "tonight" : "today";
-    todaySnapshot.isTomorrow = false;
-  }
-
-  const todayEvaluations = todayHours.map(h =>
-    evaluateHumanActionFactors(h)
-  );
-
-  const todayIntelCore = aggregateHumanAction(todayEvaluations);
-
-  const todayIntelBase = {
-    ...ensureSynthFields(todayIntelCore, todaySnapshot),
-    ...todaySnapshot,
-    hourlyEvaluations: todayEvaluations
-  };
-
-  const todayIntel = addSignalFields(todayIntelBase, todaySnapshot);
-
-  console.log("🔍 RAW hourly sample:", hourly.slice(0, 3));
-  
   // ------------------------------------------------------------
   // TOMORROW
   // ------------------------------------------------------------
-const tomorrowHours = sliceByHoursAhead(hourly, 24, 48);
+  const tomorrowHours = next48;
+  const tomorrowSnapshot = blendHoursSafe(tomorrowHours);
+  const tomorrowEval = tomorrowHours.map(evaluateHumanActionFactors);
+  const tomorrowCore = aggregateHumanAction(tomorrowEval);
 
-console.log("🟡 tomorrowHours length:", tomorrowHours.length);
-console.log("🟠 hourly length:", hourly.length);
-console.log("🟠 first hour:", new Date(hourly[0]?.timestamp));
-console.log("🟠 last hour:", new Date(hourly.at(-1)?.timestamp));
-
-const tomorrowSnapshot = blendHours(tomorrowHours);
-
-  if (tomorrowSnapshot) {
-    tomorrowSnapshot.dayLabel = "tomorrow";
-    tomorrowSnapshot.isTomorrow = true;
-  }
-
-  const tomorrowStats = computeTomorrowStats(tomorrowHours);
-
-  const tomorrowEvaluations = tomorrowHours.map(h =>
-    evaluateHumanActionFactors(h)
-  );
-
-  const tomorrowIntelCore = aggregateHumanAction(tomorrowEvaluations);
-
-  const tomorrowIntelBase = {
-    ...ensureSynthFields(tomorrowIntelCore, tomorrowSnapshot),
-    ...tomorrowSnapshot,
-    stats: tomorrowStats,
-    hourlyEvaluations: tomorrowEvaluations
-  };
-
-  const tomorrowIntel = addSignalFields(tomorrowIntelBase, tomorrowSnapshot);
+  const tomorrowIntel = buildIntelPackage({
+    core: tomorrowCore,
+    snapshot: tomorrowSnapshot,
+    hours: tomorrowHours,
+    label: "tomorrow",
+    isTomorrow: true
+  });
 
   console.log("🔵 HA BUILDER END");
 
@@ -120,77 +83,25 @@ const tomorrowSnapshot = blendHours(tomorrowHours);
 }
 
 // ------------------------------------------------------------
-// TIME SLICING
+// SAFE BLEND (CRITICAL FIX)
 // ------------------------------------------------------------
-function sliceByHoursAhead(hourly, startHr, endHr) {
-  if (!hourly?.length) return [];
-
-  let base = hourly[0].timestamp;
-
-  if (typeof base === "string") base = new Date(base).getTime();
-  if (base < 1e12) base = base * 1000;
-
-  return hourly.filter(h => {
-    let ts = h.timestamp;
-
-    if (typeof ts === "string") ts = new Date(ts).getTime();
-    if (ts < 1e12) ts = ts * 1000;
-
-    const diff = (ts - base) / 36e5;
-
-    return diff >= startHr && diff < endHr;
-  });
-}
-
-// ------------------------------------------------------------
-// SIGNAL LAYER
-// ------------------------------------------------------------
-function addSignalFields(intel, snapshot) {
-  return {
-    ...intel,
-    signals: {
-      temp: snapshot?.temp ?? 70,
-      feelsLike: snapshot?.feelsLike ?? 70,
-      dewPoint: snapshot?.dewPoint ?? 55,
-      humidity: snapshot?.humidity ?? 50,
-      windSpeed: snapshot?.windSpeed ?? 5,
-      windGust: snapshot?.windGust ?? 8,
-      cloudCover: snapshot?.cloudCover ?? 50,
-      visibility: snapshot?.visibility ?? 10,
-      precipIntensity: snapshot?.precipIntensity ?? 0
-    }
-  };
-}
-
-// ------------------------------------------------------------
-// SYNTH SAFETY
-// ------------------------------------------------------------
-function ensureSynthFields(intel, snapshot) {
-  const base = intel ?? {};
-
-  return {
-    dominantFactor: base.dominantFactor ?? "default",
-    confidence: base.confidence ?? 0.3,
-    secondaryFactors: Array.isArray(base.secondaryFactors)
-      ? base.secondaryFactors
-      : [],
-
-    precipType: base.precipType ?? snapshot?.precipType ?? "none",
-    precipChance: base.precipChance ?? 0,
-    snapshot: snapshot ?? base.snapshot ?? {},
-
-    ...base
-  };
-}
-
-// ------------------------------------------------------------
-// BLEND HOURS
-// ------------------------------------------------------------
-function blendHours(hours) {
+function blendHoursSafe(hours) {
   if (!hours?.length) return null;
 
-  const avg = key =>
-    hours.reduce((a, h) => a + (h[key] ?? 0), 0) / hours.length;
+  const safeVals = (key) =>
+    hours
+      .map(h => h[key])
+      .filter(v => typeof v === "number" && v > -100 && v < 200); // 🚨 strict bounds
+
+  const avg = key => {
+    const vals = safeVals(key);
+    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+  };
+
+  const max = key => {
+    const vals = safeVals(key);
+    return vals.length ? Math.max(...vals) : null;
+  };
 
   return {
     temp: avg("temperatureF"),
@@ -198,55 +109,77 @@ function blendHours(hours) {
     dewPoint: avg("dewpointF"),
     humidity: avg("relative_humidity"),
     windSpeed: avg("wind_speed"),
-    windGust: avg("wind_gust"),
+    windGust: max("wind_gust"),
 
+    precipIntensity: avg("precipitation"),
     precipType:
       avg("precipitation") > 0
         ? avg("snowfall") > 0 ? "snow" : "rain"
         : "none",
 
-    precipIntensity: avg("precipitation"),
     uvIndex: avg("uv_index"),
     visibility: avg("visibility"),
     cloudCover: avg("cloud_cover"),
 
-    timestamp: hours[0].timestamp
+    timestamp: hours[0]?.timestamp ?? null
   };
 }
 
 // ------------------------------------------------------------
-// FORWARD BIAS BLEND
+// INTEL PACKAGING
 // ------------------------------------------------------------
-function blendHoursWithForwardBias(coreHours, extendedHours) {
-  if (!coreHours?.length) return blendHours(extendedHours);
-
-  const core = blendHours(coreHours);
-  const ext = extendedHours?.length ? blendHours(extendedHours) : null;
-
-  const mix = (a, b) =>
-    a != null && b != null ? 0.7 * a + 0.3 * b : a ?? b ?? null;
+function buildIntelPackage({ core, snapshot, hours, label, isTomorrow }) {
+  const safe = snapshot ?? {};
 
   return {
-    temp: mix(core.temp, ext?.temp),
-    feelsLike: mix(core.feelsLike, ext?.feelsLike),
-    dewPoint: mix(core.dewPoint, ext?.dewPoint),
-    humidity: mix(core.humidity, ext?.humidity),
-    windSpeed: mix(core.windSpeed, ext?.windSpeed),
-    windGust: mix(core.windGust, ext?.windGust),
+    dominantFactor: core?.dominantFactor ?? "default",
+    confidence: core?.confidence ?? 0.3,
+    secondaryFactors: core?.secondaryFactors ?? [],
 
-    precipType: core.precipType,
-    precipIntensity: mix(core.precipIntensity, ext?.precipIntensity),
+    dayLabel: label,
+    isTomorrow,
 
-    uvIndex: mix(core.uvIndex, ext?.uvIndex),
-    visibility: mix(core.visibility, ext?.visibility),
-    cloudCover: mix(core.cloudCover, ext?.cloudCover),
+    ...safe,
 
-    timestamp: core.timestamp
+    signals: {
+      temp: safe.temp ?? 70,
+      feelsLike: safe.feelsLike ?? 70,
+      dewPoint: safe.dewPoint ?? 55,
+      humidity: safe.humidity ?? 50,
+      windSpeed: safe.windSpeed ?? 5,
+      windGust: safe.windGust ?? 8,
+      cloudCover: safe.cloudCover ?? 50,
+      visibility: safe.visibility ?? 10,
+      precipIntensity: safe.precipIntensity ?? 0
+    },
+
+    hourlyEvaluations: hours.map(evaluateHumanActionFactors)
   };
 }
 
 // ------------------------------------------------------------
-// AGGREGATION (STABLE)
+// TIME SLICING (CLEAN)
+// ------------------------------------------------------------
+function sliceByHoursAhead(hourly, startHr, endHr) {
+  if (!hourly?.length) return [];
+
+  const base = normalizeTs(hourly[0].timestamp);
+
+  return hourly.filter(h => {
+    const ts = normalizeTs(h.timestamp);
+    const diff = (ts - base) / 36e5;
+    return diff >= startHr && diff < endHr;
+  });
+}
+
+function normalizeTs(ts) {
+  if (typeof ts === "string") ts = new Date(ts).getTime();
+  if (ts < 1e12) ts *= 1000;
+  return ts;
+}
+
+// ------------------------------------------------------------
+// AGGREGATION (UNCHANGED CORE LOGIC)
 // ------------------------------------------------------------
 function aggregateHumanAction(evals) {
   if (!evals?.length) {
@@ -261,9 +194,7 @@ function aggregateHumanAction(evals) {
 
   for (const e of evals) {
     const f = e.dominantFactor;
-
     if (!stats[f]) stats[f] = { count: 0, total: 0 };
-
     stats[f].count++;
     stats[f].total += e.confidence;
   }
@@ -275,28 +206,26 @@ function aggregateHumanAction(evals) {
     }))
     .sort((a, b) => b.score - a.score);
 
-  const dominant = ranked[0]?.factor || "default";
-
-  const secondary = ranked
-    .filter(r => r.score > ranked[0].score * 0.25)
-    .slice(1, 3)
-    .map(r => r.factor);
-
-  const confidence =
-    evals.reduce((a, e) => a + e.confidence, 0) / evals.length;
-
   return {
-    dominantFactor: dominant,
-    confidence,
-    secondaryFactors: secondary
+    dominantFactor: ranked[0]?.factor ?? "default",
+    confidence: evals.reduce((a, e) => a + e.confidence, 0) / evals.length,
+    secondaryFactors: ranked.slice(1, 3).map(r => r.factor)
   };
 }
 
 // ------------------------------------------------------------
-// EMPTY INTEL (NEVER CRASH)
+// EMPTY FALLBACK
 // ------------------------------------------------------------
 function buildEmptyIntel() {
-  const base = {
+  return {
+    today: baseFallback(),
+    tomorrow: baseFallback(),
+    next6Hours: []
+  };
+}
+
+function baseFallback() {
+  return {
     dominantFactor: "default",
     confidence: 0.3,
     secondaryFactors: [],
@@ -310,45 +239,4 @@ function buildEmptyIntel() {
       precipIntensity: 0
     }
   };
-
-  return {
-    today: base,
-    tomorrow: base,
-    next6Hours: []
-  };
 }
-
-// ------------------------------------------------------------
-// TOMORROW STATS
-// ------------------------------------------------------------
-function computeTomorrowStats(hours) {
-  if (!hours?.length) {
-    return {
-      high: null,
-      low: null,
-      dewPoint: null,
-      wind: null,
-      gust: null,
-      precipProb: 0
-    };
-  }
-
-  const temps = hours.map(h => h.temperatureF).filter(v => v != null);
-  const dew = hours.map(h => h.dewpointF).filter(v => v != null);
-  const winds = hours.map(h => h.wind_speed).filter(v => v != null);
-  const gusts = hours.map(h => h.wind_gust).filter(v => v != null);
-  const precipProb = hours.map(h => h.precip_probability ?? 0);
-
-  return {
-    high: max(temps),
-    low: min(temps),
-    dewPoint: avg(dew),
-    wind: avg(winds),
-    gust: max(gusts),
-    precipProb: max(precipProb)
-  };
-}
-
-const avg = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null;
-const max = arr => arr.length ? Math.max(...arr) : null;
-const min = arr => arr.length ? Math.min(...arr) : null;
