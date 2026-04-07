@@ -1,11 +1,16 @@
 // ============================================================
-// NORMALIZE OPEN-METEO HOURLY → CANONICAL FORMAT (v4)
+// NORMALIZE OPEN-METEO HOURLY → CANONICAL FORMAT (v5)
 // - Supports array OR columnar input
 // - Never throws
 // - Never returns malformed objects
 // - Logs once per issue type (no spam)
 // - Correct unit handling (Open-Meteo = Celsius)
 // ============================================================
+
+console.log("RAW OPENMETEO SAMPLE:", {
+  temp: data.hourly.temperature_2m?.[0],
+  dew: data.hourly.dew_point_2m?.[0]
+});
 
 let warned = new Set();
 const warnOnce = (msg, data) => {
@@ -127,74 +132,56 @@ export function normalizeOpenMeteo(hourly) {
     const isNight = hour >= 18 || hour <= 6;
 
     // -------------------------
-    // METEOROLOGY (Celsius native)
+    // METEOROLOGY (Open-Meteo = Celsius)
     // -------------------------
-   const tempRaw = toNumber(pick(hourly, i, "temperature_2m"));
-const dewRaw = toNumber(pick(hourly, i, "dew_point_2m", "dewpoint_2m"));
+    const tempC = toNumber(pick(hourly, i, "temperature_2m"));
+    const dewC  = toNumber(pick(hourly, i, "dew_point_2m", "dewpoint_2m"));
+    const appC_raw = toNumber(pick(hourly, i, "apparent_temperature"));
 
-const isCelsius = tempRaw != null && tempRaw < 60;
+    const apparentC = appC_raw ?? tempC;
 
-const tempF = tempRaw != null
-  ? (isCelsius ? toF(tempRaw) : tempRaw)
-  : null;
+    const temperatureF = cToF(tempC);
+    const dewpointF    = cToF(dewC);
+    const apparentF    = cToF(apparentC);
 
-const dewpointF = dewRaw != null
-  ? (isCelsius ? toF(dewRaw) : dewRaw)
-  : null;
+    const humidity = toNumber(pick(hourly, i, "relative_humidity_2m"));
 
-const dewpointF = toNumber(pick(hourly, i, "dew_point_2m", "dewpoint_2m"));
-const humidity = toNumber(pick(hourly, i, "relative_humidity_2m"));
-
-const apparentF_raw = toNumber(pick(hourly, i, "apparent_temperature"));
-const apparentF = apparentF_raw ?? tempF;
-
-// derive Celsius ONLY if needed
-const tempC = tempF != null ? (tempF - 32) * 5 / 9 : null;
-const dewC = dewpointF != null ? (dewpointF - 32) * 5 / 9 : null;
-const apparentC = apparentF != null ? (apparentF - 32) * 5 / 9 : null;
-
-if (tempF != null && dewpointF != null) {
-  if (dewpointF > tempF) {
-    console.warn("🔥 UNIT BUG DETECTED", {
-      tempRaw,
-      dewRaw,
-      tempF,
-      dewpointF
-    });
-  }
-}
+    // sanity check
+    if (tempC != null && dewC != null && dewC > tempC) {
+      warnOnce("🔥 UNIT BUG DETECTED (dewpoint > temp)", { tempC, dewC });
+    }
 
     // -------------------------
     // WIND
     // -------------------------
-    const windSpeed =
+    const wind_speed =
       toNumber(pick(hourly, i, "wind_speed_10m", "windspeed_10m")) ?? 0;
 
-  const windGust =
-  toNumber(pick(hourly, i, "wind_gusts_10m")) ?? 0;
+    const wind_gust =
+      toNumber(pick(hourly, i, "wind_gusts_10m")) ?? 0;
 
-    const windDir = toNumber(pick(hourly, i, "winddirection_10m"));
+    const wind_dir = toNumber(pick(hourly, i, "winddirection_10m"));
 
     // -------------------------
     // PRECIP
     // -------------------------
-    const precip = toNumber(pick(hourly, i, "precipitation")) ?? 0;
-    const snow = toNumber(pick(hourly, i, "snowfall")) ?? 0;
+    const precipitation = toNumber(pick(hourly, i, "precipitation")) ?? 0;
+    const snowfall = toNumber(pick(hourly, i, "snowfall")) ?? 0;
 
     let precipType = "none";
-    if (snow > 0) precipType = "snow";
-    else if (precip > 0) precipType = "rain";
+    if (snowfall > 0) precipType = "snow";
+    else if (precipitation > 0) precipType = "rain";
 
     // -------------------------
     // UV
     // -------------------------
     const uvRaw = toNumber(pick(hourly, i, "uv_index"));
-    const uv = isNight ? 0 : uvRaw ?? 0;
+    const uv_index = isNight ? 0 : uvRaw ?? 0;
 
     // -------------------------
     // CLOUD / VISIBILITY
     // -------------------------
-    const cloud = normalizeCloud(
+    const cloud_cover = normalizeCloud(
       toNumber(pick(hourly, i, "cloudcover"))
     );
 
@@ -203,64 +190,63 @@ if (tempF != null && dewpointF != null) {
       visibilityRaw != null ? toMiles(visibilityRaw) : null;
 
     // -------------------------
-    // RISKS
+    // RISKS (Celsius logic)
     // -------------------------
-    const frostRisk =
+    const frost_risk =
       tempC != null && dewC != null && tempC <= 3 && dewC <= 2
         ? 0.6
         : tempC != null && tempC <= 1
         ? 1
         : 0;
 
-    const freezeRisk =
+    const freeze_risk =
       tempC != null && tempC <= 0
         ? 1
         : tempC != null && tempC <= 1
         ? 0.5
         : 0;
 
-    const blackIceRisk =
-      tempC != null && tempC <= 0 && precip > 0 ? 1 : 0;
+    const black_ice_risk =
+      tempC != null && tempC <= 0 && precipitation > 0 ? 1 : 0;
 
-    const inversionRisk =
-      tempC != null && tempC <= 4 && windSpeed < 3 ? 0.5 : 0;
+    const inversion_risk =
+      tempC != null && tempC <= 4 && wind_speed < 3 ? 0.5 : 0;
 
-    const valleyFogRisk =
-      humidity != null && humidity >= 95 && windSpeed < 3 ? 0.6 : 0;
+    const valley_fog_risk =
+      humidity != null && humidity >= 95 && wind_speed < 3 ? 0.6 : 0;
 
-    const ridgeFogRisk =
-      humidity != null && humidity >= 98 && windSpeed < 5 ? 0.5 : 0;
+    const ridge_fog_risk =
+      humidity != null && humidity >= 98 && wind_speed < 5 ? 0.5 : 0;
 
     // -------------------------
     // OUTPUT
     // -------------------------
     out.push({
-
-      temperatureF: tempF,
+      temperatureF,
       dewpointF,
       apparentF,
 
       relative_humidity: humidity,
 
-      wind_speed: windSpeed,
-      wind_gust: windGust,
-      wind_dir: windDir,
+      wind_speed,
+      wind_gust,
+      wind_dir,
 
-      precipitation: precip,
-      snowfall: snow,
+      precipitation,
+      snowfall,
       precipType,
 
-      uv_index: uv,
+      uv_index,
       visibility,
-      cloud_cover: cloud,
+      cloud_cover,
 
       smoke_index: 0,
-      frost_risk: frostRisk,
-      freeze_risk: freezeRisk,
-      black_ice_risk: blackIceRisk,
-      inversion_risk: inversionRisk,
-      valley_fog_risk: valleyFogRisk,
-      ridge_fog_risk: ridgeFogRisk,
+      frost_risk,
+      freeze_risk,
+      black_ice_risk,
+      inversion_risk,
+      valley_fog_risk,
+      ridge_fog_risk,
 
       timestamp: ts
     });
