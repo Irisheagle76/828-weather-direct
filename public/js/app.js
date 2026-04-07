@@ -1,32 +1,29 @@
 // ============================================================
-// APP ENTRY — v5 (STABLE + CONTRACT-CLEAN)
-// Clear separation: fetch → cache → render
+// APP ENTRY — v6 (EXPLICIT STATE + CLEAN FLOW)
 // ============================================================
 
-console.log("APP.JS LOADED — v5 CLEAN");
+console.log("APP.JS LOADED — v6");
 
 // ------------------------------------------------------------
 // IMPORTS
 // ------------------------------------------------------------
 import { renderWeather } from "./weather-render.js";
+import { fetchAllIntel } from "./weather-fetch.js";
 
 // ------------------------------------------------------------
 // CONFIG
 // ------------------------------------------------------------
 const CONFIG = {
   FORCE_LOCATION: true,
-
   DEFAULT_LAT: 35.5951,
   DEFAULT_LON: -82.5515,
-
   TEMPEST_STATION_ID: "315255",
   TEMPEST_TOKEN: "838ff386-d14b-4d45-897a-18903e6970a9",
-
   REFRESH_INTERVAL: 5 * 60 * 1000
 };
 
 // ------------------------------------------------------------
-// GLOBAL STATE
+// STATE
 // ------------------------------------------------------------
 let currentLocation = {
   lat: CONFIG.DEFAULT_LAT,
@@ -35,98 +32,95 @@ let currentLocation = {
 
 let refreshTimer = null;
 
-// 🔥 CACHE: always store FINAL PAYLOAD ONLY
-let lastWeatherData = null;
+let appState = {
+  isLoading: true,
+  data: null
+};
 
-// 🔥 GLOBAL MODE
 window.APP_STATE = window.APP_STATE || {
   mode: "downtown"
 };
 
 // ------------------------------------------------------------
-// ERROR HANDLING
+// STATUS UI
 // ------------------------------------------------------------
-function showError(msg) {
-  console.error("APP ERROR:", msg);
-
-  const el = document.getElementById("wu-error");
-  if (!el) return;
-
-  el.style.display = "block";
-  el.textContent = msg;
-}
-
-function clearError() {
-  const el = document.getElementById("wu-error");
-  if (el) el.style.display = "none";
-}
-
-// ------------------------------------------------------------
-// LOADING / READY STATES
-// ------------------------------------------------------------
-function setLoadingState() {
+function setStatus(labelText, subText) {
   const label = document.getElementById("wu-status-label");
   const text = document.getElementById("wu-status-text");
 
-  if (label) label.textContent = "Loading weather…";
-  if (text) text.textContent = "Fetching latest conditions…";
-
-  const comfort = document.getElementById("comfort-now-container");
-  const future = document.getElementById("future-comfort-container");
-  const obs = document.getElementById("current-obs-inline");
-
-  if (comfort) comfort.innerHTML = "Loading comfort…";
-  if (future) future.innerHTML = "Loading forecast…";
-  if (obs) obs.innerHTML = "Loading observations…";
-}
-
-function setReadyState() {
-  clearError();
-
-  const label = document.getElementById("wu-status-label");
-  const text = document.getElementById("wu-status-text");
-
-  if (label) label.textContent = "Live conditions";
-
-  if (text) {
-    const now = new Date();
-    text.textContent = `Updated ${now.toLocaleTimeString([], {
-      hour: "numeric",
-      minute: "2-digit"
-    })}`;
-  }
+  if (label) label.textContent = labelText;
+  if (text) text.textContent = subText;
 }
 
 // ------------------------------------------------------------
-// CORE: FETCH + RENDER
+// CORE RENDER PIPELINE
 // ------------------------------------------------------------
 async function runRender() {
+  console.log("RENDER START");
+
+  // ----------------------------------------------------------
+  // 1. LOADING STATE
+  // ----------------------------------------------------------
+  appState.isLoading = true;
+
+  renderWeather({
+    data: null,
+    isLoading: true,
+    mode: window.APP_STATE.mode
+  });
+
+  setStatus("Loading weather…", "Fetching latest conditions…");
+
   try {
-    console.log("RENDER START", currentLocation, window.APP_STATE.mode);
-
-    setLoadingState();
-
-    const payload = await renderWeather({
+    // ----------------------------------------------------------
+    // 2. FETCH
+    // ----------------------------------------------------------
+    const data = await fetchAllIntel({
       lat: currentLocation.lat,
       lon: currentLocation.lon,
       tempestStationId: CONFIG.TEMPEST_STATION_ID,
-      tempestToken: CONFIG.TEMPEST_TOKEN,
+      tempestToken: CONFIG.TEMPEST_TOKEN
+    });
+
+    // ----------------------------------------------------------
+    // 3. UPDATE STATE
+    // ----------------------------------------------------------
+    appState = {
+      isLoading: false,
+      data
+    };
+
+    // ----------------------------------------------------------
+    // 4. RENDER WITH DATA
+    // ----------------------------------------------------------
+    renderWeather({
+      data,
+      isLoading: false,
       mode: window.APP_STATE.mode
     });
 
-    // ✅ Store ONLY render-ready payload
-    lastWeatherData = {
-      payload,
-      mode: window.APP_STATE.mode
-    };
-
-    setReadyState();
+    setStatus(
+      "Live conditions",
+      `Updated ${new Date().toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit"
+      })}`
+    );
 
     console.log("RENDER COMPLETE");
 
   } catch (err) {
     console.error("RENDER FAILED:", err);
-    showError("Unable to load weather data.");
+
+    appState.isLoading = false;
+
+    renderWeather({
+      data: null,
+      isLoading: false,
+      mode: window.APP_STATE.mode
+    });
+
+    setStatus("Error", "Unable to load weather data.");
   }
 }
 
@@ -139,27 +133,16 @@ window.updateComfortModules = function () {
   clearTimeout(rerenderTimeout);
 
   rerenderTimeout = setTimeout(() => {
-
-    // No cache → full render
-    if (!lastWeatherData?.payload) {
-      console.warn("No cached data — full render fallback");
+    if (!appState.data) {
+      console.warn("No data → full fetch");
       runRender();
       return;
     }
-
-    // Mode mismatch → full re-fetch
-    if (lastWeatherData.mode !== window.APP_STATE.mode) {
-      console.log("Mode changed → full render required");
-      runRender();
-      return;
-    }
-
-    console.log("FAST RE-RENDER");
 
     renderWeather({
-      ...lastWeatherData.payload,
-      mode: window.APP_STATE.mode,
-      skipFetch: true
+      data: appState.data,
+      isLoading: false,
+      mode: window.APP_STATE.mode
     });
 
   }, 50);
@@ -178,13 +161,12 @@ function startAutoRefresh() {
 }
 
 // ------------------------------------------------------------
-// LOCATION RESOLUTION
+// LOCATION
 // ------------------------------------------------------------
 function resolveLocation() {
   return new Promise((resolve, reject) => {
 
     if (CONFIG.FORCE_LOCATION) {
-      console.log("USING FORCED LOCATION");
       resolve({
         lat: CONFIG.DEFAULT_LAT,
         lon: CONFIG.DEFAULT_LON
@@ -209,39 +191,6 @@ function resolveLocation() {
 }
 
 // ------------------------------------------------------------
-// ACCORDION SYSTEM
-// ------------------------------------------------------------
-function setupAccordion() {
-  document.addEventListener("click", function (e) {
-
-    if (e.target.closest(".comfort-info-btn")) return;
-
-    const item = e.target.closest("[data-accordion-item]");
-    if (!item) return;
-
-    const group = item.closest("[data-accordion]");
-    if (!group) return;
-
-    const content = item.querySelector("[data-accordion-content]");
-    if (!content) return;
-
-    const isActive = item.classList.contains("active");
-
-    group.querySelectorAll("[data-accordion-item].active").forEach(el => {
-      el.classList.remove("active");
-
-      const c = el.querySelector("[data-accordion-content]");
-      if (c) c.style.height = "0px";
-    });
-
-    if (!isActive) {
-      item.classList.add("active");
-      content.style.height = content.scrollHeight + "px";
-    }
-  });
-}
-
-// ------------------------------------------------------------
 // INIT
 // ------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", initApp);
@@ -249,20 +198,22 @@ document.addEventListener("DOMContentLoaded", initApp);
 async function initApp() {
   console.log("INIT START");
 
-  setupAccordion();
-  setLoadingState();
-
   try {
     const loc = await resolveLocation();
     currentLocation = loc;
-
-    console.log("LOCATION RESOLVED:", loc);
 
     await runRender();
     startAutoRefresh();
 
   } catch (err) {
     console.error("INIT FAILED:", err);
-    showError(err || "Failed to initialize app.");
+
+    renderWeather({
+      data: null,
+      isLoading: false,
+      mode: window.APP_STATE.mode
+    });
+
+    setStatus("Error", err || "Failed to initialize.");
   }
 }
