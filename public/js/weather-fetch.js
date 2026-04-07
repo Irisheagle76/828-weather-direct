@@ -1,15 +1,24 @@
-// /js/weather-fetch.js
 // ============================================================
-// RAW WEATHER FETCH LAYER — v2 (STABLE + RESILIENT)
-// Always returns safe, normalized structures
+// WEATHER FETCH LAYER — v3 (HARDENED)
+// - Never returns null hourly
+// - Retry + timeout
+// - Last-good cache fallback
+// - Safe structural guarantees
 // ============================================================
 
-/**
- * fetchAllIntel()
- * - Fetches all sources in parallel
- * - Never throws
- * - Always returns consistent shape
- */
+// ------------------------------------------------------------
+// CACHE (in-memory)
+// ------------------------------------------------------------
+let lastGood = {
+  hourly: null,
+  timestamp: 0
+};
+
+const CACHE_TTL = 5 * 60 * 1000; // 5 min
+
+// ------------------------------------------------------------
+// MAIN ENTRY
+// ------------------------------------------------------------
 export async function fetchAllIntel({
   lat,
   lon,
@@ -21,7 +30,7 @@ export async function fetchAllIntel({
   const result = {
     tempest: null,
     wu: null,
-    hourly: null,
+    hourly: safeHourlyFallback(),
     mrms: null,
     meta: {
       fetchedAt: start,
@@ -31,14 +40,15 @@ export async function fetchAllIntel({
   };
 
   // ------------------------------------------------------------
-  // PARALLEL FETCH (key upgrade)
+  // PARALLEL FETCH
   // ------------------------------------------------------------
-  const [tempestRes, wuRes, hourlyRes, mrmsRes] = await Promise.allSettled([
-    getTempestStationObs(tempestStationId, tempestToken),
-    getWUAll(lat, lon),
-    getShortTermForecast(lat, lon),
-    getMRMSPixel(lat, lon)
-  ]);
+  const [tempestRes, wuRes, hourlyRes, mrmsRes] =
+    await Promise.allSettled([
+      getTempestStationObs(tempestStationId, tempestToken),
+      getWUAll(lat, lon),
+      getHourlySafe(lat, lon),
+      getMRMSPixel(lat, lon)
+    ]);
 
   // ------------------------------------------------------------
   // TEMPEST
@@ -61,14 +71,17 @@ export async function fetchAllIntel({
   }
 
   // ------------------------------------------------------------
-  // OPEN-METEO
+  // HOURLY (CRITICAL — NEVER NULL)
   // ------------------------------------------------------------
   if (hourlyRes.status === "fulfilled") {
-    result.hourly = hourlyRes.value;
-    result.meta.sources.hourly = !!result.hourly;
+    result.hourly = hourlyRes.value || safeHourlyFallback();
   } else {
-    console.warn("Open-Meteo failed:", hourlyRes.reason);
+    console.warn("Hourly failed:", hourlyRes.reason);
+    result.hourly = safeHourlyFallback();
   }
+
+  result.meta.sources.hourly =
+    result.hourly?.time?.length > 0;
 
   // ------------------------------------------------------------
   // MRMS
@@ -85,30 +98,86 @@ export async function fetchAllIntel({
   return result;
 }
 
-//
 // ============================================================
-// 🌪️ TEMPEST — UNIFIED FETCH
+// HOURLY SAFE FETCH (CORE FIX)
 // ============================================================
-//
+async function getHourlySafe(lat, lon) {
+  if (!lat || !lon) return safeHourlyFallback();
 
+  const url = `/api/weather?type=hourly&lat=${lat}&lon=${lon}`;
+
+  // ------------------------------------------------------------
+  // CACHE HIT
+  // ------------------------------------------------------------
+  if (
+    lastGood.hourly &&
+    Date.now() - lastGood.timestamp < CACHE_TTL
+  ) {
+    return lastGood.hourly;
+  }
+
+  // ------------------------------------------------------------
+  // RETRY (2 attempts)
+  // ------------------------------------------------------------
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const res = await fetchWithTimeout(url, 5000);
+
+      if (!res || !res.ok) {
+        console.warn(`Hourly bad response (attempt ${attempt})`);
+        continue;
+      }
+
+      const data = await res.json();
+
+      // API fallback flag
+      if (data?._fallback) {
+        console.warn("Open-Meteo fallback:", data._reason);
+        continue;
+      }
+
+      if (data?.hourly?.time?.length) {
+        lastGood = {
+          hourly: data.hourly,
+          timestamp: Date.now()
+        };
+        return data.hourly;
+      }
+
+    } catch (err) {
+      console.warn(`Hourly error (attempt ${attempt})`, err);
+    }
+  }
+
+  // ------------------------------------------------------------
+  // FALLBACK: CACHE
+  // ------------------------------------------------------------
+  if (lastGood.hourly) {
+    console.warn("Using cached hourly");
+    return lastGood.hourly;
+  }
+
+  // ------------------------------------------------------------
+  // FINAL FALLBACK
+  // ------------------------------------------------------------
+  console.warn("Using safe hourly fallback");
+  return safeHourlyFallback();
+}
+
+// ============================================================
+// TEMPEST
+// ============================================================
 export async function getTempestStationObs(stationId, token) {
   if (!stationId || !token) return null;
 
   const url = `/api/tempest/device?stationId=${stationId}&token=${token}`;
-
   const res = await fetchWithTimeout(url, 4000);
 
-  if (!res || !res.ok) {
-    console.warn("Tempest bad response:", res?.status);
-    return null;
-  }
+  if (!res || !res.ok) return null;
 
   return res.json();
 }
 
-// ------------------------------------------------------------
-// TEMPEST NORMALIZER (FIXED + SAFE)
-// ------------------------------------------------------------
 function normalizeTempest(data) {
   if (!data?.current_conditions) return null;
 
@@ -129,12 +198,9 @@ function normalizeTempest(data) {
   };
 }
 
-//
 // ============================================================
 // WEATHER UNDERGROUND
 // ============================================================
-//
-
 export async function getWUAll(lat, lon) {
   if (!lat || !lon) return null;
 
@@ -147,7 +213,6 @@ export async function getWUAll(lat, lon) {
     if (!res || !res.ok) return null;
 
     const data = await res.json();
-
     if (!data?.stationId) return null;
 
     if (data.current) {
@@ -156,64 +221,25 @@ export async function getWUAll(lat, lon) {
 
     return data;
   } catch (err) {
-    console.warn("WU fetch error:", err);
+    console.warn("WU error:", err);
     return null;
   }
 }
 
-//
 // ============================================================
-// OPEN-METEO
+// MRMS
 // ============================================================
-//
-
-export async function getShortTermForecast(lat, lon) {
-  if (!lat || !lon) return null;
-
-  try {
-    const res = await fetchWithTimeout(
-      `/api/weather?type=hourly&lat=${lat}&lon=${lon}`,
-      5000
-    );
-
-    if (!res || !res.ok) return null;
-
-    const data = await res.json();
-
-    if (data?._fallback) {
-      console.warn("Open-Meteo fallback:", data._reason);
-      return null;
-    }
-
-    return data;
-  } catch (err) {
-    console.warn("Open-Meteo error:", err);
-    return null;
-  }
-}
-
-//
-// ============================================================
-// MRMS (stub)
-// ============================================================
-//
-
-export async function getMRMSPixel(lat, lon) {
+export async function getMRMSPixel() {
   return {
     precipRate: 0,
     timestamp: Date.now()
   };
 }
 
-//
 // ============================================================
 // UTILITIES
 // ============================================================
-//
 
-// ------------------------------------------------------------
-// FETCH WITH TIMEOUT (CRITICAL)
-// ------------------------------------------------------------
 async function fetchWithTimeout(url, timeout = 5000) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
@@ -229,17 +255,19 @@ async function fetchWithTimeout(url, timeout = 5000) {
   }
 }
 
-// ------------------------------------------------------------
-// SAFE NUMBER (prevents NaN / garbage)
-// ------------------------------------------------------------
+function safeHourlyFallback() {
+  return {
+    time: [],
+    temperature_2m: [],
+    relative_humidity_2m: []
+  };
+}
+
 function safeNum(v) {
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
 }
 
-// ------------------------------------------------------------
-// TIMESTAMP NORMALIZER
-// ------------------------------------------------------------
 function normalizeTs(ts) {
   if (!ts) return Date.now();
   if (ts < 1e12) return ts * 1000;
