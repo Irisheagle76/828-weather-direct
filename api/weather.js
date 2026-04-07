@@ -132,7 +132,7 @@ async function handleHourly(req, res) {
 }
 
 // ------------------------------------------------------------
-// TEMPEST (CORRECT + UNIT SAFE)
+// TEMPEST (CLEAN + UNIT-SAFE)
 // ------------------------------------------------------------
 async function fetchTempest() {
   try {
@@ -140,42 +140,72 @@ async function fetchTempest() {
     const token = process.env.TEMPEST_TOKEN;
 
     if (!stationId || !token) {
-      console.warn("Tempest not configured");
+      console.warn("⚠️ Tempest not configured");
       return null;
     }
 
-    const res = await fetch(
-      `https://swd.weatherflow.com/swd/rest/observations/station/${stationId}?token=${token}`,
-      { cache: "no-store" }
-    );
+    const url = `https://swd.weatherflow.com/swd/rest/observations/station/${stationId}?token=${token}`;
+    console.log("🌐 TEMPEST FETCH:", url);
 
-    if (!res.ok) return null;
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) {
+      console.warn("❌ Tempest bad response:", res.status);
+      return null;
+    }
 
     const data = await res.json();
     const obs = data?.obs?.[0];
-    if (!obs) return null;
 
-    const cToF = c => (c * 9) / 5 + 32;
+    if (!obs) {
+      console.warn("❌ Tempest missing obs");
+      return null;
+    }
 
-    const tempF = cToF(obs.air_temperature);
+    // --------------------------------------------------------
+    // RAW VALUES
+    // --------------------------------------------------------
+    const tempRaw = obs.air_temperature;
+    const dewRaw = obs.dew_point;
 
-    console.log("🌡️ TEMPEST RAW C:", obs.air_temperature);
-    console.log("🌡️ TEMPEST F:", tempF);
+    console.log("🌡️ RAW TEMPEST TEMP:", tempRaw);
+    console.log("🌡️ RAW TEMPEST DEW:", dewRaw);
 
+    // --------------------------------------------------------
+    // UNIT HANDLING (SAFE)
+    // Tempest is usually already °F
+    // Only convert if clearly Celsius
+    // --------------------------------------------------------
+    const isProbablyCelsius = tempRaw < 60; // heuristic
+
+    const toF = c => (c * 9) / 5 + 32;
+
+    const temp = isProbablyCelsius
+      ? Math.round(toF(tempRaw))
+      : Math.round(tempRaw);
+
+    const dew_point =
+      dewRaw != null
+        ? (isProbablyCelsius ? toF(dewRaw) : dewRaw)
+        : null;
+
+    console.log("✅ FINAL TEMPEST TEMP:", temp);
+
+    // --------------------------------------------------------
+    // FINAL SHAPE
+    // --------------------------------------------------------
     return {
-      temp: Math.round(tempF),
-      dew_point: obs.dew_point != null ? cToF(obs.dew_point) : null,
-      humidity: obs.relative_humidity,
-      wind: obs.wind_avg,
+      temp,
+      dew_point,
+      humidity: obs.relative_humidity ?? null,
+      wind: obs.wind_avg ?? 0,
       ts: obs.timestamp
     };
 
   } catch (err) {
-    console.warn("Tempest fetch failed:", err);
+    console.warn("❌ Tempest fetch failed:", err);
     return null;
   }
 }
-
 // ------------------------------------------------------------
 // FALLBACK
 // ------------------------------------------------------------
