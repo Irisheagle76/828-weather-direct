@@ -80,8 +80,8 @@ export async function fetchAllIntel({
     result.hourly = safeHourlyFallback();
   }
 
-  result.meta.sources.hourly =
-    result.hourly?.time?.length > 0;
+ result.meta.sources.hourly =
+  result.hourly?.hourly?.time?.length > 0;
 
   // ------------------------------------------------------------
   // MRMS
@@ -158,21 +158,21 @@ if (!timeArr || timeArr.length === 0) {
   continue;
 }
 
-      // --------------------------------------------------------
-      // ✅ VALID DATA CHECK (CRITICAL)
-      // --------------------------------------------------------
-      if (data?.time?.length) {
-        console.log("✅ VALID HOURLY DATA RECEIVED");
+// --------------------------------------------------------
+// ✅ VALID DATA CHECK (FIXED FOR NEW SCHEMA)
+// --------------------------------------------------------
+if (timeArr && timeArr.length > 0) {
+  console.log("✅ VALID HOURLY DATA RECEIVED");
 
-        lastGood = {
-          hourly: data,
-          timestamp: Date.now()
-        };
+  lastGood = {
+    hourly: data,
+    timestamp: Date.now()
+  };
 
-        return data;
-      }
+  return data;
+}
 
-      console.warn("❌ Data missing time array or empty");
+console.warn("❌ Data missing hourly.time array or empty");
 
     } catch (err) {
       console.warn(`❌ Hourly error (attempt ${attempt})`, err);
