@@ -212,9 +212,6 @@ const apparentC = apparentF != null ? (apparentF - 32) * 5 / 9 : null;
     // OUTPUT
     // -------------------------
     out.push({
-      temperature: tempC,
-      dewpoint: dewC,
-      apparent_temperature: apparentC,
 
       temperatureF: tempF,
       dewpointF,

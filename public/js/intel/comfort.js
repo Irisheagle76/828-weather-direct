@@ -168,8 +168,8 @@ export function computeComfort(intel) {
   num(src.temperatureF);
 
 const dew =
-  num(src.dewPoint) ??
   num(src.dewpointF) ??
+  num(src.dewPoint) ??
   (temp != null ? temp - 18 : null);
 
 const wind =
