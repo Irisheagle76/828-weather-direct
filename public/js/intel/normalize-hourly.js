@@ -7,11 +7,6 @@
 // - Correct unit handling (Open-Meteo = Celsius)
 // ============================================================
 
-console.log("RAW OPENMETEO SAMPLE:", {
-  temp: data.hourly.temperature_2m?.[0],
-  dew: data.hourly.dew_point_2m?.[0]
-});
-
 let warned = new Set();
 const warnOnce = (msg, data) => {
   if (!warned.has(msg)) {

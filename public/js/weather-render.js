@@ -48,6 +48,12 @@ export function renderWeather({ data, isLoading, mode = "downtown" }) {
   // ------------------------------------------------------------
   // NORMALIZE HOURLY
   // ------------------------------------------------------------
+  // 🔍 RAW API CHECK (before any mutation)
+console.log("RAW OPENMETEO SAMPLE:", {
+  temp: data?.hourly?.temperature_2m?.[0],
+  dew: data?.hourly?.dew_point_2m?.[0]
+});
+
   let hourly = normalizeOpenMeteo(data.hourly);
   hourly.sort((a, b) => a.timestamp - b.timestamp);
 
