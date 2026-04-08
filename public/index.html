@@ -34,20 +34,35 @@
   <div class="app-shell">
 
     <!-- HEADER -->
-    <header class="app-header">
-      <h1 class="app-title">828 Weather Direct</h1>
-      <div class="subtitle">Hyper-local Asheville weather • Built by Timothy Ballisty</div>
+<header class="app-header">
 
-      <div class="status-row">
-        <div class="badge" id="wu-status-badge">
-          <span class="badge-dot" id="wu-status-dot"></span>
-          <span id="wu-status-label">Detecting location…</span>
-        </div>
-        <div class="status-text" id="wu-status-text">
-          Waiting for browser location permission.
-        </div>
+  <!-- TOP ROW -->
+  <div class="header-top">
+    <h1 class="app-title">828 Weather</h1>
+
+    <div class="header-meta">
+      <span class="subtitle">Asheville Hyper-Local</span>
+
+      <div class="fx-updated-inline">
+        <span class="fx-dot"></span>
+        <span id="last-updated">Updated --</span>
       </div>
-    </header>
+    </div>
+  </div>
+
+  <!-- STATUS ROW -->
+  <div class="status-row">
+    <div class="badge" id="wu-status-badge">
+      <span class="badge-dot" id="wu-status-dot"></span>
+      <span id="wu-status-label">Detecting location…</span>
+    </div>
+
+    <div class="status-text" id="wu-status-text">
+      Waiting for browser location permission.
+    </div>
+  </div>
+
+</header>
 
     <!-- CURRENT OBS -->
     <section id="current-obs-section">
@@ -104,7 +119,12 @@
             <div class="action-text" id="ha-today-body"></div>
             <ul class="today-bullets" id="ha-today-bullets"></ul>
 
-            <div class="expanded-panel" id="ha-today-expanded" data-accordion-content></div>
+            <div 
+  class="expanded-panel accordion-expand" 
+  id="ha-today-expanded" 
+  data-accordion-content>
+</div>
+
           </div>
         </div>
 
@@ -124,7 +144,11 @@
             <div class="action-text" id="ha-tomorrow-body"></div>
             <ul class="tomorrow-bullets" id="ha-tomorrow-bullets"></ul>
 
-            <div class="expanded-panel" id="ha-tomorrow-expanded" data-accordion-content></div>
+            <div 
+  class="expanded-panel accordion-expand" 
+  id="ha-tomorrow-expanded" 
+  data-accordion-content>
+</div>
           </div>
         </div>
 

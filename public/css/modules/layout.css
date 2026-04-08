@@ -145,3 +145,44 @@
   line-height: 1.4;
 }
 
+/* ============================================================
+   HEADER — REFINED LAYOUT
+   ============================================================ */
+   
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.header-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.subtitle {
+  font-size: 0.75rem;
+  color: #a8b4e6;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* UPDATED CHIP */
+.fx-updated-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: #cbd5ff;
+  opacity: 0.85;
+}
+
+.fx-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #facc15;
+  box-shadow: 0 0 6px rgba(250,204,21,0.6);
+}

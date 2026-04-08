@@ -1,9 +1,6 @@
 // ============================================================
-// HUMAN ACTION RENDER (STABLE + ACCORDION FIXED)
+// HUMAN ACTION RENDER (CLEAN + RELIABLE)
 // ============================================================
-
-// 🔒 prevent duplicate listeners
-let haAccordionInitialized = false;
 
 // ============================================================
 // MAIN BLOCK RENDER
@@ -42,7 +39,8 @@ export function renderHumanActionExpanded(todayIntel, tomorrowIntel) {
   setExpanded("today", todayIntel);
   setExpanded("tomorrow", tomorrowIntel);
 
-  setupAccordionGroup(); // 🔥 initialize once
+  // 🔥 always rebind safely after render
+  setupAccordionGroup();
 }
 
 function setExpanded(type, intel) {
@@ -57,104 +55,99 @@ function setExpanded(type, intel) {
   const wind = s.windSpeed ?? null;
   const gust = s.windGust ?? null;
   const precipChance = intel.precipChance ?? null;
-  const precipType = s.precipType ?? "";
 
   el.innerHTML = `
-  <div class="fx-grid">
+    <div class="fx-grid">
 
-  <!-- 🌡️ DAILY RANGE (PRIMARY) -->
-  <div 
-  class="fx-tile primary"
-  style="background:${getTempTone(high)};"
->
-    <div class="fx-icon">🌡️</div>
-    <div class="fx-top">
-      ${high != null ? `${Math.round(high)}° / ${Math.round(low)}°` : "--"}
+      <div class="fx-tile primary" style="background:${getTempTone(high)};">
+        <div class="fx-icon">🌡️</div>
+        <div class="fx-top">
+          ${high != null ? `${Math.round(high)}° / ${Math.round(low)}°` : "--"}
+        </div>
+        <div class="fx-sub">Daily Range</div>
+      </div>
+
+      <div class="fx-tile">
+        <div class="fx-icon">💧</div>
+        <div class="fx-top">
+          ${dew != null ? Math.round(dew) + "°" : "--"}
+        </div>
+        <div class="fx-sub">Humidity Feel</div>
+      </div>
+
+      <div class="fx-tile">
+        <div class="fx-icon">🌬️</div>
+        <div class="fx-top">
+          ${wind != null ? Math.round(wind) + " mph" : "--"}
+        </div>
+        <div class="fx-sub">
+          ${gust != null ? `Gusts ${Math.round(gust)}` : "Wind"}
+        </div>
+      </div>
+
+      <div class="fx-tile">
+        <div class="fx-icon">🌧️</div>
+        <div class="fx-top">
+          ${precipChance != null ? precipChance + "%" : "Dry"}
+        </div>
+        <div class="fx-sub">
+          ${precipChance ? "Rain chance" : "No precipitation"}
+        </div>
+      </div>
+
     </div>
-    <div class="fx-sub">Daily Range</div>
-  </div>
 
-  <!-- 💧 HUMIDITY FEEL -->
-  <div class="fx-tile">
-    <div class="fx-icon">💧</div>
-    <div class="fx-top">
-      ${dew != null ? Math.round(dew) + "°" : "--"}
+    <div class="fx-highlight good">
+      <div class="fx-highlight-label">Best Time</div>
+      <div class="fx-highlight-time">
+        ${formatHourRange(intel.bestWindow?.start, intel.bestWindow?.end)}
+      </div>
     </div>
-    <div class="fx-sub">Humidity Feel</div>
-  </div>
 
-  <!-- 🌬️ WIND -->
-  <div class="fx-tile">
-    <div class="fx-icon">🌬️</div>
-    <div class="fx-top">
-      ${wind != null ? Math.round(wind) + " mph" : "--"}
+    <div class="fx-highlight bad">
+      <div class="fx-highlight-label">Toughest Stretch</div>
+      <div class="fx-highlight-time">
+        ${formatHourRange(intel.worstWindow?.start, intel.worstWindow?.end)}
+      </div>
     </div>
-    <div class="fx-sub">
-      ${gust != null ? `Gusts ${Math.round(gust)}` : "Wind"}
-    </div>
-  </div>
-
-  <!-- 🌧️ PRECIP -->
-  <div class="fx-tile">
-    <div class="fx-icon">🌧️</div>
-    <div class="fx-top">
-      ${precipChance != null ? precipChance + "%" : "Dry"}
-    </div>
-    <div class="fx-sub">
-      ${precipChance ? "Rain chance" : "No precipitation"}
-    </div>
-  </div>
-
-</div>
-
-  <div class="fx-highlight good">
-  <div class="fx-highlight-label">Best Time</div>
-  <div class="fx-highlight-time">
-    ${formatHourRange(intel.bestWindow?.start, intel.bestWindow?.end)}
-  </div>
-</div>
-
-<div class="fx-highlight bad">
-  <div class="fx-highlight-label">Toughest Stretch</div>
-  <div class="fx-highlight-time">
-    ${formatHourRange(intel.worstWindow?.start, intel.worstWindow?.end)}
-  </div>
-</div>
 
     ${renderDayparts(intel.dayparts)}
-
   `;
 }
 
 // ============================================================
-// ACCORDION (FINAL FIXED SYSTEM)
+// ACCORDION (ROBUST + RE-RENDER SAFE)
 // ============================================================
 
 function setupAccordionGroup() {
-  if (haAccordionInitialized) return;
-  haAccordionInitialized = true;
-
   const items = document.querySelectorAll("[data-accordion-item]");
 
   items.forEach(item => {
-    const content = item.querySelector("[data-accordion-content]");
-    if (!content) return;
+    // prevent duplicate binding per item
+    if (item.dataset.bound) return;
+    item.dataset.bound = "true";
 
-    // start collapsed
+    const trigger = item.querySelector("[data-accordion-trigger]");
+    const content = item.querySelector("[data-accordion-content]");
+    if (!trigger || !content) return;
+
+    // init state
+    content.classList.add("accordion-expand");
     content.classList.add("accordion-collapsed");
 
-    item.addEventListener("click", () => {
-      console.log("CLICK DETECTED");
+    trigger.addEventListener("click", (e) => {
+      e.stopPropagation();
 
       const isOpen = content.classList.contains("accordion-open");
+      const group = item.closest("[data-accordion]");
 
-      // close all
-      document.querySelectorAll("[data-accordion-content]").forEach(c => {
+      // close others in same group
+      group.querySelectorAll("[data-accordion-content]").forEach(c => {
         c.classList.remove("accordion-open");
         c.classList.add("accordion-collapsed");
       });
 
-      // open clicked
+      // open this one
       if (!isOpen) {
         content.classList.remove("accordion-collapsed");
         content.classList.add("accordion-open");
@@ -207,12 +200,12 @@ function renderDayparts(dayparts) {
           <span>${labels[key]}</span>
           <div class="fx-bar">
             <div 
-  class="fx-fill" 
-  style="
-    width:${val.avg}%;
-    background:${getComfortColor(val.avg)};
-  ">
-</div>
+              class="fx-fill" 
+              style="
+                width:${val.avg}%;
+                background:${getComfortColor(val.avg)};
+              ">
+            </div>
           </div>
           <span>${val.avg}</span>
         </div>
@@ -221,20 +214,6 @@ function renderDayparts(dayparts) {
   `;
 }
 
-function buildExplanation(intel) {
-  switch (intel.dominantFactor) {
-    case "humidity":
-      return "Humidity is the main factor affecting comfort.";
-    case "heat":
-      return "Heat is reducing comfort levels.";
-    case "wind":
-      return "Wind is shaping how it feels outside.";
-    default:
-      return "Conditions are fairly balanced.";
-  }
-}
-
-/* 🔥 ADD RIGHT BELOW */
 function getTempTone(temp) {
   if (temp == null) return "rgba(255,255,255,0.1)";
   if (temp >= 85) return "rgba(255,120,120,0.15)";
