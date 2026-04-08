@@ -108,18 +108,15 @@ function setExpanded(type, intel) {
   </div>
 </div>
 
-    <div class="fx-block">
-      <div class="fx-title">Toughest Stretch</div>
-      <div class="fx-main">
-        ${formatHourRange(intel.worstWindow?.start, intel.worstWindow?.end)}
-      </div>
-    </div>
+  <div class="fx-block">
+  <div class="fx-title">Toughest Stretch</div>
+  <div class="fx-main">
+    ${formatHourRange(intel.worstWindow?.start, intel.worstWindow?.end)}
+  </div>
+</div>
 
     ${renderDayparts(intel.dayparts)}
 
-   <div class="fx-explain">
-  ${intel.summary || buildExplanation(intel)}
-</div>
   `;
 }
 
@@ -203,7 +200,13 @@ function renderDayparts(dayparts) {
         <div class="fx-row">
           <span>${labels[key]}</span>
           <div class="fx-bar">
-            <div class="fx-fill" style="width:${val.avg}%"></div>
+            <div 
+  class="fx-fill" 
+  style="
+    width:${val.avg}%;
+    background:${getComfortColor(val.avg)};
+  ">
+</div>
           </div>
           <span>${val.avg}</span>
         </div>
@@ -223,4 +226,11 @@ function buildExplanation(intel) {
     default:
       return "Conditions are fairly balanced.";
   }
+}
+function getComfortColor(score) {
+  if (score >= 85) return "#22c55e"; // green
+  if (score >= 70) return "#84cc16"; // lime
+  if (score >= 55) return "#eab308"; // yellow
+  if (score >= 40) return "#f97316"; // orange
+  return "#ef4444"; // red
 }
