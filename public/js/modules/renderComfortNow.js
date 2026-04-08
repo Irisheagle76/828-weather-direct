@@ -1,7 +1,7 @@
 // /js/modules/renderComfortNow.js
 
 import { calculateComfort } from "../intel/comfort.js";
-import { assemble } from "../intel/synthesizer/assemble.js";
+import { assembleWithVoice } from "../intel/synthesizer/assembleWithVoice.js";
 
 // ============================================================
 // MODE ADJUSTMENTS
@@ -24,7 +24,7 @@ function applyModeAdjustments(data, mode) {
 }
 
 // ============================================================
-// SYNTHESIZER ADAPTER
+// SYNTHESIZER ADAPTER (UNCHANGED)
 // ============================================================
 function adaptComfortToIntel(c) {
   return {
@@ -53,24 +53,13 @@ function mapScoreToCategory(score) {
   if (score >= 3.5) return "uncomfortable";
   return "harsh";
 }
+
 // ============================================================
-// Mode Helper for Trail vs. Downtown
+// WIND FORMAT
 // ============================================================
-function getModeNoteFromSelection() {
-  const active = document.querySelector('.mode-btn.active');
-  if (!active) return "Conditions are balanced";
-
-  const mode = active.dataset.mode;
-
-  if (mode === "trail") {
-    return "🌲 Better conditions on trails";
-  }
-
-  if (mode === "downtown") {
-    return "🏙 Better conditions downtown";
-  }
-
-  return "Conditions are balanced";
+function formatWind(wind) {
+  if (!wind || wind < 1) return "Calm";
+  return `${Math.round(wind)} mph`;
 }
 
 // ============================================================
@@ -96,7 +85,7 @@ export function renderComfortNow(container, current, bestWindow, options = {}) {
   if (!comfort) return;
 
   // ------------------------------------------------------------
-  // MODE COMPARISON
+  // MODE COMPARISON (KEEP — THIS IS STRONG)
   // ------------------------------------------------------------
   const downtown = calculateComfort(
     applyModeAdjustments(current, "downtown"),
@@ -108,84 +97,75 @@ export function renderComfortNow(container, current, bestWindow, options = {}) {
     { isDay }
   );
 
-const downtownScore = downtown.score;
-const trailScore = trail.score;
+  const diff = Math.round((trail.score - downtown.score) * 10);
 
-const diff = Math.round((trailScore - downtownScore) * 10);
+  function getWhyMessage(trail, downtown) {
+    const reasons = [];
 
-function getWhyMessage(trail, downtown) {
-  const reasons = [];
+    if (trail.dewPoint < downtown.dewPoint - 2) reasons.push("less humid");
+    else if (trail.dewPoint > downtown.dewPoint + 2) reasons.push("more humid");
 
-  // Dew point / humidity (most important)
-  if (trail.dewPoint < downtown.dewPoint - 2) {
-    reasons.push("less humid");
-  } else if (trail.dewPoint > downtown.dewPoint + 2) {
-    reasons.push("more humid");
+    if (trail.windSpeed > downtown.windSpeed + 2) reasons.push("more breeze");
+    else if (trail.windSpeed < downtown.windSpeed - 2) reasons.push("calmer wind");
+
+    if (trail.temp < downtown.temp - 2) reasons.push("cooler air");
+    else if (trail.temp > downtown.temp + 2) reasons.push("warmer air");
+
+    return reasons.slice(0, 2).join(" and ");
   }
 
-  // Wind
-  if (trail.windSpeed > downtown.windSpeed + 2) {
-    reasons.push("more breeze");
-  } else if (trail.windSpeed < downtown.windSpeed - 2) {
-    reasons.push("calmer wind");
+  const why = getWhyMessage(trail, downtown);
+
+  let modeNote = "";
+
+  if (diff >= 2) {
+    modeNote = why
+      ? `🌲 Trails feel better — ${why}`
+      : "🌲 Trails feel better right now";
+  } else if (diff <= -2) {
+    modeNote = why
+      ? `🏙 Downtown feels better — ${why}`
+      : "🏙 Downtown feels better right now";
+  } else {
+    modeNote = "No major difference between locations";
   }
-
-  // Temperature
-  if (trail.temp < downtown.temp - 2) {
-    reasons.push("cooler air");
-  } else if (trail.temp > downtown.temp + 2) {
-    reasons.push("warmer air");
-  }
-
-  return reasons.slice(0, 2).join(" and ");
-}
-
-const why = getWhyMessage(trail, downtown);
-
-let modeNote = "";
-
-if (diff >= 2) {
-  modeNote = why
-    ? `🌲 Trails feel better — ${why}`
-    : "🌲 Trails feel better right now";
-} else if (diff <= -2) {
-  modeNote = why
-    ? `🏙 Downtown feels better — ${why}`
-    : "🏙 Downtown feels better right now";
-} else {
-  modeNote = "⚖️ Conditions are similar across locations";
-}
 
   // ------------------------------------------------------------
   // SCORE
   // ------------------------------------------------------------
   const scoreValue = Math.round(comfort.score * 10);
-  const score = `${scoreValue} / 100`;
   const scoreClass = getComfortClass(scoreValue);
+  const goldiClass = comfort.goldilocks ? "goldilocks" : "";
 
   // ------------------------------------------------------------
-  // 🔥 SYNTHESIZER (CORRECTLY WIRED)
+  // 🔥 ASSEMBLE (UPGRADED — NOT REPLACED)
   // ------------------------------------------------------------
   const intel = adaptComfortToIntel(comfort);
   const category = mapScoreToCategory(comfort.score);
 
-  const narrative = assemble.assemble(
-  intel,
-  "today",
-  category,
-  comfort.goldilocks
-);
+  const narrative = assembleWithVoice(
+    intel,
+    "today",
+    category,
+    comfort.goldilocks
+  );
 
-  const headline = narrative?.headline || "Comfort conditions";
-  const bullets = narrative?.bullets || [];
-  const emoji = narrative?.emoji || getFallbackEmoji(comfort);
+  // ------------------------------------------------------------
+  // HEADLINE (SCORE-AWARE)
+  // ------------------------------------------------------------
+  let headline = narrative.headline;
+
+  if (comfort.goldilocks) headline = "Near perfect comfort";
+  if (comfort.score <= 3) headline = "Uncomfortable";
+
+  const bullets = narrative.bullets || [];
 
   const bulletsHTML =
     bullets.length === 1
       ? `<div class="comfort-support">${bullets[0]}</div>`
-      : `<ul class="comfort-bullets">${bullets.map(b => `<li>${b}</li>`).join("")}</ul>`;
-
-  const goldiClass = comfort.goldilocks ? "goldilocks" : "";
+      : bullets.length > 1
+      ? `<ul class="comfort-bullets">${bullets.map(b => `<li>${b}</li>`).join("")}</ul>`
+      : "";
 
   // ------------------------------------------------------------
   // RENDER
@@ -194,53 +174,48 @@ if (diff >= 2) {
     <div class="comfort-module ${goldiClass}" data-accordion="comfort">
 
       <div class="comfort-main">
-        <div class="comfort-emoji">${emoji}</div>
+        <div class="comfort-emoji">${narrative.emoji}</div>
 
         <div class="comfort-text-block">
           <div class="comfort-label">Comfort Now</div>
 
-          <div class="comfort-score-row">
-            <div class="comfort-score ${scoreClass}">
-              ${score}
-            </div>
-
-            <button class="comfort-info-btn" aria-expanded="false">ⓘ</button>
+          <div class="comfort-score ${scoreClass}">
+            ${scoreValue}
           </div>
 
-          <div class="comfort-explainer hidden">
-            Combines temperature, dew point, wind, and sun into a real-world comfort score.
-          </div>
-
+          <!-- HEADLINE -->
           <div class="comfort-text">${headline}</div>
 
-       <div class="comfort-mode-note">
-  ${modeNote}
-  <span class="mode-info" title="Trail = cooler, breezier, more exposed conditions. Downtown = warmer, more sheltered.">ⓘ</span>
-</div>
-        </div>
-      </div>
+          <!-- BULLETS (your strength) -->
+          ${bulletsHTML}
 
-      <div class="comfort-body">
-        ${bulletsHTML}
+          <!-- GOLDILOCKS -->
+          ${
+            comfort.goldilocks
+              ? `<div class="comfort-goldi">✨ Ideal conditions right now</div>`
+              : ""
+          }
+
+          <!-- MODE CONTEXT -->
+          <div class="comfort-mode-note">${modeNote}</div>
+        </div>
       </div>
 
       <div class="comfort-expand">
 
         <div class="comfort-expand-row">
-          <span class="comfort-expand-label">Temperature</span>
-          <span class="comfort-expand-value">${round(comfort.temp)}°</span>
+          <span>Temperature</span>
+          <span>${round(comfort.temp)}°</span>
         </div>
 
         <div class="comfort-expand-row">
-          <span class="comfort-expand-label">Dew Point</span>
-          <span class="comfort-expand-value">${round(comfort.dewPoint)}°</span>
+          <span>Dew Point</span>
+          <span>${round(comfort.dewPoint)}°</span>
         </div>
 
         <div class="comfort-expand-row">
-          <span class="comfort-expand-label">Wind</span>
-          <span class="comfort-expand-value">
-            ${round(comfort.windSpeed)} mph
-          </span>
+          <span>Wind</span>
+          <span>${formatWind(comfort.windSpeed)}</span>
         </div>
 
         ${renderBestWindow(bestWindow)}
@@ -251,41 +226,6 @@ if (diff >= 2) {
 
   attachComfortInfoToggle(container);
   attachComfortAccordion(container);
-}
-
-// ============================================================
-// FALLBACK EMOJI (only used if synthesizer fails)
-// ============================================================
-function getFallbackEmoji(c) {
-  if (c.goldilocks) return "✨";
-  if (c.flags?.veryHot && c.flags?.veryHumid) return "🥵";
-  if (c.flags?.veryHot) return "☀️";
-  if (c.flags?.crisp && c.score >= 7) return "🍃";
-  if (c.score <= 3) return "🥶";
-  return "🌤️";
-}
-
-// ============================================================
-// BEST WINDOW
-// ============================================================
-function renderBestWindow(bestWindow) {
-  if (!bestWindow || !bestWindow.hours?.length) return "";
-
-  const first = bestWindow.hours[0];
-  const last = bestWindow.hours[bestWindow.hours.length - 1];
-
-  return `
-    <div class="comfort-expand-row">
-      <span class="comfort-expand-label">Best Window</span>
-      <span class="comfort-expand-value">
-        ${first.hourLabel}–${last.hourLabel}
-      </span>
-    </div>
-
-    <div class="comfort-extra-line">
-      Most comfortable stretch based on better temperature and lower humidity.
-    </div>
-  `;
 }
 
 // ============================================================
@@ -304,27 +244,22 @@ function getComfortClass(score) {
 }
 
 // ============================================================
-// UI BEHAVIOR
+// BEST WINDOW
 // ============================================================
-function attachComfortInfoToggle(container) {
-  const btn = container.querySelector(".comfort-info-btn");
-  const explainer = container.querySelector(".comfort-explainer");
+function renderBestWindow(bestWindow) {
+  if (!bestWindow?.hours?.length) return "";
 
-  if (!btn || !explainer) return;
+  const first = bestWindow.hours[0];
+  const last = bestWindow.hours[bestWindow.hours.length - 1];
 
-  btn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    const isHidden = explainer.classList.toggle("hidden");
-    btn.setAttribute("aria-expanded", !isHidden);
-  });
-}
+  return `
+    <div class="comfort-expand-row">
+      <span>Best Window</span>
+      <span>${first.hourLabel}–${last.hourLabel}</span>
+    </div>
 
-function attachComfortAccordion(container) {
-  const module = container.querySelector(".comfort-module");
-  if (!module) return;
-
-  module.addEventListener("click", (e) => {
-    if (e.target.closest(".comfort-info-btn")) return;
-    module.classList.toggle("active");
-  });
+    <div class="comfort-extra-line">
+      Most comfortable stretch based on better temperature and lower humidity.
+    </div>
+  `;
 }
