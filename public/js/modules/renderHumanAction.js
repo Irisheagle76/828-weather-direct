@@ -1,5 +1,12 @@
 // ============================================================
-// HUMAN ACTION RENDER (CLEAN + ACCORDION ENABLED)
+// HUMAN ACTION RENDER (STABLE + ACCORDION FIXED)
+// ============================================================
+
+// 🔒 prevent duplicate listeners
+let haAccordionInitialized = false;
+
+// ============================================================
+// MAIN BLOCK RENDER
 // ============================================================
 
 export function renderHumanAction(today, tomorrow) {
@@ -35,7 +42,7 @@ export function renderHumanActionExpanded(todayIntel, tomorrowIntel) {
   setExpanded("today", todayIntel);
   setExpanded("tomorrow", tomorrowIntel);
 
-  setupAccordionGroup(); // 🔥 enable interaction
+  setupAccordionGroup(); // 🔥 initialize once
 }
 
 function setExpanded(type, intel) {
@@ -87,7 +94,6 @@ function setExpanded(type, intel) {
 
     </div>
 
-    <!-- 🔥 BEST / WORST -->
     <div class="fx-block">
       <div class="fx-title">Best Window</div>
       <div class="fx-main">
@@ -102,10 +108,8 @@ function setExpanded(type, intel) {
       </div>
     </div>
 
-    <!-- 🔥 DAYPARTS -->
     ${renderDayparts(intel.dayparts)}
 
-    <!-- 🔥 EXPLANATION -->
     <div class="fx-explain">
       ${buildExplanation(intel)}
     </div>
@@ -113,35 +117,56 @@ function setExpanded(type, intel) {
 }
 
 // ============================================================
-// ACCORDION SYSTEM (USES YOUR CSS)
+// ACCORDION (FINAL FIXED SYSTEM)
 // ============================================================
 
 function setupAccordionGroup() {
-  const items = document.querySelectorAll("[data-accordion-item]");
+  if (haAccordionInitialized) return;
+  haAccordionInitialized = true;
 
+  const container = document.querySelector('[data-accordion="ha"]');
+  if (!container) return;
+
+  const items = container.querySelectorAll("[data-accordion-item]");
+
+  // ✅ initialize collapsed state ONCE
   items.forEach(item => {
     const content = item.querySelector("[data-accordion-content]");
     if (!content) return;
 
     content.classList.add("accordion-expand", "accordion-collapsed");
+  });
 
-    item.addEventListener("click", () => {
-      const isOpen = content.classList.contains("accordion-open");
+  // ✅ event delegation (ONE listener)
+  container.addEventListener("click", (e) => {
 
-      // close all
-      items.forEach(i => {
-        const c = i.querySelector("[data-accordion-content]");
-        if (!c) return;
-        c.classList.remove("accordion-open");
-        c.classList.add("accordion-collapsed");
-      });
+    // 🚫 ignore clicks inside expanded content
+    if (e.target.closest("[data-accordion-content]")) return;
 
-      // open clicked
-      if (!isOpen) {
-        content.classList.remove("accordion-collapsed");
-        content.classList.add("accordion-open");
-      }
+   const trigger = e.target.closest("[data-accordion-trigger]");
+if (!trigger) return;
+
+const item = trigger.closest("[data-accordion-item]");
+    if (!item) return;
+
+    const content = item.querySelector("[data-accordion-content]");
+    if (!content) return;
+
+    const isOpen = content.classList.contains("accordion-open");
+
+    // close all
+    items.forEach(i => {
+      const c = i.querySelector("[data-accordion-content]");
+      if (!c) return;
+      c.classList.remove("accordion-open");
+      c.classList.add("accordion-collapsed");
     });
+
+    // open clicked
+    if (!isOpen) {
+      content.classList.remove("accordion-collapsed");
+      content.classList.add("accordion-open");
+    }
   });
 }
 

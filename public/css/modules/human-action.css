@@ -14,7 +14,7 @@
   transition: border-color 0.25s ease, background 0.25s ease;
 }
 
-.action-module.active {
+.action-module[data-open="true"] {
   border-color: var(--accent);
   background: rgba(255,255,255,0.10);
 }
@@ -65,27 +65,6 @@
 }
 
 /* ============================================================
-   EXPANDED PANEL — CLEAN AUTO HEIGHT SYSTEM
-   ============================================================ */
-
-.expanded-panel {
-  height: 0;
-  overflow: hidden;
-  opacity: 0;
-  margin-top: 0;
-
-  transition:
-    height 0.35s ease,
-    opacity 0.25s ease,
-    margin-top 0.25s ease;
-}
-
-.action-module.active .expanded-panel {
-  opacity: 1;
-  margin-top: 0.8rem;
-}
-
-/* ============================================================
    FORECAST GRID
    ============================================================ */
 
@@ -119,4 +98,26 @@
   font-size: 0.7rem;
   opacity: 0.6;
   margin-top: 3px;
+}
+/* ============================================================
+   EXPANDED PANEL — ACCORDION SYSTEM (FINAL)
+   ============================================================ */
+
+.expanded-panel {
+  overflow: hidden;
+}
+
+/* collapsed */
+.expanded-panel.accordion-collapsed {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+/* open */
+.expanded-panel.accordion-open {
+  max-height: 1000px;
+  opacity: 1;
+  transform: translateY(0);
+  margin-top: 0.8rem;
 }
