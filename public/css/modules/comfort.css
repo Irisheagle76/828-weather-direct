@@ -29,14 +29,6 @@
    HEADER (CLICKABLE AREA)
    ============================================================ */
 
-.comfort-main {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-  min-width: 0;
-  cursor: pointer;
-}
-
 .comfort-emoji {
   font-size: 2rem;
   flex-shrink: 0;
@@ -119,12 +111,13 @@
 }
 
 /* ============================================================
-   EXPANSION PANEL (ACCORDION CORE)
+   EXPANSION PANEL (ACCORDION CORE — FIXED)
    ============================================================ */
 
 .comfort-expand {
   max-height: 0;
   overflow: hidden;
+  padding-right: 2px;
   opacity: 0;
   transform: translateY(-6px) scale(0.98);
 
@@ -138,9 +131,9 @@
   padding-top: 0;
 }
 
-/* ACTIVE STATE */
-.comfort-module.active .comfort-expand {
-  max-height: 1000px; /* large enough */
+/* ✅ MATCHES JS (.open) */
+.comfort-module.open .comfort-expand {
+  max-height: 500px;
   opacity: 1;
   transform: translateY(0) scale(1);
 
@@ -150,12 +143,36 @@
 }
 
 /* subtle emphasis when open */
-.comfort-module.active {
+.comfort-module.open {
+   transform: translateY(-1px);
   backdrop-filter: blur(6px);
+  box-shadow: 0 16px 36px rgba(0,0,0,0.4);
 }
 
 /* ============================================================
-   EXPAND CONTENT
+   EXPANDED CONTENT (NEW ACTION LAYER)
+   ============================================================ */
+
+.comfort-expand-headline {
+  font-weight: 600;
+  color: #facc15;
+  margin-bottom: 8px;
+}
+
+.comfort-expand-actions {
+  margin-bottom: 12px;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.comfort-expand-drivers {
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding-top: 8px;
+  margin-top: 10px;
+}
+
+/* ============================================================
+   EXPAND CONTENT (DATA ROWS)
    ============================================================ */
 
 .comfort-expand-row {
@@ -180,6 +197,24 @@
   font-size: 0.82rem;
   color: #c8d3ff;
   line-height: 1.35;
+}
+
+/* ============================================================
+   INTERACTION POLISH
+   ============================================================ */
+
+.comfort-main {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-width: 0;
+
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.comfort-main:hover {
+  transform: translateY(-2px);
 }
 
 /* ============================================================
