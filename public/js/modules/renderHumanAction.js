@@ -1,4 +1,6 @@
-// /js/modules/renderHumanAction.js
+// ============================================================
+// HUMAN ACTION RENDER (CLEAN + ACCORDION ENABLED)
+// ============================================================
 
 export function renderHumanAction(today, tomorrow) {
   setBlock("today", today);
@@ -25,16 +27,22 @@ function setBlock(type, data) {
   }
 }
 
+// ============================================================
+// EXPANDED PANEL
+// ============================================================
+
 export function renderHumanActionExpanded(todayIntel, tomorrowIntel) {
   setExpanded("today", todayIntel);
   setExpanded("tomorrow", tomorrowIntel);
+
+  setupAccordionGroup(); // 🔥 enable interaction
 }
 
 function setExpanded(type, intel) {
   const el = document.getElementById(`ha-${type}-expanded`);
-  if (!el || !intel || !intel.snapshot) return;
+  if (!el || !intel) return;
 
-  const s = intel.snapshot;
+  const s = intel.snapshot || {};
 
   const high = intel.stats?.tempMax ?? s.temp ?? null;
   const low = intel.stats?.tempMin ?? s.temp ?? null;
@@ -78,12 +86,69 @@ function setExpanded(type, intel) {
       </div>
 
     </div>
+
+    <!-- 🔥 BEST / WORST -->
+    <div class="fx-block">
+      <div class="fx-title">Best Window</div>
+      <div class="fx-main">
+        ${formatHourRange(intel.bestWindow?.start, intel.bestWindow?.end)}
+      </div>
+    </div>
+
+    <div class="fx-block">
+      <div class="fx-title">Toughest Stretch</div>
+      <div class="fx-main">
+        ${formatHourRange(intel.worstWindow?.start, intel.worstWindow?.end)}
+      </div>
+    </div>
+
+    <!-- 🔥 DAYPARTS -->
+    ${renderDayparts(intel.dayparts)}
+
+    <!-- 🔥 EXPLANATION -->
+    <div class="fx-explain">
+      ${buildExplanation(intel)}
+    </div>
   `;
 }
 
-// -----------------------------
-// small helpers (local only)
-// -----------------------------
+// ============================================================
+// ACCORDION SYSTEM (USES YOUR CSS)
+// ============================================================
+
+function setupAccordionGroup() {
+  const items = document.querySelectorAll("[data-accordion-item]");
+
+  items.forEach(item => {
+    const content = item.querySelector("[data-accordion-content]");
+    if (!content) return;
+
+    content.classList.add("accordion-expand", "accordion-collapsed");
+
+    item.addEventListener("click", () => {
+      const isOpen = content.classList.contains("accordion-open");
+
+      // close all
+      items.forEach(i => {
+        const c = i.querySelector("[data-accordion-content]");
+        if (!c) return;
+        c.classList.remove("accordion-open");
+        c.classList.add("accordion-collapsed");
+      });
+
+      // open clicked
+      if (!isOpen) {
+        content.classList.remove("accordion-collapsed");
+        content.classList.add("accordion-open");
+      }
+    });
+  });
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+
 function setText(id, value) {
   const el = document.getElementById(id);
   if (el && value != null) el.textContent = value;
@@ -92,4 +157,52 @@ function setText(id, value) {
 function setHTML(id, html) {
   const el = document.getElementById(id);
   if (el) el.innerHTML = html;
+}
+
+function formatHourRange(start, end) {
+  if (start == null || end == null) return "--";
+
+  const fmt = h => {
+    const suffix = h >= 12 ? "PM" : "AM";
+    const display = h % 12 || 12;
+    return `${display}${suffix}`;
+  };
+
+  return `${fmt(start)}–${fmt(end)}`;
+}
+
+function renderDayparts(dayparts) {
+  if (!dayparts) return "";
+
+  const labels = {
+    am_commute: "AM Commute",
+    lunch: "Lunch",
+    pm_commute: "PM Commute",
+    dinner: "Dinner",
+    late_night: "Late Night"
+  };
+
+  return `
+    <div class="fx-dayparts">
+      ${Object.entries(dayparts).map(([key, val]) => `
+        <div class="fx-row">
+          <span>${labels[key] || key}</span>
+          <span>${val.avg}</span>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function buildExplanation(intel) {
+  switch (intel.dominantFactor) {
+    case "humidity":
+      return "Humidity is the main factor affecting comfort.";
+    case "heat":
+      return "Heat is reducing comfort levels.";
+    case "wind":
+      return "Wind is shaping how it feels outside.";
+    default:
+      return "Conditions are fairly balanced.";
+  }
 }
