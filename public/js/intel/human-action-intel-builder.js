@@ -1,9 +1,9 @@
 // ============================================================
-// HUMAN ACTION + COMFORT BUILDER (TIME-AWARE v1)
-// - Today = now → +24h (dynamic)
+// HUMAN ACTION + COMFORT BUILDER (CLEAN v2)
+// - Today = now → +24h
 // - Tomorrow = +24h → +48h
 // - Hourly comfort → dayparts → windows → score
-// - Keeps existing factor + voice system
+// - UI compatible (headline, bullets, emoji)
 // ============================================================
 
 import { evaluateHumanActionFactors } from "../modules/human-action-2/core-engine.js";
@@ -12,7 +12,7 @@ import { buildHumanVoice } from "../intel/human-voice.js";
 import { calculateComfort } from "../intel/comfort.js";
 
 // ------------------------------------------------------------
-// DAYPARTS (fixed)
+// DAYPARTS
 // ------------------------------------------------------------
 const DAYPARTS = [
   { key: "am_commute", start: 5, end: 9 },
@@ -37,8 +37,15 @@ export function buildHumanActionIntel(raw) {
 
   const now = Date.now();
 
-  const todayHours = slice(hourly, now, 0, 24);
-  const tomorrowHours = slice(hourly, now, 24, 48);
+  const todayHours = hourly.filter(h => {
+    const diff = (h.timestamp - now) / 36e5;
+    return diff >= 0 && diff < 24;
+  });
+
+  const tomorrowHours = hourly.filter(h => {
+    const diff = (h.timestamp - now) / 36e5;
+    return diff >= 24 && diff < 48;
+  });
 
   return {
     today: buildPeriod(todayHours, "today", now),
@@ -47,14 +54,14 @@ export function buildHumanActionIntel(raw) {
 }
 
 // ------------------------------------------------------------
-// PERIOD BUILDER (CORE)
+// PERIOD BUILDER
 // ------------------------------------------------------------
 function buildPeriod(hours, label, now) {
   if (!hours?.length) return fallback(label);
 
-  // --------------------------------------------
-  // 1. HOURLY COMFORT
-  // --------------------------------------------
+  // -------------------------
+  // HOURLY COMFORT
+  // -------------------------
   const hourlyComfort = hours.map(h => {
     const c = calculateComfort({
       temp: h.temperatureF,
@@ -73,9 +80,9 @@ function buildPeriod(hours, label, now) {
     };
   });
 
-  // --------------------------------------------
-  // 2. DAYPARTS
-  // --------------------------------------------
+  // -------------------------
+  // DAYPARTS
+  // -------------------------
   const dayparts = {};
 
   for (const part of DAYPARTS) {
@@ -94,9 +101,9 @@ function buildPeriod(hours, label, now) {
     };
   }
 
-  // --------------------------------------------
-  // 3. BEST / WORST WINDOWS (3hr rolling)
-  // --------------------------------------------
+  // -------------------------
+  // BEST / WORST WINDOWS
+  // -------------------------
   let best = null;
   let worst = null;
 
@@ -121,9 +128,9 @@ function buildPeriod(hours, label, now) {
     }
   }
 
-  // --------------------------------------------
-  // 4. NOW (only for today)
-  // --------------------------------------------
+  // -------------------------
+  // NOW BLOCK
+  // -------------------------
   let nowBlock = null;
 
   if (label === "today") {
@@ -138,9 +145,9 @@ function buildPeriod(hours, label, now) {
     }
   }
 
-  // --------------------------------------------
-  // 5. SCORING
-  // --------------------------------------------
+  // -------------------------
+  // SCORE
+  // -------------------------
   const avgAll = avgScore(hourlyComfort);
 
   let score;
@@ -159,9 +166,9 @@ function buildPeriod(hours, label, now) {
 
   score = Math.round(score);
 
-  // --------------------------------------------
-  // 6. EXISTING FACTOR + VOICE SYSTEM
-  // --------------------------------------------
+  // -------------------------
+  // EXISTING ENGINE
+  // -------------------------
   const evals = hours.map(evaluateHumanActionFactors);
   const core = aggregate(evals);
 
@@ -169,49 +176,41 @@ function buildPeriod(hours, label, now) {
   const signals = buildSignals(snapshot);
   const voice = buildHumanVoice(signals, core.dominantFactor);
 
-  // --------------------------------------------
-  // RETURN
-  // --------------------------------------------
+  // -------------------------
+  // RETURN (UI READY)
+  // -------------------------
   return {
-  label,
+    label,
 
-  // 🔥 NEW CORE
-  score,
-  now: nowBlock,
-  dayparts,
-  bestWindow: best,
-  worstWindow: worst,
+    score,
+    now: nowBlock,
+    dayparts,
+    bestWindow: best,
+    worstWindow: worst,
 
-  // 🔥 UI COMPATIBILITY (THIS FIXES YOUR BLANK CARDS)
-  emoji: pickEmoji(score),
-  headline: buildHeadline(score),
-  narrative: voice.summary || "",
-  bullets: buildBullets({ best, worst, dayparts }),
+    emoji: pickEmoji(score),
+    headline: buildHeadline(score),
+    narrative: voice.summary || "",
+    bullets: buildBullets({ best, worst, dayparts }),
 
-  // EXISTING SYSTEM
-  dominantFactor: core.dominantFactor,
-  confidence: core.confidence,
-  secondaryFactors: core.secondaryFactors,
+    dominantFactor: core.dominantFactor,
+    confidence: core.confidence,
+    secondaryFactors: core.secondaryFactors,
 
-  summary: voice.summary,
-  detail: voice.detail,
-  feelsLike: voice.feelsLike,
+    summary: voice.summary,
+    detail: voice.detail,
+    feelsLike: voice.feelsLike,
 
-  snapshot,
-  hourlyEvaluations: evals
-};
+    snapshot,
+    hourlyEvaluations: evals
+  };
+}
+
 // ------------------------------------------------------------
 // HELPERS
 // ------------------------------------------------------------
 function avgScore(arr) {
   return arr.reduce((a, h) => a + h.score, 0) / arr.length;
-}
-
-function slice(hours, now, start, end) {
-  return hours.filter(h => {
-    const diff = (h.timestamp - now) / 36e5;
-    return diff >= start && diff < end;
-  });
 }
 
 function blend(hours) {
@@ -273,12 +272,16 @@ function fallback(label) {
   return {
     label,
     score: 50,
-    summary: "Conditions are fairly steady",
+    headline: "Conditions are steady",
+    narrative: "",
+    bullets: [],
     dayparts: {},
     bestWindow: null,
     worstWindow: null
   };
 }
+
+// ---------------- UI HELPERS ----------------
 function pickEmoji(score) {
   if (score >= 80) return "😌";
   if (score >= 65) return "🙂";
@@ -315,12 +318,4 @@ function formatHour(h) {
   const suffix = h >= 12 ? "PM" : "AM";
   const display = h % 12 || 12;
   return `${display}${suffix}`;
-}
-
-function slice(hours, now, start, end) {
-  return hours.filter(h => {
-    const diff = (h.timestamp - now) / 36e5; // hours ahead
-    return diff >= start && diff < end;
-  });
-}
 }
