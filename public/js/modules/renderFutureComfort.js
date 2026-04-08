@@ -1,44 +1,46 @@
 // /js/modules/renderFutureComfort.js
 
 // ============================================================
-// FUTURE COMFORT — NEXT 6 HOURS (CLEAN + INFORMATIVE)
-// - Visual first (scan quickly)
-// - One summary line (main insight)
-// - Trend chip (quick direction)
-// - No per-hour text noise
+// FUTURE COMFORT (BALANCED WITH COMFORT NOW)
 // ============================================================
 
 export function renderFutureComfort(container, items, trend) {
-  if (!container || !Array.isArray(items) || items.length === 0) return;
+  if (!container || !Array.isArray(items) || !items.length) return;
 
   const safeTrend = trend || detectTrend(items);
-  const startLabel = items?.[0]?.hourLabel || "";
-
   const summary = buildSummary(items, safeTrend);
 
   container.innerHTML = `
     <div class="comfort-module next6-module">
 
-      <!-- HEADER -->
-      <div class="next6-header">
-        <div class="next6-label">NEXT 6 HOURS</div>
-        <div class="next6-text">
-          ${startLabel ? `${startLabel} onward` : ""}
+      <!-- MATCHES COMFORT NOW STRUCTURE -->
+      <div class="comfort-main">
+
+        <div class="comfort-emoji">
+          ${getTrendEmoji(safeTrend)}
         </div>
+
+        <div class="comfort-text-block">
+
+          <div class="comfort-label">Future Comfort</div>
+
+          <div class="comfort-score ${safeTrend}">
+            ${getTrendArrow(safeTrend)}
+          </div>
+
+          <div class="comfort-text">
+            ${getTrendText(safeTrend)}
+          </div>
+
+          <div class="comfort-support">
+            ${summary}
+          </div>
+
+        </div>
+
       </div>
 
-      <!-- TREND CHIP (RESTORED, BUT CLEANER) -->
-      <div class="next6-trend-chip ${safeTrend}">
-        <span class="trend-arrow">${getTrendArrow(safeTrend)}</span>
-        <span class="trend-text">${getTrendText(safeTrend)}</span>
-      </div>
-
-      <!-- SUMMARY (PRIMARY MESSAGE) -->
-      <div class="next6-summary">
-        ${summary}
-      </div>
-
-      <!-- HOURS -->
+      <!-- HOURS STRIP -->
       <div class="next6-strip">
         ${items.map(renderHourCard).join("")}
       </div>
@@ -48,7 +50,7 @@ export function renderFutureComfort(container, items, trend) {
 }
 
 // ============================================================
-// HOUR CARD (MINIMAL)
+// HOUR CARD (UNCHANGED STRUCTURE)
 // ============================================================
 function renderHourCard(h) {
   const temp =
@@ -99,7 +101,7 @@ function renderHourCard(h) {
 }
 
 // ============================================================
-// SUMMARY (MAIN INSIGHT)
+// SUMMARY (PRIMARY MESSAGE)
 // ============================================================
 function buildSummary(hours, trend) {
   if (!hours.length) return "";
@@ -116,16 +118,10 @@ function buildSummary(hours, trend) {
   const precipTotal =
     hours.reduce((sum, h) => sum + (h.precip ?? 0), 0);
 
-  // ------------------------------------------------------------
-  // PRECIP PRIORITY
-  // ------------------------------------------------------------
   if (precipTotal > 0.05) {
     return "Rain may affect comfort during this period";
   }
 
-  // ------------------------------------------------------------
-  // TREND DRIVEN
-  // ------------------------------------------------------------
   if (trend === "improving") {
     if (tempDiff > 2) return "Warming up and becoming more comfortable";
     return "Conditions gradually become more comfortable";
@@ -136,33 +132,21 @@ function buildSummary(hours, trend) {
     return "Conditions trend less comfortable";
   }
 
-  // ------------------------------------------------------------
-  // WIND SIGNAL
-  // ------------------------------------------------------------
   if (avgWind > 8) {
     return "A steady breeze affects how it feels";
   }
 
-  // ------------------------------------------------------------
-  // TEMP SIGNAL
-  // ------------------------------------------------------------
   if (tempDiff >= 4) return "Warming up through this stretch";
   if (tempDiff <= -4) return "Cooling off gradually";
 
-  // ------------------------------------------------------------
-  // SCORE SIGNAL
-  // ------------------------------------------------------------
   if (scoreDiff >= 0.2) return "Comfort improves slightly";
   if (scoreDiff <= -0.2) return "Comfort dips slightly";
 
-  // ------------------------------------------------------------
-  // DEFAULT
-  // ------------------------------------------------------------
   return "Conditions remain fairly steady";
 }
 
 // ============================================================
-// TREND DETECTION (AUTO)
+// TREND DETECTION
 // ============================================================
 function detectTrend(hours) {
   if (!hours.length) return "steady";
@@ -191,6 +175,12 @@ function getTrendArrow(trend) {
   if (trend === "improving") return "↑";
   if (trend === "worsening") return "↓";
   return "→";
+}
+
+function getTrendEmoji(trend) {
+  if (trend === "improving") return "😌";
+  if (trend === "worsening") return "😕";
+  return "😐";
 }
 
 // ============================================================
