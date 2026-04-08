@@ -8,7 +8,7 @@
 
 import { evaluateHumanActionFactors } from "../modules/human-action-2/core-engine.js";
 import { normalizeOpenMeteo } from "./normalize-hourly.js";
-import { buildHumanVoice } from "./human-voice.js";
+import { buildHumanVoice } from "../intel/human-voice.js";
 
 // ------------------------------------------------------------
 // MAIN ENTRY

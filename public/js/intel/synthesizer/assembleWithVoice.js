@@ -1,6 +1,6 @@
 import { assemble } from "./assemble.js";
 import { cleanPhrase } from "./voice-filter.js";
-import { buildHumanVoice } from "../human-voice.js";
+import { buildHumanVoice } from "../human-voice.js"; // 👈 IMPORTANT
 
 // ------------------------------------------------------------
 // WRAPPED ASSEMBLE (SAFE + SHARP)
