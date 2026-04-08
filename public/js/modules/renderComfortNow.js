@@ -24,7 +24,7 @@ function applyModeAdjustments(data, mode) {
 }
 
 // ============================================================
-// SYNTHESIZER ADAPTER (UNCHANGED)
+// SYNTHESIZER ADAPTER
 // ============================================================
 function adaptComfortToIntel(c) {
   return {
@@ -36,7 +36,6 @@ function adaptComfortToIntel(c) {
       windGust: null,
       precipType: ""
     },
-
     valleyFogRisk: false,
     ridgeFogRisk: false,
     smokeIndex: 0,
@@ -55,14 +54,6 @@ function mapScoreToCategory(score) {
 }
 
 // ============================================================
-// WIND FORMAT
-// ============================================================
-function formatWind(wind) {
-  if (!wind || wind < 1) return "Calm";
-  return `${Math.round(wind)} mph`;
-}
-
-// ============================================================
 // MAIN RENDER
 // ============================================================
 export function renderComfortNow(container, current, bestWindow, options = {}) {
@@ -71,9 +62,6 @@ export function renderComfortNow(container, current, bestWindow, options = {}) {
   const mode = options.mode || "downtown";
   const isDay = options.isDay ?? true;
 
-  // ------------------------------------------------------------
-  // PRIMARY COMFORT
-  // ------------------------------------------------------------
   const adjusted = applyModeAdjustments(current, mode);
 
   const comfort = calculateComfort(adjusted, {
@@ -85,33 +73,29 @@ export function renderComfortNow(container, current, bestWindow, options = {}) {
   if (!comfort) return;
 
   // ------------------------------------------------------------
-  // MODE COMPARISON (KEEP — THIS IS STRONG)
+  // MODE COMPARISON (IMPROVED LANGUAGE)
   // ------------------------------------------------------------
-  const downtown = calculateComfort(
-    applyModeAdjustments(current, "downtown"),
-    { isDay }
-  );
-
-  const trail = calculateComfort(
-    applyModeAdjustments(current, "trail"),
-    { isDay }
-  );
+  const downtown = calculateComfort(applyModeAdjustments(current, "downtown"), { isDay });
+  const trail = calculateComfort(applyModeAdjustments(current, "trail"), { isDay });
 
   const diff = Math.round((trail.score - downtown.score) * 10);
 
   function getWhyMessage(trail, downtown) {
-    const reasons = [];
+    const d = {
+      dew: trail.dewPoint - downtown.dewPoint,
+      wind: trail.windSpeed - downtown.windSpeed,
+      temp: trail.temp - downtown.temp
+    };
 
-    if (trail.dewPoint < downtown.dewPoint - 2) reasons.push("less humid");
-    else if (trail.dewPoint > downtown.dewPoint + 2) reasons.push("more humid");
+    if (d.dew < -2) return "drier air";
+    if (d.wind > 2) return "a bit more breeze";
+    if (d.temp < -2) return "slightly cooler";
 
-    if (trail.windSpeed > downtown.windSpeed + 2) reasons.push("more breeze");
-    else if (trail.windSpeed < downtown.windSpeed - 2) reasons.push("calmer wind");
+    if (d.dew > 2) return "more humidity";
+    if (d.wind < -2) return "less airflow";
+    if (d.temp > 2) return "a bit warmer";
 
-    if (trail.temp < downtown.temp - 2) reasons.push("cooler air");
-    else if (trail.temp > downtown.temp + 2) reasons.push("warmer air");
-
-    return reasons.slice(0, 2).join(" and ");
+    return "";
   }
 
   const why = getWhyMessage(trail, downtown);
@@ -127,7 +111,7 @@ export function renderComfortNow(container, current, bestWindow, options = {}) {
       ? `🏙 Downtown feels better — ${why}`
       : "🏙 Downtown feels better right now";
   } else {
-    modeNote = "No major difference between locations";
+    modeNote = "Conditions feel similar across locations";
   }
 
   // ------------------------------------------------------------
@@ -138,34 +122,34 @@ export function renderComfortNow(container, current, bestWindow, options = {}) {
   const goldiClass = comfort.goldilocks ? "goldilocks" : "";
 
   // ------------------------------------------------------------
-  // 🔥 ASSEMBLE (UPGRADED — NOT REPLACED)
+  // VOICE
   // ------------------------------------------------------------
   const intel = adaptComfortToIntel(comfort);
   const category = mapScoreToCategory(comfort.score);
 
-  const narrative = assembleWithVoice(
-    intel,
-    "today",
-    category,
-    comfort.goldilocks
-  );
+  const narrative = assembleWithVoice(intel, "today", category, comfort.goldilocks);
 
-  // ------------------------------------------------------------
-  // HEADLINE (SCORE-AWARE)
-  // ------------------------------------------------------------
   let headline = narrative.headline;
-
   if (comfort.goldilocks) headline = "Near perfect comfort";
   if (comfort.score <= 3) headline = "Uncomfortable";
 
-  const bullets = narrative.bullets || [];
+  // ------------------------------------------------------------
+  // BULLETS (FORCE DEPTH)
+  // ------------------------------------------------------------
+  let bullets = narrative.bullets || [];
 
-  const bulletsHTML =
-    bullets.length === 1
-      ? `<div class="comfort-support">${bullets[0]}</div>`
-      : bullets.length > 1
-      ? `<ul class="comfort-bullets">${bullets.map(b => `<li>${b}</li>`).join("")}</ul>`
-      : "";
+  if (bullets.length < 2) {
+    bullets = [
+      bullets[0],
+      buildFallbackBullet(comfort)
+    ].filter(Boolean);
+  }
+
+  const bulletsHTML = `
+    <ul class="comfort-bullets">
+      ${bullets.map(b => `<li>${b}</li>`).join("")}
+    </ul>
+  `;
 
   // ------------------------------------------------------------
   // RENDER
@@ -183,24 +167,21 @@ export function renderComfortNow(container, current, bestWindow, options = {}) {
             ${scoreValue}
           </div>
 
-          <!-- HEADLINE -->
           <div class="comfort-text">${headline}</div>
 
-          <!-- BULLETS (your strength) -->
           ${bulletsHTML}
 
-          <!-- GOLDILOCKS -->
           ${
             comfort.goldilocks
               ? `<div class="comfort-goldi">✨ Ideal conditions right now</div>`
               : ""
           }
 
-          <!-- MODE CONTEXT -->
           <div class="comfort-mode-note">${modeNote}</div>
         </div>
       </div>
 
+      <!-- EXPANDED -->
       <div class="comfort-expand">
 
         <div class="comfort-expand-row">
@@ -219,6 +200,10 @@ export function renderComfortNow(container, current, bestWindow, options = {}) {
         </div>
 
         ${renderBestWindow(bestWindow)}
+
+        <div class="comfort-extra-line">
+          Comfort blends temperature, humidity, and wind into how it actually feels outside.
+        </div>
 
       </div>
     </div>
@@ -243,26 +228,35 @@ function getComfortClass(score) {
   return "bad";
 }
 
-// ============================================================
-// INTERACTIONS (FIX FOR MISSING FUNCTIONS)
-// ============================================================
+function formatWind(wind) {
+  if (!wind || wind < 1) return "Calm";
+  return `${Math.round(wind)} mph`;
+}
 
-// Simple accordion toggle
+function buildFallbackBullet(c) {
+  if (c.dewPoint > 65) return "Humidity adds a heavier feel";
+  if (c.windSpeed > 8) return "A noticeable breeze is present";
+  if (c.temp < 50) return "Cool air has a bit of a bite";
+  if (c.temp > 80) return "Warm conditions build through the day";
+  return "Conditions feel fairly balanced overall";
+}
+
+// ============================================================
+// INTERACTIONS
+// ============================================================
 function attachComfortAccordion(container) {
   const module = container.querySelector("[data-accordion='comfort']");
   if (!module) return;
 
   const header = module.querySelector(".comfort-main");
-  const expand = module.querySelector(".comfort-expand");
 
-  if (!header || !expand) return;
+  if (!header) return;
 
   header.addEventListener("click", () => {
     module.classList.toggle("open");
   });
 }
 
-// Optional info toggle (safe no-op if not present in DOM)
 function attachComfortInfoToggle(container) {
   const btn = container.querySelector(".comfort-info-toggle");
   const panel = container.querySelector(".comfort-info-panel");
@@ -270,7 +264,7 @@ function attachComfortInfoToggle(container) {
   if (!btn || !panel) return;
 
   btn.addEventListener("click", (e) => {
-    e.stopPropagation(); // prevent accordion trigger
+    e.stopPropagation();
     panel.classList.toggle("open");
   });
 }
@@ -291,7 +285,7 @@ function renderBestWindow(bestWindow) {
     </div>
 
     <div class="comfort-extra-line">
-      Most comfortable stretch based on better temperature and lower humidity.
+      This is the most comfortable stretch based on temperature and humidity.
     </div>
   `;
 }
