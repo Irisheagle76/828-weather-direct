@@ -1,5 +1,7 @@
-function buildHumanSummary({ dominantFactor, signals }) {
-  const { temp, dewPoint, windSpeed, humidity } = signals;
+// /js/intel/human-voice.js
+
+export function buildHumanVoice(signals, dominantFactor) {
+  const { temp, dewPoint, windSpeed } = signals;
 
   // ------------------------------------------------------------
   // CLASSIFY
@@ -24,36 +26,29 @@ function buildHumanSummary({ dominantFactor, signals }) {
     "windy";
 
   // ------------------------------------------------------------
-  // SUMMARY (NO VAGUE LANGUAGE)
+  // SUMMARY
   // ------------------------------------------------------------
   let summary;
 
   if (tempLevel === "hot" && humidityLevel !== "dry")
     summary = "Hot and uncomfortable";
-
   else if (tempLevel === "hot")
     summary = "Hot";
-
   else if (tempLevel === "warm" && humidityLevel !== "dry")
     summary = "Warm and slightly sticky";
-
   else if (tempLevel === "warm")
     summary = "Warm";
-
   else if (tempLevel === "mild")
     summary = "Comfortable";
-
   else if (tempLevel === "cool" && windLevel !== "calm")
     summary = "Cool with a breeze";
-
   else if (tempLevel === "cool")
     summary = "Cool";
-
   else
     summary = "Chilly";
 
   // ------------------------------------------------------------
-  // DETAIL (ONE CLEAR DRIVER)
+  // DETAIL
   // ------------------------------------------------------------
   let detail;
 
@@ -61,30 +56,26 @@ function buildHumanSummary({ dominantFactor, signals }) {
     case "heat":
       detail = "Feels warm in the sun";
       break;
-
     case "cold":
       detail = "Cool air is noticeable";
       break;
-
     case "humidity":
       detail = "Humidity makes it feel heavier";
       break;
-
     case "wind":
       detail =
         windLevel === "calm"
           ? "Calm conditions"
           : `Breeze around ${Math.round(windSpeed)} mph`;
       break;
-
     default:
       detail = "";
   }
 
   // ------------------------------------------------------------
-  // FEELS LIKE LABEL
+  // FEELS LIKE
   // ------------------------------------------------------------
-  const feels =
+  const feelsLike =
     temp >= 95 ? "Oppressive heat" :
     temp >= 85 ? "Very warm" :
     temp >= 75 ? "T-shirt weather" :
@@ -93,5 +84,5 @@ function buildHumanSummary({ dominantFactor, signals }) {
     temp >= 45 ? "Jacket recommended" :
     "Cold";
 
-  return { summary, detail, feelsLike: feels };
+  return { summary, detail, feelsLike };
 }
