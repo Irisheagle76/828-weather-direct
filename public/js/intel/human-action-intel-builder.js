@@ -316,4 +316,11 @@ function formatHour(h) {
   const display = h % 12 || 12;
   return `${display}${suffix}`;
 }
+
+function slice(hours, now, start, end) {
+  return hours.filter(h => {
+    const diff = (h.timestamp - now) / 36e5; // hours ahead
+    return diff >= start && diff < end;
+  });
+}
 }
