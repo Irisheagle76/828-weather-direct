@@ -173,29 +173,33 @@ function buildPeriod(hours, label, now) {
   // RETURN
   // --------------------------------------------
   return {
-    label,
+  label,
 
-    // 🔥 NEW CORE
-    score,
-    now: nowBlock,
-    dayparts,
-    bestWindow: best,
-    worstWindow: worst,
+  // 🔥 NEW CORE
+  score,
+  now: nowBlock,
+  dayparts,
+  bestWindow: best,
+  worstWindow: worst,
 
-    // EXISTING SYSTEM
-    dominantFactor: core.dominantFactor,
-    confidence: core.confidence,
-    secondaryFactors: core.secondaryFactors,
+  // 🔥 UI COMPATIBILITY (THIS FIXES YOUR BLANK CARDS)
+  emoji: pickEmoji(score),
+  headline: buildHeadline(score),
+  narrative: voice.summary || "",
+  bullets: buildBullets({ best, worst, dayparts }),
 
-    summary: voice.summary,
-    detail: voice.detail,
-    feelsLike: voice.feelsLike,
+  // EXISTING SYSTEM
+  dominantFactor: core.dominantFactor,
+  confidence: core.confidence,
+  secondaryFactors: core.secondaryFactors,
 
-    snapshot,
-    hourlyEvaluations: evals
-  };
-}
+  summary: voice.summary,
+  detail: voice.detail,
+  feelsLike: voice.feelsLike,
 
+  snapshot,
+  hourlyEvaluations: evals
+};
 // ------------------------------------------------------------
 // HELPERS
 // ------------------------------------------------------------
@@ -274,4 +278,42 @@ function fallback(label) {
     bestWindow: null,
     worstWindow: null
   };
+}
+function pickEmoji(score) {
+  if (score >= 80) return "😌";
+  if (score >= 65) return "🙂";
+  if (score >= 50) return "😐";
+  return "😕";
+}
+
+function buildHeadline(score) {
+  if (score >= 80) return "Very comfortable overall";
+  if (score >= 65) return "Comfortable for most of the day";
+  if (score >= 50) return "Mixed comfort today";
+  return "Challenging conditions";
+}
+
+function buildBullets({ best, worst, dayparts }) {
+  const bullets = [];
+
+  if (best) {
+    bullets.push(`Best: ${formatHour(best.start)}–${formatHour(best.end)}`);
+  }
+
+  if (worst) {
+    bullets.push(`Tough: ${formatHour(worst.start)}–${formatHour(worst.end)}`);
+  }
+
+  if (dayparts?.lunch) {
+    bullets.push(`Lunch: ${dayparts.lunch.avg}`);
+  }
+
+  return bullets;
+}
+
+function formatHour(h) {
+  const suffix = h >= 12 ? "PM" : "AM";
+  const display = h % 12 || 12;
+  return `${display}${suffix}`;
+}
 }
