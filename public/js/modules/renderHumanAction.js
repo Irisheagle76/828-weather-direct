@@ -117,7 +117,7 @@ function setExpanded(type, intel) {
 
     ${renderDayparts(intel.dayparts)}
 
-   div class="fx-expla<div class="fx-explain">
+   <div class="fx-explain">
   ${intel.summary || buildExplanation(intel)}
 </div>
   `;
