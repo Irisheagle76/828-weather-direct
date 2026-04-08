@@ -100,24 +100,14 @@
   margin-top: 3px;
 }
 /* ============================================================
-   EXPANDED PANEL — ACCORDION SYSTEM (FINAL)
+   EXPANDED PANEL — DEBUG MODE (NO ANIMATION)
    ============================================================ */
 
 .expanded-panel {
-  overflow: hidden;
+  display: none;
 }
 
-/* collapsed */
-.expanded-panel.accordion-collapsed {
-  max-height: 0;
-  opacity: 0;
-  transform: translateY(-6px);
-}
-
-/* open */
 .expanded-panel.accordion-open {
-  max-height: 1000px;
-  opacity: 1;
-  transform: translateY(0);
+  display: block;
   margin-top: 0.8rem;
 }
