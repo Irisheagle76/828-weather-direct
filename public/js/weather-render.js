@@ -1,5 +1,5 @@
 // ============================================================
-// WEATHER RENDER — v8 (TEMPEST-CORRECT + TIME-AWARE)
+// WEATHER RENDER — v9 (TIME-AWARE + CLEAN PIPELINE)
 // ============================================================
 
 // ------------------------------------------------------------
@@ -8,7 +8,6 @@
 import { normalizeOpenMeteo } from "./intel/normalize-hourly.js";
 import { calculateComfort } from "./intel/comfort.js";
 import { buildHumanActionIntel } from "./intel/human-action-intel-builder.js";
-import { generateNarrative } from "./intel/synthesizer/index.js";
 
 import { renderComfortNow } from "./modules/renderComfortNow.js";
 import { renderFutureComfort } from "./modules/renderFutureComfort.js";
@@ -48,23 +47,13 @@ export function renderWeather({ data, isLoading, mode = "downtown" }) {
   // ------------------------------------------------------------
   // NORMALIZE HOURLY
   // ------------------------------------------------------------
-  // 🔍 RAW API CHECK (before any mutation)
-console.log("RAW OPENMETEO SAMPLE:", {
-  temp: data?.hourly?.temperature_2m?.[0],
-  dew: data?.hourly?.dew_point_2m?.[0]
-});
-
   let hourly = normalizeOpenMeteo(data.hourly);
   hourly.sort((a, b) => a.timestamp - b.timestamp);
 
   // ------------------------------------------------------------
-  // CURRENT CONDITIONS (FIXED)
+  // CURRENT CONDITIONS
   // ------------------------------------------------------------
-
-  console.log("DATA KEYS AT RENDER:", Object.keys(data));
-console.log("DATA FULL:", data);
-
-  const current = resolveCurrent(data, hourly);
+  const current = resolveCurrent(data);
   renderCurrentObs(current);
 
   // ------------------------------------------------------------
@@ -76,31 +65,29 @@ console.log("DATA FULL:", data);
   renderComfortNow(
     $("comfort-now-container"),
     current,
-    findBestWindow(hourly, mode, isDay),
+    findBestWindow(hourly),
     { mode, isDay }
   );
 
   // ------------------------------------------------------------
-  // FUTURE COMFORT (FIXED TIME ALIGNMENT)
+  // FUTURE COMFORT (NEXT 6 HOURS)
   // ------------------------------------------------------------
   const future = buildFutureSlice(hourly, isDay);
   renderFutureComfort($("future-comfort-container"), future);
 
   // ------------------------------------------------------------
-  // HUMAN ACTION
+  // 🔥 HUMAN ACTION (NEW SYSTEM — NO OVERRIDE)
   // ------------------------------------------------------------
-  const intelRaw = buildHumanActionIntel({
+  const intel = buildHumanActionIntel({
     ...data,
     hourly
   });
 
-  const { today, tomorrow } = generateNarrative(
-    intelRaw.today,
-    intelRaw.tomorrow
-  );
+  // 🔥 DIRECT PASS (no generateNarrative)
+  renderHumanAction(intel.today, intel.tomorrow);
 
-  renderHumanAction(today, tomorrow);
-  renderHumanActionExpanded(intelRaw.today, intelRaw.tomorrow);
+  // 🔥 EXPANDED (accordion uses full data)
+  renderHumanActionExpanded(intel.today, intel.tomorrow);
 }
 
 // ============================================================
@@ -125,7 +112,7 @@ function setText(id, text) {
 }
 
 // ============================================================
-// CURRENT CONDITIONS (TEMPEST-FIRST, FULLY FIXED)
+// CURRENT CONDITIONS
 // ============================================================
 
 function resolveCurrent(data) {
@@ -134,8 +121,8 @@ function resolveCurrent(data) {
   if (!obs) return null;
 
   return {
-    temp: obs.temp ?? null,                 // ✅ FIXED
-    dewPoint: obs.dew_point ?? null,        // ✅ FIXED
+    temp: obs.temp ?? null,
+    dewPoint: obs.dew_point ?? null,
     humidity: obs.humidity ?? null,
     wind: obs.wind ?? 0,
     timestamp: obs.ts ?? null
@@ -166,7 +153,7 @@ function renderCurrentObs(current) {
 }
 
 // ============================================================
-// FUTURE (TIME-ALIGNED FIX)
+// FUTURE (NEXT 6 HOURS)
 // ============================================================
 
 function buildFutureSlice(hourly, isDay) {
@@ -182,10 +169,10 @@ function buildFutureSlice(hourly, isDay) {
   return slice.map(h => {
     const c = calculateComfort({
       temp: h.temperatureF,
-      humidity: h.relative_humidity,
-      wind: h.wind_speed,
-      clouds: h.cloud_cover
-    }, { isDay });
+      dewpointF: h.dewpointF,
+      windSpeed: h.wind_speed,
+      obsTimeLocal: h.timestamp
+    });
 
     return {
       hourLabel: new Date(getTs(h)).toLocaleTimeString([], { hour: "numeric" }),
@@ -196,10 +183,10 @@ function buildFutureSlice(hourly, isDay) {
 }
 
 // ============================================================
-// BEST WINDOW (UNCHANGED)
+// BEST WINDOW (USED BY COMFORT NOW)
 // ============================================================
 
-function findBestWindow(hourly, mode, isDay) {
+function findBestWindow(hourly) {
   let best = null;
 
   for (let i = 0; i < hourly.length - 2; i++) {
@@ -208,20 +195,26 @@ function findBestWindow(hourly, mode, isDay) {
     for (let j = 0; j < 3; j++) {
       const h = hourly[i + j];
 
-const c = calculateComfort({
-  temp: h.temperatureF,
-  dewpointF: h.dewpointF,   // 🔥 ADD THIS
-  humidity: h.relative_humidity,
-  wind: h.wind_speed,
-  clouds: h.cloud_cover
-});
+      const c = calculateComfort({
+        temp: h.temperatureF,
+        dewpointF: h.dewpointF,
+        windSpeed: h.wind_speed,
+        obsTimeLocal: h.timestamp
+      });
 
       sum += c?.score ?? 0;
     }
 
     const avg = sum / 3;
 
-    if (!best || avg > best) best = avg;
+    if (!best || avg > best.score) {
+      best = {
+        score: avg,
+        hours: hourly.slice(i, i + 3).map(h => ({
+          hourLabel: new Date(getTs(h)).toLocaleTimeString([], { hour: "numeric" })
+        }))
+      };
+    }
   }
 
   return best;
