@@ -124,49 +124,32 @@ function setupAccordionGroup() {
   if (haAccordionInitialized) return;
   haAccordionInitialized = true;
 
-  const container = document.querySelector('[data-accordion="ha"]');
-  if (!container) return;
+  const items = document.querySelectorAll("[data-accordion-item]");
 
-  const items = container.querySelectorAll("[data-accordion-item]");
-
-  // ✅ initialize collapsed state ONCE
   items.forEach(item => {
     const content = item.querySelector("[data-accordion-content]");
     if (!content) return;
 
-    content.classList.add("accordion-expand", "accordion-collapsed");
-  });
+    // start collapsed
+    content.classList.add("accordion-collapsed");
 
-  // ✅ event delegation (ONE listener)
-  container.addEventListener("click", (e) => {
+    item.addEventListener("click", () => {
+      console.log("CLICK DETECTED");
 
-    // 🚫 ignore clicks inside expanded content
-    if (e.target.closest("[data-accordion-content]")) return;
+      const isOpen = content.classList.contains("accordion-open");
 
-   const trigger = e.target.closest("[data-accordion-trigger]");
-if (!trigger) return;
+      // close all
+      document.querySelectorAll("[data-accordion-content]").forEach(c => {
+        c.classList.remove("accordion-open");
+        c.classList.add("accordion-collapsed");
+      });
 
-const item = trigger.closest("[data-accordion-item]");
-    if (!item) return;
-
-    const content = item.querySelector("[data-accordion-content]");
-    if (!content) return;
-
-    const isOpen = content.classList.contains("accordion-open");
-
-    // close all
-    items.forEach(i => {
-      const c = i.querySelector("[data-accordion-content]");
-      if (!c) return;
-      c.classList.remove("accordion-open");
-      c.classList.add("accordion-collapsed");
+      // open clicked
+      if (!isOpen) {
+        content.classList.remove("accordion-collapsed");
+        content.classList.add("accordion-open");
+      }
     });
-
-    // open clicked
-    if (!isOpen) {
-      content.classList.remove("accordion-collapsed");
-      content.classList.add("accordion-open");
-    }
   });
 }
 
