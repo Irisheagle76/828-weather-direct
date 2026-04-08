@@ -244,6 +244,38 @@ function getComfortClass(score) {
 }
 
 // ============================================================
+// INTERACTIONS (FIX FOR MISSING FUNCTIONS)
+// ============================================================
+
+// Simple accordion toggle
+function attachComfortAccordion(container) {
+  const module = container.querySelector("[data-accordion='comfort']");
+  if (!module) return;
+
+  const header = module.querySelector(".comfort-main");
+  const expand = module.querySelector(".comfort-expand");
+
+  if (!header || !expand) return;
+
+  header.addEventListener("click", () => {
+    module.classList.toggle("open");
+  });
+}
+
+// Optional info toggle (safe no-op if not present in DOM)
+function attachComfortInfoToggle(container) {
+  const btn = container.querySelector(".comfort-info-toggle");
+  const panel = container.querySelector(".comfort-info-panel");
+
+  if (!btn || !panel) return;
+
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation(); // prevent accordion trigger
+    panel.classList.toggle("open");
+  });
+}
+
+// ============================================================
 // BEST WINDOW
 // ============================================================
 function renderBestWindow(bestWindow) {
