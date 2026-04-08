@@ -111,3 +111,56 @@
   display: block;
   margin-top: 0.8rem;
 }
+.fx-highlight {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.fx-highlight.good {
+  background: rgba(80, 200, 120, 0.15);
+  border: 1px solid rgba(80, 200, 120, 0.3);
+}
+
+.fx-highlight.bad {
+  background: rgba(255, 120, 120, 0.15);
+  border: 1px solid rgba(255, 120, 120, 0.3);
+}
+
+.fx-highlight-label {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.fx-highlight-time {
+  font-size: 18px;
+}
+/* ============================================================
+   EXPANDED PANEL — Dayparts
+   ============================================================ */
+.fx-row {
+  display: grid;
+  grid-template-columns: 110px 1fr 40px;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.fx-bar {
+  height: 6px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.fx-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4ade80, #22c55e);
+}
+.fx-explain {
+  margin-top: 10px;
+  font-size: 13px;
+  opacity: 0.75;
+  line-height: 1.4;
+}

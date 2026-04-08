@@ -94,12 +94,19 @@ function setExpanded(type, intel) {
 
     </div>
 
-    <div class="fx-block">
-      <div class="fx-title">Best Window</div>
-      <div class="fx-main">
-        ${formatHourRange(intel.bestWindow?.start, intel.bestWindow?.end)}
-      </div>
-    </div>
+  <div class="fx-highlight good">
+  <div class="fx-highlight-label">Best Time</div>
+  <div class="fx-highlight-time">
+    ${formatHourRange(intel.bestWindow?.start, intel.bestWindow?.end)}
+  </div>
+</div>
+
+<div class="fx-highlight bad">
+  <div class="fx-highlight-label">Toughest</div>
+  <div class="fx-highlight-time">
+    ${formatHourRange(intel.worstWindow?.start, intel.worstWindow?.end)}
+  </div>
+</div>
 
     <div class="fx-block">
       <div class="fx-title">Toughest Stretch</div>
@@ -110,9 +117,9 @@ function setExpanded(type, intel) {
 
     ${renderDayparts(intel.dayparts)}
 
-    <div class="fx-explain">
-      ${buildExplanation(intel)}
-    </div>
+   div class="fx-expla<div class="fx-explain">
+  ${intel.summary || buildExplanation(intel)}
+</div>
   `;
 }
 
@@ -194,7 +201,10 @@ function renderDayparts(dayparts) {
     <div class="fx-dayparts">
       ${Object.entries(dayparts).map(([key, val]) => `
         <div class="fx-row">
-          <span>${labels[key] || key}</span>
+          <span>${labels[key]}</span>
+          <div class="fx-bar">
+            <div class="fx-fill" style="width:${val.avg}%"></div>
+          </div>
           <span>${val.avg}</span>
         </div>
       `).join("")}
