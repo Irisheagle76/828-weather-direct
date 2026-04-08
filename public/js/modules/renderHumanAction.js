@@ -239,25 +239,21 @@ function buildExplanation(intel) {
     default:
       return "Conditions are fairly balanced.";
   }
-
-  function buildExplanation(intel) {
-  ...
 }
 
 /* 🔥 ADD RIGHT BELOW */
 function getTempTone(temp) {
-  if (!temp) return "rgba(255,255,255,0.1)";
+  if (temp == null) return "rgba(255,255,255,0.1)";
   if (temp >= 85) return "rgba(255,120,120,0.15)";
   if (temp >= 70) return "rgba(255,200,120,0.15)";
   if (temp >= 55) return "rgba(120,200,120,0.15)";
   return "rgba(120,160,255,0.15)";
 }
 
-}
 function getComfortColor(score) {
-  if (score >= 85) return "#22c55e"; // green
-  if (score >= 70) return "#84cc16"; // lime
-  if (score >= 55) return "#eab308"; // yellow
-  if (score >= 40) return "#f97316"; // orange
-  return "#ef4444"; // red
+  if (score >= 85) return "#22c55e";
+  if (score >= 70) return "#84cc16";
+  if (score >= 55) return "#eab308";
+  if (score >= 40) return "#f97316";
+  return "#ef4444";
 }
