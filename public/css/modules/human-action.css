@@ -68,10 +68,13 @@
    FORECAST GRID
    ============================================================ */
 
-.fx-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.8rem;
+.fx-grid::-webkit-scrollbar {
+  height: 6px;
+}
+
+.fx-grid::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2);
+  border-radius: 4px;
 }
 
 .fx-tile {

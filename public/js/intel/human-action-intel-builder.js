@@ -146,6 +146,16 @@ function buildPeriod(hours, label, now) {
   }
 
   // -------------------------
+// TEMPERATURE RANGE (REAL FIX)
+// -------------------------
+const temps = hours
+  .map(h => h.temperatureF)
+  .filter(t => typeof t === "number");
+
+const tempMax = temps.length ? Math.max(...temps) : null;
+const tempMin = temps.length ? Math.min(...temps) : null;
+
+  // -------------------------
   // SCORE
   // -------------------------
   const avgAll = avgScore(hourlyComfort);
@@ -179,31 +189,41 @@ function buildPeriod(hours, label, now) {
   // -------------------------
   // RETURN (UI READY)
   // -------------------------
-  return {
-    label,
+return {
+  label,
 
-    score,
-    now: nowBlock,
-    dayparts,
-    bestWindow: best,
-    worstWindow: worst,
+  score,
+  now: nowBlock,
+  dayparts,
+  bestWindow: best,
+  worstWindow: worst,
 
-    emoji: pickEmoji(score),
-    headline: buildHeadline(score),
-    narrative: voice.summary || "",
-    bullets: buildBullets({ best, worst, dayparts }),
+  // 🔥 ADD THIS (REAL HIGH / LOW)
+  stats: {
+    tempMax,
+    tempMin
+  },
 
-    dominantFactor: core.dominantFactor,
-    confidence: core.confidence,
-    secondaryFactors: core.secondaryFactors,
+  // UI
+  emoji: pickEmoji(score),
+  headline: buildHeadline(score),
+  narrative: voice.summary || "",
+  bullets: buildBullets({ best, worst, dayparts }),
 
-    summary: voice.summary,
-    detail: voice.detail,
-    feelsLike: voice.feelsLike,
+  // engine
+  dominantFactor: core.dominantFactor,
+  confidence: core.confidence,
+  secondaryFactors: core.secondaryFactors,
 
-    snapshot,
-    hourlyEvaluations: evals
-  };
+  // voice
+  summary: voice.summary,
+  detail: voice.detail,
+  feelsLike: voice.feelsLike,
+
+  // raw
+  snapshot,
+  hourlyEvaluations: evals
+};
 }
 
 // ------------------------------------------------------------

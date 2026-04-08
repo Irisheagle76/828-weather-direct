@@ -60,39 +60,52 @@ function setExpanded(type, intel) {
   const precipType = s.precipType ?? "";
 
   el.innerHTML = `
-    <div class="fx-grid">
+  <div class="fx-grid">
 
-      <div class="fx-tile">
-        <div class="fx-top">
-          ${high != null ? `${Math.round(high)}° / ${Math.round(low)}°` : "--"}
-        </div>
-        <div class="fx-sub">High / Low</div>
-        <div class="fx-label">Temperature</div>
-      </div>
-
-      <div class="fx-tile">
-        <div class="fx-top">${dew != null ? Math.round(dew) + "°" : "--"}</div>
-        <div class="fx-sub">Dew Point</div>
-        <div class="fx-label">Moisture</div>
-      </div>
-
-      <div class="fx-tile">
-        <div class="fx-top">${wind != null ? Math.round(wind) + " mph" : "--"}</div>
-        <div class="fx-sub">
-          ${gust != null ? `Gusts ${Math.round(gust)} mph` : ""}
-        </div>
-        <div class="fx-label">Wind</div>
-      </div>
-
-      <div class="fx-tile">
-        <div class="fx-top">
-          ${precipChance != null ? precipChance + "%" : "--"}
-        </div>
-        <div class="fx-sub">${precipType}</div>
-        <div class="fx-label">Precipitation</div>
-      </div>
-
+  <!-- 🌡️ DAILY RANGE (PRIMARY) -->
+  <div 
+  class="fx-tile primary"
+  style="background:${getTempTone(high)};"
+>
+    <div class="fx-icon">🌡️</div>
+    <div class="fx-top">
+      ${high != null ? `${Math.round(high)}° / ${Math.round(low)}°` : "--"}
     </div>
+    <div class="fx-sub">Daily Range</div>
+  </div>
+
+  <!-- 💧 HUMIDITY FEEL -->
+  <div class="fx-tile">
+    <div class="fx-icon">💧</div>
+    <div class="fx-top">
+      ${dew != null ? Math.round(dew) + "°" : "--"}
+    </div>
+    <div class="fx-sub">Humidity Feel</div>
+  </div>
+
+  <!-- 🌬️ WIND -->
+  <div class="fx-tile">
+    <div class="fx-icon">🌬️</div>
+    <div class="fx-top">
+      ${wind != null ? Math.round(wind) + " mph" : "--"}
+    </div>
+    <div class="fx-sub">
+      ${gust != null ? `Gusts ${Math.round(gust)}` : "Wind"}
+    </div>
+  </div>
+
+  <!-- 🌧️ PRECIP -->
+  <div class="fx-tile">
+    <div class="fx-icon">🌧️</div>
+    <div class="fx-top">
+      ${precipChance != null ? precipChance + "%" : "Dry"}
+    </div>
+    <div class="fx-sub">
+      ${precipChance ? "Rain chance" : "No precipitation"}
+    </div>
+  </div>
+
+</div>
 
   <div class="fx-highlight good">
   <div class="fx-highlight-label">Best Time</div>
@@ -226,6 +239,20 @@ function buildExplanation(intel) {
     default:
       return "Conditions are fairly balanced.";
   }
+
+  function buildExplanation(intel) {
+  ...
+}
+
+/* 🔥 ADD RIGHT BELOW */
+function getTempTone(temp) {
+  if (!temp) return "rgba(255,255,255,0.1)";
+  if (temp >= 85) return "rgba(255,120,120,0.15)";
+  if (temp >= 70) return "rgba(255,200,120,0.15)";
+  if (temp >= 55) return "rgba(120,200,120,0.15)";
+  return "rgba(120,160,255,0.15)";
+}
+
 }
 function getComfortColor(score) {
   if (score >= 85) return "#22c55e"; // green
