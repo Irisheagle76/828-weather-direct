@@ -90,28 +90,22 @@
      ========================= -->
 <div id="comfort-row">
 
-  <!-- LEFT: COMFORT NOW (ACCORDION) -->
+  <!-- COMFORT NOW (clickable card, NOT wrapper) -->
   <div class="comfort-left-col" data-accordion="comfort">
 
-    <div class="comfort-module" data-accordion-item>
-
-      <!-- CLICKABLE HEADER -->
-      <div class="comfort-header" data-accordion-trigger>
-        <span>Comfort Now</span>
-        <span class="chevron">▾</span>
-      </div>
-
-      <!-- COLLAPSIBLE CONTENT -->
-      <div 
-        class="accordion-expand accordion-collapsed"
-        data-accordion-content
-      >
-        <div id="comfort-now-container"></div>
-      </div>
-
-    </div>
+    <div 
+      id="comfort-now-container"
+      data-accordion-item
+    ></div>
 
   </div>
+
+  <!-- FUTURE COMFORT -->
+  <div class="comfort-right-col">
+    <div id="future-comfort-container"></div>
+  </div>
+
+</div>
 
   <!-- RIGHT: FUTURE (STATIC) -->
   <div class="comfort-right-col">

@@ -40,7 +40,7 @@ export function renderHumanActionExpanded(todayIntel, tomorrowIntel) {
   renderExpanded("tomorrow", tomorrowIntel);
 
   // 🔥 ensure DOM is ready before binding
-  requestAnimationFrame(setupAccordion);
+  setTimeout(setupAccordion, 0);
 }
 
 function renderExpanded(type, intel) {
@@ -129,22 +129,25 @@ function setupAccordion() {
     content.classList.add("accordion-expand");
     content.classList.add("accordion-collapsed");
 
-    trigger.onclick = () => {
-      const group = item.closest("[data-accordion]");
-      const isOpen = content.classList.contains("accordion-open");
+trigger.onclick = () => {
+  const group = item.closest("[data-accordion]");
+  const isOpen = content.classList.contains("accordion-open");
 
-      // close all in group
-      group.querySelectorAll("[data-accordion-content]").forEach(c => {
-        c.classList.remove("accordion-open");
-        c.classList.add("accordion-collapsed");
-      });
+  group.querySelectorAll("[data-accordion-item]").forEach(i => {
+    i.classList.remove("open");
+  });
 
-      // open this one
-      if (!isOpen) {
-        content.classList.remove("accordion-collapsed");
-        content.classList.add("accordion-open");
-      }
-    };
+  group.querySelectorAll("[data-accordion-content]").forEach(c => {
+    c.classList.remove("accordion-open");
+    c.classList.add("accordion-collapsed");
+  });
+
+  if (!isOpen) {
+    content.classList.remove("accordion-collapsed");
+    content.classList.add("accordion-open");
+    item.classList.add("open"); // 🔥 this was missing
+  }
+};
   });
 }
 
