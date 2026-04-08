@@ -37,7 +37,7 @@
 
 .fx-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  grid-template-columns: repeat(4, 1fr); /* 🔥 force single row */
   gap: 14px;
 }
 
@@ -91,7 +91,7 @@
 
 @media (max-width: 640px) {
   .fx-grid {
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    grid-template-columns: repeat(2, 1fr); /* clean 2x2 */
     gap: 12px;
   }
 
@@ -103,7 +103,7 @@
     font-size: 1.15rem;
   }
 }
-
+   
 /* ------------------------------------------------------------
    ANIMATION (matches animations.css)
    ------------------------------------------------------------ */

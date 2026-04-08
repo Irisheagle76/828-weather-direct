@@ -115,15 +115,8 @@ function setExpanded(type, intel) {
 </div>
 
 <div class="fx-highlight bad">
-  <div class="fx-highlight-label">Toughest</div>
+  <div class="fx-highlight-label">Toughest Stretch</div>
   <div class="fx-highlight-time">
-    ${formatHourRange(intel.worstWindow?.start, intel.worstWindow?.end)}
-  </div>
-</div>
-
-  <div class="fx-block">
-  <div class="fx-title">Toughest Stretch</div>
-  <div class="fx-main">
     ${formatHourRange(intel.worstWindow?.start, intel.worstWindow?.end)}
   </div>
 </div>
