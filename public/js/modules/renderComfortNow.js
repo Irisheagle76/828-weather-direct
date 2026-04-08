@@ -73,7 +73,7 @@ export function renderComfortNow(container, current, bestWindow, options = {}) {
   if (!comfort) return;
 
   // ------------------------------------------------------------
-  // MODE COMPARISON (IMPROVED LANGUAGE)
+  // MODE COMPARISON
   // ------------------------------------------------------------
   const downtown = calculateComfort(applyModeAdjustments(current, "downtown"), { isDay });
   const trail = calculateComfort(applyModeAdjustments(current, "trail"), { isDay });
@@ -88,7 +88,7 @@ export function renderComfortNow(container, current, bestWindow, options = {}) {
     };
 
     if (d.dew < -2) return "drier air";
-    if (d.wind > 2) return "a bit more breeze";
+    if (d.wind > 2) return "more breeze";
     if (d.temp < -2) return "slightly cooler";
 
     if (d.dew > 2) return "more humidity";
@@ -126,7 +126,6 @@ export function renderComfortNow(container, current, bestWindow, options = {}) {
   // ------------------------------------------------------------
   const intel = adaptComfortToIntel(comfort);
   const category = mapScoreToCategory(comfort.score);
-
   const narrative = assembleWithVoice(intel, "today", category, comfort.goldilocks);
 
   let headline = narrative.headline;
@@ -134,7 +133,7 @@ export function renderComfortNow(container, current, bestWindow, options = {}) {
   if (comfort.score <= 3) headline = "Uncomfortable";
 
   // ------------------------------------------------------------
-  // BULLETS (FORCE DEPTH)
+  // BULLETS
   // ------------------------------------------------------------
   let bullets = narrative.bullets || [];
 
@@ -158,14 +157,16 @@ export function renderComfortNow(container, current, bestWindow, options = {}) {
     <div class="comfort-module ${goldiClass}" data-accordion="comfort">
 
       <div class="comfort-main">
-        <div class="comfort-emoji">${narrative.emoji}</div>
+
+        <!-- 🔥 BIG SCORE BLOCK -->
+        <div class="comfort-score-block ${scoreClass}">
+          <div class="comfort-score-main">${scoreValue}</div>
+          <div class="comfort-score-label">comfort</div>
+        </div>
 
         <div class="comfort-text-block">
-          <div class="comfort-label">Comfort Now</div>
 
-          <div class="comfort-score ${scoreClass}">
-            ${scoreValue}
-          </div>
+          <div class="comfort-label">Comfort Now</div>
 
           <div class="comfort-text">${headline}</div>
 
@@ -178,6 +179,7 @@ export function renderComfortNow(container, current, bestWindow, options = {}) {
           }
 
           <div class="comfort-mode-note">${modeNote}</div>
+
         </div>
       </div>
 
@@ -202,7 +204,17 @@ export function renderComfortNow(container, current, bestWindow, options = {}) {
         ${renderBestWindow(bestWindow)}
 
         <div class="comfort-extra-line">
-          Comfort blends temperature, humidity, and wind into how it actually feels outside.
+          This score reflects how it actually feels outside — balancing temperature, humidity, and wind.
+        </div>
+
+        <div class="comfort-extra-line">
+          ${
+            comfort.dewPoint > 65
+              ? "Humidity is the main factor affecting comfort right now."
+              : comfort.windSpeed > 8
+              ? "Wind is shaping how it feels outside."
+              : "Temperature is the main driver of comfort right now."
+          }
         </div>
 
       </div>
@@ -249,7 +261,6 @@ function attachComfortAccordion(container) {
   if (!module) return;
 
   const header = module.querySelector(".comfort-main");
-
   if (!header) return;
 
   header.addEventListener("click", () => {

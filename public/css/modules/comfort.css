@@ -509,3 +509,26 @@
   opacity: 0.6;
   cursor: help;
 }
+.comfort-score-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 70px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.05);
+}
+
+.comfort-score-main {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.comfort-score-label {
+  font-size: 10px;
+  opacity: 0.6;
+  text-transform: uppercase;
+}
