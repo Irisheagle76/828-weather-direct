@@ -1,11 +1,12 @@
 /* ============================================================
-   828 WEATHER — ANIMATION SYSTEM
-   Smooth, subtle, twilight-themed motion language
+   828 WEATHER — ANIMATION SYSTEM (GLOBAL + UNIFIED)
+   Smooth, subtle, consistent motion language
    ============================================================ */
 
+
 /* ------------------------------------------------------------
-   FADE + LIFT (universal module entrance)
-   ------------------------------------------------------------ */
+   FADE + LIFT (module entrance)
+------------------------------------------------------------ */
 
 .fade-in {
   animation: fadeInUp 0.45s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
@@ -24,9 +25,10 @@
   }
 }
 
+
 /* ------------------------------------------------------------
-   SOFT PULSE (badges, pills, subtle accents)
-   ------------------------------------------------------------ */
+   SOFT PULSE (badges, accents)
+------------------------------------------------------------ */
 
 .pulse-soft {
   animation: pulseSoft 2.8s ease-in-out infinite;
@@ -38,34 +40,78 @@
   100% { opacity: 0.85; transform: scale(1); }
 }
 
-/* ------------------------------------------------------------
-   ACCORDION — Smooth expand/collapse
-   Matches new DOM structure for Comfort + Human Action
-   ------------------------------------------------------------ */
 
+/* ============================================================
+   GLOBAL ACCORDION SYSTEM (USED EVERYWHERE)
+   Human Action + Comfort + Future modules
+   ============================================================ */
+
+/* REQUIRED BASE */
 .accordion-expand {
   overflow: hidden;
+
   transition:
     max-height 0.45s cubic-bezier(0.22, 0.61, 0.36, 1),
-    opacity 0.35s ease,
-    transform 0.35s ease;
+    opacity 0.3s ease,
+    transform 0.3s ease;
+
+  will-change: max-height, opacity, transform;
 }
 
+/* COLLAPSED */
 .accordion-collapsed {
   max-height: 0;
   opacity: 0;
   transform: translateY(-6px) scale(0.98);
+
+  pointer-events: none;
 }
 
+/* OPEN */
 .accordion-open {
-  max-height: 999px; /* safe, smooth, future-proof */
+  max-height: 900px;
   opacity: 1;
   transform: translateY(0) scale(1);
+
+  pointer-events: auto;
 }
 
+
 /* ------------------------------------------------------------
-   HOVER LIFT — Cards + modules
-   ------------------------------------------------------------ */
+   ACCORDION ITEM STATE (GLOBAL HOOK)
+------------------------------------------------------------ */
+
+[data-accordion-item].open {
+  /* optional styling hook for active cards */
+}
+
+
+/* ------------------------------------------------------------
+   TRIGGERS (GLOBAL CLICK TARGETS)
+------------------------------------------------------------ */
+
+[data-accordion-trigger] {
+  cursor: pointer;
+}
+
+
+/* ------------------------------------------------------------
+   CHEVRON / ICON ROTATION (GLOBAL)
+------------------------------------------------------------ */
+
+.chevron {
+  transition: transform 0.2s ease;
+  opacity: 0.7;
+}
+
+[data-accordion-item].open .chevron {
+  transform: rotate(180deg);
+}
+
+
+/* ------------------------------------------------------------
+   HOVER LIFT (cards + modules)
+------------------------------------------------------------ */
 
 .hover-lift {
   transition:
@@ -80,18 +126,20 @@
   background: rgba(255, 255, 255, 0.10);
 }
 
+
 /* ------------------------------------------------------------
    TAP FEEDBACK (mobile)
-   ------------------------------------------------------------ */
+------------------------------------------------------------ */
 
 .tap-active:active {
   transform: scale(0.97);
   transition: transform 0.12s ease-out;
 }
 
+
 /* ------------------------------------------------------------
-   GLASS BLUR TRANSITION
-   ------------------------------------------------------------ */
+   GLASS TRANSITIONS
+------------------------------------------------------------ */
 
 .glass-transition {
   transition:
@@ -100,15 +148,17 @@
     border-color 0.35s ease;
 }
 
-.glass-transition.active {
+.glass-transition.active,
+[data-accordion-item].open.glass-transition {
   backdrop-filter: blur(6px);
   background: rgba(255, 255, 255, 0.12);
   border-color: rgba(255, 255, 255, 0.22);
 }
 
+
 /* ------------------------------------------------------------
-   SUBTLE SHIMMER (optional for Pulse media)
-   ------------------------------------------------------------ */
+   SHIMMER (optional)
+------------------------------------------------------------ */
 
 .shimmer {
   position: relative;
@@ -122,12 +172,14 @@
   left: -120%;
   width: 80%;
   height: 100%;
+
   background: linear-gradient(
     110deg,
     transparent 0%,
     rgba(255,255,255,0.12) 50%,
     transparent 100%
   );
+
   animation: shimmerMove 2.4s ease-in-out infinite;
 }
 
