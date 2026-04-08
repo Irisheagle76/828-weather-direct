@@ -1,5 +1,5 @@
 // ============================================================
-// HUMAN ACTION RENDER (CLEAN + RELIABLE)
+// HUMAN ACTION RENDER (FINAL STABLE)
 // ============================================================
 
 // ============================================================
@@ -7,27 +7,27 @@
 // ============================================================
 
 export function renderHumanAction(today, tomorrow) {
-  setBlock("today", today);
-  setBlock("tomorrow", tomorrow);
+  renderBlock("today", today);
+  renderBlock("tomorrow", tomorrow);
 }
 
-function setBlock(type, data) {
+function renderBlock(type, data) {
   if (!data) return;
 
-  const prefix = `ha-${type}`;
+  const p = `ha-${type}`;
 
-  setText(`${prefix}-emoji`, data.emoji);
-  setText(`${prefix}-title`, data.headline);
-  setText(`${prefix}-body`, data.narrative);
+  setText(`${p}-emoji`, data.emoji);
+  setText(`${p}-title`, data.headline);
+  setText(`${p}-body`, data.narrative);
 
   setHTML(
-    `${prefix}-bullets`,
+    `${p}-bullets`,
     (data.bullets || []).map(b => `<li>${b}</li>`).join("")
   );
 
-  const gold = document.getElementById(`${prefix}-goldilocks`);
-  if (gold) {
-    gold.style.display = data.goldilocks ? "inline-block" : "none";
+  const badge = document.getElementById(`${p}-goldilocks`);
+  if (badge) {
+    badge.style.display = data.goldilocks ? "inline-block" : "none";
   }
 }
 
@@ -36,14 +36,14 @@ function setBlock(type, data) {
 // ============================================================
 
 export function renderHumanActionExpanded(todayIntel, tomorrowIntel) {
-  setExpanded("today", todayIntel);
-  setExpanded("tomorrow", tomorrowIntel);
+  renderExpanded("today", todayIntel);
+  renderExpanded("tomorrow", tomorrowIntel);
 
-  // 🔥 always rebind safely after render
-  setupAccordionGroup();
+  // 🔥 ensure DOM is ready before binding
+  requestAnimationFrame(setupAccordion);
 }
 
-function setExpanded(type, intel) {
+function renderExpanded(type, intel) {
   const el = document.getElementById(`ha-${type}-expanded`);
   if (!el || !intel) return;
 
@@ -54,7 +54,7 @@ function setExpanded(type, intel) {
   const dew = s.dewPoint ?? null;
   const wind = s.windSpeed ?? null;
   const gust = s.windGust ?? null;
-  const precipChance = intel.precipChance ?? null;
+  const precip = intel.precipChance ?? null;
 
   el.innerHTML = `
     <div class="fx-grid">
@@ -88,10 +88,10 @@ function setExpanded(type, intel) {
       <div class="fx-tile">
         <div class="fx-icon">🌧️</div>
         <div class="fx-top">
-          ${precipChance != null ? precipChance + "%" : "Dry"}
+          ${precip != null ? precip + "%" : "Dry"}
         </div>
         <div class="fx-sub">
-          ${precipChance ? "Rain chance" : "No precipitation"}
+          ${precip ? "Rain chance" : "No precipitation"}
         </div>
       </div>
 
@@ -116,32 +116,24 @@ function setExpanded(type, intel) {
 }
 
 // ============================================================
-// ACCORDION (ROBUST + RE-RENDER SAFE)
+// ACCORDION (SIMPLE + RELIABLE)
 // ============================================================
 
-function setupAccordionGroup() {
-  const items = document.querySelectorAll("[data-accordion-item]");
-
-  items.forEach(item => {
-    // prevent duplicate binding per item
-    if (item.dataset.bound) return;
-    item.dataset.bound = "true";
-
+function setupAccordion() {
+  document.querySelectorAll("[data-accordion-item]").forEach(item => {
     const trigger = item.querySelector("[data-accordion-trigger]");
     const content = item.querySelector("[data-accordion-content]");
     if (!trigger || !content) return;
 
-    // init state
+    // reset every render (safe + simple)
     content.classList.add("accordion-expand");
     content.classList.add("accordion-collapsed");
 
-    trigger.addEventListener("click", (e) => {
-      e.stopPropagation();
-
-      const isOpen = content.classList.contains("accordion-open");
+    trigger.onclick = () => {
       const group = item.closest("[data-accordion]");
+      const isOpen = content.classList.contains("accordion-open");
 
-      // close others in same group
+      // close all in group
       group.querySelectorAll("[data-accordion-content]").forEach(c => {
         c.classList.remove("accordion-open");
         c.classList.add("accordion-collapsed");
@@ -152,7 +144,7 @@ function setupAccordionGroup() {
         content.classList.remove("accordion-collapsed");
         content.classList.add("accordion-open");
       }
-    });
+    };
   });
 }
 
@@ -175,8 +167,7 @@ function formatHourRange(start, end) {
 
   const fmt = h => {
     const suffix = h >= 12 ? "PM" : "AM";
-    const display = h % 12 || 12;
-    return `${display}${suffix}`;
+    return `${h % 12 || 12}${suffix}`;
   };
 
   return `${fmt(start)}–${fmt(end)}`;
@@ -199,13 +190,10 @@ function renderDayparts(dayparts) {
         <div class="fx-row">
           <span>${labels[key]}</span>
           <div class="fx-bar">
-            <div 
-              class="fx-fill" 
-              style="
-                width:${val.avg}%;
-                background:${getComfortColor(val.avg)};
-              ">
-            </div>
+            <div class="fx-fill" style="
+              width:${val.avg}%;
+              background:${getComfortColor(val.avg)};
+            "></div>
           </div>
           <span>${val.avg}</span>
         </div>

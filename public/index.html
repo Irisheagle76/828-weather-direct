@@ -85,19 +85,40 @@
         <button class="mode-btn" data-mode="trail">🌲 Trail</button>
       </div>
 
-      <!-- =========================
-           COMFORT ROW
-           ========================= -->
-      <div id="comfort-row">
-        <div class="comfort-left-col">
-          <div id="comfort-now-container"></div>
-        </div>
+   <!-- =========================
+     COMFORT ROW
+     ========================= -->
+<div id="comfort-row">
 
-        <div class="comfort-right-col">
-          <div id="future-comfort-container"></div>
-        </div>
+  <!-- LEFT: COMFORT NOW (ACCORDION) -->
+  <div class="comfort-left-col" data-accordion="comfort">
+
+    <div class="comfort-module" data-accordion-item>
+
+      <!-- CLICKABLE HEADER -->
+      <div class="comfort-header" data-accordion-trigger>
+        <span>Comfort Now</span>
+        <span class="chevron">▾</span>
       </div>
 
+      <!-- COLLAPSIBLE CONTENT -->
+      <div 
+        class="accordion-expand accordion-collapsed"
+        data-accordion-content
+      >
+        <div id="comfort-now-container"></div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- RIGHT: FUTURE (STATIC) -->
+  <div class="comfort-right-col">
+    <div id="future-comfort-container"></div>
+  </div>
+
+</div>
       <!-- =========================
            HUMAN ACTION
            ========================= -->
@@ -120,7 +141,7 @@
             <ul class="today-bullets" id="ha-today-bullets"></ul>
 
             <div 
-  class="expanded-panel accordion-expand" 
+  class="expanded-panel accordion-expand accordion-collapsed"
   id="ha-today-expanded" 
   data-accordion-content>
 </div>
@@ -145,7 +166,7 @@
             <ul class="tomorrow-bullets" id="ha-tomorrow-bullets"></ul>
 
             <div 
-  class="expanded-panel accordion-expand" 
+  class="expanded-panel accordion-expand accordion-collapsed"
   id="ha-tomorrow-expanded" 
   data-accordion-content>
 </div>
