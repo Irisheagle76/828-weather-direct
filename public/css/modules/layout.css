@@ -236,3 +236,9 @@
     font-size: 0.9rem;
   }
 }
+
+#weather-articles-module.substack-card {
+  margin-top: calc(var(--module-gap) * 1.5);
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(245, 125, 35, 0.35); /* warm orange divider */
+}

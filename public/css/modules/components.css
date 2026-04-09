@@ -582,3 +582,55 @@ body {
     var(--828-blue) 100%
   );
 }
+
+/* ============================================================
+   SUBSTACK MODULE — MATCH PULSE EDITORIAL STYLE
+   ============================================================ */
+
+/* Title row spacing + typography (matches Pulse header rhythm) */
+#weather-articles-module .substack-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;                       /* Pulse-like spacing */
+  margin-bottom: 0.35rem;         /* tighter editorial rhythm */
+}
+
+/* Title link (Pulse title style) */
+#weather-articles-module .substack-title {
+  font-weight: 600;               /* Pulse weight */
+  letter-spacing: 0.4px;          /* Pulse spacing */
+  color: var(--828-blue);         /* Pulse blue */
+  text-decoration: none;
+  font-size: 1.05rem;             /* matches Pulse scale */
+}
+
+#weather-articles-module .substack-title:hover {
+  color: var(--828-orange);       /* Pulse hover warmth */
+}
+
+/* NEW badge (matches Pulse live indicator) */
+#weather-articles-module .substack-new-badge {
+  background-color: var(--828-orange);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  box-shadow: 0 0 6px rgba(245, 125, 35, 0.55); /* Pulse glow */
+}
+
+/* Footer link (matches Pulse link styling) */
+#weather-articles-module .substack-footer-link a {
+  color: var(--828-blue);
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-decoration: none;
+  display: inline-block;
+  margin-top: 0.5rem;
+}
+
+#weather-articles-module .substack-footer-link a:hover {
+  color: var(--828-orange);
+}
