@@ -1,14 +1,15 @@
 // ============================================================
-// APP ENTRY — v7 (CLEAN FLOW + RESILIENT STATE)
+// APP ENTRY — v8 (CLEAN FLOW + RESILIENT STATE + PULSE SUPPORT)
 // ============================================================
 
-console.log("APP.JS LOADED — v7");
+console.log("APP.JS LOADED — v8");
 
 // ------------------------------------------------------------
 // IMPORTS
 // ------------------------------------------------------------
 import { renderWeather } from "./weather-render.js";
 import { fetchAllIntel } from "./weather-fetch.js";
+import { renderPulse } from "./pulse-render.js";
 
 // ------------------------------------------------------------
 // CONFIG
@@ -54,6 +55,21 @@ function setStatus(labelText, subText) {
 }
 
 // ------------------------------------------------------------
+// PULSE LOADER — CINEMATIC MODULE
+// ------------------------------------------------------------
+async function loadPulse() {
+  try {
+    const res = await fetch("/api/tidbits/pulse-latest");
+    const pulse = await res.json();
+    renderPulse(pulse);
+  } catch (err) {
+    console.error("Pulse load failed:", err);
+    // graceful fallback — renderer handles empty state
+    renderPulse(null);
+  }
+}
+
+// ------------------------------------------------------------
 // CORE RENDER PIPELINE
 // ------------------------------------------------------------
 async function runRender() {
@@ -71,7 +87,7 @@ async function runRender() {
   setStatus("Loading weather…", "Fetching latest conditions…");
 
   try {
-    // 2. FETCH
+    // 2. FETCH WEATHER + INTEL
     const data = await fetchAllIntel({
       lat: currentLocation.lat,
       lon: currentLocation.lon,
@@ -85,13 +101,14 @@ async function runRender() {
       data
     };
 
-    // 4. RENDER WITH DATA
+    // 4. RENDER WEATHER
     renderWeather({
       data,
       isLoading: false,
       mode: window.APP_STATE.mode
     });
 
+    // 5. UPDATE STATUS
     setStatus(
       "Live conditions",
       `Updated ${new Date().toLocaleTimeString([], {
@@ -149,6 +166,7 @@ function startAutoRefresh() {
   refreshTimer = setInterval(() => {
     console.log("AUTO REFRESH");
     runRender();
+    loadPulse(); // refresh Pulse too
   }, CONFIG.REFRESH_INTERVAL);
 }
 
@@ -193,7 +211,13 @@ async function initApp() {
     const loc = await resolveLocation();
     currentLocation = loc;
 
+    // WEATHER FIRST
     await runRender();
+
+    // THEN PULSE
+    await loadPulse();
+
+    // AUTO REFRESH BOTH
     startAutoRefresh();
 
   } catch (err) {

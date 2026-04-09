@@ -167,29 +167,32 @@
 
 </section>
 
-      <!-- =========================
-           PULSE
-           ========================= -->
-      <section id="pulse-card" class="pulse-card pulse-collapsed">
-        <div class="pulse-header">
-          <h2 class="pulse-title">828 Weather Pulse</h2>
-          <div class="pulse-badge-pill">QUICK • LIVE • 828</div>
-          <div id="pulse-timestamp" class="pulse-timestamp"></div>
-        </div>
+     <!-- =========================
+     PULSE — CINEMATIC MODULE
+     ========================= -->
+<section id="pulse-card" class="pulse-card pulse-collapsed">
 
-        <div class="pulse-body">
-          <div id="pulse-media" class="pulse-media"></div>
-          <div id="pulse-preview" class="pulse-preview"></div>
-        </div>
+  <div class="pulse-header">
+    <h2 class="pulse-title">828 Weather Pulse</h2>
+    <div class="pulse-badge-pill">QUICK • LIVE • 828</div>
+    <div id="pulse-timestamp" class="pulse-timestamp"></div>
+  </div>
 
-        <div id="pulse-full-text" class="pulse-expanded">
-          <div class="pulse-expanded-content" id="pulse-expanded-content"></div>
-        </div>
+  <!-- HERO MEDIA -->
+  <div id="pulse-media" class="pulse-media"></div>
 
-        <button id="pulse-toggle" class="pulse-toggle" aria-expanded="false">
-          Read full update
-        </button>
-      </section>
+  <!-- PREVIEW TEXT -->
+  <div id="pulse-preview" class="pulse-preview"></div>
+
+  <!-- EXPANDED TEXT (renderer fills this dynamically) -->
+  <div id="pulse-full-text"></div>
+
+  <!-- TOGGLE BUTTON -->
+  <button id="pulse-toggle" class="pulse-toggle" aria-expanded="false">
+    Read full update
+  </button>
+
+</section>
 
       <!-- SUBSTACK -->
       <section id="weather-articles-module" class="substack-card"></section>
