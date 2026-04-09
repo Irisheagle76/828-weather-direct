@@ -1,4 +1,12 @@
 /* ============================================================
+   ROOT TOKENS — GLOBAL SPACING + THEME
+   ============================================================ */
+
+:root {
+  --module-gap: 20px;
+}
+
+/* ============================================================
    GLOBAL CARD LAYOUT
    ============================================================ */
 
@@ -8,7 +16,7 @@
   padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--module-gap);
 }
 
 /* ============================================================
@@ -32,7 +40,7 @@
 #comfort-row {
   display: flex;
   gap: 16px;
-  margin-bottom: 20px;
+  margin-bottom: var(--module-gap);
 }
 
 .comfort-left-col,
@@ -82,11 +90,11 @@
 
 .obs-value {
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
 .obs-item:first-child .obs-value {
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 .obs-label {
@@ -104,7 +112,7 @@
 .now-tomorrow-row {
   display: flex;
   gap: 16px;
-  margin-bottom: 20px;
+  margin-bottom: var(--module-gap);
 }
 
 .now-col {
@@ -124,7 +132,7 @@
    ============================================================ */
 
 #pulse-card {
-  margin-top: 20px;
+  margin-top: var(--module-gap);
 }
 
 /* ============================================================
@@ -137,8 +145,9 @@
   position: relative;
   z-index: 2;
 }
+
 .footer-note {
-  margin-top: 20px;
+  margin-top: var(--module-gap);
   text-align: center;
   color: var(--text-muted);
   font-size: 0.85rem;
@@ -146,43 +155,84 @@
 }
 
 /* ============================================================
-   HEADER — REFINED LAYOUT
+   828 WEATHER — CINEMATIC + EDITORIAL HEADER (FINAL)
    ============================================================ */
-   
-.header-top {
+
+.app-header-cinematic {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+/* TOP ROW — Title + Notifications */
+.header-top-row {
+  display: flex;
   justify-content: space-between;
-  margin-bottom: 6px;
-}
-
-.header-meta {
-  display: flex;
   align-items: center;
-  gap: 10px;
 }
 
-.subtitle {
-  font-size: 0.75rem;
-  color: #a8b4e6;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+.app-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  margin: 0;
+  color: var(--text-bright);
 }
 
-/* UPDATED CHIP */
-.fx-updated-inline {
+/* Notification button */
+.notify-btn {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.18);
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: var(--text-bright);
+  backdrop-filter: blur(4px);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.notify-btn:hover {
+  background: rgba(255,255,255,0.18);
+  border-color: rgba(255,255,255,0.28);
+}
+
+/* LOCATION + UPDATED BLOCK */
+.header-location-block {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.75rem;
-  color: #cbd5ff;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-top: -0.15rem;
+}
+
+.location-line {
+  font-size: 0.95rem;
   opacity: 0.85;
+  letter-spacing: 0.3px;
 }
 
-.fx-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #facc15;
-  box-shadow: 0 0 6px rgba(250,204,21,0.6);
+.updated-line {
+  font-size: 0.8rem;
+  opacity: 0.65;
+}
+
+/* LIVE CONDITIONS LABEL */
+.live-conditions-label {
+  font-size: 0.75rem;
+  opacity: 0.55;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-top: 0.25rem;
+}
+
+/* MOBILE TUNING */
+@media (max-width: 640px) {
+  .app-title {
+    font-size: 1.45rem;
+  }
+
+  .location-line {
+    font-size: 0.9rem;
+  }
 }
