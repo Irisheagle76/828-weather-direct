@@ -219,3 +219,20 @@
     max-height: 160px;
   }
 }
+/* Expanded mode: controlled hero reveal */
+.pulse-expanded #pulse-full-text .pulse-media {
+  max-height: 420px;
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+/* Disable preview fade when expanded */
+.pulse-expanded .pulse-preview::after {
+  display: none;
+}
+
+/* Ensure expanded text is visible */
+.pulse-expanded-content {
+  white-space: normal;
+  opacity: 1;
+}
