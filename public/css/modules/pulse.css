@@ -19,6 +19,7 @@
   gap: 1.2rem;
   animation: fadeInUp 0.45s ease forwards;
   position: relative;
+  isolation: isolate; /* prevents backdrop bleed */
 }
 
 /* Collapsed state */
@@ -43,7 +44,7 @@
 .pulse-header {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.45rem;
 }
 
 .pulse-title {
@@ -73,7 +74,7 @@
 }
 
 /* ------------------------------------------------------------
-   MEDIA BLOCK
+   MEDIA BLOCK — WITH NEW HEIGHT CONTAINMENT
    ------------------------------------------------------------ */
 
 .pulse-media {
@@ -82,6 +83,9 @@
   overflow: hidden;
   box-shadow: var(--shadow-medium);
   background: rgba(255,255,255,0.04);
+
+  /* NEW: cinematic containment */
+  max-height: 220px;
 }
 
 .pulse-media img,
@@ -101,6 +105,7 @@
   color: var(--text-soft);
   line-height: 1.55;
   margin-top: 0.25rem;
+  overflow-wrap: break-word; /* prevents layout break */
 }
 
 /* ------------------------------------------------------------
@@ -118,6 +123,7 @@
     max-height 0.45s cubic-bezier(0.22, 0.61, 0.36, 1),
     opacity 0.35s ease,
     transform 0.35s ease;
+  will-change: max-height, opacity, transform;
 }
 
 .pulse-expanded-content {
@@ -125,6 +131,10 @@
   color: var(--text-soft);
   line-height: 1.55;
   white-space: pre-wrap;
+}
+
+.pulse-expanded-content .pulse-media {
+  margin-bottom: 1rem; /* spacing between media + text */
 }
 
 /* ------------------------------------------------------------
@@ -143,13 +153,15 @@
   transition:
     background 0.25s ease,
     border-color 0.25s ease,
-    transform 0.25s ease;
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
 }
 
 #pulse-toggle:hover {
   background: rgba(255,255,255,0.12);
   border-color: rgba(255,255,255,0.18);
   transform: translateY(-2px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
 }
 
 #pulse-toggle:active {
@@ -168,5 +180,10 @@
   .pulse-preview,
   .pulse-expanded-content {
     font-size: 0.92rem;
+  }
+
+  /* NEW: mobile media containment */
+  .pulse-media {
+    max-height: 160px;
   }
 }
