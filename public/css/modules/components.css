@@ -670,58 +670,92 @@ body {
 }
 
 /* ============================================================
-   HEADER LAYOUT — CLEANED + REBALANCED
+   NEW HEADER SYSTEM — 828 WEATHER DIRECT
    ============================================================ */
 
-.wx-header {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 20px 20px 10px;
+/* CONTAINER */
+.top-stack {
+  max-width: 680px;
+  margin: 0 auto 20px auto;
+  padding: 0 16px;
 }
 
-/* Brand row */
-.wx-brand-row {
-  text-align: left;
+/* MAIN CARD */
+.header-card {
+  background: rgba(255,255,255,0.045);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 18px;
+  backdrop-filter: blur(6px);
 }
 
-.wx-title {
-  font-size: 1.6rem;
+/* TITLE */
+.header-title {
+  font-size: 28px;
   font-weight: 700;
   color: var(--828-blue);
   margin: 0;
 }
 
-.wx-signature {
-  font-size: 0.85rem;
-  color: var(--828-orange);
-  margin: 2px 0 0 0;
+/* SUBTITLE */
+.header-sub {
+  font-size: 14px;
+  color: rgba(255,255,255,0.65);
+  margin-top: 4px;
 }
 
-/* Live Conditions row */
-.wx-live-row {
+/* DIVIDER */
+.header-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.06);
+  margin: 14px 0;
+}
+
+/* LIVE MODULE */
+.live-module {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* TITLE ROW (label + time) */
+.live-title-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(255,255,255,0.06);
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.08);
 }
 
-.live-label {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--828-blue);
+/* LABEL */
+.live-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.55);
 }
 
+/* UPDATED TIME */
 .updated-time {
-  font-size: 0.9rem;
+  font-size: 12px;
   color: var(--828-orange);
   font-weight: 500;
 }
 
-/* Metrics row stays as-is */
-.wx-metrics-row {
-  margin-top: 5px;
+/* METRICS ROW */
+.live-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* METRIC PILLS */
+.live-pill {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
