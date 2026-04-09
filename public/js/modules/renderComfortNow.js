@@ -1,4 +1,4 @@
-// /js/modules/renderComfortNow.js
+// /js/modules/renderComfortNow.js (v5 — FIXED & CLEANED)
 
 import { calculateComfort } from "../intel/comfort.js";
 import { assembleWithVoice } from "../intel/synthesizer/assembleWithVoice.js";
@@ -45,27 +45,47 @@ export function renderComfortNow(container, current, bestWindow, options = {}) {
   if (!comfort) return;
 
   // ------------------------------------------------------------
-  // SCORE + STYLE
+  // SCORE (comfort.score is already 0–10)
   // ------------------------------------------------------------
-  const scoreValue = Math.round(comfort.score * 10);
+  const scoreValue = Math.round(comfort.score * 10); // 0–100 scale
   const scoreClass = getComfortClass(scoreValue);
   const goldiClass = comfort.goldilocks ? "goldilocks" : "";
 
   // ------------------------------------------------------------
-  // HEADLINE + BULLETS (collapsed)
+  // SYNTHESIZER
   // ------------------------------------------------------------
+  const intel = {
+    signals: {
+      temp: comfort.temp,
+      dewPoint: comfort.dewPoint,
+      windSpeed: comfort.windSpeed
+    },
+    dominantFactor: detectDominantFactor(comfort),
+    confidence: 0.7
+  };
+
   const narrative = assembleWithVoice(
-    { snapshot: comfort },
+    intel,
     "today",
-    mapScoreToCategory(comfort.score),
+    mapScoreToCategory(comfort.score), // feed raw 0–10 score
     comfort.goldilocks
   );
 
-  let headline = narrative.headline;
-  if (comfort.goldilocks) headline = "Near perfect comfort";
-  if (comfort.score <= 3) headline = "Uncomfortable";
+  const headline = narrative?.headline || fallbackHeadline(comfort);
+  const explanation = narrative?.notes || fallbackExplanation(comfort);
 
-  const bullets = (narrative.bullets || []).slice(0, 2);
+  // ------------------------------------------------------------
+  // SAFE VALUES
+  // ------------------------------------------------------------
+  const safeHeadline = headline || "Comfort looks good";
+  const safeExplanation = typeof explanation === "string" ? explanation : "";
+
+  const safeDrivers = buildScoreDrivers(comfort) || "";
+
+  const actions = buildActions(comfort);
+  const safeActions = Array.isArray(actions) ? actions : [];
+
+  const safeBestWindow = renderBestWindow(bestWindow) || "";
 
   // ------------------------------------------------------------
   // RENDER
@@ -73,36 +93,43 @@ export function renderComfortNow(container, current, bestWindow, options = {}) {
   container.innerHTML = `
     <div class="comfort-module ${goldiClass}">
 
-      <!-- COLLAPSED -->
       <div class="comfort-main">
 
         <div class="comfort-score-block ${scoreClass}">
           <div class="comfort-score-main">${scoreValue}</div>
           <div class="comfort-score-label">comfort</div>
+          ${safeDrivers ? `
+            <div class="comfort-score-sub">${safeDrivers}</div>
+          ` : ""}
         </div>
 
         <div class="comfort-text-block">
           <div class="comfort-label">Comfort Now</div>
 
-          <div class="comfort-text">${headline}</div>
+          <div class="comfort-text">
+            ${safeHeadline}
+          </div>
 
-          <ul class="comfort-bullets">
-            ${bullets.map(b => `<li>${b}</li>`).join("")}
-          </ul>
+          ${safeExplanation ? `
+            <div class="comfort-explainer">
+              ${safeExplanation}
+            </div>
+          ` : ""}
         </div>
 
       </div>
 
-      <!-- EXPANDED -->
       <div class="comfort-expand">
 
         <div class="comfort-expand-headline">
           ${buildHeadline(comfort)}
         </div>
 
-        <div class="comfort-expand-actions">
-          ${buildActions(comfort).map(a => `<div>• ${a}</div>`).join("")}
-        </div>
+        ${safeActions.length ? `
+          <div class="comfort-expand-actions">
+            ${safeActions.map(a => `<div>• ${a}</div>`).join("")}
+          </div>
+        ` : ""}
 
         <div class="comfort-expand-drivers">
 
@@ -123,22 +150,82 @@ export function renderComfortNow(container, current, bestWindow, options = {}) {
 
         </div>
 
-        ${renderBestWindow(bestWindow)}
+        ${safeBestWindow}
 
       </div>
 
     </div>
   `;
 
+  // ------------------------------------------------------------
+  // ACCORDION HOOKUP (FIXED)
+  // ------------------------------------------------------------
   attachAccordion(container);
 }
 
 // ============================================================
-// ACTION LOGIC
+// SYNTH HELPERS
+// ============================================================
+
+function detectDominantFactor(c) {
+  if (c.dewPoint >= 65) return "muggy";
+  if (c.temp >= 85) return "heat";
+  if (c.temp <= 45) return "cold";
+  if (c.windSpeed >= 12) return "wind";
+  if (c.dewPoint < 50) return "sun";
+  return "neutral";
+}
+
+// ============================================================
+// FALLBACKS
+// ============================================================
+
+function fallbackHeadline(c) {
+  if (c.goldilocks) return "Near-perfect comfort";
+  if (c.temp < 55) return "Cool and crisp";
+  if (c.temp > 80) return "Warm conditions";
+  return "Comfortable overall";
+}
+
+function fallbackExplanation(c) {
+  const parts = [];
+
+  if (c.dewPoint < 55) parts.push("Dry, comfortable air");
+  else if (c.dewPoint > 65) parts.push("Humidity adds weight");
+
+  if (c.windSpeed < 5) parts.push("with very little wind");
+  else if (c.windSpeed > 12) parts.push("with noticeable breeze");
+
+  return parts.join(", ") + ".";
+}
+
+// ============================================================
+// SCORE DRIVERS
+// ============================================================
+
+function buildScoreDrivers(c) {
+  const parts = [];
+
+  if (c.dewPoint < 55) parts.push("Dry air");
+  else if (c.dewPoint >= 65) parts.push("Humid");
+
+  if (c.windSpeed < 5) parts.push("Calm");
+  else if (c.windSpeed > 12) parts.push("Breezy");
+
+  if (c.temp >= 65 && c.temp <= 75) parts.push("Ideal temp");
+  else if (c.temp < 55) parts.push("Cool");
+  else if (c.temp > 80) parts.push("Warm");
+
+  return parts.slice(0, 3).join(" • ");
+}
+
+// ============================================================
+// EXPANDED LOGIC
 // ============================================================
 
 function buildHeadline(c) {
-  if (c.goldilocks) return "Near-perfect conditions right now";
+  if (c.goldilocks)
+    return "Everything is working in your favor right now";
 
   if (c.dewPoint > 65 && c.temp > 75)
     return "Warm and humid — stickiness is the main factor";
@@ -165,7 +252,7 @@ function buildActions(c) {
   if (c.windSpeed > 10) actions.push("Wind will affect how it feels");
 
   if (!actions.length)
-    actions.push("Comfortable conditions for most activities");
+    actions.push("Easy conditions for most outdoor plans");
 
   return actions;
 }
@@ -179,11 +266,11 @@ function round(v) {
 }
 
 function getComfortClass(score) {
-  if (score >= 80) return "great";
-  if (score >= 65) return "good";
-  if (score >= 50) return "okay";
-  if (score >= 35) return "poor";
-  return "bad";
+  if (score >= 85) return "elite";
+  if (score >= 75) return "great";
+  if (score >= 60) return "good";
+  if (score >= 45) return "okay";
+  return "poor";
 }
 
 function formatWind(wind) {
@@ -225,8 +312,8 @@ function renderBestWindow(bestWindow) {
   const last = bestWindow.hours[bestWindow.hours.length - 1];
 
   return `
-    <div class="comfort-expand-row">
-      <span>Best Window</span>
+    <div class="comfort-expand-row comfort-best-window">
+      <span>Best Time Outside</span>
       <span>${first.hourLabel}–${last.hourLabel}</span>
     </div>
   `;
