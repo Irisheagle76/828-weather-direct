@@ -584,111 +584,87 @@ body {
 }
 
 /* ============================================================
-   SUBSTACK MODULE — MATCH PULSE EDITORIAL STYLE
+   SUBSTACK MODULE — MATCH PULSE + HIGH READABILITY
    ============================================================ */
 
-/* Title row spacing + typography (matches Pulse header rhythm) */
+/* Header — matches Pulse exactly */
+#weather-articles-module .module-header {
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 1.2rem;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--828-blue);
+  margin-bottom: 1rem;
+  border-bottom: 2px solid var(--828-orange);
+  padding-bottom: 6px;
+}
+
+/* Title row spacing */
 #weather-articles-module .substack-title-row {
   display: flex;
   align-items: center;
-  gap: 8px;                       /* Pulse-like spacing */
-  margin-bottom: 0.35rem;         /* tighter editorial rhythm */
+  gap: 8px;
+  margin-bottom: 0.35rem;
 }
 
-/* Title link (Pulse title style) */
+/* Title — Pulse typography + readability */
 #weather-articles-module .substack-title {
-  font-weight: 600;               /* Pulse weight */
-  letter-spacing: 0.4px;          /* Pulse spacing */
-  color: var(--828-blue);         /* Pulse blue */
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  font-size: 1.15rem;
+  color: rgba(255, 255, 255, 0.95);
   text-decoration: none;
-  font-size: 1.05rem;             /* matches Pulse scale */
 }
 
 #weather-articles-module .substack-title:hover {
-  color: var(--828-orange);       /* Pulse hover warmth */
-}
-
-/* NEW badge (matches Pulse live indicator) */
-#weather-articles-module .substack-new-badge {
-  background-color: var(--828-orange);
-  color: #fff;
-  font-size: 0.65rem;
-  font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 4px;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  box-shadow: 0 0 6px rgba(245, 125, 35, 0.55); /* Pulse glow */
-}
-
-/* Footer link (matches Pulse link styling) */
-#weather-articles-module .substack-footer-link a {
-  color: var(--828-blue);
-  font-weight: 600;
-  letter-spacing: 0.4px;
-  text-decoration: none;
-  display: inline-block;
-  margin-top: 0.5rem;
-}
-
-#weather-articles-module .substack-footer-link a:hover {
   color: var(--828-orange);
 }
 
-/* ============================================================
-   SUBSTACK MODULE — READABILITY FIXES
-   ============================================================ */
+/* NEW badge — matches Pulse live indicator */
+#weather-articles-module .substack-new-badge {
+  background-color: var(--828-orange);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  box-shadow: 0 0 6px rgba(245, 125, 35, 0.55);
+}
 
-/* Date line — increase contrast */
+/* Date — readable but subtle */
 #weather-articles-module .substack-date {
-  color: rgba(255, 255, 255, 0.85);   /* was too dim */
-  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.9rem;
   letter-spacing: 0.3px;
+  margin-bottom: 0.35rem;
 }
 
-/* Subheadline — major readability improvement */
+/* Subheadline — major readability boost */
 #weather-articles-module .substack-subheadline {
-  color: rgba(255, 255, 255, 0.92);   /* strong but not harsh */
-  line-height: 1.45;
-  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
 }
 
-/* TL;DR or excerpt emojis — ensure they pop */
+/* Emoji inside subheadline */
 #weather-articles-module .substack-subheadline emoji,
 #weather-articles-module .substack-subheadline span {
   color: rgba(255, 255, 255, 0.95);
 }
 
-/* Footer link — keep Pulse styling but increase clarity */
+/* Footer link — Pulse styling */
 #weather-articles-module .substack-footer-link a {
   color: var(--828-blue);
   font-weight: 600;
   letter-spacing: 0.4px;
+  font-size: 1rem;
+  text-decoration: none;
 }
 
 #weather-articles-module .substack-footer-link a:hover {
   color: var(--828-orange);
-}
-
-/* ============================================================
-   SUBSTACK MODULE HEADER — MATCH 828 WEATHER PULSE
-   ============================================================ */
-
-#weather-articles-module .module-header {
-  font-family: inherit;                 /* matches Pulse */
-  font-weight: 600;                     /* Pulse weight */
-  font-size: 1.15rem;                   /* Pulse scale */
-  letter-spacing: 0.6px;                /* Pulse editorial spacing */
-  text-transform: uppercase;            /* Pulse tone */
-  color: var(--828-blue);               /* Pulse title color */
-  margin-bottom: 0.75rem;               /* Pulse spacing rhythm */
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* Optional: subtle orange underline for editorial warmth */
-#weather-articles-module .module-header {
-  border-bottom: 2px solid var(--828-orange);
-  padding-bottom: 4px;
 }
