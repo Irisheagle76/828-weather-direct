@@ -72,7 +72,14 @@ export function renderComfortNow(container, current, bestWindow, options = {}) {
   );
 
   const headline = narrative?.headline || fallbackHeadline(comfort);
-  const explanation = narrative?.notes || fallbackExplanation(comfort);
+ const driverExplanation = unifiedDrivers
+  .map(d => d.detail)
+  .join(" ");
+
+const explanation =
+  narrative?.notes
+    ? `${driverExplanation} ${narrative.notes}`
+    : driverExplanation || fallbackExplanation(comfort);
 
   // ------------------------------------------------------------
   // SAFE VALUES
@@ -80,7 +87,11 @@ export function renderComfortNow(container, current, bestWindow, options = {}) {
   const safeHeadline = headline || "Comfort looks good";
   const safeExplanation = typeof explanation === "string" ? explanation : "";
 
-  const safeDrivers = buildScoreDrivers(comfort) || "";
+const unifiedDrivers = buildUnifiedDrivers(comfort);
+
+const safeDrivers = unifiedDrivers.length
+  ? unifiedDrivers.map(d => d.short).join(" • ")
+  : "";
 
   const actions = buildActions(comfort);
   const safeActions = Array.isArray(actions) ? actions : [];
@@ -217,6 +228,56 @@ function buildScoreDrivers(c) {
   else if (c.temp > 80) parts.push("Warm");
 
   return parts.slice(0, 3).join(" • ");
+}
+
+function buildUnifiedDrivers(c) {
+  const drivers = [];
+
+  // Moisture
+  if (c.dewPoint < 50) {
+    drivers.push({
+      short: "Dry air",
+      detail: "The air stays dry and crisp, which makes everything feel lighter."
+    });
+  } else if (c.dewPoint >= 65) {
+    drivers.push({
+      short: "Humid air",
+      detail: "Humidity adds weight to the air and starts to affect comfort."
+    });
+  }
+
+  // Wind
+  if (c.windSpeed < 5) {
+    drivers.push({
+      short: "Calm wind",
+      detail: "Very little wind keeps conditions steady and easy."
+    });
+  } else if (c.windSpeed > 12) {
+    drivers.push({
+      short: "Breezy",
+      detail: "Noticeable wind adds movement and changes how it feels."
+    });
+  }
+
+  // Temperature
+  if (c.temp >= 65 && c.temp <= 75) {
+    drivers.push({
+      short: "Ideal temp",
+      detail: "Temperatures sit right in the comfort sweet spot."
+    });
+  } else if (c.temp < 55) {
+    drivers.push({
+      short: "Cool air",
+      detail: "Cool air adds a slight edge, especially in shade."
+    });
+  } else if (c.temp > 80) {
+    drivers.push({
+      short: "Warm",
+      detail: "Heat begins to push the comfort level slightly."
+    });
+  }
+
+  return drivers.slice(0, 3);
 }
 
 // ============================================================
