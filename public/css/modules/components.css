@@ -673,34 +673,143 @@ body {
    HEADER — BRAND ONLY (CLEAN + LIGHTWEIGHT)
    ============================================================ */
 
+/* CONTAINER */
 .top-stack {
   max-width: 680px;
-  margin: 0 auto 16px auto;
+  margin: 0 auto;
   padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
+/* CARD BASE */
+.card,
 .header-card {
-  background: rgba(255,255,255,0.04);
+  background: rgba(20, 24, 32, 0.78);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 16px;
-  padding: 16px 18px;
-  backdrop-filter: blur(6px);
+  padding: 14px;
+  backdrop-filter: blur(10px);
 }
 
+/* HEADER */
 .header-title {
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 700;
-  color: var(--828-blue);
-  margin: 0;
-  letter-spacing: 0.2px;
+  color: #fff;
 }
 
 .header-sub {
   font-size: 13px;
-  color: rgba(255,255,255,0.6);
-  margin-top: 4px;
+  color: rgba(255,255,255,0.65);
+  margin-bottom: 8px;
 }
 
+/* LIVE BAR */
+.live-bar {
+  display: flex;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(245, 158, 11, 0.15);
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+/* SUMMARY */
+.header-summary {
+  font-size: 14px;
+  color: rgba(255,255,255,0.9);
+  line-height: 1.4;
+  margin-bottom: 10px;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* BUTTON */
+.read-full {
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #f59e0b, #fb923c);
+  color: #1a1a1a;
+  font-weight: 600;
+  border: none;
+}
+
+/* GRID */
+.comfort-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* COMFORT HERO */
+.primary {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.comfort-score {
+  font-size: 44px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.comfort-label {
+  font-size: 12px;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 6px;
+}
+
+.comfort-text {
+  font-size: 14px;
+  color: rgba(255,255,255,0.85);
+}
+
+/* HOURS */
+.section-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #f59e0b;
+  margin-bottom: 8px;
+}
+
+.hour-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.hour {
+  text-align: center;
+  font-size: 13px;
+  color: #fff;
+}
+
+/* ARTICLE */
+.article-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.article-date {
+  font-size: 12px;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 8px;
+}
+
+.article-summary {
+  font-size: 14px;
+  color: rgba(255,255,255,0.85);
+  margin-bottom: 10px;
+}
 
 /* ============================================================
    LIVE CONDITIONS — COMPACT (PRIMARY DATA SURFACE)
