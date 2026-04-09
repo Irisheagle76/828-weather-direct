@@ -25,7 +25,8 @@ console.log("KV PULSE:", pulse);
     return res.status(200).json({
       title: "Error loading Weather Pulse",
       text: "",
-      imageUrl: null,
+      mediaUrl: null,
+mediaType: null,
       timestamp: null,
       fallback: true,
     });

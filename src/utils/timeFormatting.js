@@ -1,11 +1,15 @@
-// Human-friendly "time ago" formatting for Substack timestamps
+export function formatTimeAgo(input) {
+  if (!input) return '';
 
-export function formatTimeAgo(dateString) {
-  if (!dateString) return '';
+  // Handle BOTH timestamp numbers and date strings
+  const date = typeof input === 'number'
+    ? new Date(input)
+    : new Date(String(input));
 
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now - date;
+  if (isNaN(date.getTime())) return '';
+
+  const now = Date.now();
+  const diffMs = now - date.getTime();
 
   const seconds = Math.floor(diffMs / 1000);
   const minutes = Math.floor(seconds / 60);
@@ -13,7 +17,6 @@ export function formatTimeAgo(dateString) {
   const days = Math.floor(hours / 24);
 
   if (days > 7) {
-    // Fallback to a simple date for older content
     return date.toLocaleDateString(undefined, {
       month: 'short',
       day: 'numeric',
