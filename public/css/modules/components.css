@@ -670,92 +670,108 @@ body {
 }
 
 /* ============================================================
-   NEW HEADER SYSTEM — 828 WEATHER DIRECT
+   HEADER — BRAND ONLY (CLEAN + LIGHTWEIGHT)
    ============================================================ */
 
-/* CONTAINER */
 .top-stack {
   max-width: 680px;
-  margin: 0 auto 20px auto;
+  margin: 0 auto 16px auto;
   padding: 0 16px;
 }
 
-/* MAIN CARD */
 .header-card {
-  background: rgba(255,255,255,0.045);
+  background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 16px;
-  padding: 18px;
+  padding: 16px 18px;
   backdrop-filter: blur(6px);
 }
 
-/* TITLE */
 .header-title {
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 700;
   color: var(--828-blue);
   margin: 0;
+  letter-spacing: 0.2px;
 }
 
-/* SUBTITLE */
 .header-sub {
-  font-size: 14px;
-  color: rgba(255,255,255,0.65);
+  font-size: 13px;
+  color: rgba(255,255,255,0.6);
   margin-top: 4px;
 }
 
-/* DIVIDER */
-.header-divider {
-  height: 1px;
-  background: rgba(255,255,255,0.06);
-  margin: 14px 0;
+
+/* ============================================================
+   LIVE CONDITIONS — COMPACT (PRIMARY DATA SURFACE)
+   ============================================================ */
+
+.live-compact {
+  max-width: 680px;
+  margin: 0 auto 12px auto;
+  padding: 10px 14px;
+
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
 }
 
-/* LIVE MODULE */
-.live-module {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-/* TITLE ROW (label + time) */
-.live-title-row {
+/* HEADER ROW */
+.live-compact-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 6px;
 }
 
 /* LABEL */
-.live-title {
-  font-size: 12px;
+.live-compact-title {
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 1px;
   color: rgba(255,255,255,0.55);
 }
 
-/* UPDATED TIME */
+/* TIME */
 .updated-time {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--828-orange);
   font-weight: 500;
 }
 
 /* METRICS ROW */
-.live-row {
+.live-compact-row {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
-/* METRIC PILLS */
+/* ============================================================
+   METRIC PILLS (SINGLE SOURCE OF TRUTH)
+   ============================================================ */
+
 .live-pill {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.08);
-  padding: 8px 12px;
-  border-radius: 10px;
-  font-size: 14px;
-  color: white;
   display: flex;
   align-items: center;
   gap: 6px;
+
+  padding: 6px 10px;
+  border-radius: 8px;
+
+  font-size: 13px;
+  color: white;
+
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+
+  transition: all 0.15s ease;
+}
+
+/* subtle polish */
+.live-pill:hover {
+  background: rgba(255,255,255,0.08);
+  transform: translateY(-1px);
+}
+.live-compact {
+  box-shadow: 0 4px 18px rgba(0,0,0,0.25);
 }

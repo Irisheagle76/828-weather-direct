@@ -33,41 +33,37 @@
   <div class="app-shell">
 
     <!-- =====================================
-         NEW HEADER SYSTEM (CLEAN + CONTAINED)
+         HEADER (BRAND ONLY — CLEAN)
          ===================================== -->
     <section class="top-stack">
-
       <div class="header-card">
-
-        <!-- BRAND -->
         <div class="header-title">828 Weather Direct</div>
         <div class="header-sub">Hyper-local Asheville forecast</div>
+      </div>
+    </section>
 
-        <div class="header-divider"></div>
+    <!-- =====================================
+         CURRENT OBS + LIVE CONDITIONS (MERGED)
+         ===================================== -->
+    <section id="current-obs-section">
 
-        <!-- LIVE CONDITIONS (MERGED + FIXED) -->
-        <div class="live-module">
+      <!-- COMPACT LIVE CONDITIONS -->
+      <div class="live-compact">
 
-          <div class="live-title-row">
-            <div class="live-title">Asheville Live Conditions</div>
-            <div id="updated-time" class="updated-time"></div>
-          </div>
-
-          <div class="live-row" id="wx-metrics">
-            <!-- JS injects your metrics here -->
-          </div>
-
+        <div class="live-compact-header">
+          <span class="live-compact-title">Asheville Live Conditions</span>
+          <span id="updated-time" class="updated-time"></span>
         </div>
+
+        <div id="wx-metrics" class="live-compact-row"></div>
 
       </div>
 
-    </section>
-
-    <!-- CURRENT OBS -->
-    <section id="current-obs-section">
+      <!-- EXISTING OBS MODULE -->
       <div id="current-obs-wrapper">
         <div id="current-obs-inline"></div>
       </div>
+
     </section>
 
     <!-- SYNTH HEALTH -->
@@ -98,6 +94,7 @@
       <!-- HUMAN ACTION -->
       <section class="now-tomorrow-row" data-accordion="ha">
 
+        <!-- TODAY -->
         <div class="now-col">
           <div class="today-module action-module" id="ha-today-card" data-accordion-item>
 
@@ -121,6 +118,7 @@
           </div>
         </div>
 
+        <!-- TOMORROW -->
         <div class="now-col">
           <div class="tomorrow-module action-module" id="ha-tomorrow-card" data-accordion-item>
 
