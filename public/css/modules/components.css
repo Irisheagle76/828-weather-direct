@@ -669,3 +669,26 @@ body {
 #weather-articles-module .substack-footer-link a:hover {
   color: var(--828-orange);
 }
+
+/* ============================================================
+   SUBSTACK MODULE HEADER — MATCH 828 WEATHER PULSE
+   ============================================================ */
+
+#weather-articles-module .module-header {
+  font-family: inherit;                 /* matches Pulse */
+  font-weight: 600;                     /* Pulse weight */
+  font-size: 1.15rem;                   /* Pulse scale */
+  letter-spacing: 0.6px;                /* Pulse editorial spacing */
+  text-transform: uppercase;            /* Pulse tone */
+  color: var(--828-blue);               /* Pulse title color */
+  margin-bottom: 0.75rem;               /* Pulse spacing rhythm */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Optional: subtle orange underline for editorial warmth */
+#weather-articles-module .module-header {
+  border-bottom: 2px solid var(--828-orange);
+  padding-bottom: 4px;
+}
