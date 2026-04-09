@@ -367,6 +367,48 @@ h1, h2, h3 {
   background: var(--accent-warm-bright);
 }
 
+/* ============================
+   HEADER — 828 Weather Direct
+   ============================ */
+
+.app-header {
+  padding: 1.2rem 1.4rem;
+  background: var(--navy-900);
+  color: white;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+/* BRAND ROW */
+.header-brand-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.app-title {
+  font-size: 1.9rem;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+/* Live Conditions Button */
+.live-btn {
+  background: var(--accent-warm);
+  color: #0b1d33;
+  border: none;
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background 0.2s ease;
+}
+
+.live-btn:hover {
+  background: var(--accent-warm-bright);
+}
+
 /* META ROW */
 .header-meta-row {
   margin-top: 0.4rem;
