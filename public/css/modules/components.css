@@ -435,125 +435,45 @@ h1, h2, h3 {
 }
 
 /* ============================================================
-   828 WEATHER — BRAND COLOR TOKENS
+   ORANGE — STRONGER, WARMER, MORE PRESENT
    ============================================================ */
 
-:root {
-  --828-blue: #0f4cc4;     /* Primary accent */
-  --828-orange: #f57d23;   /* Secondary warmth accent */
-
-  --828-honey: #f7c873;
-  --828-sunset: #e89b4f;
-
-  --module-gap: 20px;
-}
-
-/* ============================================================
-   GLOBAL INTERACTION ACCENTS
-   ============================================================ */
-
-a,
-button,
-.notify-btn {
-  color: var(--828-blue);
-  transition: color 0.2s ease;
-}
-
-a:hover,
-button:hover,
-.notify-btn:hover {
-  color: var(--828-orange);
-}
-
-/* ============================================================
-   CINEMATIC HEADER — BLUE PRIMARY, ORANGE SUPPORT
-   ============================================================ */
-
-.app-header-cinematic .app-title {
-  color: var(--828-blue);
-}
-
-.app-header-cinematic .location-line {
-  color: var(--828-orange);
-}
-
-/* ============================================================
-   SECTION SUBTITLES + EDITORIAL LABELS
-   ============================================================ */
-
+/* Section subtitles + editorial labels */
 .section-subtitle,
 .card-subtitle,
-.pulse-subtitle {
-  color: var(--828-orange);
-}
-
-/* ============================================================
-   PULSE MODULE — BLUE TITLE, ORANGE METADATA
-   ============================================================ */
-
-.pulse-title {
-  color: var(--828-blue);
-}
-
+.pulse-subtitle,
+.pulse-tagline,
 .pulse-meta,
-.pulse-timestamp,
-.pulse-tagline {
+.pulse-timestamp {
   color: var(--828-orange);
 }
 
-.pulse-live-indicator {
-  background-color: var(--828-orange);
-}
-
-/* ============================================================
-   COMFORT MODULE — ORANGE HEADERS, BLUE VALUES
-   ============================================================ */
-
+/* Comfort module headers */
 .comfort-header,
 .future-comfort-header,
 .outlook-header {
   color: var(--828-orange);
+  letter-spacing: 0.4px;
 }
 
-.metric-label,
-.metric-title {
-  color: var(--828-orange);
-}
-
-.metric-value {
-  color: var(--828-blue);
-}
-
-/* ============================================================
-   HOURLY COMFORT GRAPHICS — ORANGE LINE + DOTS
-   ============================================================ */
-
+/* Hourly comfort graphics — stronger orange */
 .hourly-dot {
   border-color: var(--828-orange);
+  background-color: rgba(245, 125, 35, 0.15);
 }
 
 .hourly-line {
   stroke: var(--828-orange);
+  stroke-width: 2.2px;
 }
 
-/* ============================================================
-   CARD DIVIDERS — SUBTLE ORANGE WARMTH
-   ============================================================ */
-
-.card-divider {
-  border-color: var(--828-orange);
+/* Card dividers + borders */
+.card-divider,
+.card {
+  border-color: rgba(245, 125, 35, 0.35);
 }
 
-/* ============================================================
-   MICRO ICON COLOR LOGIC
-   ============================================================ */
-
-.icon-neutral,
-.icon-wind,
-.icon-humidity {
-  color: var(--828-blue);
-}
-
+/* Warmth-related icons */
 .icon-sun,
 .icon-uv,
 .icon-visibility,
@@ -562,15 +482,8 @@ button:hover,
   color: var(--828-orange);
 }
 
-/* ============================================================
-   BACKGROUND GRADIENT — SUBTLE BLUE INFUSION
-   ============================================================ */
-
-body {
-  background: linear-gradient(
-    180deg,
-    #0a1a33 0%,
-    #0d2b66 40%,
-    var(--828-blue) 100%
-  );
+/* Pulse live indicator */
+.pulse-live-indicator {
+  background-color: var(--828-orange);
+  box-shadow: 0 0 8px rgba(245, 125, 35, 0.6);
 }
