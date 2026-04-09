@@ -433,3 +433,115 @@ h1, h2, h3 {
   font-weight: 600;
   color: var(--accent-warm);
 }
+
+/* ============================================================
+   828 WEATHER — BRAND COLOR TOKENS
+   (New blue + orange accents added safely)
+   ============================================================ */
+
+:root {
+  --828-blue: #0f4cc4;     /* Blue Ridge electric blue */
+  --828-orange: #f57d23;   /* Warm Asheville sun orange */
+
+  --828-honey: #f7c873;
+  --828-sunset: #e89b4f;
+
+  --module-gap: 20px;
+}
+
+/* ============================================================
+   GLOBAL INTERACTION ACCENTS
+   ============================================================ */
+
+a,
+button,
+.notify-btn {
+  color: var(--828-blue);
+  transition: color 0.2s ease;
+}
+
+a:hover,
+button:hover,
+.notify-btn:hover {
+  color: var(--828-orange);
+}
+
+/* ============================================================
+   CINEMATIC HEADER — COLOR INTEGRATION
+   ============================================================ */
+
+.app-header-cinematic .app-title {
+  color: var(--828-blue);
+}
+
+.app-header-cinematic .location-line {
+  color: var(--828-orange);
+}
+
+/* ============================================================
+   METRIC + LABEL COLOR LOGIC
+   ============================================================ */
+
+.metric-label,
+.metric-title {
+  color: var(--828-orange);
+}
+
+.metric-value {
+  color: var(--828-blue);
+}
+
+/* ============================================================
+   COMFORT + GOLDILOCKS HIGHLIGHTS
+   ============================================================ */
+
+.comfort-badge,
+.goldilocks-badge {
+  background: var(--828-orange);
+  color: #fff;
+}
+
+/* ============================================================
+   PULSE MODULE — BLUE + ORANGE INFUSION
+   ============================================================ */
+
+.pulse-live-indicator {
+  background-color: var(--828-orange);
+}
+
+.pulse-card .pulse-title {
+  color: var(--828-blue);
+}
+
+.pulse-card .pulse-subtitle {
+  color: var(--828-orange);
+}
+
+/* ============================================================
+   MICRO ICON COLOR LOGIC
+   ============================================================ */
+
+.icon-neutral,
+.icon-wind,
+.icon-humidity {
+  color: var(--828-blue);
+}
+
+.icon-sun,
+.icon-uv,
+.icon-visibility {
+  color: var(--828-orange);
+}
+
+/* ============================================================
+   GRADIENT TUNING (SUBTLE BLUE INFUSION)
+   ============================================================ */
+
+body {
+  background: linear-gradient(
+    180deg,
+    #0a1a33 0%,
+    #0d2b66 40%,
+    var(--828-blue) 100%
+  );
+}
