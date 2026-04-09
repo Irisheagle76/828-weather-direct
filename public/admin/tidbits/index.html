@@ -939,16 +939,20 @@
     return `<img src="${url}" alt="Pulse media" />`;
   }
 
-  function updateTimestamp() {
-    const now = new Date();
-    const options = {
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit'
-    };
-    previewTimestamp.textContent = now.toLocaleString(undefined, options);
-  }
+function updateTimestamp() {
+  const el = document.getElementById("updated-time");
+  const now = new Date();
+
+  const formatted = now.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit"
+  });
+
+  el.textContent = `Updated ${formatted}`;
+}
+
+updateTimestamp();
+setInterval(updateTimestamp, 60000);
 
   function updatePreview() {
     const html = editor.innerHTML.trim();

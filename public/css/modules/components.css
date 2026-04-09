@@ -668,3 +668,60 @@ body {
 #weather-articles-module .substack-footer-link a:hover {
   color: var(--828-orange);
 }
+
+/* ============================================================
+   HEADER LAYOUT — CLEANED + REBALANCED
+   ============================================================ */
+
+.wx-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 20px 10px;
+}
+
+/* Brand row */
+.wx-brand-row {
+  text-align: left;
+}
+
+.wx-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--828-blue);
+  margin: 0;
+}
+
+.wx-signature {
+  font-size: 0.85rem;
+  color: var(--828-orange);
+  margin: 2px 0 0 0;
+}
+
+/* Live Conditions row */
+.wx-live-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255,255,255,0.06);
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.live-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--828-blue);
+}
+
+.updated-time {
+  font-size: 0.9rem;
+  color: var(--828-orange);
+  font-weight: 500;
+}
+
+/* Metrics row stays as-is */
+.wx-metrics-row {
+  margin-top: 5px;
+}
