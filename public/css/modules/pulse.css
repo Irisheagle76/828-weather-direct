@@ -19,7 +19,7 @@
   gap: 1.2rem;
   animation: fadeInUp 0.45s ease forwards;
   position: relative;
-  isolation: isolate; /* prevents backdrop bleed */
+  isolation: isolate;
 }
 
 /* Collapsed state */
@@ -35,6 +35,11 @@
   max-height: 999px;
   opacity: 1;
   transform: translateY(0) scale(1);
+}
+
+/* Hide preview when expanded */
+.pulse-expanded #pulse-preview {
+  display: none;
 }
 
 /* ------------------------------------------------------------
@@ -74,7 +79,7 @@
 }
 
 /* ------------------------------------------------------------
-   MEDIA BLOCK — WITH NEW HEIGHT CONTAINMENT
+   MEDIA BLOCK — WITH HEIGHT CONTAINMENT
    ------------------------------------------------------------ */
 
 .pulse-media {
@@ -83,9 +88,7 @@
   overflow: hidden;
   box-shadow: var(--shadow-medium);
   background: rgba(255,255,255,0.04);
-
-  /* NEW: cinematic containment */
-  max-height: 220px;
+  max-height: 220px; /* cinematic containment */
 }
 
 .pulse-media img,
@@ -105,7 +108,7 @@
   color: var(--text-soft);
   line-height: 1.55;
   margin-top: 0.25rem;
-  overflow-wrap: break-word; /* prevents layout break */
+  overflow-wrap: break-word;
 }
 
 /* ------------------------------------------------------------
@@ -117,6 +120,7 @@
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 18px;
   padding: 1.2rem 1.4rem;
+  margin-top: 0.5rem; /* cleaner separation */
   box-shadow: var(--shadow-medium);
   backdrop-filter: blur(6px);
   transition:
@@ -130,11 +134,11 @@
   font-size: 0.95rem;
   color: var(--text-soft);
   line-height: 1.55;
-  white-space: pre-wrap;
+  white-space: normal; /* cleaner editorial paragraphs */
 }
 
-.pulse-expanded-content .pulse-media {
-  margin-bottom: 1rem; /* spacing between media + text */
+#pulse-full-text .pulse-media {
+  margin-bottom: 1rem;
 }
 
 /* ------------------------------------------------------------
@@ -182,7 +186,6 @@
     font-size: 0.92rem;
   }
 
-  /* NEW: mobile media containment */
   .pulse-media {
     max-height: 160px;
   }
