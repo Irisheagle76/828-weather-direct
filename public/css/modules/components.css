@@ -634,3 +634,38 @@ body {
 #weather-articles-module .substack-footer-link a:hover {
   color: var(--828-orange);
 }
+
+/* ============================================================
+   SUBSTACK MODULE — READABILITY FIXES
+   ============================================================ */
+
+/* Date line — increase contrast */
+#weather-articles-module .substack-date {
+  color: rgba(255, 255, 255, 0.85);   /* was too dim */
+  font-size: 0.85rem;
+  letter-spacing: 0.3px;
+}
+
+/* Subheadline — major readability improvement */
+#weather-articles-module .substack-subheadline {
+  color: rgba(255, 255, 255, 0.92);   /* strong but not harsh */
+  line-height: 1.45;
+  font-size: 0.95rem;
+}
+
+/* TL;DR or excerpt emojis — ensure they pop */
+#weather-articles-module .substack-subheadline emoji,
+#weather-articles-module .substack-subheadline span {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* Footer link — keep Pulse styling but increase clarity */
+#weather-articles-module .substack-footer-link a {
+  color: var(--828-blue);
+  font-weight: 600;
+  letter-spacing: 0.4px;
+}
+
+#weather-articles-module .substack-footer-link a:hover {
+  color: var(--828-orange);
+}
