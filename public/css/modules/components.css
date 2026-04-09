@@ -670,217 +670,92 @@ body {
 }
 
 /* ============================================================
-   HEADER — BRAND ONLY (CLEAN + LIGHTWEIGHT)
+   NEW HEADER SYSTEM — 828 WEATHER DIRECT
    ============================================================ */
 
 /* CONTAINER */
 .top-stack {
   max-width: 680px;
-  margin: 0 auto;
+  margin: 0 auto 20px auto;
   padding: 0 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
 }
 
-/* CARD BASE */
-.card,
+/* MAIN CARD */
 .header-card {
-  background: rgba(20, 24, 32, 0.78);
+  background: rgba(255,255,255,0.045);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 16px;
-  padding: 14px;
-  backdrop-filter: blur(10px);
+  padding: 18px;
+  backdrop-filter: blur(6px);
 }
 
-/* HEADER */
+/* TITLE */
 .header-title {
-  font-size: 20px;
+  font-size: 28px;
   font-weight: 700;
-  color: #fff;
+  color: var(--828-blue);
+  margin: 0;
 }
 
+/* SUBTITLE */
 .header-sub {
-  font-size: 13px;
+  font-size: 14px;
   color: rgba(255,255,255,0.65);
-  margin-bottom: 8px;
+  margin-top: 4px;
 }
 
-/* LIVE BAR */
-.live-bar {
-  display: flex;
-  gap: 12px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: rgba(245, 158, 11, 0.15);
-  font-size: 14px;
-  margin-bottom: 10px;
+/* DIVIDER */
+.header-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.06);
+  margin: 14px 0;
 }
 
-/* SUMMARY */
-.header-summary {
-  font-size: 14px;
-  color: rgba(255,255,255,0.9);
-  line-height: 1.4;
-  margin-bottom: 10px;
-
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* BUTTON */
-.read-full {
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #f59e0b, #fb923c);
-  color: #1a1a1a;
-  font-weight: 600;
-  border: none;
-}
-
-/* GRID */
-.comfort-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-/* COMFORT HERO */
-.primary {
+/* LIVE MODULE */
+.live-module {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  gap: 10px;
 }
 
-.comfort-score {
-  font-size: 44px;
-  font-weight: 700;
-  color: #fff;
-}
-
-.comfort-label {
-  font-size: 12px;
-  color: rgba(255,255,255,0.7);
-  margin-bottom: 6px;
-}
-
-.comfort-text {
-  font-size: 14px;
-  color: rgba(255,255,255,0.85);
-}
-
-/* HOURS */
-.section-label {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #f59e0b;
-  margin-bottom: 8px;
-}
-
-.hour-row {
-  display: flex;
-  justify-content: space-between;
-}
-
-.hour {
-  text-align: center;
-  font-size: 13px;
-  color: #fff;
-}
-
-/* ARTICLE */
-.article-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #fff;
-  margin-bottom: 4px;
-}
-
-.article-date {
-  font-size: 12px;
-  color: rgba(255,255,255,0.6);
-  margin-bottom: 8px;
-}
-
-.article-summary {
-  font-size: 14px;
-  color: rgba(255,255,255,0.85);
-  margin-bottom: 10px;
-}
-
-/* ============================================================
-   LIVE CONDITIONS — COMPACT (PRIMARY DATA SURFACE)
-   ============================================================ */
-
-.live-compact {
-  max-width: 680px;
-  margin: 0 auto 12px auto;
-  padding: 10px 14px;
-
-  background: rgba(255,255,255,0.025);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 12px;
-}
-
-/* HEADER ROW */
-.live-compact-header {
+/* TITLE ROW (label + time) */
+.live-title-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
 }
 
 /* LABEL */
-.live-compact-title {
-  font-size: 11px;
+.live-title {
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 1px;
   color: rgba(255,255,255,0.55);
 }
 
-/* TIME */
+/* UPDATED TIME */
 .updated-time {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--828-orange);
   font-weight: 500;
 }
 
 /* METRICS ROW */
-.live-compact-row {
+.live-row {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
-/* ============================================================
-   METRIC PILLS (SINGLE SOURCE OF TRUTH)
-   ============================================================ */
-
+/* METRIC PILLS */
 .live-pill {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  color: white;
   display: flex;
   align-items: center;
   gap: 6px;
-
-  padding: 6px 10px;
-  border-radius: 8px;
-
-  font-size: 13px;
-  color: white;
-
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
-
-  transition: all 0.15s ease;
-}
-
-/* subtle polish */
-.live-pill:hover {
-  background: rgba(255,255,255,0.08);
-  transform: translateY(-1px);
-}
-.live-compact {
-  box-shadow: 0 4px 18px rgba(0,0,0,0.25);
 }

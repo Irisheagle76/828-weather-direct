@@ -33,91 +33,137 @@
   <div class="app-shell">
 
     <!-- =====================================
-         HEADER (BRAND ONLY — CLEAN)
+         NEW HEADER SYSTEM (CLEAN + CONTAINED)
          ===================================== -->
-<div class="top-stack">
+    <section class="top-stack">
 
-  <!-- HEADER -->
-  <div class="header-card">
-    <div class="header-title">828 Weather Direct</div>
-    <div class="header-sub">Hyper-local Asheville forecast</div>
+      <div class="header-card">
 
-    <!-- LIVE CONDITIONS (MOVED HERE) -->
-    <div class="live-bar">
-      <div>🌡 64°</div>
-      <div>💧 37°</div>
-      <div>☔ 36%</div>
-      <div>💨 1 mph</div>
-    </div>
+        <!-- BRAND -->
+        <div class="header-title">828 Weather Direct</div>
+        <div class="header-sub">Hyper-local Asheville forecast</div>
 
-    <!-- SHORT SUMMARY -->
-    <p class="header-summary">
-      Beautiful spring weekend. Dry air keeps things crisp, but wildfire risk remains elevated.
-    </p>
+        <div class="header-divider"></div>
 
-    <div class="header-actions">
-      <button class="read-full">Full update</button>
-    </div>
-  </div>
+        <!-- LIVE CONDITIONS (MERGED + FIXED) -->
+        <div class="live-module">
 
-  <!-- COMFORT + FUTURE -->
-  <div class="comfort-grid">
+          <div class="live-title-row">
+            <div class="live-title">Asheville Live Conditions</div>
+            <div id="updated-time" class="updated-time"></div>
+          </div>
 
-    <!-- COMFORT NOW (HERO) -->
-    <div class="card comfort-card primary">
-      <div class="comfort-score">100</div>
-      <div class="comfort-label">Comfort Now</div>
+          <div class="live-row" id="wx-metrics">
+            <!-- JS injects your metrics here -->
+          </div>
 
-      <div class="comfort-text">
-        A clean, low-friction setup. Dry air and ideal temps make everything feel easy.
+        </div>
+
       </div>
-    </div>
 
-    <!-- NEXT HOURS -->
-    <div class="card comfort-card">
-      <div class="section-label">Next Few Hours</div>
+    </section>
 
-      <div class="hour-row">
-        <div class="hour">
-          <div>2 PM</div>
-          <div>😊</div>
-          <div>66°</div>
-        </div>
-
-        <div class="hour">
-          <div>3 PM</div>
-          <div>😊</div>
-          <div>67°</div>
-        </div>
-
-        <div class="hour">
-          <div>4 PM</div>
-          <div>🙂</div>
-          <div>66°</div>
-        </div>
+    <!-- CURRENT OBS -->
+    <section id="current-obs-section">
+      <div id="current-obs-wrapper">
+        <div id="current-obs-inline"></div>
       </div>
-    </div>
+    </section>
 
-  </div>
+    <!-- SYNTH HEALTH -->
+    <section id="synth-health" class="synth-health-section"></section>
 
-  <!-- ARTICLE -->
-  <div class="card article-card">
-    <div class="section-label">828 Weather Update</div>
+    <!-- MAIN -->
+    <main class="main-centered">
 
-    <div class="article-title">
-      Easter Showers Bring Work Week Sunshine
-    </div>
+      <!-- MODE TOGGLE -->
+      <div class="mode-toggle">
+        <button class="mode-btn active" data-mode="downtown">🏙 Downtown</button>
+        <button class="mode-btn" data-mode="trail">🌲 Trail</button>
+      </div>
 
-    <div class="article-date">Apr 4, 2026</div>
+      <!-- COMFORT -->
+      <div id="comfort-row">
 
-    <div class="article-summary">
-      Rain arrives early Sunday morning, lingers into midday, then clears toward evening.
-    </div>
+        <div class="comfort-left-col" data-accordion="comfort">
+          <div id="comfort-now-container" data-accordion-item></div>
+        </div>
 
-    <button class="read-full">Read full article</button>
-  </div>
+        <div class="comfort-right-col">
+          <div id="future-comfort-container"></div>
+        </div>
 
-</div>
+      </div>
+
+      <!-- HUMAN ACTION -->
+      <section class="now-tomorrow-row" data-accordion="ha">
+
+        <div class="now-col">
+          <div class="today-module action-module" id="ha-today-card" data-accordion-item>
+
+            <div class="action-header" data-accordion-trigger>
+              <span id="ha-today-header">Today’s Outlook</span>
+              <span id="ha-today-goldilocks" class="gold-badge" style="display:none;">
+                🌟 Goldilocks
+              </span>
+            </div>
+
+            <div class="action-emoji" id="ha-today-emoji"></div>
+            <div class="action-headline" id="ha-today-title"></div>
+            <div class="action-text" id="ha-today-body"></div>
+            <ul class="today-bullets" id="ha-today-bullets"></ul>
+
+            <div class="expanded-panel accordion-expand accordion-collapsed"
+              id="ha-today-expanded"
+              data-accordion-content>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="now-col">
+          <div class="tomorrow-module action-module" id="ha-tomorrow-card" data-accordion-item>
+
+            <div class="action-header" data-accordion-trigger>
+              <span id="ha-tomorrow-header">Tomorrow’s Outlook</span>
+              <span id="ha-tomorrow-goldilocks" class="gold-badge" style="display:none;">
+                🌟 Goldilocks
+              </span>
+            </div>
+
+            <div class="action-emoji" id="ha-tomorrow-emoji"></div>
+            <div class="action-headline" id="ha-tomorrow-title"></div>
+            <div class="action-text" id="ha-tomorrow-body"></div>
+            <ul class="tomorrow-bullets" id="ha-tomorrow-bullets"></ul>
+
+            <div class="expanded-panel accordion-expand accordion-collapsed"
+              id="ha-tomorrow-expanded"
+              data-accordion-content>
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+      <!-- PULSE -->
+      <section id="pulse-card" class="pulse-card pulse-collapsed">
+
+        <div class="pulse-header">
+          <h2 class="pulse-title">828 Weather Pulse</h2>
+          <div class="pulse-badge-pill">QUICK • LIVE • 828</div>
+          <div id="pulse-timestamp" class="pulse-timestamp"></div>
+        </div>
+
+        <div id="pulse-media" class="pulse-media"></div>
+        <div id="pulse-preview" class="pulse-preview"></div>
+        <div id="pulse-full-text"></div>
+
+        <button id="pulse-toggle" class="pulse-toggle" aria-expanded="false">
+          Read full update
+        </button>
+
+      </section>
 
       <!-- SUBSTACK -->
       <section id="weather-articles-module" class="substack-card"></section>
