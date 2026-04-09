@@ -54,49 +54,58 @@ export function renderComfortNow(container, current, bestWindow, options = {}) {
   // ------------------------------------------------------------
   // SYNTHESIZER
   // ------------------------------------------------------------
-  const intel = {
-    signals: {
-      temp: comfort.temp,
-      dewPoint: comfort.dewPoint,
-      windSpeed: comfort.windSpeed
-    },
-    dominantFactor: detectDominantFactor(comfort),
-    confidence: 0.7
-  };
 
-  const narrative = assembleWithVoice(
-    intel,
-    "today",
-    mapScoreToCategory(comfort.score), // feed raw 0–10 score
-    comfort.goldilocks
-  );
+const intel = {
+  signals: {
+    temp: comfort.temp,
+    dewPoint: comfort.dewPoint,
+    windSpeed: comfort.windSpeed
+  },
+  dominantFactor: detectDominantFactor(comfort),
+  confidence: 0.7
+};
 
-  const headline = narrative?.headline || fallbackHeadline(comfort);
- const driverExplanation = unifiedDrivers
-  .map(d => d.detail)
-  .join(" ");
+const narrative = assembleWithVoice(
+  intel,
+  "today",
+  mapScoreToCategory(comfort.score),
+  comfort.goldilocks
+);
 
-const explanation =
-  narrative?.notes
-    ? `${driverExplanation} ${narrative.notes}`
-    : driverExplanation || fallbackExplanation(comfort);
-
-  // ------------------------------------------------------------
-  // SAFE VALUES
-  // ------------------------------------------------------------
-  const safeHeadline = headline || "Comfort looks good";
-  const safeExplanation = typeof explanation === "string" ? explanation : "";
-
+// ------------------------------------------------------------
+// DRIVERS (🔥 MUST COME FIRST)
+// ------------------------------------------------------------
 const unifiedDrivers = buildUnifiedDrivers(comfort);
 
 const safeDrivers = unifiedDrivers.length
   ? unifiedDrivers.map(d => d.short).join(" • ")
   : "";
 
-  const actions = buildActions(comfort);
-  const safeActions = Array.isArray(actions) ? actions : [];
+const driverExplanation = unifiedDrivers.length
+  ? unifiedDrivers.map(d => d.detail).join(" ")
+  : "";
 
-  const safeBestWindow = renderBestWindow(bestWindow) || "";
+// ------------------------------------------------------------
+// HEADLINE + EXPLANATION
+// ------------------------------------------------------------
+const headline = narrative?.headline || fallbackHeadline(comfort);
+
+const explanation =
+  narrative?.notes
+    ? `${driverExplanation} ${narrative.notes}`.trim()
+    : driverExplanation || fallbackExplanation(comfort);
+
+// ------------------------------------------------------------
+// SAFE VALUES
+// ------------------------------------------------------------
+const safeHeadline = headline || "Comfort looks good";
+const safeExplanation =
+  typeof explanation === "string" ? explanation : "";
+
+const actions = buildActions(comfort);
+const safeActions = Array.isArray(actions) ? actions : [];
+
+const safeBestWindow = renderBestWindow(bestWindow) || "";
 
   // ------------------------------------------------------------
   // RENDER
