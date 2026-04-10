@@ -1,7 +1,7 @@
 // /js/substack-render.js
 // ============================================================
-// 828 WEATHER — SUBSTACK ARTICLE RENDERER (CLEAN + FIXED)
-// Fully aligned with substack.css
+// 828 WEATHER — SUBSTACK ARTICLE RENDERER (FINAL CLEAN)
+// JS only injects CONTENT — HTML owns structure
 // ============================================================
 
 import { fetchSubstackLatestArticle } from "./substack-api.js";
@@ -20,18 +20,15 @@ function extractCleanText(html) {
 // MAIN RENDERER
 // ------------------------------------------------------------
 export async function renderSubstackArticle() {
-  const container = document.getElementById("substack-content");
+  const container = document.getElementById("weather-articles-module");
   if (!container) return;
 
   // ------------------------------------------------------------
-  // LOADING STATE
+  // LOADING STATE (CONTENT ONLY)
   // ------------------------------------------------------------
- container.innerHTML = `
-  <div class="substack-card">
-    <div class="substack-header-label">From 828 Weather Update</div>
+  container.innerHTML = `
     <div class="substack-loading">Loading…</div>
-  </div>
-`;
+  `;
 
   try {
     const article = await fetchSubstackLatestArticle();
@@ -41,7 +38,6 @@ export async function renderSubstackArticle() {
     // ------------------------------------------------------------
     if (!article) {
       container.innerHTML = `
-        <div class="substack-header-label">From 828 Weather Update</div>
         <div class="substack-empty">No recent articles found.</div>
       `;
       return;
@@ -85,46 +81,39 @@ export async function renderSubstackArticle() {
     const thumb = ogImage || "/828-brand-card.png";
 
     // ------------------------------------------------------------
-    // RENDER
+    // FINAL RENDER (CONTENT ONLY)
     // ------------------------------------------------------------
- container.innerHTML = `
-  <div class="substack-card">
+    container.innerHTML = `
+      <div class="substack-article">
 
-    <div class="substack-header-label">From 828 Weather Update</div>
+        <div class="substack-thumb-wrapper">
+          <img src="${thumb}" class="substack-thumb" alt="Article thumbnail">
+        </div>
 
-    <div class="substack-article">
+        <div class="substack-title-row">
+          <a href="${link}" target="_blank" rel="noopener" class="substack-title">
+            ${title}
+          </a>
+          ${isNew ? `<span class="substack-new-badge">NEW</span>` : ""}
+        </div>
 
-      <div class="substack-thumb-wrapper">
-        <img src="${thumb}" class="substack-thumb" alt="Article thumbnail">
-      </div>
+        <div class="substack-date">${formattedDate}</div>
 
-      <div class="substack-title-row">
-        <a href="${link}" target="_blank" rel="noopener" class="substack-title">
-          ${title}
+        <div class="substack-excerpt">
+          ${excerpt}
+        </div>
+
+        <a href="${link}" target="_blank" rel="noopener" class="substack-readmore">
+          Read full article →
         </a>
-        ${isNew ? `<span class="substack-new-badge">NEW</span>` : ""}
+
       </div>
-
-      <div class="substack-date">${formattedDate}</div>
-
-      <div class="substack-excerpt">
-        ${excerpt}
-      </div>
-
-      <a href="${link}" target="_blank" rel="noopener" class="substack-readmore">
-        Read full article →
-      </a>
-
-    </div>
-
-  </div>
-`;
+    `;
 
   } catch (err) {
     console.error("Error rendering Substack Article:", err);
 
     container.innerHTML = `
-      <div class="substack-header-label">From 828 Weather Update</div>
       <div class="substack-error">Unable to load article.</div>
     `;
   }
