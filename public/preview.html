@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AVL Weather – Preview</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Use your EXISTING styles -->
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+
+<body>
+
+  <!-- Safety label -->
+  <div style="
+    text-align:center;
+    padding:6px;
+    font-size:12px;
+    letter-spacing:1px;
+    opacity:.6;
+  ">
+    PREVIEW MODE
+  </div>
+
+  <!-- Your new app mounts here -->
+  <div id="app"></div>
+
+  <script type="module">
+    import { renderNewLayout } from './new-layout.js';
+
+    renderNewLayout(document.getElementById('app'));
+  </script>
+
+</body>
+</html>
