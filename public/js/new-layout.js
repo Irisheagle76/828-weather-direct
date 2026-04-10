@@ -1,10 +1,9 @@
 // ============================================================
-// NEW LAYOUT — AVL WEATHER PREVIEW
+// NEW LAYOUT — AVL WEATHER PREVIEW (CLEAN + WIRED)
 // ============================================================
 
-// 👉 IMPORT YOUR EXISTING LOGIC (adjust paths as needed)
 import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
-import { calculateComfortScore } from '/js/intel/comfort.js';
+import { calculateComfort } from '/js/intel/comfort.js';
 
 
 // ============================================================
@@ -14,32 +13,23 @@ import { calculateComfortScore } from '/js/intel/comfort.js';
 export async function renderNewLayout(container) {
   container.innerHTML = `
     <div class="top-stack">
-
-      <!-- FEELSCORE -->
       <div id="feelscore" class="card"></div>
-
-      <!-- TODAY -->
       <div id="today" class="card"></div>
-
-      <!-- NEXT FEW HOURS -->
       <div id="timeline" class="card"></div>
-
-      <!-- TOMORROW -->
       <div id="tomorrow" class="card"></div>
-
     </div>
   `;
 
   try {
-  const data = await getWeatherForUI({ lat, lon });
+    const data = await getWeatherForUI({
+      lat: 35.5951,
+      lon: -82.5515
+    });
 
-    // --- CURRENT ---
     const current = data.current;
     const hourly = data.hourly;
 
-    const currentScore = calculateComfortScore(current);
-
-    renderFeelScore(current, currentScore);
+    renderFeelScore(current);
     renderToday(hourly);
     renderTimeline(hourly);
     renderTomorrow(data);
@@ -52,18 +42,22 @@ export async function renderNewLayout(container) {
 
 
 // ============================================================
-// FEELSCORE MODULE
+// FEELSCORE (USES REAL ENGINE)
 // ============================================================
 
-function renderFeelScore(current, score) {
-  const label = getFeelLabel(score);
-  const detail = getFeelDetail(current);
+function renderFeelScore(current) {
+  const comfort = calculateComfort(current);
+
+  const score = Math.round((comfort?.score || 0) * 10);
+  const label = comfort?.label || "Unknown";
+
+  const detail = getFeelDetail(comfort);
   const action = getFeelAction(score);
 
   document.getElementById('feelscore').innerHTML = `
     <div class="feelscore-card">
       <div class="fs-title">FEELSCORE</div>
-      <div class="fs-score">${Math.round(score)}</div>
+      <div class="fs-score">${score}</div>
       <div class="fs-label">${label}</div>
       <div class="fs-detail">${detail}</div>
       <div class="fs-action">${action}</div>
@@ -73,17 +67,18 @@ function renderFeelScore(current, score) {
 
 
 // ============================================================
-// TODAY MODULE (INSIGHT LAYER)
+// TODAY MODULE
 // ============================================================
 
 function renderToday(hourly) {
+  if (!hourly?.length) return;
+
   const headline = getTodayHeadline(hourly);
   const { bestWindow, worstWindow } = getKeyWindows(hourly);
 
   document.getElementById('today').innerHTML = `
     <div class="today-card">
       <div class="today-headline">${headline}</div>
-
       <div class="today-points">
         <div>Worst: ${worstWindow}</div>
         <div>Best: ${bestWindow}</div>
@@ -94,18 +89,17 @@ function renderToday(hourly) {
 
 
 // ============================================================
-// TIMELINE (NEXT FEW HOURS)
+// TIMELINE
 // ============================================================
 
 function renderTimeline(hourly) {
-  const nextHours = data.hourly.time.slice(0, 5).map((t, i) => ({
-  time: t,
-  temp: data.hourly.temperature_2m[i],
-  humidity: data.hourly.relative_humidity_2m[i]
-}));
+  if (!hourly?.length) return;
+
+  const nextHours = hourly.slice(0, 5);
 
   const html = nextHours.map(h => {
-    const score = calculateComfortScore(h);
+    const comfort = calculateComfort(h);
+    const score = Math.round((comfort?.score || 0) * 10);
     const emoji = getSimpleIcon(score);
 
     return `
@@ -113,7 +107,7 @@ function renderTimeline(hourly) {
         <div class="hour-time">${formatHour(h.time)}</div>
         <div class="hour-icon">${emoji}</div>
         <div class="hour-temp">${Math.round(h.temp)}°</div>
-        <div class="hour-score">${Math.round(score)}</div>
+        <div class="hour-score">${score}</div>
       </div>
     `;
   }).join('');
@@ -128,47 +122,43 @@ function renderTimeline(hourly) {
 
 
 // ============================================================
-// TOMORROW MODULE
+// TOMORROW
 // ============================================================
 
 function renderTomorrow(data) {
+  if (!data.daily?.[1]) return;
+
   const tomorrow = data.daily[1];
 
-  const score = calculateComfortScore({
-    temp: tomorrow.temp.max,
+  const comfort = calculateComfort({
+    temp: tomorrow.temp?.max,
     humidity: tomorrow.humidity,
     wind: tomorrow.wind
   });
 
-  const label = getFeelLabel(score);
+  const score = Math.round((comfort?.score || 0) * 10);
 
   document.getElementById('tomorrow').innerHTML = `
     <div class="tomorrow-card">
       <div class="tomorrow-title">TOMORROW</div>
-      <div class="tomorrow-score">FeelScore ${Math.round(score)}</div>
-      <div class="tomorrow-label">${label}</div>
+      <div class="tomorrow-score">FeelScore ${score}</div>
+      <div class="tomorrow-label">${comfort?.label || ""}</div>
     </div>
   `;
 }
 
 
 // ============================================================
-// HELPERS (LIGHTWEIGHT — NO NEW ENGINE)
+// HELPERS
 // ============================================================
 
-function getFeelLabel(score) {
-  if (score >= 85) return "Feels amazing";
-  if (score >= 75) return "Feels great";
-  if (score >= 65) return "Pretty comfortable";
-  if (score >= 50) return "A bit off";
-  if (score >= 35) return "Uncomfortable";
-  return "Rough outside";
-}
+function getFeelDetail(comfort) {
+  if (!comfort) return "";
 
-function getFeelDetail(current) {
-  if (current.humidity > 70) return "Humid air";
-  if (current.humidity < 40) return "Dry air";
-  if (current.wind > 10) return "Breezy conditions";
+  if (comfort.flags?.veryHumid) return "Humid air";
+  if (comfort.flags?.crisp) return "Crisp air";
+  if (comfort.flags?.windy) return "Breezy conditions";
+
   return "Balanced conditions";
 }
 
@@ -181,12 +171,12 @@ function getFeelAction(score) {
 
 
 // ============================================================
-// TODAY LOGIC (uses your existing hourly data)
+// TODAY LOGIC
 // ============================================================
 
 function getTodayHeadline(hourly) {
-  const now = calculateComfortScore(hourly[0]);
-  const later = calculateComfortScore(hourly[3]);
+  const now = getScore(hourly[0]);
+  const later = getScore(hourly[3]);
 
   if (later > now + 5) return "Improves later today";
   if (later < now - 5) return "Gets less comfortable this afternoon";
@@ -198,7 +188,7 @@ function getKeyWindows(hourly) {
   let worst = { score: Infinity, index: 0 };
 
   hourly.slice(0, 8).forEach((h, i) => {
-    const score = calculateComfortScore(h);
+    const score = getScore(h);
 
     if (score > best.score) best = { score, index: i };
     if (score < worst.score) worst = { score, index: i };
@@ -212,8 +202,13 @@ function getKeyWindows(hourly) {
 
 
 // ============================================================
-// SMALL UTILITIES
+// UTIL
 // ============================================================
+
+function getScore(h) {
+  const c = calculateComfort(h);
+  return Math.round((c?.score || 0) * 10);
+}
 
 function formatHour(ts) {
   const d = new Date(ts);
