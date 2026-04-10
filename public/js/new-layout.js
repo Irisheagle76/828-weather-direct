@@ -4,7 +4,7 @@
 
 // 👉 IMPORT YOUR EXISTING LOGIC (adjust paths as needed)
 import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
-import { calculateComfortScore } from './js/intel/comfort.js';
+import { calculateComfortScore } from '/js/intel/comfort.js';
 
 
 // ============================================================
