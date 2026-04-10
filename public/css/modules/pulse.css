@@ -247,3 +247,107 @@
     max-height: 60vh;      /* mobile stays perfect */
   }
 }
+
+/* ============================================================
+   828 WEATHER — ARTICLE / SUBSTACK CARD (FIXED + ALIGNED)
+   Matches Pulse + Substack visual system
+   ============================================================ */
+
+/* CARD WRAPPER */
+.article-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--module-radius);
+  padding: var(--module-padding);
+  box-shadow: var(--shadow-strong);
+  backdrop-filter: blur(6px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  animation: fadeInUp 0.45s ease forwards;
+}
+
+/* HEADER LABEL (FIXED VISIBILITY) */
+.article-card-header {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-bright);   /* 🔥 THIS FIXES YOUR ISSUE */
+  opacity: 0.65;
+  font-weight: 600;
+}
+
+/* TITLE */
+.article-card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-bright);
+  line-height: 1.25;
+}
+
+/* DATE */
+.article-card-date {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: -4px;
+}
+
+/* THUMBNAIL */
+.article-card-thumb-wrapper {
+  width: 100%;
+  height: 160px;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.article-card-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* EXCERPT */
+.article-card-excerpt {
+  font-size: 0.95rem;
+  color: var(--text-soft);
+  line-height: 1.55;
+}
+
+/* READ MORE (FIXED VISIBILITY) */
+.article-card-readmore {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--accent-blue);   /* 🔥 FIX */
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.25s ease;
+}
+
+.article-card-readmore:hover {
+  color: var(--accent-orange);
+}
+
+/* HOVER LIFT */
+.article-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.38);
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.18);
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    background 0.25s ease,
+    border-color 0.25s ease;
+}
+
+/* MOBILE */
+@media (max-width: 640px) {
+  .article-card-title {
+    font-size: 1.15rem;
+  }
+
+  .article-card-excerpt {
+    font-size: 0.9rem;
+  }
+}
