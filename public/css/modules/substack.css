@@ -163,3 +163,12 @@
     font-size: 0.9rem;
   }
 }
+
+.substack-header-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-bright);   /* 🔥 THIS fixes your visibility */
+  opacity: 0.65;
+  font-weight: 600;
+}
