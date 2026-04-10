@@ -134,21 +134,27 @@ function resolveCurrent(data) {
 // ------------------------------------------------------------
 
 function renderCurrentObs(current) {
-  const el = $("current-obs-inline");
+  const el = $("wx-metrics");
   if (!el) return;
 
   if (!current || current.temp == null) {
-    el.innerHTML = "Observations unavailable";
+    el.innerHTML = `<div class="live-badge-chip">LIVE</div>`;
     return;
   }
 
+  const updatedTime = new Date().toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit"
+  });
+
   el.innerHTML = `
-    <div class="obs-row">
-      <div class="obs-item">🌡️ ${fmt(current.temp)}</div>
-      <div class="obs-item">💧 ${fmt(current.dewPoint)}</div>
-      <div class="obs-item">💦 ${pct(current.humidity)}</div>
-      <div class="obs-item">💨 ${windFmt(current.wind)}</div>
-    </div>
+    <div class="live-badge-chip">LIVE</div>
+    <div class="updated-time">Updated ${updatedTime}</div>
+
+    <div class="live-pill">🌡️ ${fmt(current.temp)}</div>
+    <div class="live-pill">💧 ${fmt(current.dewPoint)}</div>
+    <div class="live-pill">💦 ${pct(current.humidity)}</div>
+    <div class="live-pill">💨 ${windFmt(current.wind)}</div>
   `;
 }
 
