@@ -3,8 +3,8 @@
 // ============================================================
 
 // 👉 IMPORT YOUR EXISTING LOGIC (adjust paths as needed)
-import { getWeatherData } from './api.js';
-import { calculateComfortScore } from './comfort.js';
+import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
+import { calculateComfortScore } from './js/intel/comfort.js';
 
 
 // ============================================================
@@ -31,7 +31,7 @@ export async function renderNewLayout(container) {
   `;
 
   try {
-    const data = await getWeatherData();
+  const data = await getWeatherForUI({ lat, lon });
 
     // --- CURRENT ---
     const current = data.current;
@@ -98,7 +98,11 @@ function renderToday(hourly) {
 // ============================================================
 
 function renderTimeline(hourly) {
-  const nextHours = hourly.slice(0, 5);
+  const nextHours = data.hourly.time.slice(0, 5).map((t, i) => ({
+  time: t,
+  temp: data.hourly.temperature_2m[i],
+  humidity: data.hourly.relative_humidity_2m[i]
+}));
 
   const html = nextHours.map(h => {
     const score = calculateComfortScore(h);
