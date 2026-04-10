@@ -35,34 +35,33 @@
     <!-- =====================================
          HEADER
          ===================================== -->
-    <section class="top-stack">
+  <!-- =====================================
+     HEADER (COMPACT + INLINE LIVE STATUS)
+     ===================================== -->
+<section class="top-stack">
 
-      <div class="header-card">
+  <div class="header-card">
 
-        <div class="header-title">828 Weather Direct</div>
-        <div class="header-sub">Hyper-local Asheville forecast</div>
+    <!-- BRAND -->
+    <div class="header-title">828 Weather Direct</div>
+    <div class="header-sub">Hyper-local Asheville forecast</div>
 
-        <div class="header-divider"></div>
+    <!-- LIVE + METRICS (UNIFIED ROW) -->
+    <div class="live-row" id="wx-metrics">
 
-        <div class="live-module">
-          <div class="live-title-row">
-            <div class="live-title">Asheville Live Conditions</div>
-            <div id="updated-time" class="updated-time"></div>
-          </div>
+      <!-- LIVE STATUS CHIP -->
+      <div class="live-badge-chip">LIVE</div>
 
-          <div class="live-row" id="wx-metrics"></div>
-        </div>
+      <!-- OPTIONAL TIMESTAMP -->
+      <div id="updated-time" class="updated-time"></div>
 
-      </div>
+      <!-- JS injects metric chips AFTER these -->
 
-    </section>
+    </div>
 
-    <!-- CURRENT OBS -->
-    <section id="current-obs-section">
-      <div id="current-obs-wrapper">
-        <div id="current-obs-inline"></div>
-      </div>
-    </section>
+  </div>
+
+</section>
 
     <!-- SYNTH HEALTH -->
     <section id="synth-health" class="synth-health-section"></section>

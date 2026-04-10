@@ -670,13 +670,13 @@ body {
 }
 
 /* ============================================================
-   NEW HEADER SYSTEM — 828 WEATHER DIRECT
+   HEADER SYSTEM — 828 WEATHER DIRECT (COMPACT + INLINE LIVE)
    ============================================================ */
 
 /* CONTAINER */
 .top-stack {
   max-width: 680px;
-  margin: 0 auto 20px auto;
+  margin: 0 auto 16px auto;
   padding: 0 16px;
 }
 
@@ -685,13 +685,13 @@ body {
   background: rgba(255,255,255,0.045);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 16px;
-  padding: 18px;
+  padding: 16px 16px 12px;  /* 🔥 tighter */
   backdrop-filter: blur(6px);
 }
 
 /* TITLE */
 .header-title {
-  font-size: 28px;
+  font-size: 26px;          /* slightly tighter */
   font-weight: 700;
   color: var(--828-blue);
   margin: 0;
@@ -699,63 +699,72 @@ body {
 
 /* SUBTITLE */
 .header-sub {
-  font-size: 14px;
+  font-size: 13px;
   color: rgba(255,255,255,0.65);
-  margin-top: 4px;
+  margin-top: 2px;          /* tighter spacing */
 }
 
-/* DIVIDER */
-.header-divider {
-  height: 1px;
-  background: rgba(255,255,255,0.06);
-  margin: 14px 0;
-}
+/* ============================================================
+   LIVE ROW (INLINE STATUS + METRICS)
+   ============================================================ */
 
-/* LIVE MODULE */
-.live-module {
+.live-row {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-/* TITLE ROW (label + time) */
-.live-title-row {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;         /* replaces divider */
 }
 
-/* LABEL */
-.live-title {
-  font-size: 12px;
+/* 🔥 LIVE CHIP */
+.live-badge-chip {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  color: rgba(255,255,255,0.55);
+  color: var(--828-orange);
+
+  padding: 6px 10px;
+  border-radius: 999px;
+
+  background: rgba(255,140,0,0.12);
+  border: 1px solid rgba(255,140,0,0.35);
 }
 
 /* UPDATED TIME */
 .updated-time {
-  font-size: 12px;
-  color: var(--828-orange);
-  font-weight: 500;
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.55);
 }
 
-/* METRICS ROW */
-.live-row {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
+/* ============================================================
+   METRIC PILLS
+   ============================================================ */
 
-/* METRIC PILLS */
 .live-pill {
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.08);
-  padding: 8px 12px;
+  padding: 7px 11px;       /* slightly tighter */
   border-radius: 10px;
   font-size: 14px;
   color: white;
   display: flex;
   align-items: center;
   gap: 6px;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+/* subtle hover polish */
+.live-pill:hover {
+  background: rgba(255,255,255,0.10);
+  transform: translateY(-1px);
+}
+
+.live-badge-chip.stale {
+  color: #bbb;
+  border-color: rgba(255,255,255,0.2);
+}
+
+.live-badge-chip.alert {
+  color: #ff4d4d;
 }
