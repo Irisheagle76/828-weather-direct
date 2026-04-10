@@ -941,6 +941,8 @@
 
 function updateTimestamp() {
   const el = document.getElementById("updated-time");
+  if (!el) return; // ✅ prevents crash
+
   const now = new Date();
 
   const formatted = now.toLocaleTimeString("en-US", {
@@ -950,9 +952,6 @@ function updateTimestamp() {
 
   el.textContent = `Updated ${formatted}`;
 }
-
-updateTimestamp();
-setInterval(updateTimestamp, 60000);
 
   function updatePreview() {
     const html = editor.innerHTML.trim();
