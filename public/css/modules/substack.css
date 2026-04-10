@@ -87,14 +87,16 @@
 .substack-readmore {
   margin-top: 0.5rem;
   font-size: 0.9rem;
-  color: var(--accent-blue);
+  color: var(--text-bright);   /* 🔥 FIX */
   font-weight: 600;
   text-decoration: none;
-  transition: color 0.25s ease;
+  opacity: 0.85;
+  transition: color 0.25s ease, opacity 0.25s ease;
 }
 
 .substack-readmore:hover {
   color: var(--accent-orange);
+  opacity: 1;
 }
 
 /* ------------------------------------------------------------
@@ -165,10 +167,13 @@
 }
 
 .substack-header-label {
-  font-size: 0.75rem;
+  background: rgba(255,255,255,0.04);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.95rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-bright);   /* 🔥 THIS fixes your visibility */
-  opacity: 0.65;
-  font-weight: 600;
+  opacity: 0.9;
+  font-weight: 700;
 }
