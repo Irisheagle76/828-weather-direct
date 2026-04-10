@@ -20,7 +20,7 @@ function extractCleanText(html) {
 // MAIN RENDERER
 // ------------------------------------------------------------
 export async function renderSubstackArticle() {
-  const container = document.getElementById("weather-articles-module");
+  const container = document.getElementById("substack-content");
   if (!container) return;
 
   // ------------------------------------------------------------

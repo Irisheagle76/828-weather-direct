@@ -1,5 +1,5 @@
 /* ============================================================
-   828 WEATHER — SUBSTACK MODULE
+   828 WEATHER — SUBSTACK MODULE (ALIGNED WITH PULSE)
    Clean editorial card for embedded articles
    ============================================================ */
 
@@ -21,36 +21,39 @@
 }
 
 /* ------------------------------------------------------------
-   HEADER
+   HEADER (MATCHES PULSE STRUCTURE)
    ------------------------------------------------------------ */
 
 .substack-header {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 6px;
 }
 
-.substack-icon {
-  width: 22px;
-  height: 22px;
-  opacity: 0.85;
-}
-
-.substack-title {
-  font-size: 1.25rem;
+.substack-module-title {
+  font-size: 1.15rem;              /* 🔥 matches Pulse scale */
   font-weight: 700;
   color: var(--text-bright);
-  line-height: 1.25;
+  line-height: 1.2;
+}
+
+.substack-module-sub {
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
 }
 
 /* ------------------------------------------------------------
-   TIMESTAMP
+   ARTICLE BODY
    ------------------------------------------------------------ */
 
-.substack-date {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  margin-top: -4px;
+.substack-article {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
 }
 
 /* ------------------------------------------------------------
@@ -62,11 +65,54 @@
   height: 160px;
   overflow: hidden;
   border-radius: 10px;
+  margin-bottom: 0.75rem;
 }
+
 .substack-thumb {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
+}
+
+/* ------------------------------------------------------------
+   TITLE ROW
+   ------------------------------------------------------------ */
+
+.substack-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.substack-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-bright);
+  line-height: 1.25;
+}
+
+/* ------------------------------------------------------------
+   BADGE
+   ------------------------------------------------------------ */
+
+.substack-new-badge {
+  background: var(--accent);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------
+   DATE
+   ------------------------------------------------------------ */
+
+.substack-date {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: -4px;
 }
 
 /* ------------------------------------------------------------
@@ -81,26 +127,29 @@
 }
 
 /* ------------------------------------------------------------
-   READ MORE LINK
+   CTA (MATCHES PULSE BUTTON FEEL)
    ------------------------------------------------------------ */
 
 .substack-readmore {
-  margin-top: 0.5rem;
+  margin-top: 0.6rem;
   font-size: 0.9rem;
-  color: var(--text-bright);   /* 🔥 FIX */
+  color: var(--text-bright);
   font-weight: 600;
-  text-decoration: none;
-  opacity: 0.85;
-  transition: color 0.25s ease, opacity 0.25s ease;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.14);
+  display: inline-block;
+  transition: all 0.25s ease;
 }
 
 .substack-readmore:hover {
-  color: var(--accent-orange);
-  opacity: 1;
+  background: rgba(255,255,255,0.12);
+  transform: translateY(-1px);
 }
 
 /* ------------------------------------------------------------
-   HOVER LIFT (entire card)
+   HOVER LIFT (CARD)
    ------------------------------------------------------------ */
 
 .substack-card:hover {
@@ -115,48 +164,15 @@
     border-color 0.25s ease;
 }
 
-/* SUBSTACK MODULE — FIX THUMBNAIL SIZE */
-.substack-thumb-wrapper {
-  width: 100%;
-  height: 160px;          /* Reduced from full height */
-  overflow: hidden;
-  border-radius: 10px;
-  margin-bottom: 0.75rem;
-}
-
-.substack-thumb {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;      /* Ensures fallback image looks like a real thumbnail */
-  display: block;
-}
-
-.substack-article {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-.substack-title-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.substack-new-badge {
-  background: var(--accent);
-  color: #fff;
-  padding: 2px 6px;
-  border-radius: 6px;
-  font-size: 0.7rem;
-  font-weight: 600;
-}
-
 /* ------------------------------------------------------------
    MOBILE TUNING
    ------------------------------------------------------------ */
 
 @media (max-width: 640px) {
+  .substack-module-title {
+    font-size: 1.05rem;
+  }
+
   .substack-title {
     font-size: 1.15rem;
   }
@@ -164,16 +180,4 @@
   .substack-excerpt {
     font-size: 0.9rem;
   }
-}
-
-.substack-header-label {
-  background: rgba(255,255,255,0.04);
-  padding: 6px 10px;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-bright);   /* 🔥 THIS fixes your visibility */
-  opacity: 0.9;
-  font-weight: 700;
 }

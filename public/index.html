@@ -33,30 +33,24 @@
   <div class="app-shell">
 
     <!-- =====================================
-         NEW HEADER SYSTEM (CLEAN + CONTAINED)
+         HEADER
          ===================================== -->
     <section class="top-stack">
 
       <div class="header-card">
 
-        <!-- BRAND -->
         <div class="header-title">828 Weather Direct</div>
         <div class="header-sub">Hyper-local Asheville forecast</div>
 
         <div class="header-divider"></div>
 
-        <!-- LIVE CONDITIONS (MERGED + FIXED) -->
         <div class="live-module">
-
           <div class="live-title-row">
             <div class="live-title">Asheville Live Conditions</div>
             <div id="updated-time" class="updated-time"></div>
           </div>
 
-          <div class="live-row" id="wx-metrics">
-            <!-- JS injects your metrics here -->
-          </div>
-
+          <div class="live-row" id="wx-metrics"></div>
         </div>
 
       </div>
@@ -84,15 +78,12 @@
 
       <!-- COMFORT -->
       <div id="comfort-row">
-
         <div class="comfort-left-col" data-accordion="comfort">
           <div id="comfort-now-container" data-accordion-item></div>
         </div>
-
         <div class="comfort-right-col">
           <div id="future-comfort-container"></div>
         </div>
-
       </div>
 
       <!-- HUMAN ACTION -->
@@ -100,7 +91,6 @@
 
         <div class="now-col">
           <div class="today-module action-module" id="ha-today-card" data-accordion-item>
-
             <div class="action-header" data-accordion-trigger>
               <span id="ha-today-header">Today’s Outlook</span>
               <span id="ha-today-goldilocks" class="gold-badge" style="display:none;">
@@ -117,13 +107,11 @@
               id="ha-today-expanded"
               data-accordion-content>
             </div>
-
           </div>
         </div>
 
         <div class="now-col">
           <div class="tomorrow-module action-module" id="ha-tomorrow-card" data-accordion-item>
-
             <div class="action-header" data-accordion-trigger>
               <span id="ha-tomorrow-header">Tomorrow’s Outlook</span>
               <span id="ha-tomorrow-goldilocks" class="gold-badge" style="display:none;">
@@ -140,7 +128,6 @@
               id="ha-tomorrow-expanded"
               data-accordion-content>
             </div>
-
           </div>
         </div>
 
@@ -165,29 +152,30 @@
 
       </section>
 
-      <!-- SUBSTACK -->
-      <section id="weather-articles-module" class="substack-card"></section>
+      <!-- SUBSTACK (FIXED STRUCTURE) -->
+      <section class="substack-card">
+
+        <div class="substack-header">
+          <div class="substack-module-title">828 Weather Update</div>
+          <div class="substack-module-sub">Latest from Substack</div>
+        </div>
+
+        <div id="weather-articles-module"></div>
+
+      </section>
 
     </main>
 
     <!-- FOOTER -->
-    <footer class="footer-note" id="wu-station-footer">
+    <footer class="footer-note">
       © 2026 Timothy Ballisty • 828 Weather<br>
       Independent Asheville weather analysis<br>
       Not official NWS guidance
     </footer>
 
-    <div class="error-text" id="wu-error" style="display:none;"></div>
+    <div id="toast" class="toast"></div>
 
   </div>
-
-  <!-- DEBUG -->
-  <div id="narrative-debug" class="debug-panel" style="display:none;">
-    <h3>Narrative Debug</h3>
-    <pre id="debug-content"></pre>
-  </div>
-
-  <div id="toast" class="toast"></div>
 
   <!-- MODE SCRIPT -->
   <script>
