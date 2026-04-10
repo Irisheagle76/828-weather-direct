@@ -289,17 +289,39 @@ function aggregate(evals) {
 }
 
 function fallback(label) {
+  const signals = {
+    temp: 70,
+    dewPoint: 55,
+    humidity: 50,
+    windSpeed: 5,
+    cloudCover: 50
+  };
+
+  const voice = buildHumanVoice(signals, "stable");
+
   return {
     label,
     score: 50,
     headline: "Conditions are steady",
-    narrative: "",
+    narrative: voice.summary,
     bullets: [],
     dayparts: {},
     bestWindow: null,
-    worstWindow: null
+    worstWindow: null,
+
+    // required for UI safety
+    snapshot: signals,
+    signals,
+    summary: voice.summary,
+    detail: voice.detail,
+    feelsLike: voice.feelsLike,
+
+    dominantFactor: "stable",
+    confidence: 0.2,
+    secondaryFactors: []
   };
 }
+
 
 // ---------------- UI HELPERS ----------------
 function pickEmoji(score) {
