@@ -3,7 +3,7 @@
 // Translates fetchAllIntel → UI-friendly format
 // ============================================================
 
-import { fetchAllIntel } from '/js/api.js';
+import { fetchAllIntel } from '/js/weather-render.js';
 
 
 // MAIN ENTRY (used by preview)
