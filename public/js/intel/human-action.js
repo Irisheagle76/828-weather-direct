@@ -176,11 +176,11 @@ function buildBullets({ best, worst, score, snapshot, label, context }) {
 function mapComfort(hours) {
   return hours.map(h => {
     const c = calculateComfort({
-      temp: h.temperatureF,
-      dewpointF: h.dewpointF,
-      windSpeed: h.wind_speed,
-      obsTimeLocal: h.timestamp
-    });
+  temp: h.temp ?? h.temperatureF,
+  dewPoint: h.dewPoint ?? h.dewpointF,
+  windSpeed: h.wind ?? h.wind_speed,
+  obsTimeLocal: h.timestamp
+});
 
     return {
       hour: new Date(h.timestamp).getHours(),
