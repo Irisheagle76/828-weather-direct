@@ -1,10 +1,11 @@
 // ============================================================
-// NEW LAYOUT — AVL WEATHER PREVIEW (CLEAN + WIRED)
+// NEW LAYOUT — AVL WEATHER PREVIEW (SYNTHESIS WIRED)
 // ============================================================
 
 import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
 import { calculateComfort } from '/js/intel/comfort.js';
-
+import { assembleWithVoice } from '/js/synth/assembleWithVoice.js';
+import { buildHumanActionIntel } from '/js/intel/human-action.js';
 
 // ============================================================
 // MAIN RENDER FUNCTION
@@ -42,32 +43,70 @@ export async function renderNewLayout(container) {
 
 
 // ============================================================
-// FEELSCORE (USES REAL ENGINE)
+// FEELSCORE — NOW POWERED BY SYNTHESIZER
 // ============================================================
 
 function renderFeelScore(current) {
+  if (!current) return;
+
+  // 1. Comfort engine
   const comfort = calculateComfort(current);
-
   const score = Math.round((comfort?.score || 0) * 10);
-  const label = comfort?.label || "Unknown";
 
-  const detail = getFeelDetail(comfort);
-  const action = getFeelAction(score);
+  // 2. Build intel (minimal but expandable)
+  const intel = {
+    signals: {
+      temp: current.temp,
+      dewPoint: current.dewPoint ?? current.dew_point ?? null,
+      windSpeed: current.wind ?? current.windSpeed ?? 0,
+      cloudCover: current.cloudCover ?? null
+    },
+    dominantFactor: detectDominantFactor(current),
+    confidence: 0.7,
+    snapshot: current
+  };
 
+  // 3. Category bridge
+  const category = mapScoreToCategory(score);
+
+  // 4. Synthesizer
+  const narrative = assembleWithVoice(
+    intel,
+    "today",
+    category,
+    comfort?.goldilocks
+  );
+
+  // 5. Headline override (Goldilocks)
+  const headline = comfort?.goldilocks
+    ? "Chef’s kiss outside"
+    : narrative.headline;
+
+  // 6. Clean bullets (max 2)
+  const bullets = (narrative.bullets || []).slice(0, 2);
+
+  // 7. Render
   document.getElementById('feelscore').innerHTML = `
     <div class="feelscore-card">
-      <div class="fs-title">FEELSCORE</div>
-      <div class="fs-score">${score}</div>
-      <div class="fs-label">${label}</div>
-      <div class="fs-detail">${detail}</div>
-      <div class="fs-action">${action}</div>
+
+      <div class="fs-header">
+        <div class="fs-title">FEELSCORE</div>
+        <div class="fs-score">${score}</div>
+      </div>
+
+      <div class="fs-headline">${headline}</div>
+
+      <div class="fs-bullets">
+        ${bullets.map(b => `<div class="fs-bullet">• ${b}</div>`).join('')}
+      </div>
+
     </div>
   `;
 }
 
 
 // ============================================================
-// TODAY MODULE
+// TODAY MODULE (unchanged for now)
 // ============================================================
 
 function renderToday(hourly) {
@@ -89,7 +128,7 @@ function renderToday(hourly) {
 
 
 // ============================================================
-// TIMELINE
+// TIMELINE (unchanged)
 // ============================================================
 
 function renderTimeline(hourly) {
@@ -122,7 +161,7 @@ function renderTimeline(hourly) {
 
 
 // ============================================================
-// TOMORROW
+// TOMORROW (unchanged)
 // ============================================================
 
 function renderTomorrow(data) {
@@ -149,29 +188,33 @@ function renderTomorrow(data) {
 
 
 // ============================================================
-// HELPERS
+// HELPERS (UPDATED)
 // ============================================================
 
-function getFeelDetail(comfort) {
-  if (!comfort) return "";
-
-  if (comfort.flags?.veryHumid) return "Humid air";
-  if (comfort.flags?.crisp) return "Crisp air";
-  if (comfort.flags?.windy) return "Breezy conditions";
-
-  return "Balanced conditions";
+function mapScoreToCategory(score) {
+  if (score >= 88) return "veryComfortable";
+  if (score >= 70) return "comfortable";
+  if (score >= 55) return "slightlyUncomfortable";
+  if (score >= 40) return "uncomfortable";
+  return "harsh";
 }
 
-function getFeelAction(score) {
-  if (score >= 80) return "Great time to be outside";
-  if (score >= 65) return "Good for most activities";
-  if (score >= 50) return "Okay in short bursts";
-  return "Better to limit time outside";
+function detectDominantFactor(current) {
+  const dp = current.dewPoint ?? current.dew_point ?? 55;
+  const temp = current.temp ?? 70;
+  const wind = current.wind ?? current.windSpeed ?? 0;
+
+  if (dp >= 68) return "muggy";
+  if (temp >= 88) return "heat";
+  if (temp <= 45) return "cold";
+  if (wind >= 15) return "wind";
+
+  return "sun";
 }
 
 
 // ============================================================
-// TODAY LOGIC
+// EXISTING HELPERS (unchanged)
 // ============================================================
 
 function getTodayHeadline(hourly) {
@@ -187,11 +230,11 @@ function getKeyWindows(hourly) {
   let best = { score: -Infinity, index: 0 };
   let worst = { score: Infinity, index: 0 };
 
-  hourly.slice(0, 8).forEach((h, i) => {
+  hourly.slice(2, 10).forEach((h, i) => { // 👈 skip overnight noise
     const score = getScore(h);
 
-    if (score > best.score) best = { score, index: i };
-    if (score < worst.score) worst = { score, index: i };
+    if (score > best.score) best = { score, index: i + 2 };
+    if (score < worst.score) worst = { score, index: i + 2 };
   });
 
   return {
@@ -199,11 +242,6 @@ function getKeyWindows(hourly) {
     worstWindow: formatHour(hourly[worst.index].time)
   };
 }
-
-
-// ============================================================
-// UTIL
-// ============================================================
 
 function getScore(h) {
   const c = calculateComfort(h);
