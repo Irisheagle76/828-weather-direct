@@ -12,28 +12,64 @@ import { calculateComfort } from "./comfort.js";
 
 export function buildHumanActionIntel(raw) {
   const hourly = normalizeOpenMeteo(raw?.hourly);
-  if (!hourly.length) return fallbackAll();
+  if (!hourly?.length) return fallbackAll();
 
   const now = Date.now();
 
+  // ----------------------------------------------------------
+  // SAFE TIME ACCESSOR
+  // ----------------------------------------------------------
+  const getTs = (h) => h.timestamp ?? h.time ?? null;
+
+  // ----------------------------------------------------------
+  // SPLIT INTO TODAY / TOMORROW
+  // ----------------------------------------------------------
   const todayHours = hourly.filter(h => {
-    const diff = (h.timestamp - now) / 36e5;
+    const ts = getTs(h);
+    if (!ts) return false;
+
+    const diff = (ts - now) / 36e5;
     return diff >= 0 && diff < 24;
   });
 
   const tomorrowHours = hourly.filter(h => {
-    const diff = (h.timestamp - now) / 36e5;
+    const ts = getTs(h);
+    if (!ts) return false;
+
+    const diff = (ts - now) / 36e5;
     return diff >= 24 && diff < 48;
   });
 
+  // ----------------------------------------------------------
+  // FALLBACK GUARD (critical)
+  // ----------------------------------------------------------
+  if (!todayHours.length && !tomorrowHours.length) {
+    console.warn("⚠️ No valid hourly timestamps found");
+    return fallbackAll();
+  }
+
+  // ----------------------------------------------------------
+  // COMFORT MAPPING
+  // ----------------------------------------------------------
   const todayComfort = mapComfort(todayHours);
   const tomorrowComfort = mapComfort(tomorrowHours);
 
+  // ----------------------------------------------------------
+  // PATTERN DETECTION
+  // ----------------------------------------------------------
   const similar = areSimilarDays(todayComfort, tomorrowComfort);
 
+  // ----------------------------------------------------------
+  // OUTPUT
+  // ----------------------------------------------------------
   return {
-    today: buildPeriod(todayHours, todayComfort, "today", { similar }),
-    tomorrow: buildPeriod(tomorrowHours, tomorrowComfort, "tomorrow", { similar })
+    today: todayHours.length
+      ? buildPeriod(todayHours, todayComfort, "today", { similar })
+      : fallback("today"),
+
+    tomorrow: tomorrowHours.length
+      ? buildPeriod(tomorrowHours, tomorrowComfort, "tomorrow", { similar })
+      : fallback("tomorrow")
   };
 }
 
