@@ -4,7 +4,7 @@
 
 import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
 import { calculateComfort } from '/js/intel/comfort.js';
-import { assembleWithVoice } from '/js/synth/assembleWithVoice.js';
+import { assembleWithVoice } from '/js/intel/synthesizer/assembleWithVoice.js';
 import { buildHumanActionIntel } from '/js/intel/human-action.js';
 
 
