@@ -238,15 +238,25 @@ function avg(arr) {
 }
 
 function blend(hours) {
-  const avg = key => {
-    const vals = hours.map(h => h[key]).filter(v => typeof v === "number");
-    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+  const avg = (keys) => {
+    const vals = hours
+      .map(h => {
+        for (const k of keys) {
+          if (typeof h[k] === "number") return h[k];
+        }
+        return null;
+      })
+      .filter(v => v != null);
+
+    return vals.length
+      ? vals.reduce((a, b) => a + b, 0) / vals.length
+      : null;
   };
 
   return {
-    temp: avg("temperatureF"),
-    dewPoint: avg("dewpointF"),
-    windSpeed: avg("wind_speed")
+    temp: avg(["temperatureF", "temp"]),
+    dewPoint: avg(["dewpointF", "dewPoint"]),
+    windSpeed: avg(["wind_speed", "wind"])
   };
 }
 

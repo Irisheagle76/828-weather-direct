@@ -155,7 +155,6 @@ function buildBulletsFS({ best, worst, score, snapshot, label, context }) {
   return bullets.slice(0, 3);
 }
 
-
 // ============================================================
 // HELPERS
 // ============================================================
@@ -165,15 +164,25 @@ function avg(arr) {
 }
 
 function blend(hours) {
-  const avg = key => {
-    const vals = hours.map(h => h[key]).filter(v => typeof v === "number");
-    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+  const avgVal = (keys) => {
+    const vals = hours
+      .map(h => {
+        for (const k of keys) {
+          if (typeof h[k] === "number") return h[k];
+        }
+        return null;
+      })
+      .filter(v => v != null);
+
+    return vals.length
+      ? vals.reduce((a, b) => a + b, 0) / vals.length
+      : null;
   };
 
   return {
-    temp: avg("temperatureF"),
-    dewPoint: avg("dewpointF"),
-    windSpeed: avg("wind_speed")
+    temp: avgVal(["temperatureF", "temp"]),
+    dewPoint: avgVal(["dewpointF", "dewPoint"]),
+    windSpeed: avgVal(["wind_speed", "wind"])
   };
 }
 
@@ -192,7 +201,9 @@ function timeWord(hour) {
 
 function areSimilarDays(a, b) {
   if (!a.length || !b.length) return false;
+
   const avg = arr => arr.reduce((x, h) => x + h.score, 0) / arr.length;
+
   return Math.abs(avg(a) - avg(b)) <= 5;
 }
 
