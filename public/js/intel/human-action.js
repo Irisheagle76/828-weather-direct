@@ -137,31 +137,47 @@ function buildPeriod(hours, hourlyComfort, label, context) {
 // ============================================================
 
 function buildHeadline(score, label, snapshot, context) {
-  const dp = snapshot?.dewPoint ?? 55;
+  const dp = snapshot?.dewPoint;
 
-  if (score >= 85) {
-    if (label === "tomorrow" && context.similar) {
+  // ----------------------------------------------------------
+  // HIGH COMFORT (primary path)
+  // ----------------------------------------------------------
+  if (score >= 78) {
+
+    // Pattern continuity (tomorrow)
+    if (label === "tomorrow" && context?.similar) {
       return "More of the same — comfortable from start to finish";
     }
 
-    if (dp < 55) {
+    // Dry + comfortable (best-case Asheville pattern)
+    if (dp != null && dp < 55) {
       return label === "today"
         ? "Comfortable all day with crisp, dry air"
         : "Another crisp and comfortable day ahead";
     }
 
+    // Otherwise still good, just not dry
     return label === "today"
       ? "Comfortable all day with easy conditions"
       : "Another comfortable day ahead";
   }
 
-  if (score >= 80) return "Comfortable most of the day with minor variation";
-  if (score >= 70) return "Mostly comfortable with a few dips";
-  if (score >= 60) return "Mixed comfort through the day";
+  // ----------------------------------------------------------
+  // MID RANGE
+  // ----------------------------------------------------------
+  if (score >= 70) {
+    return "Mostly comfortable with a few dips";
+  }
 
+  if (score >= 60) {
+    return "Mixed comfort through the day";
+  }
+
+  // ----------------------------------------------------------
+  // LOW
+  // ----------------------------------------------------------
   return "Conditions feel more challenging overall";
 }
-
 
 // ============================================================
 // BULLETS (DIFFERENTIATED)

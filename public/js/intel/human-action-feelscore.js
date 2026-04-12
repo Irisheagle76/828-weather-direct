@@ -159,6 +159,10 @@ function buildBulletsFS({ best, worst, score, snapshot, label, context }) {
 // HELPERS
 // ============================================================
 
+// ============================================================
+// HELPERS
+// ============================================================
+
 function avg(arr) {
   return arr.reduce((a, h) => a + h.score, 0) / arr.length;
 }
