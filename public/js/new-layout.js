@@ -5,7 +5,7 @@
 import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
 import { calculateComfort } from '/js/intel/comfort.js';
 import { assembleWithVoice } from '/js/intel/synthesizer/assembleWithVoice.js';
-import { buildHumanActionIntel } from '/js/intel/human-action.js';
+import { buildHumanActionIntelFS } from '/js/intel/human-action-feelscore.js';
 
 
 // ============================================================
@@ -32,7 +32,7 @@ export async function renderNewLayout(container) {
     const hourly = data.hourly;
 
     // 🔥 Core intelligence layer
-    const human = buildHumanActionIntel(data);
+   const human = buildHumanActionIntelFS(data);
 
     renderFeelScore(current);
     renderToday(human.today);
