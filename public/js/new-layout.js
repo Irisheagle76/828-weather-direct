@@ -1,5 +1,5 @@
 // ============================================================
-// NEW LAYOUT — AVL WEATHER PREVIEW (SYNTHESIS WIRED)
+// NEW LAYOUT — AVL WEATHER PREVIEW (FULLY WIRED)
 // ============================================================
 
 import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
@@ -7,8 +7,9 @@ import { calculateComfort } from '/js/intel/comfort.js';
 import { assembleWithVoice } from '/js/synth/assembleWithVoice.js';
 import { buildHumanActionIntel } from '/js/intel/human-action.js';
 
+
 // ============================================================
-// MAIN RENDER FUNCTION
+// MAIN RENDER
 // ============================================================
 
 export async function renderNewLayout(container) {
@@ -30,10 +31,13 @@ export async function renderNewLayout(container) {
     const current = data.current;
     const hourly = data.hourly;
 
+    // 🔥 NEW: build intelligence layer
+    const human = buildHumanActionIntel(data);
+
     renderFeelScore(current);
-    renderToday(hourly);
+    renderToday(human.today);
     renderTimeline(hourly);
-    renderTomorrow(data);
+    renderTomorrow(human.tomorrow);
 
   } catch (err) {
     console.error('Preview load error:', err);
@@ -43,33 +47,28 @@ export async function renderNewLayout(container) {
 
 
 // ============================================================
-// FEELSCORE — NOW POWERED BY SYNTHESIZER
+// FEELSCORE (UNCHANGED — ALREADY GOOD)
 // ============================================================
 
 function renderFeelScore(current) {
   if (!current) return;
 
-  // 1. Comfort engine
   const comfort = calculateComfort(current);
   const score = Math.round((comfort?.score || 0) * 10);
 
-  // 2. Build intel (minimal but expandable)
   const intel = {
     signals: {
       temp: current.temp,
       dewPoint: current.dewPoint ?? current.dew_point ?? null,
-      windSpeed: current.wind ?? current.windSpeed ?? 0,
-      cloudCover: current.cloudCover ?? null
+      windSpeed: current.wind ?? current.windSpeed ?? 0
     },
     dominantFactor: detectDominantFactor(current),
     confidence: 0.7,
     snapshot: current
   };
 
-  // 3. Category bridge
   const category = mapScoreToCategory(score);
 
-  // 4. Synthesizer
   const narrative = assembleWithVoice(
     intel,
     "today",
@@ -77,15 +76,12 @@ function renderFeelScore(current) {
     comfort?.goldilocks
   );
 
-  // 5. Headline override (Goldilocks)
   const headline = comfort?.goldilocks
     ? "Chef’s kiss outside"
     : narrative.headline;
 
-  // 6. Clean bullets (max 2)
   const bullets = (narrative.bullets || []).slice(0, 2);
 
-  // 7. Render
   document.getElementById('feelscore').innerHTML = `
     <div class="feelscore-card">
 
@@ -106,29 +102,69 @@ function renderFeelScore(current) {
 
 
 // ============================================================
-// TODAY MODULE (unchanged for now)
+// TODAY — FULLY REWRITTEN
 // ============================================================
 
-function renderToday(hourly) {
-  if (!hourly?.length) return;
-
-  const headline = getTodayHeadline(hourly);
-  const { bestWindow, worstWindow } = getKeyWindows(hourly);
+function renderToday(today) {
+  if (!today) return;
 
   document.getElementById('today').innerHTML = `
     <div class="today-card">
-      <div class="today-headline">${headline}</div>
-      <div class="today-points">
-        <div>Worst: ${worstWindow}</div>
-        <div>Best: ${bestWindow}</div>
+
+      <div class="today-header">
+        <div class="today-title">TODAY</div>
+        <div class="today-emoji">${today.emoji || ""}</div>
       </div>
+
+      <div class="today-headline">
+        ${today.headline}
+      </div>
+
+      <div class="today-bullets">
+        ${(today.bullets || [])
+          .slice(0, 3)
+          .map(b => `<div class="today-bullet">• ${b}</div>`)
+          .join('')}
+      </div>
+
     </div>
   `;
 }
 
 
 // ============================================================
-// TIMELINE (unchanged)
+// TOMORROW — FULLY REWRITTEN
+// ============================================================
+
+function renderTomorrow(tomorrow) {
+  if (!tomorrow) return;
+
+  document.getElementById('tomorrow').innerHTML = `
+    <div class="tomorrow-card">
+
+      <div class="tomorrow-header">
+        <div class="tomorrow-title">TOMORROW</div>
+        <div class="tomorrow-emoji">${tomorrow.emoji || ""}</div>
+      </div>
+
+      <div class="tomorrow-headline">
+        ${tomorrow.headline}
+      </div>
+
+      <div class="tomorrow-bullets">
+        ${(tomorrow.bullets || [])
+          .slice(0, 3)
+          .map(b => `<div class="tomorrow-bullet">• ${b}</div>`)
+          .join('')}
+      </div>
+
+    </div>
+  `;
+}
+
+
+// ============================================================
+// TIMELINE (UNCHANGED FOR NOW)
 // ============================================================
 
 function renderTimeline(hourly) {
@@ -161,34 +197,7 @@ function renderTimeline(hourly) {
 
 
 // ============================================================
-// TOMORROW (unchanged)
-// ============================================================
-
-function renderTomorrow(data) {
-  if (!data.daily?.[1]) return;
-
-  const tomorrow = data.daily[1];
-
-  const comfort = calculateComfort({
-    temp: tomorrow.temp?.max,
-    humidity: tomorrow.humidity,
-    wind: tomorrow.wind
-  });
-
-  const score = Math.round((comfort?.score || 0) * 10);
-
-  document.getElementById('tomorrow').innerHTML = `
-    <div class="tomorrow-card">
-      <div class="tomorrow-title">TOMORROW</div>
-      <div class="tomorrow-score">FeelScore ${score}</div>
-      <div class="tomorrow-label">${comfort?.label || ""}</div>
-    </div>
-  `;
-}
-
-
-// ============================================================
-// HELPERS (UPDATED)
+// HELPERS
 // ============================================================
 
 function mapScoreToCategory(score) {
@@ -210,42 +219,6 @@ function detectDominantFactor(current) {
   if (wind >= 15) return "wind";
 
   return "sun";
-}
-
-
-// ============================================================
-// EXISTING HELPERS (unchanged)
-// ============================================================
-
-function getTodayHeadline(hourly) {
-  const now = getScore(hourly[0]);
-  const later = getScore(hourly[3]);
-
-  if (later > now + 5) return "Improves later today";
-  if (later < now - 5) return "Gets less comfortable this afternoon";
-  return "Stays fairly steady today";
-}
-
-function getKeyWindows(hourly) {
-  let best = { score: -Infinity, index: 0 };
-  let worst = { score: Infinity, index: 0 };
-
-  hourly.slice(2, 10).forEach((h, i) => { // 👈 skip overnight noise
-    const score = getScore(h);
-
-    if (score > best.score) best = { score, index: i + 2 };
-    if (score < worst.score) worst = { score, index: i + 2 };
-  });
-
-  return {
-    bestWindow: formatHour(hourly[best.index].time),
-    worstWindow: formatHour(hourly[worst.index].time)
-  };
-}
-
-function getScore(h) {
-  const c = calculateComfort(h);
-  return Math.round((c?.score || 0) * 10);
 }
 
 function formatHour(ts) {
