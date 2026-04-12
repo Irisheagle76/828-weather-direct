@@ -1,14 +1,13 @@
 // ============================================================
-// HUMAN ACTION + NARRATIVE ENGINE — v3 (UNIFIED VOICE)
-// - Today + Tomorrow builder
-// - Keeps scoring + windows
-// - Upgrades language to human narrative
+// HUMAN ACTION ENGINE — v3 (DOMINANT EXPERIENCE MODEL)
+// - Fixes scoring mismatch
+// - Human language (not robotic)
+// - Today vs Tomorrow differentiation
 // - UI-ready output
 // ============================================================
 
 import { normalizeOpenMeteo } from "./normalize-hourly.js";
-import { calculateComfort } from "../intel/comfort.js";
-import { buildHumanVoice } from "../intel/human-voice.js";
+import { calculateComfort } from "./comfort.js";
 
 
 // ============================================================
@@ -17,13 +16,7 @@ import { buildHumanVoice } from "../intel/human-voice.js";
 
 export function buildHumanActionIntel(raw) {
   const hourly = normalizeOpenMeteo(raw?.hourly);
-
-  if (!hourly.length) {
-    return {
-      today: fallback("today"),
-      tomorrow: fallback("tomorrow")
-    };
-  }
+  if (!hourly.length) return fallbackAll();
 
   const now = Date.now();
 
@@ -85,81 +78,44 @@ function buildPeriod(hours, label, now) {
     if (!best || score > best.score) {
       best = {
         score: Math.round(score),
-        start: slice[0].hour,
-        end: slice[2].hour
+        start: slice[0].hour
       };
     }
 
     if (!worst || score < worst.score) {
       worst = {
         score: Math.round(score),
-        start: slice[0].hour,
-        end: slice[2].hour
+        start: slice[0].hour
       };
     }
   }
 
   // ----------------------------------------------------------
-  // NOW (TODAY ONLY)
-  // ----------------------------------------------------------
-  let nowBlock = null;
-
-  if (label === "today") {
-    const current = hourlyComfort.find(h => h.ts >= now);
-
-    if (current) {
-      nowBlock = {
-        score: current.score,
-        temp: current.temp,
-        dew: current.dew
-      };
-    }
-  }
-
-  // ----------------------------------------------------------
-  // SCORE
+  // SCORE (FIXED — DOMINANT EXPERIENCE)
   // ----------------------------------------------------------
   const avgAll = avg(hourlyComfort);
 
-  let score;
-
-  if (label === "today") {
-    score =
-      (nowBlock?.score ?? avgAll) * 0.4 +
-      avgAll * 0.4 +
-      (best?.score ?? avgAll) * 0.2;
-  } else {
-    score =
-      avgAll * 0.6 +
-      (best?.score ?? avgAll) * 0.3 -
-      (100 - (worst?.score ?? avgAll)) * 0.1;
-  }
+  let score =
+    avgAll * 0.65 +
+    (best?.score ?? avgAll) * 0.25 +
+    (worst?.score ?? avgAll) * 0.10;
 
   score = Math.round(score);
 
   // ----------------------------------------------------------
-  // SIGNAL BLEND (for voice)
+  // SNAPSHOT
   // ----------------------------------------------------------
   const snapshot = blend(hours);
 
-  const voice = buildHumanVoice(
-    {
-      temp: snapshot.temp,
-      dewPoint: snapshot.dewPoint,
-      windSpeed: snapshot.windSpeed
-    },
-    detectDominant(snapshot)
-  );
+  // ----------------------------------------------------------
+  // HEADLINE
+  // ----------------------------------------------------------
+  const headline = buildHeadline(score, label, snapshot);
 
   // ----------------------------------------------------------
-  // HEADLINE (human, not robotic)
+  // BULLETS (HUMANIZED)
   // ----------------------------------------------------------
-  const headline = buildHeadline(score, voice, label);
-
-  // ----------------------------------------------------------
-  // BULLETS (THIS IS THE BIG UPGRADE)
-  // ----------------------------------------------------------
-  const bullets = buildNarrativeBullets({
+  const bullets = buildBullets({
     best,
     worst,
     score,
@@ -171,30 +127,47 @@ function buildPeriod(hours, label, now) {
     label,
     score,
     emoji: pickEmoji(score),
-
     headline,
-    bullets,
-
-    bestWindow: best,
-    worstWindow: worst,
-    now: nowBlock,
-
-    summary: voice.summary,
-    detail: voice.detail,
-
-    snapshot
+    bullets
   };
 }
 
 
 // ============================================================
-// HUMAN BULLETS (CORE UPGRADE)
+// HEADLINE (FIXED LOGIC)
 // ============================================================
 
-function buildNarrativeBullets({ best, worst, score, snapshot, label }) {
+function buildHeadline(score, label, snapshot) {
+  const dp = snapshot?.dewPoint ?? 55;
+
+  if (score >= 85) {
+    if (dp < 55) {
+      return label === "today"
+        ? "Comfortable all day with crisp, dry air"
+        : "Another crisp and comfortable day ahead";
+    }
+
+    return label === "today"
+      ? "Comfortable all day with easy conditions"
+      : "Another comfortable day ahead";
+  }
+
+  if (score >= 75) return "Mostly comfortable with minor changes";
+  if (score >= 65) return "Comfortable overall with a few dips";
+  if (score >= 55) return "Mixed comfort through the day";
+
+  return "Conditions feel more challenging overall";
+}
+
+
+// ============================================================
+// BULLETS (HUMAN VOICE)
+// ============================================================
+
+function buildBullets({ best, worst, score, snapshot, label }) {
   const bullets = [];
 
-  // Best window → human
+  // Best window
   if (best) {
     bullets.push(
       label === "today"
@@ -203,51 +176,30 @@ function buildNarrativeBullets({ best, worst, score, snapshot, label }) {
     );
   }
 
-  // Worst window → human
+  // Worst window (tone-aware)
   if (worst) {
-    bullets.push(
-      score >= 70
-        ? `Only minor dips ${timeWord(worst.start)}`
-        : `Rougher stretch ${timeWord(worst.start)}`
-    );
+    if (score >= 80) {
+      bullets.push(`Only slight dips ${timeWord(worst.start)}`);
+    } else if (score >= 65) {
+      bullets.push(`A few less comfortable moments ${timeWord(worst.start)}`);
+    } else {
+      bullets.push(`Rougher stretch ${timeWord(worst.start)}`);
+    }
   }
 
-  // Atmosphere insight
+  // Air feel
   if (snapshot.dewPoint < 55) {
     bullets.push("Dry air keeps things crisp");
   } else if (snapshot.dewPoint > 65) {
     bullets.push("Humidity adds a heavier feel");
   }
 
-  // Wind insight
+  // Wind
   if (snapshot.windSpeed > 12) {
     bullets.push("Breezes noticeable at times");
   }
 
   return bullets.slice(0, 3);
-}
-
-
-// ============================================================
-// HEADLINE BUILDER
-// ============================================================
-
-function buildHeadline(score, voice, label) {
-  if (score >= 85) {
-    return label === "today"
-      ? "Comfortable all day with easy conditions"
-      : "Another comfortable day ahead";
-  }
-
-  if (score >= 70) {
-    return "Mostly comfortable with minor changes";
-  }
-
-  if (score >= 55) {
-    return "Mixed comfort through the day";
-  }
-
-  return "Conditions feel more challenging overall";
 }
 
 
@@ -270,14 +222,6 @@ function blend(hours) {
     dewPoint: avg("dewpointF"),
     windSpeed: avg("wind_speed")
   };
-}
-
-function detectDominant(s) {
-  if (s.dewPoint > 65) return "humidity";
-  if (s.temp > 88) return "heat";
-  if (s.temp < 45) return "cold";
-  if (s.windSpeed > 15) return "wind";
-  return "stable";
 }
 
 function pickEmoji(score) {
@@ -307,5 +251,12 @@ function fallback(label) {
     headline: "Conditions are steady",
     bullets: [],
     emoji: "😐"
+  };
+}
+
+function fallbackAll() {
+  return {
+    today: fallback("today"),
+    tomorrow: fallback("tomorrow")
   };
 }
