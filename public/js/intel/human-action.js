@@ -131,45 +131,68 @@ function buildPeriod(hours, hourlyComfort, label, context) {
   };
 }
 
-
 // ============================================================
-// HEADLINE (PATTERN-AWARE)
+// HEADLINE (PATTERN-AWARE — FORECAST DRIVEN)
 // ============================================================
 
-function buildHeadline(score, label, snapshot, context) {
-  const dp = snapshot?.dewPoint;
+function buildHeadline(score, label, snapshot, context, hours) {
 
   // ----------------------------------------------------------
-  // HIGH COMFORT (primary path)
+  // EXTRACT REAL CONDITIONS (NOT AVERAGES)
   // ----------------------------------------------------------
-  if (score >= 78) {
+  const temps = hours
+    .map(h => h.temperatureF ?? h.temp)
+    .filter(v => typeof v === "number");
 
-    // Pattern continuity (tomorrow)
-    if (label === "tomorrow" && context?.similar) {
-      return "More of the same — comfortable from start to finish";
-    }
+  const dewPoints = hours
+    .map(h => h.dewpointF ?? h.dewPoint)
+    .filter(v => typeof v === "number");
 
-    // Dry + comfortable (best-case Asheville pattern)
-    if (dp != null && dp < 55) {
-      return label === "today"
-        ? "Comfortable all day with crisp, dry air"
-        : "Another crisp and comfortable day ahead";
-    }
+  if (!temps.length || !dewPoints.length) {
+    return "Conditions are steady";
+  }
 
-    // Otherwise still good, just not dry
+  const maxTemp = Math.max(...temps);
+  const minTemp = Math.min(...temps);
+  const avgDp = dewPoints.reduce((a, b) => a + b, 0) / dewPoints.length;
+
+  const dry = avgDp < 55;
+  const warmAfternoon = maxTemp >= 72;
+  const coolMorning = minTemp <= 60;
+
+  // ----------------------------------------------------------
+  // PRIMARY PATTERN (THIS FIXES YOUR ISSUE)
+  // ----------------------------------------------------------
+  if (dry && warmAfternoon && coolMorning) {
+    return label === "tomorrow" && context?.similar
+      ? "More of the same — cool mornings, warm comfortable afternoons"
+      : "Cool morning gives way to a warm, comfortable afternoon";
+  }
+
+  // ----------------------------------------------------------
+  // DRY + WARM (NO STRONG SWING)
+  // ----------------------------------------------------------
+  if (dry && warmAfternoon) {
     return label === "today"
-      ? "Comfortable all day with easy conditions"
-      : "Another comfortable day ahead";
+      ? "Warm and comfortable with dry air"
+      : "Another warm, comfortable day ahead";
+  }
+
+  // ----------------------------------------------------------
+  // GENERIC HIGH COMFORT
+  // ----------------------------------------------------------
+  if (score >= 75) {
+    return "Comfortable overall";
   }
 
   // ----------------------------------------------------------
   // MID RANGE
   // ----------------------------------------------------------
-  if (score >= 70) {
-    return "Mostly comfortable with a few dips";
+  if (score >= 65) {
+    return "Mostly comfortable with some variation";
   }
 
-  if (score >= 60) {
+  if (score >= 55) {
     return "Mixed comfort through the day";
   }
 
