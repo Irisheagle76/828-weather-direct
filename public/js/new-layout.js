@@ -1,5 +1,5 @@
 // ============================================================
-// NEW LAYOUT — AVL WEATHER PREVIEW (FULLY WIRED)
+// NEW LAYOUT — AVL WEATHER PREVIEW (FINAL CLEAN)
 // ============================================================
 
 import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
@@ -31,7 +31,7 @@ export async function renderNewLayout(container) {
     const current = data.current;
     const hourly = data.hourly;
 
-    // 🔥 NEW: build intelligence layer
+    // 🔥 Core intelligence layer
     const human = buildHumanActionIntel(data);
 
     renderFeelScore(current);
@@ -47,7 +47,7 @@ export async function renderNewLayout(container) {
 
 
 // ============================================================
-// FEELSCORE (UNCHANGED — ALREADY GOOD)
+// FEELSCORE (SYNTHESIZED)
 // ============================================================
 
 function renderFeelScore(current) {
@@ -78,9 +78,9 @@ function renderFeelScore(current) {
 
   const headline = comfort?.goldilocks
     ? "Chef’s kiss outside"
-    : narrative.headline;
+    : narrative?.headline || "Feels pretty good out";
 
-  const bullets = (narrative.bullets || []).slice(0, 2);
+  const bullets = (narrative?.bullets || []).slice(0, 2);
 
   document.getElementById('feelscore').innerHTML = `
     <div class="feelscore-card">
@@ -92,9 +92,11 @@ function renderFeelScore(current) {
 
       <div class="fs-headline">${headline}</div>
 
-      <div class="fs-bullets">
-        ${bullets.map(b => `<div class="fs-bullet">• ${b}</div>`).join('')}
-      </div>
+      ${bullets.length ? `
+        <div class="fs-bullets">
+          ${bullets.map(b => `<div class="fs-bullet">• ${b}</div>`).join('')}
+        </div>
+      ` : ``}
 
     </div>
   `;
@@ -102,11 +104,14 @@ function renderFeelScore(current) {
 
 
 // ============================================================
-// TODAY — FULLY REWRITTEN
+// TODAY
 // ============================================================
 
 function renderToday(today) {
   if (!today) return;
+
+  const headline = today.headline || "Conditions are steady";
+  const bullets = (today.bullets || []).slice(0, 3);
 
   document.getElementById('today').innerHTML = `
     <div class="today-card">
@@ -116,16 +121,13 @@ function renderToday(today) {
         <div class="today-emoji">${today.emoji || ""}</div>
       </div>
 
-      <div class="today-headline">
-        ${today.headline}
-      </div>
+      <div class="today-headline">${headline}</div>
 
-      <div class="today-bullets">
-        ${(today.bullets || [])
-          .slice(0, 3)
-          .map(b => `<div class="today-bullet">• ${b}</div>`)
-          .join('')}
-      </div>
+      ${bullets.length ? `
+        <div class="today-bullets">
+          ${bullets.map(b => `<div class="today-bullet">• ${b}</div>`).join('')}
+        </div>
+      ` : ``}
 
     </div>
   `;
@@ -133,11 +135,14 @@ function renderToday(today) {
 
 
 // ============================================================
-// TOMORROW — FULLY REWRITTEN
+// TOMORROW
 // ============================================================
 
 function renderTomorrow(tomorrow) {
   if (!tomorrow) return;
+
+  const headline = tomorrow.headline || "Conditions are steady";
+  const bullets = (tomorrow.bullets || []).slice(0, 3);
 
   document.getElementById('tomorrow').innerHTML = `
     <div class="tomorrow-card">
@@ -147,16 +152,13 @@ function renderTomorrow(tomorrow) {
         <div class="tomorrow-emoji">${tomorrow.emoji || ""}</div>
       </div>
 
-      <div class="tomorrow-headline">
-        ${tomorrow.headline}
-      </div>
+      <div class="tomorrow-headline">${headline}</div>
 
-      <div class="tomorrow-bullets">
-        ${(tomorrow.bullets || [])
-          .slice(0, 3)
-          .map(b => `<div class="tomorrow-bullet">• ${b}</div>`)
-          .join('')}
-      </div>
+      ${bullets.length ? `
+        <div class="tomorrow-bullets">
+          ${bullets.map(b => `<div class="tomorrow-bullet">• ${b}</div>`).join('')}
+        </div>
+      ` : ``}
 
     </div>
   `;
@@ -164,7 +166,7 @@ function renderTomorrow(tomorrow) {
 
 
 // ============================================================
-// TIMELINE (UNCHANGED FOR NOW)
+// TIMELINE (UNCHANGED BASELINE)
 // ============================================================
 
 function renderTimeline(hourly) {
