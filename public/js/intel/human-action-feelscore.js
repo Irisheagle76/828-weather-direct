@@ -1,8 +1,5 @@
-// ============================================================
-// HUMAN ACTION — FEELSCORE VERSION (v1)
-// - Uses canonical normalized data
-// - Weights human-active hours
-// - Fixes "false challenging" issue
+/// ============================================================
+// HUMAN ACTION — FEELSCORE VERSION (FIXED)
 // ============================================================
 
 import { normalizeOpenMeteo } from "./normalize-hourly.js";
@@ -14,9 +11,6 @@ export function buildHumanActionIntelFS(raw) {
 
   const now = Date.now();
 
-  // ----------------------------------------------------------
-  // SPLIT DAYS (timestamp already correct)
-  // ----------------------------------------------------------
   const todayHours = hourly.filter(h => {
     const diff = (h.timestamp - now) / 36e5;
     return diff >= 0 && diff < 24;
@@ -40,52 +34,37 @@ export function buildHumanActionIntelFS(raw) {
 
 
 // ============================================================
-// PERIOD (FEELSCORE LOGIC)
-// ============================================================
-
-function buildPeriodFS(hours, hourlyComfort, label, context) {
-// ============================================================
-// PERIOD (FEELSCORE LOGIC)
+// PERIOD (PEAK-WEIGHTED)
 // ============================================================
 
 function buildPeriodFS(hours, hourlyComfort, label, context) {
   if (!hours.length) return fallback(label);
 
-  // ---------------------------
-  // FOCUS ON HUMAN HOURS (key fix)
-  // ---------------------------
-  const active = hourlyComfort.filter(h => h.hour >= 8 && h.hour <= 20);
+  const daytime = hourlyComfort.filter(h => h.hour >= 8 && h.hour <= 20);
+  const midday  = hourlyComfort.filter(h => h.hour >= 11 && h.hour <= 17);
 
-  const base = active.length ? active : hourlyComfort;
+  const base = daytime.length ? daytime : hourlyComfort;
+  const peak = midday.length ? midday : base;
 
-  // ---------------------------
-  // BEST / WORST
-  // ---------------------------
   let best = null;
   let worst = null;
 
   for (let i = 0; i < base.length - 2; i++) {
     const slice = base.slice(i, i + 3);
-    const score = avg(slice);
+    const s = avg(slice);
 
-    if (!best || score > best.score) {
-      best = { score, start: slice[0].hour };
-    }
-
-    if (!worst || score < worst.score) {
-      worst = { score, start: slice[0].hour };
-    }
+    if (!best || s > best.score) best = { score: s, start: slice[0].hour };
+    if (!worst || s < worst.score) worst = { score: s, start: slice[0].hour };
   }
 
-  // ---------------------------
-  // SCORE (clean + intuitive)
-  // ---------------------------
+  const avgPeak = avg(peak);
   const avgBase = avg(base);
 
   let score =
-    avgBase * 0.75 +
-    (best?.score ?? avgBase) * 0.2 +
-    (worst?.score ?? avgBase) * 0.05;
+    avgPeak * 0.6 +
+    avgBase * 0.25 +
+    (best?.score ?? avgPeak) * 0.1 +
+    (worst?.score ?? avgPeak) * 0.05;
 
   score = Math.round(score);
 
@@ -102,7 +81,7 @@ function buildPeriodFS(hours, hourlyComfort, label, context) {
 
 
 // ============================================================
-// COMFORT MAPPING (fixed inputs)
+// COMFORT MAPPING
 // ============================================================
 
 function mapComfortFS(hours) {
@@ -123,10 +102,28 @@ function mapComfortFS(hours) {
 
 
 // ============================================================
-// HEADLINE (aligned with FeelScore)
+// HEADLINE (REAL FIX)
 // ============================================================
 
-function buildHeadlineFS(scor
+function buildHeadlineFS(score, label, snapshot, context) {
+  const temp = snapshot?.temp ?? 70;
+  const dp = snapshot?.dewPoint ?? 55;
+
+  const dry = dp < 55;
+  const warm = temp >= 70 && temp <= 85;
+
+  if (dry && warm) {
+    return label === "tomorrow" && context.similar
+      ? "More of the same — comfortable from start to finish"
+      : "Comfortable all day with crisp, dry air";
+  }
+
+  if (score >= 80) return "Comfortable overall";
+  if (score >= 65) return "Mostly comfortable with some variation";
+
+  return "Mixed comfort through the day";
+}
+
 
 // ============================================================
 // BULLETS
