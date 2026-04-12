@@ -44,6 +44,11 @@ export function buildHumanActionIntelFS(raw) {
 // ============================================================
 
 function buildPeriodFS(hours, hourlyComfort, label, context) {
+// ============================================================
+// PERIOD (FEELSCORE LOGIC)
+// ============================================================
+
+function buildPeriodFS(hours, hourlyComfort, label, context) {
   if (!hours.length) return fallback(label);
 
   // ---------------------------
@@ -121,19 +126,7 @@ function mapComfortFS(hours) {
 // HEADLINE (aligned with FeelScore)
 // ============================================================
 
-function buildHeadlineFS(score, label, snapshot, context) {
-  if (score >= 85) {
-    return label === "tomorrow" && context.similar
-      ? "More of the same — comfortable from start to finish"
-      : "Comfortable all day with crisp, dry air";
-  }
-
-  if (score >= 75) return "Mostly comfortable with minor changes";
-  if (score >= 65) return "Comfortable overall with a few dips";
-
-  return "Mixed comfort through the day";
-}
-
+function buildHeadlineFS(scor
 
 // ============================================================
 // BULLETS
