@@ -53,22 +53,15 @@ function computeSolarElevation(timestamp, lat, lon) {
 }
 
 // ============================================================
-// CORE COMFORT MODEL (DEW-BASED)
+// PENALTIES
 // ============================================================
 
 function computeTemperaturePenalty(temp) {
   if (temp == null) return 0.5;
 
-  // GOLDILOCKS
   if (temp >= 65 && temp <= 75) return 0;
-
-  // COOL (pleasant in mountains)
   if (temp >= 50) return (65 - temp) / 40;
-
-  // COLD
   if (temp < 50) return clamp((50 - temp) / 25, 0, 1);
-
-  // HOT (stronger penalty)
   if (temp > 75) return clamp((temp - 75) / 20, 0, 1);
 
   return 0;
@@ -77,13 +70,13 @@ function computeTemperaturePenalty(temp) {
 function computeDewPenalty(dew) {
   if (dew == null) return 0.2;
 
-  if (dew < 45) return 0.05;     // crisp
-  if (dew < 55) return 0.02;     // 🔥 ideal
+  if (dew < 45) return 0.05;
+  if (dew < 55) return 0.02;
   if (dew < 60) return 0.08;
   if (dew < 65) return 0.2;
   if (dew < 70) return 0.4;
 
-  return 0.7; // oppressive
+  return 0.7;
 }
 
 function computeWindPenalty(wind) {
@@ -120,8 +113,6 @@ function computeComfortScore(temp, dew, wind, elev) {
     s;
 
   const score = Math.round(clamp(100 - raw * 100, 0, 100));
-
-  // prevent unrealistic 0s
   return Math.max(score, 10);
 }
 
@@ -150,121 +141,93 @@ export function getComfortColor(score) {
   if (score >= 45) return "#ff9f1c";
   return "#e63946";
 }
+
 // ============================================================
-// MAIN ENGINE (ROBUST VERSION)
+// CORE ENGINE (FIXED)
 // ============================================================
 
-export function computeComfort(intel) {
- const src =
-  intel?.tempest ??
-  intel?.wu ??
-  intel ?? {};   // 🔥 THIS IS THE FIX
+export function computeComfort(hour) {
+  const temp = num(hour.temperatureF ?? hour.temp);
+  const dew  = num(hour.dewpointF ?? hour.dewPoint);
+  const wind = num(hour.wind_speed ?? hour.windSpeed) ?? 0;
 
-  // ---------------------------
-  // INPUT NORMALIZATION
-  // ---------------------------
- const temp =
-  num(src.temp) ??
-  num(src.temperatureF);
-
-const dew =
-  num(src.dewpointF) ??
-  num(src.dewPoint) ??
-  (temp != null ? temp - 18 : null);
-
-const wind =
-  num(src.windSpeed) ??
-  num(src.wind_speed) ??
-  0;
-  
-  const timestamp = normalizeTimestamp(src.obsTimeLocal);
-
+  const timestamp = normalizeTimestamp(hour.timestamp);
   const elev = computeSolarElevation(timestamp, LOCATION.lat, LOCATION.lon);
 
-  // ---------------------------
-  // VALIDATION (🔥 critical fix)
-  // ---------------------------
   if (temp == null || dew == null) {
-    console.warn("⚠️ Invalid comfort inputs", {
-      temp,
-      dew,
-      wind,
-      src
-    });
+    console.warn("⚠️ Missing comfort inputs", { temp, dew, hour });
 
     return {
-      comfortScore: 50, // neutral fallback instead of 0
+      comfortScore: 50,
       category: "Unknown",
       emoji: "❓",
       color: "#888",
-
-      temp: temp ?? null,
-      dewpoint: dew ?? null,
-      windSpeed: wind,
-
-      headline: "Conditions unclear",
-      narrative: null
+      temp,
+      dewpoint: dew,
+      windSpeed: wind
     };
   }
 
-  // ---------------------------
-  // SCORE CALCULATION
-  // ---------------------------
-  const rawScore = computeComfortScore(temp, dew, wind, elev);
+  const score = computeComfortScore(temp, dew, wind, elev);
 
-  const score =
-    rawScore != null
-      ? rawScore
-      : 50; // fallback (prevents 0 bug)
-
-  // ---------------------------
-  // OUTPUT
-  // ---------------------------
   return {
     comfortScore: score,
     category: getCategory(score),
     emoji: getEmoji(score),
     color: getComfortColor(score),
-
     temp,
     dewpoint: dew,
-    windSpeed: wind,
-
-    headline: buildHeadline(score, dew),
-    narrative: buildNarrative(temp, dew, wind, elev)
+    windSpeed: wind
   };
 }
 
 // ============================================================
-// NARRATIVE
+// AFTERNOON WINDOW ANALYSIS (NEW)
 // ============================================================
 
-function buildHeadline(score, dew) {
-  if (score >= 80) return "Comfortable";
-  if (score >= 65) return "Pleasant";
-  if (score >= 50) return "Fair";
-  if (score >= 35) return "Uncomfortable";
-  return "Harsh";
+export function analyzeAfternoonWindow(hours) {
+  const window = hours.filter(h => {
+    const hr = new Date(h.timestamp).getHours();
+    return hr >= 13 && hr <= 16;
+  });
+
+  const scored = window.map(h => {
+    const c = computeComfort(h);
+
+    console.log("🧪 WINDOW HOUR", {
+      time: new Date(h.timestamp).toLocaleTimeString(),
+      temp: h.temperatureF,
+      dew: h.dewpointF,
+      score: c.comfortScore
+    });
+
+    return c;
+  });
+
+  const scores = scored.map(s => s.comfortScore);
+
+  const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+  const min = Math.min(...scores);
+  const max = Math.max(...scores);
+  const trend = scores[scores.length - 1] - scores[0];
+
+  console.log("📊 WINDOW SUMMARY", { avg, min, max, trend });
+
+  return {
+    avgScore: avg,
+    minScore: min,
+    maxScore: max,
+    trend,
+    hours: scored
+  };
 }
 
-function buildNarrative(temp, dew, wind, elev) {
-  const parts = [];
-
-  if (dew < 55) parts.push("Crisp mountain air");
-  if (dew >= 65) parts.push("Sticky humidity");
-
-  if (wind >= 12) parts.push("Noticeable breeze");
-  if (elev > 40) parts.push("Strong sun");
-
-  return parts.join(", ");
-}
-
 // ============================================================
-// MODERN INTERFACE (YOUR APP USES THIS)
+// MODERN INTERFACE
 // ============================================================
 
-export function calculateComfort(data, options = {}) {
-  const result = computeComfort(data);
+export function calculateComfort(hour) {
+  const result = computeComfort(hour);
   if (!result) return null;
 
   return {
@@ -279,8 +242,7 @@ export function calculateComfort(data, options = {}) {
       veryHot: result.temp >= 85,
       veryHumid: result.dewpoint >= 65,
       crisp: result.dewpoint < 55,
-      windy: result.windSpeed >= 10,
-      harshSun: false
+      windy: result.windSpeed >= 10
     },
 
     goldilocks:
