@@ -170,14 +170,19 @@ function renderFeelScore(current) {
 
 
 // ============================================================
-// TODAY
+// TODAY (ROBUST RENDER)
 // ============================================================
 
 function renderToday(today) {
   if (!today) return;
 
-  const headline = today.headline || "Conditions are steady";
-  const bullets = (today.bullets || []).slice(0, 3);
+  const headline = today.headline || "Pretty stable conditions out there!";
+
+  const bullets = (
+    today.bullets?.length
+      ? today.bullets
+      : ["Nothing major stands out — fairly steady conditions"]
+  ).slice(0, 3);
 
   document.getElementById('today').innerHTML = `
     <div class="today-card">
@@ -189,11 +194,11 @@ function renderToday(today) {
 
       <div class="today-headline">${headline}</div>
 
-      ${bullets.length ? `
-        <div class="today-bullets">
-          ${bullets.map(b => `<div class="today-bullet">• ${b}</div>`).join('')}
-        </div>
-      ` : ``}
+      <div class="today-bullets">
+        ${bullets.map(b => `
+          <div class="today-bullet">• ${b}</div>
+        `).join("")}
+      </div>
 
     </div>
   `;
@@ -201,14 +206,19 @@ function renderToday(today) {
 
 
 // ============================================================
-// TOMORROW
+// TOMORROW (ROBUST RENDER)
 // ============================================================
 
 function renderTomorrow(tomorrow) {
   if (!tomorrow) return;
 
-  const headline = tomorrow.headline || "Conditions are steady";
-  const bullets = (tomorrow.bullets || []).slice(0, 3);
+  const headline = tomorrow.headline || "Weatherwise? Conditions are looking all good.";
+
+  const bullets = (
+    tomorrow.bullets?.length
+      ? tomorrow.bullets
+      : ["Conditions look fairly similar overall"]
+  ).slice(0, 3);
 
   document.getElementById('tomorrow').innerHTML = `
     <div class="tomorrow-card">
@@ -220,16 +230,15 @@ function renderTomorrow(tomorrow) {
 
       <div class="tomorrow-headline">${headline}</div>
 
-      ${bullets.length ? `
-        <div class="tomorrow-bullets">
-          ${bullets.map(b => `<div class="tomorrow-bullet">• ${b}</div>`).join('')}
-        </div>
-      ` : ``}
+      <div class="tomorrow-bullets">
+        ${bullets.map(b => `
+          <div class="tomorrow-bullet">• ${b}</div>
+        `).join("")}
+      </div>
 
     </div>
   `;
 }
-
 
 // ============================================================
 // TIMELINE (UNCHANGED BASELINE)
