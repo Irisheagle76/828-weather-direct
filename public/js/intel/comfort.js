@@ -148,22 +148,48 @@ export function getComfortColor(score) {
 
 export function computeComfort(hour) {
   const temp = num(hour.temperatureF ?? hour.temp);
-  const dew  = num(hour.dewpointF ?? hour.dewPoint);
-  const wind = num(hour.wind_speed ?? hour.windSpeed) ?? 0;
+
+  const humidity =
+    num(hour.relative_humidity) ??
+    num(hour.humidity);
+
+  // 🔥 Magnus fallback (only used if dew missing)
+  const estimateDewPoint = (tempF, rh) => {
+    if (tempF == null || rh == null) return null;
+
+    const T = (tempF - 32) * 5 / 9;
+    const a = 17.625;
+    const b = 243.04;
+
+    const alpha =
+      Math.log(rh / 100) +
+      (a * T) / (b + T);
+
+    const dewC = (b * alpha) / (a - alpha);
+    return (dewC * 9 / 5) + 32;
+  };
+
+  const dew =
+    num(hour.dewpointF ?? hour.dewPoint) ??
+    estimateDewPoint(temp, humidity);
+
+  const wind =
+    num(hour.wind_speed ?? hour.windSpeed) ?? 0;
 
   const timestamp = normalizeTimestamp(hour.timestamp);
   const elev = computeSolarElevation(timestamp, LOCATION.lat, LOCATION.lon);
 
-  if (temp == null || dew == null) {
-    console.warn("⚠️ Missing comfort inputs", { temp, dew, hour });
+  // 🚫 Only fail if temp is missing (dew now guaranteed fallback)
+  if (temp == null) {
+    console.warn("⚠️ Missing temperature", { hour });
 
     return {
       comfortScore: 50,
       category: "Unknown",
       emoji: "❓",
       color: "#888",
-      temp,
-      dewpoint: dew,
+      temp: null,
+      dewpoint: null,
       windSpeed: wind
     };
   }
@@ -180,7 +206,6 @@ export function computeComfort(hour) {
     windSpeed: wind
   };
 }
-
 // ============================================================
 // AFTERNOON WINDOW ANALYSIS (NEW)
 // ============================================================
