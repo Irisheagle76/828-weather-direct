@@ -1,5 +1,5 @@
 // ============================================================
-// NEW LAYOUT — AVL WEATHER PREVIEW (FINAL CLEAN)
+// AVL WEATHER — CLEAN SYNTH LAYOUT
 // ============================================================
 
 import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
@@ -10,7 +10,7 @@ import { buildHumanActionIntelFS } from '/js/intel/human-action-feelscore.js';
 
 
 // ============================================================
-// MAIN RENDER (FIXED DATA PIPELINE)
+// MAIN
 // ============================================================
 
 export async function renderNewLayout(container) {
@@ -29,29 +29,17 @@ export async function renderNewLayout(container) {
       lon: -82.5515
     });
 
-    // ------------------------------------------------------------
-    // 🔥 NORMALIZE ALL WEATHER INPUT (CRITICAL FIX)
-    // ------------------------------------------------------------
-    const rawHourly = data.hourly || [];
-    const hourly = normalizeOpenMeteo(rawHourly);
-
-    // normalize current using same pipeline
+    const hourly = normalizeOpenMeteo(data.hourly || []);
     const current =
       normalizeOpenMeteo([data.current])[0] ||
       data.current;
 
-    // ------------------------------------------------------------
-    // 🧠 HUMAN INTEL (now uses clean data)
-    // ------------------------------------------------------------
     const human = buildHumanActionIntelFS({
       ...data,
       hourly,
       current
     });
 
-    // ------------------------------------------------------------
-    // 🎯 RENDER
-    // ------------------------------------------------------------
     renderFeelScore(current);
     renderToday(human.today);
     renderTimeline(hourly);
@@ -63,8 +51,9 @@ export async function renderNewLayout(container) {
   }
 }
 
+
 // ============================================================
-// FEELSCORE (SYNTHESIZED — FULL HYBRID)
+// FEELSCORE (NOW)
 // ============================================================
 
 function renderFeelScore(current) {
@@ -73,84 +62,27 @@ function renderFeelScore(current) {
   const comfort = calculateComfort(current);
   const score = Math.round((comfort?.score || 0) * 10);
 
-  const category = mapScoreToCategory(score);
+  const intel = buildIntel(current, score, "current");
 
-  // ------------------------------------------------------------
-  // 🧠 BUILD RICH INTEL
-  // ------------------------------------------------------------
-  const intel = {
-    signals: {
-      temp: current.temperatureF,
-      dewPoint: current.dewpointF,
-      windSpeed: current.wind_speed ?? current.windSpeed ?? 0
-    },
-
-    pattern: {
-      avg: score,
-      trend: 0, // feelscore is "now", so neutral trend
-      min: score - 5,
-      max: score + 5
-    },
-
-    context: {
-      label: "today",
-      timeWindow: "current"
-    },
-
-    dominantFactor: detectDominantFactor(current)
-  };
-
-  // ------------------------------------------------------------
-  // 🎙 SYNTH
-  // ------------------------------------------------------------
   const narrative = assembleWithVoice(
     intel,
     "today",
-    category,
+    mapScoreToCategory(score),
     comfort?.goldilocks
   );
 
-  // ------------------------------------------------------------
-  // 🛟 HEADLINE (hybrid)
-  // ------------------------------------------------------------
-  let headline =
+  const headline =
     narrative?.headline ||
     "Feels pretty good out";
-
-  // soften robotic phrasing slightly
-  if (headline.includes("settles in")) {
-    headline = headline.replace("settles in", "settles in nicely");
-  }
-
-  // ------------------------------------------------------------
-  // 🛟 BULLETS (with fallback)
-  // ------------------------------------------------------------
-  const fallbackBullets = [];
-
-  if (current.dewpointF < 55) {
-    fallbackBullets.push("Air feels light and easy");
-  }
-
-  if (current.dewpointF < 50 && score >= 85) {
-    fallbackBullets.push("One of those classic mountain-air feels");
-  }
-
-  if ((current.wind_speed ?? 0) < 8 && score >= 85) {
-    fallbackBullets.push("Nothing really pushing you around");
-  }
 
   const bullets = (
     narrative?.bullets?.length
       ? narrative.bullets
-      : fallbackBullets
-  ).slice(0, 3);
+      : calmBullets(score, current)
+  ).slice(0, 2);
 
-  // ------------------------------------------------------------
-  // 🎯 RENDER
-  // ------------------------------------------------------------
   document.getElementById('feelscore').innerHTML = `
     <div class="feelscore-card">
-
       <div class="fs-header">
         <div class="fs-title">FEELSCORE</div>
         <div class="fs-score">${score}</div>
@@ -158,19 +90,16 @@ function renderFeelScore(current) {
 
       <div class="fs-headline">${headline}</div>
 
-      ${bullets.length ? `
-        <div class="fs-bullets">
-          ${bullets.map(b => `<div class="fs-bullet">• ${b}</div>`).join('')}
-        </div>
-      ` : ``}
-
+      <div class="fs-bullets">
+        ${bullets.map(b => `<div class="fs-bullet">• ${b}</div>`).join('')}
+      </div>
     </div>
   `;
 }
 
 
 // ============================================================
-// TODAY (ROBUST RENDER)
+// TODAY (DAY SHAPE)
 // ============================================================
 
 function renderToday(today) {
@@ -178,48 +107,20 @@ function renderToday(today) {
 
   const score = today.score ?? 70;
 
-  // ------------------------------------------------------------
-  // 🎯 HEADLINE (calm-day aware)
-  // ------------------------------------------------------------
-  let headline = today.headline;
+  const headline =
+    today.headline ||
+    (score >= 90
+      ? "One of those easy, dialed-in days"
+      : "Comfortable overall");
 
-  if (!headline) {
-    if (score >= 90) {
-      headline = "One of those easy, dialed-in days";
-    } else if (score >= 75) {
-      headline = "Comfortable with a smooth feel overall";
-    } else {
-      headline = "Pretty stable conditions out there";
-    }
-  }
-
-  // ------------------------------------------------------------
-  // 🎯 BULLETS (intentional calm language)
-  // ------------------------------------------------------------
-  let bullets;
-
-  if (today.bullets?.length) {
-    bullets = today.bullets;
-  } else if (score >= 90) {
-    bullets = [
-      "Just a smooth, easy stretch of weather",
-      "Nothing really getting in your way out there"
-    ];
-  } else if (score >= 75) {
-    bullets = [
-      "Overall a comfortable and steady feel",
-    ];
-  } else {
-    bullets = [
-      "Nothing major driving conditions one way or the other"
-    ];
-  }
-
-  bullets = bullets.slice(0, 3);
+  const bullets = (
+    today.bullets?.length
+      ? today.bullets
+      : calmDayBullets(score)
+  ).slice(0, 2);
 
   document.getElementById('today').innerHTML = `
     <div class="today-card">
-
       <div class="today-header">
         <div class="today-title">TODAY</div>
         <div class="today-emoji">${today.emoji || ""}</div>
@@ -228,17 +129,15 @@ function renderToday(today) {
       <div class="today-headline">${headline}</div>
 
       <div class="today-bullets">
-        ${bullets.map(b => `
-          <div class="today-bullet">• ${b}</div>
-        `).join("")}
+        ${bullets.map(b => `<div class="today-bullet">• ${b}</div>`).join('')}
       </div>
-
     </div>
   `;
 }
 
+
 // ============================================================
-// TOMORROW (ROBUST RENDER)
+// TOMORROW (CHANGE / CONTINUITY)
 // ============================================================
 
 function renderTomorrow(tomorrow) {
@@ -246,48 +145,20 @@ function renderTomorrow(tomorrow) {
 
   const score = tomorrow.score ?? 70;
 
-  // ------------------------------------------------------------
-  // 🎯 HEADLINE (avoid duplication with TODAY)
-  // ------------------------------------------------------------
-  let headline = tomorrow.headline;
+  const headline =
+    tomorrow.headline ||
+    (score >= 90
+      ? "More of the same — another great day lined up"
+      : "Conditions stay fairly similar");
 
-  if (!headline) {
-    if (score >= 90) {
-      headline = "More of the same — things stay in a good place";
-    } else if (score >= 75) {
-      headline = "Another comfortable and steady day ahead";
-    } else {
-      headline = "Conditions look fairly stable overall";
-    }
-  }
-
-  // ------------------------------------------------------------
-  // 🎯 BULLETS (calm but forward-looking)
-  // ------------------------------------------------------------
-  let bullets;
-
-  if (tomorrow.bullets?.length) {
-    bullets = tomorrow.bullets;
-  } else if (score >= 90) {
-    bullets = [
-      "That comfortable feel sticks around",
-      "Still nothing really pushing things off balance"
-    ];
-  } else if (score >= 75) {
-    bullets = [
-      "Conditions remain fairly consistent through the day"
-    ];
-  } else {
-    bullets = [
-      "No major shifts expected"
-    ];
-  }
-
-  bullets = bullets.slice(0, 3);
+  const bullets = (
+    tomorrow.bullets?.length
+      ? tomorrow.bullets
+      : calmTomorrowBullets(score)
+  ).slice(0, 2);
 
   document.getElementById('tomorrow').innerHTML = `
     <div class="tomorrow-card">
-
       <div class="tomorrow-header">
         <div class="tomorrow-title">TOMORROW</div>
         <div class="tomorrow-emoji">${tomorrow.emoji || ""}</div>
@@ -296,51 +167,35 @@ function renderTomorrow(tomorrow) {
       <div class="tomorrow-headline">${headline}</div>
 
       <div class="tomorrow-bullets">
-        ${bullets.map(b => `
-          <div class="tomorrow-bullet">• ${b}</div>
-        `).join("")}
+        ${bullets.map(b => `<div class="tomorrow-bullet">• ${b}</div>`).join('')}
       </div>
-
     </div>
   `;
 }
 
+
 // ============================================================
-// TIMELINE (UNCHANGED BASELINE)
+// TIMELINE (NEXT 6 HOURS, ALIGNED)
 // ============================================================
 
 function renderTimeline(hourly) {
   if (!hourly?.length) return;
 
-  // ------------------------------------------------------------
-  // ⏱ ROUND TO NEXT HOUR
-  // ------------------------------------------------------------
   const now = new Date();
   now.setMinutes(0, 0, 0);
   now.setHours(now.getHours() + 1);
 
-  const nextHourTs = now.getTime();
+  const startIndex = hourly.findIndex(h => h.timestamp >= now.getTime());
+  const nextHours = hourly.slice(startIndex >= 0 ? startIndex : 0, startIndex + 6);
 
-  // ------------------------------------------------------------
-  // 🔍 FIND START INDEX
-  // ------------------------------------------------------------
-  const startIndex = hourly.findIndex(h => h.timestamp >= nextHourTs);
-  const safeIndex = startIndex >= 0 ? startIndex : 0;
-
-  const nextHours = hourly.slice(safeIndex, safeIndex + 6);
-
-  // ------------------------------------------------------------
-  // 🎯 BUILD UI
-  // ------------------------------------------------------------
   const html = nextHours.map(h => {
-    const comfort = calculateComfort(h);
-    const score = Math.round((comfort?.score || 0) * 10);
-    const emoji = getSimpleIcon(score);
+    const c = calculateComfort(h);
+    const score = Math.round((c?.score || 0) * 10);
 
     return `
       <div class="hour-block">
         <div class="hour-time">${formatHour(h.timestamp)}</div>
-        <div class="hour-icon">${emoji}</div>
+        <div class="hour-icon">${getSimpleIcon(score)}</div>
         <div class="hour-temp">${Math.round(h.temperatureF)}°</div>
         <div class="hour-score">${score}</div>
       </div>
@@ -355,6 +210,65 @@ function renderTimeline(hourly) {
   `;
 }
 
+
+// ============================================================
+// INTEL BUILDER (NEW CORE)
+// ============================================================
+
+function buildIntel(current, score, mode) {
+  return {
+    signals: {
+      temp: current.temperatureF,
+      dewPoint: current.dewpointF,
+      windSpeed: current.wind_speed ?? 0
+    },
+    pattern: {
+      avg: score,
+      trend: 0,
+      min: score - 5,
+      max: score + 5
+    },
+    context: {
+      label: "today",
+      timeWindow: mode
+    },
+    dominantFactor: detectDominantFactor(current)
+  };
+}
+
+
+// ============================================================
+// CALM-DAY LANGUAGE (CORE DIFFERENTIATOR)
+// ============================================================
+
+function calmBullets(score, current) {
+  if (score >= 90) {
+    return [
+      "Nothing really pushing you around",
+      "Air feels light and easy"
+    ];
+  }
+
+  return ["Fairly steady conditions overall"];
+}
+
+function calmDayBullets(score) {
+  if (score >= 90) {
+    return ["Just a smooth, easy stretch of weather"];
+  }
+
+  return ["Conditions stay fairly steady"];
+}
+
+function calmTomorrowBullets(score) {
+  if (score >= 90) {
+    return ["That comfortable feel sticks around"];
+  }
+
+  return ["No major changes expected"];
+}
+
+
 // ============================================================
 // HELPERS
 // ============================================================
@@ -368,21 +282,20 @@ function mapScoreToCategory(score) {
 }
 
 function detectDominantFactor(current) {
-  const dp = current.dewPoint ?? current.dew_point ?? 55;
-  const temp = current.temp ?? 70;
-  const wind = current.wind ?? current.windSpeed ?? 0;
+  const dp = current.dewpointF ?? 55;
+  const temp = current.temperatureF ?? 70;
+  const wind = current.wind_speed ?? 0;
 
   if (dp >= 68) return "muggy";
   if (temp >= 88) return "heat";
   if (temp <= 45) return "cold";
   if (wind >= 15) return "wind";
 
-  return "sun";
+  return "dry";
 }
 
 function formatHour(ts) {
-  const d = new Date(ts);
-  return d.toLocaleTimeString([], { hour: 'numeric' });
+  return new Date(ts).toLocaleTimeString([], { hour: 'numeric' });
 }
 
 function getSimpleIcon(score) {
