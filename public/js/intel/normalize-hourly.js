@@ -62,13 +62,18 @@ export function normalizeOpenMeteo(hourly) {
 
         if (ts == null) return null;
 
-        const tempC = toNumber(h.temperature);
-        const dewC  = toNumber(h.dewpoint);
-        const appC  = toNumber(h.apparent_temperature);
+    const temperatureF =
+  toNumber(h.temperatureF) ??
+  toNumber(h.temp);
 
-        const temperatureF = h.temperatureF ?? cToF(tempC);
-        const dewpointF    = h.dewpointF ?? cToF(dewC);
-        const apparentF    = h.apparentF ?? cToF(appC);
+const dewpointF =
+  toNumber(h.dewpointF) ??
+  toNumber(h.dewPoint);
+
+const apparentF =
+  toNumber(h.apparentF) ??
+  toNumber(h.apparent_temperature) ??
+  temperatureF;
 
         // 🟢 TRACE
         if (i === 12) {
