@@ -4,6 +4,7 @@
 
 import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
 import { calculateComfort } from '/js/intel/comfort.js';
+import { normalizeOpenMeteo } from '/js/normalize/normalize-hourly.js';
 import { assembleWithVoice } from '/js/intel/synthesizer/assembleWithVoice.js';
 import { buildHumanActionIntelFS } from '/js/intel/human-action-feelscore.js';
 
@@ -73,11 +74,11 @@ function renderFeelScore(current) {
   const score = Math.round((comfort?.score || 0) * 10);
 
   const intel = {
-    signals: {
-      temp: current.temp,
-      dewPoint: current.dewPoint ?? current.dew_point ?? null,
-      windSpeed: current.wind ?? current.windSpeed ?? 0
-    },
+  signals: {
+  temp: current.temperatureF,
+  dewPoint: current.dewpointF,
+  windSpeed: current.wind_speed ?? current.windSpeed ?? 0
+},
     dominantFactor: detectDominantFactor(current),
     confidence: 0.7,
     snapshot: current
@@ -195,14 +196,14 @@ function renderTimeline(hourly) {
     const score = Math.round((comfort?.score || 0) * 10);
     const emoji = getSimpleIcon(score);
 
-    return `
-      <div class="hour-block">
-        <div class="hour-time">${formatHour(h.time)}</div>
-        <div class="hour-icon">${emoji}</div>
-        <div class="hour-temp">${Math.round(h.temp)}°</div>
-        <div class="hour-score">${score}</div>
-      </div>
-    `;
+return `
+  <div class="hour-block">
+    <div class="hour-time">${formatHour(h.timestamp)}</div>
+    <div class="hour-icon">${emoji}</div>
+    <div class="hour-temp">${Math.round(h.temperatureF)}°</div>
+    <div class="hour-score">${score}</div>
+  </div>
+`;
   }).join('');
 
   document.getElementById('timeline').innerHTML = `
