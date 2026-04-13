@@ -50,10 +50,10 @@ export function normalizeOpenMeteo(hourly) {
     });
   }
 
-  // ============================================================
-  // CASE 1: ARRAY INPUT
-  // ============================================================
-  if (Array.isArray(hourly)) {
+// ============================================================
+// CASE 1: ARRAY INPUT (with Magnus dew point equation)
+// ============================================================
+if (Array.isArray(hourly)) {
   return hourly
     .map((h, i) => {
 
@@ -76,12 +76,28 @@ export function normalizeOpenMeteo(hourly) {
         toNumber(h.relative_humidity) ??
         toNumber(h.humidity);
 
-      // 🔥 Dew point fallback (only if missing)
+      // ------------------------------------------------------------
+      // 🌡️ Magnus Dew Point Fallback (accurate, meteorologist-grade)
+      // ------------------------------------------------------------
       const estimateDewPoint = (tempF, rh) => {
         if (tempF == null || rh == null) return null;
-        const tempC = (tempF - 32) * 5 / 9;
-        const dewC = tempC - ((100 - rh) / 5);
-        return (dewC * 9 / 5) + 32;
+
+        const T = (tempF - 32) * 5/9; // °C
+        const RH = rh;
+
+        // Magnus constants (over water)
+        const a = 17.625;
+        const b = 243.04;
+
+        const alpha =
+          Math.log(RH / 100) +
+          (a * T) / (b + T);
+
+        const dewC =
+          (b * alpha) /
+          (a - alpha);
+
+        return (dewC * 9/5) + 32; // back to °F
       };
 
       const dewpointF =
