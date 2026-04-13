@@ -312,21 +312,39 @@ function renderTomorrow(tomorrow) {
 function renderTimeline(hourly) {
   if (!hourly?.length) return;
 
-  const nextHours = hourly.slice(0, 5);
+  // ------------------------------------------------------------
+  // ⏱ ROUND TO NEXT HOUR
+  // ------------------------------------------------------------
+  const now = new Date();
+  now.setMinutes(0, 0, 0);
+  now.setHours(now.getHours() + 1);
 
+  const nextHourTs = now.getTime();
+
+  // ------------------------------------------------------------
+  // 🔍 FIND START INDEX
+  // ------------------------------------------------------------
+  const startIndex = hourly.findIndex(h => h.timestamp >= nextHourTs);
+  const safeIndex = startIndex >= 0 ? startIndex : 0;
+
+  const nextHours = hourly.slice(safeIndex, safeIndex + 6);
+
+  // ------------------------------------------------------------
+  // 🎯 BUILD UI
+  // ------------------------------------------------------------
   const html = nextHours.map(h => {
     const comfort = calculateComfort(h);
     const score = Math.round((comfort?.score || 0) * 10);
     const emoji = getSimpleIcon(score);
 
-return `
-  <div class="hour-block">
-    <div class="hour-time">${formatHour(h.timestamp)}</div>
-    <div class="hour-icon">${emoji}</div>
-    <div class="hour-temp">${Math.round(h.temperatureF)}°</div>
-    <div class="hour-score">${score}</div>
-  </div>
-`;
+    return `
+      <div class="hour-block">
+        <div class="hour-time">${formatHour(h.timestamp)}</div>
+        <div class="hour-icon">${emoji}</div>
+        <div class="hour-temp">${Math.round(h.temperatureF)}°</div>
+        <div class="hour-score">${score}</div>
+      </div>
+    `;
   }).join('');
 
   document.getElementById('timeline').innerHTML = `
@@ -336,7 +354,6 @@ return `
     </div>
   `;
 }
-
 
 // ============================================================
 // HELPERS
