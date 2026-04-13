@@ -56,6 +56,12 @@ export function normalizeOpenMeteo(hourly) {
   if (Array.isArray(hourly)) {
     return hourly
       .map((h, i) => {
+
+         // 🧪 TRACE RAW ARRAY INPUT
+      if (i === 12) {
+        console.log("🧪 RAW ARRAY HOUR", h);
+      }
+      
         const ts =
           h.timestamp ??
           (h.time ? toTimestamp(h.time) : null);
@@ -68,7 +74,8 @@ export function normalizeOpenMeteo(hourly) {
 
 const dewpointF =
   toNumber(h.dewpointF) ??
-  toNumber(h.dewPoint);
+  toNumber(h.dewPoint) ??
+  toNumber(h.dew_point);
 
 const apparentF =
   toNumber(h.apparentF) ??
