@@ -9,7 +9,7 @@ import { buildHumanActionIntelFS } from '/js/intel/human-action-feelscore.js';
 
 
 // ============================================================
-// MAIN RENDER
+// MAIN RENDER (FIXED DATA PIPELINE)
 // ============================================================
 
 export async function renderNewLayout(container) {
@@ -28,12 +28,29 @@ export async function renderNewLayout(container) {
       lon: -82.5515
     });
 
-    const current = data.current;
-    const hourly = data.hourly;
+    // ------------------------------------------------------------
+    // 🔥 NORMALIZE ALL WEATHER INPUT (CRITICAL FIX)
+    // ------------------------------------------------------------
+    const rawHourly = data.hourly || [];
+    const hourly = normalizeOpenMeteo(rawHourly);
 
-    // 🔥 Core intelligence layer
-   const human = buildHumanActionIntelFS(data);
+    // normalize current using same pipeline
+    const current =
+      normalizeOpenMeteo([data.current])[0] ||
+      data.current;
 
+    // ------------------------------------------------------------
+    // 🧠 HUMAN INTEL (now uses clean data)
+    // ------------------------------------------------------------
+    const human = buildHumanActionIntelFS({
+      ...data,
+      hourly,
+      current
+    });
+
+    // ------------------------------------------------------------
+    // 🎯 RENDER
+    // ------------------------------------------------------------
     renderFeelScore(current);
     renderToday(human.today);
     renderTimeline(hourly);
@@ -44,7 +61,6 @@ export async function renderNewLayout(container) {
     container.innerHTML = `<div style="padding:20px;">Error loading preview</div>`;
   }
 }
-
 
 // ============================================================
 // FEELSCORE (SYNTHESIZED)
