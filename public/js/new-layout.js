@@ -64,7 +64,7 @@ export async function renderNewLayout(container) {
 }
 
 // ============================================================
-// FEELSCORE (SYNTHESIZED)
+// FEELSCORE (SYNTHESIZED — FULL HYBRID)
 // ============================================================
 
 function renderFeelScore(current) {
@@ -73,19 +73,36 @@ function renderFeelScore(current) {
   const comfort = calculateComfort(current);
   const score = Math.round((comfort?.score || 0) * 10);
 
-  const intel = {
-  signals: {
-  temp: current.temperatureF,
-  dewPoint: current.dewpointF,
-  windSpeed: current.wind_speed ?? current.windSpeed ?? 0
-},
-    dominantFactor: detectDominantFactor(current),
-    confidence: 0.7,
-    snapshot: current
-  };
-
   const category = mapScoreToCategory(score);
 
+  // ------------------------------------------------------------
+  // 🧠 BUILD RICH INTEL
+  // ------------------------------------------------------------
+  const intel = {
+    signals: {
+      temp: current.temperatureF,
+      dewPoint: current.dewpointF,
+      windSpeed: current.wind_speed ?? current.windSpeed ?? 0
+    },
+
+    pattern: {
+      avg: score,
+      trend: 0, // feelscore is "now", so neutral trend
+      min: score - 5,
+      max: score + 5
+    },
+
+    context: {
+      label: "today",
+      timeWindow: "current"
+    },
+
+    dominantFactor: detectDominantFactor(current)
+  };
+
+  // ------------------------------------------------------------
+  // 🎙 SYNTH
+  // ------------------------------------------------------------
   const narrative = assembleWithVoice(
     intel,
     "today",
@@ -93,12 +110,44 @@ function renderFeelScore(current) {
     comfort?.goldilocks
   );
 
-  const headline = comfort?.goldilocks
-    ? "Chef’s kiss outside"
-    : narrative?.headline || "Feels pretty good out";
+  // ------------------------------------------------------------
+  // 🛟 HEADLINE (hybrid)
+  // ------------------------------------------------------------
+  let headline =
+    narrative?.headline ||
+    "Feels pretty good out";
 
-  const bullets = (narrative?.bullets || []).slice(0, 2);
+  // soften robotic phrasing slightly
+  if (headline.includes("settles in")) {
+    headline = headline.replace("settles in", "settles in nicely");
+  }
 
+  // ------------------------------------------------------------
+  // 🛟 BULLETS (with fallback)
+  // ------------------------------------------------------------
+  const fallbackBullets = [];
+
+  if (current.dewpointF < 55) {
+    fallbackBullets.push("Air feels light and easy");
+  }
+
+  if (current.dewpointF < 50 && score >= 85) {
+    fallbackBullets.push("One of those classic mountain-air feels");
+  }
+
+  if ((current.wind_speed ?? 0) < 8 && score >= 85) {
+    fallbackBullets.push("Nothing really pushing you around");
+  }
+
+  const bullets = (
+    narrative?.bullets?.length
+      ? narrative.bullets
+      : fallbackBullets
+  ).slice(0, 3);
+
+  // ------------------------------------------------------------
+  // 🎯 RENDER
+  // ------------------------------------------------------------
   document.getElementById('feelscore').innerHTML = `
     <div class="feelscore-card">
 
