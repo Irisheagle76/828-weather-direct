@@ -50,11 +50,14 @@ const pick = (src, i, ...keys) => {
 // MAIN
 // ------------------------------------------------------------
 export function normalizeOpenMeteo(hourly) {
-  if (!hourly) {
-    warnOnce("normalizeOpenMeteo: missing hourly input");
-    return [];
-  }
-
+  // 🔴 TRACE: RAW INPUT SAMPLE
+if (hourly?.temperature_2m?.length) {
+  console.log("🟡 RAW OPEN-METEO SAMPLE", {
+    temp: hourly.temperature_2m[12],
+    dew: hourly.dew_point_2m?.[12] ?? hourly.dewpoint_2m?.[12],
+    time: hourly.time?.[12]
+  });
+}
   // ============================================================
   // CASE 1: ARRAY INPUT (already object-based, canonical-ish)
   // ============================================================
@@ -74,6 +77,16 @@ export function normalizeOpenMeteo(hourly) {
         // For array input we still allow Celsius → Fahrenheit
         const temperatureF = h.temperatureF ?? cToF(tempC);
         const dewpointF    = h.dewpointF ?? cToF(dewC);
+
+        // 🟢 TRACE: AFTER NORMALIZATION
+if (i === 12) {
+  console.log("🟢 NORMALIZED HOUR", {
+    temperatureF,
+    dewpointF,
+    apparentF
+  });
+}
+
         const apparentF    = h.apparentF ?? cToF(appC);
 
         const humidity = toNumber(h.relative_humidity);
@@ -242,36 +255,74 @@ export function normalizeOpenMeteo(hourly) {
     // -------------------------
     // OUTPUT
     // -------------------------
-    out.push({
-      temperatureF,
-      dewpointF,
-      apparentF,
+    // -------------------------
+// OUTPUT
+// -------------------------
 
-      relative_humidity: humidity,
+// 🔵 TRACE: FINAL OBJECT BEFORE PUSH
+// -------------------------
+// OUTPUT
+// -------------------------
 
-      wind_speed,
-      wind_gust,
-      wind_dir,
+// 🔵 TRACE: FINAL OBJECT BEFORE PUSH
+if (i === 12) {
+  console.log("🔵 FINAL NORMALIZED OBJECT", {
+    temperatureF,
+    dewpointF,
+    apparentF,
 
-      precipitation,
-      snowfall,
-      precipType,
+    relative_humidity: humidity,
 
-      uv_index,
-      visibility,
-      cloud_cover,
+    wind_speed,
+    wind_gust,
+    wind_dir,
 
-      smoke_index: 0,
-      frost_risk,
-      freeze_risk,
-      black_ice_risk,
-      inversion_risk,
-      valley_fog_risk,
-      ridge_fog_risk,
+    precipitation,
+    snowfall,
+    precipType,
 
-      timestamp: ts
-    });
-  }
+    uv_index,
+    visibility,
+    cloud_cover,
 
-  return out;
+    smoke_index: 0,
+    frost_risk,
+    freeze_risk,
+    black_ice_risk,
+    inversion_risk,
+    valley_fog_risk,
+    ridge_fog_risk,
+
+    timestamp: ts
+  });
 }
+
+out.push({
+  temperatureF,
+  dewpointF,
+  apparentF,
+
+  relative_humidity: humidity,
+
+  wind_speed,
+  wind_gust,
+  wind_dir,
+
+  precipitation,
+  snowfall,
+  precipType,
+
+  uv_index,
+  visibility,
+  cloud_cover,
+
+  smoke_index: 0,
+  frost_risk,
+  freeze_risk,
+  black_ice_risk,
+  inversion_risk,
+  valley_fog_risk,
+  ridge_fog_risk,
+
+  timestamp: ts
+});
