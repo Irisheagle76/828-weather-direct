@@ -4,7 +4,7 @@
 
 import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
 import { calculateComfort } from '/js/intel/comfort.js';
-import { normalizeOpenMeteo } from '/js/normalize/normalize-hourly.js';
+import { normalizeOpenMeteo } from '/js/intel/normalize-hourly.js';
 import { assembleWithVoice } from '/js/intel/synthesizer/assembleWithVoice.js';
 import { buildHumanActionIntelFS } from '/js/intel/human-action-feelscore.js';
 
