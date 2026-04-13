@@ -274,3 +274,28 @@ function fallbackAll() {
     tomorrow: fallback("tomorrow")
   };
 }
+
+function detectDominantFactor(snapshot) {
+  const dp = snapshot?.dewPoint ?? 55;
+  const temp = snapshot?.temp ?? 70;
+  const wind = snapshot?.windSpeed ?? 0;
+
+  if (dp >= 68) return "muggy";
+  if (dp >= 60) return "humid";
+if (dp < 50 && temp >= 65 && temp <= 80) return "mountain_air";
+
+  if (temp >= 88) return "heat";
+  if (temp <= 45) return "cold";
+
+  if (wind >= 15) return "wind";
+
+  return "comfortable";
+}
+
+function mapScoreToCategory(score) {
+  if (score >= 88) return "veryComfortable";
+  if (score >= 70) return "comfortable";
+  if (score >= 55) return "slightlyUncomfortable";
+  if (score >= 40) return "uncomfortable";
+  return "harsh";
+}
