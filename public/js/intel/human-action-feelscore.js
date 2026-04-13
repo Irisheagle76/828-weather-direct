@@ -110,12 +110,29 @@ const narrative = assembleWithVoice(
 // ------------------------------------------------------------
 // 🛟 FALLBACK (SAFETY)
 // ------------------------------------------------------------
+// ------------------------------------------------------------
+// 🛟 HYBRID OUTPUT (SYNTH + INTELLIGENT FALLBACK)
+// ------------------------------------------------------------
+
+// HEADLINE — synth first, fallback if needed
 const headline =
   narrative?.headline ||
   buildHeadlineFS(score, label, snapshot, { trend, min, max });
 
-const bullets =
-  (narrative?.bullets || []).slice(0, 3);
+
+// BULLETS — synth if present, otherwise structured fallback
+const bullets = (
+  narrative?.bullets?.length
+    ? narrative.bullets
+    : buildBulletsFS({
+        score,
+        snapshot,
+        label,
+        trend,
+        min,
+        max
+      })
+).slice(0, 3);
 
 // ------------------------------------------------------------
 // 🎯 OUTPUT
@@ -172,8 +189,9 @@ function buildHeadlineFS(score, label, snapshot, context) {
       : "Comfortable all day with crisp, dry air";
   }
 
-  if (score >= 80) return "Comfortable overall";
-  if (score >= 65) return "Mostly comfortable with some variation";
+ if (score >= 85) return "Feels really nice out there";
+if (score >= 70) return "Comfortable with a few small shifts";
+if (score >= 55) return "A bit uneven, but manageable";
 
   return "Mixed comfort through the day";
 }
