@@ -176,13 +176,46 @@ function renderFeelScore(current) {
 function renderToday(today) {
   if (!today) return;
 
-  const headline = today.headline || "Pretty stable conditions out there!";
+  const score = today.score ?? 70;
 
-  const bullets = (
-    today.bullets?.length
-      ? today.bullets
-      : ["Nothing major stands out — fairly steady conditions"]
-  ).slice(0, 3);
+  // ------------------------------------------------------------
+  // 🎯 HEADLINE (calm-day aware)
+  // ------------------------------------------------------------
+  let headline = today.headline;
+
+  if (!headline) {
+    if (score >= 90) {
+      headline = "One of those easy, dialed-in days";
+    } else if (score >= 75) {
+      headline = "Comfortable with a smooth feel overall";
+    } else {
+      headline = "Pretty stable conditions out there";
+    }
+  }
+
+  // ------------------------------------------------------------
+  // 🎯 BULLETS (intentional calm language)
+  // ------------------------------------------------------------
+  let bullets;
+
+  if (today.bullets?.length) {
+    bullets = today.bullets;
+  } else if (score >= 90) {
+    bullets = [
+      "Just a smooth, easy stretch of weather",
+      "Nothing really getting in your way out there"
+    ];
+  } else if (score >= 75) {
+    bullets = [
+      "Overall a comfortable and steady feel",
+    ];
+  } else {
+    bullets = [
+      "Nothing major driving conditions one way or the other"
+    ];
+  }
+
+  bullets = bullets.slice(0, 3);
 
   document.getElementById('today').innerHTML = `
     <div class="today-card">
@@ -204,7 +237,6 @@ function renderToday(today) {
   `;
 }
 
-
 // ============================================================
 // TOMORROW (ROBUST RENDER)
 // ============================================================
@@ -212,13 +244,46 @@ function renderToday(today) {
 function renderTomorrow(tomorrow) {
   if (!tomorrow) return;
 
-  const headline = tomorrow.headline || "Weatherwise? Conditions are looking all good.";
+  const score = tomorrow.score ?? 70;
 
-  const bullets = (
-    tomorrow.bullets?.length
-      ? tomorrow.bullets
-      : ["Conditions look fairly similar overall"]
-  ).slice(0, 3);
+  // ------------------------------------------------------------
+  // 🎯 HEADLINE (avoid duplication with TODAY)
+  // ------------------------------------------------------------
+  let headline = tomorrow.headline;
+
+  if (!headline) {
+    if (score >= 90) {
+      headline = "More of the same — things stay in a good place";
+    } else if (score >= 75) {
+      headline = "Another comfortable and steady day ahead";
+    } else {
+      headline = "Conditions look fairly stable overall";
+    }
+  }
+
+  // ------------------------------------------------------------
+  // 🎯 BULLETS (calm but forward-looking)
+  // ------------------------------------------------------------
+  let bullets;
+
+  if (tomorrow.bullets?.length) {
+    bullets = tomorrow.bullets;
+  } else if (score >= 90) {
+    bullets = [
+      "That comfortable feel sticks around",
+      "Still nothing really pushing things off balance"
+    ];
+  } else if (score >= 75) {
+    bullets = [
+      "Conditions remain fairly consistent through the day"
+    ];
+  } else {
+    bullets = [
+      "No major shifts expected"
+    ];
+  }
+
+  bullets = bullets.slice(0, 3);
 
   document.getElementById('tomorrow').innerHTML = `
     <div class="tomorrow-card">
