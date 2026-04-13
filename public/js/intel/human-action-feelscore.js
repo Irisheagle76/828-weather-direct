@@ -127,6 +127,7 @@ return {
   headline,
   bullets
 };
+}
 
 // ============================================================
 // COMFORT MAPPING
@@ -272,5 +273,4 @@ function fallbackAll() {
     today: fallback("today"),
     tomorrow: fallback("tomorrow")
   };
-}
 }
