@@ -6,7 +6,7 @@ import { normalizeOpenMeteo } from "./normalize-hourly.js";
 import { calculateComfort } from "./comfort.js";
 
 export function buildHumanActionIntelFS(raw) {
-  const hourly = normalizeOpenMeteo(raw?.hourly);
+  const hourly = raw?.hourly || [];
   if (!hourly.length) return fallbackAll();
 
   const now = Date.now();
@@ -86,20 +86,18 @@ function buildPeriodFS(hours, hourlyComfort, label, context) {
 
 function mapComfortFS(hours) {
   return hours.map(h => {
-    const c = calculateComfort({
-      temp: h.temperatureF,
-      dewPoint: h.dewpointF,
-      windSpeed: h.wind_speed,
-      obsTimeLocal: h.timestamp
-    });
+    const c = calculateComfort(h);
+
+    const score = Number.isFinite(c?.score)
+      ? Math.round(c.score * 10)
+      : 50;
 
     return {
       hour: new Date(h.timestamp).getHours(),
-      score: Math.round((c?.score ?? 5) * 10)
+      score
     };
   });
 }
-
 
 // ============================================================
 // HEADLINE (REAL FIX)
