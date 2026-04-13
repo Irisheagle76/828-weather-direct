@@ -4,7 +4,7 @@
 
 import { normalizeOpenMeteo } from "./normalize-hourly.js";
 import { calculateComfort } from "./comfort.js";
-import { assembleWithVoice } from "./intel/synthesizer/assembleWithVoice.js";
+import { assembleWithVoice } from "./synthesizer/assembleWithVoice.js";
 
 export function buildHumanActionIntelFS(raw) {
   const hourly = raw?.hourly || [];
