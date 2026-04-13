@@ -34,51 +34,62 @@ export function buildHumanActionIntelFS(raw) {
 
 
 // ============================================================
-// PERIOD (PEAK-WEIGHTED)
+// PERIOD (New Window)
 // ============================================================
 
 function buildPeriodFS(hours, hourlyComfort, label, context) {
   if (!hours.length) return fallback(label);
 
-  const daytime = hourlyComfort.filter(h => h.hour >= 8 && h.hour <= 20);
-  const midday  = hourlyComfort.filter(h => h.hour >= 11 && h.hour <= 17);
+  // ------------------------------------------------------------
+  // 🕐 PRIMARY WINDOW: 1–4 PM
+  // ------------------------------------------------------------
+  const window = hourlyComfort.filter(h =>
+    h.hour >= 13 && h.hour <= 16
+  );
 
-  const base = daytime.length ? daytime : hourlyComfort;
-  const peak = midday.length ? midday : base;
+  const base = window.length ? window : hourlyComfort;
 
-  let best = null;
-  let worst = null;
+  // ------------------------------------------------------------
+  // 📊 CORE METRICS
+  // ------------------------------------------------------------
+  const scores = base.map(h => h.score);
 
-  for (let i = 0; i < base.length - 2; i++) {
-    const slice = base.slice(i, i + 3);
-    const s = avg(slice);
+  const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+  const min = Math.min(...scores);
+  const max = Math.max(...scores);
 
-    if (!best || s > best.score) best = { score: s, start: slice[0].hour };
-    if (!worst || s < worst.score) worst = { score: s, start: slice[0].hour };
-  }
+  const trend = scores[scores.length - 1] - scores[0];
 
-  const avgPeak = avg(peak);
-  const avgBase = avg(base);
+  const score = Math.round(avg);
 
-  let score =
-    avgPeak * 0.6 +
-    avgBase * 0.25 +
-    (best?.score ?? avgPeak) * 0.1 +
-    (worst?.score ?? avgPeak) * 0.05;
-
-  score = Math.round(score);
-
+  // ------------------------------------------------------------
+  // 🌡 SNAPSHOT (for language)
+  // ------------------------------------------------------------
   const snapshot = blend(hours);
 
+  // ------------------------------------------------------------
+  // 🧠 OUTPUT
+  // ------------------------------------------------------------
   return {
     label,
     score,
     emoji: pickEmoji(score),
-    headline: buildHeadlineFS(score, label, snapshot, context),
-    bullets: buildBulletsFS({ best, worst, score, snapshot, label, context })
+    headline: buildHeadlineFS(score, label, snapshot, {
+      ...context,
+      trend,
+      min,
+      max
+    }),
+    bullets: buildBulletsFS({
+      score,
+      snapshot,
+      label,
+      trend,
+      min,
+      max
+    })
   };
 }
-
 
 // ============================================================
 // COMFORT MAPPING
@@ -100,7 +111,7 @@ function mapComfortFS(hours) {
 }
 
 // ============================================================
-// HEADLINE (REAL FIX)
+// HEADLINE (with new window data)
 // ============================================================
 
 function buildHeadlineFS(score, label, snapshot, context) {
@@ -110,8 +121,15 @@ function buildHeadlineFS(score, label, snapshot, context) {
   const dry = dp < 55;
   const warm = temp >= 70 && temp <= 85;
 
+  const trend = context?.trend ?? 0;
+
+  // 🔥 Trend-aware logic
   if (dry && warm) {
-    return label === "tomorrow" && context.similar
+    if (trend < -5) {
+      return "Comfortable early, a bit more humid later";
+    }
+
+    return label === "tomorrow" && context?.similar
       ? "More of the same — comfortable from start to finish"
       : "Comfortable all day with crisp, dry air";
   }
@@ -122,24 +140,17 @@ function buildHeadlineFS(score, label, snapshot, context) {
   return "Mixed comfort through the day";
 }
 
-
 // ============================================================
 // BULLETS
 // ============================================================
 
-function buildBulletsFS({ best, worst, score, snapshot, label, context }) {
+function buildBulletsFS({ score, snapshot, label, trend, min, max }) {
   const bullets = [];
 
-  if (best) {
-    bullets.push(
-      label === "today"
-        ? `Best stretch comes ${timeWord(best.start)}`
-        : `Another good window ${timeWord(best.start)}`
-    );
-  }
-
-  if (worst && score < 85) {
-    bullets.push(`A brief dip ${timeWord(worst.start)}`);
+  if (trend < -5) {
+    bullets.push("A little more humid as the afternoon goes on");
+  } else if (trend > 5) {
+    bullets.push("Conditions improve through the afternoon");
   }
 
   if (snapshot.dewPoint < 55) {
@@ -150,12 +161,12 @@ function buildBulletsFS({ best, worst, score, snapshot, label, context }) {
     );
   }
 
+  if (min < 70) {
+    bullets.push("A brief dip in comfort at times");
+  }
+
   return bullets.slice(0, 3);
 }
-
-// ============================================================
-// HELPERS
-// ============================================================
 
 // ============================================================
 // HELPERS
