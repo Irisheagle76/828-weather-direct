@@ -4,6 +4,7 @@
 
 import { normalizeOpenMeteo } from "./normalize-hourly.js";
 import { calculateComfort } from "./comfort.js";
+import { assembleWithVoice } from "./intel/synthesizer/assembleWithVoice.js";
 
 export function buildHumanActionIntelFS(raw) {
   const hourly = raw?.hourly || [];
@@ -70,26 +71,62 @@ function buildPeriodFS(hours, hourlyComfort, label, context) {
   // ------------------------------------------------------------
   // 🧠 OUTPUT
   // ------------------------------------------------------------
-  return {
+// ------------------------------------------------------------
+// 🧠 BUILD INTEL OBJECT
+// ------------------------------------------------------------
+const intel = {
+  signals: {
+    temp: snapshot.temp,
+    dewPoint: snapshot.dewPoint,
+    windSpeed: snapshot.windSpeed
+  },
+
+  pattern: {
+    trend,
+    min,
+    max,
+    avg: score
+  },
+
+  context: {
     label,
-    score,
-    emoji: pickEmoji(score),
-    headline: buildHeadlineFS(score, label, snapshot, {
-      ...context,
-      trend,
-      min,
-      max
-    }),
-    bullets: buildBulletsFS({
-      score,
-      snapshot,
-      label,
-      trend,
-      min,
-      max
-    })
-  };
-}
+    similar: context?.similar,
+    timeWindow: "afternoon"
+  },
+
+  dominantFactor: detectDominantFactor(snapshot)
+};
+
+// ------------------------------------------------------------
+// 🎙 SYNTHESIS (PRIMARY)
+// ------------------------------------------------------------
+const narrative = assembleWithVoice(
+  intel,
+  label,
+  mapScoreToCategory(score),
+  score >= 85
+);
+
+// ------------------------------------------------------------
+// 🛟 FALLBACK (SAFETY)
+// ------------------------------------------------------------
+const headline =
+  narrative?.headline ||
+  buildHeadlineFS(score, label, snapshot, { trend, min, max });
+
+const bullets =
+  (narrative?.bullets || []).slice(0, 3);
+
+// ------------------------------------------------------------
+// 🎯 OUTPUT
+// ------------------------------------------------------------
+return {
+  label,
+  score,
+  emoji: pickEmoji(score, snapshot),
+  headline,
+  bullets
+};
 
 // ============================================================
 // COMFORT MAPPING
@@ -235,4 +272,5 @@ function fallbackAll() {
     today: fallback("today"),
     tomorrow: fallback("tomorrow")
   };
+}
 }
