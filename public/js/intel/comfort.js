@@ -56,27 +56,62 @@ function computeSolarElevation(timestamp, lat, lon) {
 // PENALTIES
 // ============================================================
 
+// ============================================================
+// TEMPERATURE PENALTY — Asheville realistic
+// ============================================================
+
 function computeTemperaturePenalty(temp) {
   if (temp == null) return 0.5;
 
+  // Goldilocks
   if (temp >= 65 && temp <= 75) return 0;
-  if (temp >= 50) return (65 - temp) / 40;
+
+  // Cool discomfort
+  if (temp < 65 && temp >= 50) return (65 - temp) / 40;
   if (temp < 50) return clamp((50 - temp) / 25, 0, 1);
-  if (temp > 75) return clamp((temp - 75) / 20, 0, 1);
+
+  // --- Asheville heat discomfort (new curve) ---
+
+  // 75–82°F → gentle ramp
+  if (temp > 75 && temp < 82) {
+    return (temp - 75) / 14; // 0 → ~0.5
+  }
+
+  // 82–86°F → sharper discomfort
+  if (temp >= 82 && temp < 86) {
+    return 0.5 + (temp - 82) * 0.12; // 0.5 → ~1.0
+  }
+
+  // 86°F+ → near-max penalty
+  if (temp >= 86) {
+    return clamp(0.98 + (temp - 86) * 0.05, 0, 1);
+  }
 
   return 0;
 }
 
+// ============================================================
+// DEWPOINT PENALTY — Asheville realistic (lower threshold)
+// ============================================================
+
 function computeDewPenalty(dew) {
   if (dew == null) return 0.2;
 
+  // Crisp & dry
   if (dew < 45) return 0.05;
-  if (dew < 55) return 0.02;
-  if (dew < 60) return 0.08;
-  if (dew < 65) return 0.2;
-  if (dew < 70) return 0.4;
+  if (dew < 55) return 0.10;
 
-  return 0.7;
+  // Noticeable humidity
+  if (dew < 60) return 0.25;
+
+  // Muggy
+  if (dew < 65) return 0.45;
+
+  // 🔥 Asheville harsh humidity starts here
+  if (dew < 70) return 0.70;
+
+  // Oppressive
+  return 0.90;
 }
 
 function computeWindPenalty(wind) {
