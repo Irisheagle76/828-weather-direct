@@ -675,3 +675,8 @@ body {
   font-size: 12px;
   font-weight: 500;
 }
+
+.best-hour {
+  border: 1px solid rgba(255,255,255,0.15);
+  box-shadow: 0 0 10px rgba(255,255,255,0.08);
+}
