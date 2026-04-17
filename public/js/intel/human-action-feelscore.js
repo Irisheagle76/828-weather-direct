@@ -36,11 +36,12 @@ export function buildHumanActionIntelFS(raw) {
 function buildPeriod(hours, mapped, label, context) {
   if (!hours.length) return fallback(label);
 
-  // 1–4 PM focus
   const window = mapped.filter(h => h.hour >= 13 && h.hour <= 16);
   const base = window.length ? window : mapped;
 
-  const scores = base.map(h => h.score);
+  const scores = base.map(h => h.score).filter(s => typeof s === "number");
+
+  if (!scores.length) return fallback(label);
 
   const avg = average(scores);
   const min = Math.min(...scores);
@@ -51,11 +52,17 @@ function buildPeriod(hours, mapped, label, context) {
 
   const snapshot = buildSnapshot(hours);
 
+  // 🚨 HARD GUARD — snapshot must exist
+  if (!snapshot || snapshot.temp == null) {
+    console.warn("⚠️ Snapshot failed", snapshot);
+    return fallback(label);
+  }
+
   const intel = {
     signals: {
-      temp: snapshot?.temp ?? null,
-      dewPoint: snapshot?.dewPoint ?? null,
-      wind: snapshot?.wind ?? 0
+      temp: snapshot.temp,
+      dewPoint: snapshot.dewPoint ?? null,
+      wind: snapshot.wind ?? 0
     },
     pattern: {
       trend,
@@ -71,18 +78,25 @@ function buildPeriod(hours, mapped, label, context) {
     dominantFactor: detectDominantFactor(snapshot)
   };
 
-  // 🛡️ GUARD (prevents crash)
+  // 🚨 FINAL GUARD (before voice system)
   if (!intel.signals || intel.signals.temp == null) {
-    console.warn("⚠️ Invalid signals for voice", intel);
+    console.warn("⚠️ Invalid signals", intel);
     return fallback(label);
   }
 
-  const narrative = assembleWithVoice(
-    intel,
-    label,
-    mapScoreToCategory(score),
-    score >= 85
-  );
+  let narrative = null;
+
+  try {
+    narrative = assembleWithVoice(
+      intel,
+      label,
+      mapScoreToCategory(score),
+      score >= 85
+    );
+  } catch (err) {
+    console.warn("⚠️ Voice assembly failed", err);
+    return fallback(label);
+  }
 
   return {
     label,
