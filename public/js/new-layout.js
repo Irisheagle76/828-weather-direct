@@ -52,40 +52,73 @@ export async function renderNewLayout(container) {
     // SAFE NORMALIZATION
     // ============================================================
 
-    let hourly = [];
-    let current = null;
+   // ============================================================
+// SAFE NORMALIZATION (LOCAL + NON-DESTRUCTIVE)
+// ============================================================
 
-    if (
-      data?.hourly &&
-      typeof data.hourly === "object" &&
-      Array.isArray(data.hourly.time)
-    ) {
-      try {
-        hourly = normalizeOpenMeteo(data.hourly);
-      } catch (e) {
-        console.warn("⚠️ Hourly normalization failed", e);
-      }
-    } else {
-      console.warn("⚠️ Invalid hourly structure:", data?.hourly);
-    }
+function normalizeHourlyLocal(hourlyRaw = []) {
+  return hourlyRaw.map(h => ({
+    ts: h.ts || h.time || h.timestamp,
 
-    if (data?.current) {
-      try {
-        const normalized = normalizeOpenMeteo([data.current]);
-        current = normalized?.[0] || data.current;
-      } catch (e) {
-        console.warn("⚠️ Current normalization failed", e);
-        current = data.current;
-      }
-    }
+    temp:
+      h.temp ??
+      h.temperature ??
+      h.temperatureF,
 
-    if (current) renderHeaderMetrics(current);
+    dewPoint:
+      h.dewPoint ??
+      h.dewpoint ??
+      null,
 
-    const human = buildHumanActionIntelFS({
-      ...data,
-      hourly,
-      current
-    });
+    wind:
+      h.wind ??
+      h.windspeed ??
+      h.windSpeed ??
+      0,
+
+    rh:
+      h.rh ??
+      h.relative_humidity ??
+      h.humidity ??
+      null
+  }));
+}
+
+let hourly = [];
+let current = null;
+
+// ------------------------------------------------------------
+// HOURLY
+// ------------------------------------------------------------
+
+if (Array.isArray(data?.hourly) && data.hourly.length) {
+  hourly = normalizeHourlyLocal(data.hourly);
+} else {
+  console.warn("⚠️ Invalid hourly structure:", data?.hourly);
+}
+
+// ------------------------------------------------------------
+// CURRENT (light normalization only)
+// ------------------------------------------------------------
+
+if (data?.current) {
+  current = {
+    ...data.current,
+    temp:
+      data.current.temp ??
+      data.current.temperature ??
+      data.current.temperatureF,
+
+    wind:
+      data.current.wind ??
+      data.current.wind_avg ??
+      data.current.windSpeed,
+
+    rh:
+      data.current.rh ??
+      data.current.relative_humidity
+  };
+}
 
     // ============================================================
     // RENDER CORE
@@ -249,37 +282,60 @@ function renderTomorrow(data) {
 // ============================================================
 
 function renderTimeline(hourly) {
+  const container = document.getElementById('timeline');
+
   if (!Array.isArray(hourly) || !hourly.length) {
-    document.getElementById('timeline').innerHTML = '';
+    container.innerHTML = '';
     return;
   }
 
+  // ------------------------------------------------------------
+  // VALID DATA (normalized shape)
+  // ------------------------------------------------------------
   const valid = hourly.filter(h =>
-    h && h.timestamp && h.temperatureF != null
+    h && h.ts && h.temp != null
   );
 
-  if (!valid.length) return;
+  if (!valid.length) {
+    container.innerHTML = '';
+    return;
+  }
 
-  const next = valid.slice(0, 6);
+  // ------------------------------------------------------------
+  // NEXT 6 HOURS (future-aware)
+  // ------------------------------------------------------------
+  const now = Date.now();
 
-  const best = Math.max(...next.map(h =>
+  const future = valid.filter(h => h.ts >= now);
+
+  const next = (future.length ? future : valid).slice(0, 6);
+
+  // ------------------------------------------------------------
+  // BEST HOUR
+  // ------------------------------------------------------------
+  const scores = next.map(h =>
     Math.round((calculateComfort(h)?.score || 0) * 10)
-  ));
+  );
 
-  const html = next.map(h => {
-    const score = Math.round((calculateComfort(h)?.score || 0) * 10);
+  const best = Math.max(...scores);
+
+  // ------------------------------------------------------------
+  // BUILD UI
+  // ------------------------------------------------------------
+  const html = next.map((h, i) => {
+    const score = scores[i];
     const isBest = score === best ? "best-hour" : "";
 
     return `
       <div class="hour-block ${isBest}">
-        <div>${formatHour(h.timestamp)}</div>
-        <div>${Math.round(h.temperatureF)}°</div>
+        <div>${formatHour(h.ts)}</div>
+        <div>${Math.round(h.temp)}°</div>
         <div>${score}</div>
       </div>
     `;
   }).join('');
 
-  document.getElementById('timeline').innerHTML = `
+  container.innerHTML = `
     <div class="timeline-card">
       <div class="section-title">NEXT FEW HOURS</div>
       <div class="timeline-row">${html}</div>
