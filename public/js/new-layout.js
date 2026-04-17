@@ -1,5 +1,5 @@
 // ============================================================
-// AVL WEATHER — CLEAN SYNTH LAYOUT
+// AVL WEATHER — CLEAN SYNTH LAYOUT (WITH DROUGHT/FIRE)
 // ============================================================
 
 import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
@@ -10,6 +10,21 @@ import { buildHumanActionIntelFS } from '/js/intel/human-action-feelscore.js';
 
 
 // ============================================================
+// DROUGHT / FIRE FETCH
+// ============================================================
+
+async function fetchDroughtFire() {
+  try {
+    const res = await fetch('/api/drought-fire');
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+
+// ============================================================
 // MAIN
 // ============================================================
 
@@ -17,6 +32,7 @@ export async function renderNewLayout(container) {
   container.innerHTML = `
     <div class="top-stack">
       <div id="feelscore" class="card"></div>
+      <div id="droughtfire" class="card"></div>
       <div id="today" class="card"></div>
       <div id="timeline" class="card"></div>
       <div id="tomorrow" class="card"></div>
@@ -24,10 +40,13 @@ export async function renderNewLayout(container) {
   `;
 
   try {
-    const data = await getWeatherForUI({
-      lat: 35.5951,
-      lon: -82.5515
-    });
+    const [data, drought] = await Promise.all([
+      getWeatherForUI({
+        lat: 35.5951,
+        lon: -82.5515
+      }),
+      fetchDroughtFire()
+    ]);
 
     const hourly = normalizeOpenMeteo(data.hourly || []);
     const current =
@@ -41,6 +60,7 @@ export async function renderNewLayout(container) {
     });
 
     renderFeelScore(current);
+    renderDroughtFire(drought); // 👈 NEW
     renderToday(human.today);
     renderTimeline(hourly);
     renderTomorrow(human.tomorrow);
@@ -92,6 +112,47 @@ function renderFeelScore(current) {
 
       <div class="fs-bullets">
         ${bullets.map(b => `<div class="fs-bullet">• ${b}</div>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
+
+// ============================================================
+// DROUGHT / FIRE (NEW MODULE)
+// ============================================================
+
+function renderDroughtFire(data) {
+  if (!data) return;
+
+  const { DSS, FRI, dssLabel, friLabel, narrative } = data;
+
+  const headline =
+    narrative?.headline ||
+    "Dry conditions in place";
+
+  const bullets = (narrative?.bullets || []).slice(0, 2);
+
+  document.getElementById('droughtfire').innerHTML = `
+    <div class="df-card">
+      <div class="df-header">DROUGHT / FIRE</div>
+
+      <div class="df-scores">
+        <div class="df-score">
+          🔥 ${FRI}
+          <span class="df-label">${friLabel}</span>
+        </div>
+
+        <div class="df-score">
+          🌵 ${DSS}
+          <span class="df-label">${dssLabel}</span>
+        </div>
+      </div>
+
+      <div class="df-headline">${headline}</div>
+
+      <div class="df-bullets">
+        ${bullets.map(b => `<div class="df-bullet">• ${b}</div>`).join('')}
       </div>
     </div>
   `;
@@ -175,7 +236,7 @@ function renderTomorrow(tomorrow) {
 
 
 // ============================================================
-// TIMELINE (NEXT 6 HOURS, ALIGNED)
+// TIMELINE
 // ============================================================
 
 function renderTimeline(hourly) {
@@ -212,7 +273,7 @@ function renderTimeline(hourly) {
 
 
 // ============================================================
-// INTEL BUILDER (NEW CORE)
+// HELPERS (UNCHANGED)
 // ============================================================
 
 function buildIntel(current, score, mode) {
@@ -236,42 +297,24 @@ function buildIntel(current, score, mode) {
   };
 }
 
-
-// ============================================================
-// CALM-DAY LANGUAGE (CORE DIFFERENTIATOR)
-// ============================================================
-
-function calmBullets(score, current) {
+function calmBullets(score) {
   if (score >= 90) {
-    return [
-      "Nothing really pushing you around",
-      "Air feels light and easy"
-    ];
+    return ["Nothing really pushing you around", "Air feels light and easy"];
   }
-
   return ["Fairly steady conditions overall"];
 }
 
 function calmDayBullets(score) {
-  if (score >= 90) {
-    return ["Just a smooth, easy stretch of weather"];
-  }
-
-  return ["Conditions stay fairly steady"];
+  return score >= 90
+    ? ["Just a smooth, easy stretch of weather"]
+    : ["Conditions stay fairly steady"];
 }
 
 function calmTomorrowBullets(score) {
-  if (score >= 90) {
-    return ["That comfortable feel sticks around"];
-  }
-
-  return ["No major changes expected"];
+  return score >= 90
+    ? ["That comfortable feel sticks around"]
+    : ["No major changes expected"];
 }
-
-
-// ============================================================
-// HELPERS
-// ============================================================
 
 function mapScoreToCategory(score) {
   if (score >= 88) return "veryComfortable";

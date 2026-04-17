@@ -98,12 +98,26 @@ async function handleHourly(req, res) {
   // ----------------------------------------------------------
   // FINAL PAYLOAD
   // ----------------------------------------------------------
-  const payload = {
-    hourly: data.hourly,
-    current: tempest,
-    tempest, // explicit (helps frontend clarity)
-    _source: "open-meteo"
-  };
+ const payload = {
+  hourly: data.hourly,
+
+  // legacy (keep for frontend safety)
+  current: tempest,
+
+  // new standardized object (used by drought-fire)
+  current_conditions: tempest
+    ? {
+        air_temperature: tempest.temp,
+        relative_humidity: tempest.humidity,
+        wind_gust: data.hourly?.wind_gusts_10m?.[0] ?? tempest.wind,
+        wind_avg: tempest.wind,
+        timestamp: tempest.ts
+      }
+    : null,
+
+  tempest,
+  _source: "open-meteo"
+};
 
   cache[key] = {
     ts: Date.now(),
@@ -149,13 +163,14 @@ async function fetchTempest() {
     const tempF = Math.round(toF(tempRaw));
     const dewF  = dewRaw != null ? Math.round(toF(dewRaw)) : null;
 
-    return {
-      temp: tempF,
-      dew_point: dewF,
-      humidity: obs.relative_humidity ?? null,
-      wind: obs.wind_avg ?? 0,
-      ts: obs.timestamp
-    };
+ return {
+  temp: tempF,
+  dew_point: dewF,
+  humidity: obs.relative_humidity ?? null,
+  wind: obs.wind_avg ?? 0,
+  wind_gust: obs.wind_gust ?? obs.wind_avg ?? 0,
+  ts: obs.timestamp
+};
 
   } catch {
     return null;

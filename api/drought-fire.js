@@ -1,35 +1,33 @@
 import { computeDroughtFireIndexLive } from "../lib/drought-fire/computeDroughtFireIndex.js";
-import { getForecast } from "../lib/forecast.js";
 
 // -----------------------------
 // CONFIG
 // -----------------------------
-const STATION_ID = 127602;
+const LAT = 35.5951;
+const LON = -82.5515;
 
 // -----------------------------
-// TEMPEST FETCH
+// WEATHER FETCH (single source of truth)
 // -----------------------------
-async function getTempestObs() {
+async function getWeather() {
   try {
     const base =
       process.env.BASE_URL ||
-      "https://avlweather.com"; // fallback for prod
+      "https://avlweather.com";
 
-    const url = `${base}/api/tempest/device?stationId=${STATION_ID}&token=${process.env.TEMPEST_TOKEN}`;
+    const url = `${base}/api/weather?type=hourly&lat=${LAT}&lon=${LON}`;
 
     const res = await fetch(url);
 
     if (!res.ok) {
-      console.warn("Tempest fetch failed:", res.status);
+      console.warn("Weather fetch failed:", res.status);
       return null;
     }
 
-    const data = await res.json();
-
-    return data?.current_conditions || null;
+    return await res.json();
 
   } catch (err) {
-    console.warn("Tempest fetch error:", err);
+    console.warn("Weather fetch error:", err);
     return null;
   }
 }
@@ -39,28 +37,30 @@ async function getTempestObs() {
 // -----------------------------
 export default async function handler(req, res) {
   try {
-    const [obs, forecast] = await Promise.all([
-      getTempestObs(),
-      getForecast()
-    ]);
+    const weather = await getWeather();
 
     // -----------------------------
     // CURRENT CONDITIONS
     // -----------------------------
-    const tempF = obs?.air_temperature ?? 75;
-    const rh = obs?.relative_humidity ?? 40;
-    const windGust = obs?.wind_gust ?? obs?.wind_avg ?? 5;
+    const obs = weather?.current_conditions || weather?.current || null;
+
+    const tempF = obs?.air_temperature ?? obs?.temp ?? 75;
+    const rh = obs?.relative_humidity ?? obs?.humidity ?? 40;
+    const windGust =
+      obs?.wind_gust ??
+      weather?.hourly?.wind_gusts_10m?.[0] ??
+      5;
 
     // -----------------------------
     // TEMPERATURE ANOMALY
     // -----------------------------
-    const normalTemp = getNormalTemp(forecast);
+    const normalTemp = getNormalTemp(weather);
     const tempAnomalyF = tempF - normalTemp;
 
     // -----------------------------
     // DAYS SINCE RAIN
     // -----------------------------
-    const daysSinceRain = getDaysSinceRain(forecast);
+    const daysSinceRain = getDaysSinceRain(weather);
 
     // -----------------------------
     // RUN INDEX
@@ -88,33 +88,31 @@ export default async function handler(req, res) {
 // HELPERS
 // -----------------------------
 
-function getNormalTemp(forecast) {
-  if (forecast?.daily?.[0]?.temp_normal != null) {
-    return forecast.daily[0].temp_normal;
-  }
+function getNormalTemp(weather) {
+  const temps = weather?.hourly?.temperature_2m;
 
-  if (forecast?.daily?.[0]?.temp?.day != null) {
-    return forecast.daily[0].temp.day;
-  }
+  if (!temps || !temps.length) return 70;
 
-  return 70;
+  // use first 24h average
+  const slice = temps.slice(0, 24);
+  const avg =
+    slice.reduce((a, b) => a + b, 0) / slice.length;
+
+  return avg;
 }
 
-function getDaysSinceRain(forecast) {
-  const days = forecast?.daily || [];
+function getDaysSinceRain(weather) {
+  const precip = weather?.hourly?.precipitation;
 
-  for (let i = 0; i < days.length; i++) {
-    const d = days[i];
+  if (!precip || !precip.length) return 10;
 
-    const precip =
-      d.precip ??
-      d.rain ??
-      d.qpf ??
-      0;
+  let hours = 0;
 
-    if (precip >= 0.25) {
-      return i;
+  for (let i = 0; i < precip.length; i++) {
+    if (precip[i] >= 0.25) {
+      return Math.floor(hours / 24);
     }
+    hours++;
   }
 
   return 10;
