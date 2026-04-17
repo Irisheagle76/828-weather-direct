@@ -285,15 +285,15 @@ function buildFutureSlice(hourly, isDay) {
 
   return slice.map(h => {
     const c = calculateComfort({
-      temp: h.temperatureF,
-      dewpointF: h.dewpointF,
-      windSpeed: h.wind_speed,
+      temp: h.temperatureF ?? h.temp ?? null,
+      dewpointF: h.dewpointF ?? h.dew_point ?? null,
+      windSpeed: h.windSpeed ?? h.wind_speed ?? 0,
       obsTimeLocal: h.timestamp
     });
 
     return {
       hourLabel: new Date(getTs(h)).toLocaleTimeString([], { hour: "numeric" }),
-      temp: h.temperatureF,
+      temp: h.temperatureF ?? h.temp ?? null,
       score: c?.score ?? null
     };
   });
