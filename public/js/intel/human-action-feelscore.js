@@ -1,5 +1,5 @@
 // ============================================================
-// HUMAN ACTION — FEELSCORE (STABLE + SIMPLIFIED)
+// HUMAN ACTION — FEELSCORE (STABLE + HARDENED)
 // ============================================================
 
 import { calculateComfort } from "./comfort.js";
@@ -18,14 +18,9 @@ export function buildHumanActionIntelFS(raw) {
   const todayHours = hourly.filter(h => h.ts >= now && h.ts < now + 24 * 3600e3);
   const tomorrowHours = hourly.filter(h => h.ts >= now + 24 * 3600e3 && h.ts < now + 48 * 3600e3);
 
-  const todayMapped = mapComfort(todayHours);
-  const tomorrowMapped = mapComfort(tomorrowHours);
-
-  const similar = areSimilarDays(todayMapped, tomorrowMapped);
-
   return {
-    today: buildPeriod(todayHours, todayMapped, "today", { similar }),
-    tomorrow: buildPeriod(tomorrowHours, tomorrowMapped, "tomorrow", { similar })
+    today: buildPeriod(todayHours, "today"),
+    tomorrow: buildPeriod(tomorrowHours, "tomorrow")
   };
 }
 
@@ -33,10 +28,12 @@ export function buildHumanActionIntelFS(raw) {
 // PERIOD
 // ============================================================
 
-function buildPeriod(hours, mapped, label, context) {
-  if (!hours.length) return fallback(label);
+function buildPeriod(hours, label) {
+  if (!Array.isArray(hours) || !hours.length) return fallback(label);
 
-  // focus window (afternoon bias)
+  const mapped = mapComfort(hours);
+
+  // Afternoon bias
   const window = mapped.filter(h => h.hour >= 13 && h.hour <= 16);
   const base = window.length ? window : mapped;
 
@@ -55,34 +52,17 @@ function buildPeriod(hours, mapped, label, context) {
 
   const snapshot = buildSnapshot(hours);
 
-  // ------------------------------------------------------------
-  // HARD GUARD (no valid signal → no voice)
-  // ------------------------------------------------------------
-  if (!snapshot || typeof snapshot.temp !== "number") {
-    console.warn("⚠️ Snapshot invalid", snapshot);
+  // 🚨 HARD STOP — no valid temp → no voice
+  if (typeof snapshot.temp !== "number") {
+    console.warn("⚠️ Invalid snapshot", snapshot);
     return fallback(label);
   }
 
-  const intel = {
-    signals: {
-      temp: snapshot.temp,
-      dewPoint: snapshot.dewPoint ?? null,
-      wind: snapshot.wind ?? 0
-    },
-    pattern: { trend, min, max, avg: score },
-    context: {
-      label,
-      similar: context?.similar,
-      timeWindow: "afternoon"
-    },
-    dominantFactor: detectDominantFactor(snapshot)
-  };
+  const intel = buildIntel(snapshot, score, trend, min, max, label);
 
-  // ------------------------------------------------------------
-  // FINAL GUARD
-  // ------------------------------------------------------------
+  // 🚨 FINAL GUARD
   if (typeof intel.signals.temp !== "number") {
-    console.warn("⚠️ Invalid signals", intel);
+    console.warn("⚠️ Invalid intel", intel);
     return fallback(label);
   }
 
@@ -106,12 +86,37 @@ function buildPeriod(hours, mapped, label, context) {
     emoji: pickEmoji(score),
     headline:
       narrative?.headline ||
-      buildHeadline(score, label, snapshot),
+      buildHeadline(score, snapshot),
     bullets:
       (narrative?.bullets?.length
         ? narrative.bullets
         : buildBullets(snapshot, trend)
       ).slice(0, 3)
+  };
+}
+
+// ============================================================
+// INTEL BUILDER (NEW — CONSISTENT SHAPE)
+// ============================================================
+
+function buildIntel(snapshot, score, trend, min, max, label) {
+  return {
+    signals: {
+      temp: snapshot.temp,
+      dewPoint: snapshot.dewPoint ?? null,
+      wind: snapshot.wind ?? 0
+    },
+    pattern: {
+      trend,
+      min,
+      max,
+      avg: score
+    },
+    context: {
+      label,
+      timeWindow: "afternoon"
+    },
+    dominantFactor: detectDominantFactor(snapshot)
   };
 }
 
@@ -131,7 +136,7 @@ function mapComfort(hours) {
 }
 
 // ============================================================
-// SNAPSHOT (resilient)
+// SNAPSHOT (STRICT)
 // ============================================================
 
 function buildSnapshot(hours) {
@@ -155,24 +160,22 @@ function buildSnapshot(hours) {
   const wind = avg(["wind", "windSpeed", "windspeed", "wind_speed"]);
 
   return {
-    temp,
-    dewPoint,
-    wind: wind ?? 0
+    temp: typeof temp === "number" ? temp : null,
+    dewPoint: typeof dewPoint === "number" ? dewPoint : null,
+    wind: typeof wind === "number" ? wind : 0
   };
 }
 
 // ============================================================
-// HEADLINE + BULLETS
+// TEXT SYSTEM
 // ============================================================
 
-function buildHeadline(score, label, snapshot) {
+function buildHeadline(score, snapshot) {
   const temp = snapshot.temp ?? 70;
   const dp = snapshot.dewPoint ?? 55;
 
   if (dp < 55 && temp >= 70 && temp <= 85) {
-    return label === "tomorrow"
-      ? "More of the same — comfortable throughout"
-      : "Comfortable with dry, crisp air";
+    return "Comfortable with dry, crisp air";
   }
 
   if (score >= 85) return "Feels really nice out";
@@ -209,11 +212,6 @@ function pickEmoji(score) {
   return "😐";
 }
 
-function areSimilarDays(a, b) {
-  if (!a.length || !b.length) return false;
-  return Math.abs(average(a.map(h => h.score)) - average(b.map(h => h.score))) <= 5;
-}
-
 function fallback(label) {
   return {
     label,
@@ -231,7 +229,7 @@ function fallbackAll() {
   };
 }
 
-function detectDominantFactor(s) {
+function detectDominantFactor(s = {}) {
   if (s.dewPoint >= 65) return "muggy";
   if (s.temp >= 85) return "heat";
   if (s.temp <= 45) return "cold";
