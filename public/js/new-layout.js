@@ -104,9 +104,11 @@ function renderFeelScore(current) {
   document.getElementById('feelscore').innerHTML = `
     <div class="feelscore-card">
       <div class="fs-header">
-        <div class="fs-title">FEELSCORE</div>
-        <div class="fs-score">${score}</div>
-      </div>
+      <div class="fs-header">
+  <div class="fs-title">FEELSCORE</div>
+  <div class="fs-score">${score}</div>
+  <div class="info-btn" onclick="openInfo('feelscore')">ⓘ</div>
+</div>
 
       <div class="fs-headline">${headline}</div>
 
@@ -145,7 +147,10 @@ function renderDroughtFire(data) {
 
   document.getElementById('droughtfire').innerHTML = `
     <div class="df-card">
-      <div class="df-header">DROUGHT / FIRE</div>
+      <div class="df-header">
+  DROUGHT / FIRE
+  <span class="info-btn" onclick="openInfo('drought')">ⓘ</span>
+</div>
 
       <div class="df-scores">
         <div class="df-score">

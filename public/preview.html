@@ -23,11 +23,84 @@
   <div id="app"></div>
 
   <script type="module">
-    import { renderNewLayout } from '/js/new-layout.js';
+  import { renderNewLayout } from '/js/new-layout.js';
 
-    const app = document.getElementById('app');
-    await renderNewLayout(app);
-  </script>
+  const app = document.getElementById('app');
+  await renderNewLayout(app);
+
+  // 👇 ADD THIS BELOW
+
+  window.openInfo = function(type) {
+    const modal = document.getElementById('info-modal');
+    const body = document.getElementById('info-body');
+
+    if (type === 'feelscore') {
+      body.innerHTML = `
+        <h2>FeelScore</h2>
+        <p>
+          FeelScore measures how the air actually feels — not just temperature.
+        </p>
+
+        <ul>
+          <li><b>Temperature</b> — baseline comfort</li>
+          <li><b>Dew point</b> — humidity / heaviness</li>
+          <li><b>Wind</b> — cooling or harshness</li>
+        </ul>
+
+        <p>
+          Scores range from 0–100:
+        </p>
+
+        <ul>
+          <li>90+ → ideal</li>
+          <li>70–89 → comfortable</li>
+          <li>50–69 → noticeable discomfort</li>
+          <li><50 → uncomfortable</li>
+        </ul>
+      `;
+    }
+
+    if (type === 'drought') {
+      body.innerHTML = `
+        <h2>Drought & Fire Index</h2>
+
+        <p>
+          This combines long-term dryness with daily fire weather risk.
+        </p>
+
+        <h3>Drought Stress Score (DSS)</h3>
+        <p>
+          Measures how stressed the land is using rainfall deficit,
+          soil moisture, and heat.
+        </p>
+
+        <h3>Fire Risk Index (FRI)</h3>
+        <p>
+          Measures how easily fire could spread today using humidity,
+          wind, and temperature.
+        </p>
+
+        <p>
+          Official drought levels (D0–D4) reflect longer-term conditions
+          and may appear more severe.
+        </p>
+      `;
+    }
+
+    modal.classList.remove('hidden');
+  };
+
+  window.closeInfo = function() {
+    document.getElementById('info-modal').classList.add('hidden');
+  };
+</script>
+
+<div id="info-modal" class="info-modal hidden">
+  <div class="info-content">
+    <div class="info-close" onclick="closeInfo()">✕</div>
+    <div id="info-body"></div>
+  </div>
+</div>
 
 </body>
 </html>
