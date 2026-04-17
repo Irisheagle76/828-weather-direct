@@ -152,14 +152,39 @@ function renderFeelScore(current) {
   const color = getFeelScoreColor(score);
   const bgTint = getFeelScoreBackground(score);
 
-  const intel = buildHumanActionIntelFS({ current, score });
+const intel = {
+  signals: {
+    temp: current?.temp ?? null,
+    dewPoint: current?.dewPoint ?? null,
+    wind: current?.wind ?? 0
+  },
+  pattern: {
+    trend: 0,
+    min: score,
+    max: score,
+    avg: score
+  },
+  context: {
+    label: "today",
+    timeWindow: "current"
+  },
+  dominantFactor: detectDominantFactor(current || {})
+};
 
-  const narrative = assembleWithVoice(
-    intel,
-    "today",
-    mapScoreToCategory(score),
-    comfort?.goldilocks
-  );
+if (
+  !intel.signals ||
+  typeof intel.signals.temp !== "number"
+) {
+  console.warn("⚠️ Invalid feelscore signals", intel);
+  return; // or fallback UI
+}
+
+const narrative = assembleWithVoice(
+  intel,
+  "today",
+  mapScoreToCategory(score),
+  comfort?.goldilocks
+);
 
   const headline = narrative?.headline || "Feels pretty good out";
   const bullets = (narrative?.bullets || []).slice(0, 2);
