@@ -26,6 +26,13 @@ function normalizeCurrent(data = {}) {
   };
 }
 
+function buildHeadline(score) {
+  if (score >= 85) return "Feels really nice out";
+  if (score >= 70) return "Comfortable overall";
+  if (score >= 55) return "A bit uneven at times";
+  return "Mixed comfort conditions";
+}
+
 // ============================================================
 // MODE ADJUSTMENTS
 // ============================================================
