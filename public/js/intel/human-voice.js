@@ -1,5 +1,9 @@
 // /js/intel/human-voice.js
 
+// ============================================================
+// CORE VOICE (LOW LEVEL)
+// ============================================================
+
 export function buildHumanVoice(intel = {}) {
   const signals = intel?.signals || {};
   const dominantFactor = intel?.dominantFactor;
@@ -9,7 +13,7 @@ export function buildHumanVoice(intel = {}) {
   const wind = typeof signals.wind === "number" ? signals.wind : 0;
 
   // ------------------------------------------------------------
-  // HARD GUARD (prevents crash)
+  // HARD GUARD
   // ------------------------------------------------------------
   if (temp === null) {
     return {
@@ -75,7 +79,7 @@ export function buildHumanVoice(intel = {}) {
     case "cold":
       detail = "Cool air is noticeable";
       break;
-    case "muggy": // ✅ FIXED
+    case "muggy":
       detail = "Humidity makes it feel heavier";
       break;
     case "wind":
@@ -99,4 +103,77 @@ export function buildHumanVoice(intel = {}) {
     "Cold";
 
   return { summary, detail, feelsLike };
+}
+
+// ============================================================
+// 🧠 UNIFIED NARRATIVE (NEW)
+// ============================================================
+
+export function buildNarrative(intel = {}, mode = "current") {
+  const voice = buildHumanVoice(intel);
+
+  const trend = intel?.pattern?.trend ?? 0;
+  const dp = intel?.signals?.dewPoint;
+
+  let headline = "";
+  let bullets = [];
+
+  // ------------------------------------------------------------
+  // CURRENT (Feelscore)
+  // ------------------------------------------------------------
+  if (mode === "current") {
+    headline = voice.summary;
+
+    if (voice.detail) bullets.push(voice.detail);
+    if (voice.feelsLike) bullets.push(voice.feelsLike);
+  }
+
+  // ------------------------------------------------------------
+  // TODAY / TOMORROW
+  // ------------------------------------------------------------
+  else {
+    headline = refineHeadline(voice.summary, trend, mode === "tomorrow");
+
+    bullets = buildTrendBullets(trend, dp);
+  }
+
+  return {
+    headline,
+    bullets: bullets.slice(0, 3)
+  };
+}
+
+// ============================================================
+// REFINERS (NEW)
+// ============================================================
+
+function refineHeadline(summary, trend, isFuture = false) {
+  if (!summary) return "";
+
+  if (trend > 5) {
+    return isFuture
+      ? "Improving comfort through the day"
+      : "Conditions improve later";
+  }
+
+  if (trend < -5) {
+    return isFuture
+      ? "Less comfortable as the day goes on"
+      : "Conditions decline slightly";
+  }
+
+  return summary;
+}
+
+function buildTrendBullets(trend, dewPoint) {
+  const bullets = [];
+
+  if (trend > 5) bullets.push("Improves as the day goes on");
+  if (trend < -5) bullets.push("Slight drop in comfort later");
+
+  if (dewPoint != null && dewPoint < 55) {
+    bullets.push("Dry air keeps things comfortable");
+  }
+
+  return bullets;
 }
