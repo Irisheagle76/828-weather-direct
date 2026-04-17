@@ -1,5 +1,5 @@
 // ============================================================
-// WEATHER API — V3 (NORMALIZED + STABLE)
+// WEATHER API — V4 (HARDENED + DEBUG SAFE)
 // ============================================================
 
 let cache = {};
@@ -61,7 +61,6 @@ async function handleHourly(req, res) {
   // ----------------------------------------------------------
   const hourlyFields = [
     "temperature_2m",
-    "apparent_temperature",
     "dew_point_2m",
     "relative_humidity_2m",
     "precipitation",
@@ -84,17 +83,27 @@ async function handleHourly(req, res) {
   const response = await fetchWithTimeout(url);
 
   if (!response || !response.ok) {
+    console.warn("⚠️ Forecast fetch failed");
     return respondWithFallback(res, key, "forecast-failed", tempest);
   }
 
   const data = await response.json();
 
-  if (!data?.hourly?.time?.length) {
-    return respondWithFallback(res, key, "malformed", tempest);
+  // ----------------------------------------------------------
+  // 🔴 CRITICAL DEBUG POINT
+  // ----------------------------------------------------------
+  if (!data?.hourly) {
+    console.error("❌ Missing hourly block entirely");
+    return respondWithFallback(res, key, "missing-hourly", tempest);
+  }
+
+  if (!data.hourly.time || data.hourly.time.length === 0) {
+    console.warn("⚠️ Empty hourly.time from Open-Meteo", data.hourly);
+    return respondWithFallback(res, key, "empty-hourly", tempest);
   }
 
   // ----------------------------------------------------------
-  // NORMALIZE HOURLY (🔥 CORE FIX)
+  // NORMALIZE HOURLY
   // ----------------------------------------------------------
   const hourly = data.hourly.time.map((t, i) => ({
     timestamp: new Date(t).getTime(),
@@ -116,8 +125,8 @@ async function handleHourly(req, res) {
   // FINAL PAYLOAD
   // ----------------------------------------------------------
   const payload = {
-    hourly,                  // ✅ normalized array
-    current: tempest,        // ✅ normalized current
+    hourly,
+    current: tempest,
 
     current_conditions: tempest
       ? {
@@ -132,6 +141,9 @@ async function handleHourly(req, res) {
     _source: "open-meteo"
   };
 
+  // ----------------------------------------------------------
+  // CACHE + LAST GOOD
+  // ----------------------------------------------------------
   cache[key] = {
     ts: Date.now(),
     data: payload
@@ -176,7 +188,8 @@ async function fetchTempest() {
       windGust: obs.wind_gust ?? obs.wind_avg ?? 0
     };
 
-  } catch {
+  } catch (err) {
+    console.warn("⚠️ Tempest failed:", err.message);
     return null;
   }
 }
@@ -202,8 +215,10 @@ async function fetchWithTimeout(url, timeout = 4000) {
 // FALLBACK
 // ------------------------------------------------------------
 function respondWithFallback(res, key, reason, tempest) {
+  console.warn(`⚠️ Using fallback: ${reason}`);
+
   return res.status(200).json({
-    hourly: [],
+    hourly: [], // ✅ ALWAYS ARRAY NOW
     _fallback: true,
     _reason: reason,
     current: tempest || lastGood[key]?.current || null
