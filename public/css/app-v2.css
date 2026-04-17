@@ -680,3 +680,75 @@ body {
   border: 1px solid rgba(255,255,255,0.15);
   box-shadow: 0 0 10px rgba(255,255,255,0.08);
 }
+
+.df-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0;
+}
+
+.df-metric {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 22px;
+}
+
+.df-icon {
+  font-size: 22px;
+}
+
+.df-value {
+  font-weight: 600;
+}
+
+/* ============================================================
+   DAY CARDS
+   ============================================================ */
+
+.day-card {
+  background: rgba(255,255,255,0.04);
+  border-radius: var(--radius);
+  padding: 14px;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+
+.day-card > * + * {
+  margin-top: 6px;
+}
+
+.day-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.day-title {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--muted);
+}
+
+.day-score {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.day-score-value {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.day-emoji {
+  font-size: 18px;
+}
+
+.day-headline {
+  font-size: 15px;
+}
+
+.day-bullet {
+  font-size: 13px;
+  color: var(--muted);
+}

@@ -148,7 +148,7 @@ function computeComfortScore(temp, dew, wind, elev) {
     s;
 
   const score = Math.round(clamp(100 - raw * 100, 0, 100));
-  return Math.max(score, 10);
+  return clamp(score, 20, 98);
 }
 
 // ============================================================

@@ -175,28 +175,49 @@ function renderFeelScore(current) {
 function renderTimeline(hourly) {
   const container = document.getElementById('timeline');
 
-  if (!hourly.length) {
+  if (!Array.isArray(hourly) || !hourly.length) {
     container.innerHTML = '';
     return;
   }
 
   const now = Date.now();
-  const future = hourly.filter(h => h.ts >= now && h.temp != null);
+
+  // ------------------------------------------------------------
+  // FUTURE HOURS ONLY
+  // ------------------------------------------------------------
+  const future = hourly.filter(h =>
+    h && h.ts >= now && h.temp != null
+  );
+
   const next = (future.length ? future : hourly).slice(0, 6);
 
-  const scores = next.map(h =>
-    Math.round((calculateComfort(h)?.score || 0) * 10)
-  );
+  // ------------------------------------------------------------
+  // SCORES (clamped to avoid fake perfection)
+  // ------------------------------------------------------------
+  const scores = next.map(h => {
+    const raw = calculateComfort(h)?.score ?? 0;
+    const scaled = Math.round(raw * 10);
+
+    // prevent unrealistic 100 spam (UI-level guard)
+    return Math.min(scaled, 98);
+  });
 
   const best = Math.max(...scores);
 
-  const html = next.map((h, i) => `
-    <div class="hour-block ${scores[i] === best ? "best-hour" : ""}">
-      <div>${formatHour(h.ts)}</div>
-      <div>${Math.round(h.temp)}°</div>
-      <div>${scores[i]}</div>
-    </div>
-  `).join('');
+  // ------------------------------------------------------------
+  // BUILD UI (MATCHES CSS)
+  // ------------------------------------------------------------
+  const html = next.map((h, i) => {
+    const isBest = scores[i] === best ? "best-hour" : "";
+
+    return `
+      <div class="hour-block ${isBest}">
+        <div class="hour-time">${formatHour(h.ts)}</div>
+        <div class="hour-temp">${Math.round(h.temp)}°</div>
+        <div class="hour-score">${scores[i]}</div>
+      </div>
+    `;
+  }).join('');
 
   container.innerHTML = `
     <div class="timeline-card">
@@ -205,6 +226,7 @@ function renderTimeline(hourly) {
     </div>
   `;
 }
+
 // ============================================================
 // HELPERS
 // ============================================================
@@ -311,7 +333,6 @@ function mapScoreToLabel(score) {
 
 function renderDroughtFire(data) {
   const el = document.getElementById('droughtfire');
-
   if (!el) return;
 
   if (!data) {
@@ -320,7 +341,6 @@ function renderDroughtFire(data) {
   }
 
   const { DSS, FRI, narrative } = data;
-
   const bgTint = getDroughtBackground(DSS, FRI);
 
   el.innerHTML = `
@@ -329,16 +349,28 @@ function renderDroughtFire(data) {
         linear-gradient(${bgTint}, ${bgTint}),
         #121a2b;
     ">
-      <div class="df-header">DROUGHT / FIRE</div>
 
-      <div class="df-scores">
-        <div class="df-score">🔥 ${FRI ?? "--"}</div>
-        <div class="df-score">🌵 ${DSS ?? "--"}</div>
+      <div class="df-header">
+        DROUGHT / FIRE
+        <span class="info-btn" onclick="openInfo('drought', ${FRI})">ⓘ</span>
+      </div>
+
+      <div class="df-row">
+        <div class="df-metric">
+          <div class="df-icon">🔥</div>
+          <div class="df-value">${FRI ?? "--"}</div>
+        </div>
+
+        <div class="df-metric">
+          <div class="df-icon">🌵</div>
+          <div class="df-value">${DSS ?? "--"}</div>
+        </div>
       </div>
 
       <div class="df-headline">
         ${narrative?.headline || ""}
       </div>
+
     </div>
   `;
 }
@@ -349,7 +381,6 @@ function renderDroughtFire(data) {
 
 function renderToday(data) {
   const el = document.getElementById('today');
-
   if (!el) return;
 
   if (!data) {
@@ -360,12 +391,13 @@ function renderToday(data) {
   const { score, headline, bullets, emoji } = data;
 
   el.innerHTML = `
-    <div class="day-card">
+    <div class="day-card fade-in">
 
-      <div class="day-header">
+      <div class="day-header-row">
         <div class="day-title">TODAY</div>
         <div class="day-score">
-          ${emoji ?? ""} ${score ?? "--"}
+          <span class="day-emoji">${emoji ?? ""}</span>
+          <span class="day-score-value">${score ?? "--"}</span>
         </div>
       </div>
 
@@ -376,7 +408,7 @@ function renderToday(data) {
       ${
         bullets?.length
           ? `<div class="day-bullets">
-              ${bullets.map(b => `<div>• ${b}</div>`).join("")}
+              ${bullets.map(b => `<div class="day-bullet">• ${b}</div>`).join("")}
             </div>`
           : ""
       }
@@ -385,13 +417,13 @@ function renderToday(data) {
   `;
 }
 
+
 // ============================================================
 // TOMORROW
 // ============================================================
 
 function renderTomorrow(data) {
   const el = document.getElementById('tomorrow');
-
   if (!el) return;
 
   if (!data) {
@@ -402,12 +434,13 @@ function renderTomorrow(data) {
   const { score, headline, bullets, emoji } = data;
 
   el.innerHTML = `
-    <div class="day-card">
+    <div class="day-card fade-in">
 
-      <div class="day-header">
+      <div class="day-header-row">
         <div class="day-title">TOMORROW</div>
         <div class="day-score">
-          ${emoji ?? ""} ${score ?? "--"}
+          <span class="day-emoji">${emoji ?? ""}</span>
+          <span class="day-score-value">${score ?? "--"}</span>
         </div>
       </div>
 
@@ -418,7 +451,7 @@ function renderTomorrow(data) {
       ${
         bullets?.length
           ? `<div class="day-bullets">
-              ${bullets.map(b => `<div>• ${b}</div>`).join("")}
+              ${bullets.map(b => `<div class="day-bullet">• ${b}</div>`).join("")}
             </div>`
           : ""
       }
