@@ -22,6 +22,18 @@ import {
 const $ = id => document.getElementById(id);
 const getTs = h => (h.timestamp < 1e12 ? h.timestamp * 1000 : h.timestamp);
 
+
+// -----------------------------
+// FEELSCORE BACKGROUND COLOR
+// -----------------------------
+function getFeelScoreBackground(score) {
+  if (score >= 85) return "rgba(80, 200, 120, 0.12)";
+  if (score >= 70) return "rgba(100, 180, 255, 0.12)";
+  if (score >= 55) return "rgba(255, 200, 100, 0.12)";
+  if (score >= 40) return "rgba(255, 140, 80, 0.12)";
+  return "rgba(255, 80, 80, 0.12)";
+}
+
 // ------------------------------------------------------------
 // FORMATTERS
 // ------------------------------------------------------------
