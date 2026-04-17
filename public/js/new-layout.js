@@ -71,7 +71,6 @@ export async function renderNewLayout(container) {
   }
 }
 
-
 // ============================================================
 // FEELSCORE (NOW)
 // ============================================================
@@ -81,6 +80,9 @@ function renderFeelScore(current) {
 
   const comfort = calculateComfort(current);
   const score = Math.round((comfort?.score || 0) * 10);
+
+  const color = getFeelScoreColor(score);
+  const bgTint = getFeelScoreBackground(score);
 
   const intel = buildIntel(current, score, "current");
 
@@ -102,28 +104,70 @@ function renderFeelScore(current) {
   ).slice(0, 2);
 
   document.getElementById('feelscore').innerHTML = `
-    <div class="feelscore-card">
+    <div class="feelscore-card hero" style="
+      background:
+        linear-gradient(${bgTint}, ${bgTint}),
+        #101b33;
+    ">
+
       <div class="fs-header">
-      <div class="fs-header">
-  <div class="fs-title">FEELSCORE</div>
-  <div class="fs-score">${score}</div>
-  <div class="info-btn" onclick="openInfo('feelscore')">ⓘ</div>
-</div>
+        <div class="fs-title">
+          FEELSCORE
+          <span class="info-btn" onclick="openInfo('feelscore', ${score})">ⓘ</span>
+        </div>
+      </div>
+
+      <div class="fs-hero-row">
+        <div class="fs-score" style="color:${color}">
+          ${score}
+        </div>
+        <div class="fs-status" style="color:${color}">
+          ${mapScoreToLabel(score)}
+        </div>
+      </div>
 
       <div class="fs-headline">${headline}</div>
 
       <div class="fs-bullets">
         ${bullets.map(b => `<div class="fs-bullet">• ${b}</div>`).join('')}
       </div>
+
     </div>
   `;
-}
 
+  // ============================================================
+  // ANIMATION (COUNT UP + BUMP)
+  // ============================================================
+
+  const scoreEl = document.querySelector('#feelscore .fs-score');
+
+  if (!scoreEl) return;
+
+  // prevent re-running animation unnecessarily
+  if (!scoreEl.dataset.animated) {
+    scoreEl.dataset.animated = "true";
+
+    // start at 0
+    scoreEl.textContent = "0";
+
+    // count-up animation
+    animateScore(scoreEl, score);
+
+    // bump effect
+    scoreEl.classList.add('bump');
+    setTimeout(() => {
+      scoreEl.classList.remove('bump');
+    }, 300);
+
+  } else {
+    // fallback (no animation)
+    scoreEl.textContent = score;
+  }
+}
 
 // ============================================================
 // DROUGHT / FIRE (NEW MODULE)
 // ============================================================
-
 function renderDroughtFire(data) {
   if (!data) return;
 
@@ -136,6 +180,14 @@ function renderDroughtFire(data) {
   const bullets = (narrative?.bullets || []).slice(0, 2);
 
   // -----------------------------
+  // COLORS
+  // -----------------------------
+ const dssColor = getDSSColor(DSS);
+const friColor = getFRIColor(FRI);
+
+const bgTint = getDroughtBackground(DSS, FRI);
+
+  // -----------------------------
   // OFFICIAL DROUGHT (TEMP STATIC)
   // -----------------------------
   const official = {
@@ -146,29 +198,36 @@ function renderDroughtFire(data) {
   const badgeColor = getDroughtColor(official.level);
 
   document.getElementById('droughtfire').innerHTML = `
-    <div class="df-card">
+    <div class="df-card" style="
+  background:
+    linear-gradient(${bgTint}, ${bgTint}),
+    #121a2b;
+">
+
       <div class="df-header">
-  DROUGHT / FIRE
-  <span class="info-btn" onclick="openInfo('drought')">ⓘ</span>
-</div>
+        DROUGHT / FIRE
+        <span class="info-btn" onclick="openInfo('drought')">ⓘ</span>
+      </div>
 
       <div class="df-scores">
-        <div class="df-score">
+
+        <div class="df-score" style="color:${friColor}">
           🔥 ${FRI}
           <span class="df-label">${friLabel}</span>
         </div>
 
-        <div class="df-score">
+        <div class="df-score" style="color:${dssColor}">
           🌵 ${DSS}
           <span class="df-label">${dssLabel}</span>
         </div>
+
       </div>
 
       <div class="df-official">
         <span class="df-badge" style="background:${badgeColor}">
           ${official.level}
         </span>
-        ${official.label} (official)
+        ${official.label}
       </div>
 
       <div class="df-headline">${headline}</div>
@@ -176,6 +235,7 @@ function renderDroughtFire(data) {
       <div class="df-bullets">
         ${bullets.map(b => `<div class="df-bullet">• ${b}</div>`).join('')}
       </div>
+
     </div>
   `;
 }
@@ -377,4 +437,83 @@ function getDroughtColor(level) {
     case "D4": return "#7F0000"; // dark red
     default: return "#999";
   }
+}
+// ============================================================
+// COLOR SYSTEM
+// ============================================================
+
+function getFeelScoreColor(score) {
+  if (score >= 90) return "#4caf50";
+  if (score >= 75) return "#8bc34a";
+  if (score >= 60) return "#ffc107";
+  if (score >= 45) return "#ff9800";
+  return "#f44336";
+}
+
+function getDSSColor(score) {
+  if (score < 25) return "#4caf50";
+  if (score < 45) return "#cddc39";
+  if (score < 65) return "#ffc107";
+  if (score < 85) return "#ff5722";
+  return "#b71c1c";
+}
+
+function getFRIColor(score) {
+  if (score < 30) return "#4caf50";
+  if (score < 50) return "#ffc107";
+  if (score < 70) return "#ff9800";
+  if (score < 85) return "#f44336";
+  return "#b71c1c";
+}
+
+function mapScoreToLabel(score) {
+  if (score >= 90) return "Ideal";
+  if (score >= 70) return "Comfortable";
+  if (score >= 55) return "Slightly Off";
+  if (score >= 40) return "Uncomfortable";
+  return "Harsh";
+}
+
+function getDroughtBackground(DSS, FRI) {
+  const severity = Math.max(DSS, FRI);
+
+  if (severity >= 85) return "rgba(183, 28, 28, 0.25)"; // deep red
+  if (severity >= 70) return "rgba(244, 67, 54, 0.18)"; // red
+  if (severity >= 55) return "rgba(255, 152, 0, 0.14)"; // orange
+  if (severity >= 40) return "rgba(255, 193, 7, 0.10)"; // yellow
+  return "rgba(255,255,255,0.03)";
+}
+
+function getFeelScoreBackground(score) {
+  if (score >= 90) return "rgba(76, 175, 80, 0.12)";   // soft green
+  if (score >= 75) return "rgba(139, 195, 74, 0.10)";
+  if (score >= 60) return "rgba(255, 193, 7, 0.08)";
+  if (score >= 45) return "rgba(255, 152, 0, 0.08)";
+  return "rgba(244, 67, 54, 0.10)";
+}
+
+// ============================================================
+// ANIMATE SCORE
+// ============================================================
+function animateScore(el, end) {
+  if (!el) return;
+
+  const duration = 500;
+  const startTime = performance.now();
+
+  function frame(now) {
+    const progress = Math.min((now - startTime) / duration, 1);
+
+    // easeOut for smoother finish
+    const eased = 1 - Math.pow(1 - progress, 3);
+
+    const value = Math.round(eased * end);
+    el.textContent = value;
+
+    if (progress < 1) {
+      requestAnimationFrame(frame);
+    }
+  }
+
+  requestAnimationFrame(frame);
 }

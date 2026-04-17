@@ -1,0 +1,313 @@
+:root {
+  --blue: #173783;
+  --orange: #db6e2d;
+
+  --bg: #0b1220;
+  --card: #121a2b;
+
+  --text: #e8eefc;
+  --muted: #9fb0d1;
+
+  --radius: 14px;
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* ============================================================
+   GLOBAL STACK
+   ============================================================ */
+
+.top-stack {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* FIXED SPACING SYSTEM */
+.feelscore-card > * + *,
+.df-card > * + * {
+  margin-top: 6px;
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
+.app-header {
+  background: linear-gradient(180deg, #122a5a, #0f2247);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.header-inner {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 16px 12px 12px;
+}
+
+.brand-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #6ea8ff;
+  letter-spacing: 0.3px;
+}
+
+.brand-sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.live-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.live-chip {
+  border: 1px solid var(--orange);
+  color: var(--orange);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.updated-time {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.metric-chip {
+  background: rgba(255,255,255,0.06);
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 13px;
+
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* ============================================================
+   DROUGHT CARD
+   ============================================================ */
+
+.df-card {
+  background: #121a2b;
+  border-radius: var(--radius);
+  padding: 14px;
+
+  position: relative;
+  overflow: hidden;
+
+  border: 1px solid rgba(255,255,255,0.04);
+
+  transition:
+    background 0.4s ease,
+    box-shadow 0.3s ease;
+}
+
+.df-header {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--muted);
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.df-scores {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.df-score {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+
+  transition: color 0.4s ease;
+}
+
+.df-label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.df-official {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.df-badge {
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-right: 6px;
+  font-weight: 600;
+}
+
+.df-headline {
+  font-size: 14px;
+}
+
+.df-bullet {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ============================================================
+   FEELSCORE HERO
+   ============================================================ */
+
+.feelscore-card.hero {
+  padding: 18px;
+  border-radius: 16px;
+
+  background: linear-gradient(180deg, #142544, #101b33);
+
+  position: relative;
+  overflow: hidden;
+
+  border: 1px solid rgba(255,255,255,0.04);
+
+  transition:
+    background 0.4s ease,
+    box-shadow 0.3s ease;
+}
+
+/* FIXED HEADER ALIGNMENT */
+.fs-header {
+  display: flex;
+  align-items: center;
+}
+
+.fs-title {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--muted);
+}
+
+.fs-hero-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+/* SCORE */
+.fs-score {
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1;
+
+  transition:
+    color 0.4s ease,
+    transform 0.3s ease;
+}
+
+/* BUMP ANIMATION */
+.fs-score.bump {
+  transform: scale(1.08);
+}
+
+/* STATUS */
+.fs-status {
+  font-size: 16px;
+  font-weight: 500;
+  opacity: 0.9;
+
+  transition: color 0.4s ease;
+}
+
+.fs-headline {
+  margin-top: 8px;
+  font-size: 16px;
+}
+
+.fs-bullet {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* GLOW FIXED */
+.feelscore-card.hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  box-shadow: inset 0 0 50px rgba(255,255,255,0.04);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.feelscore-card.hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================================
+   INFO BUTTON
+   ============================================================ */
+
+.info-btn {
+  margin-left: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+
+.info-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 999;
+}
+
+.info-content {
+  position: relative;
+  background: #111;
+  color: white;
+  padding: 20px;
+  border-radius: 12px;
+  max-width: 420px;
+  width: 90%;
+}
+
+.info-close {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  cursor: pointer;
+}
+
+.hidden {
+  display: none;
+}
