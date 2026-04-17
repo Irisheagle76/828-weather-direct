@@ -133,6 +133,16 @@ function renderDroughtFire(data) {
 
   const bullets = (narrative?.bullets || []).slice(0, 2);
 
+  // -----------------------------
+  // OFFICIAL DROUGHT (TEMP STATIC)
+  // -----------------------------
+  const official = {
+    level: "D3",
+    label: "Extreme Drought"
+  };
+
+  const badgeColor = getDroughtColor(official.level);
+
   document.getElementById('droughtfire').innerHTML = `
     <div class="df-card">
       <div class="df-header">DROUGHT / FIRE</div>
@@ -149,6 +159,13 @@ function renderDroughtFire(data) {
         </div>
       </div>
 
+      <div class="df-official">
+        <span class="df-badge" style="background:${badgeColor}">
+          ${official.level}
+        </span>
+        ${official.label} (official)
+      </div>
+
       <div class="df-headline">${headline}</div>
 
       <div class="df-bullets">
@@ -157,7 +174,6 @@ function renderDroughtFire(data) {
     </div>
   `;
 }
-
 
 // ============================================================
 // TODAY (DAY SHAPE)
@@ -345,4 +361,15 @@ function getSimpleIcon(score) {
   if (score >= 80) return "🙂";
   if (score >= 60) return "😐";
   return "😕";
+}
+
+function getDroughtColor(level) {
+  switch (level) {
+    case "D0": return "#F7E600"; // yellow
+    case "D1": return "#E6B566"; // tan
+    case "D2": return "#F29F05"; // orange
+    case "D3": return "#D73027"; // red
+    case "D4": return "#7F0000"; // dark red
+    default: return "#999";
+  }
 }
