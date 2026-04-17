@@ -5,6 +5,7 @@
   "type": "module",
   "dependencies": {
     "@vercel/kv": "^3.0.0",
+    "geotiff": "^3.0.5",
     "rss-parser": "latest",
     "web-push": "^3.6.7"
   }
