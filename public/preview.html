@@ -5,42 +5,11 @@
   <title>AVL Weather – Preview</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Existing styles -->
   <link rel="stylesheet" href="/css/styles.css" />
-
-  <style>
-    /* Drought/Fire module styling */
-    .df-module {
-      margin-top: 12px;
-      padding: 12px;
-      border-radius: 12px;
-      background: rgba(255,255,255,0.05);
-    }
-
-    .df-main {
-      display: flex;
-      justify-content: space-between;
-      font-size: 20px;
-      font-weight: 600;
-    }
-
-    .df-headline {
-      margin-top: 6px;
-      font-size: 14px;
-      opacity: 0.9;
-    }
-
-    .df-bullets {
-      margin: 6px 0 0 16px;
-      font-size: 13px;
-      opacity: 0.85;
-    }
-  </style>
 </head>
 
 <body>
 
-  <!-- Preview label -->
   <div style="
     text-align:center;
     padding:6px;
@@ -51,68 +20,13 @@
     PREVIEW MODE
   </div>
 
-  <!-- App root -->
   <div id="app"></div>
 
   <script type="module">
     import { renderNewLayout } from '/js/new-layout.js';
 
-    // 1. Render your existing app
     const app = document.getElementById('app');
     await renderNewLayout(app);
-
-    // 2. Fetch drought/fire data
-    async function fetchDroughtFire() {
-      try {
-        const res = await fetch('/api/drought-fire');
-        return await res.json();
-      } catch (e) {
-        console.error('Drought/Fire fetch failed', e);
-        return null;
-      }
-    }
-
-    // 3. Render module
-    function renderDroughtFireCard(data) {
-      if (!data) return '';
-
-      return `
-        <div class="df-module">
-          <div class="df-main">
-            <div>
-              🔥 ${data.FRI} ${data.friLabel}
-            </div>
-            <div>
-              🌵 ${data.DSS} ${data.dssLabel}
-            </div>
-          </div>
-
-          <div class="df-headline">
-            ${data.narrative.headline}
-          </div>
-
-          <ul class="df-bullets">
-            ${data.narrative.bullets.map(b => `<li>${b}</li>`).join('')}
-          </ul>
-        </div>
-      `;
-    }
-
-    // 4. Inject into UI
-    const droughtFire = await fetchDroughtFire();
-
-    if (droughtFire) {
-      const moduleHTML = renderDroughtFireCard(droughtFire);
-
-      // Try to insert after first module (like FeelScore)
-      const firstModule = app.querySelector('.module, .card, div');
-
-      if (firstModule) {
-        firstModule.insertAdjacentHTML('afterend', moduleHTML);
-      } else {
-        app.insertAdjacentHTML('beforeend', moduleHTML);
-      }
-    }
   </script>
 
 </body>
