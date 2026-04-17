@@ -1,5 +1,5 @@
 // ============================================================
-// HUMAN ACTION — FEELSCORE (CLEAN + ALIGNED)
+// HUMAN ACTION — FEELSCORE (STABLE + SIMPLIFIED)
 // ============================================================
 
 import { calculateComfort } from "./comfort.js";
@@ -15,17 +15,17 @@ export function buildHumanActionIntelFS(raw) {
 
   const now = Date.now();
 
-  const today = hourly.filter(h => h.ts >= now && h.ts < now + 24 * 3600e3);
-  const tomorrow = hourly.filter(h => h.ts >= now + 24 * 3600e3 && h.ts < now + 48 * 3600e3);
+  const todayHours = hourly.filter(h => h.ts >= now && h.ts < now + 24 * 3600e3);
+  const tomorrowHours = hourly.filter(h => h.ts >= now + 24 * 3600e3 && h.ts < now + 48 * 3600e3);
 
-  const todayMapped = mapComfort(today);
-  const tomorrowMapped = mapComfort(tomorrow);
+  const todayMapped = mapComfort(todayHours);
+  const tomorrowMapped = mapComfort(tomorrowHours);
 
   const similar = areSimilarDays(todayMapped, tomorrowMapped);
 
   return {
-    today: buildPeriod(today, todayMapped, "today", { similar }),
-    tomorrow: buildPeriod(tomorrow, tomorrowMapped, "tomorrow", { similar })
+    today: buildPeriod(todayHours, todayMapped, "today", { similar }),
+    tomorrow: buildPeriod(tomorrowHours, tomorrowMapped, "tomorrow", { similar })
   };
 }
 
@@ -36,10 +36,13 @@ export function buildHumanActionIntelFS(raw) {
 function buildPeriod(hours, mapped, label, context) {
   if (!hours.length) return fallback(label);
 
+  // focus window (afternoon bias)
   const window = mapped.filter(h => h.hour >= 13 && h.hour <= 16);
   const base = window.length ? window : mapped;
 
-  const scores = base.map(h => h.score).filter(s => typeof s === "number");
+  const scores = base
+    .map(h => h.score)
+    .filter(s => typeof s === "number");
 
   if (!scores.length) return fallback(label);
 
@@ -52,9 +55,11 @@ function buildPeriod(hours, mapped, label, context) {
 
   const snapshot = buildSnapshot(hours);
 
-  // 🚨 HARD GUARD — snapshot must exist
-  if (!snapshot || snapshot.temp == null) {
-    console.warn("⚠️ Snapshot failed", snapshot);
+  // ------------------------------------------------------------
+  // HARD GUARD (no valid signal → no voice)
+  // ------------------------------------------------------------
+  if (!snapshot || typeof snapshot.temp !== "number") {
+    console.warn("⚠️ Snapshot invalid", snapshot);
     return fallback(label);
   }
 
@@ -64,12 +69,7 @@ function buildPeriod(hours, mapped, label, context) {
       dewPoint: snapshot.dewPoint ?? null,
       wind: snapshot.wind ?? 0
     },
-    pattern: {
-      trend,
-      min,
-      max,
-      avg: score
-    },
+    pattern: { trend, min, max, avg: score },
     context: {
       label,
       similar: context?.similar,
@@ -78,8 +78,10 @@ function buildPeriod(hours, mapped, label, context) {
     dominantFactor: detectDominantFactor(snapshot)
   };
 
-  // 🚨 FINAL GUARD (before voice system)
-  if (!intel.signals || intel.signals.temp == null) {
+  // ------------------------------------------------------------
+  // FINAL GUARD
+  // ------------------------------------------------------------
+  if (typeof intel.signals.temp !== "number") {
     console.warn("⚠️ Invalid signals", intel);
     return fallback(label);
   }
@@ -94,7 +96,7 @@ function buildPeriod(hours, mapped, label, context) {
       score >= 85
     );
   } catch (err) {
-    console.warn("⚠️ Voice assembly failed", err);
+    console.warn("⚠️ Voice failed", err, intel);
     return fallback(label);
   }
 
@@ -104,11 +106,11 @@ function buildPeriod(hours, mapped, label, context) {
     emoji: pickEmoji(score),
     headline:
       narrative?.headline ||
-      buildHeadline(score, label, snapshot, { trend }),
+      buildHeadline(score, label, snapshot),
     bullets:
       (narrative?.bullets?.length
         ? narrative.bullets
-        : buildBullets({ score, snapshot, trend, label })
+        : buildBullets(snapshot, trend)
       ).slice(0, 3)
   };
 }
@@ -123,13 +125,13 @@ function mapComfort(hours) {
 
     return {
       hour: new Date(h.ts).getHours(),
-      score: Math.round((c?.score || 0) * 10) // 0–100
+      score: Math.round((c?.score || 0) * 10)
     };
   });
 }
 
 // ============================================================
-// SNAPSHOT (no legacy guessing)
+// SNAPSHOT (resilient)
 // ============================================================
 
 function buildSnapshot(hours) {
@@ -148,10 +150,14 @@ function buildSnapshot(hours) {
       : null;
   };
 
+  const temp = avg(["temp", "temperature", "temperatureF"]);
+  const dewPoint = avg(["dewPoint", "dewpoint", "dewpointF"]);
+  const wind = avg(["wind", "windSpeed", "windspeed", "wind_speed"]);
+
   return {
-    temp: avg(["temp", "temperature", "temperatureF"]),
-    dewPoint: avg(["dewPoint", "dewpoint", "dewpointF"]),
-    wind: avg(["wind", "windSpeed", "windspeed", "wind_speed"])
+    temp,
+    dewPoint,
+    wind: wind ?? 0
   };
 }
 
@@ -159,7 +165,7 @@ function buildSnapshot(hours) {
 // HEADLINE + BULLETS
 // ============================================================
 
-function buildHeadline(score, label, snapshot, { trend }) {
+function buildHeadline(score, label, snapshot) {
   const temp = snapshot.temp ?? 70;
   const dp = snapshot.dewPoint ?? 55;
 
@@ -176,13 +182,13 @@ function buildHeadline(score, label, snapshot, { trend }) {
   return "Mixed comfort conditions";
 }
 
-function buildBullets({ snapshot, trend }) {
+function buildBullets(snapshot, trend) {
   const bullets = [];
 
   if (trend < -5) bullets.push("Slightly less comfortable later");
   if (trend > 5) bullets.push("Improves as the day goes on");
 
-  if (snapshot.dewPoint < 55) {
+  if (snapshot.dewPoint != null && snapshot.dewPoint < 55) {
     bullets.push("Dry air keeps things comfortable");
   }
 
