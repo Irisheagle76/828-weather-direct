@@ -257,52 +257,49 @@ function renderTimeline(hourly) {
 
   const next = valid.slice(0, 6);
 
-  // ✅ ADD HERE
   const best = Math.max(...next.map(h =>
     Math.round((calculateComfort(h)?.score || 0) * 10)
   ));
 
+  const html = next.map(h => {
+    const comfort = calculateComfort(h);
+    const score = Math.round((comfort?.score || 0) * 10);
+
+    const isBest = score === best ? "best-hour" : "";
+
+    const tint = getFeelScoreBackground(score);
+    const color = getFeelScoreColor(score);
+
+    return `
+      <div class="hour-block ${isBest}" style="
+        background:
+          linear-gradient(${tint}, ${tint}),
+          rgba(255,255,255,0.04);
+      ">
+        <div class="hour-time">
+          ${formatHour(h.timestamp)}
+        </div>
+
+        <div class="hour-icon">
+          ${getWeatherEmoji(h)}
+        </div>
+
+        <div class="hour-temp">
+          ${Math.round(h.temperatureF)}°
+        </div>
+
+        <div class="hour-score" style="color:${color}">
+          ${score}
+        </div>
+      </div>
+    `;
+  }).join('');
+
   document.getElementById('timeline').innerHTML = `
     <div class="timeline-card">
       <div class="section-title">NEXT FEW HOURS</div>
-
       <div class="timeline-row">
-        ${next.map(h => {
-          const comfort = calculateComfort(h);
-          const score = Math.round((comfort?.score || 0) * 10);
-
-          // ✅ ADD HERE
-          const isBest = score === best ? "best-hour" : "";
-
-          const tint = getFeelScoreBackground(score);
-          const color = getFeelScoreColor(score);
-
-          return `
-            <div class="hour-block ${isBest}" style="
-              background:
-                linear-gradient(${tint}, ${tint}),
-                rgba(255,255,255,0.04);
-            ">
-
-              <div class="hour-time">
-                ${formatHour(h.timestamp)}
-              </div>
-
-              <div class="hour-icon">
-                ${getWeatherEmoji(h)}
-              </div>
-
-              <div class="hour-temp">
-                ${Math.round(h.temperatureF)}°
-              </div>
-
-              <div class="hour-score" style="color:${color}">
-                ${score}
-              </div>
-
-            </div>
-          `;
-        }).join('')}
+        ${html}
       </div>
     </div>
   `;
