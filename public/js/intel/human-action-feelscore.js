@@ -53,11 +53,16 @@ function buildPeriod(hours, mapped, label, context) {
 
   const intel = {
     signals: {
-      temp: snapshot.temp,
-      dewPoint: snapshot.dewPoint,
-      wind: snapshot.wind
+      temp: snapshot?.temp ?? null,
+      dewPoint: snapshot?.dewPoint ?? null,
+      wind: snapshot?.wind ?? 0
     },
-    pattern: { trend, min, max, avg: score },
+    pattern: {
+      trend,
+      min,
+      max,
+      avg: score
+    },
     context: {
       label,
       similar: context?.similar,
@@ -65,6 +70,12 @@ function buildPeriod(hours, mapped, label, context) {
     },
     dominantFactor: detectDominantFactor(snapshot)
   };
+
+  // 🛡️ GUARD (prevents crash)
+  if (!intel.signals || intel.signals.temp == null) {
+    console.warn("⚠️ Invalid signals for voice", intel);
+    return fallback(label);
+  }
 
   const narrative = assembleWithVoice(
     intel,
@@ -108,15 +119,25 @@ function mapComfort(hours) {
 // ============================================================
 
 function buildSnapshot(hours) {
-  const avg = (key) => {
-    const vals = hours.map(h => h[key]).filter(v => v != null);
-    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+  const avg = (keys) => {
+    const vals = hours
+      .map(h => {
+        for (const k of keys) {
+          if (typeof h[k] === "number") return h[k];
+        }
+        return null;
+      })
+      .filter(v => v != null);
+
+    return vals.length
+      ? vals.reduce((a, b) => a + b, 0) / vals.length
+      : null;
   };
 
   return {
-    temp: avg("temp"),
-    dewPoint: avg("dewPoint"),
-    wind: avg("wind")
+    temp: avg(["temp", "temperature", "temperatureF"]),
+    dewPoint: avg(["dewPoint", "dewpoint", "dewpointF"]),
+    wind: avg(["wind", "windSpeed", "windspeed", "wind_speed"])
   };
 }
 
