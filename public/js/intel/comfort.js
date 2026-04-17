@@ -74,7 +74,7 @@ function computeTemperaturePenalty(temp) {
 
   // 75–82°F → gentle ramp
   if (temp > 75 && temp < 82) {
-    return (temp - 75) / 14; // 0 → ~0.5
+    return (temp - 75) / 17; // 0 → ~0.5
   }
 
   // 82–86°F → sharper discomfort
@@ -125,7 +125,7 @@ function computeWindPenalty(wind) {
 }
 
 function computeSolarBonus(temp, elev) {
-  if (elev > 20 && temp < 75) return 0.15;
+  if (elev > 20 && temp < 75) return 0.12;
   return 0;
 }
 
