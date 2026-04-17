@@ -139,6 +139,14 @@ export async function renderNewLayout(container) {
   }
 }
 
+function detectDominantFactor(s = {}) {
+  if (s.dewPoint >= 65) return "muggy";
+  if (s.temp >= 85) return "heat";
+  if (s.temp <= 45) return "cold";
+  if (s.wind >= 12) return "wind";
+  return "comfortable";
+}
+
 // ============================================================
 // FEELSCORE
 // ============================================================
