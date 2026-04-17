@@ -405,3 +405,11 @@ function getWeatherEmoji(h) {
   if (h.cloudcover > 60) return "☁️";
   return "☀️";
 }
+
+function mapScoreToCategory(score) {
+  if (score >= 90) return "ideal";
+  if (score >= 70) return "comfortable";
+  if (score >= 55) return "slight";
+  if (score >= 40) return "uncomfortable";
+  return "harsh";
+}
