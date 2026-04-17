@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>AVL Weather – Preview</title>
+  <title>828 Weather Direct – Preview</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <link rel="stylesheet" href="/css/app-v2.css" />
@@ -22,7 +22,7 @@
   </div>
 
   <!-- =====================================
-       HEADER (NEW V2)
+       HEADER (LIVE DATA READY)
        ===================================== -->
   <div class="app-header">
     <div class="header-inner">
@@ -34,25 +34,34 @@
 
       <div class="live-row" id="wx-metrics">
         <div class="live-chip">LIVE</div>
-        <div id="updated-time" class="updated-time">Updated just now</div>
+        <div id="updated-time" class="updated-time">Updating…</div>
 
-        <!-- placeholder chips -->
-        <div class="metric-chip">🌡 67°</div>
-        <div class="metric-chip">💧 52°</div>
-        <div class="metric-chip">💦 59%</div>
-        <div class="metric-chip">💨 1 mph</div>
+        <!-- 👇 REAL DATA GETS INJECTED HERE -->
+        <div id="metric-chips"></div>
       </div>
 
     </div>
   </div>
 
-  <!-- APP ROOT -->
+  <!-- =====================================
+       SPLASH
+       ===================================== -->
+  <div id="splash" class="splash">
+    <div class="splash-inner">
+      <div class="splash-title">828 Weather</div>
+      <div class="splash-sub">Loading Asheville conditions…</div>
+    </div>
+  </div>
+
+  <!-- =====================================
+       APP ROOT
+       ===================================== -->
   <div id="app"></div>
 
   <!-- =====================================
        INFO MODAL
        ===================================== -->
-  <div id="info-modal" class="info-modal hidden" onclick="closeInfo(event)">
+  <div id="info-modal" class="info-modal hidden" role="dialog" aria-modal="true" onclick="closeInfo(event)">
     <div class="info-content" onclick="event.stopPropagation()">
       <div class="info-close" onclick="closeInfo()">✕</div>
       <div id="info-body"></div>
@@ -66,10 +75,21 @@
     import { renderNewLayout } from '/js/new-layout.js';
 
     const app = document.getElementById('app');
-    await renderNewLayout(app);
+
+    try {
+      await renderNewLayout(app);
+    } catch (e) {
+      console.error('App load failed:', e);
+    } finally {
+      // 🔴 SAFETY: never allow splash to get stuck
+      setTimeout(() => {
+        const splash = document.getElementById('splash');
+        if (splash) splash.classList.add('hide');
+      }, 1500);
+    }
 
     // ============================================================
-    // INFO MODAL LOGIC
+    // INFO MODAL
     // ============================================================
 
     window.openInfo = function(type, value = null) {
@@ -77,7 +97,6 @@
       const body = document.getElementById('info-body');
 
       if (type === 'feelscore') {
-
         const currentLine = value != null
           ? `<p style="margin-top:10px;"><b>You are here:</b> ${value}</p>`
           : '';
@@ -96,7 +115,7 @@
             <li><b>70–89</b> → Comfortable</li>
             <li><b>55–69</b> → Slight discomfort</li>
             <li><b>40–54</b> → Uncomfortable</li>
-            <li><b><40</b> → Harsh</li>
+            <li><b>&lt;40</b> → Harsh</li>
           </ul>
 
           ${currentLine}
@@ -139,8 +158,8 @@
     };
 
     window.closeInfo = function(e) {
-      // allow click outside modal to close
-      if (!e || e.target.id === 'info-modal') {
+      // safer click detection
+      if (!e || e.target === e.currentTarget) {
         document.getElementById('info-modal').classList.add('hidden');
       }
     };

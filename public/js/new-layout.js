@@ -31,20 +31,20 @@ async function fetchDroughtFire() {
 // ============================================================
 
 export async function renderNewLayout(container) {
-  container.innerHTML = `
-    <div class="top-stack">
+container.innerHTML = `
+  <div class="top-stack">
 
-      <div id="feelscore"></div>
-      <div id="droughtfire"></div>
-      <div id="today"></div>
-      <div id="timeline"></div>
-      <div id="tomorrow"></div>
+    <div id="feelscore" class="fade-in"></div>
+    <div id="droughtfire" class="fade-in"></div>
+    <div id="today" class="fade-in"></div>
+    <div id="timeline" class="fade-in"></div>
+    <div id="tomorrow" class="fade-in"></div>
 
-      <div id="pulse"></div>
-      <div id="update"></div>
+    <div id="pulse" class="fade-in"></div>
+    <div id="update" class="fade-in"></div>
 
-    </div>
-  `;
+  </div>
+`;
 
   try {
     const [data, drought] = await Promise.all([
@@ -55,6 +55,8 @@ export async function renderNewLayout(container) {
     const hourly = normalizeOpenMeteo(data.hourly || []);
     const current =
       normalizeOpenMeteo([data.current])[0] || data.current;
+
+      renderHeaderMetrics(current);
 
     const human = buildHumanActionIntelFS({
       ...data,
@@ -84,6 +86,10 @@ export async function renderNewLayout(container) {
       data?.substack
     );
 
+    runStaggerAnimation();
+
+    hideSplash();
+
   } catch (err) {
     console.error('Layout error:', err);
     container.innerHTML = `<div style="padding:20px;">Error loading</div>`;
@@ -103,7 +109,7 @@ function renderFeelScore(current) {
   const color = getFeelScoreColor(score);
   const bgTint = getFeelScoreBackground(score);
 
-  const intel = buildIntel(current, score);
+const intel = buildHumanActionIntelFS({ current });
 
   const narrative = assembleWithVoice(
     intel,
@@ -233,14 +239,38 @@ function renderTimeline(hourly) {
   document.getElementById('timeline').innerHTML = `
     <div class="timeline-card">
       <div class="section-title">NEXT FEW HOURS</div>
+
       <div class="timeline-row">
         ${next.map(h => {
-          const score = Math.round((calculateComfort(h)?.score || 0) * 10);
+          const comfort = calculateComfort(h);
+          const score = Math.round((comfort?.score || 0) * 10);
+
+          const tint = getFeelScoreBackground(score);
+          const color = getFeelScoreColor(score);
+
           return `
-            <div class="hour-block">
-              <div>${formatHour(h.timestamp)}</div>
-              <div>${Math.round(h.temperatureF)}°</div>
-              <div>${score}</div>
+            <div class="hour-block" style="
+              background:
+                linear-gradient(${tint}, ${tint}),
+                rgba(255,255,255,0.04);
+            ">
+
+              <div class="hour-time">
+                ${formatHour(h.timestamp)}
+              </div>
+
+              <div class="hour-icon">
+                ${getWeatherEmoji(h)}
+              </div>
+
+              <div class="hour-temp">
+                ${Math.round(h.temperatureF)}°
+              </div>
+
+              <div class="hour-score" style="color:${color}">
+                ${score}
+              </div>
+
             </div>
           `;
         }).join('')}
@@ -307,4 +337,71 @@ function getDroughtBackground(DSS, FRI) {
   if (s >= 55) return "rgba(255,152,0,0.14)";
   if (s >= 40) return "rgba(255,193,7,0.10)";
   return "rgba(255,255,255,0.03)";
+}
+
+function runStaggerAnimation() {
+  const elements = document.querySelectorAll('.fade-in');
+
+  elements.forEach((el, i) => {
+    if (el.classList.contains('show')) return;
+
+    setTimeout(() => {
+      el.classList.add('show');
+    }, i * 90);
+  });
+}
+
+function hideSplash() {
+  const splash = document.getElementById('splash');
+  if (!splash) return;
+
+  // let the first card begin animating before fade
+  setTimeout(() => {
+    splash.classList.add('hide');
+
+    // remove from DOM after animation completes
+    setTimeout(() => {
+      splash.remove();
+    }, 600);
+
+  }, 300);
+}
+
+function renderHeaderMetrics(current) {
+  const el = document.getElementById('metric-chips');
+  const updated = document.getElementById('updated-time');
+
+  if (!el || !current) return;
+
+  const temp = Math.round(current.air_temperature ?? current.temperatureF ?? 0);
+  const dew = Math.round(current.dew_point ?? 0);
+  const rh = Math.round(current.relative_humidity ?? 0);
+  const wind = Math.round(current.wind_avg ?? current.windSpeed ?? 0);
+
+  el.innerHTML = `
+    <div class="metric-chip">🌡 ${temp}°</div>
+    <div class="metric-chip">💧 ${dew}°</div>
+    <div class="metric-chip">💦 ${rh}%</div>
+    <div class="metric-chip">💨 ${wind} mph</div>
+  `;
+
+  if (updated && current.timestamp) {
+    updated.textContent =
+      "Updated " + formatTimeAgo(new Date(current.timestamp));
+  }
+}
+
+function formatTimeAgo(date) {
+  const diff = (Date.now() - date.getTime()) / 1000;
+
+  if (diff < 60) return "just now";
+  if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} hr ago`;
+  return `${Math.floor(diff / 86400)} days ago`;
+}
+
+function getWeatherEmoji(h) {
+  if (h.precipitation > 0.1) return "🌧️";
+  if (h.cloudcover > 60) return "☁️";
+  return "☀️";
 }
