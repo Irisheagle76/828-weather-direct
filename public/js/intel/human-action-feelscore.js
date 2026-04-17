@@ -213,7 +213,7 @@ function buildBulletsFS({ score, snapshot, label, trend, min, max }) {
     bullets.push(
       label === "tomorrow"
         ? "Air stays dry and comfortable again"
-        : "Dry air keeps things crisp"
+        : "Perfect patio weather and sweat-free warmth!"
     );
   }
 
