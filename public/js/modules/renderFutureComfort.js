@@ -32,9 +32,9 @@ export function renderFutureComfort(container, items, trend) {
             ${getTrendText(safeTrend)}
           </div>
 
-          <div class="comfort-support">
-            ${summary}
-          </div>
+         <div class="comfort-support">
+  ${summary}
+</div>
 
         </div>
 

@@ -390,3 +390,178 @@ body {
 .next6-hour-goldi {
   font-size: 12px;
 }
+
+.comfort-support {
+  font-size: 13px;
+  color: #9fb0d1;
+  margin-top: 4px;
+}
+
+/* ============================================================
+   TOMORROW CARD
+   ============================================================ */
+
+.tomorrow-card {
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.04);
+  position: relative;
+  overflow: hidden;
+}
+
+.tm-headline {
+  font-size: 15px;
+  margin-top: 6px;
+}
+
+.tm-bullet {
+  font-size: 13px;
+  color: #9fb0d1;
+}
+
+/* ============================================================
+   CONTENT CARDS (PULSE + UPDATE) — V2
+   ============================================================ */
+
+.content-card {
+  border-radius: 16px;
+  padding: 14px;
+
+  position: relative;
+  overflow: hidden;
+
+  border: 1px solid rgba(255,255,255,0.04);
+
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)),
+    #121a2b;
+
+  transition:
+    transform 0.18s ease,
+    background 0.35s ease,
+    border-color 0.25s ease;
+}
+
+/* subtle lift (mobile-safe) */
+.content-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255,255,255,0.08);
+}
+
+/* consistent internal spacing */
+.content-card > * + * {
+  margin-top: 6px;
+}
+
+/* ============================================================
+   MEDIA
+   ============================================================ */
+
+.content-card img {
+  width: 100%;
+  border-radius: 12px;
+  display: block;
+}
+
+/* ============================================================
+   TEXT SYSTEM
+   ============================================================ */
+
+.content-card .section-title {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #9fb0d1;
+}
+
+.content-card h3,
+.update-title {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.content-card .meta,
+.update-date,
+.pulse-meta {
+  font-size: 12px;
+  color: #9fb0d1;
+}
+
+.content-card .body,
+.update-excerpt,
+.pulse-text {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   CTA
+   ============================================================ */
+
+.content-card .cta,
+.update-cta {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+
+  display: inline-block;
+}
+
+/* ============================================================
+   PULSE (BLUE)
+   ============================================================ */
+
+.pulse-card {
+  background:
+    linear-gradient(
+      rgba(23,55,131,0.18),
+      rgba(23,55,131,0.05)
+    ),
+    #121a2b;
+}
+
+.pulse-expand {
+  font-size: 12px;
+  color: #6ea8ff;
+}
+
+/* ============================================================
+   UPDATE (ORANGE)
+   ============================================================ */
+
+.update-card {
+  background:
+    linear-gradient(
+      rgba(219,110,45,0.18),
+      rgba(219,110,45,0.05)
+    ),
+    #121a2b;
+}
+
+.update-cta {
+  color: #db6e2d;
+}
+
+/* NEW badge */
+.update-new {
+  font-size: 10px;
+  background: #db6e2d;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 6px;
+  margin-left: 6px;
+}
+
+/* ============================================================
+   OPTIONAL: SUBTLE GLOW (matches hero system)
+   ============================================================ */
+
+.content-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  box-shadow: inset 0 0 40px rgba(255,255,255,0.03);
+  pointer-events: none;
+}
