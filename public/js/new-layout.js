@@ -1,5 +1,5 @@
 // ============================================================
-// AVL WEATHER — V2 LAYOUT (CLEAN + MODULAR)
+// AVL WEATHER — V2 LAYOUT (CLEAN + STABLE)
 // ============================================================
 
 import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
@@ -8,7 +8,6 @@ import { normalizeOpenMeteo } from '/js/intel/normalize-hourly.js';
 import { assembleWithVoice } from '/js/intel/synthesizer/assembleWithVoice.js';
 import { buildHumanActionIntelFS } from '/js/intel/human-action-feelscore.js';
 
-// NEW MODULES
 import { renderPulseV2 } from '/js/modules/renderPulseV2.js';
 import { renderSubstackV2 } from '/js/modules/renderSubstackV2.js';
 
@@ -30,59 +29,78 @@ async function fetchDroughtFire() {
 // MAIN ENTRY
 // ============================================================
 
-let hourly = [];
-let current = null;
+export async function renderNewLayout(container) {
+  container.innerHTML = `
+    <div class="top-stack">
+      <div id="feelscore" class="fade-in"></div>
+      <div id="droughtfire" class="fade-in"></div>
+      <div id="today" class="fade-in"></div>
+      <div id="timeline" class="fade-in"></div>
+      <div id="tomorrow" class="fade-in"></div>
+      <div id="pulse" class="fade-in"></div>
+      <div id="update" class="fade-in"></div>
+    </div>
+  `;
 
-// -----------------------------
-// HOURLY (SAFE)
-// -----------------------------
-if (
-  data?.hourly &&
-  typeof data.hourly === "object" &&
-  Array.isArray(data.hourly.time)
-) {
   try {
-    hourly = normalizeOpenMeteo(data.hourly);
-  } catch (e) {
-    console.warn("⚠️ Hourly normalization failed", e);
-    hourly = [];
-  }
-} else {
-  console.warn("⚠️ Invalid hourly structure:", data?.hourly);
-}
+    const [data, drought] = await Promise.all([
+      getWeatherForUI({ lat: 35.5951, lon: -82.5515 }),
+      fetchDroughtFire()
+    ]);
 
-// -----------------------------
-// CURRENT (SAFE)
-// -----------------------------
-if (data?.current) {
-  try {
-    const normalized = normalizeOpenMeteo([data.current]);
-    current = normalized?.[0] || data.current;
-  } catch (e) {
-    console.warn("⚠️ Current normalization failed", e);
-    current = data.current;
-  }
-}
+    // ============================================================
+    // SAFE NORMALIZATION
+    // ============================================================
 
-// -----------------------------
-// HEADER (ONLY IF VALID)
-// -----------------------------
-if (current) {
-  renderHeaderMetrics(current);
-}
+    let hourly = [];
+    let current = null;
 
-    // -----------------------------
-    // CORE MODULES
-    // -----------------------------
+    if (
+      data?.hourly &&
+      typeof data.hourly === "object" &&
+      Array.isArray(data.hourly.time)
+    ) {
+      try {
+        hourly = normalizeOpenMeteo(data.hourly);
+      } catch (e) {
+        console.warn("⚠️ Hourly normalization failed", e);
+      }
+    } else {
+      console.warn("⚠️ Invalid hourly structure:", data?.hourly);
+    }
+
+    if (data?.current) {
+      try {
+        const normalized = normalizeOpenMeteo([data.current]);
+        current = normalized?.[0] || data.current;
+      } catch (e) {
+        console.warn("⚠️ Current normalization failed", e);
+        current = data.current;
+      }
+    }
+
+    if (current) renderHeaderMetrics(current);
+
+    const human = buildHumanActionIntelFS({
+      ...data,
+      hourly,
+      current
+    });
+
+    // ============================================================
+    // RENDER CORE
+    // ============================================================
+
     renderFeelScore(current);
     renderDroughtFire(drought);
-    renderToday(human.today);
+    renderToday(human?.today);
     renderTimeline(hourly);
-    renderTomorrow(human.tomorrow);
+    renderTomorrow(human?.tomorrow);
 
-    // -----------------------------
-    // CONTENT MODULES (NEW)
-    // -----------------------------
+    // ============================================================
+    // CONTENT MODULES
+    // ============================================================
+
     renderPulseV2(
       document.getElementById('pulse'),
       data?.pulse
@@ -94,7 +112,6 @@ if (current) {
     );
 
     runStaggerAnimation();
-
     hideSplash();
 
   } catch (err) {
@@ -116,7 +133,7 @@ function renderFeelScore(current) {
   const color = getFeelScoreColor(score);
   const bgTint = getFeelScoreBackground(score);
 
-const intel = buildHumanActionIntelFS({ current });
+  const intel = buildHumanActionIntelFS({ current, score });
 
   const narrative = assembleWithVoice(
     intel,
@@ -126,7 +143,6 @@ const intel = buildHumanActionIntelFS({ current });
   );
 
   const headline = narrative?.headline || "Feels pretty good out";
-
   const bullets = (narrative?.bullets || []).slice(0, 2);
 
   document.getElementById('feelscore').innerHTML = `
@@ -136,10 +152,8 @@ const intel = buildHumanActionIntelFS({ current });
         #101b33;
     ">
       <div class="fs-header">
-        <div class="fs-title">
-          FEELSCORE
-          <span class="info-btn" onclick="openInfo('feelscore', ${score})">ⓘ</span>
-        </div>
+        FEELSCORE
+        <span class="info-btn" onclick="openInfo('feelscore', ${score})">ⓘ</span>
       </div>
 
       <div class="fs-hero-row">
@@ -167,8 +181,7 @@ const intel = buildHumanActionIntelFS({ current });
 function renderDroughtFire(data) {
   if (!data) return;
 
-  const { DSS, FRI, dssLabel, friLabel, narrative } = data;
-
+  const { DSS, FRI, narrative } = data;
   const bgTint = getDroughtBackground(DSS, FRI);
 
   document.getElementById('droughtfire').innerHTML = `
@@ -180,8 +193,8 @@ function renderDroughtFire(data) {
       <div class="df-header">DROUGHT / FIRE</div>
 
       <div class="df-scores">
-        <div class="df-score">${FRI}</div>
-        <div class="df-score">${DSS}</div>
+        <div class="df-score">🔥 ${FRI}</div>
+        <div class="df-score">🌵 ${DSS}</div>
       </div>
 
       <div class="df-headline">${narrative?.headline || ""}</div>
@@ -205,14 +218,13 @@ function renderToday(today) {
 }
 
 // ============================================================
-// TOMORROW (FIXED)
+// TOMORROW
 // ============================================================
 
 function renderTomorrow(data) {
   if (!data) return;
 
   const { headline, bullets, score } = data;
-
   const bgTint = getFeelScoreBackground(score || 70);
 
   document.getElementById('tomorrow').innerHTML = `
@@ -222,9 +234,7 @@ function renderTomorrow(data) {
         #101b33;
     ">
       <div class="section-title">TOMORROW</div>
-
       <div class="tm-headline">${headline}</div>
-
       <div class="tm-bullets">
         ${(bullets || []).slice(0, 2).map(b => `
           <div class="tm-bullet">• ${b}</div>
@@ -235,7 +245,7 @@ function renderTomorrow(data) {
 }
 
 // ============================================================
-// TIMELINE (KEEP SIMPLE)
+// TIMELINE
 // ============================================================
 
 function renderTimeline(hourly) {
@@ -245,15 +255,10 @@ function renderTimeline(hourly) {
   }
 
   const valid = hourly.filter(h =>
-    h &&
-    h.timestamp &&
-    h.temperatureF != null
+    h && h.timestamp && h.temperatureF != null
   );
 
-  if (!valid.length) {
-    document.getElementById('timeline').innerHTML = '';
-    return;
-  }
+  if (!valid.length) return;
 
   const next = valid.slice(0, 6);
 
@@ -262,35 +267,14 @@ function renderTimeline(hourly) {
   ));
 
   const html = next.map(h => {
-    const comfort = calculateComfort(h);
-    const score = Math.round((comfort?.score || 0) * 10);
-
+    const score = Math.round((calculateComfort(h)?.score || 0) * 10);
     const isBest = score === best ? "best-hour" : "";
 
-    const tint = getFeelScoreBackground(score);
-    const color = getFeelScoreColor(score);
-
     return `
-      <div class="hour-block ${isBest}" style="
-        background:
-          linear-gradient(${tint}, ${tint}),
-          rgba(255,255,255,0.04);
-      ">
-        <div class="hour-time">
-          ${formatHour(h.timestamp)}
-        </div>
-
-        <div class="hour-icon">
-          ${getWeatherEmoji(h)}
-        </div>
-
-        <div class="hour-temp">
-          ${Math.round(h.temperatureF)}°
-        </div>
-
-        <div class="hour-score" style="color:${color}">
-          ${score}
-        </div>
+      <div class="hour-block ${isBest}">
+        <div>${formatHour(h.timestamp)}</div>
+        <div>${Math.round(h.temperatureF)}°</div>
+        <div>${score}</div>
       </div>
     `;
   }).join('');
@@ -298,9 +282,7 @@ function renderTimeline(hourly) {
   document.getElementById('timeline').innerHTML = `
     <div class="timeline-card">
       <div class="section-title">NEXT FEW HOURS</div>
-      <div class="timeline-row">
-        ${html}
-      </div>
+      <div class="timeline-row">${html}</div>
     </div>
   `;
 }
@@ -316,19 +298,12 @@ function animateScoreOnce(selector, score) {
   el.dataset.done = "true";
   el.textContent = "0";
 
-  animateScore(el, score);
-
-  el.classList.add('bump');
-  setTimeout(() => el.classList.remove('bump'), 300);
-}
-
-function animateScore(el, end) {
   const start = performance.now();
 
   function frame(t) {
     const p = Math.min((t - start) / 500, 1);
     const eased = 1 - Math.pow(1 - p, 3);
-    el.textContent = Math.round(eased * end);
+    el.textContent = Math.round(eased * score);
     if (p < 1) requestAnimationFrame(frame);
   }
 
@@ -339,7 +314,6 @@ function formatHour(ts) {
   return new Date(ts).toLocaleTimeString([], { hour: 'numeric' });
 }
 
-// color helpers (same as before)
 function getFeelScoreColor(score) {
   if (score >= 90) return "#4caf50";
   if (score >= 75) return "#8bc34a";
@@ -366,14 +340,8 @@ function getDroughtBackground(DSS, FRI) {
 }
 
 function runStaggerAnimation() {
-  const elements = document.querySelectorAll('.fade-in');
-
-  elements.forEach((el, i) => {
-    if (el.classList.contains('show')) return;
-
-    setTimeout(() => {
-      el.classList.add('show');
-    }, i * 90);
+  document.querySelectorAll('.fade-in').forEach((el, i) => {
+    setTimeout(() => el.classList.add('show'), i * 90);
   });
 }
 
@@ -381,55 +349,26 @@ function hideSplash() {
   const splash = document.getElementById('splash');
   if (!splash) return;
 
-  // let the first card begin animating before fade
   setTimeout(() => {
     splash.classList.add('hide');
-
-    // remove from DOM after animation completes
-    setTimeout(() => {
-      splash.remove();
-    }, 600);
-
+    setTimeout(() => splash.remove(), 600);
   }, 300);
 }
 
 function renderHeaderMetrics(current) {
-  const el = document.getElementById('metric-chips');
-  const updated = document.getElementById('updated-time');
-
-  if (!el || !current) return;
+  const el = document.getElementById('wx-metrics');
+  if (!el) return;
 
   const temp = Math.round(current.air_temperature ?? current.temperatureF ?? 0);
-  const dew = Math.round(current.dew_point ?? 0);
   const rh = Math.round(current.relative_humidity ?? 0);
   const wind = Math.round(current.wind_avg ?? current.windSpeed ?? 0);
 
   el.innerHTML = `
+    <div class="live-chip">LIVE</div>
     <div class="metric-chip">🌡 ${temp}°</div>
-    <div class="metric-chip">💧 ${dew}°</div>
     <div class="metric-chip">💦 ${rh}%</div>
     <div class="metric-chip">💨 ${wind} mph</div>
   `;
-
-  if (updated && current.timestamp) {
-    updated.textContent =
-      "Updated " + formatTimeAgo(new Date(current.timestamp));
-  }
-}
-
-function formatTimeAgo(date) {
-  const diff = (Date.now() - date.getTime()) / 1000;
-
-  if (diff < 60) return "just now";
-  if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)} hr ago`;
-  return `${Math.floor(diff / 86400)} days ago`;
-}
-
-function getWeatherEmoji(h) {
-  if (h.precipitation > 0.1) return "🌧️";
-  if (h.cloudcover > 60) return "☁️";
-  return "☀️";
 }
 
 function mapScoreToCategory(score) {
