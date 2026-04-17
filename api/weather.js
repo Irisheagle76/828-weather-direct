@@ -1,5 +1,5 @@
 // ============================================================
-// WEATHER API — FINAL (STABLE + CORRECT UNITS)
+// WEATHER API — V3 (NORMALIZED + STABLE)
 // ============================================================
 
 let cache = {};
@@ -22,9 +22,9 @@ export default async function handler(req, res) {
 
   } catch (err) {
     console.error("🚨 TOP LEVEL ERROR:", err);
+
     return res.status(500).json({
-      error: err.message,
-      stack: err.stack
+      error: err.message
     });
   }
 }
@@ -42,7 +42,7 @@ async function handleHourly(req, res) {
   const key = `${lat},${lon}`;
 
   // ----------------------------------------------------------
-  // CURRENT (TEMPEST)
+  // TEMPEST (CURRENT CONDITIONS)
   // ----------------------------------------------------------
   const tempest = await fetchTempest();
 
@@ -57,7 +57,7 @@ async function handleHourly(req, res) {
   }
 
   // ----------------------------------------------------------
-  // FORECAST (OPEN-METEO — ALREADY FAHRENHEIT)
+  // OPEN-METEO FETCH
   // ----------------------------------------------------------
   const hourlyFields = [
     "temperature_2m",
@@ -65,9 +65,7 @@ async function handleHourly(req, res) {
     "dew_point_2m",
     "relative_humidity_2m",
     "precipitation",
-    "snowfall",
     "cloudcover",
-    "visibility",
     "wind_speed_10m",
     "wind_gusts_10m",
     "uv_index"
@@ -96,28 +94,43 @@ async function handleHourly(req, res) {
   }
 
   // ----------------------------------------------------------
+  // NORMALIZE HOURLY (🔥 CORE FIX)
+  // ----------------------------------------------------------
+  const hourly = data.hourly.time.map((t, i) => ({
+    timestamp: new Date(t).getTime(),
+
+    temperatureF: data.hourly.temperature_2m?.[i] ?? null,
+    dewpointF: data.hourly.dew_point_2m?.[i] ?? null,
+    relative_humidity: data.hourly.relative_humidity_2m?.[i] ?? null,
+
+    windSpeed: data.hourly.wind_speed_10m?.[i] ?? 0,
+    windGust: data.hourly.wind_gusts_10m?.[i] ?? null,
+
+    precipitation: data.hourly.precipitation?.[i] ?? 0,
+    cloudCover: data.hourly.cloudcover?.[i] ?? null,
+
+    uv: data.hourly.uv_index?.[i] ?? null
+  }));
+
+  // ----------------------------------------------------------
   // FINAL PAYLOAD
   // ----------------------------------------------------------
- const payload = {
-  hourly: data.hourly,
+  const payload = {
+    hourly,                  // ✅ normalized array
+    current: tempest,        // ✅ normalized current
 
-  // legacy (keep for frontend safety)
-  current: tempest,
+    current_conditions: tempest
+      ? {
+          air_temperature: tempest.temperatureF,
+          relative_humidity: tempest.relative_humidity,
+          wind_gust: tempest.windGust,
+          wind_avg: tempest.windSpeed,
+          timestamp: tempest.timestamp
+        }
+      : null,
 
-  // new standardized object (used by drought-fire)
-  current_conditions: tempest
-    ? {
-        air_temperature: tempest.temp,
-        relative_humidity: tempest.humidity,
-        wind_gust: data.hourly?.wind_gusts_10m?.[0] ?? tempest.wind,
-        wind_avg: tempest.wind,
-        timestamp: tempest.ts
-      }
-    : null,
-
-  tempest,
-  _source: "open-meteo"
-};
+    _source: "open-meteo"
+  };
 
   cache[key] = {
     ts: Date.now(),
@@ -130,16 +143,14 @@ async function handleHourly(req, res) {
 }
 
 // ------------------------------------------------------------
-// TEMPEST (C → F NORMALIZATION — ONLY PLACE WE CONVERT)
+// TEMPEST (NORMALIZED)
 // ------------------------------------------------------------
 async function fetchTempest() {
   try {
     const stationId = process.env.TEMPEST_STATION_ID;
     const token = process.env.TEMPEST_TOKEN;
 
-    if (!stationId || !token) {
-      return null;
-    }
+    if (!stationId || !token) return null;
 
     const url =
       `https://swd.weatherflow.com/swd/rest/observations/station/` +
@@ -152,25 +163,18 @@ async function fetchTempest() {
     const obs = data?.obs?.[0];
     if (!obs) return null;
 
-    const tempRaw = obs.air_temperature;
-    const dewRaw = obs.dew_point;
-
-    if (tempRaw == null) return null;
-
-    // 🔥 CONFIRMED: Tempest is returning Celsius → convert ONCE
     const toF = c => (c * 9) / 5 + 32;
 
-    const tempF = Math.round(toF(tempRaw));
-    const dewF  = dewRaw != null ? Math.round(toF(dewRaw)) : null;
+    return {
+      timestamp: obs.timestamp,
 
- return {
-  temp: tempF,
-  dew_point: dewF,
-  humidity: obs.relative_humidity ?? null,
-  wind: obs.wind_avg ?? 0,
-  wind_gust: obs.wind_gust ?? obs.wind_avg ?? 0,
-  ts: obs.timestamp
-};
+      temperatureF: Math.round(toF(obs.air_temperature)),
+      dewpointF: obs.dew_point != null ? Math.round(toF(obs.dew_point)) : null,
+
+      relative_humidity: obs.relative_humidity ?? null,
+      windSpeed: obs.wind_avg ?? 0,
+      windGust: obs.wind_gust ?? obs.wind_avg ?? 0
+    };
 
   } catch {
     return null;
@@ -199,10 +203,7 @@ async function fetchWithTimeout(url, timeout = 4000) {
 // ------------------------------------------------------------
 function respondWithFallback(res, key, reason, tempest) {
   return res.status(200).json({
-    hourly: {
-      time: [],
-      temperature_2m: []
-    },
+    hourly: [],
     _fallback: true,
     _reason: reason,
     current: tempest || lastGood[key]?.current || null
