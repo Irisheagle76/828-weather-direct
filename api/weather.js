@@ -1,5 +1,5 @@
 // ============================================================
-// WEATHER API — V4 (HARDENED + DEBUG SAFE)
+// WEATHER API — V5 (STABLE + LEGACY COMPAT)
 // ============================================================
 
 let cache = {};
@@ -42,7 +42,7 @@ async function handleHourly(req, res) {
   const key = `${lat},${lon}`;
 
   // ----------------------------------------------------------
-  // TEMPEST (CURRENT CONDITIONS)
+  // TEMPEST
   // ----------------------------------------------------------
   const tempest = await fetchTempest();
 
@@ -83,27 +83,18 @@ async function handleHourly(req, res) {
   const response = await fetchWithTimeout(url);
 
   if (!response || !response.ok) {
-    console.warn("⚠️ Forecast fetch failed");
     return respondWithFallback(res, key, "forecast-failed", tempest);
   }
 
   const data = await response.json();
 
-  // ----------------------------------------------------------
-  // 🔴 CRITICAL DEBUG POINT
-  // ----------------------------------------------------------
-  if (!data?.hourly) {
-    console.error("❌ Missing hourly block entirely");
-    return respondWithFallback(res, key, "missing-hourly", tempest);
-  }
-
-  if (!data.hourly.time || data.hourly.time.length === 0) {
-    console.warn("⚠️ Empty hourly.time from Open-Meteo", data.hourly);
+  if (!data?.hourly?.time?.length) {
+    console.warn("⚠️ Empty hourly.time from Open-Meteo");
     return respondWithFallback(res, key, "empty-hourly", tempest);
   }
 
   // ----------------------------------------------------------
-  // NORMALIZE HOURLY
+  // NORMALIZED (NEW SYSTEM)
   // ----------------------------------------------------------
   const hourly = data.hourly.time.map((t, i) => ({
     timestamp: new Date(t).getTime(),
@@ -122,10 +113,22 @@ async function handleHourly(req, res) {
   }));
 
   // ----------------------------------------------------------
+  // LEGACY FORMAT (OLD APP SUPPORT)
+  // ----------------------------------------------------------
+  const hourly_legacy = {
+    time: data.hourly.time,
+    temperature_2m: data.hourly.temperature_2m,
+    relative_humidity_2m: data.hourly.relative_humidity_2m,
+    wind_speed_10m: data.hourly.wind_speed_10m
+  };
+
+  // ----------------------------------------------------------
   // FINAL PAYLOAD
   // ----------------------------------------------------------
   const payload = {
-    hourly,
+    hourly,            // ✅ NEW
+    hourly_legacy,     // ✅ OLD
+
     current: tempest,
 
     current_conditions: tempest
@@ -142,7 +145,7 @@ async function handleHourly(req, res) {
   };
 
   // ----------------------------------------------------------
-  // CACHE + LAST GOOD
+  // CACHE
   // ----------------------------------------------------------
   cache[key] = {
     ts: Date.now(),
@@ -155,7 +158,7 @@ async function handleHourly(req, res) {
 }
 
 // ------------------------------------------------------------
-// TEMPEST (NORMALIZED)
+// TEMPEST
 // ------------------------------------------------------------
 async function fetchTempest() {
   try {
@@ -179,17 +182,14 @@ async function fetchTempest() {
 
     return {
       timestamp: obs.timestamp,
-
       temperatureF: Math.round(toF(obs.air_temperature)),
       dewpointF: obs.dew_point != null ? Math.round(toF(obs.dew_point)) : null,
-
       relative_humidity: obs.relative_humidity ?? null,
       windSpeed: obs.wind_avg ?? 0,
       windGust: obs.wind_gust ?? obs.wind_avg ?? 0
     };
 
-  } catch (err) {
-    console.warn("⚠️ Tempest failed:", err.message);
+  } catch {
     return null;
   }
 }
@@ -215,10 +215,14 @@ async function fetchWithTimeout(url, timeout = 4000) {
 // FALLBACK
 // ------------------------------------------------------------
 function respondWithFallback(res, key, reason, tempest) {
-  console.warn(`⚠️ Using fallback: ${reason}`);
-
   return res.status(200).json({
-    hourly: [], // ✅ ALWAYS ARRAY NOW
+    hourly: [],
+    hourly_legacy: {
+      time: [],
+      temperature_2m: [],
+      relative_humidity_2m: [],
+      wind_speed_10m: []
+    },
     _fallback: true,
     _reason: reason,
     current: tempest || lastGood[key]?.current || null
