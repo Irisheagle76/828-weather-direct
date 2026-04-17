@@ -703,6 +703,81 @@ body {
 }
 
 /* ============================================================
+   DROUGHT / FIRE — UPGRADED
+   ============================================================ */
+
+.df-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.df-block {
+  background: rgba(255,255,255,0.04);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.df-label {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.df-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.df-sub {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.df-trend {
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+.df-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.df-block {
+  background: rgba(255,255,255,0.04);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.df-label {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.df-main {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.df-sub {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* ============================================================
    DAY CARDS
    ============================================================ */
 

@@ -25,6 +25,29 @@ async function fetchDroughtFire() {
 }
 
 // ============================================================
+// DROUGHT COLOR HELPERS
+// ============================================================
+function getDroughtColor(dss) {
+  if (dss >= 75) return "#ff6b6b";
+  if (dss >= 60) return "#ffb347";
+  if (dss >= 45) return "#ffd166";
+  return "#7bd389";
+}
+
+function getFireColor(fri) {
+  if (fri >= 70) return "#ff4d4d";
+  if (fri >= 55) return "#ff944d";
+  if (fri >= 40) return "#ffd166";
+  return "#7bd389";
+}
+
+function getTrendMeta(trend) {
+  if (trend > 2) return { arrow: "↑", label: "Rising" };
+  if (trend < -2) return { arrow: "↓", label: "Falling" };
+  return { arrow: "→", label: "Steady" };
+}
+
+// ============================================================
 // NORMALIZATION (LOCAL + SAFE)
 // ============================================================
 
@@ -340,8 +363,22 @@ function renderDroughtFire(data) {
     return;
   }
 
-  const { DSS, FRI, narrative } = data;
+  const {
+    DSS,
+    FRI,
+    dssTrend = 0,
+    friTrend = 0,
+    narrative,
+    droughtMonitor
+  } = data;
+
   const bgTint = getDroughtBackground(DSS, FRI);
+
+  const dColor = getDroughtColor(DSS);
+  const fColor = getFireColor(FRI);
+
+  const dTrend = getTrendMeta(dssTrend);
+  const fTrend = getTrendMeta(friTrend);
 
   el.innerHTML = `
     <div class="df-card" style="
@@ -351,20 +388,41 @@ function renderDroughtFire(data) {
     ">
 
       <div class="df-header">
-        DROUGHT / FIRE
+        CONDITIONS
         <span class="info-btn" onclick="openInfo('drought', ${FRI})">ⓘ</span>
       </div>
 
-      <div class="df-row">
-        <div class="df-metric">
-          <div class="df-icon">🔥</div>
-          <div class="df-value">${FRI ?? "--"}</div>
+      <div class="df-grid">
+
+        <div class="df-block">
+          <div class="df-label">DROUGHT STRESS</div>
+
+          <div class="df-main" style="color:${dColor}">
+            <span class="df-icon">🌵</span>
+            <span class="df-value">${DSS ?? "--"}</span>
+            <span class="df-trend">${dTrend.arrow}</span>
+          </div>
+
+          <div class="df-sub">
+            ${dTrend.label}
+            ${droughtMonitor ? ` • USDM ${droughtMonitor}` : ""}
+          </div>
         </div>
 
-        <div class="df-metric">
-          <div class="df-icon">🌵</div>
-          <div class="df-value">${DSS ?? "--"}</div>
+        <div class="df-block">
+          <div class="df-label">FIRE RISK</div>
+
+          <div class="df-main" style="color:${fColor}">
+            <span class="df-icon">🔥</span>
+            <span class="df-value">${FRI ?? "--"}</span>
+            <span class="df-trend">${fTrend.arrow}</span>
+          </div>
+
+          <div class="df-sub">
+            ${fTrend.label} • Weather-driven risk
+          </div>
         </div>
+
       </div>
 
       <div class="df-headline">
