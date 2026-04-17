@@ -148,13 +148,31 @@ function buildCurrentWithTrend(hours) {
       ? today.headline
       : "";
 
-  const bullets = [
-    ...new Set([
-      ...(current?.bullets || []),
-      ...(today?.bullets || [])
-    ])
-  ].slice(0, 3);
+let bullets = [
+  ...new Set([
+    ...(current?.bullets || []),
+    ...(today?.bullets || [])
+  ])
+];
 
+// ------------------------------------------------------------
+// FILL IF TOO THIN
+// ------------------------------------------------------------
+if (bullets.length < 2) {
+  if (trend > 5) bullets.push("Improves as the day goes on");
+  if (trend < -5) bullets.push("Slight drop in comfort later");
+
+  if (snapshot.dewPoint != null && snapshot.dewPoint < 55) {
+    bullets.push("Dry air keeps things comfortable");
+  }
+
+  if (snapshot.wind > 8) {
+    bullets.push("Light breeze adds movement");
+  }
+}
+
+// Final trim
+bullets = bullets.slice(0, 3);
   return {
     label: "today",
     score,

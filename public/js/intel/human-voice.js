@@ -58,8 +58,15 @@ export function buildHumanVoice(intel = {}) {
     summary = "Warm and slightly sticky";
   else if (tempLevel === "warm")
     summary = "Warm";
-  else if (tempLevel === "mild")
-    summary = "Comfortable";
+else if (tempLevel === "mild") {
+  const options = [
+    "Comfortable",
+    "Easy to be outside",
+    "Pleasant conditions",
+    "Mild and manageable"
+  ];
+  summary = options[Math.floor(Math.random() * options.length)];
+}
   else if (tempLevel === "cool" && windLevel !== "calm")
     summary = "Cool with a breeze";
   else if (tempLevel === "cool")
