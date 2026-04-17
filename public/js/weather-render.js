@@ -34,6 +34,36 @@ function getFeelScoreBackground(score) {
   return "rgba(255, 80, 80, 0.12)";
 }
 
+// ============================================================
+// COMPAT HELPERS (old app ↔ V2 bridge)
+// Add once, fixes missing helper errors from newer code
+// ============================================================
+
+function getFeelScoreBackground(score) {
+  if (score >= 85) return "rgba(80, 200, 120, 0.12)";
+  if (score >= 70) return "rgba(100, 180, 255, 0.12)";
+  if (score >= 55) return "rgba(255, 200, 100, 0.12)";
+  if (score >= 40) return "rgba(255, 140, 80, 0.12)";
+  return "rgba(255, 80, 80, 0.12)";
+}
+
+function getFeelScoreColor(score) {
+  if (score >= 85) return "#50c878";
+  if (score >= 70) return "#64b4ff";
+  if (score >= 55) return "#ffc864";
+  if (score >= 40) return "#ff8c50";
+  return "#ff5050";
+}
+
+// Optional safety (prevents other surprises)
+function mapScoreToLabel(score) {
+  if (score >= 85) return "Ideal";
+  if (score >= 70) return "Comfortable";
+  if (score >= 55) return "Slightly Off";
+  if (score >= 40) return "Uncomfortable";
+  return "Harsh";
+}
+
 // ------------------------------------------------------------
 // FORMATTERS
 // ------------------------------------------------------------
