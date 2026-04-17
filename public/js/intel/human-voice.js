@@ -1,7 +1,23 @@
 // /js/intel/human-voice.js
 
-export function buildHumanVoice(signals, dominantFactor) {
-  const { temp, dewPoint, windSpeed } = signals;
+export function buildHumanVoice(intel = {}) {
+  const signals = intel?.signals || {};
+  const dominantFactor = intel?.dominantFactor;
+
+  const temp = typeof signals.temp === "number" ? signals.temp : null;
+  const dewPoint = typeof signals.dewPoint === "number" ? signals.dewPoint : null;
+  const wind = typeof signals.wind === "number" ? signals.wind : 0;
+
+  // ------------------------------------------------------------
+  // HARD GUARD (prevents crash)
+  // ------------------------------------------------------------
+  if (temp === null) {
+    return {
+      summary: "Conditions are steady",
+      detail: "",
+      feelsLike: ""
+    };
+  }
 
   // ------------------------------------------------------------
   // CLASSIFY
@@ -20,9 +36,9 @@ export function buildHumanVoice(signals, dominantFactor) {
     "dry";
 
   const windLevel =
-    windSpeed < 1 ? "calm" :
-    windSpeed < 5 ? "light" :
-    windSpeed < 12 ? "breezy" :
+    wind < 1 ? "calm" :
+    wind < 5 ? "light" :
+    wind < 12 ? "breezy" :
     "windy";
 
   // ------------------------------------------------------------
@@ -50,26 +66,24 @@ export function buildHumanVoice(signals, dominantFactor) {
   // ------------------------------------------------------------
   // DETAIL
   // ------------------------------------------------------------
-  let detail;
+  let detail = "";
 
   switch (dominantFactor) {
     case "heat":
-      detail = "Feels warm in the sun";
+      detail = "Feels warmer in direct sun";
       break;
     case "cold":
       detail = "Cool air is noticeable";
       break;
-    case "humidity":
+    case "muggy": // ✅ FIXED
       detail = "Humidity makes it feel heavier";
       break;
     case "wind":
       detail =
         windLevel === "calm"
           ? "Calm conditions"
-          : `Breeze around ${Math.round(windSpeed)} mph`;
+          : `Breeze around ${Math.round(wind)} mph`;
       break;
-    default:
-      detail = "";
   }
 
   // ------------------------------------------------------------
