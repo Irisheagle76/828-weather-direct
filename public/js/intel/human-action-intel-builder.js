@@ -1,9 +1,8 @@
 // ============================================================
-// HUMAN ACTION + COMFORT BUILDER (CLEAN v2)
-// - Today = now → +24h
-// - Tomorrow = +24h → +48h
-// - Hourly comfort → dayparts → windows → score
-// - UI compatible (headline, bullets, emoji)
+// HUMAN ACTION + COMFORT BUILDER (CLEAN v3)
+// - Normalized internal schema (single source of truth)
+// - Supports raw + pre-normalized hourly
+// - Bulletproof against missing fields
 // ============================================================
 
 import { evaluateHumanActionFactors } from "../modules/human-action-2/core-engine.js";
@@ -26,9 +25,42 @@ const DAYPARTS = [
 // MAIN ENTRY
 // ------------------------------------------------------------
 export function buildHumanActionIntel(raw) {
-  const hourly = normalizeOpenMeteo(raw?.hourly);
 
-  if (!hourly.length) {
+  // ============================================================
+  // NORMALIZE INPUT (CRITICAL FIX)
+  // ============================================================
+
+  let hourly = [];
+
+  if (Array.isArray(raw?.hourly)) {
+    hourly = raw.hourly;
+  } else {
+    hourly = normalizeOpenMeteo(raw?.hourly);
+  }
+
+  // ------------------------------------------------------------
+  // FORCE INTERNAL SCHEMA (THIS FIXES EVERYTHING)
+  // ------------------------------------------------------------
+  const clean = hourly
+    .map(h => {
+      const ts = h.timestamp ?? h.ts;
+
+      if (!ts) return null;
+
+      return {
+        timestamp: ts,
+        hour: new Date(ts).getHours(),
+
+        temperatureF: h.temperatureF ?? h.temp ?? null,
+        dewpointF: h.dewpointF ?? h.dew ?? null,
+        windSpeed: h.windSpeed ?? h.wind_speed ?? null,
+        humidity: h.relative_humidity ?? h.humidity ?? null,
+        cloudCover: h.cloud_cover ?? h.cloudCover ?? null
+      };
+    })
+    .filter(Boolean);
+
+  if (!clean.length) {
     return {
       today: fallback("today"),
       tomorrow: fallback("tomorrow")
@@ -37,12 +69,12 @@ export function buildHumanActionIntel(raw) {
 
   const now = Date.now();
 
-  const todayHours = hourly.filter(h => {
+  const todayHours = clean.filter(h => {
     const diff = (h.timestamp - now) / 36e5;
     return diff >= 0 && diff < 24;
   });
 
-  const tomorrowHours = hourly.filter(h => {
+  const tomorrowHours = clean.filter(h => {
     const diff = (h.timestamp - now) / 36e5;
     return diff >= 24 && diff < 48;
   });
@@ -66,17 +98,17 @@ function buildPeriod(hours, label, now) {
     const c = calculateComfort({
       temp: h.temperatureF,
       dewpointF: h.dewpointF,
-      windSpeed: h.wind_speed,
+      windSpeed: h.windSpeed,
       obsTimeLocal: h.timestamp
     });
 
     return {
       ts: h.timestamp,
-      hour: new Date(h.timestamp).getHours(),
+      hour: h.hour,
       score: Math.round((c?.score ?? 5) * 10),
       temp: h.temperatureF,
       dew: h.dewpointF,
-      wind: h.wind_speed
+      wind: h.windSpeed
     };
   });
 
@@ -146,14 +178,14 @@ function buildPeriod(hours, label, now) {
   }
 
   // -------------------------
-// TEMPERATURE RANGE (REAL FIX)
-// -------------------------
-const temps = hours
-  .map(h => h.temperatureF)
-  .filter(t => typeof t === "number");
+  // TEMP RANGE
+  // -------------------------
+  const temps = hours
+    .map(h => h.temperatureF)
+    .filter(t => typeof t === "number");
 
-const tempMax = temps.length ? Math.max(...temps) : null;
-const tempMin = temps.length ? Math.min(...temps) : null;
+  const tempMax = temps.length ? Math.max(...temps) : null;
+  const tempMin = temps.length ? Math.min(...temps) : null;
 
   // -------------------------
   // SCORE
@@ -177,7 +209,7 @@ const tempMin = temps.length ? Math.min(...temps) : null;
   score = Math.round(score);
 
   // -------------------------
-  // EXISTING ENGINE
+  // ENGINE + VOICE
   // -------------------------
   const evals = hours.map(evaluateHumanActionFactors);
   const core = aggregate(evals);
@@ -186,44 +218,35 @@ const tempMin = temps.length ? Math.min(...temps) : null;
   const signals = buildSignals(snapshot);
   const voice = buildHumanVoice(signals, core.dominantFactor);
 
-  // -------------------------
-  // RETURN (UI READY)
-  // -------------------------
-return {
-  label,
+  return {
+    label,
+    score,
+    now: nowBlock,
+    dayparts,
+    bestWindow: best,
+    worstWindow: worst,
 
-  score,
-  now: nowBlock,
-  dayparts,
-  bestWindow: best,
-  worstWindow: worst,
+    stats: {
+      tempMax,
+      tempMin
+    },
 
-  // 🔥 ADD THIS (REAL HIGH / LOW)
-  stats: {
-    tempMax,
-    tempMin
-  },
+    emoji: pickEmoji(score),
+    headline: buildHeadline(score),
+    narrative: voice.summary || "",
+    bullets: buildBullets({ best, worst, dayparts }),
 
-  // UI
-  emoji: pickEmoji(score),
-  headline: buildHeadline(score),
-  narrative: voice.summary || "",
-  bullets: buildBullets({ best, worst, dayparts }),
+    dominantFactor: core.dominantFactor,
+    confidence: core.confidence,
+    secondaryFactors: core.secondaryFactors,
 
-  // engine
-  dominantFactor: core.dominantFactor,
-  confidence: core.confidence,
-  secondaryFactors: core.secondaryFactors,
+    summary: voice.summary,
+    detail: voice.detail,
+    feelsLike: voice.feelsLike,
 
-  // voice
-  summary: voice.summary,
-  detail: voice.detail,
-  feelsLike: voice.feelsLike,
-
-  // raw
-  snapshot,
-  hourlyEvaluations: evals
-};
+    snapshot,
+    hourlyEvaluations: evals
+  };
 }
 
 // ------------------------------------------------------------
@@ -236,15 +259,17 @@ function avgScore(arr) {
 function blend(hours) {
   const avg = key => {
     const vals = hours.map(h => h[key]).filter(v => typeof v === "number");
-    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+    return vals.length
+      ? vals.reduce((a, b) => a + b, 0) / vals.length
+      : null;
   };
 
   return {
     temp: avg("temperatureF"),
     dewPoint: avg("dewpointF"),
-    humidity: avg("relative_humidity"),
-    windSpeed: avg("wind_speed"),
-    cloudCover: avg("cloud_cover")
+    humidity: avg("humidity"),
+    windSpeed: avg("windSpeed"),
+    cloudCover: avg("cloudCover")
   };
 }
 
@@ -289,15 +314,7 @@ function aggregate(evals) {
 }
 
 function fallback(label) {
-  const signals = {
-    temp: 70,
-    dewPoint: 55,
-    humidity: 50,
-    windSpeed: 5,
-    cloudCover: 50
-  };
-
-  const voice = buildHumanVoice(signals, "stable");
+  const voice = buildHumanVoice({}, "stable");
 
   return {
     label,
@@ -308,20 +325,9 @@ function fallback(label) {
     dayparts: {},
     bestWindow: null,
     worstWindow: null,
-
-    // required for UI safety
-    snapshot: signals,
-    signals,
-    summary: voice.summary,
-    detail: voice.detail,
-    feelsLike: voice.feelsLike,
-
-    dominantFactor: "stable",
-    confidence: 0.2,
-    secondaryFactors: []
+    stats: { tempMax: null, tempMin: null }
   };
 }
-
 
 // ---------------- UI HELPERS ----------------
 function pickEmoji(score) {
@@ -341,17 +347,9 @@ function buildHeadline(score) {
 function buildBullets({ best, worst, dayparts }) {
   const bullets = [];
 
-  if (best) {
-    bullets.push(`Best: ${formatHour(best.start)}–${formatHour(best.end)}`);
-  }
-
-  if (worst) {
-    bullets.push(`Tough: ${formatHour(worst.start)}–${formatHour(worst.end)}`);
-  }
-
-  if (dayparts?.lunch) {
-    bullets.push(`Lunch: ${dayparts.lunch.avg}`);
-  }
+  if (best) bullets.push(`Best: ${formatHour(best.start)}–${formatHour(best.end)}`);
+  if (worst) bullets.push(`Tough: ${formatHour(worst.start)}–${formatHour(worst.end)}`);
+  if (dayparts?.lunch) bullets.push(`Lunch: ${dayparts.lunch.avg}`);
 
   return bullets;
 }
