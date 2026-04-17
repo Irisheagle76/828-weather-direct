@@ -304,3 +304,41 @@ function mapScoreToLabel(score) {
   if (score >= 45) return "Uncomfortable";
   return "Harsh";
 }
+
+// ============================================================
+// DROUGHT / FIRE
+// ============================================================
+
+function renderDroughtFire(data) {
+  const el = document.getElementById('droughtfire');
+
+  if (!el) return;
+
+  if (!data) {
+    el.innerHTML = '';
+    return;
+  }
+
+  const { DSS, FRI, narrative } = data;
+
+  const bgTint = getDroughtBackground(DSS, FRI);
+
+  el.innerHTML = `
+    <div class="df-card" style="
+      background:
+        linear-gradient(${bgTint}, ${bgTint}),
+        #121a2b;
+    ">
+      <div class="df-header">DROUGHT / FIRE</div>
+
+      <div class="df-scores">
+        <div class="df-score">🔥 ${FRI ?? "--"}</div>
+        <div class="df-score">🌵 ${DSS ?? "--"}</div>
+      </div>
+
+      <div class="df-headline">
+        ${narrative?.headline || ""}
+      </div>
+    </div>
+  `;
+}
