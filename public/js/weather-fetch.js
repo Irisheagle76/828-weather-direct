@@ -1,9 +1,5 @@
 // ============================================================
-// WEATHER FETCH LAYER — v5 (Unified + Tempest-Correct)
-// - Single source: /api/weather
-// - Stable shape: { hourly, current }
-// - Tempest Better Forecast supported via current_conditions
-// - 5-minute cache with safe fallback
+// WEATHER FETCH LAYER — v6 (STABLE + DUAL FORMAT)
 // ============================================================
 
 // ------------------------------------------------------------
@@ -14,7 +10,7 @@ let lastGood = {
   timestamp: 0
 };
 
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL = 5 * 60 * 1000;
 
 // ------------------------------------------------------------
 // MAIN ENTRY
@@ -27,7 +23,7 @@ export async function fetchAllIntel({ lat, lon }) {
   return {
     ...data,
 
-    // compatibility for older modules
+    // compatibility
     tempest: data.current || null,
     wu: null,
     mrms: null,
@@ -36,7 +32,7 @@ export async function fetchAllIntel({ lat, lon }) {
       fetchedAt: start,
       durationMs: Date.now() - start,
       sources: {
-        hourly: !!data.hourly?.time?.length,
+        hourly: Array.isArray(data.hourly) && data.hourly.length > 0,
         current: !!data.current
       }
     }
@@ -76,30 +72,51 @@ async function getWeatherUnified(lat, lon) {
       const json = await res.json();
       console.log("Raw keys:", Object.keys(json));
 
-      const hourly = json.hourly;
-     const current =
-  json.tempest ||              // <-- NEW: explicit Tempest support
-  json.current ||              // fallback
-  json.current_conditions ||   // Tempest Better Forecast
-  null;
+      // ------------------------------------------------------
+      // SUPPORT BOTH FORMATS
+      // ------------------------------------------------------
+      let hourly = null;
 
-      const timeArr = hourly?.time;
+      if (Array.isArray(json.hourly) && json.hourly.length > 0) {
+        // ✅ NEW SYSTEM
+        hourly = json.hourly;
+      } else if (json.hourly_legacy?.time?.length) {
+        // ✅ OLD SYSTEM FALLBACK
+        console.log("🟡 Using legacy hourly format");
 
-      if (!timeArr || timeArr.length === 0) {
-        console.warn("❌ Missing hourly.time");
+        hourly = json.hourly_legacy.time.map((t, i) => ({
+          timestamp: new Date(t).getTime(),
+          temperatureF: json.hourly_legacy.temperature_2m?.[i] ?? null,
+          relative_humidity: json.hourly_legacy.relative_humidity_2m?.[i] ?? null,
+          windSpeed: json.hourly_legacy.wind_speed_10m?.[i] ?? 0
+        }));
+      }
+
+      const current =
+        json.current ||
+        json.current_conditions ||
+        null;
+
+      // ------------------------------------------------------
+      // VALIDATION
+      // ------------------------------------------------------
+      if (!Array.isArray(hourly) || hourly.length === 0) {
+        console.warn("❌ Invalid hourly data");
         continue;
       }
 
       const payload = { hourly, current };
 
-      // cache it
+      // ------------------------------------------------------
+      // CACHE
+      // ------------------------------------------------------
       lastGood = {
         data: payload,
         timestamp: Date.now()
       };
 
       console.log("✅ WEATHER OK", {
-        hours: timeArr.length,
+        hours: hourly.length,
         hasCurrent: !!current
       });
 
@@ -127,11 +144,7 @@ async function getWeatherUnified(lat, lon) {
 // ============================================================
 function buildFallback() {
   return {
-    hourly: {
-      time: [],
-      temperature_2m: [],
-      relative_humidity_2m: []
-    },
+    hourly: [],   // ✅ unified format
     current: null
   };
 }
