@@ -342,3 +342,87 @@ function renderDroughtFire(data) {
     </div>
   `;
 }
+
+// ============================================================
+// TODAY
+// ============================================================
+
+function renderToday(data) {
+  const el = document.getElementById('today');
+
+  if (!el) return;
+
+  if (!data) {
+    el.innerHTML = '';
+    return;
+  }
+
+  const { score, headline, bullets, emoji } = data;
+
+  el.innerHTML = `
+    <div class="day-card">
+
+      <div class="day-header">
+        <div class="day-title">TODAY</div>
+        <div class="day-score">
+          ${emoji ?? ""} ${score ?? "--"}
+        </div>
+      </div>
+
+      <div class="day-headline">
+        ${headline || ""}
+      </div>
+
+      ${
+        bullets?.length
+          ? `<div class="day-bullets">
+              ${bullets.map(b => `<div>• ${b}</div>`).join("")}
+            </div>`
+          : ""
+      }
+
+    </div>
+  `;
+}
+
+// ============================================================
+// TOMORROW
+// ============================================================
+
+function renderTomorrow(data) {
+  const el = document.getElementById('tomorrow');
+
+  if (!el) return;
+
+  if (!data) {
+    el.innerHTML = '';
+    return;
+  }
+
+  const { score, headline, bullets, emoji } = data;
+
+  el.innerHTML = `
+    <div class="day-card">
+
+      <div class="day-header">
+        <div class="day-title">TOMORROW</div>
+        <div class="day-score">
+          ${emoji ?? ""} ${score ?? "--"}
+        </div>
+      </div>
+
+      <div class="day-headline">
+        ${headline || ""}
+      </div>
+
+      ${
+        bullets?.length
+          ? `<div class="day-bullets">
+              ${bullets.map(b => `<div>• ${b}</div>`).join("")}
+            </div>`
+          : ""
+      }
+
+    </div>
+  `;
+}
