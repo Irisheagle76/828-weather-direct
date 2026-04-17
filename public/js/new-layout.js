@@ -363,14 +363,20 @@ function renderDroughtFire(data) {
     return;
   }
 
-  const {
-    DSS,
-    FRI,
-    dssTrend = 0,
-    friTrend = 0,
-    narrative,
-    droughtMonitor
-  } = data;
+ const {
+  DSS,
+  FRI,
+  dssTrend = 0,
+  friTrend = 0,
+  narrative
+} = data;
+
+const droughtMonitor =
+  data.droughtMonitor ||
+  data.usdm ||
+  data.dm ||
+  data?.drought?.monitor ||
+  null;
 
   const bgTint = getDroughtBackground(DSS, FRI);
 
