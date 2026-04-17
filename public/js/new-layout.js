@@ -428,8 +428,9 @@ function renderDroughtFire(data) {
           </div>
 
           <div class="df-sub">
-            ${fTrend.label} • Weather-driven risk
-          </div>
+  ${dTrend.label}
+  ${droughtMonitor ? ` • ${droughtMonitor}` : ""}
+</div>
         </div>
 
       </div>
