@@ -311,3 +311,82 @@ body {
 .hidden {
   display: none;
 }
+
+/* ============================================================
+   FUTURE COMFORT STRIP (UPGRADED)
+   ============================================================ */
+
+.next6-strip {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-top: 10px;
+  padding-bottom: 4px;
+}
+
+.next6-strip::-webkit-scrollbar {
+  display: none;
+}
+
+/* CARD */
+.next6-hour {
+  min-width: 70px;
+  border-radius: 12px;
+  padding: 10px 8px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+
+  border: 1px solid rgba(255,255,255,0.04);
+
+  transition:
+    transform 0.2s ease,
+    background 0.4s ease;
+}
+
+/* hover / tap feel */
+.next6-hour:hover {
+  transform: translateY(-2px);
+}
+
+/* TIME */
+.next6-hour-label {
+  font-size: 11px;
+  color: #9fb0d1;
+}
+
+/* ICON */
+.next6-hour-emoji {
+  font-size: 18px;
+}
+
+/* TEMP */
+.next6-hour-temp {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* SCORE */
+.next6-hour-score {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* SCORE COLORS */
+.next6-hour-score.great { color: #4caf50; }
+.next6-hour-score.good { color: #8bc34a; }
+.next6-hour-score.okay { color: #ffc107; }
+.next6-hour-score.poor { color: #ff9800; }
+.next6-hour-score.bad  { color: #f44336; }
+
+/* GOLDILOCKS MOMENT */
+.next6-hour.goldilocks {
+  border: 1px solid rgba(255,255,255,0.15);
+  box-shadow: 0 0 12px rgba(255,255,255,0.08);
+}
+
+.next6-hour-goldi {
+  font-size: 12px;
+}

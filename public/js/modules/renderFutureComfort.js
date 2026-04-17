@@ -67,8 +67,14 @@ function renderHourCard(h) {
   const scoreClass = getScoreClass(score);
   const goldiClass = h.goldilocks ? "goldilocks" : "";
 
+  const tint = getFeelScoreBackground(score || 50); // 🔥 KEY ADD
+
   return `
-    <div class="next6-hour ${goldiClass}">
+    <div class="next6-hour ${goldiClass}" style="
+      background:
+        linear-gradient(${tint}, ${tint}),
+        rgba(255,255,255,0.05);
+    ">
 
       <div class="next6-hour-label">
         ${h.hourLabel || ""}
