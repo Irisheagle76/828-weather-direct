@@ -214,14 +214,32 @@ function resolveCurrent(data) {
   if (!obs) return null;
 
   return {
-    temp: obs.temp ?? null,
-    dewPoint: obs.dew_point ?? null,
-    humidity: obs.humidity ?? null,
-    wind: obs.wind ?? 0,
-    timestamp: obs.ts ?? null
+    temp:
+      obs.temperatureF ??
+      obs.temp ??
+      null,
+
+    dewPoint:
+      obs.dewpointF ??
+      obs.dew_point ??
+      null,
+
+    humidity:
+      obs.relative_humidity ??
+      obs.humidity ??
+      null,
+
+    wind:
+      obs.windSpeed ??
+      obs.wind ??
+      0,
+
+    timestamp:
+      obs.timestamp ??
+      obs.ts ??
+      null
   };
 }
-
 // ------------------------------------------------------------
 // CURRENT OBS RENDER
 // ------------------------------------------------------------
