@@ -1,10 +1,9 @@
 // ============================================================
-// AVL WEATHER — V2 LAYOUT (CLEAN + STABLE)
+// AVL WEATHER — V3 LAYOUT (STABLE + UNIFIED)
 // ============================================================
 
 import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
 import { calculateComfort } from '/js/intel/comfort.js';
-import { normalizeOpenMeteo } from '/js/intel/normalize-hourly.js';
 import { assembleWithVoice } from '/js/intel/synthesizer/assembleWithVoice.js';
 import { buildHumanActionIntelFS } from '/js/intel/human-action-feelscore.js';
 
@@ -12,7 +11,7 @@ import { renderPulseV2 } from '/js/modules/renderPulseV2.js';
 import { renderSubstackV2 } from '/js/modules/renderSubstackV2.js';
 
 // ============================================================
-// DROUGHT FETCH
+// FETCH HELPERS
 // ============================================================
 
 async function fetchDroughtFire() {
@@ -23,6 +22,29 @@ async function fetchDroughtFire() {
   } catch {
     return null;
   }
+}
+
+// ============================================================
+// NORMALIZATION (LOCAL + SAFE)
+// ============================================================
+
+function normalizeHourly(hourly = []) {
+  return hourly.map(h => ({
+    ts: h.ts || h.time || h.timestamp,
+    temp: h.temp ?? h.temperature ?? h.temperatureF ?? null,
+    dewPoint: h.dewPoint ?? h.dewpoint ?? null,
+    wind: h.wind ?? h.windspeed ?? h.windSpeed ?? 0,
+    rh: h.rh ?? h.relative_humidity ?? null
+  }));
+}
+
+function normalizeCurrent(c = {}) {
+  return {
+    ...c,
+    temp: c.temp ?? c.temperature ?? c.temperatureF ?? null,
+    wind: c.wind ?? c.wind_avg ?? c.windSpeed ?? 0,
+    rh: c.rh ?? c.relative_humidity ?? null
+  };
 }
 
 // ============================================================
@@ -48,101 +70,42 @@ export async function renderNewLayout(container) {
       fetchDroughtFire()
     ]);
 
-    // ============================================================
-    // SAFE NORMALIZATION
-    // ============================================================
+    // ------------------------------------------------------------
+    // NORMALIZE ONCE
+    // ------------------------------------------------------------
+    const hourly = Array.isArray(data?.hourly)
+      ? normalizeHourly(data.hourly)
+      : [];
 
-   // ============================================================
-// SAFE NORMALIZATION (LOCAL + NON-DESTRUCTIVE)
-// ============================================================
+    const current = data?.current
+      ? normalizeCurrent(data.current)
+      : null;
 
-function normalizeHourlyLocal(hourlyRaw = []) {
-  return hourlyRaw.map(h => ({
-    ts: h.ts || h.time || h.timestamp,
+    if (current) renderHeaderMetrics(current);
 
-    temp:
-      h.temp ??
-      h.temperature ??
-      h.temperatureF,
+    // ------------------------------------------------------------
+    // HUMAN INTEL (FIXED)
+    // ------------------------------------------------------------
+    const human = buildHumanActionIntelFS({
+      ...data,
+      hourly,
+      current
+    });
 
-    dewPoint:
-      h.dewPoint ??
-      h.dewpoint ??
-      null,
-
-    wind:
-      h.wind ??
-      h.windspeed ??
-      h.windSpeed ??
-      0,
-
-    rh:
-      h.rh ??
-      h.relative_humidity ??
-      h.humidity ??
-      null
-  }));
-}
-
-let hourly = [];
-let current = null;
-
-// ------------------------------------------------------------
-// HOURLY
-// ------------------------------------------------------------
-
-if (Array.isArray(data?.hourly) && data.hourly.length) {
-  hourly = normalizeHourlyLocal(data.hourly);
-} else {
-  console.warn("⚠️ Invalid hourly structure:", data?.hourly);
-}
-
-// ------------------------------------------------------------
-// CURRENT (light normalization only)
-// ------------------------------------------------------------
-
-if (data?.current) {
-  current = {
-    ...data.current,
-    temp:
-      data.current.temp ??
-      data.current.temperature ??
-      data.current.temperatureF,
-
-    wind:
-      data.current.wind ??
-      data.current.wind_avg ??
-      data.current.windSpeed,
-
-    rh:
-      data.current.rh ??
-      data.current.relative_humidity
-  };
-}
-
-    // ============================================================
-    // RENDER CORE
-    // ============================================================
-
+    // ------------------------------------------------------------
+    // CORE RENDER
+    // ------------------------------------------------------------
     renderFeelScore(current);
     renderDroughtFire(drought);
     renderToday(human?.today);
     renderTimeline(hourly);
     renderTomorrow(human?.tomorrow);
 
-    // ============================================================
-    // CONTENT MODULES
-    // ============================================================
-
-    renderPulseV2(
-      document.getElementById('pulse'),
-      data?.pulse
-    );
-
-    renderSubstackV2(
-      document.getElementById('update'),
-      data?.substack
-    );
+    // ------------------------------------------------------------
+    // CONTENT
+    // ------------------------------------------------------------
+    renderPulseV2(document.getElementById('pulse'), data?.pulse);
+    renderSubstackV2(document.getElementById('update'), data?.substack);
 
     runStaggerAnimation();
     hideSplash();
@@ -180,9 +143,7 @@ function renderFeelScore(current) {
 
   document.getElementById('feelscore').innerHTML = `
     <div class="feelscore-card hero" style="
-      background:
-        linear-gradient(${bgTint}, ${bgTint}),
-        #101b33;
+      background: linear-gradient(${bgTint}, ${bgTint}), #101b33;
     ">
       <div class="fs-header">
         FEELSCORE
@@ -208,132 +169,34 @@ function renderFeelScore(current) {
 }
 
 // ============================================================
-// DROUGHT / FIRE
-// ============================================================
-
-function renderDroughtFire(data) {
-  if (!data) return;
-
-  const { DSS, FRI, narrative } = data;
-  const bgTint = getDroughtBackground(DSS, FRI);
-
-  document.getElementById('droughtfire').innerHTML = `
-    <div class="df-card" style="
-      background:
-        linear-gradient(${bgTint}, ${bgTint}),
-        #121a2b;
-    ">
-      <div class="df-header">DROUGHT / FIRE</div>
-
-      <div class="df-scores">
-        <div class="df-score">🔥 ${FRI}</div>
-        <div class="df-score">🌵 ${DSS}</div>
-      </div>
-
-      <div class="df-headline">${narrative?.headline || ""}</div>
-    </div>
-  `;
-}
-
-// ============================================================
-// TODAY
-// ============================================================
-
-function renderToday(today) {
-  if (!today) return;
-
-  document.getElementById('today').innerHTML = `
-    <div class="today-card">
-      <div class="section-title">TODAY</div>
-      <div>${today.headline}</div>
-    </div>
-  `;
-}
-
-// ============================================================
-// TOMORROW
-// ============================================================
-
-function renderTomorrow(data) {
-  if (!data) return;
-
-  const { headline, bullets, score } = data;
-  const bgTint = getFeelScoreBackground(score || 70);
-
-  document.getElementById('tomorrow').innerHTML = `
-    <div class="tomorrow-card" style="
-      background:
-        linear-gradient(${bgTint}, ${bgTint}),
-        #101b33;
-    ">
-      <div class="section-title">TOMORROW</div>
-      <div class="tm-headline">${headline}</div>
-      <div class="tm-bullets">
-        ${(bullets || []).slice(0, 2).map(b => `
-          <div class="tm-bullet">• ${b}</div>
-        `).join("")}
-      </div>
-    </div>
-  `;
-}
-
-// ============================================================
-// TIMELINE
+// TIMELINE (CLEAN + FUTURE SAFE)
 // ============================================================
 
 function renderTimeline(hourly) {
   const container = document.getElementById('timeline');
 
-  if (!Array.isArray(hourly) || !hourly.length) {
+  if (!hourly.length) {
     container.innerHTML = '';
     return;
   }
 
-  // ------------------------------------------------------------
-  // VALID DATA (normalized shape)
-  // ------------------------------------------------------------
-  const valid = hourly.filter(h =>
-    h && h.ts && h.temp != null
-  );
-
-  if (!valid.length) {
-    container.innerHTML = '';
-    return;
-  }
-
-  // ------------------------------------------------------------
-  // NEXT 6 HOURS (future-aware)
-  // ------------------------------------------------------------
   const now = Date.now();
+  const future = hourly.filter(h => h.ts >= now && h.temp != null);
+  const next = (future.length ? future : hourly).slice(0, 6);
 
-  const future = valid.filter(h => h.ts >= now);
-
-  const next = (future.length ? future : valid).slice(0, 6);
-
-  // ------------------------------------------------------------
-  // BEST HOUR
-  // ------------------------------------------------------------
   const scores = next.map(h =>
     Math.round((calculateComfort(h)?.score || 0) * 10)
   );
 
   const best = Math.max(...scores);
 
-  // ------------------------------------------------------------
-  // BUILD UI
-  // ------------------------------------------------------------
-  const html = next.map((h, i) => {
-    const score = scores[i];
-    const isBest = score === best ? "best-hour" : "";
-
-    return `
-      <div class="hour-block ${isBest}">
-        <div>${formatHour(h.ts)}</div>
-        <div>${Math.round(h.temp)}°</div>
-        <div>${score}</div>
-      </div>
-    `;
-  }).join('');
+  const html = next.map((h, i) => `
+    <div class="hour-block ${scores[i] === best ? "best-hour" : ""}">
+      <div>${formatHour(h.ts)}</div>
+      <div>${Math.round(h.temp)}°</div>
+      <div>${scores[i]}</div>
+    </div>
+  `).join('');
 
   container.innerHTML = `
     <div class="timeline-card">
@@ -342,7 +205,6 @@ function renderTimeline(hourly) {
     </div>
   `;
 }
-
 // ============================================================
 // HELPERS
 // ============================================================

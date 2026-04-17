@@ -181,14 +181,29 @@ export function getComfortColor(score) {
 // CORE ENGINE (FIXED)
 // ============================================================
 
-export function computeComfort(hour) {
+function computeComfort(hour) {
+  // ------------------------------------------------------------
+  // NORMALIZED INPUT (SAFE — DOES NOT BREAK OLD APP)
+  // ------------------------------------------------------------
   const temp = num(hour.temperatureF ?? hour.temp);
 
   const humidity =
     num(hour.relative_humidity) ??
     num(hour.humidity);
 
-  // 🔥 Magnus fallback (only used if dew missing)
+  const dew =
+    num(hour.dewpointF ?? hour.dewPoint);
+
+  const wind =
+    num(hour.wind ?? hour.windSpeed ?? hour.wind_speed) ?? 0;
+
+  const timestamp = normalizeTimestamp(
+    hour.ts ?? hour.timestamp
+  );
+
+  // ------------------------------------------------------------
+  // DEW FALLBACK (unchanged logic)
+  // ------------------------------------------------------------
   const estimateDewPoint = (tempF, rh) => {
     if (tempF == null || rh == null) return null;
 
@@ -204,17 +219,12 @@ export function computeComfort(hour) {
     return (dewC * 9 / 5) + 32;
   };
 
-  const dew =
-    num(hour.dewpointF ?? hour.dewPoint) ??
-    estimateDewPoint(temp, humidity);
+  const finalDew =
+    dew ?? estimateDewPoint(temp, humidity);
 
-  const wind =
-    num(hour.wind_speed ?? hour.windSpeed) ?? 0;
-
-  const timestamp = normalizeTimestamp(hour.timestamp);
-  const elev = computeSolarElevation(timestamp, LOCATION.lat, LOCATION.lon);
-
-  // 🚫 Only fail if temp is missing (dew now guaranteed fallback)
+  // ------------------------------------------------------------
+  // FAIL SAFE
+  // ------------------------------------------------------------
   if (temp == null) {
     console.warn("⚠️ Missing temperature", { hour });
 
@@ -229,18 +239,31 @@ export function computeComfort(hour) {
     };
   }
 
-  const score = computeComfortScore(temp, dew, wind, elev);
+  const elev = computeSolarElevation(
+    timestamp,
+    LOCATION.lat,
+    LOCATION.lon
+  );
+
+  const score = computeComfortScore(
+    temp,
+    finalDew,
+    wind,
+    elev
+  );
 
   return {
     comfortScore: score,
     category: getCategory(score),
     emoji: getEmoji(score),
     color: getComfortColor(score),
+
     temp,
-    dewpoint: dew,
+    dewpoint: finalDew,
     windSpeed: wind
   };
 }
+
 // ============================================================
 // AFTERNOON WINDOW ANALYSIS (NEW)
 // ============================================================
