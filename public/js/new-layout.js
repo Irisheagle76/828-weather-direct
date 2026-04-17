@@ -79,7 +79,7 @@ export async function renderNewLayout(container) {
     <div class="top-stack">
       <div id="feelscore" class="fade-in"></div>
       <div id="droughtfire" class="fade-in"></div>
-      <div id="today" class="fade-in"></div>
+    
       <div id="timeline" class="fade-in"></div>
       <div id="tomorrow" class="fade-in"></div>
       <div id="pulse" class="fade-in"></div>
@@ -118,9 +118,9 @@ export async function renderNewLayout(container) {
     // ------------------------------------------------------------
     // CORE RENDER
     // ------------------------------------------------------------
-    renderFeelScore(current);
+   
     renderDroughtFire(drought);
-    renderToday(human?.today);
+  renderFeelScore(human?.feelscore);
     renderTimeline(hourly);
     renderTomorrow(human?.tomorrow);
 
@@ -151,51 +151,13 @@ function detectDominantFactor(s = {}) {
 // FEELSCORE
 // ============================================================
 
-function renderFeelScore(current) {
-  if (!current) return;
+function renderFeelScore(data) {
+  if (!data) return;
 
-  const comfort = calculateComfort(current);
-  const score = Math.round((comfort?.score || 0) * 10);
+  const { score, headline, subHeadline, bullets, emoji } = data;
 
   const color = getFeelScoreColor(score);
   const bgTint = getFeelScoreBackground(score);
-
-const intel = {
-  signals: {
-    temp: current?.temp ?? null,
-    dewPoint: current?.dewPoint ?? null,
-    wind: current?.wind ?? 0
-  },
-  pattern: {
-    trend: 0,
-    min: score,
-    max: score,
-    avg: score
-  },
-  context: {
-    label: "today",
-    timeWindow: "current"
-  },
-  dominantFactor: detectDominantFactor(current || {})
-};
-
-if (
-  !intel.signals ||
-  typeof intel.signals.temp !== "number"
-) {
-  console.warn("⚠️ Invalid feelscore signals", intel);
-  return; // or fallback UI
-}
-
-const narrative = assembleWithVoice(
-  intel,
-  "today",
-  mapScoreToCategory(score),
-  comfort?.goldilocks
-);
-
-  const headline = narrative?.headline || "Feels pretty good out";
-  const bullets = (narrative?.bullets || []).slice(0, 2);
 
   document.getElementById('feelscore').innerHTML = `
     <div class="feelscore-card hero" style="
@@ -213,10 +175,16 @@ const narrative = assembleWithVoice(
         </div>
       </div>
 
-      <div class="fs-headline">${headline}</div>
+      <div class="fs-headline">${headline || ""}</div>
+
+      ${
+        subHeadline
+          ? `<div class="fs-subhead">${subHeadline}</div>`
+          : ""
+      }
 
       <div class="fs-bullets">
-        ${bullets.map(b => `<div class="fs-bullet">• ${b}</div>`).join('')}
+        ${(bullets || []).map(b => `<div class="fs-bullet">• ${b}</div>`).join('')}
       </div>
     </div>
   `;
@@ -430,7 +398,7 @@ function renderDroughtFire(data) {
     ">
 
       <div class="df-header">
-        CONDITIONS
+        ASHEVILLE DROUGHT AND FIRE THREAT
         <span class="info-btn" onclick="openInfo('drought', ${FRI})">ⓘ</span>
       </div>
 
@@ -446,7 +414,7 @@ function renderDroughtFire(data) {
           </div>
 
           <div class="df-sub">
-            ${dTrend.label}
+            ${fTrend.label}
             ${droughtMonitor ? ` • USDM ${droughtMonitor}` : ""}
           </div>
         </div>
@@ -471,48 +439,6 @@ function renderDroughtFire(data) {
       <div class="df-headline">
         ${narrative?.headline || ""}
       </div>
-
-    </div>
-  `;
-}
-
-// ============================================================
-// TODAY
-// ============================================================
-
-function renderToday(data) {
-  const el = document.getElementById('today');
-  if (!el) return;
-
-  if (!data) {
-    el.innerHTML = '';
-    return;
-  }
-
-  const { score, headline, bullets, emoji } = data;
-
-  el.innerHTML = `
-    <div class="day-card fade-in">
-
-      <div class="day-header-row">
-        <div class="day-title">TODAY</div>
-        <div class="day-score">
-          <span class="day-emoji">${emoji ?? ""}</span>
-          <span class="day-score-value">${score ?? "--"}</span>
-        </div>
-      </div>
-
-      <div class="day-headline">
-        ${headline || ""}
-      </div>
-
-      ${
-        bullets?.length
-          ? `<div class="day-bullets">
-              ${bullets.map(b => `<div class="day-bullet">• ${b}</div>`).join("")}
-            </div>`
-          : ""
-      }
 
     </div>
   `;

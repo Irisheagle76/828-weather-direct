@@ -1,5 +1,5 @@
 // ============================================================
-// NARRATIVE ASSEMBLER — v8.1 (FULLY SAFE + CLEAN)
+// NARRATIVE ASSEMBLER — v9 (CLEAN + SUPPORT ROLE)
 // ============================================================
 
 import { phrases } from "./phrases.js";
@@ -21,8 +21,15 @@ function getCategoryTemplate(category, isGoldilocks) {
 }
 
 // ------------------------------------------------------------
-// SIGNAL PICKERS (SAFE)
+// SIGNAL PICKERS (SAFE + NORMALIZED)
 // ------------------------------------------------------------
+function getWind(intel) {
+  return (
+    intel?.signals?.wind ??
+    intel?.signals?.windSpeed ??
+    0
+  );
+}
 
 function pickTempPhrase(intel) {
   const t = intel?.signals?.temp ?? 70;
@@ -45,7 +52,7 @@ function pickMoisturePhrase(intel) {
 
 function pickWindPhrase(intel) {
   const gust = intel?.signals?.windGust ?? 0;
-  const wind = intel?.signals?.windSpeed ?? 0;
+  const wind = getWind(intel);
 
   if (gust >= 30) return random(phrases.wind.gusty);
   if (wind >= 15) return random(phrases.wind.windy);
@@ -94,12 +101,10 @@ function pickEdgePhrase(intel) {
 }
 
 // ------------------------------------------------------------
-// EMOJI
+// EMOJI (kept — still useful)
 // ------------------------------------------------------------
 function buildEmoji(intel) {
-  const f = intel?.dominantFactor;
-
-  switch (f) {
+  switch (intel?.dominantFactor) {
     case "rain": return "🌧️";
     case "snow": return "❄️";
     case "wind": return "💨";
@@ -113,62 +118,39 @@ function buildEmoji(intel) {
 }
 
 // ------------------------------------------------------------
-// HEADLINE
-// ------------------------------------------------------------
-function buildHeadline(intel, category, isGoldilocks) {
-  const safeIntel = intel ?? {};
-  const base = getCategoryTemplate(category, isGoldilocks);
-
-  let headline = random(base.headlines);
-
-  if (!isGoldilocks) {
-    const f = safeIntel.dominantFactor;
-
-    if (f === "rain") headline += " with periods of rain";
-    if (f === "wind") headline += " with noticeable wind";
-    if (f === "heat") headline += " with building heat";
-    if (f === "cold") headline += " with a cool edge";
-  }
-
-  return headline;
-}
-
-// ------------------------------------------------------------
-// BULLETS
+// BULLETS (clean + reusable)
 // ------------------------------------------------------------
 function buildBullets(intel) {
-  const safeIntel = intel ?? {};
-  const { dominantFactor, secondaryFactors, confidence } = safeIntel;
-
+  const { dominantFactor, secondaryFactors, confidence } = intel ?? {};
   const bullets = [];
 
   switch (dominantFactor) {
-    case "rain": bullets.push("Rain plays a steady role through the period."); break;
-    case "wind": bullets.push("Wind is a consistent factor affecting comfort."); break;
-    case "heat": bullets.push("Warm temperatures shape the overall feel."); break;
-    case "cold": bullets.push("Cool conditions dominate much of the time."); break;
-    case "muggy": bullets.push("Moisture in the air adds a heavier feel."); break;
-    case "fog": bullets.push("Reduced visibility is a recurring feature."); break;
-    default: bullets.push("Conditions are shaped by multiple subtle factors.");
+    case "rain": bullets.push("Rain plays a steady role."); break;
+    case "wind": bullets.push("Wind affects how it feels."); break;
+    case "heat": bullets.push("Warm temperatures shape conditions."); break;
+    case "cold": bullets.push("Cool conditions dominate."); break;
+    case "muggy": bullets.push("Humidity adds a heavier feel."); break;
+    case "fog": bullets.push("Reduced visibility at times."); break;
+    default: bullets.push("Conditions are generally stable.");
   }
 
   if (secondaryFactors?.includes("wind"))
-    bullets.push("Breezes add variability at times.");
+    bullets.push("Breezes add some variation.");
 
   if (secondaryFactors?.includes("rain"))
-    bullets.push("Occasional precipitation mixes in.");
+    bullets.push("Occasional precipitation possible.");
 
   if (secondaryFactors?.includes("muggy"))
-    bullets.push("Humidity adds a slight heaviness at times.");
+    bullets.push("Humidity fluctuates at times.");
 
   if (confidence < 0.4)
-    bullets.push("Conditions shift rather than staying consistent.");
+    bullets.push("Conditions may shift through the period.");
 
   return bullets.slice(0, 3);
 }
 
 // ------------------------------------------------------------
-// NARRATIVE
+// LONG NARRATIVE (PRIMARY PURPOSE NOW)
 // ------------------------------------------------------------
 function buildNarrative(intel, dayType, category, isGoldilocks) {
   const safeIntel = intel ?? {};
@@ -186,22 +168,21 @@ function buildNarrative(intel, dayType, category, isGoldilocks) {
   const edge = pickEdgePhrase(safeIntel);
 
   const DRIVER_MAP = {
-    rain: "Rain plays the central role in how it feels.",
-    wind: "Wind shapes the overall experience.",
-    heat: "Heat becomes the defining feature.",
-    cold: "Cool air defines the overall feel.",
-    muggy: "Humidity drives the heavier feel.",
-    fog: "Low visibility influences conditions."
+    rain: "Rain plays the central role.",
+    wind: "Wind shapes the experience.",
+    heat: "Heat stands out the most.",
+    cold: "Cool air defines the feel.",
+    muggy: "Humidity drives the feel.",
+    fog: "Low visibility is a factor."
   };
 
   const driver = isGoldilocks
-    ? "No single factor stands out — everything remains in balance."
+    ? "No single factor dominates — things stay balanced."
     : DRIVER_MAP[safeIntel.dominantFactor] ||
-      "No single factor fully dominates.";
+      "No single factor dominates.";
 
   const intro = `${temporalFrame} ${baseNarrative}`;
 
-  // ✅ CLEAN DETAIL HANDLING
   const detailParts = [temp, moisture].filter(Boolean);
 
   let detail = "";
@@ -235,7 +216,7 @@ function buildNarrative(intel, dayType, category, isGoldilocks) {
 }
 
 // ------------------------------------------------------------
-// MASTER
+// MASTER (SIMPLIFIED ROLE)
 // ------------------------------------------------------------
 export const assemble = {
   assemble(intel, dayType, category, isGoldilocks) {
@@ -243,13 +224,16 @@ export const assemble = {
 
     return {
       emoji: buildEmoji(intel),
-      headline: buildHeadline(intel, category, isGoldilocks),
-      notes: narrativeObj.narrative,
+
+      // ❌ headline removed (handled by unified voice system)
+      headline: null,
+
+      longNarrative: narrativeObj.narrative,
       bullets: buildBullets(intel),
 
       category,
       goldilocks: isGoldilocks,
-      version: "8.1",
+      version: "9.0",
 
       temporal: narrativeObj.temporal
     };
