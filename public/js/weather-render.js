@@ -23,30 +23,13 @@ const $ = id => document.getElementById(id);
 const getTs = h => (h.timestamp < 1e12 ? h.timestamp * 1000 : h.timestamp);
 
 
-// -----------------------------
-// FEELSCORE BACKGROUND COLOR
-// -----------------------------
-function getFeelScoreBackground(score) {
-  if (score >= 85) return "rgba(80, 200, 120, 0.12)";
-  if (score >= 70) return "rgba(100, 180, 255, 0.12)";
-  if (score >= 55) return "rgba(255, 200, 100, 0.12)";
-  if (score >= 40) return "rgba(255, 140, 80, 0.12)";
-  return "rgba(255, 80, 80, 0.12)";
-}
-
 // ============================================================
-// COMPAT HELPERS (old app ↔ V2 bridge)
-// Add once, fixes missing helper errors from newer code
+// V2 COMPATIBILITY HELPERS (OLD APP SAFETY NET)
 // ============================================================
 
-function getFeelScoreBackground(score) {
-  if (score >= 85) return "rgba(80, 200, 120, 0.12)";
-  if (score >= 70) return "rgba(100, 180, 255, 0.12)";
-  if (score >= 55) return "rgba(255, 200, 100, 0.12)";
-  if (score >= 40) return "rgba(255, 140, 80, 0.12)";
-  return "rgba(255, 80, 80, 0.12)";
-}
-
+// -----------------------------
+// FEELSCORE COLORS
+// -----------------------------
 function getFeelScoreColor(score) {
   if (score >= 85) return "#50c878";
   if (score >= 70) return "#64b4ff";
@@ -55,13 +38,81 @@ function getFeelScoreColor(score) {
   return "#ff5050";
 }
 
-// Optional safety (prevents other surprises)
+function getFeelScoreBackground(score) {
+  if (score >= 85) return "rgba(80, 200, 120, 0.12)";
+  if (score >= 70) return "rgba(100, 180, 255, 0.12)";
+  if (score >= 55) return "rgba(255, 200, 100, 0.12)";
+  if (score >= 40) return "rgba(255, 140, 80, 0.12)";
+  return "rgba(255, 80, 80, 0.12)";
+}
+
+// -----------------------------
+// SCORE LABELS
+// -----------------------------
 function mapScoreToLabel(score) {
   if (score >= 85) return "Ideal";
   if (score >= 70) return "Comfortable";
   if (score >= 55) return "Slightly Off";
   if (score >= 40) return "Uncomfortable";
   return "Harsh";
+}
+
+function mapScoreToCategory(score) {
+  if (score >= 85) return "ideal";
+  if (score >= 70) return "comfortable";
+  if (score >= 55) return "neutral";
+  if (score >= 40) return "uncomfortable";
+  return "harsh";
+}
+
+// -----------------------------
+// SAFE COMFORT (fallback wrapper)
+// -----------------------------
+function safeComfortScore(h) {
+  try {
+    const c = calculateComfort?.(h);
+    return Math.round((c?.score || 0) * 10);
+  } catch {
+    return 50;
+  }
+}
+
+// -----------------------------
+// WEATHER ICON (fallback)
+// -----------------------------
+function getWeatherEmoji(h) {
+  if (!h) return "–";
+
+  const temp = h.temperatureF ?? h.temp ?? 70;
+  const rain = h.precipitation ?? 0;
+
+  if (rain > 0.1) return "🌧";
+  if (temp > 85) return "☀️";
+  if (temp < 40) return "❄️";
+
+  return "⛅";
+}
+
+// -----------------------------
+// HOUR FORMAT (safe)
+// -----------------------------
+function formatHour(ts) {
+  if (!ts) return "--";
+
+  const d = new Date(ts);
+  const h = d.getHours();
+  const suffix = h >= 12 ? "PM" : "AM";
+  const display = h % 12 || 12;
+
+  return `${display}${suffix}`;
+}
+
+// -----------------------------
+// BULLET SAFETY
+// -----------------------------
+function safeBullets(arr) {
+  if (!Array.isArray(arr)) return [];
+  return arr.slice(0, 3);
 }
 
 // ------------------------------------------------------------
