@@ -34,58 +34,83 @@
     const modal = document.getElementById('info-modal');
     const body = document.getElementById('info-body');
 
-    if (type === 'feelscore') {
-      body.innerHTML = `
-        <h2>FeelScore</h2>
-        <p>
-          FeelScore measures how the air actually feels — not just temperature.
-        </p>
+  if (type === 'feelscore') {
+  body.innerHTML = `
+    <h2>FeelScore</h2>
 
-        <ul>
-          <li><b>Temperature</b> — baseline comfort</li>
-          <li><b>Dew point</b> — humidity / heaviness</li>
-          <li><b>Wind</b> — cooling or harshness</li>
-        </ul>
+    <p>
+      FeelScore measures how the air actually feels — not just temperature.
+      It blends temperature, humidity (dew point), and wind into a single score.
+    </p>
 
-        <p>
-          Scores range from 0–100:
-        </p>
+    <h3>What affects it</h3>
+    <ul>
+      <li><b>Temperature</b> — baseline comfort</li>
+      <li><b>Dew point</b> — how heavy or dry the air feels</li>
+      <li><b>Wind</b> — cooling or harshness</li>
+    </ul>
 
-        <ul>
-          <li>90+ → ideal</li>
-          <li>70–89 → comfortable</li>
-          <li>50–69 → noticeable discomfort</li>
-          <li><50 → uncomfortable</li>
-        </ul>
-      `;
-    }
+    <h3>Score scale (0–100)</h3>
+    <ul>
+      <li><b>90–100</b> → Ideal (effortless, near perfect)</li>
+      <li><b>70–89</b> → Comfortable</li>
+      <li><b>55–69</b> → Slight discomfort</li>
+      <li><b>40–54</b> → Uncomfortable</li>
+      <li><b>Below 40</b> → Harsh conditions</li>
+    </ul>
 
-    if (type === 'drought') {
-      body.innerHTML = `
-        <h2>Drought & Fire Index</h2>
+    <p>
+      Higher scores mean the air feels easier and more natural to be in.
+    </p>
+  `;
+}
 
-        <p>
-          This combines long-term dryness with daily fire weather risk.
-        </p>
+if (type === 'drought') {
+  body.innerHTML = `
+    <h2>Drought & Fire Index</h2>
 
-        <h3>Drought Stress Score (DSS)</h3>
-        <p>
-          Measures how stressed the land is using rainfall deficit,
-          soil moisture, and heat.
-        </p>
+    <p>
+      This combines long-term drought stress with short-term fire weather
+      conditions to show both environmental dryness and fire risk.
+    </p>
 
-        <h3>Fire Risk Index (FRI)</h3>
-        <p>
-          Measures how easily fire could spread today using humidity,
-          wind, and temperature.
-        </p>
+    <h3>Drought Stress Score (DSS)</h3>
+    <p>
+      Measures how stressed the land is using rainfall deficit,
+      soil moisture, heat, and dry duration.
+    </p>
 
-        <p>
-          Official drought levels (D0–D4) reflect longer-term conditions
-          and may appear more severe.
-        </p>
-      `;
-    }
+    <h3>DSS scale (0–100)</h3>
+    <ul>
+      <li><b>0–25</b> → Normal</li>
+      <li><b>25–45</b> → Dry</li>
+      <li><b>45–65</b> → Moderate drought</li>
+      <li><b>65–85</b> → Severe drought</li>
+      <li><b>85+</b> → Extreme drought</li>
+    </ul>
+
+    <h3>Fire Risk Index (FRI)</h3>
+    <p>
+      Measures how easily fire could spread today using humidity,
+      wind, and temperature.
+    </p>
+
+    <h3>FRI scale (0–100)</h3>
+    <ul>
+      <li><b>0–30</b> → Low</li>
+      <li><b>30–50</b> → Elevated</li>
+      <li><b>50–70</b> → High</li>
+      <li><b>70–85</b> → Very high</li>
+      <li><b>85+</b> → Extreme</li>
+    </ul>
+
+    <h3>Important</h3>
+    <p>
+      Official drought levels (D0–D4) reflect long-term conditions and may
+      appear more severe than daily index values.
+    </p>
+  `;
+}
 
     modal.classList.remove('hidden');
   };
