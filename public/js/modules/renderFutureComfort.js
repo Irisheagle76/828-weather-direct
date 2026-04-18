@@ -1,35 +1,35 @@
-// /js/modules/renderFutureComfort.js (v2 — STABLE + NORMALIZED)
+// ============================================================
+// FUTURE COMFORT (V3 — CANONICAL + SELF-CONTAINED)
+// ============================================================
+
+import { calculateComfort } from "../intel/comfort.js";
 
 // ============================================================
-// NORMALIZE HOURS (critical)
+// NORMALIZE HOURS (STRICT SCHEMA)
 // ============================================================
 
 function normalizeHours(hours = []) {
   return hours.map(h => ({
-    ts: h.ts ?? h.time ?? h.timestamp,
-    temp: h.temp ?? h.temperature ?? h.temperatureF ?? null,
-    wind: h.wind ?? h.windSpeed ?? 0,
-    precip: h.precip ?? h.precipitation ?? 0,
-    score: h.score ?? null,
+    timestamp: h.timestamp,
+
+    temperatureF: h.temperatureF ?? null,
+    windSpeed: h.windSpeed ?? 0,
+    windGust: h.windGust ?? null,
+    precipitation: h.precipitation ?? 0,
+
+    // compute score here (no dependency!)
+    score:
+      typeof h.score === "number"
+        ? h.score
+        : calculateComfort(h)?.score ?? null,
+
     goldilocks: !!h.goldilocks,
-    hourLabel: h.hourLabel ?? ""
+    hourLabel: h.hourLabel ?? formatHour(h.timestamp)
   }));
 }
 
 // ============================================================
-// COLOR SCALE
-// ============================================================
-
-function getFeelScoreBackground(score) {
-  if (score >= 85) return "rgba(80, 200, 120, 0.12)";
-  if (score >= 70) return "rgba(100, 180, 255, 0.12)";
-  if (score >= 55) return "rgba(255, 200, 100, 0.12)";
-  if (score >= 40) return "rgba(255, 140, 80, 0.12)";
-  return "rgba(255, 80, 80, 0.12)";
-}
-
-// ============================================================
-// MAIN
+// MAIN RENDER
 // ============================================================
 
 export function renderFutureComfort(container, items, trend) {
@@ -39,6 +39,8 @@ export function renderFutureComfort(container, items, trend) {
   }
 
   const hours = normalizeHours(items);
+
+  console.log("FUTURE COMFORT (FINAL):", hours[0]);
 
   const safeTrend = trend || detectTrend(hours);
   const summary = buildSummary(hours, safeTrend);
@@ -54,7 +56,7 @@ export function renderFutureComfort(container, items, trend) {
 
         <div class="comfort-text-block">
 
-          <div class="comfort-label">Future Comfort</div>
+          <div class="comfort-label">Next Few Hours</div>
 
           <div class="comfort-score ${safeTrend}">
             ${getTrendArrow(safeTrend)}
@@ -86,10 +88,14 @@ export function renderFutureComfort(container, items, trend) {
 
 function renderHourCard(h) {
   const temp =
-    h.temp != null ? `${Math.round(h.temp)}°` : "--";
+    h.temperatureF != null
+      ? `${Math.round(h.temperatureF)}°`
+      : "--";
 
   const score =
-    h.score != null ? Math.round(h.score * 10) : null;
+    h.score != null
+      ? Math.round(h.score * 10)
+      : null;
 
   const emoji = getComfortEmoji(score);
   const scoreClass = getScoreClass(score);
@@ -135,7 +141,7 @@ function renderHourCard(h) {
 }
 
 // ============================================================
-// SUMMARY (cleaned logic)
+// SUMMARY
 // ============================================================
 
 function buildSummary(hours, trend) {
@@ -144,18 +150,29 @@ function buildSummary(hours, trend) {
   const first = hours[0];
   const last = hours.at(-1);
 
-  const tempDiff = (last.temp ?? 0) - (first.temp ?? 0);
-  const scoreDiff = (last.score ?? 0) - (first.score ?? 0);
+  const tempDiff =
+    (last.temperatureF ?? 0) - (first.temperatureF ?? 0);
+
+  const scoreDiff =
+    (last.score ?? 0) - (first.score ?? 0);
 
   const avgWind =
-    hours.reduce((s, h) => s + (h.wind ?? 0), 0) / hours.length;
+    hours.reduce((s, h) => s + (h.windSpeed ?? 0), 0) /
+    hours.length;
+
+  const maxGust = Math.max(...hours.map(h => h.windGust ?? 0));
 
   const precipTotal =
-    hours.reduce((s, h) => s + (h.precip ?? 0), 0);
+    hours.reduce((s, h) => s + (h.precipitation ?? 0), 0);
 
   // precipitation dominates
   if (precipTotal > 0.05) {
     return "Rain may impact comfort during this stretch";
+  }
+
+  // 🔥 WIND (new, important)
+  if (maxGust >= 35) {
+    return "Gusty winds will significantly impact comfort";
   }
 
   // trend-based messaging
@@ -200,8 +217,15 @@ function detectTrend(hours) {
 }
 
 // ============================================================
-// DISPLAY HELPERS
+// HELPERS
 // ============================================================
+
+function formatHour(ts) {
+  if (!ts) return "";
+  return new Date(ts).toLocaleTimeString([], {
+    hour: "numeric"
+  });
+}
 
 function getTrendText(trend) {
   if (trend === "improving") return "Getting more comfortable";
@@ -222,7 +246,7 @@ function getTrendEmoji(trend) {
 }
 
 // ============================================================
-// SCORE + EMOJI
+// SCORE VISUALS
 // ============================================================
 
 function getScoreClass(score) {
@@ -241,4 +265,12 @@ function getComfortEmoji(score) {
   if (score >= 50) return "😐";
   if (score >= 35) return "😕";
   return "🥵";
+}
+
+function getFeelScoreBackground(score) {
+  if (score >= 85) return "rgba(80, 200, 120, 0.12)";
+  if (score >= 70) return "rgba(100, 180, 255, 0.12)";
+  if (score >= 55) return "rgba(255, 200, 100, 0.12)";
+  if (score >= 40) return "rgba(255, 140, 80, 0.12)";
+  return "rgba(255, 80, 80, 0.12)";
 }
