@@ -117,7 +117,8 @@ function adaptHourly(hourly) {
     ).filter(Boolean);
   }
 
-  console.warn("⚠️ Unknown hourly format:", hourly);
+  console.log("ADAPTER OUTPUT SAMPLE:", hourly[0]);
+  
   return [];
 }
 
