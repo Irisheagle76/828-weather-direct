@@ -87,6 +87,10 @@ async function handleHourly(req, res) {
   }
 
   const data = await response.json();
+  console.log(
+  "RAW GUST ARRAY:",
+  data.hourly.wind_gusts_10m
+);
 
   if (!data?.hourly?.time?.length) {
     console.warn("⚠️ Empty hourly.time from Open-Meteo");
@@ -105,10 +109,7 @@ async function handleHourly(req, res) {
 
     windSpeed: data.hourly.wind_speed_10m?.[i] ?? 0,
     windGust: data.hourly.wind_gusts_10m?.[i] ?? null,
-console.log(
-  "RAW GUST ARRAY:",
-  data.hourly.wind_gusts_10m
-);
+
     precipitation: data.hourly.precipitation?.[i] ?? 0,
     cloudCover: data.hourly.cloudcover?.[i] ?? null,
 
