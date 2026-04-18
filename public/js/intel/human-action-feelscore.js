@@ -98,6 +98,19 @@ export function buildHumanActionIntelFS(raw) {
 function buildPeriod(hours, label, change = {}) {
   if (!Array.isArray(hours) || !hours.length) return null;
 
+  // 🔍 DEBUG — RAW INPUT TO THIS PERIOD
+  if (label === "tomorrow") {
+    const debug = hours.map(h => ({
+      time: new Date(h.timestamp).toLocaleString(),
+      temp: h.temperatureF,
+      rh: h.relativeHumidity,
+      wind: h.windSpeed,
+      gust: h.windGust
+    }));
+
+    console.table(debug);
+  }
+
   const mapped = mapComfort(hours);
   const scores = mapped.map(h => h.score).filter(s => typeof s === "number");
   if (!scores.length) return null;
