@@ -1,8 +1,8 @@
 // ============================================================
-// NORMALIZE OPEN-METEO HOURLY → CANONICAL FORMAT (v6 - FIXED)
+// NORMALIZE OPEN-METEO HOURLY → CANONICAL FORMAT (v7 CLEAN)
+// - Consistent camelCase (windSpeed, windGust)
+// - Preserves nulls (no fake zeros for gusts)
 // - Enforces timestamp correctness
-// - Fixes C → F conversion
-// - Removes ambiguity + noisy logging
 // ============================================================
 
 // ------------------------------------------------------------
@@ -19,17 +19,13 @@ const mpsToMph = m => (m != null ? m * 2.23694 : null);
 const metersToMiles = m => (m != null ? m / 1609.34 : null);
 const normalizeCloud = c => (c != null ? (c > 1 ? c / 100 : c) : null);
 
-// 🔥 CRITICAL: force timestamp → epoch ms
+// Force timestamp → epoch ms
 function toTimestamp(t) {
   if (!t) return null;
 
-  // If already number, assume ms
   if (typeof t === "number") return t;
 
-  // If ISO string WITHOUT timezone → assume LOCAL
-  // (Open-Meteo usually returns local when timezone=auto)
   const ts = new Date(t).getTime();
-
   return Number.isFinite(ts) ? ts : null;
 }
 
@@ -64,7 +60,6 @@ function estimateDewPointF(tempF, rh) {
 // MAIN
 // ------------------------------------------------------------
 export function normalizeOpenMeteo(hourly) {
-
   if (!hourly) return [];
 
   // ============================================================
@@ -101,17 +96,19 @@ export function normalizeOpenMeteo(hourly) {
             cToF(toNumber(h.apparent_temperature)) ??
             tempF,
 
-          relative_humidity: humidity,
+          relativeHumidity: humidity,
 
-          wind_speed:
+          windSpeed:
             mpsToMph(toNumber(h.wind_speed)) ??
             toNumber(h.windSpeed) ??
-            0,
+            null,
 
-          wind_gust:
-            mpsToMph(toNumber(h.wind_gust)) ?? 0,
+          windGust:
+            mpsToMph(toNumber(h.wind_gust)) ??
+            toNumber(h.windGust) ??
+            null,
 
-          wind_dir: toNumber(h.wind_dir),
+          windDir: toNumber(h.wind_dir),
 
           precipitation: toNumber(h.precipitation) ?? 0,
           snowfall: toNumber(h.snowfall) ?? 0,
@@ -124,23 +121,23 @@ export function normalizeOpenMeteo(hourly) {
               ? "rain"
               : "none"),
 
-          uv_index: toNumber(h.uv_index) ?? 0,
+          uvIndex: toNumber(h.uv_index) ?? 0,
 
           visibility:
             h.visibility != null
               ? metersToMiles(toNumber(h.visibility))
               : null,
 
-          cloud_cover: normalizeCloud(toNumber(h.cloud_cover)),
+          cloudCover: normalizeCloud(toNumber(h.cloud_cover)),
 
           // passthrough risks
-          smoke_index: h.smoke_index ?? 0,
-          frost_risk: h.frost_risk ?? 0,
-          freeze_risk: h.freeze_risk ?? 0,
-          black_ice_risk: h.black_ice_risk ?? 0,
-          inversion_risk: h.inversion_risk ?? 0,
-          valley_fog_risk: h.valley_fog_risk ?? 0,
-          ridge_fog_risk: h.ridge_fog_risk ?? 0
+          smokeIndex: h.smoke_index ?? 0,
+          frostRisk: h.frost_risk ?? 0,
+          freezeRisk: h.freeze_risk ?? 0,
+          blackIceRisk: h.black_ice_risk ?? 0,
+          inversionRisk: h.inversion_risk ?? 0,
+          valleyFogRisk: h.valley_fog_risk ?? 0,
+          ridgeFogRisk: h.ridge_fog_risk ?? 0
         };
       })
       .filter(Boolean);
@@ -159,19 +156,20 @@ export function normalizeOpenMeteo(hourly) {
     const ts = toTimestamp(hourly.time[i]);
     if (!ts) continue;
 
-    // 🔥 Open-Meteo temps are °C → convert
     const tempF = cToF(toNumber(pick(hourly, i, "temperature_2m")));
-    const dewF = cToF(toNumber(pick(hourly, i, "dew_point_2m", "dewpoint_2m")));
-
     const humidity = toNumber(pick(hourly, i, "relative_humidity_2m"));
+
+    const dewF =
+      cToF(toNumber(pick(hourly, i, "dew_point_2m", "dewpoint_2m"))) ??
+      estimateDewPointF(tempF, humidity);
 
     const windSpeed = mpsToMph(
       toNumber(pick(hourly, i, "wind_speed_10m", "windspeed_10m"))
-    ) ?? 0;
+    );
 
     const windGust = mpsToMph(
       toNumber(pick(hourly, i, "wind_gusts_10m"))
-    ) ?? 0;
+    );
 
     const precipitation = toNumber(pick(hourly, i, "precipitation")) ?? 0;
     const snowfall = toNumber(pick(hourly, i, "snowfall")) ?? 0;
@@ -180,15 +178,15 @@ export function normalizeOpenMeteo(hourly) {
       timestamp: ts,
 
       temperatureF: tempF,
-      dewpointF: dewF ?? estimateDewPointF(tempF, humidity),
+      dewpointF: dewF,
       apparentF:
         cToF(toNumber(pick(hourly, i, "apparent_temperature"))) ?? tempF,
 
-      relative_humidity: humidity,
+      relativeHumidity: humidity,
 
-      wind_speed: windSpeed,
-      wind_gust: windGust,
-      wind_dir: toNumber(pick(hourly, i, "winddirection_10m")),
+      windSpeed,
+      windGust,
+      windDir: toNumber(pick(hourly, i, "winddirection_10m")),
 
       precipitation,
       snowfall,
@@ -196,24 +194,24 @@ export function normalizeOpenMeteo(hourly) {
         snowfall > 0 ? "snow" :
         precipitation > 0 ? "rain" : "none",
 
-      uv_index: toNumber(pick(hourly, i, "uv_index")) ?? 0,
+      uvIndex: toNumber(pick(hourly, i, "uv_index")) ?? 0,
 
       visibility: (() => {
         const v = toNumber(pick(hourly, i, "visibility"));
         return v != null ? metersToMiles(v) : null;
       })(),
 
-      cloud_cover: normalizeCloud(
+      cloudCover: normalizeCloud(
         toNumber(pick(hourly, i, "cloudcover"))
       ),
 
-      smoke_index: 0,
-      frost_risk: 0,
-      freeze_risk: 0,
-      black_ice_risk: 0,
-      inversion_risk: 0,
-      valley_fog_risk: 0,
-      ridge_fog_risk: 0
+      smokeIndex: 0,
+      frostRisk: 0,
+      freezeRisk: 0,
+      blackIceRisk: 0,
+      inversionRisk: 0,
+      valleyFogRisk: 0,
+      ridgeFogRisk: 0
     });
   }
 
