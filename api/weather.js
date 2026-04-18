@@ -91,7 +91,7 @@ async function handleHourly(req, res) {
   "RAW GUST ARRAY:",
   data.hourly.wind_gusts_10m
 );
-
+console.log("RAW GUST ARRAY:", data.hourly.wind_gusts_10m);
 console.log("RAW HOURLY KEYS:", Object.keys(data.hourly));
 
   if (!data?.hourly?.time?.length) {
