@@ -104,7 +104,7 @@ function buildPeriod(hours, label, change = {}) {
   }
 
   const mapped = mapComfort(hours);
-  
+
   const scores = mapped.map(h => h.score).filter(s => typeof s === "number");
   if (!scores.length) return null;
 
@@ -194,16 +194,26 @@ const intel = buildIntel(
 function buildPeriodNarrative(ctx, label) {
   if (!ctx) return fallback(label);
 
-  const { score, narrativeText, flags, change } = ctx;
-  const { isShockDay, hasColdStart, isWindyShift } = flags;
-  const { tempDrop, chillDelta, tomorrowMin } = change;
+  const { score, narrativeText, flags, change, wind } = ctx;
+  const { isShockDay, hasColdStart } = flags;
+  const { tempDrop } = change;
+
+  const maxWind = wind?.maxWind ?? 0;
+  const maxGust = wind?.maxGust ?? 0;
 
   // ------------------------------------------------------------
   // HEADLINE
   // ------------------------------------------------------------
   let headline;
 
-  if (isShockDay) {
+  // 🔥 WIND TAKES PRIORITY (this is what you're missing)
+  if (maxGust >= 35) {
+    headline = "Strong, gusty winds will be a major factor tomorrow";
+  } else if (maxGust >= 25) {
+    headline = "Breezy to windy conditions develop tomorrow";
+  }
+
+  else if (isShockDay) {
     headline =
       tempDrop >= 25
         ? "A sharp cooldown hits tomorrow"
@@ -215,6 +225,9 @@ function buildPeriodNarrative(ctx, label) {
       extractHeadline(narrativeText) ||
       "Conditions settle into a steady pattern";
   }
+
+  return headline;
+}
 
   // ------------------------------------------------------------
   // BULLETS
