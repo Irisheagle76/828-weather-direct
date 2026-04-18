@@ -53,20 +53,20 @@ function getTrendMeta(trend) {
 
 function normalizeHourly(hourly = []) {
   return hourly.map(h => ({
-    // ✅ time
+    // TIME
     timestamp: h.timestamp ?? h.ts ?? h.time,
 
-    // ✅ temp
+    // TEMP
     temperatureF: h.temperatureF ?? h.temp ?? null,
 
-    // ✅ humidity
-    relativeHumidity: h.relativeHumidity ?? h.rh ?? null,
+    // HUMIDITY
+    relativeHumidity: h.relativeHumidity ?? h.rh ?? h.relative_humidity ?? null,
 
-    // ✅ WIND (FIXED)
+    // WIND (FIXED)
     windSpeed: h.windSpeed ?? h.wind ?? 0,
-    windGust: h.windGust ?? null,
+    windGust: h.windGust ?? null,   // 🔥 THIS WAS MISSING
 
-    // optional
+    // OPTIONAL
     dewpointF: h.dewpointF ?? h.dewPoint ?? null
   }));
 }
