@@ -46,6 +46,7 @@ export default async function handler(req, res) {
 
     const tempF = obs?.air_temperature ?? obs?.temp ?? 75;
     const rh = obs?.relative_humidity ?? obs?.humidity ?? 40;
+
     const windGust =
       obs?.wind_gust ??
       weather?.hourly?.wind_gusts_10m?.[0] ??
@@ -63,6 +64,17 @@ export default async function handler(req, res) {
     const daysSinceRain = getDaysSinceRain(weather);
 
     // -----------------------------
+    // DEBUG INPUTS (important)
+    // -----------------------------
+    console.log("📥 INPUT CHECK:", {
+      tempAnomalyF,
+      daysSinceRain,
+      rh,
+      windGust,
+      tempF
+    });
+
+    // -----------------------------
     // RUN INDEX
     // -----------------------------
     const result = await computeDroughtFireIndexLive({
@@ -73,13 +85,16 @@ export default async function handler(req, res) {
       tempF
     });
 
+    console.log("✅ DROUGHT/FIRE RESULT:", result);
+
     res.status(200).json(result);
 
   } catch (err) {
-    console.error("Drought/Fire API error:", err);
+    console.error("🔥 DROUGHT/FIRE ERROR:", err);
 
     res.status(500).json({
-      error: "failed to compute drought/fire index"
+      error: err.message,
+      stack: err.stack
     });
   }
 }
@@ -93,7 +108,6 @@ function getNormalTemp(weather) {
 
   if (!temps || !temps.length) return 70;
 
-  // use first 24h average
   const slice = temps.slice(0, 24);
   const avg =
     slice.reduce((a, b) => a + b, 0) / slice.length;
