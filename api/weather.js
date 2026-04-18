@@ -87,10 +87,7 @@ async function handleHourly(req, res) {
   }
 
   const data = await response.json();
-  console.log(
-  "RAW GUST ARRAY:",
-  data.hourly.wind_gusts_10m
-);
+  
 console.log("RAW GUST ARRAY:", data.hourly.wind_gusts_10m);
 console.log("RAW HOURLY KEYS:", Object.keys(data.hourly));
 
