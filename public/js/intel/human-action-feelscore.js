@@ -8,33 +8,98 @@ import { assembleWithVoice } from "./synthesizer/assembleWithVoice.js";
 // ============================================================
 // MAIN
 // ============================================================
-
 export function buildHumanActionIntelFS(raw) {
   const hourly = Array.isArray(raw?.hourly) ? raw.hourly : [];
   if (!hourly.length) return fallbackAll();
 
   const now = Date.now();
 
-  const todayHours = hourly.filter(h => h.ts >= now && h.ts < now + 24 * 3600e3);
-  const tomorrowHours = hourly.filter(h => h.ts >= now + 24 * 3600e3 && h.ts < now + 48 * 3600e3);
+  const todayHours = hourly.filter(
+    h => h.ts >= now && h.ts < now + 24 * 3600e3
+  );
 
+  const tomorrowHours = hourly.filter(
+    h => h.ts >= now + 24 * 3600e3 && h.ts < now + 48 * 3600e3
+  );
+
+  // ------------------------------------------------------------
+  // SNAPSHOTS
+  // ------------------------------------------------------------
   const todaySnapshot = buildSnapshot(todayHours);
   const tomorrowSnapshot = buildSnapshot(tomorrowHours);
 
+  // ------------------------------------------------------------
+  // STRONGER TEMP SIGNAL (MAX, NOT AVG)
+  // ------------------------------------------------------------
+  const getTemp = h =>
+    h?.temp ?? h?.temperature ?? h?.temperatureF ?? null;
+
+  const todayMax = Math.max(
+    ...todayHours.map(getTemp).filter(v => typeof v === "number"),
+    -999
+  );
+
+  const tomorrowMax = Math.max(
+    ...tomorrowHours.map(getTemp).filter(v => typeof v === "number"),
+    -999
+  );
+
   const tempDrop =
-    typeof todaySnapshot.temp === "number" &&
-    typeof tomorrowSnapshot.temp === "number"
-      ? todaySnapshot.temp - tomorrowSnapshot.temp
+    todayMax > -900 && tomorrowMax > -900
+      ? todayMax - tomorrowMax
       : 0;
 
-  const windJump =
-    (tomorrowSnapshot.wind || 0) - (todaySnapshot.wind || 0);
+  // ------------------------------------------------------------
+  // MORNING LOW (COLD START DETECTION)
+  // ------------------------------------------------------------
+  const tomorrowMorning = tomorrowHours.filter(h => {
+    const hr = new Date(h.ts).getHours();
+    return hr >= 5 && hr <= 10;
+  });
 
+  const tomorrowMinMorning = Math.min(
+    ...tomorrowMorning.map(getTemp).filter(v => typeof v === "number"),
+    999
+  );
+
+  // fallback if no morning slice
+  const tomorrowMin =
+    tomorrowMinMorning < 900
+      ? tomorrowMinMorning
+      : Math.min(
+          ...tomorrowHours.map(getTemp).filter(v => typeof v === "number"),
+          999
+        );
+
+  // ------------------------------------------------------------
+  // WIND SIGNAL (MAX GUSTY PERIOD FEEL)
+  // ------------------------------------------------------------
+  const getWind = h =>
+    h?.wind ?? h?.windSpeed ?? h?.windspeed ?? h?.wind_speed ?? 0;
+
+  const todayWindMax = Math.max(
+    ...todayHours.map(getWind),
+    0
+  );
+
+  const tomorrowWindMax = Math.max(
+    ...tomorrowHours.map(getWind),
+    0
+  );
+
+  const windJump = tomorrowWindMax - todayWindMax;
+
+  // ------------------------------------------------------------
+  // PASS ENHANCED CHANGE SIGNAL
+  // ------------------------------------------------------------
   return {
     feelscore: buildCurrentWithTrend(todayHours),
+
     tomorrow: buildPeriod(tomorrowHours, "tomorrow", {
       tempDrop,
-      windJump
+      windJump,
+      tomorrowMin,     // 👈 NEW (cold start)
+      tomorrowMax      // 👈 optional if you want later
     })
   };
 }
@@ -46,6 +111,9 @@ export function buildHumanActionIntelFS(raw) {
 function buildPeriod(hours, label, change = {}) {
   if (!Array.isArray(hours) || !hours.length) return fallback(label);
 
+  // ------------------------------------------------------------
+  // COMFORT + SCORE
+  // ------------------------------------------------------------
   const mapped = mapComfort(hours);
   const scores = mapped.map(h => h.score).filter(s => typeof s === "number");
   if (!scores.length) return fallback(label);
@@ -54,14 +122,46 @@ function buildPeriod(hours, label, change = {}) {
   const trend = scores.at(-1) - scores[0];
   const score = Math.round(avg);
 
+  // ------------------------------------------------------------
+  // SNAPSHOT
+  // ------------------------------------------------------------
   const snapshot = buildSnapshot(hours);
   if (typeof snapshot.temp !== "number") return fallback(label);
 
-  const { tempDrop = 0, windJump = 0 } = change;
+  // ------------------------------------------------------------
+  // CHANGE SIGNAL (ENHANCED INPUT)
+  // ------------------------------------------------------------
+  const {
+    tempDrop = 0,
+    windJump = 0,
+    tomorrowMin = null // 👈 NEW
+  } = change;
 
+  // ------------------------------------------------------------
+  // WIND CHILL
+  // ------------------------------------------------------------
   const windChill = calcWindChill(snapshot.temp, snapshot.wind);
   const chillDelta = snapshot.temp - windChill;
 
+  // ------------------------------------------------------------
+  // PATTERN FLAGS (THIS IS NEW + IMPORTANT)
+  // ------------------------------------------------------------
+  const isShockDay =
+    label === "tomorrow" &&
+    tempDrop >= 18;
+
+  const hasColdStart =
+    label === "tomorrow" &&
+    typeof tomorrowMin === "number" &&
+    tomorrowMin <= 50;
+
+  const isWindyShift =
+    label === "tomorrow" &&
+    windJump >= 8;
+
+  // ------------------------------------------------------------
+  // INTEL → NARRATIVE
+  // ------------------------------------------------------------
   const intel = buildIntel(snapshot, score, trend, 0, 0, label);
 
   let narrative;
@@ -80,6 +180,29 @@ function buildPeriod(hours, label, change = {}) {
     narrative?.longNarrative ||
     narrative?.headline ||
     "";
+
+  // ------------------------------------------------------------
+  // RETURN CORE CONTEXT (used later)
+  // ------------------------------------------------------------
+  return {
+    snapshot,
+    score,
+    trend,
+    narrative,
+    narrativeText,
+    flags: {
+      isShockDay,
+      hasColdStart,
+      isWindyShift
+    },
+    change: {
+      tempDrop,
+      windJump,
+      chillDelta,
+      tomorrowMin
+    }
+  };
+}
 
   // ------------------------------------------------------------
   // HEADLINE
