@@ -10,7 +10,12 @@ import { assembleWithVoice } from "./synthesizer/assembleWithVoice.js";
 // ============================================================
 
 export function buildHumanActionIntelFS(raw) {
-  const hourly = Array.isArray(raw?.hourly) ? raw.hourly : [];
+  const hourly = Array.isArray(raw?.hourly)
+  ? raw.hourly.map(h => ({
+      ...h,
+      ts: h.ts ?? h.timestamp // 🔥 critical fix
+    }))
+  : [];
   if (!hourly.length) return fallbackAll();
 
   const now = Date.now();
@@ -23,6 +28,8 @@ export function buildHumanActionIntelFS(raw) {
     h => h.ts >= now + 24 * 3600e3 && h.ts < now + 48 * 3600e3
   );
 
+  console.log("TOMORROW SAMPLE:", tomorrowHours[0]);
+  
   const getTemp = h => h?.temp ?? h?.temperature ?? h?.temperatureF ?? null;
 
   const todayMax = Math.max(
@@ -50,8 +57,8 @@ export function buildHumanActionIntelFS(raw) {
     999
   );
 
-  const getWind = h =>
-    h?.wind ?? h?.windSpeed ?? h?.wind_speed ?? 0;
+ const getWind = h =>
+  h?.windSpeed ?? h?.wind ?? h?.wind_speed ?? 0;
 
   const todayWindMax = Math.max(...todayHours.map(getWind), 0);
   const tomorrowWindMax = Math.max(...tomorrowHours.map(getWind), 0);
