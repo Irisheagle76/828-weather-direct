@@ -245,7 +245,7 @@ function renderTimeline(hourly) {
 
   container.innerHTML = `
     <div class="timeline-card">
-      <div class="section-title">NEXT FEW HOURS</div>
+      <div class="section-title">FEELSCORE NEXT FEW HOURS</div>
       <div class="timeline-row">${html}</div>
     </div>
   `;

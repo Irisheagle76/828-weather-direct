@@ -121,10 +121,12 @@ body {
     box-shadow 0.3s ease;
 }
 
-.df-header {
-  font-size: 11px;
-  letter-spacing: 1px;
-  color: var(--muted);
+ .df-header {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
 
   display: flex;
   justify-content: space-between;
