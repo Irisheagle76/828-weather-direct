@@ -94,25 +94,17 @@ export function buildHumanActionIntelFS(raw) {
 // ============================================================
 // BUILD PERIOD (DETECTION ONLY — NO UI LOGIC)
 // ============================================================
-console.log("INPUT TO buildPeriod:", hours[0]);
 
 function buildPeriod(hours, label, change = {}) {
   if (!Array.isArray(hours) || !hours.length) return null;
 
-  // 🔍 DEBUG — RAW INPUT TO THIS PERIOD
+  // 🔍 DEBUG — what is actually being passed in
   if (label === "tomorrow") {
-    const debug = hours.map(h => ({
-      time: new Date(h.timestamp).toLocaleString(),
-      temp: h.temperatureF,
-      rh: h.relativeHumidity,
-      wind: h.windSpeed,
-      gust: h.windGust
-    }));
-
-    console.table(debug);
+    console.log("INPUT TO buildPeriod:", hours[0]);
   }
 
   const mapped = mapComfort(hours);
+  
   const scores = mapped.map(h => h.score).filter(s => typeof s === "number");
   if (!scores.length) return null;
 
