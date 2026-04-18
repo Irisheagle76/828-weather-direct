@@ -1,5 +1,5 @@
 // ============================================================
-// HUMAN ACTION — FEELSCORE (STABLE + HARDENED)
+// HUMAN ACTION — FEELSCORE (NARRATIVE-DRIVEN)
 // ============================================================
 
 import { calculateComfort } from "./comfort.js";
@@ -18,14 +18,14 @@ export function buildHumanActionIntelFS(raw) {
   const todayHours = hourly.filter(h => h.ts >= now && h.ts < now + 24 * 3600e3);
   const tomorrowHours = hourly.filter(h => h.ts >= now + 24 * 3600e3 && h.ts < now + 48 * 3600e3);
 
-return {
-  feelscore: buildCurrentWithTrend(todayHours), // 👈 NEW
-  tomorrow: buildPeriod(tomorrowHours, "tomorrow")
-};
+  return {
+    feelscore: buildCurrentWithTrend(todayHours),
+    tomorrow: buildPeriod(tomorrowHours, "tomorrow")
+  };
 }
 
 // ============================================================
-// PERIOD
+// PERIOD (TOMORROW)
 // ============================================================
 
 function buildPeriod(hours, label) {
@@ -33,41 +33,24 @@ function buildPeriod(hours, label) {
 
   const mapped = mapComfort(hours);
 
-  // Afternoon bias
   const window = mapped.filter(h => h.hour >= 13 && h.hour <= 16);
   const base = window.length ? window : mapped;
 
-  const scores = base
-    .map(h => h.score)
-    .filter(s => typeof s === "number");
-
+  const scores = base.map(h => h.score).filter(s => typeof s === "number");
   if (!scores.length) return fallback(label);
 
   const avg = average(scores);
   const min = Math.min(...scores);
   const max = Math.max(...scores);
   const trend = scores.at(-1) - scores[0];
-
   const score = Math.round(avg);
 
   const snapshot = buildSnapshot(hours);
-
-  // 🚨 HARD STOP — no valid temp → no voice
-  if (typeof snapshot.temp !== "number") {
-    console.warn("⚠️ Invalid snapshot", snapshot);
-    return fallback(label);
-  }
+  if (typeof snapshot.temp !== "number") return fallback(label);
 
   const intel = buildIntel(snapshot, score, trend, min, max, label);
 
-  // 🚨 FINAL GUARD
-  if (typeof intel.signals.temp !== "number") {
-    console.warn("⚠️ Invalid intel", intel);
-    return fallback(label);
-  }
-
-  let narrative = null;
-
+  let narrative;
   try {
     narrative = assembleWithVoice(
       intel,
@@ -75,53 +58,57 @@ function buildPeriod(hours, label) {
       mapScoreToCategory(score),
       score >= 85
     );
-  } catch (err) {
-    console.warn("⚠️ Voice failed", err, intel);
+  } catch {
     return fallback(label);
   }
+
+  const narrativeText =
+    narrative?.longNarrative ||
+    narrative?.headline ||
+    "";
+
+  const headline =
+    extractHeadline(narrativeText, label) ||
+    narrative?.headline ||
+    buildHeadline(score, snapshot);
+
+  const bullets =
+    extractBullets(narrativeText, { trend, snapshot, label }) ||
+    buildBullets(snapshot, trend);
 
   return {
     label,
     score,
     emoji: pickEmoji(score),
-    headline:
-      narrative?.headline ||
-      buildHeadline(score, snapshot),
-    bullets:
-      (narrative?.bullets?.length
-        ? narrative.bullets
-        : buildBullets(snapshot, trend)
-      ).slice(0, 3)
+    headline,
+    bullets: bullets.slice(0, 3)
   };
 }
+
+// ============================================================
+// FEELSCORE (CURRENT + TODAY MERGED)
+// ============================================================
 
 function buildCurrentWithTrend(hours) {
   if (!Array.isArray(hours) || !hours.length) return fallback("today");
 
   const mapped = mapComfort(hours);
 
-  const scores = mapped
-    .map(h => h.score)
-    .filter(s => typeof s === "number");
-
+  const scores = mapped.map(h => h.score).filter(s => typeof s === "number");
   if (!scores.length) return fallback("today");
 
   const avg = average(scores);
   const min = Math.min(...scores);
   const max = Math.max(...scores);
   const trend = scores.at(-1) - scores[0];
-
   const score = Math.round(avg);
-  const snapshot = buildSnapshot(hours);
 
-  if (typeof snapshot.temp !== "number") {
-    return fallback("today");
-  }
+  const snapshot = buildSnapshot(hours);
+  if (typeof snapshot.temp !== "number") return fallback("today");
 
   const intel = buildIntel(snapshot, score, trend, min, max, "today");
 
-  let current = null;
-  let today = null;
+  let current, today;
 
   try {
     current = assembleWithVoice(
@@ -141,38 +128,55 @@ function buildCurrentWithTrend(hours) {
     return fallback("today");
   }
 
-  const headline = current?.headline || today?.headline || "";
+  const narrativeText =
+    today?.longNarrative ||
+    current?.longNarrative ||
+    today?.headline ||
+    "";
+
+  const headline =
+    extractHeadline(narrativeText, "today") ||
+    current?.headline ||
+    today?.headline ||
+    "";
 
   const subHeadline =
-    today?.headline && today.headline !== headline
-      ? today.headline
+    trend > 5
+      ? "Improving through the afternoon"
+      : trend < -5
+      ? "Slightly less comfortable later"
       : "";
 
-let bullets = [
-  ...new Set([
-    ...(current?.bullets || []),
-    ...(today?.bullets || [])
-  ])
-];
+  let bullets = extractBullets(narrativeText, {
+    trend,
+    snapshot,
+    label: "today"
+  });
 
-// ------------------------------------------------------------
-// FILL IF TOO THIN
-// ------------------------------------------------------------
-if (bullets.length < 2) {
-  if (trend > 5) bullets.push("Improves as the day goes on");
-  if (trend < -5) bullets.push("Slight drop in comfort later");
-
-  if (snapshot.dewPoint != null && snapshot.dewPoint < 55) {
-    bullets.push("Dry air keeps things comfortable");
+  if (!bullets.length) {
+    bullets = [
+      ...(current?.bullets || []),
+      ...(today?.bullets || [])
+    ];
   }
 
-  if (snapshot.wind > 8) {
-    bullets.push("Light breeze adds movement");
-  }
-}
+  bullets = [...new Set(bullets)];
 
-// Final trim
-bullets = bullets.slice(0, 3);
+  if (bullets.length < 2) {
+    if (trend > 5) bullets.push("Improves as the day goes on");
+    if (trend < -5) bullets.push("Slight drop in comfort later");
+
+    if (snapshot.dewPoint != null && snapshot.dewPoint < 55) {
+      bullets.push("Dry air keeps things comfortable");
+    }
+
+    if (snapshot.wind > 8) {
+      bullets.push("Light breeze adds movement");
+    }
+  }
+
+  bullets = bullets.slice(0, 3);
+
   return {
     label: "today",
     score,
@@ -184,7 +188,7 @@ bullets = bullets.slice(0, 3);
 }
 
 // ============================================================
-// INTEL BUILDER (NEW — CONSISTENT SHAPE)
+// INTEL BUILDER
 // ============================================================
 
 function buildIntel(snapshot, score, trend, min, max, label) {
@@ -194,16 +198,8 @@ function buildIntel(snapshot, score, trend, min, max, label) {
       dewPoint: snapshot.dewPoint ?? null,
       wind: snapshot.wind ?? 0
     },
-    pattern: {
-      trend,
-      min,
-      max,
-      avg: score
-    },
-    context: {
-      label,
-      timeWindow: "afternoon"
-    },
+    pattern: { trend, min, max, avg: score },
+    context: { label, timeWindow: "afternoon" },
     dominantFactor: detectDominantFactor(snapshot)
   };
 }
@@ -215,7 +211,6 @@ function buildIntel(snapshot, score, trend, min, max, label) {
 function mapComfort(hours) {
   return hours.map(h => {
     const c = calculateComfort(h);
-
     return {
       hour: new Date(h.ts).getHours(),
       score: Math.round((c?.score || 0) * 10)
@@ -224,33 +219,22 @@ function mapComfort(hours) {
 }
 
 // ============================================================
-// SNAPSHOT (STRICT)
+// SNAPSHOT
 // ============================================================
 
 function buildSnapshot(hours) {
   const avg = (keys) => {
     const vals = hours
-      .map(h => {
-        for (const k of keys) {
-          if (typeof h[k] === "number") return h[k];
-        }
-        return null;
-      })
+      .map(h => keys.find(k => typeof h[k] === "number") ? h[keys.find(k => typeof h[k] === "number")] : null)
       .filter(v => v != null);
 
-    return vals.length
-      ? vals.reduce((a, b) => a + b, 0) / vals.length
-      : null;
+    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
   };
 
-  const temp = avg(["temp", "temperature", "temperatureF"]);
-  const dewPoint = avg(["dewPoint", "dewpoint", "dewpointF"]);
-  const wind = avg(["wind", "windSpeed", "windspeed", "wind_speed"]);
-
   return {
-    temp: typeof temp === "number" ? temp : null,
-    dewPoint: typeof dewPoint === "number" ? dewPoint : null,
-    wind: typeof wind === "number" ? wind : 0
+    temp: avg(["temp", "temperature", "temperatureF"]),
+    dewPoint: avg(["dewPoint", "dewpoint", "dewpointF"]),
+    wind: avg(["wind", "windSpeed", "windspeed", "wind_speed"]) ?? 0
   };
 }
 
@@ -259,16 +243,16 @@ function buildSnapshot(hours) {
 // ============================================================
 
 function buildHeadline(score, snapshot) {
-  const temp = snapshot.temp ?? 70;
-  const dp = snapshot.dewPoint ?? 55;
+  const options = [
+    "Comfortable overall",
+    "Pleasant conditions",
+    "Easy to be outside",
+    "Mild and manageable"
+  ];
 
-  if (dp < 55 && temp >= 70 && temp <= 85) {
-    return "Comfortable with dry, crisp air";
+  if (score >= 70) {
+    return options[Math.floor(Math.random() * options.length)];
   }
-
-  if (score >= 85) return "Feels really nice out";
-  if (score >= 70) return "Comfortable overall";
-  if (score >= 55) return "A bit uneven at times";
 
   return "Mixed comfort conditions";
 }
@@ -276,10 +260,10 @@ function buildHeadline(score, snapshot) {
 function buildBullets(snapshot, trend) {
   const bullets = [];
 
-  if (trend < -5) bullets.push("Slightly less comfortable later");
   if (trend > 5) bullets.push("Improves as the day goes on");
+  if (trend < -5) bullets.push("Slight drop in comfort later");
 
-  if (snapshot.dewPoint != null && snapshot.dewPoint < 55) {
+  if (snapshot.dewPoint < 55) {
     bullets.push("Dry air keeps things comfortable");
   }
 
@@ -289,6 +273,29 @@ function buildBullets(snapshot, trend) {
 // ============================================================
 // HELPERS
 // ============================================================
+
+function extractHeadline(text = "") {
+  return text.split(".")[0]?.trim() || "";
+}
+
+function extractBullets(text = "", { trend, snapshot, label }) {
+  const bullets = [];
+  const t = text.toLowerCase();
+
+  if (t.includes("dry")) bullets.push("Dry air keeps things feeling good");
+  if (t.includes("breeze") || t.includes("wind")) bullets.push("Light breeze adds some movement");
+  if (t.includes("stable")) bullets.push("Conditions stay steady overall");
+  if (t.includes("cool") && label === "tomorrow") bullets.push("Cooler air settles in");
+
+  if (trend > 5) bullets.push("Improves through the day");
+  if (trend < -5) bullets.push("Slight drop in comfort later");
+
+  if (bullets.length < 2 && snapshot.dewPoint < 55) {
+    bullets.push("Low humidity keeps it comfortable");
+  }
+
+  return [...new Set(bullets)];
+}
 
 function average(arr) {
   return arr.reduce((a, b) => a + b, 0) / arr.length;
@@ -312,7 +319,7 @@ function fallback(label) {
 
 function fallbackAll() {
   return {
-    today: fallback("today"),
+    feelscore: fallback("today"),
     tomorrow: fallback("tomorrow")
   };
 }
