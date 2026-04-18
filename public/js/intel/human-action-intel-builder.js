@@ -1,8 +1,5 @@
 // ============================================================
-// HUMAN ACTION + COMFORT BUILDER (CLEAN v3)
-// - Normalized internal schema (single source of truth)
-// - Supports raw + pre-normalized hourly
-// - Bulletproof against missing fields
+// HUMAN ACTION + COMFORT BUILDER (v4 - FIXED TIME + CLEAN)
 // ============================================================
 
 import { evaluateHumanActionFactors } from "../modules/human-action-2/core-engine.js";
@@ -25,59 +22,20 @@ const DAYPARTS = [
 // MAIN ENTRY
 // ------------------------------------------------------------
 export function buildHumanActionIntel(raw) {
+  const hourly = Array.isArray(raw?.hourly)
+    ? raw.hourly
+    : normalizeOpenMeteo(raw?.hourly);
 
-  // ============================================================
-  // NORMALIZE INPUT (CRITICAL FIX)
-  // ============================================================
-
-  let hourly = [];
-
-  if (Array.isArray(raw?.hourly)) {
-    hourly = raw.hourly;
-  } else {
-    hourly = normalizeOpenMeteo(raw?.hourly);
-  }
-
-  // ------------------------------------------------------------
-  // FORCE INTERNAL SCHEMA (THIS FIXES EVERYTHING)
-  // ------------------------------------------------------------
-  const clean = hourly
-    .map(h => {
-      const ts = h.timestamp ?? h.ts;
-
-      if (!ts) return null;
-
-      return {
-        timestamp: ts,
-        hour: new Date(ts).getHours(),
-
-        temperatureF: h.temperatureF ?? h.temp ?? null,
-        dewpointF: h.dewpointF ?? h.dew ?? null,
-        windSpeed: h.windSpeed ?? h.wind_speed ?? null,
-        humidity: h.relative_humidity ?? h.humidity ?? null,
-        cloudCover: h.cloud_cover ?? h.cloudCover ?? null
-      };
-    })
-    .filter(Boolean);
+  const clean = normalizeHourly(hourly);
 
   if (!clean.length) {
-    return {
-      today: fallback("today"),
-      tomorrow: fallback("tomorrow")
-    };
+    return fallbackBundle();
   }
 
   const now = Date.now();
 
-  const todayHours = clean.filter(h => {
-    const diff = (h.timestamp - now) / 36e5;
-    return diff >= 0 && diff < 24;
-  });
-
-  const tomorrowHours = clean.filter(h => {
-    const diff = (h.timestamp - now) / 36e5;
-    return diff >= 24 && diff < 48;
-  });
+  const todayHours = clean.filter(h => inWindow(h.timestamp, now, 0, 24));
+  const tomorrowHours = clean.filter(h => inWindow(h.timestamp, now, 24, 48));
 
   return {
     today: buildPeriod(todayHours, "today", now),
@@ -86,14 +44,59 @@ export function buildHumanActionIntel(raw) {
 }
 
 // ------------------------------------------------------------
+// 🔥 CRITICAL FIX: TIMESTAMP NORMALIZATION
+// ------------------------------------------------------------
+function normalizeHourly(hourly) {
+  return hourly
+    .map(h => {
+      const rawTs = h.timestamp ?? h.ts ?? h.time;
+      const ts = parseTimestamp(rawTs);
+
+      if (!ts) return null;
+
+      const d = new Date(ts);
+
+      return {
+        timestamp: ts,
+        hour: d.getHours(),
+
+        temperatureF: pick(h, ["temperatureF", "temp"]),
+        dewpointF: pick(h, ["dewpointF", "dew"]),
+        windSpeed: pick(h, ["windSpeed", "wind_speed"]),
+        humidity: pick(h, ["humidity", "relative_humidity"]),
+        cloudCover: pick(h, ["cloudCover", "cloud_cover"])
+      };
+    })
+    .filter(Boolean);
+}
+
+function parseTimestamp(input) {
+  if (!input) return null;
+
+  if (typeof input === "number") return input;
+
+  const ts = new Date(input).getTime();
+  return Number.isFinite(ts) ? ts : null;
+}
+
+function pick(obj, keys) {
+  for (const k of keys) {
+    if (typeof obj[k] === "number") return obj[k];
+  }
+  return null;
+}
+
+function inWindow(ts, now, startHrs, endHrs) {
+  const diff = (ts - now) / 36e5;
+  return diff >= startHrs && diff < endHrs;
+}
+
+// ------------------------------------------------------------
 // PERIOD BUILDER
 // ------------------------------------------------------------
 function buildPeriod(hours, label, now) {
-  if (!hours?.length) return fallback(label);
+  if (!hours.length) return fallback(label);
 
-  // -------------------------
-  // HOURLY COMFORT
-  // -------------------------
   const hourlyComfort = hours.map(h => {
     const c = calculateComfort({
       temp: h.temperatureF,
@@ -112,105 +115,23 @@ function buildPeriod(hours, label, now) {
     };
   });
 
-  // -------------------------
-  // DAYPARTS
-  // -------------------------
-  const dayparts = {};
+  const dayparts = buildDayparts(hourlyComfort);
+  const { best, worst } = findWindows(hourlyComfort);
+  const nowBlock = label === "today" ? findNow(hourlyComfort, now) : null;
 
-  for (const part of DAYPARTS) {
-    const segment = hourlyComfort.filter(h =>
-      h.hour >= part.start && h.hour < part.end
-    );
-
-    if (!segment.length) continue;
-
-    const avg = avgScore(segment);
-
-    dayparts[part.key] = {
-      avg: Math.round(avg),
-      min: Math.min(...segment.map(h => h.score)),
-      max: Math.max(...segment.map(h => h.score))
-    };
-  }
-
-  // -------------------------
-  // BEST / WORST WINDOWS
-  // -------------------------
-  let best = null;
-  let worst = null;
-
-  for (let i = 0; i < hourlyComfort.length - 2; i++) {
-    const slice = hourlyComfort.slice(i, i + 3);
-    const score = avgScore(slice);
-
-    if (!best || score > best.score) {
-      best = {
-        score: Math.round(score),
-        start: slice[0].hour,
-        end: slice[2].hour
-      };
-    }
-
-    if (!worst || score < worst.score) {
-      worst = {
-        score: Math.round(score),
-        start: slice[0].hour,
-        end: slice[2].hour
-      };
-    }
-  }
-
-  // -------------------------
-  // NOW BLOCK
-  // -------------------------
-  let nowBlock = null;
-
-  if (label === "today") {
-    const current = hourlyComfort.find(h => h.ts >= now);
-
-    if (current) {
-      nowBlock = {
-        score: current.score,
-        temp: current.temp,
-        dew: current.dew
-      };
-    }
-  }
-
-  // -------------------------
-  // TEMP RANGE
-  // -------------------------
-  const temps = hours
-    .map(h => h.temperatureF)
-    .filter(t => typeof t === "number");
-
+  const temps = hours.map(h => h.temperatureF).filter(isNum);
   const tempMax = temps.length ? Math.max(...temps) : null;
   const tempMin = temps.length ? Math.min(...temps) : null;
 
-  // -------------------------
-  // SCORE
-  // -------------------------
-  const avgAll = avgScore(hourlyComfort);
+  const avgAll = avg(hourlyComfort.map(h => h.score));
 
-  let score;
-
-  if (label === "today") {
-    score =
-      (nowBlock?.score ?? avgAll) * 0.4 +
-      avgAll * 0.4 +
-      (best?.score ?? avgAll) * 0.2;
-  } else {
-    score =
-      avgAll * 0.5 +
-      (best?.score ?? avgAll) * 0.3 -
-      (100 - (worst?.score ?? avgAll)) * 0.2;
-  }
+  let score =
+    label === "today"
+      ? (nowBlock?.score ?? avgAll) * 0.4 + avgAll * 0.4 + (best?.score ?? avgAll) * 0.2
+      : avgAll * 0.5 + (best?.score ?? avgAll) * 0.3 - (100 - (worst?.score ?? avgAll)) * 0.2;
 
   score = Math.round(score);
 
-  // -------------------------
-  // ENGINE + VOICE
-  // -------------------------
   const evals = hours.map(evaluateHumanActionFactors);
   const core = aggregate(evals);
 
@@ -225,11 +146,7 @@ function buildPeriod(hours, label, now) {
     dayparts,
     bestWindow: best,
     worstWindow: worst,
-
-    stats: {
-      tempMax,
-      tempMin
-    },
+    stats: { tempMax, tempMin },
 
     emoji: pickEmoji(score),
     headline: buildHeadline(score),
@@ -252,24 +169,66 @@ function buildPeriod(hours, label, now) {
 // ------------------------------------------------------------
 // HELPERS
 // ------------------------------------------------------------
-function avgScore(arr) {
-  return arr.reduce((a, h) => a + h.score, 0) / arr.length;
+const isNum = v => typeof v === "number";
+
+const avg = arr => arr.reduce((a, b) => a + b, 0) / arr.length;
+
+function buildDayparts(hours) {
+  const out = {};
+
+  for (const part of DAYPARTS) {
+    const seg = hours.filter(h => h.hour >= part.start && h.hour < part.end);
+    if (!seg.length) continue;
+
+    out[part.key] = {
+      avg: Math.round(avg(seg.map(h => h.score))),
+      min: Math.min(...seg.map(h => h.score)),
+      max: Math.max(...seg.map(h => h.score))
+    };
+  }
+
+  return out;
+}
+
+function findWindows(hours) {
+  let best = null;
+  let worst = null;
+
+  for (let i = 0; i < hours.length - 2; i++) {
+    const slice = hours.slice(i, i + 3);
+    const score = avg(slice.map(h => h.score));
+
+    if (!best || score > best.score) {
+      best = { score: Math.round(score), start: slice[0].hour, end: slice[2].hour };
+    }
+
+    if (!worst || score < worst.score) {
+      worst = { score: Math.round(score), start: slice[0].hour, end: slice[2].hour };
+    }
+  }
+
+  return { best, worst };
+}
+
+function findNow(hours, now) {
+  const current = hours.find(h => h.ts >= now);
+  return current
+    ? { score: current.score, temp: current.temp, dew: current.dew }
+    : null;
 }
 
 function blend(hours) {
-  const avg = key => {
-    const vals = hours.map(h => h[key]).filter(v => typeof v === "number");
-    return vals.length
-      ? vals.reduce((a, b) => a + b, 0) / vals.length
-      : null;
+  const avgKey = key => {
+    const vals = hours.map(h => h[key]).filter(isNum);
+    return vals.length ? avg(vals) : null;
   };
 
   return {
-    temp: avg("temperatureF"),
-    dewPoint: avg("dewpointF"),
-    humidity: avg("humidity"),
-    windSpeed: avg("windSpeed"),
-    cloudCover: avg("cloudCover")
+    temp: avgKey("temperatureF"),
+    dewPoint: avgKey("dewpointF"),
+    humidity: avgKey("humidity"),
+    windSpeed: avgKey("windSpeed"),
+    cloudCover: avgKey("cloudCover")
   };
 }
 
@@ -307,9 +266,18 @@ function aggregate(evals) {
 
   return {
     dominantFactor: ranked[0]?.factor ?? "stable",
-    confidence:
-      evals.reduce((a, e) => a + e.confidence, 0) / evals.length,
+    confidence: avg(evals.map(e => e.confidence)),
     secondaryFactors: ranked.slice(1, 3).map(r => r.factor)
+  };
+}
+
+// ------------------------------------------------------------
+// FALLBACK + UI
+// ------------------------------------------------------------
+function fallbackBundle() {
+  return {
+    today: fallback("today"),
+    tomorrow: fallback("tomorrow")
   };
 }
 
@@ -329,7 +297,6 @@ function fallback(label) {
   };
 }
 
-// ---------------- UI HELPERS ----------------
 function pickEmoji(score) {
   if (score >= 80) return "😌";
   if (score >= 65) return "🙂";
@@ -345,16 +312,16 @@ function buildHeadline(score) {
 }
 
 function buildBullets({ best, worst, dayparts }) {
-  const bullets = [];
+  const out = [];
 
-  if (best) bullets.push(`Best: ${formatHour(best.start)}–${formatHour(best.end)}`);
-  if (worst) bullets.push(`Tough: ${formatHour(worst.start)}–${formatHour(worst.end)}`);
-  if (dayparts?.lunch) bullets.push(`Lunch: ${dayparts.lunch.avg}`);
+  if (best) out.push(`Best: ${fmt(best.start)}–${fmt(best.end)}`);
+  if (worst) out.push(`Tough: ${fmt(worst.start)}–${fmt(worst.end)}`);
+  if (dayparts?.lunch) out.push(`Lunch: ${dayparts.lunch.avg}`);
 
-  return bullets;
+  return out;
 }
 
-function formatHour(h) {
+function fmt(h) {
   const suffix = h >= 12 ? "PM" : "AM";
   const display = h % 12 || 12;
   return `${display}${suffix}`;
