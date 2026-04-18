@@ -28,6 +28,8 @@ function normalizeHours(hours = []) {
   }));
 }
 
+console.log("ITEMS PASSED TO FUTURE COMFORT:", items[0]);
+
 // ============================================================
 // MAIN RENDER
 // ============================================================
