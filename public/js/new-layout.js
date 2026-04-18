@@ -109,7 +109,7 @@ export async function renderNewLayout(container) {
     const hourly = Array.isArray(data?.hourly)
       ? normalizeHourly(data.hourly)
       : [];
-
+console.log("POST-NORMALIZE (LAYOUT):", hourly[0]);
     const current = data?.current
       ? normalizeCurrent(data.current)
       : null;
