@@ -283,6 +283,16 @@ function buildFutureSlice(hourly, isDay) {
       ? hourly.slice(0, 6)
       : hourly.slice(startIndex, startIndex + 6);
 
+      console.log(
+  "🧪 6-HOUR SLICE",
+  slice.map(h => ({
+    raw: h.timestamp ?? h.ts ?? h.time,
+    local: new Date(h.timestamp ?? h.ts ?? h.time).toString(),
+    hour: new Date(h.timestamp ?? h.ts ?? h.time).getHours(),
+    temp: h.temperatureF ?? h.temp
+  }))
+);
+
   return slice.map(h => {
     const c = calculateComfort({
       temp: h.temperatureF ?? h.temp ?? null,
