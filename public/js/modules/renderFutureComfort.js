@@ -9,26 +9,33 @@ import { calculateComfort } from "../intel/comfort.js";
 // ============================================================
 
 function normalizeHours(hours = []) {
-  return hours.map(h => ({
-    timestamp: h.timestamp,
+  return hours
+    .map(h => {
+      if (!h || !h.timestamp) return null;
 
-    temperatureF: h.temperatureF ?? null,
-    windSpeed: h.windSpeed ?? 0,
-    windGust: h.windGust ?? null,
-    precipitation: h.precipitation ?? 0,
+      return {
+        timestamp: h.timestamp,
 
-    // compute score here (no dependency!)
-    score:
-      typeof h.score === "number"
-        ? h.score
-        : calculateComfort(h)?.score ?? null,
+        temperatureF:
+          Number.isFinite(h.temperatureF)
+            ? h.temperatureF
+            : null,
 
-    goldilocks: !!h.goldilocks,
-    hourLabel: h.hourLabel ?? formatHour(h.timestamp)
-  }));
+        windSpeed: h.windSpeed ?? 0,
+        windGust: h.windGust ?? null,
+        precipitation: h.precipitation ?? 0,
+
+        score:
+          typeof h.score === "number"
+            ? h.score
+            : calculateComfort(h)?.score ?? null,
+
+        goldilocks: !!h.goldilocks,
+        hourLabel: h.hourLabel ?? formatHour(h.timestamp)
+      };
+    })
+    .filter(Boolean); // 🔥 removes bad rows
 }
-
-console.log("ITEMS PASSED TO FUTURE COMFORT:", items[0]);
 
 // ============================================================
 // MAIN RENDER
@@ -90,9 +97,9 @@ export function renderFutureComfort(container, items, trend) {
 
 function renderHourCard(h) {
   const temp =
-    h.temperatureF != null
-      ? `${Math.round(h.temperatureF)}°`
-      : "--";
+  Number.isFinite(h.temperatureF)
+    ? `${Math.round(h.temperatureF)}°`
+    : "--";
 
   const score =
     h.score != null
@@ -223,10 +230,12 @@ function detectTrend(hours) {
 // ============================================================
 
 function formatHour(ts) {
-  if (!ts) return "";
-  return new Date(ts).toLocaleTimeString([], {
-    hour: "numeric"
-  });
+  if (!ts || isNaN(ts)) return "--";
+
+  const d = new Date(ts);
+  if (isNaN(d.getTime())) return "--";
+
+  return d.toLocaleTimeString([], { hour: "numeric" });
 }
 
 function getTrendText(trend) {
