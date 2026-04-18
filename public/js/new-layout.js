@@ -364,7 +364,6 @@ function renderDroughtFire(data) {
     return;
   }
 
-  // 👉 ADD IT HERE
   console.log("🔥 Drought payload:", data);
 
   const {
@@ -372,7 +371,8 @@ function renderDroughtFire(data) {
     FRI,
     dssTrend = 0,
     friTrend = 0,
-    narrative
+    narrative,
+    fireDriver
   } = data;
 
   const droughtMonitor =
@@ -404,6 +404,7 @@ function renderDroughtFire(data) {
 
       <div class="df-grid">
 
+        <!-- DROUGHT -->
         <div class="df-block">
           <div class="df-label">DROUGHT STRESS</div>
 
@@ -414,11 +415,12 @@ function renderDroughtFire(data) {
           </div>
 
           <div class="df-sub">
-            ${fTrend.label}
+            ${dTrend.label}
             ${droughtMonitor ? ` • USDM ${droughtMonitor}` : ""}
           </div>
         </div>
 
+        <!-- FIRE -->
         <div class="df-block">
           <div class="df-label">FIRE RISK</div>
 
@@ -429,21 +431,28 @@ function renderDroughtFire(data) {
           </div>
 
           <div class="df-sub">
-  ${dTrend.label}
-  ${droughtMonitor ? ` • ${droughtMonitor}` : ""}
-</div>
+            ${fTrend.label}
+            ${droughtMonitor ? ` • ${droughtMonitor}` : ""}
+          </div>
         </div>
 
       </div>
 
+      <!-- HEADLINE -->
       <div class="df-headline">
         ${narrative?.headline || ""}
       </div>
 
+      <!-- 🔥 DRIVER (NEW INTELLIGENCE LAYER) -->
+      ${
+        fireDriver
+          ? `<div class="df-driver">${fireDriver}</div>`
+          : ""
+      }
+
     </div>
   `;
 }
-
 
 // ============================================================
 // TOMORROW
