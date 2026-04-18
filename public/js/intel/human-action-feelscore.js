@@ -11,8 +11,9 @@ import { normalizeHourly } from "../utils/normalizeWeather.js";
 // ============================================================
 
 export function buildHumanActionIntelFS(raw) {
-console.log("FRONTEND RAW HOURLY SAMPLE:", raw.hourly[0]);
+
 console.log("AFTER NORMALIZE SAMPLE:", hourly[0]);
+
   if (!hourly.length) return fallbackAll();
 
   const now = Date.now();
