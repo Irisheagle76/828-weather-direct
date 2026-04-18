@@ -94,6 +94,7 @@ export function buildHumanActionIntelFS(raw) {
 // ============================================================
 // BUILD PERIOD (DETECTION ONLY — NO UI LOGIC)
 // ============================================================
+console.log("INPUT TO buildPeriod:", hours[0]);
 
 function buildPeriod(hours, label, change = {}) {
   if (!Array.isArray(hours) || !hours.length) return null;
