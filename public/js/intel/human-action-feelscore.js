@@ -4,7 +4,7 @@
 
 import { calculateComfort } from "./comfort.js";
 import { assembleWithVoice } from "./synthesizer/assembleWithVoice.js";
-import { normalizeHourly } from "../utils/normalizeWeather";
+import { normalizeHourly } from "../utils/normalizeWeather.js";
 
 // ============================================================
 // MAIN
