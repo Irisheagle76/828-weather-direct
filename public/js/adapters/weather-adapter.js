@@ -1,5 +1,5 @@
 // ============================================================
-// WEATHER ADAPTER (V2 — CANONICAL SCHEMA)
+// WEATHER ADAPTER (V3 — CANONICAL + GUST SUPPORT)
 // ============================================================
 
 import { fetchAllIntel } from '/js/weather-fetch.js';
@@ -40,7 +40,8 @@ function adaptCurrent(c) {
       c.dew_point ??
       null,
 
-    relative_humidity:
+    relativeHumidity:
+      c.relativeHumidity ??
       c.relative_humidity ??
       c.humidity ??
       null,
@@ -52,12 +53,18 @@ function adaptCurrent(c) {
       c.wind_avg ??
       0,
 
+    windGust:
+      c.windGust ??
+      c.wind_gust ??
+      null,
+
     precipitation:
       c.precipitation ??
       c.rain ??
       0,
 
     cloudCover:
+      c.cloudCover ??
       c.cloud_cover ??
       c.cloudcover ??
       null
@@ -75,23 +82,39 @@ function adaptHourly(hourly) {
   // CASE 1: Already normalized (array)
   // ------------------------------------------------------------
   if (Array.isArray(hourly)) {
-    return hourly.map(h => normalizeHourObject(h)).filter(Boolean);
+    return hourly.map(normalizeHourObject).filter(Boolean);
   }
 
   // ------------------------------------------------------------
   // CASE 2: Open-Meteo style (arrays)
   // ------------------------------------------------------------
   if (hourly?.time?.length) {
-    return hourly.time.map((t, i) => normalizeHourObject({
-      timestamp: new Date(t).getTime(),
+    return hourly.time.map((t, i) =>
+      normalizeHourObject({
+        timestamp: new Date(t).getTime(),
 
-      temperatureF: hourly.temperature_2m?.[i],
-      dewpointF: hourly.dewpoint_2m?.[i],
-      relative_humidity: hourly.relative_humidity_2m?.[i],
-      windSpeed: hourly.wind_speed_10m?.[i],
-      precipitation: hourly.precipitation?.[i],
-      cloudCover: hourly.cloudcover?.[i]
-    })).filter(Boolean);
+        temperatureF: hourly.temperature_2m?.[i] ?? null,
+        dewpointF: hourly.dew_point_2m?.[i] ?? null,
+
+        relativeHumidity:
+          hourly.relative_humidity_2m?.[i] ?? null,
+
+        windSpeed:
+          hourly.wind_speed_10m?.[i] ?? 0,
+
+        windGust:
+          hourly.wind_gusts_10m?.[i] ?? null, // 🔥 KEY FIX
+
+        precipitation:
+          hourly.precipitation?.[i] ?? 0,
+
+        cloudCover:
+          hourly.cloudcover?.[i] ?? null,
+
+        uvIndex:
+          hourly.uv_index?.[i] ?? null
+      })
+    ).filter(Boolean);
   }
 
   console.warn("⚠️ Unknown hourly format:", hourly);
@@ -104,33 +127,46 @@ function adaptHourly(hourly) {
 
 function normalizeHourObject(h) {
   const ts = h.timestamp ?? h.time ?? h.ts;
-
   if (!ts) return null;
 
   return {
-    timestamp: typeof ts === "number" ? ts : new Date(ts).getTime(),
+    timestamp:
+      typeof ts === "number"
+        ? ts
+        : new Date(ts).getTime(),
 
+    // TEMP
     temperatureF:
       h.temperatureF ??
       h.temp ??
-      h.temperature ??
       null,
 
+    // DEWPOINT
     dewpointF:
       h.dewpointF ??
-      h.dew ??
+      h.dew_point ??
       null,
 
-    relative_humidity:
+    // HUMIDITY
+    relativeHumidity:
+      h.relativeHumidity ??
       h.relative_humidity ??
       h.humidity ??
       null,
 
+    // WIND (FINALIZED)
     windSpeed:
       h.windSpeed ??
       h.wind_speed ??
+      h.wind ??
       0,
 
+    windGust:
+      h.windGust ??
+      h.wind_gust ??
+      null,
+
+    // OTHER
     precipitation:
       h.precipitation ??
       h.rain ??
@@ -139,6 +175,11 @@ function normalizeHourObject(h) {
     cloudCover:
       h.cloudCover ??
       h.cloud_cover ??
+      null,
+
+    uvIndex:
+      h.uvIndex ??
+      h.uv_index ??
       null
   };
 }
