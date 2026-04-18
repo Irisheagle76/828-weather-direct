@@ -92,6 +92,8 @@ async function handleHourly(req, res) {
   data.hourly.wind_gusts_10m
 );
 
+console.log("RAW HOURLY KEYS:", Object.keys(data.hourly));
+
   if (!data?.hourly?.time?.length) {
     console.warn("⚠️ Empty hourly.time from Open-Meteo");
     return respondWithFallback(res, key, "empty-hourly", tempest);
