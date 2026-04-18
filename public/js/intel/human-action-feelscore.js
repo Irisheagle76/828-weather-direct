@@ -4,33 +4,30 @@
 
 import { calculateComfort } from "./comfort.js";
 import { assembleWithVoice } from "./synthesizer/assembleWithVoice.js";
+import { normalizeHourly } from "../utils/normalizeWeather";
 
 // ============================================================
 // MAIN
 // ============================================================
 
 export function buildHumanActionIntelFS(raw) {
-  const hourly = Array.isArray(raw?.hourly)
-  ? raw.hourly.map(h => ({
-      ...h,
-      ts: h.ts ?? h.timestamp // 🔥 critical fix
-    }))
-  : [];
+  const hourly = normalizeHourly(raw?.hourly || []);
+  console.log("NORMALIZED SAMPLE:", hourly[0]);
   if (!hourly.length) return fallbackAll();
 
   const now = Date.now();
 
   const todayHours = hourly.filter(
-    h => h.ts >= now && h.ts < now + 24 * 3600e3
+    h => h.timestamp >= now && h.timestamp < now + 24 * 3600e3
   );
 
   const tomorrowHours = hourly.filter(
-    h => h.ts >= now + 24 * 3600e3 && h.ts < now + 48 * 3600e3
+    h => h.timestamp >= now + 24 * 3600e3 && h.timestamp < now + 48 * 3600e3
   );
 
   console.log("TOMORROW SAMPLE:", tomorrowHours[0]);
-  
-  const getTemp = h => h?.temp ?? h?.temperature ?? h?.temperatureF ?? null;
+
+const getTemp = h => h.temperatureF;
 
   const todayMax = Math.max(
     ...todayHours.map(getTemp).filter(v => typeof v === "number"),
@@ -58,7 +55,7 @@ export function buildHumanActionIntelFS(raw) {
   );
 
  const getWind = h =>
-  h?.windSpeed ?? h?.wind ?? h?.wind_speed ?? 0;
+  h.windSpeed;
 
   const todayWindMax = Math.max(...todayHours.map(getWind), 0);
   const tomorrowWindMax = Math.max(...tomorrowHours.map(getWind), 0);
