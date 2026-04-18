@@ -1,5 +1,5 @@
 // ============================================================
-// HUMAN ACTION — FEELSCORE (NARRATIVE + CHANGE-AWARE)
+// HUMAN ACTION — FEELSCORE (CLEAN + STABLE)
 // ============================================================
 
 import { calculateComfort } from "./comfort.js";
@@ -40,14 +40,13 @@ export function buildHumanActionIntelFS(raw) {
 }
 
 // ============================================================
-// PERIOD (TOMORROW — NOW CHANGE-AWARE)
+// TOMORROW (CHANGE-AWARE)
 // ============================================================
 
 function buildPeriod(hours, label, change = {}) {
   if (!Array.isArray(hours) || !hours.length) return fallback(label);
 
   const mapped = mapComfort(hours);
-
   const scores = mapped.map(h => h.score).filter(s => typeof s === "number");
   if (!scores.length) return fallback(label);
 
@@ -56,15 +55,12 @@ function buildPeriod(hours, label, change = {}) {
   const score = Math.round(avg);
 
   const snapshot = buildSnapshot(hours);
-  const windChill = calcWindChill(snapshot.temp, snapshot.wind);
-const chillDelta = snapshot.temp - windChill;
   if (typeof snapshot.temp !== "number") return fallback(label);
 
   const { tempDrop = 0, windJump = 0 } = change;
-  const isShockDay =
-  label === "tomorrow" &&
-  tempDrop >= 20 &&
-  snapshot.temp <= 65;
+
+  const windChill = calcWindChill(snapshot.temp, snapshot.wind);
+  const chillDelta = snapshot.temp - windChill;
 
   const intel = buildIntel(snapshot, score, trend, 0, 0, label);
 
@@ -85,114 +81,83 @@ const chillDelta = snapshot.temp - windChill;
     narrative?.headline ||
     "";
 
-// ------------------------------------------------------------
-// 🔥 CHANGE-DRIVEN HEADLINE + BULLETS (UPGRADED)
-// ------------------------------------------------------------
+  // ------------------------------------------------------------
+  // HEADLINE
+  // ------------------------------------------------------------
+  let headline;
 
-let headline;
-
-// ------------------------------------------------------------
-// PRIORITY: SHOCK > COOL DOWN > BASE
-// ------------------------------------------------------------
-if (label === "tomorrow") {
-
-  if (tempDrop >= 30) {
-    headline = "A big temperature swing hits tomorrow";
-  } 
-  else if (tempDrop >= 20) {
-    headline = "A much cooler, windier day moves in";
-  } 
-  else if (tempDrop >= 12) {
-    headline = "Noticeably cooler air settles in";
-  } 
-  else {
+  if (label === "tomorrow") {
+    if (tempDrop >= 30) {
+      headline = "A big temperature swing hits tomorrow";
+    } else if (tempDrop >= 20) {
+      headline = "A much cooler, windier day moves in";
+    } else if (tempDrop >= 12) {
+      headline = "Noticeably cooler air settles in";
+    } else {
+      headline =
+        extractHeadline(narrativeText) ||
+        narrative?.headline ||
+        buildHeadline(score, snapshot);
+    }
+  } else {
     headline =
       extractHeadline(narrativeText) ||
       narrative?.headline ||
       buildHeadline(score, snapshot);
   }
 
-} else {
-  headline =
-    extractHeadline(narrativeText) ||
-    narrative?.headline ||
-    buildHeadline(score, snapshot);
-}
-
-
-// ------------------------------------------------------------
-// BASE BULLETS FROM NARRATIVE
-// ------------------------------------------------------------
-let bullets = extractBullets(narrativeText, {
-  trend,
-  snapshot,
-  label
-});
-
-
-// ------------------------------------------------------------
-// 🔥 CHANGE LAYER (ORDERED BY IMPORTANCE)
-// ------------------------------------------------------------
-if (label === "tomorrow") {
-
-  const enhanced = [];
-
-  // 1. BIG STORY FIRST (temperature shock)
-  if (tempDrop >= 20) {
-    enhanced.push("Much colder than today — a noticeable drop");
-  }
-
-  // 2. WIND IMPACT (more human wording)
-  if (windJump >= 8) {
-    enhanced.push("Breezy to gusty winds at times");
-  }
-
-  // 3. WIND CHILL / FEELS-LIKE
-  if (snapshot.temp <= 50 && snapshot.wind >= 10) {
-    enhanced.push("Feels colder than the temperature suggests");
-  }
-
-  // 4. HUMAN BEHAVIOR (this is what you were missing)
-  if (tempDrop >= 25) {
-    enhanced.push("You’ll likely want a jacket after today's warmth");
-  } 
-  else if (tempDrop >= 15) {
-    enhanced.push("A hoodie or light jacket will feel good");
-  }
-
   // ------------------------------------------------------------
-  // MERGE (CHANGE FIRST, THEN NARRATIVE)
+  // BULLETS
   // ------------------------------------------------------------
-  bullets = [...enhanced, ...(bullets || [])];
+  let bullets = extractBullets(narrativeText, {
+    trend,
+    snapshot,
+    label
+  });
+
+  if (label === "tomorrow") {
+    const enhanced = [];
+
+    if (tempDrop >= 20) {
+      enhanced.push("Much colder than today — a noticeable drop");
+    }
+
+    if (windJump >= 8) {
+      enhanced.push("Breezy to gusty winds at times");
+    }
+
+    if (chillDelta >= 5) {
+      enhanced.push("Feels colder than the temperature suggests");
+    }
+
+    if (tempDrop >= 25) {
+      enhanced.push("You’ll likely want a jacket after today's warmth");
+    } else if (tempDrop >= 15) {
+      enhanced.push("A hoodie or light jacket will feel good");
+    }
+
+    bullets = [...enhanced, ...(bullets || [])];
+  }
+
+  bullets = [...new Set(bullets)].slice(0, 3);
+
+  return {
+    label,
+    score,
+    emoji: pickEmoji(score),
+    headline,
+    bullets
+  };
 }
-
-
-// ------------------------------------------------------------
-// CLEAN + LIMIT
-// ------------------------------------------------------------
-bullets = [...new Set(bullets)].slice(0, 3);
-
-
-// ------------------------------------------------------------
-// RETURN
-// ------------------------------------------------------------
-return {
-  label,
-  score,
-  emoji: pickEmoji(score),
-  headline,
-  bullets
-};
 
 // ============================================================
-// FEELSCORE (UNCHANGED CORE — CLEANED)
+// FEELSCORE (TODAY)
 // ============================================================
 
 function buildCurrentWithTrend(hours) {
   if (!Array.isArray(hours) || !hours.length) return fallback("today");
 
   const mapped = mapComfort(hours);
-
   const scores = mapped.map(h => h.score).filter(s => typeof s === "number");
   if (!scores.length) return fallback("today");
 
@@ -240,10 +205,8 @@ function buildCurrentWithTrend(hours) {
     label: "today"
   });
 
-  if (bullets.length < 2) {
-    if (snapshot.dewPoint < 55) {
-      bullets.push("Dry air keeps things comfortable");
-    }
+  if (bullets.length < 2 && snapshot.dewPoint < 55) {
+    bullets.push("Dry air keeps things comfortable");
   }
 
   bullets = [...new Set(bullets)].slice(0, 3);
@@ -257,9 +220,9 @@ function buildCurrentWithTrend(hours) {
     bullets
   };
 }
-}
+
 // ============================================================
-// HELPERS (UNCHANGED CORE)
+// HELPERS
 // ============================================================
 
 function mapComfort(hours) {
