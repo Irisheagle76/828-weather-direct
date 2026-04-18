@@ -115,7 +115,7 @@ function buildPeriod(hours, label, change = {}) {
     tomorrowMin = null
   } = change;
 
-  const windChill = calcWindChill(snapshot.temp, snapshot.wind);
+  const windChill = calcWindChill(snapshot.temp, snapshot.windSpeed);
   const chillDelta = snapshot.temp - windChill;
 
   const isShockDay = label === "tomorrow" && tempDrop >= 18;
@@ -128,7 +128,22 @@ function buildPeriod(hours, label, change = {}) {
     label === "tomorrow" &&
     windJump >= 8;
 
-  const intel = buildIntel(snapshot, score, trend, 0, 0, label);
+  const maxWind = Math.max(...hours.map(h => h.windSpeed ?? 0));
+const maxGust = Math.max(...hours.map(h => h.windGust ?? 0));
+
+const windSignal = Math.max(
+  ...hours.map(h => Math.max(h.windSpeed ?? 0, (h.windGust ?? 0) * 0.7))
+);
+
+const intel = buildIntel(
+  snapshot,
+  score,
+  trend,
+  maxWind,
+  windSignal,
+  maxGust,
+  label
+);
 
   let narrative;
   try {
