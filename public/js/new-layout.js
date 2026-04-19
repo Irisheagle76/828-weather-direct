@@ -203,7 +203,7 @@ function renderFeelScore(data) {
 }
 
 // ============================================================
-// TIMELINE (CLEAN + FUTURE SAFE)
+// TIMELINE (CLEAN + FUTURE SAFE — FIXED)
 // ============================================================
 
 function renderTimeline(hourly) {
@@ -217,37 +217,52 @@ function renderTimeline(hourly) {
   const now = Date.now();
 
   // ------------------------------------------------------------
-  // FUTURE HOURS ONLY
+  // FUTURE HOURS ONLY (canonical fields)
   // ------------------------------------------------------------
   const future = hourly.filter(h =>
-    h && h.ts >= now && h.temp != null
+    h &&
+    Number.isFinite(h.timestamp) &&
+    h.timestamp >= now &&
+    Number.isFinite(h.temperatureF)
   );
 
-  const next = (future.length ? future : hourly).slice(0, 6);
+  // fallback to full array if future slice fails (safety)
+  const next = (future.length ? future : hourly)
+    .slice(0, 6)
+    .filter(h =>
+      h &&
+      Number.isFinite(h.timestamp) &&
+      Number.isFinite(h.temperatureF)
+    );
+
+  if (!next.length) {
+    container.innerHTML = '';
+    return;
+  }
 
   // ------------------------------------------------------------
-  // SCORES (clamped to avoid fake perfection)
+  // SCORES
   // ------------------------------------------------------------
   const scores = next.map(h => {
     const raw = calculateComfort(h)?.score ?? 0;
     const scaled = Math.round(raw * 10);
 
-    // prevent unrealistic 100 spam (UI-level guard)
+    // clamp to avoid unrealistic perfect scores
     return Math.min(scaled, 98);
   });
 
   const best = Math.max(...scores);
 
   // ------------------------------------------------------------
-  // BUILD UI (MATCHES CSS)
+  // BUILD UI
   // ------------------------------------------------------------
   const html = next.map((h, i) => {
     const isBest = scores[i] === best ? "best-hour" : "";
 
     return `
       <div class="hour-block ${isBest}">
-        <div class="hour-time">${formatHour(h.ts)}</div>
-        <div class="hour-temp">${Math.round(h.temp)}°</div>
+        <div class="hour-time">${formatHour(h.timestamp)}</div>
+        <div class="hour-temp">${Math.round(h.temperatureF)}°</div>
         <div class="hour-score">${scores[i]}</div>
       </div>
     `;
@@ -260,7 +275,6 @@ function renderTimeline(hourly) {
     </div>
   `;
 }
-
 // ============================================================
 // HELPERS
 // ============================================================
