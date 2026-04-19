@@ -1,5 +1,5 @@
 // ============================================================
-// /js/modules/renderComfortNow.js (v8 — TEMPEST INTEGRATED)
+// /js/modules/renderComfortNow.js (v9 — NARRATIVE FIXED)
 // ============================================================
 
 import { calculateComfort } from "../intel/comfort.js";
@@ -46,7 +46,6 @@ function injectTempest(current, tempest) {
   return {
     ...current,
 
-    // aggressive override for "now"
     humidity: mix(tempest.humidity, current.humidity, 0.85),
 
     wind: mix(tempest.windSpeed, current.wind, 0.8),
@@ -63,7 +62,7 @@ function injectTempest(current, tempest) {
 }
 
 // ============================================================
-// NORMALIZE INPUT (single source of truth)
+// NORMALIZE INPUT
 // ============================================================
 
 function normalizeCurrent(data = {}) {
@@ -90,36 +89,6 @@ function normalizeCurrent(data = {}) {
   };
 }
 
-function buildHeadline(score) {
-  if (score >= 85) return "Feels really nice out";
-  if (score >= 70) return "Comfortable overall";
-  if (score >= 55) return "A bit uneven at times";
-  return "Mixed comfort conditions";
-}
-
-// ============================================================
-// MODE ADJUSTMENTS
-// ============================================================
-
-function applyModeAdjustments(data, mode) {
-  const adjusted = { ...data };
-
-  if (mode === "trail") {
-    adjusted.temp -= 3;
-    adjusted.wind *= 1.2;
-    adjusted.windSpeed = adjusted.wind;
-    adjusted.clouds = (adjusted.clouds ?? 0) + 10;
-  }
-
-  if (mode === "downtown") {
-    adjusted.temp += 2;
-    adjusted.wind *= 0.7;
-    adjusted.windSpeed = adjusted.wind;
-  }
-
-  return adjusted;
-}
-
 // ============================================================
 // MAIN RENDER
 // ============================================================
@@ -135,16 +104,10 @@ export function renderComfortNow(
   const mode = options.mode || "downtown";
   const isDay = options.isDay ?? true;
 
-  // 🆕 TEMPEST INPUT
   const tempestRaw = options.tempest ?? null;
   const tempest = normalizeTempest(tempestRaw);
 
-  // ------------------------------------------------------------
-  // NORMALIZE
-  // ------------------------------------------------------------
   let normalized = normalizeCurrent(current);
-
-  // 🆕 INJECT TEMPEST BEFORE ANYTHING ELSE
   normalized = injectTempest(normalized, tempest);
 
   const adjusted = applyModeAdjustments(normalized, mode);
@@ -155,10 +118,7 @@ export function renderComfortNow(
     isValley: mode === "downtown"
   });
 
-  if (!comfort || comfort.temp == null) {
-    console.warn("⚠️ Invalid comfort object", comfort);
-    return;
-  }
+  if (!comfort || comfort.temp == null) return;
 
   // ------------------------------------------------------------
   // SCORE
@@ -168,7 +128,7 @@ export function renderComfortNow(
   const goldiClass = comfort.goldilocks ? "goldilocks" : "";
 
   // ------------------------------------------------------------
-  // SYNTH INPUT
+  // SYNTH
   // ------------------------------------------------------------
   const intel = {
     signals: {
@@ -177,7 +137,7 @@ export function renderComfortNow(
       wind: comfort.windSpeed
     },
     dominantFactor: detectDominantFactor(comfort),
-    confidence: 0.75 // slight boost (Tempest confidence)
+    confidence: 0.75
   };
 
   const narrative = assembleWithVoice(
@@ -191,20 +151,15 @@ export function renderComfortNow(
   // DRIVERS
   // ------------------------------------------------------------
   const drivers = buildDrivers(comfort);
-
   const driverShort = drivers.map(d => d.short).join(" • ");
-  const driverDetail = drivers.map(d => d.detail).join(" ");
 
   // ------------------------------------------------------------
-  // TEXT
+  // TEXT (FIXED)
   // ------------------------------------------------------------
   const headline =
     narrative?.headline || fallbackHeadline(comfort);
 
-  const explanation =
-    narrative?.notes
-      ? `${driverDetail} ${narrative.notes}`.trim()
-      : driverDetail || fallbackExplanation(comfort);
+  const explanation = buildFullExplanation(comfort, narrative);
 
   const actions = buildActions(comfort);
 
@@ -227,9 +182,7 @@ export function renderComfortNow(
 
           <div class="comfort-text">${headline}</div>
 
-          ${explanation ? `
-            <div class="comfort-explainer">${explanation}</div>
-          ` : ""}
+          <div class="comfort-explainer">${explanation}</div>
         </div>
 
       </div>
@@ -237,7 +190,7 @@ export function renderComfortNow(
       <div class="comfort-expand">
 
         <div class="comfort-expand-headline">
-          ${buildHeadline(comfort)}
+          ${buildHeadline(score)}
         </div>
 
         ${actions.length ? `
@@ -276,7 +229,53 @@ export function renderComfortNow(
 }
 
 // ============================================================
-// LOGIC (UNCHANGED)
+// 🧠 NEW: FULL EXPLANATION ENGINE
+// ============================================================
+
+function buildFullExplanation(c, narrative) {
+  const parts = [];
+
+  // 1. FEEL
+  if (c.dewPoint < 50)
+    parts.push("Dry air makes it feel crisp and light.");
+  else if (c.dewPoint > 65)
+    parts.push("Humidity adds weight to the air.");
+
+  if (c.temp < 55)
+    parts.push("Cool temperatures add a noticeable chill.");
+  else if (c.temp > 80)
+    parts.push("Warm temperatures are starting to impact comfort.");
+
+  if (c.windSpeed > 10)
+    parts.push("A steady breeze is influencing how it feels.");
+
+  // 2. TREND (always included)
+  if (narrative?.trend === "improving") {
+    parts.push("Conditions improve through the day.");
+  } else if (narrative?.trend === "worsening") {
+    parts.push("Conditions become less comfortable later.");
+  } else {
+    // fallback trend logic
+    if (c.temp < 60 && c.dewPoint < 55) {
+      parts.push("Expect a steady warm-up into more comfortable conditions.");
+    }
+  }
+
+  // 3. EDGE SIGNAL
+  if (c.dewPoint < 45 && c.windSpeed > 8) {
+    parts.push("Dry air and wind may accelerate drying conditions.");
+  }
+
+  // 4. SYNTH BONUS
+  if (narrative?.notes) {
+    parts.push(narrative.notes);
+  }
+
+  return parts.slice(0, 3).join(" ");
+}
+
+// ============================================================
+// REMAINING FUNCTIONS (UNCHANGED)
 // ============================================================
 
 function detectDominantFactor(c) {
@@ -284,13 +283,9 @@ function detectDominantFactor(c) {
   if (c.temp >= 85) return "heat";
   if (c.temp <= 45) return "cold";
   if (c.windSpeed >= 12) return "wind";
-  if (c.dewPoint < 50) return "dry"; // subtle upgrade
+  if (c.dewPoint < 50) return "dry";
   return "neutral";
 }
-
-// ============================================================
-// DRIVERS (cleaned)
-// ============================================================
 
 function buildDrivers(c) {
   const d = [];
@@ -311,10 +306,6 @@ function buildDrivers(c) {
   return d.slice(0, 3).map(([short, detail]) => ({ short, detail }));
 }
 
-// ============================================================
-// TEXT FALLBACKS
-// ============================================================
-
 function fallbackHeadline(c) {
   if (c.goldilocks) return "Near-perfect comfort";
   if (c.temp < 55) return "Cool and crisp";
@@ -322,21 +313,12 @@ function fallbackHeadline(c) {
   return "Comfortable overall";
 }
 
-function fallbackExplanation(c) {
-  const parts = [];
-
-  if (c.dewPoint < 55) parts.push("Dry air");
-  else if (c.dewPoint > 65) parts.push("Humidity noticeable");
-
-  if (c.windSpeed < 5) parts.push("light wind");
-  else if (c.windSpeed > 12) parts.push("breezy");
-
-  return parts.length ? parts.join(", ") + "." : "";
+function buildHeadline(score) {
+  if (score >= 85) return "Feels really nice out";
+  if (score >= 70) return "Comfortable overall";
+  if (score >= 55) return "A bit uneven at times";
+  return "Mixed comfort conditions";
 }
-
-// ============================================================
-// ACTIONS
-// ============================================================
 
 function buildActions(c) {
   const a = [];
@@ -349,10 +331,6 @@ function buildActions(c) {
 
   return a.length ? a : ["Easy outdoor conditions"];
 }
-
-// ============================================================
-// HELPERS
-// ============================================================
 
 function round(v) {
   return v != null ? Math.round(v) : "--";
@@ -378,10 +356,6 @@ function mapScoreToCategory(score) {
   if (score >= 3.5) return "uncomfortable";
   return "harsh";
 }
-
-// ============================================================
-// UI
-// ============================================================
 
 function attachAccordion(container) {
   const module = container.querySelector(".comfort-module");
