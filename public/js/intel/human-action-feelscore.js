@@ -60,6 +60,35 @@ function splitDays(hourly, now) {
   return { today, tomorrow };
 }
 
+// ------------------------------------------------------------
+// WIND SMOOTHING
+// ------------------------------------------------------------
+
+function smoothWind(current, hours = []) {
+  const values = [
+    current.windSpeed,
+    ...hours.slice(0, 3).map(h => h.windSpeed)
+  ].filter(v => Number.isFinite(v));
+
+  if (!values.length) return current.windSpeed;
+
+  return values.reduce((a, b) => a + b, 0) / values.length;
+}
+
+function smoothGust(current, hours = []) {
+  const values = [
+    current.windGust,
+    ...hours.slice(0, 3).map(h => h.windGust)
+  ].filter(v => Number.isFinite(v));
+
+  if (!values.length) return current.windGust;
+
+  const avg = values.reduce((a, b) => a + b, 0) / values.length;
+
+  // prevent unrealistic spikes
+  return Math.min(avg, (current.windSpeed ?? 0) * 2.5);
+}
+
 // ============================================================
 // MAIN ENTRY
 // ============================================================
@@ -311,6 +340,18 @@ if (tempest) {
     )
   };
 }
+// ------------------------------------------------------------
+// 🆕 WIND SMOOTHING (CRITICAL)
+// ------------------------------------------------------------
+
+const smoothedWind = smoothWind(first, hours);
+const smoothedGust = smoothGust(first, hours);
+
+first = {
+  ...first,
+  windSpeed: smoothedWind,
+  windGust: smoothedGust
+};
 
   const currentScore = calculateComfort(first)?.score;
   if (!Number.isFinite(currentScore)) return fallback("today");
