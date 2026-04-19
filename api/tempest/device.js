@@ -1,30 +1,51 @@
 // ============================================================
-// TEMPEST UNIFIED ENDPOINT — v3 (MULTI-STATION READY)
-// Supports:
-//   - Better Forecast (stationId)
-//   - Device Observations (deviceId)
-//   - Secondary Wind Station (144737)
-//
-// Always returns:
-// {
-//   current_conditions: {...} | null,
-//   wind_station: {...} | null
-// }
+// TEMPEST UNIFIED ENDPOINT — v4 (FULL + FIXED)
 // ============================================================
 
 export default async function handler(req, res) {
   try {
-    const { deviceId, stationId } = req.query;
-const token = process.env.TEMPEST_TOKEN;
+    const stationId = process.env.TEMPEST_STATION_ID;
+    const token = process.env.TEMPEST_TOKEN;
 
     if (!token) {
-      return res.status(400).json({ error: "Missing Tempest token" });
+      return res.status(200).json({
+        current_conditions: null,
+        wind_station: null,
+        source: "no_token"
+      });
     }
 
     // ------------------------------------------------------------
-    // 🆕 FETCH EXPOSED WIND STATION (144737)
+    // 1. CURRENT CONDITIONS (BETTER FORECAST)
     // ------------------------------------------------------------
-    let windStation = null;
+    let current_conditions = null;
+
+    try {
+      const url = `https://swd.weatherflow.com/swd/rest/better_forecast?station_id=${stationId}&token=${token}`;
+      const r = await fetch(url);
+
+      if (r.ok) {
+        const json = await r.json();
+
+        const current =
+          json?.current_conditions ||
+          json?.forecast?.current_conditions ||
+          null;
+
+        if (current) {
+          current_conditions = normalizeCurrent(current);
+        }
+      } else {
+        console.warn("⚠️ Better forecast failed:", r.status);
+      }
+    } catch (err) {
+      console.warn("⚠️ Better forecast error:", err);
+    }
+
+    // ------------------------------------------------------------
+    // 2. WIND STATION (EXPOSED SITE)
+    // ------------------------------------------------------------
+    let wind_station = null;
 
     try {
       const windUrl = `https://swd.weatherflow.com/swd/rest/observations/station/144737?token=${token}`;
@@ -35,7 +56,7 @@ const token = process.env.TEMPEST_TOKEN;
         const obs = json?.obs?.[0];
 
         if (obs) {
-          windStation = {
+          wind_station = {
             windSpeed: obs[2],
             windGust: obs[3],
             timestamp: normalizeTs(obs[0])
@@ -49,74 +70,12 @@ const token = process.env.TEMPEST_TOKEN;
     }
 
     // ------------------------------------------------------------
-    // 1. TRY BETTER FORECAST (station-level)
-    // ------------------------------------------------------------
-    if (stationId) {
-      try {
-        const url = `https://swd.weatherflow.com/swd/rest/better_forecast?station_id=${stationId}&token=${token}`;
-        const r = await fetch(url);
-
-        if (r.ok) {
-          const json = await r.json();
-
-          const current =
-            json?.current_conditions ||
-            json?.forecast?.current_conditions ||
-            null;
-
-          if (current) {
-            return res.status(200).json({
-              current_conditions: normalizeCurrent(current),
-              wind_station: windStation,
-              source: "better_forecast"
-            });
-          }
-
-          console.warn("⚠️ No current_conditions in better_forecast");
-        } else {
-          console.warn("⚠️ Better forecast failed:", r.status);
-        }
-      } catch (err) {
-        console.warn("⚠️ Better forecast error:", err);
-      }
-    }
-
-    // ------------------------------------------------------------
-    // 2. FALL BACK TO DEVICE OBS
-    // ------------------------------------------------------------
-    if (deviceId) {
-      try {
-        const url = `https://swd.weatherflow.com/swd/rest/observations/device/${deviceId}?token=${token}`;
-        const r = await fetch(url);
-
-        if (r.ok) {
-          const json = await r.json();
-          const obs = json?.obs?.[0];
-
-          if (obs) {
-            return res.status(200).json({
-              current_conditions: normalizeObsArray(obs),
-              wind_station: windStation,
-              source: "device_obs"
-            });
-          }
-
-          console.warn("⚠️ No obs data");
-        } else {
-          console.warn("⚠️ Device obs failed:", r.status);
-        }
-      } catch (err) {
-        console.warn("⚠️ Device obs error:", err);
-      }
-    }
-
-    // ------------------------------------------------------------
-    // 3. FINAL FALLBACK
+    // 3. FINAL RESPONSE
     // ------------------------------------------------------------
     return res.status(200).json({
-      current_conditions: null,
-      wind_station: windStation,
-      source: "none"
+      current_conditions,
+      wind_station,
+      source: "ok"
     });
 
   } catch (err) {
@@ -130,9 +89,11 @@ const token = process.env.TEMPEST_TOKEN;
   }
 }
 
+//
 // ============================================================
-// NORMALIZERS
+// NORMALIZERS (UNCHANGED — KEPT INTACT)
 // ============================================================
+//
 
 // ------------------------------------------------------------
 // Better Forecast → normalize
@@ -154,7 +115,7 @@ function normalizeCurrent(c) {
 }
 
 // ------------------------------------------------------------
-// Device obs array → normalize
+// Device obs array → normalize (kept for compatibility)
 // ------------------------------------------------------------
 function normalizeObsArray(obs) {
   return {
