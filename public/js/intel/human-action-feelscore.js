@@ -22,6 +22,19 @@ export function buildHumanActionIntelFS(raw) {
   // 🔍 DEBUG (safe)
   console.log("FEELSCORE INPUT SAMPLE:", hourly[0]);
 
+  console.log("RAW HOURLY SAMPLE (first 5):");
+
+hourly.slice(0, 5).forEach((h, i) => {
+  console.log(i, {
+    temp: h.temperatureF,
+    dew: h.dewpointF,
+    wind: h.windSpeed,
+    ts: h.timestamp,
+    date: new Date(getTs(h)).toString()
+  });
+});
+
+
   if (!hourly.length) return fallbackAll();
 
   const now = Date.now();
