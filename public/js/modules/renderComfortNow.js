@@ -162,11 +162,11 @@ export function renderComfortNow(
   const headline =
     narrative?.headline || fallbackHeadline(comfort);
 
-const explanation = buildFullExplanation(
-  comfort,
-  narrative,
-  hourly
-);
+    console.log("COMFORT:", comfort);
+console.log("HOURLY LENGTH:", hourly.length);
+console.log("NARRATIVE:", narrative);
+
+const explanation = "NARRATIVE TEST WORKING";
 
   const actions = buildActions(comfort);
 
