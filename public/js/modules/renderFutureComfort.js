@@ -9,7 +9,9 @@ import { calculateComfort } from "../intel/comfort.js";
 // ============================================================
 
 function normalizeHours(hours = []) {
-  return hours
+  const now = Date.now();
+
+  const normalized = hours
     .map(h => {
       if (!h || !h.timestamp) return null;
 
@@ -34,7 +36,25 @@ function normalizeHours(hours = []) {
         hourLabel: h.hourLabel ?? formatHour(h.timestamp)
       };
     })
-    .filter(Boolean); // 🔥 removes bad rows
+    .filter(Boolean)
+    .sort((a, b) => a.timestamp - b.timestamp);
+
+  if (!normalized.length) return [];
+
+  // 🔥 CRITICAL FIX — find closest to NOW
+  let closestIndex = 0;
+  let smallestDiff = Infinity;
+
+  for (let i = 0; i < normalized.length; i++) {
+    const diff = Math.abs(normalized[i].timestamp - now);
+    if (diff < smallestDiff) {
+      smallestDiff = diff;
+      closestIndex = i;
+    }
+  }
+
+  // 🔥 return only future-facing slice
+  return normalized.slice(closestIndex, closestIndex + 6);
 }
 
 // ============================================================
