@@ -13,15 +13,20 @@ function normalizeHours(hours = []) {
 
   const normalized = hours
     .map(h => {
-      if (!h || !h.timestamp) return null;
+    if (!h) return null;
 
-      return {
-        timestamp: h.timestamp,
+const ts = h.timestamp ?? h.ts;
+if (!Number.isFinite(ts)) return null;
 
-        temperatureF:
-          Number.isFinite(h.temperatureF)
-            ? h.temperatureF
-            : null,
+return {
+  timestamp: ts,
+
+  temperatureF:
+    Number.isFinite(h.temperatureF)
+      ? h.temperatureF
+      : Number.isFinite(h.temp)
+        ? h.temp
+        : null,
 
         windSpeed: h.windSpeed ?? 0,
         windGust: h.windGust ?? null,
