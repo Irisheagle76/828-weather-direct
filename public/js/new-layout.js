@@ -9,6 +9,7 @@ import { buildHumanActionIntelFS } from '/js/intel/human-action-feelscore.js';
 
 import { renderPulseV2 } from '/js/modules/renderPulseV2.js';
 import { renderSubstackV2 } from '/js/modules/renderSubstackV2.js';
+import { smoothWind, smoothGust, calculateGustiness } from '/js/intel/human-action-feelscore.js';
 
 // ============================================================
 // FETCH HELPERS
@@ -252,13 +253,39 @@ function renderTimeline(hourly) {
   // ------------------------------------------------------------
   // SCORES
   // ------------------------------------------------------------
-  const scores = next.map(h => {
-    const raw = calculateComfort(h)?.score ?? 0;
-    const scaled = Math.round(raw * 10);
+const scores = next.map((h, i, arr) => {
+  let adjusted = { ...h };
 
-    // clamp to avoid unrealistic perfect scores
+  // ------------------------------------------------------------
+  // 🆕 APPLY SAME LOGIC AS "NOW"
+  // ------------------------------------------------------------
+  if (i < 3) {
+    adjusted.windSpeed = smoothWind(adjusted, arr);
+    adjusted.windGust = smoothGust(adjusted, arr);
+
+    const g = calculateGustiness(
+      adjusted.windSpeed,
+      adjusted.windGust
+    );
+
+    let score = calculateComfort(adjusted)?.score ?? 0;
+
+    if (g >= 12) score -= 0.5;
+    else if (g >= 7) score -= 0.25;
+
+    const scaled = Math.round(score * 10);
+
     return Math.min(scaled, 98);
-  });
+  }
+
+  // ------------------------------------------------------------
+  // FARTHER HOURS (unchanged)
+  // ------------------------------------------------------------
+  const raw = calculateComfort(h)?.score ?? 0;
+  const scaled = Math.round(raw * 10);
+
+  return Math.min(scaled, 98);
+});
 
   const best = Math.max(...scores);
 
