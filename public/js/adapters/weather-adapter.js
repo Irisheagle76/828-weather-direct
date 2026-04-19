@@ -18,7 +18,7 @@ export async function getWeatherForUI({ lat, lon }) {
     tempest: raw?.tempest ?? null
   };
 }
-console.log("ADAPTER TEMPEST:", raw?.tempest);
+
 // ============================================================
 // CURRENT → NORMALIZED
 // ============================================================
