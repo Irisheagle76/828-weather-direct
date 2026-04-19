@@ -27,7 +27,7 @@ export async function fetchAllIntel({ lat, lon }) {
 let tempestData = null;
 
 try {
-  const url = `/api/tempest`;
+  const url = `/api/tempest/device`;
 
   const res = await fetch(url);
 
@@ -42,7 +42,7 @@ try {
 
 return {
   ...data,
-  
+
     // ----------------------------------------------------------
     // 🆕 TEMPEST + WIND STATION
     // ----------------------------------------------------------
