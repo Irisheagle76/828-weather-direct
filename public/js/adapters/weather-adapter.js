@@ -11,12 +11,17 @@ import { fetchAllIntel } from '/js/weather-fetch.js';
 export async function getWeatherForUI({ lat, lon }) {
   const raw = await fetchAllIntel({ lat, lon });
 
-  return {
-    current: adaptCurrent(raw?.current || raw?.current_conditions),
-    hourly: adaptHourly(raw?.hourly),
-    daily: raw?.daily || [],
-    tempest: raw?.tempest ?? null
-  };
+return {
+  current: adaptCurrent(raw?.current || raw?.current_conditions),
+  hourly: adaptHourly(raw?.hourly),
+  daily: raw?.daily || [],
+
+  // ✅ FIXED: correct source
+  tempest: raw?.current_conditions ?? null,
+
+  // 🆕 ADD THIS
+  wind_station: raw?.wind_station ?? null
+};
 }
 
 // ============================================================
