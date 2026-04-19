@@ -261,21 +261,29 @@ function buildFullExplanation(c, narrative, hourly = []) {
   // --------------------------------------------------
   // 2. REAL TREND (THIS IS THE MAGIC)
   // --------------------------------------------------
-  const trend = analyzeTrend(hourly);
+const trend = analyzeTrend(hourly);
 
-  if (trend.temp === "rising") {
-    parts.push("Temperatures climb steadily over the next few hours.");
-  } else if (trend.temp === "falling") {
-    parts.push("Temperatures gradually ease downward.");
-  }
+if (trend.strongWarmup) {
+  parts.push("A rapid warm-up is expected over the next few hours.");
+} else if (trend.mildWarmup) {
+  parts.push("Temperatures trend upward through late morning.");
+}
 
-  if (trend.wind === "increasing") {
-    parts.push("Winds pick up as the day goes on.");
-  }
+if (trend.afternoonPeak) {
+  parts.push("The warmest stretch arrives early this afternoon.");
+}
 
-  if (trend.dryness === "increasing") {
-    parts.push("Air continues drying out.");
-  }
+if (trend.coolingAfterPeak) {
+  parts.push("Conditions ease slightly after the peak.");
+}
+
+if (trend.windIncreasing) {
+  parts.push("Winds increase as the day progresses.");
+}
+
+if (trend.drying) {
+  parts.push("Air continues drying out.");
+}
 
   // fallback if no hourly
   if (!hourly.length && narrative?.trend === "improving") {
@@ -296,7 +304,7 @@ function buildFullExplanation(c, narrative, hourly = []) {
     parts.push(narrative.notes);
   }
 
-  return parts.slice(0, 3).join(" ");
+ return parts.slice(0, 4).join(" ");
 }
 
 // ============================================================
@@ -410,33 +418,39 @@ function analyzeTrend(hourly = []) {
 
   const future = hourly
     .filter(h => h.timestamp >= now)
-    .slice(0, 4); // next ~3 hours
+    .slice(0, 5); // look slightly further
 
   if (future.length < 2) return {};
 
   const first = future[0];
+  const peak = future.reduce((max, h) =>
+    h.temperatureF > max.temperatureF ? h : max,
+    future[0]
+  );
+
   const last = future[future.length - 1];
 
-  const tempDelta = last.temperatureF - first.temperatureF;
-  const windDelta = (last.windSpeed ?? 0) - (first.windSpeed ?? 0);
-  const humidityDelta =
-    (last.relative_humidity ?? 0) -
-    (first.relative_humidity ?? 0);
+  const tempRise = peak.temperatureF - first.temperatureF;
+  const tempDrop = last.temperatureF - peak.temperatureF;
+
+  const windRise =
+    (last.windSpeed ?? 0) - (first.windSpeed ?? 0);
+
+  const humidityDrop =
+    (first.relative_humidity ?? 0) -
+    (last.relative_humidity ?? 0);
 
   return {
-    temp:
-      tempDelta > 2 ? "rising" :
-      tempDelta < -2 ? "falling" :
-      "steady",
+    strongWarmup: tempRise >= 6,
+    mildWarmup: tempRise >= 3,
 
-    wind:
-      windDelta > 3 ? "increasing" :
-      windDelta < -3 ? "decreasing" :
-      "steady",
+    afternoonPeak:
+      peak.timestamp !== first.timestamp,
 
-    dryness:
-      humidityDelta < -5 ? "increasing" : // lower RH = drier
-      humidityDelta > 5 ? "decreasing" :
-      "steady"
+    coolingAfterPeak: tempDrop < -2,
+
+    windIncreasing: windRise > 3,
+
+    drying: humidityDrop > 5
   };
 }
