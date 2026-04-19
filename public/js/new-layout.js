@@ -114,6 +114,10 @@ console.log("POST-NORMALIZE (LAYOUT):", hourly[0]);
       ? normalizeCurrent(data.current)
       : null;
 
+      const tempest = data?.tempest ?? null;
+
+      console.log("TEMPEST IN LAYOUT:", tempest);
+      
     if (current) renderHeaderMetrics(current);
 
     // ------------------------------------------------------------
