@@ -155,12 +155,12 @@ export function renderWeather({ data, isLoading, mode = "downtown" }) {
   const hourNow = new Date().getHours();
   const isDay = hourNow >= 6 && hourNow < 18;
 
-  renderComfortNow(
-    $("comfort-now-container"),
-    current,
-    findBestWindow(hourly),
-    { mode, isDay }
-  );
+ renderComfortNow(
+  $("comfort-now-container"),
+  current,
+  findBestWindow(hourly),
+  { mode, isDay, hourly } // 👈 ADD THIS
+);
 
   // ------------------------------------------------------------
   // FUTURE COMFORT (NEXT 6 HOURS)
