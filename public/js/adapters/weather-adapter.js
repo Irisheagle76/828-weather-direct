@@ -14,10 +14,11 @@ export async function getWeatherForUI({ lat, lon }) {
   return {
     current: adaptCurrent(raw?.current || raw?.current_conditions),
     hourly: adaptHourly(raw?.hourly),
-    daily: raw?.daily || []
+    daily: raw?.daily || [],
+    tempest: raw?.tempest ?? null
   };
 }
-
+console.log("ADAPTER TEMPEST:", raw?.tempest);
 // ============================================================
 // CURRENT → NORMALIZED
 // ============================================================
