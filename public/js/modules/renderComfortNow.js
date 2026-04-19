@@ -243,7 +243,7 @@ function buildFullExplanation(c, narrative, hourly = []) {
   const parts = [];
 
   // --------------------------------------------------
-  // 1. CURRENT FEEL
+  // 1. CURRENT FEEL (always anchors the narrative)
   // --------------------------------------------------
   if (c.dewPoint < 50)
     parts.push("Dry air makes it feel crisp and light.");
@@ -259,54 +259,58 @@ function buildFullExplanation(c, narrative, hourly = []) {
     parts.push("A steady breeze is influencing how it feels.");
 
   // --------------------------------------------------
-  // 2. REAL TREND (THIS IS THE MAGIC)
+  // 2. REAL TREND (stronger + always contributes)
   // --------------------------------------------------
-const trend = analyzeTrend(hourly);
+  const trend = analyzeTrend(hourly);
 
-if (trend.strongWarmup) {
-  parts.push("A rapid warm-up is expected over the next few hours.");
-} else if (trend.mildWarmup) {
-  parts.push("Temperatures trend upward through late morning.");
-}
+  if (trend.strongWarmup) {
+    parts.push("A rapid warm-up is expected over the next few hours.");
+  } else if (trend.mildWarmup) {
+    parts.push("Temperatures trend upward through late morning.");
+  } else {
+    // ✅ NEW: fallback so trend ALWAYS says something
+    if (c.temp < 60) {
+      parts.push("Temperatures gradually improve through the morning.");
+    } else {
+      parts.push("Conditions remain fairly steady over the next few hours.");
+    }
+  }
 
-if (trend.afternoonPeak) {
-  parts.push("The warmest stretch arrives early this afternoon.");
-}
+  if (trend.afternoonPeak) {
+    parts.push("The warmest stretch arrives early this afternoon.");
+  }
 
-if (trend.coolingAfterPeak) {
-  parts.push("Conditions ease slightly after the peak.");
-}
+  if (trend.coolingAfterPeak) {
+    parts.push("Conditions ease slightly after the peak.");
+  }
 
-if (trend.windIncreasing) {
-  parts.push("Winds increase as the day progresses.");
-}
+  if (trend.windIncreasing) {
+    parts.push("Winds increase as the day progresses.");
+  }
 
-if (trend.drying) {
-  parts.push("Air continues drying out.");
-}
-
-  // fallback if no hourly
-  if (!hourly.length && narrative?.trend === "improving") {
-    parts.push("Conditions improve through the day.");
+  if (trend.drying) {
+    parts.push("Air continues drying out.");
   }
 
   // --------------------------------------------------
-  // 3. EDGE SIGNAL
+  // 3. EDGE SIGNAL (adds depth when present)
   // --------------------------------------------------
   if (c.dewPoint < 45 && c.windSpeed > 8) {
     parts.push("Dry air and wind may accelerate drying conditions.");
   }
 
   // --------------------------------------------------
-  // 4. SYNTH BONUS (optional)
+  // 4. SYNTH (LOW PRIORITY ONLY)
   // --------------------------------------------------
-  if (narrative?.notes) {
+  if (parts.length < 2 && narrative?.notes) {
     parts.push(narrative.notes);
   }
 
- return parts.slice(0, 4).join(" ");
+  // --------------------------------------------------
+  // FINAL OUTPUT
+  // --------------------------------------------------
+  return parts.slice(0, 5).join(" ");
 }
-
 // ============================================================
 // REMAINING FUNCTIONS (UNCHANGED)
 // ============================================================
