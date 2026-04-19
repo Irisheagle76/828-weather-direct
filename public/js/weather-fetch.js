@@ -1,5 +1,5 @@
 // ============================================================
-// WEATHER FETCH LAYER — v7 (ALIGNED + STABLE + DUAL FORMAT)
+// WEATHER FETCH LAYER — v8 (TEMP + WIND STATION INTEGRATED)
 // ============================================================
 
 // ------------------------------------------------------------
@@ -21,11 +21,37 @@ export async function fetchAllIntel({ lat, lon }) {
 
   const data = await getWeatherUnified(lat, lon);
 
+  // ------------------------------------------------------------
+  // 🆕 FETCH TEMPEST (PERSONAL + WIND STATION)
+  // ------------------------------------------------------------
+  let tempestData = null;
+
+  try {
+    const token = process.env.TEMPEST_TOKEN;
+
+    const url = `/api/tempest?stationId=YOUR_STATION_ID`;
+    const res = await fetch(url);
+
+    if (res?.ok) {
+      tempestData = await res.json();
+    } else {
+      console.warn("⚠️ Tempest fetch failed");
+    }
+  } catch (err) {
+    console.warn("⚠️ Tempest fetch error:", err);
+  }
+
   return {
     ...data,
 
+    // ----------------------------------------------------------
+    // 🆕 TEMPEST + WIND STATION
+    // ----------------------------------------------------------
+    current_conditions: tempestData?.current_conditions ?? null,
+    wind_station: tempestData?.wind_station ?? null,
+
     // compatibility
-    tempest: data.current || null,
+    tempest: tempestData?.current_conditions ?? null,
     wu: null,
     mrms: null,
 
@@ -34,7 +60,8 @@ export async function fetchAllIntel({ lat, lon }) {
       durationMs: Date.now() - start,
       sources: {
         hourly: Array.isArray(data.hourly) && data.hourly.length > 0,
-        current: !!data.current
+        current: !!data.current,
+        tempest: !!tempestData
       }
     }
   };
@@ -53,7 +80,6 @@ function alignToNow(hourly = []) {
 
   if (!sorted.length) return [];
 
-  // find closest hour to NOW
   let closestIndex = 0;
   let smallestDiff = Infinity;
 
@@ -67,7 +93,6 @@ function alignToNow(hourly = []) {
 
   const aligned = sorted.slice(closestIndex);
 
-  // 🔍 DEBUG (keep for now)
   console.log("🧭 ALIGNMENT CHECK:", {
     now: new Date(now).toString(),
     start: new Date(aligned[0]?.timestamp).toString(),
@@ -111,16 +136,11 @@ async function getWeatherUnified(lat, lon) {
       const json = await res.json();
       console.log("Raw keys:", Object.keys(json));
 
-      // ------------------------------------------------------
-      // SUPPORT BOTH FORMATS
-      // ------------------------------------------------------
       let hourly = null;
 
       if (Array.isArray(json.hourly) && json.hourly.length > 0) {
-        // ✅ NEW SYSTEM
         hourly = json.hourly;
       } else if (json.hourly_legacy?.time?.length) {
-        // ✅ OLD SYSTEM FALLBACK
         console.log("🟡 Using legacy hourly format");
 
         hourly = json.hourly_legacy.time.map((t, i) => ({
@@ -145,15 +165,11 @@ async function getWeatherUnified(lat, lon) {
         json.current_conditions ||
         null;
 
-      // ------------------------------------------------------
-      // VALIDATION
-      // ------------------------------------------------------
       if (!Array.isArray(hourly) || hourly.length === 0) {
         console.warn("❌ Invalid hourly data");
         continue;
       }
 
-      // 🔥 CRITICAL FIX — ALIGN HERE
       const alignedHourly = alignToNow(hourly);
 
       const payload = {
@@ -161,9 +177,6 @@ async function getWeatherUnified(lat, lon) {
         current
       };
 
-      // ------------------------------------------------------
-      // CACHE
-      // ------------------------------------------------------
       lastGood = {
         data: payload,
         timestamp: Date.now()
@@ -182,9 +195,6 @@ async function getWeatherUnified(lat, lon) {
     }
   }
 
-  // ----------------------------------------------------------
-  // FALLBACK
-  // ----------------------------------------------------------
   if (lastGood.data) {
     console.warn("🟡 Using cached fallback");
     return lastGood.data;

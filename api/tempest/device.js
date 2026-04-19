@@ -14,7 +14,8 @@
 
 export default async function handler(req, res) {
   try {
-    const { deviceId, stationId, token } = req.query;
+    const { deviceId, stationId } = req.query;
+const token = process.env.TEMPEST_TOKEN;
 
     if (!token) {
       return res.status(400).json({ error: "Missing Tempest token" });
