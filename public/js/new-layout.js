@@ -81,6 +81,39 @@ function normalizeCurrent(c = {}) {
   };
 }
 
+// ------------------------------------------------------------
+// WIND HELPERS (LOCAL)
+// ------------------------------------------------------------
+
+function smoothWind(current, hours = []) {
+  const values = [
+    current.windSpeed,
+    ...hours.slice(0, 3).map(h => h.windSpeed)
+  ].filter(Number.isFinite);
+
+  if (!values.length) return current.windSpeed;
+
+  return values.reduce((a, b) => a + b, 0) / values.length;
+}
+
+function smoothGust(current, hours = []) {
+  const values = [
+    current.windGust,
+    ...hours.slice(0, 3).map(h => h.windGust)
+  ].filter(Number.isFinite);
+
+  if (!values.length) return current.windGust;
+
+  const avg = values.reduce((a, b) => a + b, 0) / values.length;
+
+  return Math.min(avg, (current.windSpeed ?? 0) * 2.5);
+}
+
+function calculateGustiness(windSpeed, windGust) {
+  if (!Number.isFinite(windSpeed) || !Number.isFinite(windGust)) return 0;
+  return Math.max(0, windGust - windSpeed);
+}
+
 // ============================================================
 // MAIN ENTRY
 // ============================================================
