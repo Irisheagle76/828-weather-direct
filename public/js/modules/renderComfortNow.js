@@ -240,77 +240,79 @@ const explanation = buildFullExplanation(
 // ============================================================
 
 function buildFullExplanation(c, narrative, hourly = []) {
-  const parts = [];
+  const primary = [];
+  const secondary = [];
 
   // --------------------------------------------------
-  // 1. CURRENT FEEL (always anchors the narrative)
+  // 1. CORE FEEL (always first)
   // --------------------------------------------------
   if (c.dewPoint < 50)
-    parts.push("Dry air makes it feel crisp and light.");
+    primary.push("Dry air makes it feel crisp and light.");
   else if (c.dewPoint > 65)
-    parts.push("Humidity adds weight to the air.");
+    primary.push("Humidity adds weight to the air.");
 
   if (c.temp < 55)
-    parts.push("Cool temperatures add a noticeable chill.");
+    primary.push("Cool temperatures add a noticeable chill.");
   else if (c.temp > 80)
-    parts.push("Warm temperatures are starting to impact comfort.");
-
-  if (c.windSpeed > 10)
-    parts.push("A steady breeze is influencing how it feels.");
+    primary.push("Warm temperatures are starting to impact comfort.");
 
   // --------------------------------------------------
-  // 2. REAL TREND (stronger + always contributes)
+  // 2. TREND (ALWAYS PROMINENT)
   // --------------------------------------------------
   const trend = analyzeTrend(hourly);
 
   if (trend.strongWarmup) {
-    parts.push("A rapid warm-up is expected over the next few hours.");
+    primary.push("A rapid warm-up is expected over the next few hours.");
   } else if (trend.mildWarmup) {
-    parts.push("Temperatures trend upward through late morning.");
+    primary.push("Temperatures trend upward through late morning.");
   } else {
-    // ✅ NEW: fallback so trend ALWAYS says something
-    if (c.temp < 60) {
-      parts.push("Temperatures gradually improve through the morning.");
-    } else {
-      parts.push("Conditions remain fairly steady over the next few hours.");
-    }
+    primary.push(
+      c.temp < 60
+        ? "Temperatures gradually improve through the morning."
+        : "Conditions remain fairly steady over the next few hours."
+    );
   }
 
+  // --------------------------------------------------
+  // 3. SECONDARY DETAILS
+  // --------------------------------------------------
   if (trend.afternoonPeak) {
-    parts.push("The warmest stretch arrives early this afternoon.");
+    secondary.push("The warmest stretch arrives early this afternoon.");
   }
 
   if (trend.coolingAfterPeak) {
-    parts.push("Conditions ease slightly after the peak.");
+    secondary.push("Conditions ease slightly after the peak.");
   }
 
   if (trend.windIncreasing) {
-    parts.push("Winds increase as the day progresses.");
+    secondary.push("Winds increase as the day progresses.");
   }
 
   if (trend.drying) {
-    parts.push("Air continues drying out.");
+    secondary.push("Air continues drying out.");
   }
 
-  // --------------------------------------------------
-  // 3. EDGE SIGNAL (adds depth when present)
-  // --------------------------------------------------
+  if (c.windSpeed > 10) {
+    secondary.push("A steady breeze is influencing how it feels.");
+  }
+
   if (c.dewPoint < 45 && c.windSpeed > 8) {
-    parts.push("Dry air and wind may accelerate drying conditions.");
+    secondary.push("Dry air and wind may accelerate drying conditions.");
   }
 
   // --------------------------------------------------
-  // 4. SYNTH (LOW PRIORITY ONLY)
+  // 4. SYNTH (ONLY IF WE SOMEHOW FAILED)
   // --------------------------------------------------
-  if (parts.length < 2 && narrative?.notes) {
-    parts.push(narrative.notes);
+  if (!primary.length && narrative?.notes) {
+    primary.push(narrative.notes);
   }
 
   // --------------------------------------------------
-  // FINAL OUTPUT
+  // FINAL COMPOSITION (structured, not random)
   // --------------------------------------------------
-  return parts.slice(0, 5).join(" ");
+  return [...primary.slice(0, 2), ...secondary.slice(0, 2)].join(" ");
 }
+
 // ============================================================
 // REMAINING FUNCTIONS (UNCHANGED)
 // ============================================================
