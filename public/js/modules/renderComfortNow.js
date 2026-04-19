@@ -239,7 +239,7 @@ const explanation = "NARRATIVE TEST WORKING";
 // 🧠 NEW: FULL EXPLANATION ENGINE
 // ============================================================
 
-function buildFullExplanation(c, narrative, hourly = []) {
+export function buildFullExplanation(c, narrative, hourly = []) {
   const primary = [];
   const secondary = [];
 
