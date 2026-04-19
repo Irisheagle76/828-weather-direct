@@ -179,7 +179,7 @@ export function buildHumanActionIntelFS(raw) {
   });
 
   return {
-    feelscore: buildCurrentWithTrend(todayHours),
+    feelscore: buildCurrentWithTrend(todayHours, tempest),
     tomorrow: buildPeriodNarrative(tomorrowCtx, "tomorrow")
   };
 }
@@ -281,10 +281,33 @@ function buildPeriod(hours, label, change = {}) {
 // CURRENT FEELSCORE (FIXED CORE ISSUE)
 // ============================================================
 
-function buildCurrentWithTrend(hours) {
+function buildCurrentWithTrend(hours, tempest = null) {
   if (!hours.length) return fallback("today");
 
-  const first = hours[0]; // current hour anchor
+  hours = smoothFirstHoursWithTempest(hours, tempest);
+  
+let first = hours[0];
+
+// 🆕 Inject Tempest real-time conditions
+if (tempest) {
+  first = {
+    ...first,
+
+    temperatureF:
+      tempest.air_temperature ?? first.temperatureF,
+
+    dewpointF:
+      tempest.dew_point ?? first.dewpointF,
+
+    windSpeed:
+      tempest.wind_avg ?? first.windSpeed,
+
+    windGust: Math.max(
+      first.windGust ?? 0,
+      tempest.wind_gust ?? 0
+    )
+  };
+}
 
   const currentScore = calculateComfort(first)?.score;
   if (!Number.isFinite(currentScore)) return fallback("today");
@@ -529,4 +552,24 @@ function calcWindChill(temp, wind) {
     35.75 * Math.pow(wind, 0.16) +
     0.4275 * temp * Math.pow(wind, 0.16)
   );
+}
+function smoothFirstHoursWithTempest(hours = [], tempest = null) {
+  if (!hours.length || !tempest?.air_temperature) return hours;
+
+  const baseTemp = hours[0].temperatureF;
+  const delta = tempest.air_temperature - baseTemp;
+
+  return hours.map((h, i) => {
+    if (i > 2) return h; // only adjust first ~2–3 hours
+
+    const decay = 1 - i / 2;
+
+    return {
+      ...h,
+      temperatureF:
+        h.temperatureF != null
+          ? h.temperatureF + delta * decay
+          : h.temperatureF
+    };
+  });
 }

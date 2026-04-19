@@ -122,7 +122,8 @@ console.log("POST-NORMALIZE (LAYOUT):", hourly[0]);
     const human = buildHumanActionIntelFS({
       ...data,
       hourly,
-      current
+      current,
+      tempest
     });
 
     // ------------------------------------------------------------
