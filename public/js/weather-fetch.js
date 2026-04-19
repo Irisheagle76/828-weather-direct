@@ -24,25 +24,24 @@ export async function fetchAllIntel({ lat, lon }) {
   // ------------------------------------------------------------
   // 🆕 FETCH TEMPEST (PERSONAL + WIND STATION)
   // ------------------------------------------------------------
-  let tempestData = null;
+let tempestData = null;
 
-  try {
-    const token = process.env.TEMPEST_TOKEN;
+try {
+  const url = `/api/tempest?stationId=YOUR_STATION_ID`;
 
-    const url = `/api/tempest?stationId=YOUR_STATION_ID`;
-    const res = await fetch(url);
+  const res = await fetch(url);
 
-    if (res?.ok) {
-      tempestData = await res.json();
-    } else {
-      console.warn("⚠️ Tempest fetch failed");
-    }
-  } catch (err) {
-    console.warn("⚠️ Tempest fetch error:", err);
+  if (res?.ok) {
+    tempestData = await res.json();
+  } else {
+    console.warn("⚠️ Tempest fetch failed");
   }
+} catch (err) {
+  console.warn("⚠️ Tempest fetch error:", err);
+}
 
-  return {
-    ...data,
+return {
+  ...data,
 
     // ----------------------------------------------------------
     // 🆕 TEMPEST + WIND STATION
