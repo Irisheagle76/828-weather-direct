@@ -9,7 +9,6 @@ import { buildHumanActionIntelFS } from '/js/intel/human-action-feelscore.js';
 
 import { renderPulseV2 } from '/js/modules/renderPulseV2.js';
 import { renderSubstackV2 } from '/js/modules/renderSubstackV2.js';
-import { smoothWind, smoothGust, calculateGustiness } from '/js/intel/human-action-feelscore.js';
 
 // ============================================================
 // FETCH HELPERS
