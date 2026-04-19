@@ -1,7 +1,66 @@
-// /js/modules/renderComfortNow.js (v7 — HARDENED)
+// ============================================================
+// /js/modules/renderComfortNow.js (v8 — TEMPEST INTEGRATED)
+// ============================================================
 
 import { calculateComfort } from "../intel/comfort.js";
 import { assembleWithVoice } from "../intel/synthesizer/assembleWithVoice.js";
+
+// ============================================================
+// UTILS
+// ============================================================
+
+const clamp = (v, min, max) =>
+  v == null ? null : Math.max(min, Math.min(max, v));
+
+const mix = (a, b, w) =>
+  a == null ? b : b == null ? a : a * w + b * (1 - w);
+
+// ============================================================
+// TEMPEST NORMALIZATION
+// ============================================================
+
+function normalizeTempest(obs = {}) {
+  if (!obs) return null;
+
+  return {
+    temp: obs.air_temperature ?? null,
+    humidity: clamp(obs.relative_humidity, 0, 100),
+    wind: obs.wind_avg ?? 0,
+    windSpeed: obs.wind_avg ?? 0,
+    windGust: obs.wind_gust ?? 0,
+    solarRadiation: clamp(obs.solar_radiation, 0, 1200),
+
+    dewPoint:
+      obs.dew_point ??
+      calcDewPoint(obs.air_temperature, obs.relative_humidity)
+  };
+}
+
+// ============================================================
+// BLEND TEMPEST → CURRENT
+// ============================================================
+
+function injectTempest(current, tempest) {
+  if (!tempest) return current;
+
+  return {
+    ...current,
+
+    // aggressive override for "now"
+    humidity: mix(tempest.humidity, current.humidity, 0.85),
+
+    wind: mix(tempest.windSpeed, current.wind, 0.8),
+    windSpeed: mix(tempest.windSpeed, current.windSpeed, 0.8),
+
+    windGust: Math.max(
+      current.windGust ?? 0,
+      tempest.windGust ?? 0
+    ),
+
+    solarRadiation:
+      tempest.solarRadiation ?? current.solarRadiation
+  };
+}
 
 // ============================================================
 // NORMALIZE INPUT (single source of truth)
@@ -9,7 +68,12 @@ import { assembleWithVoice } from "../intel/synthesizer/assembleWithVoice.js";
 
 function normalizeCurrent(data = {}) {
   const temp = data.temp ?? data.temperature ?? data.temperatureF ?? null;
-  const dewPoint = data.dewPoint ?? data.dewpoint ?? null;
+
+  const dewPoint =
+    data.dewPoint ??
+    data.dewpoint ??
+    data.dew_point ??
+    null;
 
   const windBase =
     data.wind ??
@@ -60,16 +124,29 @@ function applyModeAdjustments(data, mode) {
 // MAIN RENDER
 // ============================================================
 
-export function renderComfortNow(container, current, bestWindow, options = {}) {
+export function renderComfortNow(
+  container,
+  current,
+  bestWindow,
+  options = {}
+) {
   if (!container || !current) return;
 
   const mode = options.mode || "downtown";
   const isDay = options.isDay ?? true;
 
+  // 🆕 TEMPEST INPUT
+  const tempestRaw = options.tempest ?? null;
+  const tempest = normalizeTempest(tempestRaw);
+
   // ------------------------------------------------------------
-  // NORMALIZE FIRST (critical)
+  // NORMALIZE
   // ------------------------------------------------------------
-  const normalized = normalizeCurrent(current);
+  let normalized = normalizeCurrent(current);
+
+  // 🆕 INJECT TEMPEST BEFORE ANYTHING ELSE
+  normalized = injectTempest(normalized, tempest);
+
   const adjusted = applyModeAdjustments(normalized, mode);
 
   const comfort = calculateComfort(adjusted, {
@@ -91,7 +168,7 @@ export function renderComfortNow(container, current, bestWindow, options = {}) {
   const goldiClass = comfort.goldilocks ? "goldilocks" : "";
 
   // ------------------------------------------------------------
-  // SYNTH INPUT (guaranteed shape)
+  // SYNTH INPUT
   // ------------------------------------------------------------
   const intel = {
     signals: {
@@ -100,7 +177,7 @@ export function renderComfortNow(container, current, bestWindow, options = {}) {
       wind: comfort.windSpeed
     },
     dominantFactor: detectDominantFactor(comfort),
-    confidence: 0.7
+    confidence: 0.75 // slight boost (Tempest confidence)
   };
 
   const narrative = assembleWithVoice(
@@ -199,7 +276,7 @@ export function renderComfortNow(container, current, bestWindow, options = {}) {
 }
 
 // ============================================================
-// LOGIC
+// LOGIC (UNCHANGED)
 // ============================================================
 
 function detectDominantFactor(c) {
@@ -207,7 +284,7 @@ function detectDominantFactor(c) {
   if (c.temp >= 85) return "heat";
   if (c.temp <= 45) return "cold";
   if (c.windSpeed >= 12) return "wind";
-  if (c.dewPoint < 50) return "sun";
+  if (c.dewPoint < 50) return "dry"; // subtle upgrade
   return "neutral";
 }
 
