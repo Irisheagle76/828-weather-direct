@@ -25,7 +25,9 @@ export function assembleWithVoice(intel, period, category, goldilocks) {
   // ------------------------------------------------------------
   // 🆕 BUILD NOTES (THIS WAS MISSING)
   // ------------------------------------------------------------
-  const notes = bullets.join(" ");
+ const notes =
+  result?.longNarrative ||
+  bullets.join(" ");
 
   // ------------------------------------------------------------
   // 🆕 BASIC TREND SIGNAL (lightweight bridge)

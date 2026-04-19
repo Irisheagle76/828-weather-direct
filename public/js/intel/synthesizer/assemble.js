@@ -121,30 +121,49 @@ function buildEmoji(intel) {
 // BULLETS (clean + reusable)
 // ------------------------------------------------------------
 function buildBullets(intel) {
-  const { dominantFactor, secondaryFactors, confidence } = intel ?? {};
+  const { signals = {}, dominantFactor } = intel ?? {};
   const bullets = [];
 
-  switch (dominantFactor) {
-    case "rain": bullets.push("Rain plays a steady role."); break;
-    case "wind": bullets.push("Wind affects how it feels."); break;
-    case "heat": bullets.push("Warm temperatures shape conditions."); break;
-    case "cold": bullets.push("Cool conditions dominate."); break;
-    case "muggy": bullets.push("Humidity adds a heavier feel."); break;
-    case "fog": bullets.push("Reduced visibility at times."); break;
-    default: bullets.push("Conditions are generally stable.");
+  const t = signals.temp;
+  const dp = signals.dewPoint;
+  const wind = signals.wind ?? signals.windSpeed ?? 0;
+
+  // --------------------------------------------------
+  // TEMP
+  // --------------------------------------------------
+  if (t <= 45) bullets.push("Cool temperatures add a noticeable chill.");
+  else if (t >= 80) bullets.push("Warm temperatures begin to impact comfort.");
+
+  // --------------------------------------------------
+  // MOISTURE
+  // --------------------------------------------------
+  if (dp < 50) bullets.push("Dry air makes conditions feel crisp.");
+  else if (dp > 65) bullets.push("Humidity adds weight to the air.");
+
+  // --------------------------------------------------
+  // WIND
+  // --------------------------------------------------
+  if (wind > 12) bullets.push("A steady breeze affects how it feels.");
+  else if (wind < 4) bullets.push("Winds remain light.");
+
+  // --------------------------------------------------
+  // DOMINANT FACTOR (fallback)
+  // --------------------------------------------------
+  if (!bullets.length) {
+    switch (dominantFactor) {
+      case "heat":
+        bullets.push("Warm temperatures shape the overall feel.");
+        break;
+      case "cold":
+        bullets.push("Cool air dominates the feel.");
+        break;
+      case "wind":
+        bullets.push("Wind is the primary factor.");
+        break;
+      default:
+        bullets.push("Conditions remain relatively steady.");
+    }
   }
-
-  if (secondaryFactors?.includes("wind"))
-    bullets.push("Breezes add some variation.");
-
-  if (secondaryFactors?.includes("rain"))
-    bullets.push("Occasional precipitation possible.");
-
-  if (secondaryFactors?.includes("muggy"))
-    bullets.push("Humidity fluctuates at times.");
-
-  if (confidence < 0.4)
-    bullets.push("Conditions may shift through the period.");
 
   return bullets.slice(0, 3);
 }
