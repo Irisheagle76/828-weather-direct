@@ -89,6 +89,11 @@ function smoothGust(current, hours = []) {
   return Math.min(avg, (current.windSpeed ?? 0) * 2.5);
 }
 
+function calculateGustiness(windSpeed, windGust) {
+  if (!Number.isFinite(windSpeed) || !Number.isFinite(windGust)) return 0;
+  return Math.max(0, windGust - windSpeed);
+}
+
 // ============================================================
 // MAIN ENTRY
 // ============================================================
@@ -353,65 +358,101 @@ first = {
   windGust: smoothedGust
 };
 
-  const currentScore = calculateComfort(first)?.score;
-  if (!Number.isFinite(currentScore)) return fallback("today");
+const gustiness = calculateGustiness(
+  first.windSpeed,
+  first.windGust
+);
 
-  const scores = hours
-    .map(h => calculateComfort(h)?.score)
-    .filter(Number.isFinite)
-    .map(s => Math.round(s * 10));
+// ------------------------------------------------------------
+// 🆕 BASE SCORE
+// ------------------------------------------------------------
 
-  const trend = scores.length ? scores.at(-1) - scores[0] : 0;
+let currentScore = calculateComfort(first)?.score;
+if (!Number.isFinite(currentScore)) return fallback("today");
 
-  // 🔥 IMPORTANT: use CURRENT conditions, not averages
-  const snapshot = {
-    temp: first.temperatureF,
-    dewPoint: first.dewpointF,
-    wind: first.windSpeed
-  };
+// ------------------------------------------------------------
+// 🆕 GUST PENALTY
+// ------------------------------------------------------------
 
-  const intel = buildIntel(snapshot, currentScore * 10, trend, 0, 0, "today");
-
-  let narrative;
-  try {
-    narrative = assembleWithVoice(
-      intel,
-      "today",
-      mapScoreToCategory(currentScore * 10),
-      currentScore * 10 >= 85
-    );
-  } catch {
-    return fallback("today");
-  }
-
-  // 🔥 NEW: use your real narrative engine
-  const explanation = buildFullExplanation(
-    {
-      temp: snapshot.temp,
-      dewPoint: snapshot.dewPoint,
-      windSpeed: snapshot.wind
-    },
-    narrative,
-    hours
-  );
-
-  return {
-    label: "today",
-    score: Math.round(currentScore * 10),
-    emoji: pickEmoji(currentScore * 10),
-
-    // keep headline simple + safe
-   headline:
-  narrative?.headline ||
-  (trend > 10
-    ? "Rapid improvement in comfort ahead"
-    : "Comfort gradually improving"),
-
-    // 🔥 CRITICAL CHANGE: replace bullets with real narrative
-    bullets: [explanation]
-  };
+if (gustiness >= 12) {
+  currentScore -= 0.5;
+} else if (gustiness >= 7) {
+  currentScore -= 0.25;
 }
-// ============================================================
+
+// ------------------------------------------------------------
+// TREND + SNAPSHOT
+// ------------------------------------------------------------
+
+const scores = hours
+  .map(h => calculateComfort(h)?.score)
+  .filter(Number.isFinite)
+  .map(s => Math.round(s * 10));
+
+const trend = scores.length ? scores.at(-1) - scores[0] : 0;
+
+// 🔥 IMPORTANT: use CURRENT conditions, not averages
+const snapshot = {
+  temp: first.temperatureF,
+  dewPoint: first.dewpointF,
+  wind: first.windSpeed,
+  gust: first.windGust,
+  gustiness
+};
+
+// ------------------------------------------------------------
+// INTEL + NARRATIVE
+// ------------------------------------------------------------
+
+const scoreScaled = currentScore * 10;
+
+const intel = buildIntel(snapshot, scoreScaled, trend, 0, 0, "today");
+
+let narrative;
+try {
+  narrative = assembleWithVoice(
+    intel,
+    "today",
+    mapScoreToCategory(scoreScaled),
+    scoreScaled >= 85
+  );
+} catch {
+  return fallback("today");
+}
+
+// ------------------------------------------------------------
+// EXPLANATION
+// ------------------------------------------------------------
+
+const explanation = buildFullExplanation(
+  {
+    temp: snapshot.temp,
+    dewPoint: snapshot.dewPoint,
+    windSpeed: snapshot.wind
+  },
+  narrative,
+  hours
+);
+
+// ------------------------------------------------------------
+// FINAL OUTPUT
+// ------------------------------------------------------------
+
+return {
+  label: "today",
+  score: Math.round(scoreScaled),
+  emoji: pickEmoji(scoreScaled),
+
+  headline:
+    narrative?.headline ||
+    (trend > 10
+      ? "Rapid improvement in comfort ahead"
+      : "Comfort gradually improving"),
+
+  bullets: [explanation]
+};
+
+//============================================================
 // BUILD NARRATIVE (RESTORED - REQUIRED)
 // ============================================================
 
@@ -572,10 +613,17 @@ function buildIntel(snapshot, score, trend, windImpact, maxGust, label) {
 }
 
 function detectDominantFactor(s = {}) {
+  const gustiness = s.gustiness ?? 0;
+
+  // 🆕 gust-driven discomfort
+  if (gustiness >= 12) return "gusty_wind";
+  if (gustiness >= 7) return "breezy";
+
   if (s.dewPoint >= 65) return "muggy";
   if (s.temp >= 85) return "heat";
   if (s.temp <= 45) return "cold";
   if (s.wind >= 12) return "wind";
+
   return "comfortable";
 }
 
