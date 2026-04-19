@@ -8,6 +8,13 @@ import { assembleWithVoice } from "./synthesizer/assembleWithVoice.js";
 // ============================================================
 // MAIN ENTRY
 // ============================================================
+function getTs(h) {
+  const ts = h?.timestamp ?? h?.ts ?? null;
+  if (!ts) return null;
+
+  // normalize seconds → milliseconds
+  return ts < 1e12 ? ts * 1000 : ts;
+}
 
 export function buildHumanActionIntelFS(raw) {
   const hourly = Array.isArray(raw?.hourly) ? raw.hourly : [];
@@ -19,45 +26,109 @@ export function buildHumanActionIntelFS(raw) {
 
   const now = Date.now();
 
-  const todayHours = hourly.filter(
-    h => h.timestamp >= now && h.timestamp < now + 24 * 3600e3
-  );
+const todayHours = hourly.filter(h => {
+  const ts = getTs(h);
+  return ts && ts >= now && ts < now + 24 * 3600e3;
+});
 
-  const tomorrowHours = hourly.filter(
-    h => h.timestamp >= now + 24 * 3600e3 &&
-         h.timestamp < now + 48 * 3600e3
+const tomorrowHours = hourly.filter(h => {
+  const ts = getTs(h);
+  return (
+    ts &&
+    ts >= now + 24 * 3600e3 &&
+    ts < now + 48 * 3600e3
   );
+});
 
   console.log("TOMORROW SAMPLE:", tomorrowHours[0]);
 
-  // ==========================================================
-  // TEMPERATURE ANALYSIS
-  // ==========================================================
+ // ==========================================================
+// TEMPERATURE ANALYSIS (DEBUG SAFE)
+// ==========================================================
 
-  const todayMax = Math.max(
-    ...todayHours.map(h => h.temperatureF).filter(Number.isFinite),
-    -999
-  );
+// --- DEBUG: verify time alignment ---
+console.log("NOW:", new Date(now).toString());
 
-  const tomorrowMax = Math.max(
-    ...tomorrowHours.map(h => h.temperatureF).filter(Number.isFinite),
-    -999
-  );
+console.log(
+  "TODAY HOURS (sample):",
+  todayHours.slice(0, 3).map(h => ({
+    temp: h.temperatureF,
+    raw: h.timestamp,
+    ts: getTs(h),
+    date: new Date(getTs(h)).toString()
+  }))
+);
 
-  const tempDrop =
-    todayMax > -900 && tomorrowMax > -900
-      ? todayMax - tomorrowMax
-      : 0;
+console.log(
+  "TOMORROW HOURS (sample):",
+  tomorrowHours.slice(0, 3).map(h => ({
+    temp: h.temperatureF,
+    raw: h.timestamp,
+    ts: getTs(h),
+    date: new Date(getTs(h)).toString()
+  }))
+);
 
-  const tomorrowMorning = tomorrowHours.filter(h => {
-    const hr = new Date(h.timestamp).getHours();
-    return hr >= 5 && hr <= 10;
-  });
+// ==========================================================
+// MAX TEMPS (safe, no silent masking)
+// ==========================================================
 
-  const tomorrowMin = Math.min(
-    ...tomorrowMorning.map(h => h.temperatureF).filter(Number.isFinite),
-    999
-  );
+const todayTemps = todayHours
+  .map(h => h.temperatureF)
+  .filter(Number.isFinite);
+
+const tomorrowTemps = tomorrowHours
+  .map(h => h.temperatureF)
+  .filter(Number.isFinite);
+
+const todayMax = todayTemps.length
+  ? Math.max(...todayTemps)
+  : null;
+
+const tomorrowMax = tomorrowTemps.length
+  ? Math.max(...tomorrowTemps)
+  : null;
+
+const tempDrop =
+  todayMax !== null && tomorrowMax !== null
+    ? todayMax - tomorrowMax
+    : 0;
+
+// ==========================================================
+// TOMORROW MORNING LOW (timestamp-safe)
+// ==========================================================
+
+const tomorrowMorning = tomorrowHours.filter(h => {
+  const ts = getTs(h);
+  if (!ts) return false;
+
+  const hr = new Date(ts).getHours();
+  return hr >= 5 && hr <= 10;
+});
+
+const tomorrowMorningTemps = tomorrowMorning
+  .map(h => h.temperatureF)
+  .filter(Number.isFinite);
+
+const tomorrowMin = tomorrowMorningTemps.length
+  ? Math.min(...tomorrowMorningTemps)
+  : null;
+
+// ==========================================================
+// DEBUG: confirm results
+// ==========================================================
+
+console.log("TEMP DEBUG:", {
+  todayMax,
+  tomorrowMax,
+  tempDrop,
+  tomorrowMin,
+  counts: {
+    today: todayHours.length,
+    tomorrow: tomorrowHours.length,
+    tomorrowMorning: tomorrowMorning.length
+  }
+});
 
   // ==========================================================
   // WIND ANALYSIS (KEY FIX AREA)

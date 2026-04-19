@@ -1,46 +1,52 @@
 // ============================================================
-// NORMALIZE → CANONICAL WEATHER SCHEMA (STRICT)
+// NORMALIZE → CANONICAL WEATHER SCHEMA (STRICT + SAFE)
 // ============================================================
 
 export function normalizeHourly(rawHourly = []) {
-  return rawHourly.map(h => ({
-    // ✅ TIME
-    timestamp: h.timestamp ?? h.ts ?? null,
+  return rawHourly
+    .map(h => {
+      if (!h) return null;
 
-    // ✅ TEMPERATURE
-    temperatureF:
-      h.temperatureF ??
-      h.temp ??
-      h.temperature ??
-      null,
+      const timestamp = h.timestamp;
 
-    // ✅ DEW POINT
-    dewpointF:
-      h.dewpointF ??
-      h.dewPoint ??
-      null,
+      // 🚫 reject anything not already canonical
+      if (!Number.isFinite(timestamp)) return null;
 
-    // ✅ HUMIDITY
-    relativeHumidity:
-      h.relativeHumidity ??
-      h.rh ??
-      null,
+      return {
+        timestamp,
 
-    // ✅ WIND
-    windSpeed:
-      h.windSpeed ??
-      h.wind ??
-      h.wind_speed ??
-      0,
+        temperatureF: Number.isFinite(h.temperatureF)
+          ? h.temperatureF
+          : null,
 
-    windGust:
-      h.windGust ??
-      null,
+        dewpointF: Number.isFinite(h.dewpointF)
+          ? h.dewpointF
+          : null,
 
-    // ✅ PRECIP / CLOUD / UV (optional but future-proof)
-    precipitation: h.precipitation ?? 0,
-    cloudCover: h.cloudCover ?? null,
-    uvIndex: h.uv ?? h.uvIndex ?? null
-  }))
-  .filter(h => h.timestamp != null);
+        relativeHumidity: Number.isFinite(h.relativeHumidity)
+          ? h.relativeHumidity
+          : null,
+
+        windSpeed: Number.isFinite(h.windSpeed)
+          ? h.windSpeed
+          : 0,
+
+        windGust: Number.isFinite(h.windGust)
+          ? h.windGust
+          : null,
+
+        precipitation: Number.isFinite(h.precipitation)
+          ? h.precipitation
+          : 0,
+
+        cloudCover: Number.isFinite(h.cloudCover)
+          ? h.cloudCover
+          : null,
+
+        uvIndex: Number.isFinite(h.uvIndex)
+          ? h.uvIndex
+          : null
+      };
+    })
+    .filter(Boolean);
 }

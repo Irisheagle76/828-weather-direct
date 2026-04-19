@@ -165,8 +165,12 @@ export function renderWeather({ data, isLoading, mode = "downtown" }) {
   // ------------------------------------------------------------
   // FUTURE COMFORT (NEXT 6 HOURS)
   // ------------------------------------------------------------
-  const future = buildFutureSlice(hourly, isDay);
-  renderFutureComfort($("future-comfort-container"), future);
+const next6 = hourly.slice(0, 6);
+
+renderFutureComfort(
+  $("future-comfort-container"),
+  next6
+);
 
   // ------------------------------------------------------------
   // 🔥 HUMAN ACTION (NEW SYSTEM — NO OVERRIDE)
