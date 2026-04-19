@@ -96,24 +96,82 @@ console.log("RAW HOURLY KEYS:", Object.keys(data.hourly));
     return respondWithFallback(res, key, "empty-hourly", tempest);
   }
 
+// ----------------------------------------------------------
+// NORMALIZED (NEW SYSTEM)
+// ----------------------------------------------------------
+const hourly = data.hourly.time.map((t, i) => ({
+  timestamp: new Date(t).getTime(),
+
+  temperatureF: data.hourly.temperature_2m?.[i] ?? null,
+  dewpointF: data.hourly.dew_point_2m?.[i] ?? null,
+  relative_humidity: data.hourly.relative_humidity_2m?.[i] ?? null,
+
+  windSpeed: data.hourly.wind_speed_10m?.[i] ?? 0,
+  windGust: data.hourly.wind_gusts_10m?.[i] ?? null,
+
+  precipitation: data.hourly.precipitation?.[i] ?? 0,
+  cloudCover: data.hourly.cloudcover?.[i] ?? null,
+
+  uv: data.hourly.uv_index?.[i] ?? null
+}));
+// ----------------------------------------------------------
+// 🆕 SMOOTH TRANSITION WITH TEMPEST
+// ----------------------------------------------------------
+const hourlySmoothed = smoothTransitionWithTempest(hourly, tempest);
   // ----------------------------------------------------------
-  // NORMALIZED (NEW SYSTEM)
+  // TEMPEST INTEGRATION SMOOTH
   // ----------------------------------------------------------
-  const hourly = data.hourly.time.map((t, i) => ({
-    timestamp: new Date(t).getTime(),
+function smoothTransitionWithTempest(hourly = [], tempest = null) {
+  if (!hourly.length || !tempest?.temperatureF) return hourly;
 
-    temperatureF: data.hourly.temperature_2m?.[i] ?? null,
-    dewpointF: data.hourly.dew_point_2m?.[i] ?? null,
-    relative_humidity: data.hourly.relative_humidity_2m?.[i] ?? null,
+  const now = Date.now();
 
-    windSpeed: data.hourly.wind_speed_10m?.[i] ?? 0,
-    windGust: data.hourly.wind_gusts_10m?.[i] ?? null,
+  const startIndex = hourly.findIndex(h => h.timestamp >= now);
+  if (startIndex === -1) return hourly;
 
-    precipitation: data.hourly.precipitation?.[i] ?? 0,
-    cloudCover: data.hourly.cloudcover?.[i] ?? null,
+  const first = hourly[startIndex];
 
-    uv: data.hourly.uv_index?.[i] ?? null
-  }));
+  const baseHumidity = first.relative_humidity ?? 50;
+
+  const deltaTemp = tempest.temperatureF - first.temperatureF;
+
+  const deltaHumidity =
+    (tempest.relative_humidity ?? baseHumidity) - baseHumidity;
+
+  const deltaWind =
+    (tempest.windSpeed ?? first.windSpeed ?? 0) -
+    (first.windSpeed ?? 0);
+
+  return hourly.map((h, i) => {
+    if (i < startIndex) return h;
+
+    const hoursOut = (h.timestamp - first.timestamp) / 3600000;
+
+    const decay =
+      hoursOut <= 1
+        ? 1
+        : Math.max(0, 1 - hoursOut / 3);
+
+    return {
+      ...h,
+
+      temperatureF:
+        h.temperatureF != null
+          ? h.temperatureF + deltaTemp * decay
+          : h.temperatureF,
+
+      relative_humidity:
+        h.relative_humidity != null
+          ? h.relative_humidity + deltaHumidity * decay
+          : h.relative_humidity,
+
+      windSpeed:
+        h.windSpeed != null
+          ? h.windSpeed + deltaWind * decay
+          : h.windSpeed
+    };
+  });
+}
 
   // ----------------------------------------------------------
   // LEGACY FORMAT (OLD APP SUPPORT)
@@ -129,7 +187,7 @@ console.log("RAW HOURLY KEYS:", Object.keys(data.hourly));
   // FINAL PAYLOAD
   // ----------------------------------------------------------
   const payload = {
-    hourly,            // ✅ NEW
+    hourly: hourlySmoothed,          // ✅ NEW
     hourly_legacy,     // ✅ OLD
 
     current: tempest,
