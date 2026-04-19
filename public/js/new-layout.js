@@ -98,10 +98,14 @@ export async function renderNewLayout(container) {
   `;
 
   try {
-    const [data, drought] = await Promise.all([
-      getWeatherForUI({ lat: 35.5951, lon: -82.5515 }),
-      fetchDroughtFire()
-    ]);
+  const [data, drought] = await Promise.all([
+  getWeatherForUI({ lat: 35.5951, lon: -82.5515 }),
+  fetchDroughtFire()
+]);
+
+// 👇 ADD THESE TWO LINES
+console.log("FULL API DATA:", data);
+console.log("WIND STATION:", data?.wind_station);
 
     // ------------------------------------------------------------
     // NORMALIZE ONCE
@@ -117,7 +121,7 @@ console.log("POST-NORMALIZE (LAYOUT):", hourly[0]);
       const tempest = data?.tempest ?? null;
 
       console.log("TEMPEST IN LAYOUT:", tempest);
-      
+
     if (current) renderHeaderMetrics(current);
 
     // ------------------------------------------------------------
