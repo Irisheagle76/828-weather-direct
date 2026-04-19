@@ -1,15 +1,11 @@
-// ============================================================
-// NORMALIZE → CANONICAL WEATHER SCHEMA (STRICT + SAFE)
-// ============================================================
-
 export function normalizeHourly(rawHourly = []) {
-  return rawHourly
+  const now = Date.now();
+
+  const normalized = rawHourly
     .map(h => {
       if (!h) return null;
 
       const timestamp = h.timestamp;
-
-      // 🚫 reject anything not already canonical
       if (!Number.isFinite(timestamp)) return null;
 
       return {
@@ -48,5 +44,22 @@ export function normalizeHourly(rawHourly = []) {
           : null
       };
     })
-    .filter(Boolean);
+    .filter(Boolean)
+    .sort((a, b) => a.timestamp - b.timestamp);
+
+  if (!normalized.length) return [];
+
+  // 🔥 CRITICAL FIX — align to closest to now
+  let closestIndex = 0;
+  let smallestDiff = Infinity;
+
+  for (let i = 0; i < normalized.length; i++) {
+    const diff = Math.abs(normalized[i].timestamp - now);
+    if (diff < smallestDiff) {
+      smallestDiff = diff;
+      closestIndex = i;
+    }
+  }
+
+  return normalized.slice(closestIndex);
 }
