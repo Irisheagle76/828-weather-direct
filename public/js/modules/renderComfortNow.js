@@ -104,6 +104,9 @@ export function renderComfortNow(
   const mode = options.mode || "downtown";
   const isDay = options.isDay ?? true;
 
+  // 👇 ADD THIS LINE
+  const hourly = options.hourly ?? [];
+
   const tempestRaw = options.tempest ?? null;
   const tempest = normalizeTempest(tempestRaw);
 
@@ -159,7 +162,11 @@ export function renderComfortNow(
   const headline =
     narrative?.headline || fallbackHeadline(comfort);
 
-  const explanation = buildFullExplanation(comfort, narrative);
+const explanation = buildFullExplanation(
+  comfort,
+  narrative,
+  hourly
+);
 
   const actions = buildActions(comfort);
 
@@ -232,10 +239,12 @@ export function renderComfortNow(
 // 🧠 NEW: FULL EXPLANATION ENGINE
 // ============================================================
 
-function buildFullExplanation(c, narrative) {
+function buildFullExplanation(c, narrative, hourly = []) {
   const parts = [];
 
-  // 1. FEEL
+  // --------------------------------------------------
+  // 1. CURRENT FEEL
+  // --------------------------------------------------
   if (c.dewPoint < 50)
     parts.push("Dry air makes it feel crisp and light.");
   else if (c.dewPoint > 65)
@@ -249,24 +258,40 @@ function buildFullExplanation(c, narrative) {
   if (c.windSpeed > 10)
     parts.push("A steady breeze is influencing how it feels.");
 
-  // 2. TREND (always included)
-  if (narrative?.trend === "improving") {
-    parts.push("Conditions improve through the day.");
-  } else if (narrative?.trend === "worsening") {
-    parts.push("Conditions become less comfortable later.");
-  } else {
-    // fallback trend logic
-    if (c.temp < 60 && c.dewPoint < 55) {
-      parts.push("Expect a steady warm-up into more comfortable conditions.");
-    }
+  // --------------------------------------------------
+  // 2. REAL TREND (THIS IS THE MAGIC)
+  // --------------------------------------------------
+  const trend = analyzeTrend(hourly);
+
+  if (trend.temp === "rising") {
+    parts.push("Temperatures climb steadily over the next few hours.");
+  } else if (trend.temp === "falling") {
+    parts.push("Temperatures gradually ease downward.");
   }
 
+  if (trend.wind === "increasing") {
+    parts.push("Winds pick up as the day goes on.");
+  }
+
+  if (trend.dryness === "increasing") {
+    parts.push("Air continues drying out.");
+  }
+
+  // fallback if no hourly
+  if (!hourly.length && narrative?.trend === "improving") {
+    parts.push("Conditions improve through the day.");
+  }
+
+  // --------------------------------------------------
   // 3. EDGE SIGNAL
+  // --------------------------------------------------
   if (c.dewPoint < 45 && c.windSpeed > 8) {
     parts.push("Dry air and wind may accelerate drying conditions.");
   }
 
-  // 4. SYNTH BONUS
+  // --------------------------------------------------
+  // 4. SYNTH BONUS (optional)
+  // --------------------------------------------------
   if (narrative?.notes) {
     parts.push(narrative.notes);
   }
@@ -376,4 +401,42 @@ function renderBestWindow(bestWindow) {
       <span>${first.hourLabel}–${last.hourLabel}</span>
     </div>
   `;
+}
+
+function analyzeTrend(hourly = []) {
+  if (!hourly.length) return {};
+
+  const now = Date.now();
+
+  const future = hourly
+    .filter(h => h.timestamp >= now)
+    .slice(0, 4); // next ~3 hours
+
+  if (future.length < 2) return {};
+
+  const first = future[0];
+  const last = future[future.length - 1];
+
+  const tempDelta = last.temperatureF - first.temperatureF;
+  const windDelta = (last.windSpeed ?? 0) - (first.windSpeed ?? 0);
+  const humidityDelta =
+    (last.relative_humidity ?? 0) -
+    (first.relative_humidity ?? 0);
+
+  return {
+    temp:
+      tempDelta > 2 ? "rising" :
+      tempDelta < -2 ? "falling" :
+      "steady",
+
+    wind:
+      windDelta > 3 ? "increasing" :
+      windDelta < -3 ? "decreasing" :
+      "steady",
+
+    dryness:
+      humidityDelta < -5 ? "increasing" : // lower RH = drier
+      humidityDelta > 5 ? "decreasing" :
+      "steady"
+  };
 }
