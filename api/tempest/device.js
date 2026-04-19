@@ -1,10 +1,15 @@
 // ============================================================
-// TEMPEST UNIFIED ENDPOINT — v2 (STABLE + NORMALIZED)
+// TEMPEST UNIFIED ENDPOINT — v3 (MULTI-STATION READY)
 // Supports:
 //   - Better Forecast (stationId)
 //   - Device Observations (deviceId)
+//   - Secondary Wind Station (144737)
+//
 // Always returns:
-//   { current_conditions: {...} | null }
+// {
+//   current_conditions: {...} | null,
+//   wind_station: {...} | null
+// }
 // ============================================================
 
 export default async function handler(req, res) {
@@ -15,7 +20,32 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing Tempest token" });
     }
 
-    let data = null;
+    // ------------------------------------------------------------
+    // 🆕 FETCH EXPOSED WIND STATION (144737)
+    // ------------------------------------------------------------
+    let windStation = null;
+
+    try {
+      const windUrl = `https://swd.weatherflow.com/swd/rest/observations/station/144737?token=${token}`;
+      const r = await fetch(windUrl);
+
+      if (r.ok) {
+        const json = await r.json();
+        const obs = json?.obs?.[0];
+
+        if (obs) {
+          windStation = {
+            windSpeed: obs[2],
+            windGust: obs[3],
+            timestamp: normalizeTs(obs[0])
+          };
+        }
+      } else {
+        console.warn("⚠️ Wind station fetch failed:", r.status);
+      }
+    } catch (err) {
+      console.warn("⚠️ Wind station error:", err);
+    }
 
     // ------------------------------------------------------------
     // 1. TRY BETTER FORECAST (station-level)
@@ -28,7 +58,6 @@ export default async function handler(req, res) {
         if (r.ok) {
           const json = await r.json();
 
-          // normalize possible shapes
           const current =
             json?.current_conditions ||
             json?.forecast?.current_conditions ||
@@ -37,6 +66,7 @@ export default async function handler(req, res) {
           if (current) {
             return res.status(200).json({
               current_conditions: normalizeCurrent(current),
+              wind_station: windStation,
               source: "better_forecast"
             });
           }
@@ -60,12 +90,12 @@ export default async function handler(req, res) {
 
         if (r.ok) {
           const json = await r.json();
-
-          const obs = json?.obs?.[0]; // latest observation row
+          const obs = json?.obs?.[0];
 
           if (obs) {
             return res.status(200).json({
               current_conditions: normalizeObsArray(obs),
+              wind_station: windStation,
               source: "device_obs"
             });
           }
@@ -84,6 +114,7 @@ export default async function handler(req, res) {
     // ------------------------------------------------------------
     return res.status(200).json({
       current_conditions: null,
+      wind_station: windStation,
       source: "none"
     });
 
@@ -92,16 +123,15 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       current_conditions: null,
+      wind_station: null,
       source: "exception"
     });
   }
 }
 
-//
 // ============================================================
 // NORMALIZERS
 // ============================================================
-//
 
 // ------------------------------------------------------------
 // Better Forecast → normalize
