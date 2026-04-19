@@ -100,6 +100,14 @@ function smoothGust(current, hours = []) {
   return Math.min(avg, (current.windSpeed ?? 0) * 2.5);
 }
 
+// ------------------------------------------------------------
+// GUSTINESS
+// ------------------------------------------------------------
+function calculateGustiness(windSpeed, windGust) {
+  if (!Number.isFinite(windSpeed) || !Number.isFinite(windGust)) return 0;
+  return Math.max(0, windGust - windSpeed);
+}
+
 // ============================================================
 // MAIN ENTRY
 // ============================================================
