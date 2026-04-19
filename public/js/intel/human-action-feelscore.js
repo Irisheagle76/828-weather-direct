@@ -65,10 +65,16 @@ function splitDays(hourly, now) {
 // ------------------------------------------------------------
 
 function smoothWind(current, hours = []) {
+  const idx = hours.findIndex(h => h.timestamp === current.timestamp);
+
+  if (idx === -1) return current.windSpeed;
+
+  const window = hours.slice(idx, idx + 3);
+
   const values = [
     current.windSpeed,
-    ...hours.slice(0, 3).map(h => h.windSpeed)
-  ].filter(v => Number.isFinite(v));
+    ...window.map(h => h.windSpeed)
+  ].filter(Number.isFinite);
 
   if (!values.length) return current.windSpeed;
 
@@ -76,22 +82,22 @@ function smoothWind(current, hours = []) {
 }
 
 function smoothGust(current, hours = []) {
+  const idx = hours.findIndex(h => h.timestamp === current.timestamp);
+
+  if (idx === -1) return current.windGust;
+
+  const window = hours.slice(idx, idx + 3);
+
   const values = [
     current.windGust,
-    ...hours.slice(0, 3).map(h => h.windGust)
-  ].filter(v => Number.isFinite(v));
+    ...window.map(h => h.windGust)
+  ].filter(Number.isFinite);
 
   if (!values.length) return current.windGust;
 
   const avg = values.reduce((a, b) => a + b, 0) / values.length;
 
-  // prevent unrealistic spikes
   return Math.min(avg, (current.windSpeed ?? 0) * 2.5);
-}
-
-function calculateGustiness(windSpeed, windGust) {
-  if (!Number.isFinite(windSpeed) || !Number.isFinite(windGust)) return 0;
-  return Math.max(0, windGust - windSpeed);
 }
 
 // ============================================================
