@@ -89,34 +89,35 @@ function adaptHourly(hourly) {
   // CASE 2: Open-Meteo style (arrays)
   // ------------------------------------------------------------
   if (hourly?.time?.length) {
-    return hourly.time.map((t, i) =>
-      normalizeHourObject({
-        timestamp: new Date(t).getTime(),
+   return hourly.time
+  .map((t, i) =>
+    normalizeHourObject({
+      timestamp: new Date(t).getTime(),
 
-        temperatureF: hourly.temperature_2m?.[i] ?? null,
-        dewpointF: hourly.dew_point_2m?.[i] ?? null,
+      temperatureF: hourly.temperature_2m?.[i] ?? null,
+      dewpointF: hourly.dew_point_2m?.[i] ?? null,
 
-        relativeHumidity:
-          hourly.relative_humidity_2m?.[i] ?? null,
+      relativeHumidity:
+        hourly.relative_humidity_2m?.[i] ?? null,
 
-        windSpeed:
-          hourly.wind_speed_10m?.[i] ?? 0,
+      windSpeed:
+        hourly.wind_speed_10m?.[i] ?? 0,
 
-        windGust:
-          hourly.wind_gusts_10m?.[i] ?? null, // 🔥 KEY FIX
+      windGust:
+        hourly.wind_gusts_10m?.[i] ?? null,
 
-        precipitation:
-          hourly.precipitation?.[i] ?? 0,
+      precipitation:
+        hourly.precipitation?.[i] ?? 0,
 
-        cloudCover:
-          hourly.cloudcover?.[i] ?? null,
+      cloudCover:
+        hourly.cloudcover?.[i] ?? null,
 
-        uvIndex:
-          hourly.uv_index?.[i] ?? null
-      })
-    ).filter(Boolean);
-  }
-
+      uvIndex:
+        hourly.uv_index?.[i] ?? null
+    })
+  )
+  .filter(Boolean)
+  .sort((a, b) => a.timestamp - b.timestamp);
   console.log("ADAPTER OUTPUT SAMPLE:", hourly[0]);
   
   return [];
