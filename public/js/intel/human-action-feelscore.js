@@ -222,22 +222,54 @@ console.log("TEMPEST IN FEELSCORE:", tempest);
 }
 
 // ============================================================
-// BUILD PERIOD CORE (UNCHANGED STRUCTURE)
+// BUILD PERIOD CORE (SMOOTHED + CONSISTENT)
 // ============================================================
 
 function buildPeriod(hours, label, change = {}) {
   if (!Array.isArray(hours) || !hours.length) return null;
 
-  const scores = hours
-    .map(h => calculateComfort(h)?.score)
-    .filter(Number.isFinite)
-    .map(s => Math.round(s * 10));
+  const scores = hours.map((h, i) => {
+    let adjusted = { ...h };
+
+    // ------------------------------------------------------------
+    // 🆕 APPLY REALISM TO NEAR-TERM HOURS ONLY
+    // ------------------------------------------------------------
+    if (i < 3) {
+      adjusted.windSpeed = smoothWind(adjusted, hours);
+      adjusted.windGust = smoothGust(adjusted, hours);
+
+      const gustiness = calculateGustiness(
+        adjusted.windSpeed,
+        adjusted.windGust
+      );
+
+      let score = calculateComfort(adjusted)?.score;
+
+      if (!Number.isFinite(score)) return null;
+
+      // 🆕 GUST PENALTY
+      if (gustiness >= 12) score -= 0.5;
+      else if (gustiness >= 7) score -= 0.25;
+
+      return Math.round(score * 10);
+    }
+
+    // ------------------------------------------------------------
+    // FARTHER HOURS = RAW MODEL
+    // ------------------------------------------------------------
+    const base = calculateComfort(h)?.score;
+    return Number.isFinite(base) ? Math.round(base * 10) : null;
+
+  }).filter(Number.isFinite);
 
   if (!scores.length) return null;
 
   const score = Math.round(average(scores));
   const trend = scores.at(-1) - scores[0];
 
+  // ------------------------------------------------------------
+  // SNAPSHOT (UNCHANGED)
+  // ------------------------------------------------------------
   const snapshot = {
     temp: avg(hours.map(h => h.temperatureF)),
     dewPoint: avg(hours.map(h => h.dewpointF)),
@@ -246,6 +278,9 @@ function buildPeriod(hours, label, change = {}) {
 
   if (!Number.isFinite(snapshot.temp)) return null;
 
+  // ------------------------------------------------------------
+  // WIND METRICS (UNCHANGED)
+  // ------------------------------------------------------------
   const maxWind = Math.max(...hours.map(h => h.windSpeed ?? 0));
   const maxGust = Math.max(...hours.map(h => h.windGust ?? 0));
 
@@ -267,6 +302,9 @@ function buildPeriod(hours, label, change = {}) {
     Number.isFinite(tomorrowMin) &&
     tomorrowMin <= 50;
 
+  // ------------------------------------------------------------
+  // INTEL + NARRATIVE (UNCHANGED)
+  // ------------------------------------------------------------
   const intel = buildIntel(
     snapshot,
     score,
@@ -288,6 +326,9 @@ function buildPeriod(hours, label, change = {}) {
     narrative = null;
   }
 
+  // ------------------------------------------------------------
+  // FINAL RETURN (UNCHANGED)
+  // ------------------------------------------------------------
   return {
     label,
     score,
