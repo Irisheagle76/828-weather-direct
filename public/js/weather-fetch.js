@@ -1,5 +1,5 @@
 // ============================================================
-// WEATHER FETCH LAYER — v6 (STABLE + DUAL FORMAT)
+// WEATHER FETCH LAYER — v7 (ALIGNED + STABLE + DUAL FORMAT)
 // ============================================================
 
 // ------------------------------------------------------------
@@ -12,9 +12,10 @@ let lastGood = {
 
 const CACHE_TTL = 5 * 60 * 1000;
 
-// ------------------------------------------------------------
+// ============================================================
 // MAIN ENTRY
-// ------------------------------------------------------------
+// ============================================================
+
 export async function fetchAllIntel({ lat, lon }) {
   const start = Date.now();
 
@@ -40,8 +41,46 @@ export async function fetchAllIntel({ lat, lon }) {
 }
 
 // ============================================================
+// ALIGNMENT (🔥 SINGLE SOURCE OF TRUTH)
+// ============================================================
+
+function alignToNow(hourly = []) {
+  const now = Date.now();
+
+  const sorted = hourly
+    .filter(h => Number.isFinite(h?.timestamp))
+    .sort((a, b) => a.timestamp - b.timestamp);
+
+  if (!sorted.length) return [];
+
+  // find closest hour to NOW
+  let closestIndex = 0;
+  let smallestDiff = Infinity;
+
+  for (let i = 0; i < sorted.length; i++) {
+    const diff = Math.abs(sorted[i].timestamp - now);
+    if (diff < smallestDiff) {
+      smallestDiff = diff;
+      closestIndex = i;
+    }
+  }
+
+  const aligned = sorted.slice(closestIndex);
+
+  // 🔍 DEBUG (keep for now)
+  console.log("🧭 ALIGNMENT CHECK:", {
+    now: new Date(now).toString(),
+    start: new Date(aligned[0]?.timestamp).toString(),
+    totalHours: aligned.length
+  });
+
+  return aligned;
+}
+
+// ============================================================
 // SINGLE SOURCE FETCH
 // ============================================================
+
 async function getWeatherUnified(lat, lon) {
   if (!lat || !lon) {
     console.warn("❌ Missing lat/lon");
@@ -86,9 +125,18 @@ async function getWeatherUnified(lat, lon) {
 
         hourly = json.hourly_legacy.time.map((t, i) => ({
           timestamp: new Date(t).getTime(),
-          temperatureF: json.hourly_legacy.temperature_2m?.[i] ?? null,
-          relative_humidity: json.hourly_legacy.relative_humidity_2m?.[i] ?? null,
-          windSpeed: json.hourly_legacy.wind_speed_10m?.[i] ?? 0
+
+          temperatureF:
+            json.hourly_legacy.temperature_2m?.[i] ?? null,
+
+          relativeHumidity:
+            json.hourly_legacy.relative_humidity_2m?.[i] ?? null,
+
+          windSpeed:
+            json.hourly_legacy.wind_speed_10m?.[i] ?? 0,
+
+          windGust:
+            json.hourly_legacy.wind_gusts_10m?.[i] ?? null
         }));
       }
 
@@ -105,7 +153,13 @@ async function getWeatherUnified(lat, lon) {
         continue;
       }
 
-      const payload = { hourly, current };
+      // 🔥 CRITICAL FIX — ALIGN HERE
+      const alignedHourly = alignToNow(hourly);
+
+      const payload = {
+        hourly: alignedHourly,
+        current
+      };
 
       // ------------------------------------------------------
       // CACHE
@@ -116,7 +170,8 @@ async function getWeatherUnified(lat, lon) {
       };
 
       console.log("✅ WEATHER OK", {
-        hours: hourly.length,
+        rawHours: hourly.length,
+        alignedHours: alignedHourly.length,
         hasCurrent: !!current
       });
 
@@ -142,9 +197,10 @@ async function getWeatherUnified(lat, lon) {
 // ============================================================
 // FALLBACK
 // ============================================================
+
 function buildFallback() {
   return {
-    hourly: [],   // ✅ unified format
+    hourly: [],
     current: null
   };
 }
@@ -152,6 +208,7 @@ function buildFallback() {
 // ============================================================
 // UTIL
 // ============================================================
+
 async function fetchWithTimeout(url, timeout = 5000) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
