@@ -285,15 +285,15 @@ function renderTimeline(hourly) {
   // ------------------------------------------------------------
   // SCORES
   // ------------------------------------------------------------
-const scores = next.map((h, i, arr) => {
+const scores = next.map((h, i) => {
   let adjusted = { ...h };
 
   // ------------------------------------------------------------
   // 🆕 APPLY SAME LOGIC AS "NOW"
   // ------------------------------------------------------------
   if (i < 3) {
-    adjusted.windSpeed = smoothWind(adjusted, arr);
-    adjusted.windGust = smoothGust(adjusted, arr);
+   adjusted.windSpeed = smoothWind(adjusted, hourly);
+adjusted.windGust = smoothGust(adjusted, hourly);
 
     const g = calculateGustiness(
       adjusted.windSpeed,
