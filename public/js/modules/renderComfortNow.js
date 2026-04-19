@@ -46,21 +46,38 @@ function injectTempest(current, tempest) {
   return {
     ...current,
 
-    humidity: mix(tempest.humidity, current.humidity, 0.85),
+    // 🌡️ Temperature (if you include it here later)
+    temperatureF:
+      tempest.temperatureF ??
+      current.temperatureF,
 
-    wind: mix(tempest.windSpeed, current.wind, 0.8),
-    windSpeed: mix(tempest.windSpeed, current.windSpeed, 0.8),
+    // 💧 Humidity — trust Tempest
+    humidity:
+      tempest.relative_humidity ??
+      tempest.humidity ??
+      current.humidity,
 
-    windGust: Math.max(
-      current.windGust ?? 0,
-      tempest.windGust ?? 0
-    ),
+    // 🌬️ Wind — trust Tempest
+    wind:
+      tempest.windSpeed ??
+      current.wind,
 
+    windSpeed:
+      tempest.windSpeed ??
+      current.windSpeed,
+
+    // 💨 Gust — DO NOT use Math.max
+    windGust:
+      tempest.windGust ??
+      tempest.wind_gust ??
+      current.windGust,
+
+    // ☀️ Solar
     solarRadiation:
-      tempest.solarRadiation ?? current.solarRadiation
+      tempest.solarRadiation ??
+      current.solarRadiation
   };
 }
-
 // ============================================================
 // NORMALIZE INPUT
 // ============================================================
