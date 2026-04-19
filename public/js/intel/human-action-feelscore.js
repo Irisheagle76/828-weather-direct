@@ -327,7 +327,101 @@ function buildCurrentWithTrend(hours) {
     }).slice(0, 3)
   };
 }
+// ============================================================
+// BUILD NARRATIVE (RESTORED - REQUIRED)
+// ============================================================
 
+function buildPeriodNarrative(ctx, label) {
+  if (!ctx) return fallback(label);
+
+  const { score, narrativeText, flags, change, wind } = ctx;
+
+  const { isShockDay, hasColdStart } = flags;
+  const { tempDrop, chillDelta, tomorrowMin } = change;
+
+  const maxWind = wind?.maxWind ?? 0;
+  const maxGust = wind?.maxGust ?? 0;
+
+  // ==========================================================
+  // HEADLINE
+  // ==========================================================
+
+  let headline;
+
+  if (maxGust >= 45) {
+    headline = "Strong winds may cause impacts tomorrow";
+  } else if (maxGust >= 30) {
+    headline = "Gusty winds will be a major factor tomorrow";
+  } else if (maxWind >= 12) {
+    headline = "Breezy conditions develop tomorrow";
+  } else if (isShockDay) {
+    headline =
+      tempDrop >= 25
+        ? "A sharp cooldown hits tomorrow"
+        : "A noticeably cooler day arrives tomorrow";
+  } else if (hasColdStart) {
+    headline = "A chilly start leads into a cool day";
+  } else {
+    headline =
+      extractHeadline(narrativeText) ||
+      "Conditions settle into a steady pattern";
+  }
+
+  // ==========================================================
+  // BULLETS
+  // ==========================================================
+
+  let bullets = [];
+
+  if (isShockDay) {
+    bullets.push("Much colder than today — a noticeable drop");
+  }
+
+  if (hasColdStart) {
+    bullets.push(
+      tomorrowMin <= 42
+        ? "Cold start in the 40s"
+        : "Cool start early in the day"
+    );
+  }
+
+  if (maxGust >= 45) {
+    bullets.push("Wind gusts could exceed 45 mph at times");
+  } else if (maxGust >= 30) {
+    bullets.push("Gusty winds up to around 30–40 mph");
+  } else if (maxWind >= 12) {
+    bullets.push("Breezy conditions at times");
+  }
+
+  if (chillDelta >= 5) {
+    bullets.push("Feels colder than the temperature suggests");
+  }
+
+  if (isShockDay && tempDrop >= 25) {
+    bullets.push("You’ll likely want a jacket after today's warmth");
+  }
+
+  if (bullets.length < 2) {
+    bullets = [
+      ...bullets,
+      ...extractBullets(narrativeText, {
+        trend: 0,
+        snapshot: ctx.snapshot,
+        label
+      })
+    ];
+  }
+
+  bullets = [...new Set(bullets)].slice(0, 3);
+
+  return {
+    label,
+    score,
+    emoji: pickEmoji(score),
+    headline,
+    bullets
+  };
+}
 // ============================================================
 // HELPERS
 // ============================================================
