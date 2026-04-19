@@ -65,10 +65,13 @@ function splitDays(hourly, now) {
 // ============================================================
 
 export function buildHumanActionIntelFS(raw) {
+
+  const tempest = raw?.tempest ?? null;
+
   const rawHourly = Array.isArray(raw?.hourly) ? raw.hourly : [];
 
   console.log("FEELSCORE INPUT SAMPLE:", rawHourly[0]);
-
+console.log("TEMPEST IN FEELSCORE:", tempest);
   console.log("RAW HOURLY SAMPLE (first 5):");
 
   rawHourly.slice(0, 5).forEach((h, i) => {
@@ -285,7 +288,7 @@ function buildCurrentWithTrend(hours, tempest = null) {
   if (!hours.length) return fallback("today");
 
   hours = smoothFirstHoursWithTempest(hours, tempest);
-  
+
 let first = hours[0];
 
 // 🆕 Inject Tempest real-time conditions
