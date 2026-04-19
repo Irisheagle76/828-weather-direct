@@ -4,6 +4,7 @@
 
 import { calculateComfort } from "./comfort.js";
 import { assembleWithVoice } from "./synthesizer/assembleWithVoice.js";
+import { buildFullExplanation } from "../modules/renderComfortNow.js";
 
 // ============================================================
 // TIME HELPERS
@@ -283,7 +284,7 @@ function buildPeriod(hours, label, change = {}) {
 function buildCurrentWithTrend(hours) {
   if (!hours.length) return fallback("today");
 
-  const first = hours[0]; // 🔥 current hour anchor
+  const first = hours[0]; // current hour anchor
 
   const currentScore = calculateComfort(first)?.score;
   if (!Number.isFinite(currentScore)) return fallback("today");
@@ -295,10 +296,11 @@ function buildCurrentWithTrend(hours) {
 
   const trend = scores.length ? scores.at(-1) - scores[0] : 0;
 
+  // 🔥 IMPORTANT: use CURRENT conditions, not averages
   const snapshot = {
-    temp: avg(hours.map(h => h.temperatureF)),
-    dewPoint: avg(hours.map(h => h.dewpointF)),
-    wind: avg(hours.map(h => h.windSpeed))
+    temp: first.temperatureF,
+    dewPoint: first.dewpointF,
+    wind: first.windSpeed
   };
 
   const intel = buildIntel(snapshot, currentScore * 10, trend, 0, 0, "today");
@@ -315,16 +317,31 @@ function buildCurrentWithTrend(hours) {
     return fallback("today");
   }
 
+  // 🔥 NEW: use your real narrative engine
+  const explanation = buildFullExplanation(
+    {
+      temp: snapshot.temp,
+      dewPoint: snapshot.dewPoint,
+      windSpeed: snapshot.wind
+    },
+    narrative,
+    hours
+  );
+
   return {
     label: "today",
     score: Math.round(currentScore * 10),
     emoji: pickEmoji(currentScore * 10),
-    headline: extractHeadline(narrative?.longNarrative || ""),
-    bullets: extractBullets(narrative?.longNarrative || "", {
-      trend,
-      snapshot,
-      label: "today"
-    }).slice(0, 3)
+
+    // keep headline simple + safe
+   headline:
+  narrative?.headline ||
+  (trend > 10
+    ? "Rapid improvement in comfort ahead"
+    : "Comfort gradually improving"),
+
+    // 🔥 CRITICAL CHANGE: replace bullets with real narrative
+    bullets: [explanation]
   };
 }
 // ============================================================
