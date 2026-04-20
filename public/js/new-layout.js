@@ -151,6 +151,14 @@ console.log("POST-NORMALIZE (LAYOUT):", hourly[0]);
       ? normalizeCurrent(data.current)
       : null;
 
+      // 🔍 DEBUG HERE
+console.log("CURRENT DEBUG:", {
+  raw: current,
+  rh1: current?.relativeHumidity,
+  rh2: current?.relative_humidity,
+  rh3: current?.rh
+});
+
       const tempest = data?.tempest ?? null;
 
       console.log("TEMPEST IN LAYOUT:", tempest);
