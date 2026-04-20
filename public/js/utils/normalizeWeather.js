@@ -19,9 +19,36 @@ export function normalizeHourly(rawHourly = []) {
           ? h.dewpointF
           : null,
 
-        relativeHumidity: Number.isFinite(h.relativeHumidity)
-          ? h.relativeHumidity
-          : null,
+        relativeHumidity: (() => {
+  let rh = h.relativeHumidity;
+
+  // ------------------------------------------------------------
+  // 1. Fix NaN / bad values
+  // ------------------------------------------------------------
+  if (!Number.isFinite(rh)) {
+    // fallback: derive from temp + dewpoint if possible
+    if (
+      Number.isFinite(h.temperatureF) &&
+      Number.isFinite(h.dewpointF)
+    ) {
+      const t = (h.temperatureF - 32) * 5/9;
+      const d = (h.dewpointF - 32) * 5/9;
+
+      const es = 6.112 * Math.exp((17.67 * t) / (t + 243.5));
+      const e  = 6.112 * Math.exp((17.67 * d) / (d + 243.5));
+
+      rh = (e / es) * 100;
+    } else {
+      return null;
+    }
+  }
+
+  // ------------------------------------------------------------
+  // 2. Clamp to physical bounds
+  // ------------------------------------------------------------
+  return Math.max(0, Math.min(100, rh));
+})(),
+
 
         windSpeed: Number.isFinite(h.windSpeed)
           ? h.windSpeed
