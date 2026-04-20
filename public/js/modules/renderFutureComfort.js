@@ -12,7 +12,7 @@ function normalizeHours(hours = []) {
   const now = Date.now();
 
   const normalized = hours
-    .map(h => {
+    .map((h, i, arr) => {
     if (!h) return null;
 
 const ts = h.timestamp ?? h.ts;
@@ -33,9 +33,7 @@ return {
         precipitation: h.precipitation ?? 0,
 
         score:
-          typeof h.score === "number"
-            ? h.score
-            : calculateComfort(h)?.score ?? null,
+        score: calculateAdjustedScore(h, i, arr),
 
         goldilocks: !!h.goldilocks,
         hourLabel: h.hourLabel ?? formatHour(h.timestamp)
@@ -309,4 +307,27 @@ function getFeelScoreBackground(score) {
   if (score >= 55) return "rgba(255, 200, 100, 0.12)";
   if (score >= 40) return "rgba(255, 140, 80, 0.12)";
   return "rgba(255, 80, 80, 0.12)";
+}
+
+function calculateAdjustedScore(h, i, hours = []) {
+  let adjusted = { ...h };
+
+  if (i < 3) {
+    adjusted.windSpeed = smoothWind(adjusted, hours);
+    adjusted.windGust = smoothGust(adjusted, hours);
+
+    const g = calculateGustiness(
+      adjusted.windSpeed,
+      adjusted.windGust
+    );
+
+    let score = calculateComfort(adjusted)?.score ?? 0;
+
+    if (g >= 12) score -= 0.5;
+    else if (g >= 7) score -= 0.25;
+
+    return score;
+  }
+
+  return calculateComfort(h)?.score ?? null;
 }
