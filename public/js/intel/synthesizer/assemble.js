@@ -1,5 +1,5 @@
 // ============================================================
-// NARRATIVE ASSEMBLER — v9 (CLEAN + SUPPORT ROLE)
+// NARRATIVE ASSEMBLER — v10 (VOICE-FIRST, CLEAN)
 // ============================================================
 
 import { phrases } from "./phrases.js";
@@ -9,7 +9,7 @@ import { temporal } from "./temporal.js";
 // ------------------------------------------------------------
 // HELPERS
 // ------------------------------------------------------------
-const random = arr => arr[Math.floor(Math.random() * arr.length)];
+const random = arr => arr?.length ? arr[Math.floor(Math.random() * arr.length)] : "";
 const maybe = (p = 0.5) => Math.random() < p;
 
 // ------------------------------------------------------------
@@ -21,14 +21,10 @@ function getCategoryTemplate(category, isGoldilocks) {
 }
 
 // ------------------------------------------------------------
-// SIGNAL PICKERS (SAFE + NORMALIZED)
+// SIGNAL PICKERS (SAFE)
 // ------------------------------------------------------------
 function getWind(intel) {
-  return (
-    intel?.signals?.wind ??
-    intel?.signals?.windSpeed ??
-    0
-  );
+  return intel?.signals?.wind ?? intel?.signals?.windSpeed ?? 0;
 }
 
 function pickTempPhrase(intel) {
@@ -68,40 +64,8 @@ function pickLightPhrase(intel) {
   return random(phrases.light.filtered);
 }
 
-function pickMicroPhrase(intel) {
-  const confidence = intel?.confidence ?? 0.5;
-
-  if (confidence < 0.4)
-    return random(phrases.microclimate.mixed);
-
-  return maybe(0.5)
-    ? random(phrases.microclimate.valley)
-    : random(phrases.microclimate.ridge);
-}
-
-function pickPatternPhrase(intel) {
-  const confidence = intel?.confidence ?? 0.5;
-
-  if (confidence < 0.4)
-    return random(phrases.pattern.variable);
-
-  if (confidence > 0.7)
-    return random(phrases.pattern.stable);
-
-  return random(phrases.pattern.transitional);
-}
-
-function pickEdgePhrase(intel) {
-  const confidence = intel?.confidence ?? 0.5;
-
-  if (confidence < 0.5 && maybe(0.4)) {
-    return random(phrases.edges);
-  }
-  return null;
-}
-
 // ------------------------------------------------------------
-// EMOJI (kept — still useful)
+// EMOJI
 // ------------------------------------------------------------
 function buildEmoji(intel) {
   switch (intel?.dominantFactor) {
@@ -118,7 +82,7 @@ function buildEmoji(intel) {
 }
 
 // ------------------------------------------------------------
-// BULLETS (clean + reusable)
+// BULLETS (UNCHANGED — already solid)
 // ------------------------------------------------------------
 function buildBullets(intel) {
   const { signals = {}, dominantFactor } = intel ?? {};
@@ -128,40 +92,21 @@ function buildBullets(intel) {
   const dp = signals.dewPoint;
   const wind = signals.wind ?? signals.windSpeed ?? 0;
 
-  // --------------------------------------------------
-  // TEMP
-  // --------------------------------------------------
   if (t <= 45) bullets.push("Cool temperatures add a noticeable chill.");
   else if (t >= 80) bullets.push("Warm temperatures begin to impact comfort.");
 
-  // --------------------------------------------------
-  // MOISTURE
-  // --------------------------------------------------
   if (dp < 50) bullets.push("Dry air makes conditions feel crisp.");
   else if (dp > 65) bullets.push("Humidity adds weight to the air.");
 
-  // --------------------------------------------------
-  // WIND
-  // --------------------------------------------------
   if (wind > 12) bullets.push("A steady breeze affects how it feels.");
   else if (wind < 4) bullets.push("Winds remain light.");
 
-  // --------------------------------------------------
-  // DOMINANT FACTOR (fallback)
-  // --------------------------------------------------
   if (!bullets.length) {
     switch (dominantFactor) {
-      case "heat":
-        bullets.push("Warm temperatures shape the overall feel.");
-        break;
-      case "cold":
-        bullets.push("Cool air dominates the feel.");
-        break;
-      case "wind":
-        bullets.push("Wind is the primary factor.");
-        break;
-      default:
-        bullets.push("Conditions remain relatively steady.");
+      case "heat": bullets.push("Warm temperatures shape the overall feel."); break;
+      case "cold": bullets.push("Cool air dominates the feel."); break;
+      case "wind": bullets.push("Wind is the primary factor."); break;
+      default: bullets.push("Conditions remain relatively steady.");
     }
   }
 
@@ -169,64 +114,62 @@ function buildBullets(intel) {
 }
 
 // ------------------------------------------------------------
-// LONG NARRATIVE (PRIMARY PURPOSE NOW)
+// CLEAN NARRATIVE BUILDER (VOICE + SCORE ALIGNED)
 // ------------------------------------------------------------
 function buildNarrative(intel, dayType, category, isGoldilocks) {
   const safeIntel = intel ?? {};
 
   const temporalFrame = temporal.choose(dayType, isGoldilocks);
   const base = getCategoryTemplate(category, isGoldilocks);
-  const baseNarrative = random(base.narratives);
 
+  const score = safeIntel?.score ?? 75;
+
+  // ------------------------------------------------------------
+  // SCORE + CATEGORY BLEND (important)
+  // ------------------------------------------------------------
+  const categoryBase = random(base.narratives) || "";
+  const scoreBase = random(getScoreTone(score)) || "";
+
+  const baseNarrative =
+    score >= 80 && scoreBase
+      ? scoreBase
+      : categoryBase;
+
+  // normalize casing after temporal (only if needed)
+  const intro = `${temporalFrame} ${
+    baseNarrative.charAt(0).toLowerCase() + baseNarrative.slice(1)
+  }`;
+
+  // ------------------------------------------------------------
+  // CORE SIGNALS (LIMITED)
+  // ------------------------------------------------------------
   const temp = pickTempPhrase(safeIntel);
   const moisture = pickMoisturePhrase(safeIntel);
   const wind = pickWindPhrase(safeIntel);
   const light = pickLightPhrase(safeIntel);
-  const micro = pickMicroPhrase(safeIntel);
-  const pattern = pickPatternPhrase(safeIntel);
-  const edge = pickEdgePhrase(safeIntel);
 
-  const DRIVER_MAP = {
-    rain: "Rain plays the central role.",
-    wind: "Wind shapes the experience.",
-    heat: "Heat stands out the most.",
-    cold: "Cool air defines the feel.",
-    muggy: "Humidity drives the feel.",
-    fog: "Low visibility is a factor."
-  };
+  // prioritize strongest signals
+  const candidates = [temp, moisture, wind].filter(Boolean).slice(0, 2);
 
-  const driver = isGoldilocks
-    ? "No single factor dominates — things stay balanced."
-    : DRIVER_MAP[safeIntel.dominantFactor] ||
-      "No single factor dominates.";
+  let narrative = intro;
 
-  const intro = `${temporalFrame} ${baseNarrative}`;
-
-  const detailParts = [temp, moisture].filter(Boolean);
-
-  let detail = "";
-  if (detailParts.length === 2) {
-    detail = maybe(0.8)
-      ? `${detailParts[0]}, with ${detailParts[1]}.`
-      : `${detailParts[1]}, paired with ${detailParts[0]}.`;
-  } else if (detailParts.length === 1) {
-    detail = `${detailParts[0]}.`;
+  // ------------------------------------------------------------
+  // SUPPORT PHRASES (CONTROLLED)
+  // ------------------------------------------------------------
+  if (candidates.length === 1) {
+    narrative += `, with ${candidates[0]}`;
+  } else if (candidates.length === 2) {
+    narrative += `, with ${candidates[0]} and ${candidates[1]}`;
   }
 
-  const support = `${light}, ${wind}, and ${pattern}.`;
+  // optional sky layer (light touch)
+  if (light && maybe(0.5)) {
+    narrative += candidates.length
+      ? `, and ${light}`
+      : `, with ${light}`;
+  }
 
-  const optionalParts = [
-    maybe(0.6) ? `${micro}.` : null,
-    edge ? `${edge}.` : null
-  ].filter(Boolean);
-
-  const narrative = [
-    intro,
-    detail,
-    driver,
-    support,
-    ...optionalParts
-  ].join(" ");
+  narrative += ".";
 
   return {
     narrative: narrative.trim(),
@@ -235,7 +178,7 @@ function buildNarrative(intel, dayType, category, isGoldilocks) {
 }
 
 // ------------------------------------------------------------
-// MASTER (SIMPLIFIED ROLE)
+// MASTER
 // ------------------------------------------------------------
 export const assemble = {
   assemble(intel, dayType, category, isGoldilocks) {
@@ -243,18 +186,35 @@ export const assemble = {
 
     return {
       emoji: buildEmoji(intel),
-
-      // ❌ headline removed (handled by unified voice system)
-      headline: null,
-
+      headline: null, // handled elsewhere
       longNarrative: narrativeObj.narrative,
       bullets: buildBullets(intel),
-
       category,
       goldilocks: isGoldilocks,
-      version: "9.0",
-
+      version: "10.0",
       temporal: narrativeObj.temporal
     };
   }
 };
+
+function getScoreTone(score = 75) {
+  if (score >= 92) {
+    return ["about as good as it gets", "a near-perfect day", "hard to beat"];
+  }
+  if (score >= 85) {
+    return ["a really nice day", "very comfortable overall", "easy to be outside"];
+  }
+  if (score >= 75) {
+    return ["a comfortable, steady day", "generally comfortable overall", "a pretty nice setup"];
+  }
+  if (score >= 65) {
+    return ["a decent day with a few small quirks", "some minor ups and downs", "not perfect, but manageable"];
+  }
+  if (score >= 55) {
+    return ["a few rough edges show up", "conditions feel a bit uneven", "comfort dips at times"];
+  }
+  if (score >= 40) {
+    return ["a tougher setup overall", "noticeable discomfort at times", "not especially comfortable"];
+  }
+  return ["a rough day overall", "conditions are hard to ignore", "comfort takes a hit"];
+}
