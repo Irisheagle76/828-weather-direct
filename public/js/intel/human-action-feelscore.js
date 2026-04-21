@@ -591,30 +591,35 @@ function buildPeriodNarrative(ctx, label) {
   const maxWind = wind?.maxWind ?? 0;
   const maxGust = wind?.maxGust ?? 0;
 
-  // ==========================================================
-  // HEADLINE
-  // ==========================================================
+  // ------------------------------------------------------------
+// WIND-AWARE HEADLINE (IMPROVED)
+// ------------------------------------------------------------
+const breezyHours = windValues.filter(w => w >= 12).length;
+const avgWind = avg(windValues);
 
-  let headline;
+let headline;
 
-  if (maxGust >= 45) {
-    headline = "Strong winds may cause impacts tomorrow";
-  } else if (maxGust >= 30) {
-    headline = "Gusty winds will be a major factor tomorrow";
-  } else if (maxWind >= 12) {
-    headline = "Breezy conditions develop tomorrow";
-  } else if (isShockDay) {
-    headline =
-      tempDrop >= 25
-        ? "A sharp cooldown hits tomorrow"
-        : "A noticeably cooler day arrives tomorrow";
-  } else if (hasColdStart) {
-    headline = "A chilly start leads into a cool day";
-  } else {
-    headline =
-      extractHeadline(narrativeText) ||
-      "Conditions settle into a steady pattern";
-  }
+if (maxGust >= 45) {
+  headline = "Strong winds may cause impacts tomorrow";
+} else if (maxGust >= 30) {
+  headline = "Gusty winds will be a major factor tomorrow";
+} 
+// 👉 require persistence OR meaningful average
+else if (breezyHours >= 3 || avgWind >= 10) {
+  headline = "Breezy conditions develop tomorrow";
+} 
+else if (isShockDay) {
+  headline =
+    tempDrop >= 25
+      ? "A sharp cooldown hits tomorrow"
+      : "A noticeably cooler day arrives tomorrow";
+} else if (hasColdStart) {
+  headline = "A chilly start leads into a cool day";
+} else {
+  headline =
+    extractHeadline(narrativeText) ||
+    "Conditions settle into a steady pattern";
+}
 
   // ==========================================================
   // BULLETS
