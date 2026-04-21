@@ -616,7 +616,7 @@ function renderTomorrow(data) {
     return;
   }
 
-  const { score, headline, bullets, emoji } = data;
+  const { score, headline, narrative, bullets, emoji } = data;
 
   el.innerHTML = `
     <div class="day-card fade-in">
@@ -634,6 +634,12 @@ function renderTomorrow(data) {
       </div>
 
       ${
+        narrative
+          ? `<div class="day-narrative">${narrative}</div>`
+          : ""
+      }
+
+      ${
         bullets?.length
           ? `<div class="day-bullets">
               ${bullets.map(b => `<div class="day-bullet">• ${b}</div>`).join("")}
@@ -644,3 +650,4 @@ function renderTomorrow(data) {
     </div>
   `;
 }
+
