@@ -295,8 +295,23 @@ function buildPeriod(hours, label, change = {}) {
   // ------------------------------------------------------------
   // WIND METRICS (UNCHANGED)
   // ------------------------------------------------------------
-  const maxWind = Math.max(...hours.map(h => h.windSpeed ?? 0));
+const maxWind = Math.max(
+  ...hours.map((h, i) => {
+    if (i < 3) {
+      const smoothed = smoothWind(h, hours);
+      return Number.isFinite(smoothed) ? smoothed : 0;
+    }
+    return Number.isFinite(h.windSpeed) ? h.windSpeed : 0;
+  })
+);
   const maxGust = Math.max(...hours.map(h => h.windGust ?? 0));
+
+  console.log("🌬️ TOMORROW WIND FINAL", {
+  maxWind,
+  maxGust,
+  rawWind: ctx?.snapshot?.wind,
+  hours: ctx?.wind
+});
 
   const windImpact = Math.max(
     ...hours.map(h =>
