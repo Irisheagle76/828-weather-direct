@@ -4,7 +4,7 @@
 
 import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
 import { calculateComfort } from '/js/intel/comfort.js';
-import { assembleWithVoice } from '/js/intel/synthesizer/assembleWithVoice.js';
+import { generateNarrative } from '/js/intel/synthesizer/index.js';
 import { buildHumanActionIntelFS } from '/js/intel/human-action-feelscore.js';
 
 import { renderPulseV2 } from '/js/modules/renderPulseV2.js';
@@ -182,7 +182,9 @@ console.log("CURRENT DEBUG:", {
     renderDroughtFire(drought);
   renderFeelScore(human?.feelscore);
     renderTimeline(hourly);
-    renderTomorrow(human?.tomorrow);
+   const narrativeData = generateNarrative(human?.today, human?.tomorrow);
+
+renderTomorrow(narrativeData?.tomorrow);
 
     // ------------------------------------------------------------
     // CONTENT
