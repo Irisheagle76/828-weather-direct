@@ -119,7 +119,14 @@ export function generateNarrative(intelToday, intelTomorrow) {
 
   // 4. APPLY CONTRAST (OPTIONAL LAYER)
   const pools = buildContrastPools(categoryTomorrow, goldTomorrow);
-  const tomorrowFinal = contrast.applyContrast(todayRaw, tomorrowRaw, pools);
+const contrasted = contrast.applyContrast(todayRaw, tomorrowRaw, pools);
+
+// ✅ KEEP your new narrative
+const tomorrowFinal = {
+  ...contrasted,
+  narrative: tomorrowRaw.narrative,
+  longNarrative: tomorrowRaw.narrative
+};
 
   // 5. RETURN FINAL OUTPUT
   return {
