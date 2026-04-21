@@ -330,6 +330,17 @@ if (label === "tomorrow") {
   });
 }
 
+if (label === "tomorrow") {
+  console.log("💧 HUMIDITY + DEW CHECK", {
+    humidity: hours.map(h => ({
+      raw: h.humidity,
+      rh: h.relativeHumidity,
+      rh_alt: h.relative_humidity
+    })),
+    dew: hours.map(h => h.dewpointF)
+  });
+}
+
 // ------------------------------------------------------------
 // WIND IMPACT (STABLE)
 // ------------------------------------------------------------
@@ -694,8 +705,12 @@ function buildPeriodNarrative(ctx, label) {
 // HELPERS
 // ============================================================
 
-const avg = arr =>
-  arr.filter(Number.isFinite).reduce((a, b) => a + b, 0) / arr.length || null;
+const avg = arr => {
+  const valid = arr.filter(Number.isFinite);
+  return valid.length
+    ? valid.reduce((a, b) => a + b, 0) / valid.length
+    : null;
+};
 
 function average(arr) {
   return arr.reduce((a, b) => a + b, 0) / arr.length;

@@ -115,7 +115,12 @@ if (label === "tomorrow") {
   const temps = get(hours, "temperatureF");
   const dew = get(hours, "dewpointF");
   const wind = get(hours, "windSpeed");
-  const humidity = get(hours, "humidity");
+ const humidity = hours.map(h =>
+  h.humidity ??
+  h.relativeHumidity ??
+  h.relative_humidity
+).filter(v => typeof v === "number");
+
   const clouds = get(hours, "cloudCover");
 
   console.log("🌤️ TOMORROW FULL DEBUG", {
@@ -424,4 +429,5 @@ function fmt(h) {
   const suffix = h >= 12 ? "PM" : "AM";
   const display = h % 12 || 12;
   return `${display}${suffix}`;
+}
 }
