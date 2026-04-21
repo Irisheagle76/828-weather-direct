@@ -576,8 +576,8 @@ return {
   bullets: [explanation]
 };
 }
-//============================================================
-// BUILD NARRATIVE (RESTORED - REQUIRED)
+// ============================================================
+// BUILD NARRATIVE (FIXED + WIND-AWARE)
 // ============================================================
 
 function buildPeriodNarrative(ctx, label) {
@@ -588,43 +588,48 @@ function buildPeriodNarrative(ctx, label) {
   const { isShockDay, hasColdStart } = flags;
   const { tempDrop, chillDelta, tomorrowMin } = change;
 
+  // ------------------------------------------------------------
+  // SAFE WIND VALUES (FROM buildPeriod)
+  // ------------------------------------------------------------
   const maxWind = wind?.maxWind ?? 0;
   const maxGust = wind?.maxGust ?? 0;
+  const avgWind = wind?.avgWind ?? 0;
+  const breezyHours = wind?.breezyHours ?? 0;
 
   // ------------------------------------------------------------
-// WIND-AWARE HEADLINE (IMPROVED)
-// ------------------------------------------------------------
-const breezyHours = windValues.filter(w => w >= 12).length;
-const avgWind = avg(windValues);
+  // HEADLINE (IMPROVED + STABLE)
+  // ------------------------------------------------------------
+  let headline;
 
-let headline;
-
-if (maxGust >= 45) {
-  headline = "Strong winds may cause impacts tomorrow";
-} else if (maxGust >= 30) {
-  headline = "Gusty winds will be a major factor tomorrow";
-} 
-// 👉 require persistence OR meaningful average
-else if (breezyHours >= 3 || avgWind >= 10) {
-  headline = "Breezy conditions develop tomorrow";
-} 
-else if (isShockDay) {
-  headline =
-    tempDrop >= 25
-      ? "A sharp cooldown hits tomorrow"
-      : "A noticeably cooler day arrives tomorrow";
-} else if (hasColdStart) {
-  headline = "A chilly start leads into a cool day";
-} else {
-  headline =
-    extractHeadline(narrativeText) ||
-    "Conditions settle into a steady pattern";
-}
+  if (maxGust >= 45) {
+    headline = "Strong winds may cause impacts tomorrow";
+  } else if (maxGust >= 30) {
+    headline = "Gusty winds will be a major factor tomorrow";
+  }
+  // 👉 require persistence OR meaningful average
+  else if (breezyHours >= 3 || avgWind >= 10) {
+    headline = "Breezy conditions develop tomorrow";
+  }
+  // 👉 optional: brief spike messaging (nice polish)
+  else if (breezyHours >= 1 && avgWind < 10) {
+    headline = "A brief increase in wind early in the day";
+  }
+  else if (isShockDay) {
+    headline =
+      tempDrop >= 25
+        ? "A sharp cooldown hits tomorrow"
+        : "A noticeably cooler day arrives tomorrow";
+  } else if (hasColdStart) {
+    headline = "A chilly start leads into a cool day";
+  } else {
+    headline =
+      extractHeadline(narrativeText) ||
+      "Conditions settle into a steady pattern";
+  }
 
   // ==========================================================
-  // BULLETS
+  // BULLETS (ALIGNED WITH NEW LOGIC)
   // ==========================================================
-
   let bullets = [];
 
   if (isShockDay) {
@@ -643,8 +648,12 @@ else if (isShockDay) {
     bullets.push("Wind gusts could exceed 45 mph at times");
   } else if (maxGust >= 30) {
     bullets.push("Gusty winds up to around 30–40 mph");
-  } else if (maxWind >= 12) {
+  }
+  // 👉 match new breezy logic
+  else if (breezyHours >= 3 || avgWind >= 10) {
     bullets.push("Breezy conditions at times");
+  } else if (breezyHours >= 1) {
+    bullets.push("A brief uptick in wind early");
   }
 
   if (chillDelta >= 5) {
@@ -655,6 +664,7 @@ else if (isShockDay) {
     bullets.push("You’ll likely want a jacket after today's warmth");
   }
 
+  // fallback bullets
   if (bullets.length < 2) {
     bullets = [
       ...bullets,
@@ -668,6 +678,9 @@ else if (isShockDay) {
 
   bullets = [...new Set(bullets)].slice(0, 3);
 
+  // ------------------------------------------------------------
+  // RETURN
+  // ------------------------------------------------------------
   return {
     label,
     score,
@@ -676,6 +689,7 @@ else if (isShockDay) {
     bullets
   };
 }
+
 // ============================================================
 // HELPERS
 // ============================================================
