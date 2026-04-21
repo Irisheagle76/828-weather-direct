@@ -44,86 +44,79 @@ export const phrases = {
   // ------------------------------------------------------------
   // MOISTURE / HUMIDITY (GRADIENT ADDED)
   // ------------------------------------------------------------
-  moisture: {
-    dry: [
-      "dry air in place",
-      "low moisture keeping things crisp",
-      "a clean, dry feel to the air",
-      "dry conditions holding steady"
-    ],
-    neutral: [
-      "moisture staying in a manageable range",
-      "humidity remaining balanced",
-      "air feeling steady and controlled",
-      "a neutral moisture profile overall"
-    ],
-    humid: [
-      "humidity becoming noticeable",
-      "moisture building slightly",
-      "a subtle heaviness developing",
-      "humidity creeping in through the period"
-    ],
-    muggy: [
-      "thick moisture creating a heavier feel",
-      "humid air lingering and adding weight",
-      "a muggy layer settling in",
-      "a dense, moisture-rich feel taking hold"
-    ]
-  },
-
+ moisture: {
+  dry: [
+    "dry air keeps things feeling crisp",
+    "the air stays clean and comfortable",
+    "low humidity keeps it feeling light"
+  ],
+  neutral: [
+    "humidity stays comfortable",
+    "nothing too noticeable in the air",
+    "moisture stays in a good range"
+  ],
+  humid: [
+    "humidity starts to creep in",
+    "the air feels a bit heavier at times",
+    "a little stickiness develops"
+  ],
+  muggy: [
+    "it turns muggy as the day goes on",
+    "the air feels thick and heavy",
+    "humidity becomes hard to ignore"
+  ]
+}
   // ------------------------------------------------------------
   // WIND (BETTER SCALING)
   // ------------------------------------------------------------
-  wind: {
-    calm: [
-      "winds staying light and unobtrusive",
-      "a mostly calm air pattern",
-      "little movement in the air",
-      "minimal wind overall"
-    ],
-    breezy: [
-      "a light breeze adding gentle movement",
-      "subtle airflow keeping things from feeling still",
-      "a steady but mild breeze",
-      "light winds moving through at times"
-    ],
-    windy: [
-      "winds becoming more noticeable",
-      "a more active wind pattern developing",
-      "consistent movement in the air",
-      "winds adding a persistent presence"
-    ],
-    gusty: [
-      "strong gusts shaping the experience",
-      "wind surging at times with sharper bursts",
-      "a pushy, uneven wind pattern",
-      "gusts creating brief spikes in intensity"
-    ]
-  },
+wind: {
+  calm: [
+    "winds stay light",
+    "not much wind to deal with",
+    "the air stays mostly still"
+  ],
+  breezy: [
+    "a light breeze develops",
+    "a bit of a breeze at times",
+    "some gentle movement in the air"
+  ],
+  windy: [
+    "winds become noticeable",
+    "it gets a bit windy at times",
+    "winds pick up through the day"
+  ],
+  gusty: [
+    "gusts kick up at times",
+    "some stronger gusts show up",
+    "winds get a bit pushy at times"
+  ]
+}
 
   // ------------------------------------------------------------
   // LIGHT / SKY (MORE VARIETY)
   // ------------------------------------------------------------
-  light: {
-    sunny: [
-      "bright conditions dominating",
-      "sun breaking through cleanly at times",
-      "a mostly open sky driving the feel",
-      "sunlight holding strong through much of the period"
-    ],
-    filtered: [
-      "filtered light softening the overall feel",
-      "a mix of sun and thin cloud moderating things",
-      "light staying soft and diffused",
-      "sun breaking through at times without fully taking over"
-    ],
-    overcast: [
-      "cloud cover keeping things muted",
-      "a flatter sky reducing contrast",
-      "overcast conditions holding steady",
-      "a uniform gray layer limiting brightness"
-    ]
-  },
+ light: {
+  sunny: [
+    "plenty of sunshine",
+    "mostly sunny through the day",
+    "a good amount of sun overall",
+    "sunshine dominates for much of the day"
+  ],
+
+  filtered: [
+    "a mix of sun and clouds",
+    "sun at times with some passing clouds",
+    "partly sunny with a few clouds around",
+    "sun filtered by some thin clouds at times"
+  ],
+
+  overcast: [
+    "mostly cloudy skies",
+    "a good bit of cloud cover",
+    "skies stay on the cloudy side",
+    "not much sunshine getting through"
+  ]
+}
 
   // ------------------------------------------------------------
   // MICROCLIMATE (ALREADY STRONG — SLIGHTLY EXPANDED)
