@@ -421,9 +421,11 @@ const hasColdStart =
       tomorrowMin
     },
     wind: {
-      maxWind,
-      maxGust
-    }
+  maxWind,
+  maxGust,
+  avgWind: avg(windValues),        // ✅ ADD
+  breezyHours: windValues.filter(w => w >= 10).length  // ✅ ADD
+}
   };
 }
 
@@ -587,25 +589,6 @@ return {
   bullets: [explanation]
 };
 }
-// ============================================================
-// BUILD NARRATIVE (FIXED + WIND-AWARE)
-// ============================================================
-
-function buildPeriodNarrative(ctx, label) {
-  if (!ctx) return fallback(label);
-
-  const { score, narrativeText, flags, change, wind } = ctx;
-
-  const { isShockDay, hasColdStart } = flags;
-  const { tempDrop, chillDelta, tomorrowMin } = change;
-
-  // ------------------------------------------------------------
-  // SAFE WIND VALUES (FROM buildPeriod)
-  // ------------------------------------------------------------
-  const maxWind = wind?.maxWind ?? 0;
-  const maxGust = wind?.maxGust ?? 0;
-  const avgWind = wind?.avgWind ?? 0;
-  const breezyHours = wind?.breezyHours ?? 0;
 
  // ============================================================
 // BUILD NARRATIVE (STABLE + DATA-DRIVEN)
@@ -630,32 +613,32 @@ function buildPeriodNarrative(ctx, label) {
   // ==========================================================
   // HEADLINE (FULLY DATA-DRIVEN)
   // ==========================================================
-  let headline;
+// --- TEMPERATURE SHIFTS (PRIMARY DRIVER) ---
+let headline;
 
-  // --- WIND DOMINANT ---
-  if (maxGust >= 45) {
-    headline = "Strong winds may cause impacts tomorrow";
-  } 
-  else if (maxGust >= 30) {
-    headline = "Gusty winds will be a major factor tomorrow";
-  }
-  else if (breezyHours >= 3 || avgWind >= 10) {
-    headline = "Breezy conditions develop tomorrow";
-  }
-  else if (breezyHours >= 1 && avgWind < 10) {
-    headline = "A brief increase in wind early in the day";
-  }
+if (isShockDay) {
+  headline =
+    tempDrop >= 25
+      ? "A sharp cooldown hits tomorrow"
+      : "A noticeably cooler day arrives tomorrow";
+} 
+else if (hasColdStart) {
+  headline = "A chilly start leads into a cool day";
+}
 
-  // --- TEMPERATURE SHIFTS ---
-  else if (isShockDay) {
-    headline =
-      tempDrop >= 25
-        ? "A sharp cooldown hits tomorrow"
-        : "A noticeably cooler day arrives tomorrow";
-  } 
-  else if (hasColdStart) {
-    headline = "A chilly start leads into a cool day";
-  }
+// --- WIND (ONLY IF NOT OVERRIDDEN BY TEMP) ---
+else if (maxGust >= 45) {
+  headline = "Strong winds may cause impacts tomorrow";
+} 
+else if (maxGust >= 30) {
+  headline = "Gusty winds will be a major factor tomorrow";
+}
+else if (breezyHours >= 3 || avgWind >= 10) {
+  headline = "Breezy conditions develop tomorrow";
+}
+else if (breezyHours >= 1 && avgWind < 10) {
+  headline = "A brief increase in wind early in the day";
+}
 
   // --- BASE CONDITIONS (REPLACES WEAK FALLBACK) ---
   else {
@@ -694,42 +677,52 @@ function buildPeriodNarrative(ctx, label) {
   // ==========================================================
   let narrative = "";
 
-  const minT =
-    tomorrowMin != null
-      ? Math.round(tomorrowMin)
-      : temp != null
-      ? Math.round(temp - 10)
-      : null;
+const minT =
+  tomorrowMin != null
+    ? Math.round(tomorrowMin)
+    : temp != null
+    ? Math.round(temp - 10)
+    : null;
 
-  const maxT = temp != null ? Math.round(temp) : null;
+const maxT = temp != null ? Math.round(temp) : null;
 
-  if (label === "tomorrow") {
-    narrative = `A generally ${headline.toLowerCase()}.`;
+if (label === "tomorrow") {
+  // ------------------------------------------------------------
+  // BASE LINE (don’t echo headline)
+  // ------------------------------------------------------------
+  narrative = "A smooth and stable weather day overall.";
 
-    if (minT != null && maxT != null) {
-      narrative += ` Temperatures start near ${minT}° and rise into the ${maxT}s by afternoon.`;
-    }
+  // ------------------------------------------------------------
+  // TEMPERATURE
+  // ------------------------------------------------------------
+  if (minT != null && maxT != null) {
+    narrative += ` Temperatures start near ${minT}° and climb into the ${maxT}° range.`;
+  }
 
-    // moisture
-    if (dp != null) {
-      if (dp < 50) {
-        narrative += " Dry air keeps things feeling crisp and clean.";
-      } else if (dp > 65) {
-        narrative += " Humidity adds a heavier feel at times.";
-      } else {
-        narrative += " Humidity stays in a comfortable range.";
-      }
-    }
-
-    // wind
-    if (maxGust >= 30) {
-      narrative += " Winds may be gusty at times.";
-    } else if (maxWind >= 12) {
-      narrative += " A light breeze develops.";
+  // ------------------------------------------------------------
+  // MOISTURE (dewpoint-driven)
+  // ------------------------------------------------------------
+  if (dp != null) {
+    if (dp < 50) {
+      narrative += " Dry air keeps things feeling crisp and clean.";
+    } else if (dp > 65) {
+      narrative += " Humidity adds a heavier feel at times.";
     } else {
-      narrative += " Winds stay light and out of the way.";
+      narrative += " Humidity stays in a comfortable range.";
     }
   }
+
+  // ------------------------------------------------------------
+  // WIND
+  // ------------------------------------------------------------
+  if (maxGust >= 30) {
+    narrative += " Winds may be gusty at times.";
+  } else if (maxWind >= 12) {
+    narrative += " A light breeze develops.";
+  } else {
+    narrative += " Winds stay light and out of the way.";
+  }
+}
 
   // ==========================================================
   // BULLETS (CLEAN + DATA-ALIGNED)
@@ -833,6 +826,7 @@ function fallback(label) {
     label,
     score: 50,
     headline: "Conditions are steady",
+    narrative: "",
     bullets: [],
     emoji: "😐"
   };
