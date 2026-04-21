@@ -591,13 +591,13 @@ return {
 }
 
  // ============================================================
-// BUILD NARRATIVE (STABLE + DATA-DRIVEN)
+// BUILD NARRATIVE (UNIFIED + DATA-DRIVEN)
 // ============================================================
 
 function buildPeriodNarrative(ctx, label) {
   if (!ctx) return fallback(label);
 
-  const { score, narrativeText, flags, change, wind, snapshot } = ctx;
+  const { score, flags, change, wind, snapshot } = ctx;
 
   const { isShockDay, hasColdStart } = flags || {};
   const { tempDrop = 0, chillDelta = 0, tomorrowMin = null } = change || {};
@@ -611,61 +611,57 @@ function buildPeriodNarrative(ctx, label) {
   const dp = snapshot?.dewPoint ?? null;
 
   // ==========================================================
-  // HEADLINE (FULLY DATA-DRIVEN)
+  // 🔥 SINGLE CONDITION MODEL (FIXES EVERYTHING)
   // ==========================================================
-// --- TEMPERATURE SHIFTS (PRIMARY DRIVER) ---
-let headline;
 
-if (isShockDay) {
-  headline =
-    tempDrop >= 25
-      ? "A sharp cooldown hits tomorrow"
-      : "A noticeably cooler day arrives tomorrow";
-} 
-else if (hasColdStart) {
-  headline = "A chilly start leads into a cool day";
-}
+  const isWindy = maxGust >= 30 || avgWind >= 15;
 
-// --- WIND (ONLY IF NOT OVERRIDDEN BY TEMP) ---
-else if (maxGust >= 45) {
-  headline = "Strong winds may cause impacts tomorrow";
-} 
-else if (maxGust >= 30) {
-  headline = "Gusty winds will be a major factor tomorrow";
-}
-else if (breezyHours >= 3 || avgWind >= 10) {
-  headline = "Breezy conditions develop tomorrow";
-}
-else if (breezyHours >= 1 && avgWind < 10) {
-  headline = "A brief increase in wind early in the day";
-}
+  const isBreezy =
+    !isWindy &&
+    ((breezyHours >= 4 && avgWind >= 8) || avgWind >= 12);
 
-  // --- BASE CONDITIONS (REPLACES WEAK FALLBACK) ---
+  let moisture = "dry";
+  if (dp != null) {
+    if (dp >= 65) moisture = "humid";
+    else if (dp >= 55) moisture = "slightly_humid";
+    else if (dp >= 45) moisture = "comfortable";
+  }
+
+  let tempBand = "mild";
+  if (temp >= 88) tempBand = "hot";
+  else if (temp >= 75) tempBand = "warm";
+  else if (temp <= 55) tempBand = "cool";
+
+  // ==========================================================
+  // HEADLINE
+  // ==========================================================
+
+  let headline;
+
+  if (isShockDay) {
+    headline =
+      tempDrop >= 25
+        ? "A sharp cooldown hits tomorrow"
+        : "A noticeably cooler day arrives tomorrow";
+  } 
+  else if (hasColdStart) {
+    headline = "A chilly start leads into a cool day";
+  }
+  else if (isWindy) {
+    headline = "Windy conditions may impact plans";
+  }
+  else if (isBreezy) {
+    headline = "A light breeze develops during the day";
+  }
   else {
-    let tempLabel = "comfortable";
-
-    if (temp >= 88) tempLabel = "hot";
-    else if (temp >= 75) tempLabel = "warm";
-    else if (temp <= 55) tempLabel = "cool";
-
-    let moisture = "dry";
-    if (dp != null) {
-      if (dp >= 65) moisture = "humid";
-      else if (dp >= 55) moisture = "slightly humid";
-      else if (dp >= 45) moisture = "comfortable";
-    }
-
-    if (tempLabel === "hot" && moisture === "humid") {
+    if (tempBand === "hot" && moisture === "humid") {
       headline = "Hot and humid conditions build tomorrow";
     } 
-    else if (tempLabel === "hot") {
+    else if (tempBand === "hot") {
       headline = "Hot conditions settle in tomorrow";
     }
-    else if (tempLabel === "cool") {
+    else if (tempBand === "cool") {
       headline = "Cool and crisp conditions tomorrow";
-    }
-    else if (moisture === "humid") {
-      headline = "Mild but slightly humid conditions";
     }
     else {
       headline = "Comfortable and steady conditions";
@@ -673,60 +669,48 @@ else if (breezyHours >= 1 && avgWind < 10) {
   }
 
   // ==========================================================
-  // 🆕 NARRATIVE BODY (THIS WAS MISSING)
+  // NARRATIVE
   // ==========================================================
+
   let narrative = "";
 
-const minT =
-  tomorrowMin != null
-    ? Math.round(tomorrowMin)
-    : temp != null
-    ? Math.round(temp - 10)
-    : null;
+  const minT =
+    tomorrowMin != null
+      ? Math.round(tomorrowMin)
+      : temp != null
+      ? Math.round(temp - 10)
+      : null;
 
-const maxT = temp != null ? Math.round(temp) : null;
+  const maxT = temp != null ? Math.round(temp) : null;
 
-if (label === "tomorrow") {
-  // ------------------------------------------------------------
-  // BASE LINE (don’t echo headline)
-  // ------------------------------------------------------------
-  narrative = "A smooth and stable weather day overall.";
+  if (label === "tomorrow") {
+    narrative = "A generally comfortable and stable day overall.";
 
-  // ------------------------------------------------------------
-  // TEMPERATURE
-  // ------------------------------------------------------------
-  if (minT != null && maxT != null) {
-    narrative += ` Temperatures start near ${minT}° and climb into the ${maxT}° range.`;
-  }
+    if (minT != null && maxT != null) {
+      narrative += ` Temperatures start near ${minT}° and rise into the ${maxT}° range by afternoon.`;
+    }
 
-  // ------------------------------------------------------------
-  // MOISTURE (dewpoint-driven)
-  // ------------------------------------------------------------
-  if (dp != null) {
-    if (dp < 50) {
+    // moisture
+    if (moisture === "dry") {
       narrative += " Dry air keeps things feeling crisp and clean.";
-    } else if (dp > 65) {
+    } else if (moisture === "humid") {
       narrative += " Humidity adds a heavier feel at times.";
+    }
+
+    // wind (uses SAME logic)
+    if (isWindy) {
+      narrative += " Winds may be strong enough to impact plans.";
+    } else if (isBreezy) {
+      narrative += " A light breeze develops through the day.";
     } else {
-      narrative += " Humidity stays in a comfortable range.";
+      narrative += " Winds stay light and out of the way.";
     }
   }
 
-  // ------------------------------------------------------------
-  // WIND
-  // ------------------------------------------------------------
-  if (maxGust >= 30) {
-    narrative += " Winds may be gusty at times.";
-  } else if (maxWind >= 12) {
-    narrative += " A light breeze develops.";
-  } else {
-    narrative += " Winds stay light and out of the way.";
-  }
-}
+  // ==========================================================
+  // BULLETS (SAME SOURCE OF TRUTH)
+  // ==========================================================
 
-  // ==========================================================
-  // BULLETS (CLEAN + DATA-ALIGNED)
-  // ==========================================================
   let bullets = [];
 
   if (isShockDay) {
@@ -737,30 +721,28 @@ if (label === "tomorrow") {
     bullets.push(
       tomorrowMin <= 42
         ? `Cold start near ${Math.round(tomorrowMin)}°`
-        : "Cool start early in the day"
+        : "Cool start early"
     );
   }
 
-  if (maxGust >= 45) {
-    bullets.push("Strong wind gusts possible");
+  if (isWindy) {
+    bullets.push("Windy at times");
   } 
-  else if (maxGust >= 30) {
-    bullets.push("Gusty at times");
-  }
-  else if (breezyHours >= 3 || avgWind >= 10) {
-    bullets.push("Breezy conditions develop");
-  }
-  else if (breezyHours >= 1) {
-    bullets.push("Brief increase in wind early");
+  else if (isBreezy) {
+    bullets.push("Light breeze develops");
   }
   else {
     bullets.push("Light winds");
   }
 
-  if (dp != null) {
-    if (dp < 50) bullets.push("Dry, crisp air");
-    else if (dp > 65) bullets.push("Humid at times");
-    else bullets.push("Comfortable humidity");
+  if (moisture === "dry") {
+    bullets.push("Dry, crisp air");
+  } 
+  else if (moisture === "humid") {
+    bullets.push("Humid at times");
+  } 
+  else {
+    bullets.push("Comfortable humidity");
   }
 
   if (chillDelta >= 5) {
@@ -772,6 +754,7 @@ if (label === "tomorrow") {
   // ==========================================================
   // FINAL
   // ==========================================================
+
   return {
     label,
     score,
