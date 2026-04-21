@@ -1,5 +1,5 @@
 // ============================================================
-// NARRATIVE ASSEMBLER — v10 (VOICE-FIRST, CLEAN)
+// NARRATIVE ASSEMBLER — v11 (FULL CLEAN, NO LOSS)
 // ============================================================
 
 import { categories } from "./categories.js";
@@ -10,7 +10,11 @@ import { buildBullets } from "./bullets.js";
 // ------------------------------------------------------------
 // HELPERS
 // ------------------------------------------------------------
-const random = arr => arr?.length ? arr[Math.floor(Math.random() * arr.length)] : "";
+const random = arr =>
+  Array.isArray(arr) && arr.length
+    ? arr[Math.floor(Math.random() * arr.length)]
+    : "";
+
 const maybe = (p = 0.5) => Math.random() < p;
 
 // ------------------------------------------------------------
@@ -22,14 +26,54 @@ function getCategoryTemplate(category, isGoldilocks) {
 }
 
 // ------------------------------------------------------------
-// SIGNAL PICKERS (SAFE)
+// SAFE SIGNAL RESOLUTION (KEY FIX)
+// supports BOTH signals + flat structure
 // ------------------------------------------------------------
-function getWind(intel) {
-  return intel?.signals?.wind ?? intel?.signals?.windSpeed ?? 0;
+function getTemp(intel) {
+  return (
+    intel?.signals?.temp ??
+    intel?.temperature ??
+    intel?.temp ??
+    70
+  );
 }
 
+function getDewpoint(intel) {
+  return (
+    intel?.signals?.dewPoint ??
+    intel?.dewpoint ??
+    intel?.dewpointF ??
+    55
+  );
+}
+
+function getWind(intel) {
+  return (
+    intel?.signals?.wind ??
+    intel?.signals?.windSpeed ??
+    intel?.windSpeed ??
+    0
+  );
+}
+
+function getGust(intel) {
+  return intel?.signals?.windGust ?? intel?.windGust ?? 0;
+}
+
+function getCloud(intel) {
+  return (
+    intel?.signals?.cloudCover ??
+    intel?.cloudCover ??
+    intel?.clouds ??
+    50
+  );
+}
+
+// ------------------------------------------------------------
+// PHRASE PICKERS
+// ------------------------------------------------------------
 function pickTempPhrase(intel) {
-  const t = intel?.signals?.temp ?? 70;
+  const t = getTemp(intel);
 
   if (t <= 35) return random(phrases.temperature.cold);
   if (t <= 50) return random(phrases.temperature.cool);
@@ -39,7 +83,7 @@ function pickTempPhrase(intel) {
 }
 
 function pickMoisturePhrase(intel) {
-  const dp = intel?.signals?.dewPoint ?? 55;
+  const dp = getDewpoint(intel);
 
   if (dp < 50) return random(phrases.moisture.dry);
   if (dp < 60) return random(phrases.moisture.neutral);
@@ -48,7 +92,7 @@ function pickMoisturePhrase(intel) {
 }
 
 function pickWindPhrase(intel) {
-  const gust = intel?.signals?.windGust ?? 0;
+  const gust = getGust(intel);
   const wind = getWind(intel);
 
   if (gust >= 30) return random(phrases.wind.gusty);
@@ -58,7 +102,7 @@ function pickWindPhrase(intel) {
 }
 
 function pickLightPhrase(intel) {
-  const cloud = intel?.signals?.cloudCover ?? 50;
+  const cloud = getCloud(intel);
 
   if (cloud > 80) return random(phrases.light.overcast);
   if (cloud < 30) return random(phrases.light.sunny);
@@ -66,7 +110,7 @@ function pickLightPhrase(intel) {
 }
 
 // ------------------------------------------------------------
-// EMOJI
+// EMOJI (UNCHANGED — STILL VALID)
 // ------------------------------------------------------------
 function buildEmoji(intel) {
   switch (intel?.dominantFactor) {
@@ -83,39 +127,7 @@ function buildEmoji(intel) {
 }
 
 // ------------------------------------------------------------
-// BULLETS (UNCHANGED — already solid)
-// ------------------------------------------------------------
-function buildBullets(intel) {
-  const { signals = {}, dominantFactor } = intel ?? {};
-  const bullets = [];
-
-  const t = signals.temp;
-  const dp = signals.dewPoint;
-  const wind = signals.wind ?? signals.windSpeed ?? 0;
-
-  if (t <= 45) bullets.push("Cool temperatures add a noticeable chill.");
-  else if (t >= 80) bullets.push("Warm temperatures begin to impact comfort.");
-
-  if (dp < 50) bullets.push("Dry air makes conditions feel crisp.");
-  else if (dp > 65) bullets.push("Humidity adds weight to the air.");
-
-  if (wind > 12) bullets.push("A steady breeze affects how it feels.");
-  else if (wind < 4) bullets.push("Winds remain light.");
-
-  if (!bullets.length) {
-    switch (dominantFactor) {
-      case "heat": bullets.push("Warm temperatures shape the overall feel."); break;
-      case "cold": bullets.push("Cool air dominates the feel."); break;
-      case "wind": bullets.push("Wind is the primary factor."); break;
-      default: bullets.push("Conditions remain relatively steady.");
-    }
-  }
-
-  return bullets.slice(0, 3);
-}
-
-// ------------------------------------------------------------
-// CLEAN NARRATIVE BUILDER (VOICE + SCORE ALIGNED)
+// CLEAN NARRATIVE BUILDER
 // ------------------------------------------------------------
 function buildNarrative(intel, dayType, category, isGoldilocks) {
   const safeIntel = intel ?? {};
@@ -126,46 +138,44 @@ function buildNarrative(intel, dayType, category, isGoldilocks) {
   const score = safeIntel?.score ?? 75;
 
   // ------------------------------------------------------------
-  // SCORE + CATEGORY BLEND (important)
+  // CATEGORY FIRST (PRIMARY VOICE)
   // ------------------------------------------------------------
   const categoryBase = random(base.narratives) || "";
-  const scoreBase = random(getScoreTone(score)) || "";
+
+  // ------------------------------------------------------------
+  // SCORE (LIGHT INFLUENCE — NOT OVERRIDING)
+  // ------------------------------------------------------------
+  const scoreTone = random(getScoreTone(score));
 
   const baseNarrative =
-    score >= 80 && scoreBase
-      ? scoreBase
+    score >= 90 && maybe(0.3)
+      ? scoreTone
       : categoryBase;
 
-  // normalize casing after temporal (only if needed)
   const intro = `${temporalFrame} ${
     baseNarrative.charAt(0).toLowerCase() + baseNarrative.slice(1)
   }`;
 
   // ------------------------------------------------------------
-  // CORE SIGNALS (LIMITED)
+  // CORE SIGNALS
   // ------------------------------------------------------------
   const temp = pickTempPhrase(safeIntel);
   const moisture = pickMoisturePhrase(safeIntel);
   const wind = pickWindPhrase(safeIntel);
   const light = pickLightPhrase(safeIntel);
 
-  // prioritize strongest signals
-  const candidates = [temp, moisture, wind].filter(Boolean).slice(0, 2);
+  const core = [temp, moisture, wind].filter(Boolean).slice(0, 2);
 
   let narrative = intro;
 
-  // ------------------------------------------------------------
-  // SUPPORT PHRASES (CONTROLLED)
-  // ------------------------------------------------------------
-  if (candidates.length === 1) {
-    narrative += `, with ${candidates[0]}`;
-  } else if (candidates.length === 2) {
-    narrative += `, with ${candidates[0]} and ${candidates[1]}`;
+  if (core.length === 1) {
+    narrative += `, with ${core[0]}`;
+  } else if (core.length === 2) {
+    narrative += `, with ${core[0]} and ${core[1]}`;
   }
 
-  // optional sky layer (light touch)
   if (light && maybe(0.5)) {
-    narrative += candidates.length
+    narrative += core.length
       ? `, and ${light}`
       : `, with ${light}`;
   }
@@ -192,45 +202,47 @@ export const assemble = {
       isGoldilocks
     );
 
-    // DEBUG (remove later if you want)
     console.log("ASSEMBLE OUTPUT:", narrativeObj.narrative);
 
     return {
-      emoji: "🌤️", // handled elsewhere if needed
+      emoji: buildEmoji(intel),
       headline: null,
 
       narrative: narrativeObj.narrative,
       longNarrative: narrativeObj.narrative,
 
-      bullets: buildBullets(intel), // ✅ FIXED
+      bullets: buildBullets(intel), // ✅ now correctly external
 
       category,
       goldilocks: isGoldilocks,
-      version: "10.0",
+      version: "11.0",
 
       temporal: narrativeObj.temporal
     };
   }
 };
 
+// ------------------------------------------------------------
+// SCORE TONE (KEPT — BUT USED LIGHTLY)
+// ------------------------------------------------------------
 function getScoreTone(score = 75) {
   if (score >= 92) {
     return ["about as good as it gets", "a near-perfect day", "hard to beat"];
   }
   if (score >= 85) {
-    return ["a really nice day", "very comfortable overall", "easy to be outside"];
+    return ["a really nice day", "easy to be outside"];
   }
   if (score >= 75) {
-    return ["a comfortable, steady day", "generally comfortable overall", "a pretty nice setup"];
+    return ["a pretty comfortable day", "generally comfortable"];
   }
   if (score >= 65) {
-    return ["a decent day with a few small quirks", "some minor ups and downs", "not perfect, but manageable"];
+    return ["a few small quirks show up", "some ups and downs"];
   }
   if (score >= 55) {
-    return ["a few rough edges show up", "conditions feel a bit uneven", "comfort dips at times"];
+    return ["a bit uneven at times", "comfort dips here and there"];
   }
   if (score >= 40) {
-    return ["a tougher setup overall", "noticeable discomfort at times", "not especially comfortable"];
+    return ["a tougher setup overall", "noticeable discomfort"];
   }
-  return ["a rough day overall", "conditions are hard to ignore", "comfort takes a hit"];
+  return ["a rough day overall", "conditions are hard to ignore"];
 }
