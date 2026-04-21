@@ -1,122 +1,137 @@
 // contrast.js
 // ============================================================
-// STRONG DIVERSITY ENGINE (Option C)
-// Ensures Today ≠ Tomorrow across:
-// - headlines
-// - emojis
-// - narrative templates
-// - temporal framing
-// - bullet pools
-// - phrase families
+// CONTRAST ENGINE — v6 (NON-DESTRUCTIVE, VOICE-AWARE)
 //
-// This module does NOT generate text — it enforces constraints
-// used by assemble.js and index.js.
+// Purpose:
+// Ensure Today ≠ Tomorrow without overriding assembled voice.
+//
+// Rules:
+// - NEVER replace narrative unless identical
+// - Light-touch adjustments only
+// - Respect assemble.js as source of truth
 // ============================================================
 
 export const contrast = {
 
   // ------------------------------------------------------------
-  // ENSURE DIFFERENT EMOJIS
+  // HELPERS
+  // ------------------------------------------------------------
+  pickDifferent(current, pool = []) {
+    if (!Array.isArray(pool) || pool.length === 0) return current;
+
+    const alternatives = pool.filter(x => x !== current);
+    if (!alternatives.length) return current;
+
+    return alternatives[Math.floor(Math.random() * alternatives.length)];
+  },
+
+  // ------------------------------------------------------------
+  // EMOJI
   // ------------------------------------------------------------
   ensureDifferentEmoji(todayEmoji, tomorrowEmoji, pool) {
     if (todayEmoji !== tomorrowEmoji) return tomorrowEmoji;
-
-    // pick a different one
-    const alternatives = pool.filter(e => e !== todayEmoji);
-    return alternatives[Math.floor(Math.random() * alternatives.length)];
+    return this.pickDifferent(todayEmoji, pool);
   },
 
   // ------------------------------------------------------------
-  // ENSURE DIFFERENT HEADLINES
+  // HEADLINE
   // ------------------------------------------------------------
   ensureDifferentHeadline(todayHeadline, tomorrowHeadline, pool) {
+    if (!todayHeadline || !tomorrowHeadline) return tomorrowHeadline;
     if (todayHeadline !== tomorrowHeadline) return tomorrowHeadline;
 
-    // pick a different one
-    const alternatives = pool.filter(h => h !== todayHeadline);
-    return alternatives[Math.floor(Math.random() * alternatives.length)];
+    return this.pickDifferent(todayHeadline, pool);
   },
 
   // ------------------------------------------------------------
-  // ENSURE DIFFERENT NARRATIVE TEMPLATE
+  // NARRATIVE (VERY IMPORTANT — SAFE ONLY)
   // ------------------------------------------------------------
   ensureDifferentNarrative(todayNarrative, tomorrowNarrative, pool) {
+    if (!todayNarrative || !tomorrowNarrative) return tomorrowNarrative;
+
+    // ✅ Only intervene if identical (rare edge case)
     if (todayNarrative !== tomorrowNarrative) return tomorrowNarrative;
 
-    const alternatives = pool.filter(n => n !== todayNarrative);
-    return alternatives[Math.floor(Math.random() * alternatives.length)];
+    return this.pickDifferent(todayNarrative, pool);
   },
 
   // ------------------------------------------------------------
-  // ENSURE DIFFERENT TEMPORAL FRAMING
+  // TEMPORAL FRAMING
   // ------------------------------------------------------------
   ensureDifferentTemporal(todayFrame, tomorrowFrame, pool) {
+    if (!todayFrame || !tomorrowFrame) return tomorrowFrame;
     if (todayFrame !== tomorrowFrame) return tomorrowFrame;
 
-    const alternatives = pool.filter(f => f !== todayFrame);
-    return alternatives[Math.floor(Math.random() * alternatives.length)];
+    return this.pickDifferent(todayFrame, pool);
   },
 
   // ------------------------------------------------------------
-  // ENSURE BULLET DIVERSITY
+  // BULLETS
   // ------------------------------------------------------------
-  ensureDifferentBullets(todayBullets, tomorrowBullets, pool, count = 3) {
-    // If tomorrow's bullets are already distinct, keep them
+  ensureDifferentBullets(todayBullets = [], tomorrowBullets = [], pool = [], count = 3) {
+    if (!Array.isArray(todayBullets) || !Array.isArray(tomorrowBullets)) {
+      return tomorrowBullets;
+    }
+
     const overlap = tomorrowBullets.filter(b => todayBullets.includes(b));
+
+    // already different → keep
     if (overlap.length === 0) return tomorrowBullets;
 
-    // Otherwise, pick a new set with minimal overlap
+    if (!Array.isArray(pool) || pool.length === 0) return tomorrowBullets;
+
     const shuffled = [...pool].sort(() => Math.random() - 0.5);
     const newBullets = [];
 
-    for (let b of shuffled) {
+    for (const b of shuffled) {
       if (!todayBullets.includes(b)) newBullets.push(b);
       if (newBullets.length >= count) break;
     }
 
-    return newBullets;
+    return newBullets.length ? newBullets : tomorrowBullets;
   },
 
   // ------------------------------------------------------------
-  // HIGH-LEVEL CONTRAST APPLICATION
-  // Called by index.js AFTER both narratives are generated
+  // APPLY CONTRAST (NON-DESTRUCTIVE)
   // ------------------------------------------------------------
-  applyContrast(today, tomorrow, pools) {
+  applyContrast(today, tomorrow, pools = {}) {
+    const result = { ...tomorrow };
+
     // 1. Emoji
-    tomorrow.emoji = this.ensureDifferentEmoji(
-      today.emoji,
-      tomorrow.emoji,
-      pools.emojiPool
+    result.emoji = this.ensureDifferentEmoji(
+      today?.emoji,
+      result?.emoji,
+      pools?.emojiPool
     );
 
     // 2. Headline
-    tomorrow.title = this.ensureDifferentHeadline(
-      today.title,
-      tomorrow.title,
-      pools.headlinePool
+    result.headline = this.ensureDifferentHeadline(
+      today?.headline,
+      result?.headline,
+      pools?.headlinePool
     );
 
-    // 3. Narrative template (main text)
-    tomorrow.mainTemplate = this.ensureDifferentNarrative(
-      today.mainTemplate,
-      tomorrow.mainTemplate,
-      pools.narrativePool
+    // 3. Narrative (SAFE — DO NOT OVERRIDE VOICE)
+    result.narrative = this.ensureDifferentNarrative(
+      today?.narrative,
+      result?.narrative,
+      pools?.narrativePool
     );
 
-    // 4. Temporal framing
-    tomorrow.temporal = this.ensureDifferentTemporal(
-      today.temporal,
-      tomorrow.temporal,
-      pools.temporalPool
+    // 4. Temporal
+    result.temporal = this.ensureDifferentTemporal(
+      today?.temporal,
+      result?.temporal,
+      pools?.temporalPool
     );
 
     // 5. Bullets
-    tomorrow.bullets = this.ensureDifferentBullets(
-      today.bullets,
-      tomorrow.bullets,
-      pools.bulletPool
+    result.bullets = this.ensureDifferentBullets(
+      today?.bullets,
+      result?.bullets,
+      pools?.bulletPool
     );
 
-    return tomorrow;
+    return result;
   }
 };
