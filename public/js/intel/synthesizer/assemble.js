@@ -184,16 +184,24 @@ export const assemble = {
   assemble(intel, dayType, category, isGoldilocks) {
     const narrativeObj = buildNarrative(intel, dayType, category, isGoldilocks);
 
-    return {
-      emoji: buildEmoji(intel),
-      headline: null, // handled elsewhere
-      longNarrative: narrativeObj.narrative,
-      bullets: buildBullets(intel),
-      category,
-      goldilocks: isGoldilocks,
-      version: "10.0",
-      temporal: narrativeObj.temporal
-    };
+    console.log("ASSEMBLE OUTPUT:", narrativeObj.narrative);
+    
+   return {
+  emoji: buildEmoji(intel),
+  headline: null,
+
+  // ✅ KEY FIX
+  narrative: narrativeObj.narrative,
+  longNarrative: narrativeObj.narrative,
+
+  bullets: buildBullets(intel),
+
+  category,
+  goldilocks: isGoldilocks,
+  version: "10.0",
+
+  temporal: narrativeObj.temporal
+};
   }
 };
 
