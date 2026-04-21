@@ -372,6 +372,26 @@ function buildPeriod(hours, label, change = {}) {
 // ============================================================
 // CURRENT FEELSCORE (FIXED CORE ISSUE)
 // ============================================================
+function resolveDewpoint(first, tempest) {
+  const model = first?.dewpointF;
+
+  const station =
+    typeof tempest?.dew_point === "number"
+      ? (tempest.dew_point * 9) / 5 + 32
+      : null;
+
+  if (station == null) return model;
+  if (model == null) return station;
+
+  const diff = Math.abs(station - model);
+
+  const resolved =
+    diff <= 2 ? station :
+    diff <= 8 ? station * 0.7 + model * 0.3 :
+                station * 0.5 + model * 0.5;
+
+  return Math.min(resolved, first?.temperatureF ?? resolved);
+}
 
 function buildCurrentWithTrend(hours, tempest = null) {
   if (!hours.length) return fallback("today");
@@ -386,10 +406,12 @@ if (tempest) {
     ...first,
 
     temperatureF:
-      tempest.air_temperature ?? first.temperatureF,
+      (typeof tempest.air_temperature === "number"
+        ? (tempest.air_temperature * 9) / 5 + 32
+        : null) ?? first.temperatureF,
 
     dewpointF:
-      tempest.dew_point ?? first.dewpointF,
+      resolveDewpoint(first, tempest),
 
     windSpeed:
       tempest.wind_avg ?? first.windSpeed,
