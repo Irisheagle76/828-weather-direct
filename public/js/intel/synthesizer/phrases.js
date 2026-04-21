@@ -107,6 +107,7 @@ wind: {
     "a mix of sun and clouds",
     "sun at times with some passing clouds",
     "partly sunny with a few clouds around",
+    "sun peeking through now and then",
     "sun filtered by some thin clouds at times"
   ],
 
@@ -114,7 +115,8 @@ wind: {
     "mostly cloudy skies",
     "a good bit of cloud cover",
     "skies stay on the cloudy side",
-    "not much sunshine getting through"
+    "not much sunshine getting through",
+    "clouds hanging around for most of the day"
   ]
 }
 
