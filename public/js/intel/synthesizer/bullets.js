@@ -1,4 +1,3 @@
-✅ Final correct file (clean + working)
 // bullets.js
 // ============================================================
 // MICRO-BULLET LIBRARY — CLEAN + USER-FACING
