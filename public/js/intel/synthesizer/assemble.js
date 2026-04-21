@@ -140,7 +140,7 @@ function buildNarrative(intel, dayType, category, isGoldilocks) {
   // ------------------------------------------------------------
   // CATEGORY FIRST (PRIMARY VOICE)
   // ------------------------------------------------------------
-  const categoryBase = random(base.narratives) || "";
+  const categoryBase = random(base.headlines)
 
   // ------------------------------------------------------------
   // SCORE (LIGHT INFLUENCE — NOT OVERRIDING)
