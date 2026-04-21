@@ -137,82 +137,134 @@ if (label === "tomorrow") {
 // ============================================================
 // 🔍 END DEBUG: FULL TOMORROW SNAPSHOT
 // ============================================================
-  const hourlyComfort = hours.map(h => {
-    const c = calculateComfort({
-      temp: h.temperatureF,
-      dewpointF: h.dewpointF,
-      windSpeed: h.windSpeed,
-      obsTimeLocal: h.timestamp
-    });
-
-    return {
-      ts: h.timestamp,
-      hour: h.hour,
-      score: Math.round((c?.score ?? 5) * 10),
-      temp: h.temperatureF,
-      dew: h.dewpointF,
-      wind: h.windSpeed
-    };
+// ------------------------------------------------------------
+// COMFORT (unchanged)
+// ------------------------------------------------------------
+const hourlyComfort = hours.map(h => {
+  const c = calculateComfort({
+    temp: h.temperatureF,
+    dewpointF: h.dewpointF,
+    windSpeed: h.windSpeed,
+    obsTimeLocal: h.timestamp
   });
 
-  const dayparts = buildDayparts(hourlyComfort);
-  const { best, worst } = findWindows(hourlyComfort);
-  const nowBlock = label === "today" ? findNow(hourlyComfort, now) : null;
+  return {
+    ts: h.timestamp,
+    hour: h.hour,
+    score: Math.round((c?.score ?? 5) * 10),
+    temp: h.temperatureF,
+    dew: h.dewpointF,
+    wind: h.windSpeed
+  };
+});
 
-  const temps = hours.map(h => h.temperatureF).filter(isNum);
-  const tempMax = temps.length ? Math.max(...temps) : null;
-  const tempMin = temps.length ? Math.min(...temps) : null;
+// ------------------------------------------------------------
+// WINDOWS + STATS (unchanged)
+// ------------------------------------------------------------
+const dayparts = buildDayparts(hourlyComfort);
+const { best, worst } = findWindows(hourlyComfort);
+const nowBlock = label === "today" ? findNow(hourlyComfort, now) : null;
 
-  const avgAll = avg(hourlyComfort.map(h => h.score));
+const temps = hours.map(h => h.temperatureF).filter(isNum);
+const tempMax = temps.length ? Math.max(...temps) : null;
+const tempMin = temps.length ? Math.min(...temps) : null;
 
-  let score =
-    label === "today"
-      ? (nowBlock?.score ?? avgAll) * 0.4 + avgAll * 0.4 + (best?.score ?? avgAll) * 0.2
-      : avgAll * 0.5 + (best?.score ?? avgAll) * 0.3 - (100 - (worst?.score ?? avgAll)) * 0.2;
+const avgAll = avg(hourlyComfort.map(h => h.score));
 
-  score = Math.round(score);
+let score =
+  label === "today"
+    ? (nowBlock?.score ?? avgAll) * 0.4 + avgAll * 0.4 + (best?.score ?? avgAll) * 0.2
+    : avgAll * 0.5 + (best?.score ?? avgAll) * 0.3 - (100 - (worst?.score ?? avgAll)) * 0.2;
 
-  const evals = hours.map(evaluateHumanActionFactors);
-  if (label === "tomorrow") {
+score = Math.round(score);
+
+// ------------------------------------------------------------
+// 🔥 CORE ENGINE (FIXED INPUT SCHEMA)
+// ------------------------------------------------------------
+const evals = hours.map(h => {
+  return evaluateHumanActionFactors({
+    temp: h.temperatureF ?? null,
+    feelsLike: h.temperatureF ?? null, // safe proxy
+
+    dewpoint: h.dewpointF ?? null,
+    humidity: h.humidity ?? null,
+
+    windSpeed: h.windSpeed ?? 0,
+    windGust: h.windGust ?? h.windSpeed ?? 0,
+
+    cloudCover:
+      typeof h.cloudCover === "number"
+        ? (h.cloudCover > 1 ? h.cloudCover / 100 : h.cloudCover)
+        : null,
+
+    precipType: "none",
+    precipIntensity: 0,
+
+    uvIndex: null,
+    visibility: null,
+
+    smokeIndex: 0,
+    frostRisk: 0,
+    freezeRisk: 0,
+    inversionRisk: 0,
+    blackIceRisk: 0,
+    valleyFogRisk: 0,
+    ridgeFogRisk: 0,
+
+    timestamp: h.timestamp
+  });
+});
+
+// ------------------------------------------------------------
+// 🔍 DEBUG (NOW ACTUALLY USEFUL)
+// ------------------------------------------------------------
+if (label === "tomorrow") {
   console.log("🧪 FACTOR BREAKDOWN", evals.map(e => ({
     factor: e.dominantFactor,
     confidence: e.confidence
   })));
 }
 
-  const core = aggregate(evals);
+// ------------------------------------------------------------
+// AGGREGATE
+// ------------------------------------------------------------
+const core = aggregate(evals);
 
-  const snapshot = blend(hours);
-  const signals = buildSignals(snapshot);
-  const voice = buildHumanVoice(signals, core.dominantFactor);
+// ------------------------------------------------------------
+// SNAPSHOT → SIGNALS → VOICE
+// ------------------------------------------------------------
+const snapshot = blend(hours);
+const signals = buildSignals(snapshot);
+const voice = buildHumanVoice(signals, core.dominantFactor);
 
-  return {
-    label,
-    score,
-    now: nowBlock,
-    dayparts,
-    bestWindow: best,
-    worstWindow: worst,
-    stats: { tempMax, tempMin },
+// ------------------------------------------------------------
+// RETURN (unchanged)
+// ------------------------------------------------------------
+return {
+  label,
+  score,
+  now: nowBlock,
+  dayparts,
+  bestWindow: best,
+  worstWindow: worst,
+  stats: { tempMax, tempMin },
 
-    emoji: pickEmoji(score),
-    headline: buildHeadline(score),
-    narrative: voice.summary || "",
-    bullets: buildBullets({ best, worst, dayparts }),
+  emoji: pickEmoji(score),
+  headline: buildHeadline(score),
+  narrative: voice.summary || "",
+  bullets: buildBullets({ best, worst, dayparts }),
 
-    dominantFactor: core.dominantFactor,
-    confidence: core.confidence,
-    secondaryFactors: core.secondaryFactors,
+  dominantFactor: core.dominantFactor,
+  confidence: core.confidence,
+  secondaryFactors: core.secondaryFactors,
 
-    summary: voice.summary,
-    detail: voice.detail,
-    feelsLike: voice.feelsLike,
+  summary: voice.summary,
+  detail: voice.detail,
+  feelsLike: voice.feelsLike,
 
-    snapshot,
-    hourlyEvaluations: evals
-  };
-}
-
+  snapshot,
+  hourlyEvaluations: evals
+};
 // ------------------------------------------------------------
 // HELPERS
 // ------------------------------------------------------------
