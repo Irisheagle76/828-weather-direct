@@ -142,3 +142,4 @@ return {
     score: intelTomorrow?.score
   }
 };
+}
