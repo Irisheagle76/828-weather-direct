@@ -377,10 +377,16 @@ function animateScoreOnce(selector, score) {
   requestAnimationFrame(frame);
 }
 
+// ------------------------------------------------------------
+// FORMATTERS
+// ------------------------------------------------------------
 function formatHour(ts) {
-  return new Date(ts).toLocaleTimeString([], { hour: 'numeric' });
+  return new Date(ts).toLocaleTimeString([], { hour: "numeric" });
 }
 
+// ------------------------------------------------------------
+// FEELSCORE COLORS
+// ------------------------------------------------------------
 function getFeelScoreColor(score) {
   if (score >= 90) return "#4caf50";
   if (score >= 75) return "#8bc34a";
@@ -397,6 +403,9 @@ function getFeelScoreBackground(score) {
   return "rgba(244,67,54,0.10)";
 }
 
+// ------------------------------------------------------------
+// DROUGHT COLORS
+// ------------------------------------------------------------
 function getDroughtBackground(DSS, FRI) {
   const s = Math.max(DSS, FRI);
   if (s >= 85) return "rgba(183,28,28,0.25)";
@@ -406,38 +415,75 @@ function getDroughtBackground(DSS, FRI) {
   return "rgba(255,255,255,0.03)";
 }
 
+// ------------------------------------------------------------
+// UI ANIMATIONS
+// ------------------------------------------------------------
 function runStaggerAnimation() {
-  document.querySelectorAll('.fade-in').forEach((el, i) => {
-    setTimeout(() => el.classList.add('show'), i * 90);
+  document.querySelectorAll(".fade-in").forEach((el, i) => {
+    setTimeout(() => el.classList.add("show"), i * 90);
   });
 }
 
 function hideSplash() {
-  const splash = document.getElementById('splash');
+  const splash = document.getElementById("splash");
   if (!splash) return;
 
   setTimeout(() => {
-    splash.classList.add('hide');
+    splash.classList.add("hide");
     setTimeout(() => splash.remove(), 600);
   }, 300);
 }
 
+// ------------------------------------------------------------
+// HEADER METRICS (🔥 FIXED)
+// ------------------------------------------------------------
 function renderHeaderMetrics(current) {
-  const el = document.getElementById('wx-metrics');
-  if (!el) return;
+  const el = document.getElementById("wx-metrics");
+  if (!el || !current) return;
 
-  const temp = Math.round(current.air_temperature ?? current.temperatureF ?? 0);
-  const rh = Math.round(current.relative_humidity ?? 0);
-  const wind = Math.round(current.wind_avg ?? current.windSpeed ?? 0);
+  // 🌡 Temperature (Tempest C → F)
+  const tempRaw =
+    typeof current.air_temperature === "number"
+      ? (current.air_temperature * 9) / 5 + 32
+      : current.temperatureF;
+
+  // 💦 Humidity (robust fallback)
+  const rhRaw =
+    current.relativeHumidity ??
+    current.relative_humidity ??
+    current.rh;
+
+  // 💧 Dew Point (Tempest → F or fallback)
+  const dewRaw =
+    typeof current.dew_point === "number"
+      ? (current.dew_point * 9) / 5 + 32
+      : current.dewpointF ??
+        current.dewPoint ??
+        null;
+
+  // 💨 Wind (m/s → mph if needed)
+  const windRaw =
+    typeof current.wind_avg === "number"
+      ? current.wind_avg * 2.237
+      : current.windSpeed;
+
+  const temp = Number.isFinite(tempRaw) ? Math.round(tempRaw) : "--";
+  const rh = Number.isFinite(rhRaw) ? Math.round(rhRaw) : "--";
+  const dew = Number.isFinite(dewRaw) ? Math.round(dewRaw) : "--";
+  const wind = Number.isFinite(windRaw) ? Math.round(windRaw) : "--";
 
   el.innerHTML = `
     <div class="live-chip">LIVE</div>
     <div class="metric-chip">🌡 ${temp}°</div>
     <div class="metric-chip">💦 ${rh}%</div>
+    <div class="metric-chip">💧 ${dew}°</div>
     <div class="metric-chip">💨 ${wind} mph</div>
   `;
 }
 
+// ------------------------------------------------------------
+// SCORE MAPPING
+// ------------------------------------------------------------
 function mapScoreToCategory(score) {
   if (score >= 90) return "ideal";
   if (score >= 70) return "comfortable";
