@@ -607,96 +607,184 @@ function buildPeriodNarrative(ctx, label) {
   const avgWind = wind?.avgWind ?? 0;
   const breezyHours = wind?.breezyHours ?? 0;
 
-  // ------------------------------------------------------------
-  // HEADLINE (IMPROVED + STABLE)
-  // ------------------------------------------------------------
+ // ============================================================
+// BUILD NARRATIVE (STABLE + DATA-DRIVEN)
+// ============================================================
+
+function buildPeriodNarrative(ctx, label) {
+  if (!ctx) return fallback(label);
+
+  const { score, narrativeText, flags, change, wind, snapshot } = ctx;
+
+  const { isShockDay, hasColdStart } = flags || {};
+  const { tempDrop = 0, chillDelta = 0, tomorrowMin = null } = change || {};
+
+  const maxWind = wind?.maxWind ?? 0;
+  const maxGust = wind?.maxGust ?? 0;
+  const avgWind = wind?.avgWind ?? 0;
+  const breezyHours = wind?.breezyHours ?? 0;
+
+  const temp = snapshot?.temp ?? null;
+  const dp = snapshot?.dewPoint ?? null;
+
+  // ==========================================================
+  // HEADLINE (FULLY DATA-DRIVEN)
+  // ==========================================================
   let headline;
 
+  // --- WIND DOMINANT ---
   if (maxGust >= 45) {
     headline = "Strong winds may cause impacts tomorrow";
-  } else if (maxGust >= 30) {
+  } 
+  else if (maxGust >= 30) {
     headline = "Gusty winds will be a major factor tomorrow";
   }
-  // 👉 require persistence OR meaningful average
   else if (breezyHours >= 3 || avgWind >= 10) {
     headline = "Breezy conditions develop tomorrow";
   }
-  // 👉 optional: brief spike messaging (nice polish)
   else if (breezyHours >= 1 && avgWind < 10) {
     headline = "A brief increase in wind early in the day";
   }
+
+  // --- TEMPERATURE SHIFTS ---
   else if (isShockDay) {
     headline =
       tempDrop >= 25
         ? "A sharp cooldown hits tomorrow"
         : "A noticeably cooler day arrives tomorrow";
-  } else if (hasColdStart) {
+  } 
+  else if (hasColdStart) {
     headline = "A chilly start leads into a cool day";
-  } else {
-    headline =
-      extractHeadline(narrativeText) ||
-      "Conditions settle into a steady pattern";
+  }
+
+  // --- BASE CONDITIONS (REPLACES WEAK FALLBACK) ---
+  else {
+    let tempLabel = "comfortable";
+
+    if (temp >= 88) tempLabel = "hot";
+    else if (temp >= 75) tempLabel = "warm";
+    else if (temp <= 55) tempLabel = "cool";
+
+    let moisture = "dry";
+    if (dp != null) {
+      if (dp >= 65) moisture = "humid";
+      else if (dp >= 55) moisture = "slightly humid";
+      else if (dp >= 45) moisture = "comfortable";
+    }
+
+    if (tempLabel === "hot" && moisture === "humid") {
+      headline = "Hot and humid conditions build tomorrow";
+    } 
+    else if (tempLabel === "hot") {
+      headline = "Hot conditions settle in tomorrow";
+    }
+    else if (tempLabel === "cool") {
+      headline = "Cool and crisp conditions tomorrow";
+    }
+    else if (moisture === "humid") {
+      headline = "Mild but slightly humid conditions";
+    }
+    else {
+      headline = "Comfortable and steady conditions";
+    }
   }
 
   // ==========================================================
-  // BULLETS (ALIGNED WITH NEW LOGIC)
+  // 🆕 NARRATIVE BODY (THIS WAS MISSING)
+  // ==========================================================
+  let narrative = "";
+
+  const minT =
+    tomorrowMin != null
+      ? Math.round(tomorrowMin)
+      : temp != null
+      ? Math.round(temp - 10)
+      : null;
+
+  const maxT = temp != null ? Math.round(temp) : null;
+
+  if (label === "tomorrow") {
+    narrative = `A generally ${headline.toLowerCase()}.`;
+
+    if (minT != null && maxT != null) {
+      narrative += ` Temperatures start near ${minT}° and rise into the ${maxT}s by afternoon.`;
+    }
+
+    // moisture
+    if (dp != null) {
+      if (dp < 50) {
+        narrative += " Dry air keeps things feeling crisp and clean.";
+      } else if (dp > 65) {
+        narrative += " Humidity adds a heavier feel at times.";
+      } else {
+        narrative += " Humidity stays in a comfortable range.";
+      }
+    }
+
+    // wind
+    if (maxGust >= 30) {
+      narrative += " Winds may be gusty at times.";
+    } else if (maxWind >= 12) {
+      narrative += " A light breeze develops.";
+    } else {
+      narrative += " Winds stay light and out of the way.";
+    }
+  }
+
+  // ==========================================================
+  // BULLETS (CLEAN + DATA-ALIGNED)
   // ==========================================================
   let bullets = [];
 
   if (isShockDay) {
-    bullets.push("Much colder than today — a noticeable drop");
+    bullets.push("Much cooler than today");
   }
 
-  if (hasColdStart) {
+  if (hasColdStart && tomorrowMin != null) {
     bullets.push(
       tomorrowMin <= 42
-        ? "Cold start in the 40s"
+        ? `Cold start near ${Math.round(tomorrowMin)}°`
         : "Cool start early in the day"
     );
   }
 
   if (maxGust >= 45) {
-    bullets.push("Wind gusts could exceed 45 mph at times");
-  } else if (maxGust >= 30) {
-    bullets.push("Gusty winds up to around 30–40 mph");
+    bullets.push("Strong wind gusts possible");
+  } 
+  else if (maxGust >= 30) {
+    bullets.push("Gusty at times");
   }
-  // 👉 match new breezy logic
   else if (breezyHours >= 3 || avgWind >= 10) {
-    bullets.push("Breezy conditions at times");
-  } else if (breezyHours >= 1) {
-    bullets.push("A brief uptick in wind early");
+    bullets.push("Breezy conditions develop");
+  }
+  else if (breezyHours >= 1) {
+    bullets.push("Brief increase in wind early");
+  }
+  else {
+    bullets.push("Light winds");
+  }
+
+  if (dp != null) {
+    if (dp < 50) bullets.push("Dry, crisp air");
+    else if (dp > 65) bullets.push("Humid at times");
+    else bullets.push("Comfortable humidity");
   }
 
   if (chillDelta >= 5) {
-    bullets.push("Feels colder than the temperature suggests");
+    bullets.push("Feels cooler than actual temperature");
   }
 
-  if (isShockDay && tempDrop >= 25) {
-    bullets.push("You’ll likely want a jacket after today's warmth");
-  }
+  bullets = [...new Set(bullets)].slice(0, 4);
 
-  // fallback bullets
-  if (bullets.length < 2) {
-    bullets = [
-      ...bullets,
-      ...extractBullets(narrativeText, {
-        trend: 0,
-        snapshot: ctx.snapshot,
-        label
-      })
-    ];
-  }
-
-  bullets = [...new Set(bullets)].slice(0, 3);
-
-  // ------------------------------------------------------------
-  // RETURN
-  // ------------------------------------------------------------
+  // ==========================================================
+  // FINAL
+  // ==========================================================
   return {
     label,
     score,
     emoji: pickEmoji(score),
     headline,
+    narrative,
     bullets
   };
 }
