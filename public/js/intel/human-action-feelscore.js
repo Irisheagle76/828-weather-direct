@@ -292,44 +292,76 @@ function buildPeriod(hours, label, change = {}) {
 
   if (!Number.isFinite(snapshot.temp)) return null;
 
-  // ------------------------------------------------------------
-  // WIND METRICS (UNCHANGED)
-  // ------------------------------------------------------------
-const maxWind = Math.max(
-  ...hours.map((h, i) => {
-    if (i < 3) {
-      const smoothed = smoothWind(h, hours);
-      return Number.isFinite(smoothed) ? smoothed : 0;
-    }
-    return Number.isFinite(h.windSpeed) ? h.windSpeed : 0;
-  })
-);
-  const maxGust = Math.max(...hours.map(h => h.windGust ?? 0));
+ // ------------------------------------------------------------
+// WIND METRICS (FIXED + SAFE)
+// ------------------------------------------------------------
+const windValues = hours.map((h, i) => {
+  const raw = Number.isFinite(h.windSpeed) ? Math.max(0, h.windSpeed) : 0;
 
-  console.log("🌬️ TOMORROW WIND FINAL", {
-  maxWind,
-  maxGust,
-  rawWind: ctx?.snapshot?.wind,
-  hours: ctx?.wind
+  // smooth near-term hours only
+  if (i < 3) {
+    const smoothed = smoothWind(h, hours);
+    return Number.isFinite(smoothed) ? Math.max(0, smoothed) : raw;
+  }
+
+  return raw;
 });
 
-  const windImpact = Math.max(
-    ...hours.map(h =>
-      Math.max(h.windSpeed ?? 0, (h.windGust ?? 0) * 0.7)
-    )
-  );
+const gustValues = hours.map(h =>
+  Number.isFinite(h.windGust) ? Math.max(0, h.windGust) : 0
+);
 
-  const { tempDrop = 0, windJump = 0, tomorrowMin = null } = change;
+const maxWind = windValues.length ? Math.max(...windValues) : 0;
+const maxGust = gustValues.length ? Math.max(...gustValues) : 0;
 
-  const windChill = calcWindChill(snapshot.temp, snapshot.wind);
-  const chillDelta = snapshot.temp - windChill;
+// ------------------------------------------------------------
+// 🔍 DEBUG (CORRECT + USEFUL)
+// ------------------------------------------------------------
+if (label === "tomorrow") {
+  console.log("🌬️ TOMORROW WIND FINAL", {
+    maxWind,
+    maxGust,
+    avgWind: avg(windValues),
+    sample: hours.slice(0, 8).map(h => ({
+      hour: new Date(h._ts).getHours(),
+      wind: h.windSpeed,
+      gust: h.windGust
+    }))
+  });
+}
 
-  const isShockDay = label === "tomorrow" && tempDrop >= 18;
+// ------------------------------------------------------------
+// WIND IMPACT (STABLE)
+// ------------------------------------------------------------
+const windImpact = Math.max(
+  ...hours.map(h => {
+    const w = Number.isFinite(h.windSpeed) ? Math.max(0, h.windSpeed) : 0;
+    const g = Number.isFinite(h.windGust) ? Math.max(0, h.windGust) : 0;
+    return Math.max(w, g * 0.7);
+  }),
+  0
+);
 
-  const hasColdStart =
-    label === "tomorrow" &&
-    Number.isFinite(tomorrowMin) &&
-    tomorrowMin <= 50;
+// ------------------------------------------------------------
+// CHANGE METRICS (UNCHANGED)
+// ------------------------------------------------------------
+const { tempDrop = 0, windJump = 0, tomorrowMin = null } = change;
+
+// ------------------------------------------------------------
+// WIND CHILL (SAFE)
+// ------------------------------------------------------------
+const windChill = calcWindChill(snapshot.temp, snapshot.wind ?? 0);
+const chillDelta = snapshot.temp - windChill;
+
+// ------------------------------------------------------------
+// FLAGS (UNCHANGED)
+// ------------------------------------------------------------
+const isShockDay = label === "tomorrow" && tempDrop >= 18;
+
+const hasColdStart =
+  label === "tomorrow" &&
+  Number.isFinite(tomorrowMin) &&
+  tomorrowMin <= 50;
 
   // ------------------------------------------------------------
   // INTEL + NARRATIVE (UNCHANGED)
