@@ -129,6 +129,9 @@ const tomorrowFinal = {
 };
 
   // 5. RETURN FINAL OUTPUT
+  console.log("TOMORROW RAW:", tomorrowRaw);
+console.log("TOMORROW FINAL:", tomorrowFinal);
+
   return {
     today: todayRaw,
     tomorrow: tomorrowFinal
