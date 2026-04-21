@@ -171,7 +171,15 @@ function buildNarrative(intel, dayType, category, isGoldilocks) {
   if (core.length === 1) {
     narrative += `, with ${core[0]}`;
   } else if (core.length === 2) {
-    narrative += `, with ${core[0]} and ${core[1]}`;
+   const joinPhrases = (arr) => {
+  if (arr.length === 1) return arr[0];
+  if (arr.length === 2) return `${arr[0]} and ${arr[1]}`;
+  return `${arr.slice(0, -1).join(", ")}, and ${arr[arr.length - 1]}`;
+};
+
+if (core.length) {
+  narrative += `, with ${joinPhrases(core)}`;
+}
   }
 
   if (light && maybe(0.5)) {

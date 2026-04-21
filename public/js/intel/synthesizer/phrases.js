@@ -20,12 +20,12 @@ export const phrases = {
       "a slight chill staying in place"
     ],
 
-    neutral: [
-      "temperatures in a comfortable range",
-      "a nice steady temperature setup",
-      "nothing extreme either way",
-      "comfortable from start to finish"
-    ],
+  neutral: [
+  "temperatures staying comfortable",
+  "a comfortable temperature range",
+  "temperatures holding in a nice range",
+  "mild temperatures through the day"
+],
 
     warm: [
       "temperatures warming nicely by afternoon",
