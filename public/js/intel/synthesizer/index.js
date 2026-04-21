@@ -10,7 +10,7 @@ import { contrast } from "./contrast.js";
 import { emojiPools } from "./emojis.js";
 import { categories } from "./categories.js";
 import { temporal } from "./temporal.js";
-import { bulletPools } from "./bullets.js";
+import { buildBullets } from "./bullets.js";
 
 // ------------------------------------------------------------
 // CATEGORY DETECTOR (INTEL-DRIVEN)
@@ -132,8 +132,13 @@ const tomorrowFinal = {
   console.log("TOMORROW RAW:", tomorrowRaw);
 console.log("TOMORROW FINAL:", tomorrowFinal);
 
-  return {
-    today: todayRaw,
-    tomorrow: tomorrowFinal
-  };
-}
+return {
+  today: {
+    ...todayRaw,
+    score: intelToday?.score
+  },
+  tomorrow: {
+    ...tomorrowFinal,
+    score: intelTomorrow?.score
+  }
+};

@@ -2,9 +2,10 @@
 // NARRATIVE ASSEMBLER — v10 (VOICE-FIRST, CLEAN)
 // ============================================================
 
-import { phrases } from "./phrases.js";
 import { categories } from "./categories.js";
 import { temporal } from "./temporal.js";
+import { phrases } from "./phrases.js";
+import { buildBullets } from "./bullets.js";
 
 // ------------------------------------------------------------
 // HELPERS
@@ -181,27 +182,34 @@ function buildNarrative(intel, dayType, category, isGoldilocks) {
 // MASTER
 // ------------------------------------------------------------
 export const assemble = {
+
   assemble(intel, dayType, category, isGoldilocks) {
-    const narrativeObj = buildNarrative(intel, dayType, category, isGoldilocks);
 
+    const narrativeObj = buildNarrative(
+      intel,
+      dayType,
+      category,
+      isGoldilocks
+    );
+
+    // DEBUG (remove later if you want)
     console.log("ASSEMBLE OUTPUT:", narrativeObj.narrative);
-    
-   return {
-  emoji: buildEmoji(intel),
-  headline: null,
 
-  // ✅ KEY FIX
-  narrative: narrativeObj.narrative,
-  longNarrative: narrativeObj.narrative,
+    return {
+      emoji: "🌤️", // handled elsewhere if needed
+      headline: null,
 
-  bullets: buildBullets(intel),
+      narrative: narrativeObj.narrative,
+      longNarrative: narrativeObj.narrative,
 
-  category,
-  goldilocks: isGoldilocks,
-  version: "10.0",
+      bullets: buildBullets(intel), // ✅ FIXED
 
-  temporal: narrativeObj.temporal
-};
+      category,
+      goldilocks: isGoldilocks,
+      version: "10.0",
+
+      temporal: narrativeObj.temporal
+    };
   }
 };
 
