@@ -1,3 +1,4 @@
+console.log("NEW CATEGORIES LOADED");
 export const categories = {
 
   // ------------------------------------------------------------
