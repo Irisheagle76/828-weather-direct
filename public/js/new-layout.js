@@ -200,10 +200,13 @@ console.log("CURRENT DEBUG:", {
 }
 
 function detectDominantFactor(s = {}) {
+  const wind = s.wind ?? s.windSpeed ?? 0;
+
   if (s.dewPoint >= 65) return "muggy";
   if (s.temp >= 85) return "heat";
   if (s.temp <= 45) return "cold";
-  if (s.wind >= 12) return "wind";
+  if (wind >= 12) return "wind";
+
   return "comfortable";
 }
 
@@ -423,46 +426,15 @@ function renderHeaderMetrics(current) {
   const el = document.getElementById('wx-metrics');
   if (!el) return;
 
- const tempRaw =
-  current.air_temperature ??
-  current.temperatureF;
-
-const rhRaw =
-  current.relativeHumidity ??
-  current.relative_humidity ??
-  current.rh;
-
-const dewRaw =
-  current.dewpointF ??
-  current.dewPoint ??
-  null;
-
-const windRaw =
-  current.wind_avg ??
-  current.windSpeed;
-
-const temp = Number.isFinite(tempRaw)
-  ? Math.round(tempRaw)
-  : "--";
-
-const rh = Number.isFinite(rhRaw)
-  ? Math.round(rhRaw)
-  : "--";
-
-const dew = Number.isFinite(dewRaw)
-  ? Math.round(dewRaw)
-  : "--";
-
-const wind = Number.isFinite(windRaw)
-  ? Math.round(windRaw)
-  : "--";
+  const temp = Math.round(current.air_temperature ?? current.temperatureF ?? 0);
+  const rh = Math.round(current.relative_humidity ?? 0);
+  const wind = Math.round(current.wind_avg ?? current.windSpeed ?? 0);
 
   el.innerHTML = `
-     <div class="live-chip">LIVE</div>
-  <div class="metric-chip">🌡 ${temp}°</div>
-  <div class="metric-chip">💦 ${rh}%</div>
-  <div class="metric-chip">🌫 ${dew}°</div>
-  <div class="metric-chip">💨 ${wind} mph</div>
+    <div class="live-chip">LIVE</div>
+    <div class="metric-chip">🌡 ${temp}°</div>
+    <div class="metric-chip">💦 ${rh}%</div>
+    <div class="metric-chip">💨 ${wind} mph</div>
   `;
 }
 

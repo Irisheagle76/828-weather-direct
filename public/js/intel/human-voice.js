@@ -10,7 +10,12 @@ export function buildHumanVoice(intel = {}) {
 
   const temp = typeof signals.temp === "number" ? signals.temp : null;
   const dewPoint = typeof signals.dewPoint === "number" ? signals.dewPoint : null;
-  const wind = typeof signals.wind === "number" ? signals.wind : 0;
+ const wind =
+  typeof signals.wind === "number"
+    ? signals.wind
+    : typeof signals.windSpeed === "number"
+    ? signals.windSpeed
+    : 0;
 
   // ------------------------------------------------------------
   // HARD GUARD

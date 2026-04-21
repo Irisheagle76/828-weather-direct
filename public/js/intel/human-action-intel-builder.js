@@ -173,6 +173,13 @@ if (label === "tomorrow") {
   score = Math.round(score);
 
   const evals = hours.map(evaluateHumanActionFactors);
+  if (label === "tomorrow") {
+  console.log("🧪 FACTOR BREAKDOWN", evals.map(e => ({
+    factor: e.dominantFactor,
+    confidence: e.confidence
+  })));
+}
+
   const core = aggregate(evals);
 
   const snapshot = blend(hours);
@@ -277,7 +284,7 @@ function buildSignals(s) {
     temp: s.temp ?? 70,
     dewPoint: s.dewPoint ?? 55,
     humidity: s.humidity ?? 50,
-    windSpeed: s.windSpeed ?? 5,
+    wind: s.windSpeed ?? 5,
     cloudCover: s.cloudCover ?? 50
   };
 }
