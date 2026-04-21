@@ -44,7 +44,7 @@ export const phrases = {
   // ------------------------------------------------------------
   // MOISTURE / HUMIDITY (GRADIENT ADDED)
   // ------------------------------------------------------------
- moisture: {
+moisture: {
   dry: [
     "dry air keeps things feeling crisp",
     "the air stays clean and comfortable",
@@ -65,10 +65,8 @@ export const phrases = {
     "the air feels thick and heavy",
     "humidity becomes hard to ignore"
   ]
-}
-  // ------------------------------------------------------------
-  // WIND (BETTER SCALING)
-  // ------------------------------------------------------------
+}, 
+
 wind: {
   calm: [
     "winds stay light",
@@ -90,7 +88,30 @@ wind: {
     "some stronger gusts show up",
     "winds get a bit pushy at times"
   ]
-}
+},  // ✅
+
+light: {
+  sunny: [
+    "plenty of sunshine",
+    "mostly sunny through the day",
+    "a good amount of sun overall",
+    "sunshine dominates for much of the day"
+  ],
+  filtered: [
+    "a mix of sun and clouds",
+    "sun at times with some passing clouds",
+    "partly sunny with a few clouds around",
+    "sun peeking through now and then",
+    "sun filtered by some thin clouds at times"
+  ],
+  overcast: [
+    "mostly cloudy skies",
+    "a good bit of cloud cover",
+    "skies stay on the cloudy side",
+    "not much sunshine getting through",
+    "clouds hanging around for most of the day"
+  ]
+},  // ✅
 
   // ------------------------------------------------------------
   // LIGHT / SKY (MORE VARIETY)
@@ -118,7 +139,7 @@ wind: {
     "not much sunshine getting through",
     "clouds hanging around for most of the day"
   ]
-}
+},
 
   // ------------------------------------------------------------
   // MICROCLIMATE (ALREADY STRONG — SLIGHTLY EXPANDED)
