@@ -97,6 +97,46 @@ function inWindow(ts, now, startHrs, endHrs) {
 function buildPeriod(hours, label, now) {
   if (!hours.length) return fallback(label);
 
+// ============================================================
+// 🔍 DEBUG: FULL TOMORROW SNAPSHOT
+// ============================================================
+if (label === "tomorrow") {
+  const get = (arr, key) =>
+    arr.map(h => h[key]).filter(v => typeof v === "number");
+
+  const stats = arr => ({
+    min: arr.length ? Math.min(...arr) : null,
+    max: arr.length ? Math.max(...arr) : null,
+    avg: arr.length
+      ? arr.reduce((a, b) => a + b, 0) / arr.length
+      : null
+  });
+
+  const temps = get(hours, "temperatureF");
+  const dew = get(hours, "dewpointF");
+  const wind = get(hours, "windSpeed");
+  const humidity = get(hours, "humidity");
+  const clouds = get(hours, "cloudCover");
+
+  console.log("🌤️ TOMORROW FULL DEBUG", {
+    count: hours.length,
+
+    temperature: stats(temps),
+    dewpoint: stats(dew),
+    wind: stats(wind),
+    humidity: stats(humidity),
+    cloudCover: stats(clouds),
+
+    // 🔥 Raw sample (first 5 hours)
+    sample: hours.slice(0, 5),
+
+    // 🔥 Hour distribution (catch slicing bugs)
+    hoursLocal: hours.map(h => h.hour)
+  });
+}
+// ============================================================
+// 🔍 END DEBUG: FULL TOMORROW SNAPSHOT
+// ============================================================
   const hourlyComfort = hours.map(h => {
     const c = calculateComfort({
       temp: h.temperatureF,
