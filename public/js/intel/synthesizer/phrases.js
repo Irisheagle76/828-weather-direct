@@ -1,3 +1,5 @@
+console.log("NEW PHRASES LOADED");
+
 // ============================================================
 // PHRASE SYSTEM — v3 (REFINED + INTENSITY-AWARE)
 // Asheville-tuned | Composable | Hybrid-engine ready
