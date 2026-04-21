@@ -182,7 +182,10 @@ console.log("CURRENT DEBUG:", {
     renderDroughtFire(drought);
   renderFeelScore(human?.feelscore);
     renderTimeline(hourly);
-   const narrativeData = generateNarrative(human?.today, human?.tomorrow);
+  const narrativeData = generateNarrative(
+  human?.today,
+  human?.tomorrow
+);
 
 renderTomorrow(narrativeData?.tomorrow);
 
