@@ -74,18 +74,7 @@ function buildContrastPools(category, isGoldilocksFlag) {
 
     temporalPool: isGoldilocksFlag
       ? [...temporal.goldilocksToday, ...temporal.goldilocksTomorrow]
-      : [...temporal.today, ...temporal.tomorrow],
-
-    bulletPool: isGoldilocksFlag
-      ? bulletPools.goldilocks
-      : [
-          ...bulletPools.temperature,
-          ...bulletPools.moisture,
-          ...bulletPools.wind,
-          ...bulletPools.light,
-          ...bulletPools.microclimate,
-          ...bulletPools.pattern
-        ]
+      : [...temporal.today, ...temporal.tomorrow]
   };
 }
 

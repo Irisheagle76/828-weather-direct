@@ -1,14 +1,14 @@
 // contrast.js
 // ============================================================
-// CONTRAST ENGINE — v6 (NON-DESTRUCTIVE, VOICE-AWARE)
+// CONTRAST ENGINE — v7 (CLEAN + NON-DESTRUCTIVE)
 //
 // Purpose:
-// Ensure Today ≠ Tomorrow without overriding assembled voice.
+// Ensure Today ≠ Tomorrow without breaking narrative voice
 //
 // Rules:
-// - NEVER replace narrative unless identical
-// - Light-touch adjustments only
-// - Respect assemble.js as source of truth
+// - Never override narrative unless identical
+// - Do not depend on bulletPools
+// - Keep changes minimal and safe
 // ============================================================
 
 export const contrast = {
@@ -29,7 +29,9 @@ export const contrast = {
   // EMOJI
   // ------------------------------------------------------------
   ensureDifferentEmoji(todayEmoji, tomorrowEmoji, pool) {
+    if (!todayEmoji || !tomorrowEmoji) return tomorrowEmoji;
     if (todayEmoji !== tomorrowEmoji) return tomorrowEmoji;
+
     return this.pickDifferent(todayEmoji, pool);
   },
 
@@ -44,19 +46,19 @@ export const contrast = {
   },
 
   // ------------------------------------------------------------
-  // NARRATIVE (VERY IMPORTANT — SAFE ONLY)
+  // NARRATIVE (STRICT — DO NOT TOUCH UNLESS IDENTICAL)
   // ------------------------------------------------------------
   ensureDifferentNarrative(todayNarrative, tomorrowNarrative, pool) {
     if (!todayNarrative || !tomorrowNarrative) return tomorrowNarrative;
 
-    // ✅ Only intervene if identical (rare edge case)
+    // Only intervene if identical
     if (todayNarrative !== tomorrowNarrative) return tomorrowNarrative;
 
     return this.pickDifferent(todayNarrative, pool);
   },
 
   // ------------------------------------------------------------
-  // TEMPORAL FRAMING
+  // TEMPORAL
   // ------------------------------------------------------------
   ensureDifferentTemporal(todayFrame, tomorrowFrame, pool) {
     if (!todayFrame || !tomorrowFrame) return tomorrowFrame;
@@ -66,70 +68,62 @@ export const contrast = {
   },
 
   // ------------------------------------------------------------
-  // BULLETS
+  // BULLETS (NO POOLS — JUST REMOVE DUPLICATES)
   // ------------------------------------------------------------
-  ensureDifferentBullets(todayBullets = [], tomorrowBullets = [], pool = [], count = 3) {
+  ensureDifferentBullets(todayBullets = [], tomorrowBullets = []) {
     if (!Array.isArray(todayBullets) || !Array.isArray(tomorrowBullets)) {
       return tomorrowBullets;
     }
 
     const overlap = tomorrowBullets.filter(b => todayBullets.includes(b));
 
-    // already different → keep
+    // Already different → keep
     if (overlap.length === 0) return tomorrowBullets;
 
-    if (!Array.isArray(pool) || pool.length === 0) return tomorrowBullets;
+    // Remove duplicates only (non-destructive)
+    const filtered = tomorrowBullets.filter(b => !todayBullets.includes(b));
 
-    const shuffled = [...pool].sort(() => Math.random() - 0.5);
-    const newBullets = [];
-
-    for (const b of shuffled) {
-      if (!todayBullets.includes(b)) newBullets.push(b);
-      if (newBullets.length >= count) break;
-    }
-
-    return newBullets.length ? newBullets : tomorrowBullets;
+    return filtered.length ? filtered : tomorrowBullets;
   },
 
   // ------------------------------------------------------------
-  // APPLY CONTRAST (NON-DESTRUCTIVE)
+  // APPLY CONTRAST
   // ------------------------------------------------------------
-  applyContrast(today, tomorrow, pools = {}) {
+  applyContrast(today = {}, tomorrow = {}, pools = {}) {
     const result = { ...tomorrow };
 
-    // 1. Emoji
+    // Emoji
     result.emoji = this.ensureDifferentEmoji(
-      today?.emoji,
-      result?.emoji,
-      pools?.emojiPool
+      today.emoji,
+      result.emoji,
+      pools.emojiPool
     );
 
-    // 2. Headline
+    // Headline
     result.headline = this.ensureDifferentHeadline(
-      today?.headline,
-      result?.headline,
-      pools?.headlinePool
+      today.headline,
+      result.headline,
+      pools.headlinePool
     );
 
-    // 3. Narrative (SAFE — DO NOT OVERRIDE VOICE)
+    // Narrative (protected)
     result.narrative = this.ensureDifferentNarrative(
-      today?.narrative,
-      result?.narrative,
-      pools?.narrativePool
+      today.narrative,
+      result.narrative,
+      pools.narrativePool
     );
 
-    // 4. Temporal
+    // Temporal
     result.temporal = this.ensureDifferentTemporal(
-      today?.temporal,
-      result?.temporal,
-      pools?.temporalPool
+      today.temporal,
+      result.temporal,
+      pools.temporalPool
     );
 
-    // 5. Bullets
+    // Bullets (no pool dependency)
     result.bullets = this.ensureDifferentBullets(
-      today?.bullets,
-      result?.bullets,
-      pools?.bulletPool
+      today.bullets,
+      result.bullets
     );
 
     return result;
