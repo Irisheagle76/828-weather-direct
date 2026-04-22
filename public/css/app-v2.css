@@ -892,7 +892,30 @@ body {
 .pulse-card.expanded .pulse-fade {
   display: none;
 }
+/* ============================================================
+   PULSE HEADER POLISH
+   ============================================================ */
 
+.pulse-card .section-title {
+  position: relative;
+  color: #9ecbff;                 /* cool blue accent (not white) */
+  letter-spacing: 0.05em;
+}
+
+/* subtle cool accent line */
+.pulse-card .section-title::after {
+  content: "";
+  display: block;
+  width: 28px;
+  height: 2px;
+  margin-top: 4px;
+
+  background: linear-gradient(
+    to right,
+    #6ea8ff,
+    transparent
+  );
+}
 /* ============================================================
    META / TEXT
    ============================================================ */
@@ -1084,4 +1107,27 @@ body {
     #ffb86c,
     transparent
   );
+}
+/* ============================================================
+   FEELSCORE HEADER (TONED DOWN)
+   ============================================================ */
+
+.feelscore-title {
+  font-size: 0.9rem;                 /* smaller than Pulse/Update */
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+
+  color: rgba(255,255,255,0.6);      /* softer */
+  font-weight: 600;
+
+  margin-bottom: 10px;
+}
+.feelscore-title::after {
+  content: "";
+  display: block;
+  width: 20px;
+  height: 1px;
+  margin-top: 6px;
+
+  background: rgba(255,255,255,0.2);
 }

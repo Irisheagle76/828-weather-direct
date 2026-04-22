@@ -399,7 +399,7 @@ adjusted.windGust = smoothGust(adjusted, hourly);
 
   container.innerHTML = `
     <div class="timeline-card">
-      <div class="section-title">FEELSCORE NEXT FEW HOURS</div>
+     <div class="section-title feelscore-title">Feelscore next few hours</div>
       <div class="timeline-row">${html}</div>
     </div>
   `;
