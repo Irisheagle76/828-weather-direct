@@ -122,14 +122,24 @@ async function loadPulse() {
   if (!container) return;
 
   try {
-    fetch('/api/tidbits/pulse-latest')
+    const res = await fetch('/api/tidbits/pulse-latest');
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
     const pulse = await res.json();
 
     renderPulseV2(container, pulse?.fallback ? null : pulse);
 
   } catch (err) {
     console.error("Pulse load error:", err);
-    renderPulseV2(container, null);
+
+    renderPulseV2(container, {
+      title: "No recent update",
+      text: "No recent 828 Weather Pulse update has been published.",
+      timestamp: Date.now()
+    });
   }
 }
 
