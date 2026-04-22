@@ -1059,3 +1059,9 @@ body {
 .update-card:hover .substack-icon {
   transform: translateY(1px) scale(1.1);
 }
+
+.update-card .section-title {
+  color: #ffffff;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}

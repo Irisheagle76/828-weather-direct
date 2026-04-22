@@ -50,15 +50,21 @@ container.innerHTML = `
   <div class="content-card update-card">
 
     <div class="section-title update-title-row">
-      <span class="update-title-text">828 Weather Update</span>
 
-      <img 
-  src="https://res.cloudinary.com/dz45rrije/image/upload/v1776884962/substack_avlweather.png"
-  class="substack-icon"
-  alt="Substack"
-/>
+      <span class="update-title-text">
+        828 Weather Update
+      </span>
+
+      <span class="update-brand">
+        <img 
+          src="https://res.cloudinary.com/dz45rrije/image/upload/w_36,h_36,c_fit/v1776884962/substack_avlweather.png"
+          class="substack-icon"
+          alt="Substack"
+        />
+      </span>
 
       ${isNew ? `<span class="update-new">NEW</span>` : ""}
+
     </div>
 
     <div class="update-title">
