@@ -1,50 +1,79 @@
-// /js/modules/renderPulseV2.js
+// ============================================================
+// 828 WEATHER — PULSE MODULE (V2 CLEAN)
+// ============================================================
 
 export function renderPulseV2(container, pulse) {
   if (!container) return;
 
-  if (!pulse) {
+  // ------------------------------------------------------------
+  // EMPTY STATE
+  // ------------------------------------------------------------
+  if (!pulse || pulse.fallback) {
     container.innerHTML = `
       <div class="content-card pulse-card">
-        <div class="section-title">PULSE</div>
+        <div class="section-title">828 Weather Pulse</div>
         <div class="pulse-empty">No recent updates</div>
       </div>
     `;
     return;
   }
 
+  // ------------------------------------------------------------
+  // DATA
+  // ------------------------------------------------------------
   const time = formatTimeAgo(new Date(pulse.timestamp));
   const text = cleanText(pulse.text || pulse.body || "");
-  const preview = buildPreview(text);
+  const media = pulse.mediaUrl || pulse.image || null;
 
-  const media = pulse.mediaUrl || pulse.image;
-
+  // ------------------------------------------------------------
+  // RENDER
+  // ------------------------------------------------------------
   container.innerHTML = `
     <div class="content-card pulse-card">
 
-      <div class="section-title">PULSE</div>
-
-      ${media ? `
-        <div class="pulse-media">
-          <img src="${media}" />
-        </div>
-      ` : ""}
+      <div class="section-title">828 Weather Pulse</div>
 
       <div class="pulse-meta">${time}</div>
 
-      <div class="pulse-text">
-        ${preview}
+      ${media ? `
+        <div class="pulse-media">
+          <img src="${media}" alt="Pulse image" />
+        </div>
+      ` : ""}
+
+      <div class="pulse-body">
+        <div class="pulse-text">
+          ${text}
+        </div>
+        <div class="pulse-fade"></div>
       </div>
 
-      <div class="pulse-expand">Tap for full update</div>
+      <button class="pulse-toggle" aria-expanded="false">
+        Read full update
+      </button>
 
     </div>
   `;
+
+  // ------------------------------------------------------------
+  // EXPAND / COLLAPSE (NO RE-RENDER)
+  // ------------------------------------------------------------
+  const card = container.querySelector('.pulse-card');
+  const btn = container.querySelector('.pulse-toggle');
+
+  if (card && btn) {
+    btn.onclick = () => {
+      const expanded = card.classList.toggle('expanded');
+
+      btn.textContent = expanded ? 'Show less' : 'Read full update';
+      btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    };
+  }
 }
 
-// -----------------------------
-// HELPERS (simplified)
-// -----------------------------
+// ============================================================
+// HELPERS
+// ============================================================
 
 function cleanText(html) {
   return (html || "")
@@ -53,18 +82,13 @@ function cleanText(html) {
     .trim();
 }
 
-function buildPreview(text) {
-  if (!text) return "";
-  return text.length > 140
-    ? text.slice(0, 140).trim() + "…"
-    : text;
-}
-
 function formatTimeAgo(date) {
   const diff = (Date.now() - date.getTime()) / 1000;
 
   if (diff < 60) return "Just now";
   if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)} hr ago`;
-  return `${Math.floor(diff / 86400)} days ago`;
+
+  const days = Math.floor(diff / 86400);
+  return `Last updated ${days} day${days > 1 ? "s" : ""} ago`;
 }
