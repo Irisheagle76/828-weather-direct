@@ -43,43 +43,53 @@ export function renderSubstackV2(container, post) {
 
   const isNew = isRecent(date);
 
-  // ------------------------------------------------------------
-  // RENDER
-  // ------------------------------------------------------------
-  container.innerHTML = `
-    <div class="content-card update-card">
+// ------------------------------------------------------------
+// RENDER
+// ------------------------------------------------------------
+container.innerHTML = `
+  <div class="content-card update-card">
 
-      <div class="section-title update-title-row">
-        <span>828 Weather Update</span>
-        <img src="https://res.cloudinary.com/dz45rrije/image/upload/v1776884962/substack_avlweather.png" class="substack-icon" alt="Substack" />
-        ${isNew ? `<span class="update-new">NEW</span>` : ""}
-      </div>
+    <div class="section-title update-title-row">
+      <span class="update-title-text">828 Weather Update</span>
 
-      <div class="update-title">
-        ${title}
-      </div>
+      <img 
+        src="https://res.cloudinary.com/dz45rrije/image/upload/w_36,h_36,c_fit/v1776884962/substack_avlweather.png" 
+        class="substack-icon" 
+        alt="Substack"
+      />
 
-      ${thumb ? `
-        <div class="update-media">
-          <img src="${thumb}" alt="Update image" />
-        </div>
-      ` : ""}
-
-      <div class="update-date">
-        ${formattedDate}
-      </div>
-
-      <div class="update-excerpt">
-        ${excerpt}
-      </div>
-
-      <a href="${link}" target="_blank" rel="noopener noreferrer" class="update-cta">
-        Read full update →
-      </a>
-
+      ${isNew ? `<span class="update-new">NEW</span>` : ""}
     </div>
-  `;
-}
+
+    <div class="update-title">
+      ${title}
+    </div>
+
+    ${thumb ? `
+      <div class="update-media">
+        <img src="${thumb}" alt="Update image" />
+      </div>
+    ` : ""}
+
+    <div class="update-date">
+      ${formattedDate}
+    </div>
+
+    <div class="update-excerpt">
+      ${excerpt}
+    </div>
+
+    <a 
+      href="${link}" 
+      target="_blank" 
+      rel="noopener noreferrer" 
+      class="update-cta"
+    >
+      Read full update →
+    </a>
+
+  </div>
+`;
 
 // ============================================================
 // HELPERS

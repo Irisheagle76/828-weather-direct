@@ -1029,13 +1029,13 @@ body {
   white-space: nowrap;
 }
 
-/* Title text — allow space + proper truncation */
-.update-title-row span {
-  flex: 1;                    /* 🚨 key fix: allow text to take space */
-  min-width: 0;               /* required for ellipsis in flex */
-  white-space: nowrap;
+/* Target ONLY the title text (not all spans) */
+.update-title-text {
+  flex: 1;                    /* allow text to fill available space */
+  min-width: 0;               /* required for ellipsis in flex layouts */
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* keep icon + NEW badge stable */
@@ -1051,7 +1051,7 @@ body {
   object-fit: contain;
   opacity: 0.9;
 
-  transform: translateY(1px);
+  transform: translateY(1px);     /* optical alignment */
   transition: transform 0.2s ease;
 }
 
