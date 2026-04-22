@@ -25,35 +25,53 @@ export function renderPulseV2(container, pulse) {
   const text = cleanText(pulse.text || pulse.body || "");
   const media = pulse.mediaUrl || pulse.image || null;
 
-  // ------------------------------------------------------------
-  // RENDER
-  // ------------------------------------------------------------
-  container.innerHTML = `
-    <div class="content-card pulse-card">
+// ------------------------------------------------------------
+// RENDER
+// ------------------------------------------------------------
+const isVideo =
+  media &&
+  (
+    pulse.mediaType === "video" ||
+    media.endsWith(".mp4") ||
+    media.includes("/video/")
+  );
 
-      <div class="section-title">828 Weather Pulse</div>
+container.innerHTML = `
+  <div class="content-card pulse-card">
 
-      <div class="pulse-meta">${time}</div>
+    <div class="section-title">828 Weather Pulse</div>
 
-      ${media ? `
-        <div class="pulse-media">
-          <img src="${media}" alt="Pulse image" />
-        </div>
-      ` : ""}
+    <div class="pulse-meta">${time}</div>
 
-      <div class="pulse-body">
-        <div class="pulse-text">
-          ${text}
-        </div>
-        <div class="pulse-fade"></div>
+    ${media ? `
+      <div class="pulse-media">
+        ${
+          isVideo
+            ? `
+              <video autoplay muted loop playsinline>
+                <source src="${media}" type="video/mp4" />
+              </video>
+            `
+            : `
+              <img src="${media}" alt="Pulse image" />
+            `
+        }
       </div>
+    ` : ""}
 
-      <button class="pulse-toggle" aria-expanded="false">
-        Read full update
-      </button>
-
+    <div class="pulse-body">
+      <div class="pulse-text">
+        ${text}
+      </div>
+      <div class="pulse-fade"></div>
     </div>
-  `;
+
+    <button class="pulse-toggle" aria-expanded="false">
+      Read full update
+    </button>
+
+  </div>
+`;
 
   // ------------------------------------------------------------
   // EXPAND / COLLAPSE (NO RE-RENDER)
