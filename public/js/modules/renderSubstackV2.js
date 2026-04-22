@@ -147,3 +147,4 @@ function isRecent(dateStr) {
 
   return diff < 86400;
 }
+}
