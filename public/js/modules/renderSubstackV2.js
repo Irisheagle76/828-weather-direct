@@ -57,7 +57,7 @@ container.innerHTML = `
 
       <span class="update-brand">
         <img 
-          src="https://res.cloudinary.com/dz45rrije/image/upload/w_36,h_36,c_fit/v1776884962/substack_avlweather.png"
+          src="https://res.cloudinary.com/dz45rrije/image/upload/v1776884962/substack_avlweather.png"
           class="substack-icon"
           alt="Substack"
         />
