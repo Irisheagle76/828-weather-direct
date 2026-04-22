@@ -1002,3 +1002,16 @@ body {
   padding: 4px 8px;
   border-radius: 8px;
 }
+
+.update-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.substack-icon {
+  width: 18px;        /* slightly larger than before */
+  height: 18px;
+  object-fit: contain;
+  opacity: 0.9;
+}
