@@ -114,6 +114,41 @@ function calculateGustiness(windSpeed, windGust) {
 }
 
 // ============================================================
+// CONTENT LOADERS (PULSE + SUBSTACK)
+// ============================================================
+
+async function loadPulse() {
+  const container = document.getElementById('pulse');
+  if (!container) return;
+
+  try {
+    const res = await fetch('/api/pulse-latest');
+    const pulse = await res.json();
+
+    renderPulseV2(container, pulse?.fallback ? null : pulse);
+
+  } catch (err) {
+    console.error("Pulse load error:", err);
+    renderPulseV2(container, null);
+  }
+}
+
+async function loadSubstack() {
+  const container = document.getElementById('update');
+  if (!container) return;
+
+  try {
+    const res = await fetch('/api/substack-articles');
+    const post = await res.json();
+
+    renderSubstackV2(container, post);
+
+  } catch (err) {
+    console.error("Substack load error:", err);
+    renderSubstackV2(container, null);
+  }
+}
+// ============================================================
 // MAIN ENTRY
 // ============================================================
 
@@ -192,8 +227,8 @@ renderTomorrow(narrativeData?.tomorrow);
     // ------------------------------------------------------------
     // CONTENT
     // ------------------------------------------------------------
-    renderPulseV2(document.getElementById('pulse'), data?.pulse);
-    renderSubstackV2(document.getElementById('update'), data?.substack);
+  await loadPulse();
+await loadSubstack();
 
     runStaggerAnimation();
     hideSplash();
