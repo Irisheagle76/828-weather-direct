@@ -9,7 +9,7 @@ console.log("KV PULSE:", pulse);
       return res.status(200).json({
         title: "No Weather Pulse yet",
         text: "",
-        imageUrl: null,
+        mediaUrl: null,
         timestamp: null,
         fallback: true,
       });

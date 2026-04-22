@@ -122,7 +122,7 @@ async function loadPulse() {
   if (!container) return;
 
   try {
-    const res = await fetch('/api/pulse-latest');
+    fetch('/api/tidbits/pulse-latest')
     const pulse = await res.json();
 
     renderPulseV2(container, pulse?.fallback ? null : pulse);
