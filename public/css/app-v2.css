@@ -848,6 +848,19 @@ body {
   opacity: 0.85;
 }
 /* ============================================================
+   TITLES (PULSE + UPDATE)
+   ============================================================ */
+
+.section-title {
+  font-size: 1.15rem;                 /* larger, more prominent */
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.9);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+/* ============================================================
    PULSE MODULE — CLEAN EXPANSION
    ============================================================ */
 
@@ -913,12 +926,12 @@ body {
 .pulse-media img,
 .pulse-media video {
   width: 100%;
-  height: 220px;              /* consistent card height */
+  height: 220px;
   object-fit: cover;
   display: block;
 }
 
-/* Tap hint (improved readability) */
+/* Tap hint */
 .pulse-media::after {
   content: "Tap to expand";
   position: absolute;
@@ -989,7 +1002,7 @@ body {
   border-radius: 12px;
 }
 
-/* Close button (fixed for mobile usability) */
+/* Close button */
 .pulse-lightbox-close {
   position: absolute;
   top: 10px;
@@ -1003,15 +1016,45 @@ body {
   border-radius: 8px;
 }
 
+/* ============================================================
+   UPDATE (SUBSTACK HEADER FIXES)
+   ============================================================ */
+
 .update-title-row {
   display: flex;
   align-items: center;
   gap: 6px;
+
+  flex-wrap: nowrap;          /* prevents wrapping */
+  white-space: nowrap;        /* force one line */
+  overflow: hidden;
 }
 
+/* prevent breaking */
+.update-title-row span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* keep icon + badge stable */
+.substack-icon,
+.update-new {
+  flex-shrink: 0;
+}
+
+/* Substack icon */
 .substack-icon {
-  width: 18px;        /* slightly larger than before */
+  width: 18px;
   height: 18px;
   object-fit: contain;
   opacity: 0.9;
+
+  transform: translateY(1px);
+  transition: transform 0.2s ease;
+}
+
+/* subtle hover polish */
+.update-card:hover .substack-icon {
+  transform: translateY(1px) scale(1.1);
 }
