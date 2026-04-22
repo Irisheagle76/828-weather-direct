@@ -22,7 +22,7 @@
   </div>
 
   <!-- =====================================
-       HEADER (LIVE DATA READY)
+       HEADER
        ===================================== -->
   <div class="app-header">
     <div class="header-inner">
@@ -35,8 +35,6 @@
       <div class="live-row" id="wx-metrics">
         <div class="live-chip">LIVE</div>
         <div id="updated-time" class="updated-time">Updating…</div>
-
-        <!-- 👇 REAL DATA GETS INJECTED HERE -->
         <div id="metric-chips"></div>
       </div>
 
@@ -57,6 +55,16 @@
        APP ROOT
        ===================================== -->
   <div id="app"></div>
+
+  <!-- =====================================
+       PULSE LIGHTBOX (NEW)
+       ===================================== -->
+  <div id="pulse-lightbox" class="pulse-lightbox hidden">
+    <div class="pulse-lightbox-inner">
+      <span class="pulse-lightbox-close">✕</span>
+      <div id="pulse-lightbox-content"></div>
+    </div>
+  </div>
 
   <!-- =====================================
        INFO MODAL
@@ -81,7 +89,6 @@
     } catch (e) {
       console.error('App load failed:', e);
     } finally {
-      // 🔴 SAFETY: never allow splash to get stuck
       setTimeout(() => {
         const splash = document.getElementById('splash');
         if (splash) splash.classList.add('hide');
@@ -103,7 +110,6 @@
 
         body.innerHTML = `
           <h2>FeelScore</h2>
-
           <p>
             Measures how the air actually feels using temperature,
             humidity (dew point), and wind.
@@ -128,15 +134,6 @@
 
           <p>
             Combines long-term dryness with daily fire weather risk.
-            Drought Stress
-Long-term dryness (days to weeks)
-Driven by rainfall deficits + soil moisture
-Reflects fuel condition
-
-Fire Risk
-Short-term fire behavior (hours to days)
-Driven by wind, humidity, temperature
-Reflects fire potential today
           </p>
 
           <h3>DSS (Drought Stress)</h3>
@@ -163,7 +160,6 @@ Reflects fire potential today
     };
 
     window.closeInfo = function(e) {
-      // safer click detection
       if (!e || e.target === e.currentTarget) {
         document.getElementById('info-modal').classList.add('hidden');
       }
