@@ -52,7 +52,8 @@ export const phrases = {
 
     neutral: [
       "humidity staying comfortable",
-      "nothing heavy in the air",
+      "humidity remains manageable",
+      "air feels clean and fresh",
       "humidity remaining comfortable"
     ],
 

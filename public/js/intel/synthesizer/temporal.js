@@ -11,7 +11,7 @@ export const temporal = {
     "Tomorrow,",
     "For tomorrow,",
     "Heading into tomorrow,",
-    "Looking ahead totomorrow,"
+    "Looking ahead to tomorrow,"
   ],
 
   goldilocksToday: [
