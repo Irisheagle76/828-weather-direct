@@ -1025,19 +1025,20 @@ body {
   align-items: center;
   gap: 6px;
 
-  flex-wrap: nowrap;          /* prevents wrapping */
-  white-space: nowrap;        /* force one line */
-  overflow: hidden;
+  flex-wrap: nowrap;          /* keep everything on one line */
+  white-space: nowrap;
 }
 
-/* prevent breaking */
+/* Title text — allow space + proper truncation */
 .update-title-row span {
+  flex: 1;                    /* 🚨 key fix: allow text to take space */
+  min-width: 0;               /* required for ellipsis in flex */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* keep icon + badge stable */
+/* keep icon + NEW badge stable */
 .substack-icon,
 .update-new {
   flex-shrink: 0;
