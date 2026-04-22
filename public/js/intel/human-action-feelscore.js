@@ -59,6 +59,110 @@ function splitDays(hourly, now) {
 
   return { today, tomorrow };
 }
+// ============================================================
+// WEIGHTED CURRENT CONDITIONS (NEW)
+// ============================================================
+
+function buildWeightedCurrent(hours = []) {
+  const h0 = hours[0] || {};
+  const h1 = hours[1] || {};
+  const h2 = hours[2] || {};
+
+  const weights = [0.6, 0.3, 0.1];
+
+  const wAvg = (vals) => {
+    const valid = vals.map((v, i) =>
+      Number.isFinite(v) ? v * weights[i] : null
+    ).filter(v => v != null);
+
+    const totalWeight = vals.reduce((sum, v, i) =>
+      Number.isFinite(v) ? sum + weights[i] : sum
+    , 0);
+
+    return totalWeight
+      ? valid.reduce((a, b) => a + b, 0) / totalWeight
+      : null;
+  };
+
+  return {
+    temperatureF: wAvg([h0.temperatureF, h1.temperatureF, h2.temperatureF]),
+    dewpointF:    wAvg([h0.dewpointF,    h1.dewpointF,    h2.dewpointF]),
+    windSpeed:    wAvg([h0.windSpeed,    h1.windSpeed,    h2.windSpeed]),
+    windGust: Math.max(
+      h0.windGust ?? 0,
+      h1.windGust ?? 0,
+      h2.windGust ?? 0
+    )
+  };
+}
+// ============================================================
+// SHORT-TERM TREND (NEW)
+// ============================================================
+
+function computeShortTermTrend(hours = []) {
+  const h0 = hours[0] || {};
+  const h1 = hours[1] || {};
+  const h2 = hours[2] || {};
+
+  const safe = (v) => (Number.isFinite(v) ? v : null);
+
+  const tempTrend =
+    safe(h2.temperatureF) != null && safe(h0.temperatureF) != null
+      ? h2.temperatureF - h0.temperatureF
+      : 0;
+
+  const dewTrend =
+    safe(h2.dewpointF) != null && safe(h0.dewpointF) != null
+      ? h2.dewpointF - h0.dewpointF
+      : 0;
+
+  const windTrend =
+    safe(h2.windSpeed) != null && safe(h0.windSpeed) != null
+      ? h2.windSpeed - h0.windSpeed
+      : 0;
+
+  return { tempTrend, dewTrend, windTrend };
+}
+
+// ============================================================
+// NARRATIVE TREND FLAVOR (ANTI-REPEAT)
+// ============================================================
+
+function applyTrendFlavor(text, shortTerm = {}) {
+  if (!text) return text;
+
+  const { tempTrend = 0, dewTrend = 0, windTrend = 0 } = shortTerm;
+
+  let additions = [];
+
+  if (tempTrend >= 2 && !text.includes("climbing")) {
+    additions.push("Temperatures are climbing over the next couple of hours.");
+  }
+
+  if (tempTrend <= -2 && !text.includes("ease downward")) {
+    additions.push("Temperatures are starting to ease downward.");
+  }
+
+  if (dewTrend >= 2 && !text.includes("increasing")) {
+    additions.push("Humidity is gradually increasing.");
+  }
+
+  if (dewTrend <= -2 && !text.includes("drying out")) {
+    additions.push("The air is drying out a bit.");
+  }
+
+  if (windTrend >= 3 && !text.includes("pick up")) {
+    additions.push("Winds are beginning to pick up.");
+  }
+
+  if (windTrend <= -3 && !text.includes("easing")) {
+    additions.push("Winds are easing.");
+  }
+
+  if (!additions.length) return text;
+
+  return text + " " + additions.join(" ");
+}
 
 // ------------------------------------------------------------
 // WIND SMOOTHING
@@ -430,8 +534,9 @@ const hasColdStart =
 }
 
 // ============================================================
-// CURRENT FEELSCORE (FIXED CORE ISSUE)
+// CURRENT FEELSCORE (STABLE + RESPONSIVE)
 // ============================================================
+
 function resolveDewpoint(first, tempest) {
   const model = first?.dewpointF;
 
@@ -456,50 +561,63 @@ function resolveDewpoint(first, tempest) {
 function buildCurrentWithTrend(hours, tempest = null) {
   if (!hours.length) return fallback("today");
 
+  // ------------------------------------------------------------
+  // STEP 1: Smooth near-term model hours
+  // ------------------------------------------------------------
   hours = smoothFirstHoursWithTempest(hours, tempest);
 
-let first = hours[0];
+  // ------------------------------------------------------------
+  // STEP 2: Build weighted current baseline (h0 + h1 + h2)
+  // ------------------------------------------------------------
+  let first = buildWeightedCurrent(hours);
 
-// 🆕 Inject Tempest real-time conditions
-if (tempest) {
+  // ------------------------------------------------------------
+  // STEP 3: Inject real-time Tempest conditions
+  // ------------------------------------------------------------
+  if (tempest) {
+    first = {
+      ...first,
+
+      temperatureF:
+        (typeof tempest.air_temperature === "number"
+          ? (tempest.air_temperature * 9) / 5 + 32
+          : null) ?? first.temperatureF,
+
+      dewpointF:
+        resolveDewpoint(first, tempest),
+
+      windSpeed:
+        tempest.wind_avg ?? first.windSpeed,
+
+      windGust: Math.max(
+        first.windGust ?? 0,
+        tempest.wind_gust ?? 0
+      )
+    };
+  }
+
+  // ------------------------------------------------------------
+  // STEP 4: Wind smoothing (final pass)
+  // ------------------------------------------------------------
+  const smoothedWind = smoothWind(first, hours);
+  const smoothedGust = smoothGust(first, hours);
+
   first = {
     ...first,
-
-    temperatureF:
-      (typeof tempest.air_temperature === "number"
-        ? (tempest.air_temperature * 9) / 5 + 32
-        : null) ?? first.temperatureF,
-
-    dewpointF:
-      resolveDewpoint(first, tempest),
-
-    windSpeed:
-      tempest.wind_avg ?? first.windSpeed,
-
-    windGust: Math.max(
-      first.windGust ?? 0,
-      tempest.wind_gust ?? 0
-    )
+    windSpeed: smoothedWind,
+    windGust: smoothedGust
   };
-}
-// ------------------------------------------------------------
-// 🆕 WIND SMOOTHING (CRITICAL)
-// ------------------------------------------------------------
 
-const smoothedWind = smoothWind(first, hours);
-const smoothedGust = smoothGust(first, hours);
+  const gustiness = calculateGustiness(
+    first.windSpeed,
+    first.windGust
+  );
 
-first = {
-  ...first,
-  windSpeed: smoothedWind,
-  windGust: smoothedGust
-};
-
-const gustiness = calculateGustiness(
-  first.windSpeed,
-  first.windGust
-);
-
+  // ------------------------------------------------------------
+  // STEP 5: Recompute short-term trend using adjusted "now"
+  // ------------------------------------------------------------
+  const adjustedHours = [first, ...hours.slice(1, 3)];
+  const shortTrend = computeShortTermTrend(adjustedHours);
 // ------------------------------------------------------------
 // 🆕 BASE SCORE
 // ------------------------------------------------------------
@@ -543,7 +661,15 @@ const snapshot = {
 
 const scoreScaled = currentScore * 10;
 
-const intel = buildIntel(snapshot, scoreScaled, trend, 0, 0, "today");
+const intel = buildIntel(
+  snapshot,
+  scoreScaled,
+  trend,
+  0,
+  0,
+  "today",
+  shortTrend
+);
 
 let narrative;
 try {
@@ -553,6 +679,15 @@ try {
     mapScoreToCategory(scoreScaled),
     scoreScaled >= 85
   );
+
+  // 👇 ADD THIS BLOCK
+  if (narrative?.longNarrative) {
+    narrative.longNarrative = applyTrendFlavor(
+      narrative.longNarrative,
+      shortTrend
+    );
+  }
+
 } catch {
   return fallback("today");
 }
@@ -822,7 +957,15 @@ function fallbackAll() {
   };
 }
 
-function buildIntel(snapshot, score, trend, windImpact, maxGust, label) {
+function buildIntel(
+  snapshot,
+  score,
+  trend,
+  windImpact,
+  maxGust,
+  label,
+  shortTerm = {}
+) {
   return {
     signals: {
       temp: snapshot.temp,
@@ -831,7 +974,8 @@ function buildIntel(snapshot, score, trend, windImpact, maxGust, label) {
     },
     pattern: { trend, avg: score },
     context: { label },
-    dominantFactor: detectDominantFactor(snapshot)
+    dominantFactor: detectDominantFactor(snapshot),
+    shortTerm: shortTerm   // ✅ correct
   };
 }
 
@@ -888,3 +1032,4 @@ function smoothFirstHoursWithTempest(hours = [], tempest = null) {
     };
   });
 }
+
