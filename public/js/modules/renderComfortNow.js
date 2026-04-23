@@ -1,9 +1,11 @@
 // ============================================================
-// /js/modules/renderComfortNow.js (v9 — NARRATIVE FIXED)
+// /js/modules/renderComfortNow.js
 // ============================================================
 
 import { calculateComfort } from "../intel/comfort.js";
 import { assembleWithVoice } from "../intel/synthesizer/assembleWithVoice.js";
+import { analyzeTrend } from "../intel/trend/analyzeTrend.js";
+import { buildFullExplanation } from "../intel/explanations/buildFullExplanation.js";
 
 // ============================================================
 // UTILS
@@ -48,18 +50,15 @@ function injectTempest(current, tempest) {
   return {
     ...current,
 
-    // 🌡️ Temperature
     temperatureF:
       tempest.temperatureF ??
       current.temperatureF,
 
-    // 💧 Humidity — trust Tempest
     humidity:
       tempest.relative_humidity ??
       tempest.humidity ??
       current.humidity,
 
-    // 🌬️ Wind — trust Tempest
     wind:
       tempest.windSpeed ??
       current.wind,
@@ -68,13 +67,11 @@ function injectTempest(current, tempest) {
       tempest.windSpeed ??
       current.windSpeed,
 
-    // 💨 Gust — DO NOT use Math.max
     windGust:
       tempest.windGust ??
       tempest.wind_gust ??
       current.windGust,
 
-    // ☀️ Solar
     solarRadiation:
       tempest.solarRadiation ??
       current.solarRadiation
@@ -129,8 +126,11 @@ export function renderComfortNow(
   const isDay = options.isDay ?? true;
   const hourly = options.hourly ?? [];
 
-  const tempestRaw = options.tempest ?? null;
-  const tempest = normalizeTempest(tempestRaw);
+  // ------------------------------------------------------------
+  // DATA PREP
+  // ------------------------------------------------------------
+
+  const tempest = normalizeTempest(options.tempest ?? null);
 
   let normalized = normalizeCurrent(current);
   normalized = injectTempest(normalized, tempest);
@@ -154,7 +154,7 @@ export function renderComfortNow(
   const goldiClass = comfort.goldilocks ? "goldilocks" : "";
 
   // ------------------------------------------------------------
-  // SYNTH
+  // INTEL + TREND
   // ------------------------------------------------------------
 
   const intel = {
@@ -169,6 +169,10 @@ export function renderComfortNow(
 
   const trend = analyzeTrend(hourly);
 
+  // ------------------------------------------------------------
+  // NARRATIVE
+  // ------------------------------------------------------------
+
   const narrative = assembleWithVoice(
     intel,
     "today",
@@ -178,13 +182,6 @@ export function renderComfortNow(
   );
 
   // ------------------------------------------------------------
-  // DRIVERS
-  // ------------------------------------------------------------
-
-  const drivers = buildDrivers(comfort);
-  const driverShort = drivers.map(d => d.short).join(" • ");
-
-  // ------------------------------------------------------------
   // TEXT
   // ------------------------------------------------------------
 
@@ -192,17 +189,28 @@ export function renderComfortNow(
     narrative?.headline ||
     fallbackHeadline(comfort);
 
-  console.log("COMFORT:", comfort);
-  console.log("HOURLY LENGTH:", hourly.length);
-  console.log("NARRATIVE:", narrative);
-
   const explanation = buildFullExplanation(
     comfort,
     narrative,
-    hourly
+    trend
   );
 
+  // ------------------------------------------------------------
+  // DRIVERS + ACTIONS
+  // ------------------------------------------------------------
+
+  const drivers = buildDrivers(comfort);
+  const driverShort = drivers.map(d => d.short).join(" • ");
+
   const actions = buildActions(comfort);
+
+  // ------------------------------------------------------------
+  // DEBUG
+  // ------------------------------------------------------------
+
+  console.log("COMFORT:", comfort);
+  console.log("TREND:", trend);
+  console.log("NARRATIVE:", narrative);
 
   // ------------------------------------------------------------
   // RENDER
@@ -225,9 +233,7 @@ export function renderComfortNow(
 
         <div class="comfort-text-block">
           <div class="comfort-label">Comfort Now</div>
-
           <div class="comfort-text">${headline}</div>
-
           <div class="comfort-explainer">${explanation}</div>
         </div>
 
