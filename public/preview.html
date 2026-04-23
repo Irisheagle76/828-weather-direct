@@ -170,7 +170,67 @@
         document.getElementById('info-modal').classList.add('hidden');
       }
     };
-  </script>
 
+        window.closeInfo = function(e) {
+      if (!e || e.target === e.currentTarget) {
+        document.getElementById('info-modal').classList.add('hidden');
+      }
+    };
+
+    // ============================================================
+    // SYNC FOOTER LIVE TIME
+    // ============================================================
+    function syncFooterTime() {
+      const main = document.getElementById("liveAge");
+      const footer = document.getElementById("footerLiveText");
+
+      if (!main || !footer) return;
+
+      footer.textContent = main.textContent;
+    }
+
+    // Run once after load
+    setTimeout(syncFooterTime, 2000);
+
+    // Keep it in sync
+    setInterval(syncFooterTime, 60000);
+
+  </script>
+<footer class="site-footer">
+  <div class="footer-inner">
+
+    <div class="footer-brand">
+      <div class="footer-logo">828 Weather Direct</div>
+      <div class="footer-tagline">
+        Hyper-local, human-readable weather for Western North Carolina.
+      </div>
+    </div>
+
+    <div class="footer-live">
+      <span class="live-dot"></span>
+      <span id="footerLiveText">Updated just now</span>
+    </div>
+
+    <div class="footer-links">
+      <a href="#">Home</a>
+      <a href="#">Forecast</a>
+      <a href="#">About</a>
+      <a href="mailto:tballistydy@gmail.com">Contact</a>
+    </div>
+
+    <div class="footer-meta">
+      <div>Data: NOAA • NWS • OpenWeather</div>
+      <div>Serving Asheville, Weaverville & the 828 region</div>
+      <div class="footer-disclaimer">
+        Weather info is for general awareness, not official warnings.
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      © 2026 828 Weather Direct
+    </div>
+
+  </div>
+</footer>
 </body>
 </html>
