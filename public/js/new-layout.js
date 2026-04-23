@@ -487,7 +487,7 @@ function hideSplash() {
 // ------------------------------------------------------------
 // HEADER METRICS
 // ------------------------------------------------------------
-function renderHeaderMetrics(current) {
+function renderHeaderMetrics(current, tempest = {}) {
   const container = document.getElementById("metric-chips");
   if (!container || !current) return;
 
