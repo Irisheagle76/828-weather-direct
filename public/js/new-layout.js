@@ -485,43 +485,93 @@ function hideSplash() {
 }
 
 // ------------------------------------------------------------
-// HEADER METRICS (🔥 FIXED)
+// HEADER METRICS
 // ------------------------------------------------------------
 function renderHeaderMetrics(current) {
   const container = document.getElementById("metric-chips");
   if (!container || !current) return;
 
-  // 🌡 Temperature (Tempest C → F)
+  // ---------------------------
+  // helpers
+  // ---------------------------
+  const toF = (c) => (c * 9) / 5 + 32;
+  const toMPH = (ms) => ms * 2.237;
+  const round = (v) => (Number.isFinite(v) ? Math.round(v) : "--");
+
+  // ---------------------------
+  // temperature
+  // ---------------------------
   const tempRaw =
     typeof current.air_temperature === "number"
-      ? (current.air_temperature * 9) / 5 + 32
+      ? toF(current.air_temperature)
       : current.temperatureF;
 
-  // 💦 Humidity
+  // ---------------------------
+  // humidity
+  // ---------------------------
   const rhRaw =
     current.relativeHumidity ??
     current.relative_humidity ??
     current.rh;
 
-  // 💧 Dew Point
+  // ---------------------------
+  // dew point
+  // ---------------------------
   const dewRaw =
     typeof current.dew_point === "number"
-      ? (current.dew_point * 9) / 5 + 32
+      ? toF(current.dew_point)
       : current.dewpointF ??
         current.dewPoint ??
         null;
 
-  // 💨 Wind
+  // ---------------------------
+  // wind + gusts
+  // ---------------------------
   const windRaw =
     typeof current.wind_avg === "number"
-      ? current.wind_avg * 2.237
+      ? toMPH(current.wind_avg)
       : current.windSpeed;
 
-  const temp = Number.isFinite(tempRaw) ? Math.round(tempRaw) : "--";
-  const rh = Number.isFinite(rhRaw) ? Math.round(rhRaw) : "--";
-  const dew = Number.isFinite(dewRaw) ? Math.round(dewRaw) : "--";
-  const wind = Number.isFinite(windRaw) ? Math.round(windRaw) : "--";
+  const gustRaw =
+    typeof current.wind_gust === "number"
+      ? toMPH(current.wind_gust)
+      : current.windGust ??
+        current.wind_gust_speed ??
+        null;
 
+  // ---------------------------
+  // normalized values
+  // ---------------------------
+  const temp = round(tempRaw);
+  const rh = round(rhRaw);
+  const dew = round(dewRaw);
+  const wind = round(windRaw);
+  const gust = round(gustRaw);
+
+// ---------------------------
+// wind display logic
+// ---------------------------
+const showGust =
+  Number.isFinite(gustRaw) &&
+  Number.isFinite(windRaw) &&
+  gustRaw > windRaw + 3;
+
+const windHTML = showGust
+  ? `
+    <span class="label">Wind</span>
+    <span class="value">
+      ${wind} mph
+      <span class="gust">→ ${gust}</span>
+    </span>
+  `
+  : `
+    <span class="label">Wind</span>
+    <span class="value">${wind}<span class="unit"> mph</span></span>
+  `;
+
+  // ---------------------------
+  // render
+  // ---------------------------
   container.innerHTML = `
     <div class="metric-chip temp">${temp}°</div>
 
@@ -536,12 +586,10 @@ function renderHeaderMetrics(current) {
     </div>
 
     <div class="metric-chip">
-      <span class="label">Wind</span>
-      <span class="value">${wind} mph</span>
+      ${windHTML}
     </div>
   `;
 }
-
 // ------------------------------------------------------------
 // SCORE MAPPING
 // ------------------------------------------------------------

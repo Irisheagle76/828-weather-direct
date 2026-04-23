@@ -136,6 +136,18 @@ body {
 .metric-chip .value {
   font-weight: 700;
 }
+
+.metric-chip .gust {
+  opacity: 0.75;
+  margin-left: 6px;
+  font-weight: 600;
+}
+
+.metric-chip .unit {
+  opacity: 0.6;
+  font-weight: 500;
+  margin-left: 2px;
+}
 /* ============================================================
    DROUGHT CARD
    ============================================================ */
