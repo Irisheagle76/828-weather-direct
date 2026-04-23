@@ -2,47 +2,89 @@ import { assemble } from "./assemble.js";
 import { cleanPhrase } from "./voice-filter.js";
 import { buildHumanVoice } from "../human-voice.js";
 
-export function assembleWithVoice(intel, period, category, goldilocks) {
-  const result = assemble.assemble(intel, period, category, goldilocks);
-
-  let headline = cleanPhrase(result?.headline);
+export function assembleWithVoice(
+  intel,
+  period,
+  category,
+  goldilocks,
+  trendData = null // 👈 NEW
+) {
+  // ------------------------------------------------------------
+  // BASE SYNTHESIS
+  // ------------------------------------------------------------
+  const base = assemble.assemble(intel, period, category, goldilocks);
 
   // ------------------------------------------------------------
-  // FALLBACK if vague
+  // HEADLINE (clean + fallback)
   // ------------------------------------------------------------
+  let headline = cleanPhrase(base?.headline);
+
   if (!headline) {
     const fallback = buildHumanVoice(intel);
-    headline = fallback.summary;
+    headline = cleanPhrase(fallback?.summary) || "";
   }
 
   // ------------------------------------------------------------
-  // CLEAN BULLETS
+  // BULLETS
   // ------------------------------------------------------------
-  const bullets = (result?.bullets || [])
-    .map(b => cleanPhrase(b))
+  const bullets = (base?.bullets ?? [])
+    .map(cleanPhrase)
     .filter(Boolean);
 
   // ------------------------------------------------------------
-  // 🆕 BUILD NOTES (THIS WAS MISSING)
+  // NOTES
   // ------------------------------------------------------------
-  const notes = bullets.join(" ");
+  const notes = bullets.length ? bullets.join(" ") : null;
 
   // ------------------------------------------------------------
-  // 🆕 BASIC TREND SIGNAL (lightweight bridge)
+  // TREND RESOLUTION (REAL > TEXT)
   // ------------------------------------------------------------
   let trend = null;
 
-  if (bullets.some(b => /warm|improve|rise/i.test(b))) {
-    trend = "improving";
-  } else if (bullets.some(b => /cool|worse|drop/i.test(b))) {
-    trend = "worsening";
+  if (trendData) {
+    if (trendData.strongWarmup) trend = "improving-fast";
+    else if (trendData.mildWarmup) trend = "improving";
+    else if (trendData.coolingAfterPeak) trend = "cooling";
+    else if (trendData.windIncreasing) trend = "breezier";
+    else if (trendData.drying) trend = "drying";
   }
 
+  // fallback to bullet inference if no structured trend
+  if (!trend) {
+    const has = (r) => bullets.some(b => r.test(b));
+
+    if (has(/warm|improve|rise|clear|dry/i)) trend = "improving";
+    else if (has(/cool|drop|worse|cloud|humid/i)) trend = "worsening";
+  }
+
+  // ------------------------------------------------------------
+  // HEADLINE MODULATION (subtle, not spammy)
+  // ------------------------------------------------------------
+  if (headline && trend) {
+    const suffixMap = {
+      "improving-fast": "warming quickly",
+      "improving": "gradually improving",
+      "cooling": "easing later",
+      "breezier": "wind picking up",
+      "drying": "drying out",
+      "worsening": "slipping a bit"
+    };
+
+    const suffix = suffixMap[trend];
+
+    if (suffix && !headline.toLowerCase().includes(suffix)) {
+      headline = `${headline} — ${suffix}`;
+    }
+  }
+
+  // ------------------------------------------------------------
+  // OUTPUT
+  // ------------------------------------------------------------
   return {
     headline,
     bullets,
-    notes,   // ✅ NOW EXISTS
-    trend,   // ✅ NOW EXISTS
-    emoji: result?.emoji || "🌤️"
+    notes,
+    trend,
+    emoji: base?.emoji ?? "🌤️"
   };
 }
