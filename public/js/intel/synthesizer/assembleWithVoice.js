@@ -57,25 +57,48 @@ export function assembleWithVoice(
     else if (has(/cool|drop|worse|cloud|humid/i)) trend = "worsening";
   }
 
-  // ------------------------------------------------------------
-  // HEADLINE MODULATION (subtle, not spammy)
-  // ------------------------------------------------------------
-  if (headline && trend) {
-    const suffixMap = {
-      "improving-fast": "warming quickly",
-      "improving": "gradually improving",
-      "cooling": "easing later",
-      "breezier": "wind picking up",
-      "drying": "drying out",
-      "worsening": "slipping a bit"
-    };
+// ------------------------------------------------------------
+// HEADLINE MODULATION (context-aware)
+// ------------------------------------------------------------
+if (headline && trend) {
 
-    const suffix = suffixMap[trend];
+  const modifiers = {
+    "improving-fast": (h) => {
+      if (/cool|chill/i.test(h)) return "Warming up quickly";
+      return `${h} — turning better quickly`;
+    },
 
-    if (suffix && !headline.toLowerCase().includes(suffix)) {
-      headline = `${headline} — ${suffix}`;
+    "improving": (h) => {
+      if (/cool|chill/i.test(h)) return "Losing the chill";
+      return `${h} — trending better`;
+    },
+
+    "cooling": (h) => {
+      if (/warm|heat/i.test(h)) return "Warm, but easing";
+      return `${h} — cooling off`;
+    },
+
+    "breezier": (h) => {
+      if (/calm/i.test(h)) return "Calm now, breeze building";
+      return `${h} with increasing breeze`;
+    },
+
+    "drying": (h) => {
+      return `${h} — drying out`;
+    },
+
+    "worsening": (h) => {
+      if (/ideal|perfect/i.test(h)) return "Still nice, but slipping";
+      return `${h} — becoming less comfortable`;
     }
+  };
+
+  const fn = modifiers[trend];
+
+  if (fn) {
+    headline = fn(headline);
   }
+}
 
   // ------------------------------------------------------------
   // OUTPUT

@@ -717,7 +717,19 @@ const explanation = buildFullExplanation(
 return {
   label: "today",
   score: Math.round(scoreScaled),
-  emoji: pickEmoji(scoreScaled),
+
+  // 🎯 Use comfort-driven icon instead of generic emoji
+  emoji: resolveComfortIcon({
+    score: scoreScaled,
+    temp: snapshot.temp,
+    dewPoint: snapshot.dewPoint,
+    wind: {
+      maxWind: snapshot.wind,
+      maxGust: snapshot.gust,
+      avgWind: snapshot.wind,
+      breezyHours: snapshot.wind >= 10 ? 3 : 0
+    }
+  }),
 
   headline:
     narrative?.headline ||
@@ -728,7 +740,6 @@ return {
   bullets: [explanation]
 };
 }
-
  // ============================================================
 // BUILD NARRATIVE (UNIFIED + DATA-DRIVEN)
 // ============================================================
@@ -894,14 +905,19 @@ function buildPeriodNarrative(ctx, label) {
   // FINAL
   // ==========================================================
 
-  return {
-    label,
+return {
+  label,
+  score,
+  emoji: resolveComfortIcon({
     score,
-    emoji: pickEmoji(score),
-    headline,
-    narrative,
-    bullets
-  };
+    temp,
+    dewPoint: dp,
+    wind
+  }),
+  headline,
+  narrative,
+  bullets
+};
 }
 
 // ============================================================
@@ -1037,3 +1053,59 @@ function smoothFirstHoursWithTempest(hours = [], tempest = null) {
   });
 }
 
+// ============================================================
+// ICON RESOLUTION (FEELSCORE-DRIVEN)
+// ============================================================
+
+function resolveComfortIcon({
+  score,
+  temp,
+  dewPoint,
+  wind = {},
+}) {
+  const maxWind = wind.maxWind ?? 0;
+  const maxGust = wind.maxGust ?? 0;
+  const avgWind = wind.avgWind ?? 0;
+
+  // ------------------------------------------------------------
+  // DERIVE CONDITIONS (same logic as narrative)
+  // ------------------------------------------------------------
+
+  let moisture = "dry";
+  if (dewPoint != null) {
+    if (dewPoint >= 65) moisture = "humid";
+    else if (dewPoint >= 55) moisture = "slightly_humid";
+    else if (dewPoint >= 45) moisture = "comfortable";
+  }
+
+  let tempBand = "mild";
+  if (temp >= 88) tempBand = "hot";
+  else if (temp >= 75) tempBand = "warm";
+  else if (temp <= 55) tempBand = "cool";
+
+  const isWindy = maxGust >= 30 || avgWind >= 15;
+  const isBreezy =
+    !isWindy &&
+    (avgWind >= 12 || (avgWind >= 8 && wind.breezyHours >= 4));
+
+  // ------------------------------------------------------------
+  // ICON LOGIC (ordered by impact)
+  // ------------------------------------------------------------
+
+  // 🌬️ Wind dominates
+  if (isWindy) return "🌬️";
+  if (isBreezy) return "🌤️"; // light movement, still pleasant
+
+  // 💧 Humidity dominates
+  if (moisture === "humid") return "💧";
+
+  // 🌡️ Temperature extremes
+  if (tempBand === "hot") return "☀️";
+  if (tempBand === "cool") return "🌤️";
+
+  // 🌤️ Default comfort-driven
+  if (score >= 85) return "☀️";
+  if (score >= 70) return "🌤️";
+
+  return "🌥️";
+}
