@@ -488,8 +488,8 @@ function hideSplash() {
 // HEADER METRICS (🔥 FIXED)
 // ------------------------------------------------------------
 function renderHeaderMetrics(current) {
-  const el = document.getElementById("wx-metrics");
-  if (!el || !current) return;
+  const container = document.getElementById("metric-chips");
+  if (!container || !current) return;
 
   // 🌡 Temperature (Tempest C → F)
   const tempRaw =
@@ -497,13 +497,13 @@ function renderHeaderMetrics(current) {
       ? (current.air_temperature * 9) / 5 + 32
       : current.temperatureF;
 
-  // 💦 Humidity (robust fallback)
+  // 💦 Humidity
   const rhRaw =
     current.relativeHumidity ??
     current.relative_humidity ??
     current.rh;
 
-  // 💧 Dew Point (Tempest → F or fallback)
+  // 💧 Dew Point
   const dewRaw =
     typeof current.dew_point === "number"
       ? (current.dew_point * 9) / 5 + 32
@@ -511,7 +511,7 @@ function renderHeaderMetrics(current) {
         current.dewPoint ??
         null;
 
-  // 💨 Wind (m/s → mph if needed)
+  // 💨 Wind
   const windRaw =
     typeof current.wind_avg === "number"
       ? current.wind_avg * 2.237
@@ -522,12 +522,23 @@ function renderHeaderMetrics(current) {
   const dew = Number.isFinite(dewRaw) ? Math.round(dewRaw) : "--";
   const wind = Number.isFinite(windRaw) ? Math.round(windRaw) : "--";
 
-  el.innerHTML = `
-    <div class="live-chip">LIVE</div>
-    <div class="metric-chip">🌡 ${temp}°</div>
-    <div class="metric-chip">💦 ${rh}%</div>
-    <div class="metric-chip">💧 ${dew}°</div>
-    <div class="metric-chip">💨 ${wind} mph</div>
+  container.innerHTML = `
+    <div class="metric-chip temp">${temp}°</div>
+
+    <div class="metric-chip">
+      <span class="label">RH</span>
+      <span class="value">${rh}%</span>
+    </div>
+
+    <div class="metric-chip">
+      <span class="label">DP</span>
+      <span class="value">${dew}°</span>
+    </div>
+
+    <div class="metric-chip">
+      <span class="label">Wind</span>
+      <span class="value">${wind} mph</span>
+    </div>
   `;
 }
 
