@@ -208,7 +208,7 @@ console.log("CURRENT DEBUG:", {
 
       console.log("TEMPEST IN LAYOUT:", tempest);
 
-    if (current) renderHeaderMetrics(current);
+   if (current) renderHeaderMetrics(current, tempest);
 
     // ------------------------------------------------------------
     // HUMAN INTEL (FIXED)
@@ -498,46 +498,42 @@ function renderHeaderMetrics(current) {
   const toMPH = (ms) => ms * 2.237;
   const round = (v) => (Number.isFinite(v) ? Math.round(v) : "--");
 
-  // ---------------------------
-  // temperature
-  // ---------------------------
-  const tempRaw =
-    typeof current.air_temperature === "number"
-      ? toF(current.air_temperature)
-      : current.temperatureF;
+// ---------------------------
+// temperature
+// ---------------------------
+const tempRaw =
+  typeof tempest?.air_temperature === "number"
+    ? toF(tempest.air_temperature)
+    : current.temperatureF;
 
-  // ---------------------------
-  // humidity
-  // ---------------------------
-  const rhRaw =
-    current.relativeHumidity ??
-    current.relative_humidity ??
-    current.rh;
+// ---------------------------
+// humidity
+// ---------------------------
+const rhRaw =
+  tempest?.relative_humidity ??
+  current.relativeHumidity ??
+  current.rh;
 
-  // ---------------------------
-  // dew point
-  // ---------------------------
-  const dewRaw =
-    typeof current.dew_point === "number"
-      ? toF(current.dew_point)
-      : current.dewpointF ??
-        current.dewPoint ??
-        null;
+// ---------------------------
+// dew point
+// ---------------------------
+const dewRaw =
+  typeof tempest?.dew_point === "number"
+    ? toF(tempest.dew_point)
+    : current.dewpointF ?? null;
 
-  // ---------------------------
-  // wind + gusts
-  // ---------------------------
-  const windRaw =
-    typeof current.wind_avg === "number"
-      ? toMPH(current.wind_avg)
-      : current.windSpeed;
+// ---------------------------
+// wind + gusts
+// ---------------------------
+const windRaw =
+  typeof tempest?.wind_avg === "number"
+    ? toMPH(tempest.wind_avg)
+    : current.windSpeed;
 
-  const gustRaw =
-    typeof current.wind_gust === "number"
-      ? toMPH(current.wind_gust)
-      : current.windGust ??
-        current.wind_gust_speed ??
-        null;
+const gustRaw =
+  typeof tempest?.wind_gust === "number"
+    ? toMPH(tempest.wind_gust)
+    : current.windGust ?? null;
 
   // ---------------------------
   // normalized values
