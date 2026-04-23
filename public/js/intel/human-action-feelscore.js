@@ -4,7 +4,7 @@
 
 import { calculateComfort } from "./comfort.js";
 import { assembleWithVoice } from "./synthesizer/assembleWithVoice.js";
-import { buildFullExplanation } from "../modules/renderComfortNow.js";
+import { buildFullExplanation } from "../intel/explanations/buildFullExplanation.js";
 
 // ============================================================
 // TIME HELPERS
@@ -98,30 +98,34 @@ function buildWeightedCurrent(hours = []) {
 // ============================================================
 // SHORT-TERM TREND (NEW)
 // ============================================================
-
 function computeShortTermTrend(hours = []) {
-  const h0 = hours[0] || {};
-  const h1 = hours[1] || {};
-  const h2 = hours[2] || {};
+  const [h0 = {}, h1 = {}, h2 = {}] = hours;
 
-  const safe = (v) => (Number.isFinite(v) ? v : null);
+  const get = (v) => (Number.isFinite(v) ? v : null);
+
+  const t0 = get(h0.temperatureF);
+  const t2 = get(h2.temperatureF);
+
+  const d0 = get(h0.dewpointF);
+  const d2 = get(h2.dewpointF);
+
+  const w0 = get(h0.windSpeed);
+  const w2 = get(h2.windSpeed);
 
   const tempTrend =
-    safe(h2.temperatureF) != null && safe(h0.temperatureF) != null
-      ? h2.temperatureF - h0.temperatureF
-      : 0;
+    t0 != null && t2 != null ? t2 - t0 : null;
 
   const dewTrend =
-    safe(h2.dewpointF) != null && safe(h0.dewpointF) != null
-      ? h2.dewpointF - h0.dewpointF
-      : 0;
+    d0 != null && d2 != null ? d2 - d0 : null;
 
   const windTrend =
-    safe(h2.windSpeed) != null && safe(h0.windSpeed) != null
-      ? h2.windSpeed - h0.windSpeed
-      : 0;
+    w0 != null && w2 != null ? w2 - w0 : null;
 
-  return { tempTrend, dewTrend, windTrend };
+  return {
+    tempTrend,
+    dewTrend,
+    windTrend
+  };
 }
 
 // ============================================================
@@ -703,7 +707,7 @@ const explanation = buildFullExplanation(
     windSpeed: snapshot.wind
   },
   narrative,
-  hours
+  shortTrend   // ✅ correct
 );
 
 // ------------------------------------------------------------
