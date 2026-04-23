@@ -1,5 +1,5 @@
 // ============================================================
-// /js/modules/renderComfortNow.js
+// /js/modules/renderComfortNow.js — V2 (RAIN-AWARE)
 // ============================================================
 
 import { calculateComfort } from "../intel/comfort.js";
@@ -14,15 +14,14 @@ import { buildFullExplanation } from "../intel/explanations/buildFullExplanation
 const clamp = (v, min, max) =>
   v == null ? null : Math.max(min, Math.min(max, v));
 
-const mix = (a, b, w) =>
-  a == null ? b : b == null ? a : a * w + b * (1 - w);
-
 // ============================================================
 // TEMPEST NORMALIZATION
 // ============================================================
 
 function normalizeTempest(obs = {}) {
   if (!obs) return null;
+
+  const precipRate = obs.precip_rate ?? obs.precipRate ?? 0;
 
   return {
     temp: obs.air_temperature ?? null,
@@ -36,7 +35,11 @@ function normalizeTempest(obs = {}) {
 
     dewPoint:
       obs.dew_point ??
-      calcDewPoint(obs.air_temperature, obs.relative_humidity)
+      calcDewPoint(obs.air_temperature, obs.relative_humidity),
+
+    // 🌧️ RAIN
+    precipRate,
+    isRainingNow: precipRate > 0
   };
 }
 
@@ -69,12 +72,18 @@ function injectTempest(current, tempest) {
 
     windGust:
       tempest.windGust ??
-      tempest.wind_gust ??
       current.windGust,
 
     solarRadiation:
       tempest.solarRadiation ??
-      current.solarRadiation
+      current.solarRadiation,
+
+    // 🌧️ RAIN
+    precipRate:
+      tempest.precipRate ?? current.precipRate ?? 0,
+
+    isRainingNow:
+      tempest.isRainingNow ?? current.isRainingNow ?? false
   };
 }
 
@@ -108,6 +117,46 @@ function normalizeCurrent(data = {}) {
     wind: windBase,
     windSpeed: windBase
   };
+}
+
+// ============================================================
+// 🌧️ RAIN IMPACT ENGINE
+// ============================================================
+
+function applyRainImpact(score, data) {
+  const precipRate = data?.precipRate ?? 0;
+  const tempF = data?.temperatureF ?? data?.temp ?? null;
+
+  // debounce jitter
+  const effectiveRain = precipRate > 0.05 ? precipRate : 0;
+
+  let rainLevel = "none";
+  if (effectiveRain > 0 && effectiveRain < 0.2) rainLevel = "mist";
+  else if (effectiveRain < 1.0) rainLevel = "light";
+  else if (effectiveRain < 3.0) rainLevel = "moderate";
+  else if (effectiveRain >= 3.0) rainLevel = "heavy";
+
+  let impact = 0;
+  if (rainLevel === "mist") impact = -0.1;
+  if (rainLevel === "light") impact = -0.2;
+  if (rainLevel === "moderate") impact = -0.4;
+  if (rainLevel === "heavy") impact = -0.6;
+
+  // warm rain relief
+  if (tempF != null && tempF > 85 && rainLevel === "light") {
+    impact += 0.1;
+  }
+
+  // evening softening
+  const hour = new Date().getHours();
+  if (hour >= 18 && rainLevel !== "heavy") {
+    impact += 0.1;
+  }
+
+  // clamp so it never dominates
+  impact = Math.max(impact, -0.5);
+
+  return score + impact;
 }
 
 // ============================================================
@@ -146,6 +195,12 @@ export function renderComfortNow(
   if (!comfort || comfort.temp == null) return;
 
   // ------------------------------------------------------------
+  // 🌧️ APPLY RAIN TO SCORE
+  // ------------------------------------------------------------
+
+  comfort.score = applyRainImpact(comfort.score ?? 0, adjusted);
+
+  // ------------------------------------------------------------
   // SCORE
   // ------------------------------------------------------------
 
@@ -161,7 +216,8 @@ export function renderComfortNow(
     signals: {
       temp: comfort.temp,
       dewPoint: comfort.dewPoint,
-      wind: comfort.windSpeed
+      wind: comfort.windSpeed,
+      rain: adjusted.precipRate // 🌧️ subtle signal
     },
     dominantFactor: detectDominantFactor(comfort),
     confidence: 0.75
@@ -196,12 +252,20 @@ export function renderComfortNow(
   );
 
   // ------------------------------------------------------------
-  // DRIVERS + ACTIONS
+  // DRIVERS
   // ------------------------------------------------------------
 
   const drivers = buildDrivers(comfort);
-  const driverShort = drivers.map(d => d.short).join(" • ");
 
+  // 🌧️ Inject rain driver if present
+  if (adjusted.precipRate > 0.05) {
+    drivers.push({
+      short: "rain",
+      long: "Rain is slightly reducing comfort"
+    });
+  }
+
+  const driverShort = drivers.map(d => d.short).join(" • ");
   const actions = buildActions(comfort);
 
   // ------------------------------------------------------------
@@ -209,8 +273,7 @@ export function renderComfortNow(
   // ------------------------------------------------------------
 
   console.log("COMFORT:", comfort);
-  console.log("TREND:", trend);
-  console.log("NARRATIVE:", narrative);
+  console.log("RAIN:", adjusted.precipRate);
 
   // ------------------------------------------------------------
   // RENDER
