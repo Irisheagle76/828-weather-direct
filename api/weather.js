@@ -1,5 +1,5 @@
 // ============================================================
-// WEATHER API — V5 (STABLE + LEGACY COMPAT)
+// WEATHER API — V6 (TEMPEST + REAL RAIN + CLEANED)
 // ============================================================
 
 let cache = {};
@@ -42,7 +42,7 @@ async function handleHourly(req, res) {
   const key = `${lat},${lon}`;
 
   // ----------------------------------------------------------
-  // TEMPEST
+  // TEMPEST (REAL CONDITIONS)
   // ----------------------------------------------------------
   const tempest = await fetchTempest();
 
@@ -57,7 +57,7 @@ async function handleHourly(req, res) {
   }
 
   // ----------------------------------------------------------
-  // OPEN-METEO FETCH
+  // OPEN-METEO (FORECAST)
   // ----------------------------------------------------------
   const hourlyFields = [
     "temperature_2m",
@@ -87,45 +87,136 @@ async function handleHourly(req, res) {
   }
 
   const data = await response.json();
-  
-console.log("RAW GUST ARRAY:", data.hourly.wind_gusts_10m);
-console.log("RAW HOURLY KEYS:", Object.keys(data.hourly));
 
   if (!data?.hourly?.time?.length) {
-    console.warn("⚠️ Empty hourly.time from Open-Meteo");
     return respondWithFallback(res, key, "empty-hourly", tempest);
   }
 
-// ----------------------------------------------------------
-// NORMALIZED (NEW SYSTEM)
-// ----------------------------------------------------------
-const hourly = data.hourly.time.map((t, i) => ({
-  timestamp: new Date(t).getTime(),
-
-  temperatureF: data.hourly.temperature_2m?.[i] ?? null,
-  dewpointF: data.hourly.dew_point_2m?.[i] ?? null,
-  relative_humidity: data.hourly.relative_humidity_2m?.[i] ?? null,
-
-  windSpeed: data.hourly.wind_speed_10m?.[i] ?? 0,
-  windGust: data.hourly.wind_gusts_10m?.[i] ?? null,
-
-  precipitation: data.hourly.precipitation?.[i] ?? 0,
-  cloudCover: data.hourly.cloudcover?.[i] ?? null,
-
-  uv: data.hourly.uv_index?.[i] ?? null
-}));
-// ----------------------------------------------------------
-// 🆕 SMOOTH TRANSITION WITH TEMPEST
-// ----------------------------------------------------------
-const hourlySmoothed = smoothTransitionWithTempest(hourly, tempest);
   // ----------------------------------------------------------
-  // TEMPEST INTEGRATION SMOOTH
+  // NORMALIZE FORECAST
   // ----------------------------------------------------------
+  const hourly = data.hourly.time.map((t, i) => ({
+    timestamp: new Date(t).getTime(),
+
+    temperatureF: data.hourly.temperature_2m?.[i] ?? null,
+    dewpointF: data.hourly.dew_point_2m?.[i] ?? null,
+    relative_humidity: data.hourly.relative_humidity_2m?.[i] ?? null,
+
+    windSpeed: data.hourly.wind_speed_10m?.[i] ?? 0,
+    windGust: data.hourly.wind_gusts_10m?.[i] ?? null,
+
+    precipitation: data.hourly.precipitation?.[i] ?? 0,
+    cloudCover: data.hourly.cloudcover?.[i] ?? null,
+
+    uv: data.hourly.uv_index?.[i] ?? null
+  }));
+
+  // ----------------------------------------------------------
+  // SMOOTH FORECAST → REAL CONDITIONS
+  // ----------------------------------------------------------
+  const hourlySmoothed = smoothTransitionWithTempest(hourly, tempest);
+
+  // ----------------------------------------------------------
+  // FINAL PAYLOAD
+  // ----------------------------------------------------------
+  const payload = {
+    hourly: hourlySmoothed,
+
+    hourly_legacy: {
+      time: data.hourly.time,
+      temperature_2m: data.hourly.temperature_2m,
+      relative_humidity_2m: data.hourly.relative_humidity_2m,
+      wind_speed_10m: data.hourly.wind_speed_10m
+    },
+
+    // 🔥 THIS IS THE IMPORTANT PART
+    current: tempest
+      ? {
+          ...tempest,
+          isRainingNow: tempest.precipRate > 0
+        }
+      : null,
+
+    current_conditions: tempest
+      ? {
+          air_temperature: tempest.temperatureF,
+          relative_humidity: tempest.relative_humidity,
+          wind_gust: tempest.windGust,
+          wind_avg: tempest.windSpeed,
+          precip_rate: tempest.precipRate,   // ✅ NEW
+          precip: tempest.precip,           // ✅ NEW
+          timestamp: tempest.timestamp
+        }
+      : null,
+
+    _source: "open-meteo+tempest"
+  };
+
+  // ----------------------------------------------------------
+  // CACHE
+  // ----------------------------------------------------------
+  cache[key] = {
+    ts: Date.now(),
+    data: payload
+  };
+
+  lastGood[key] = payload;
+
+  return res.status(200).json(payload);
+}
+
+// ------------------------------------------------------------
+// TEMPEST (FIXED + RAIN ENABLED)
+// ------------------------------------------------------------
+async function fetchTempest() {
+  try {
+    const stationId = process.env.TEMPEST_STATION_ID;
+    const token = process.env.TEMPEST_TOKEN;
+
+    if (!stationId || !token) return null;
+
+    const url =
+      `https://swd.weatherflow.com/swd/rest/observations/station/` +
+      `${stationId}?token=${token}`;
+
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) return null;
+
+    const data = await res.json();
+    const obs = data?.obs?.[0];
+
+    if (!obs) return null;
+
+    const toF = c => (c * 9) / 5 + 32;
+
+    return {
+      timestamp: obs[0] * 1000,
+
+      temperatureF: Math.round(toF(obs[7])),
+      dewpointF: obs[6] != null ? Math.round(toF(obs[6])) : null,
+      relative_humidity: obs[8] ?? null,
+
+      windSpeed: obs[2] ?? 0,
+      windGust: obs[3] ?? obs[2] ?? 0,
+
+      // 🌧️ THIS WAS MISSING
+      precip: obs[12] ?? 0,
+      precipRate: obs[13] ?? 0
+    };
+
+  } catch (err) {
+    console.warn("Tempest error:", err);
+    return null;
+  }
+}
+
+// ------------------------------------------------------------
+// SMOOTHING (UNCHANGED)
+// ------------------------------------------------------------
 function smoothTransitionWithTempest(hourly = [], tempest = null) {
   if (!hourly.length || !tempest?.temperatureF) return hourly;
 
   const now = Date.now();
-
   const startIndex = hourly.findIndex(h => h.timestamp >= now);
   if (startIndex === -1) return hourly;
 
@@ -134,7 +225,6 @@ function smoothTransitionWithTempest(hourly = [], tempest = null) {
   const baseHumidity = first.relative_humidity ?? 50;
 
   const deltaTemp = tempest.temperatureF - first.temperatureF;
-
   const deltaHumidity =
     (tempest.relative_humidity ?? baseHumidity) - baseHumidity;
 
@@ -154,7 +244,6 @@ function smoothTransitionWithTempest(hourly = [], tempest = null) {
 
     return {
       ...h,
-
       temperatureF:
         h.temperatureF != null
           ? h.temperatureF + deltaTemp * decay
@@ -171,88 +260,6 @@ function smoothTransitionWithTempest(hourly = [], tempest = null) {
           : h.windSpeed
     };
   });
-}
-
-  // ----------------------------------------------------------
-  // LEGACY FORMAT (OLD APP SUPPORT)
-  // ----------------------------------------------------------
-  const hourly_legacy = {
-    time: data.hourly.time,
-    temperature_2m: data.hourly.temperature_2m,
-    relative_humidity_2m: data.hourly.relative_humidity_2m,
-    wind_speed_10m: data.hourly.wind_speed_10m
-  };
-
-  // ----------------------------------------------------------
-  // FINAL PAYLOAD
-  // ----------------------------------------------------------
-  const payload = {
-    hourly: hourlySmoothed,          // ✅ NEW
-    hourly_legacy,     // ✅ OLD
-
-    current: tempest,
-
-    current_conditions: tempest
-      ? {
-          air_temperature: tempest.temperatureF,
-          relative_humidity: tempest.relative_humidity,
-          wind_gust: tempest.windGust,
-          wind_avg: tempest.windSpeed,
-          timestamp: tempest.timestamp
-        }
-      : null,
-
-    _source: "open-meteo"
-  };
-
-  // ----------------------------------------------------------
-  // CACHE
-  // ----------------------------------------------------------
-  cache[key] = {
-    ts: Date.now(),
-    data: payload
-  };
-
-  lastGood[key] = payload;
-
-  return res.status(200).json(payload);
-}
-
-// ------------------------------------------------------------
-// TEMPEST
-// ------------------------------------------------------------
-async function fetchTempest() {
-  try {
-    const stationId = process.env.TEMPEST_STATION_ID;
-    const token = process.env.TEMPEST_TOKEN;
-
-    if (!stationId || !token) return null;
-
-    const url =
-      `https://swd.weatherflow.com/swd/rest/observations/station/` +
-      `${stationId}?token=${token}`;
-
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) return null;
-
-    const data = await res.json();
-    const obs = data?.obs?.[0];
-    if (!obs) return null;
-
-    const toF = c => (c * 9) / 5 + 32;
-
-    return {
-      timestamp: obs.timestamp,
-      temperatureF: Math.round(toF(obs.air_temperature)),
-      dewpointF: obs.dew_point != null ? Math.round(toF(obs.dew_point)) : null,
-      relative_humidity: obs.relative_humidity ?? null,
-      windSpeed: obs.wind_avg ?? 0,
-      windGust: obs.wind_gust ?? obs.wind_avg ?? 0
-    };
-
-  } catch {
-    return null;
-  }
 }
 
 // ------------------------------------------------------------
