@@ -1290,7 +1290,7 @@ body {
 .footer-inner {
   max-width: 420px;
   margin: 0 auto;
-  padding: 0 12px;
+  padding: 0 10px;
 
   display: flex;
   flex-direction: column;
