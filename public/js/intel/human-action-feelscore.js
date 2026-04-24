@@ -867,6 +867,7 @@ const precipSignal = getPrecipSignal({
   precipAmount: snapshot?.precipAmount ?? 0
 });
 
+const precipType = snapshot?.precipType ?? "none";
   // ==========================================================
   // CORE CONDITIONS
   // ==========================================================
