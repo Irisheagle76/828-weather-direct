@@ -314,386 +314,6 @@ function buildCurrentWithTrend(hours, tempest = null) {
 }
 
 // ============================================================
-// MAIN ENTRY
-// ============================================================
-export function buildHumanActionIntelFS(raw) {
-
-  const tempest = raw?.tempest ?? null;
-
-  const rawHourly = Array.isArray(raw?.hourly) ? raw.hourly : [];
-
-  console.log("FEELSCORE INPUT SAMPLE:", rawHourly[0]);
-console.log("TEMPEST IN FEELSCORE:", tempest);
-  console.log("RAW HOURLY SAMPLE (first 5):");
-
-  rawHourly.slice(0, 5).forEach((h, i) => {
-    console.log(i, {
-      temp: h.temperatureF,
-      dew: h.dewpointF,
-      wind: h.windSpeed,
-      ts: h.timestamp,
-      date: new Date(getTs(h)).toString()
-    });
-  });
-
-  if (!rawHourly.length) return fallbackAll();
-
-  const now = Date.now();
-
-  // 🔥 FIX 1: ALIGN TIMELINE
-  const hourly = alignHourly(rawHourly);
-  if (!hourly.length) return fallbackAll();
-
-  // 🔥 FIX 2: CORRECT DAY SPLIT
-  const { today: todayHours, tomorrow: tomorrowHours } = splitDays(hourly, now);
-
-  console.log("NOW:", new Date(now).toString());
-
-  console.log(
-    "TODAY HOURS (sample):",
-    todayHours.slice(0, 3).map(h => ({
-      temp: h.temperatureF,
-      ts: h._ts,
-      date: new Date(h._ts).toString()
-    }))
-  );
-
-  console.log(
-    "TOMORROW HOURS (sample):",
-    tomorrowHours.slice(0, 3).map(h => ({
-      temp: h.temperatureF,
-      ts: h._ts,
-      date: new Date(h._ts).toString()
-    }))
-  );
-
-  // ==========================================================
-  // TEMPERATURE ANALYSIS
-  // ==========================================================
-
-  const todayTemps = todayHours.map(h => h.temperatureF).filter(Number.isFinite);
-  const tomorrowTemps = tomorrowHours.map(h => h.temperatureF).filter(Number.isFinite);
-
-  const todayMax = todayTemps.length ? Math.max(...todayTemps) : null;
-  const tomorrowMax = tomorrowTemps.length ? Math.max(...tomorrowTemps) : null;
-
-  const tempDrop =
-    todayMax !== null && tomorrowMax !== null
-      ? todayMax - tomorrowMax
-      : 0;
-
-  const tomorrowMorning = tomorrowHours.filter(h => {
-    const hr = new Date(h._ts).getHours();
-    return hr >= 5 && hr <= 10;
-  });
-
-  const tomorrowMorningTemps = tomorrowMorning
-    .map(h => h.temperatureF)
-    .filter(Number.isFinite);
-
-  const tomorrowMin = tomorrowMorningTemps.length
-    ? Math.min(...tomorrowMorningTemps)
-    : null;
-
-  console.log("TEMP DEBUG:", {
-    todayMax,
-    tomorrowMax,
-    tempDrop,
-    tomorrowMin,
-    counts: {
-      today: todayHours.length,
-      tomorrow: tomorrowHours.length,
-      tomorrowMorning: tomorrowMorning.length
-    }
-  });
-
-  // ==========================================================
-  // WIND ANALYSIS
-  // ==========================================================
-
-  const todayWindMax = Math.max(
-    ...todayHours.map(h => h.windSpeed ?? 0),
-    0
-  );
-
-  const tomorrowWindMax = Math.max(
-    ...tomorrowHours.map(h => h.windSpeed ?? 0),
-    0
-  );
-
-  const windJump = tomorrowWindMax - todayWindMax;
-
-  // ==========================================================
-  // BUILD OUTPUT
-  // ==========================================================
-
-  const tomorrowCtx = buildPeriod(tomorrowHours, "tomorrow", {
-    tempDrop,
-    windJump,
-    tomorrowMin
-  });
-
-  return {
-    feelscore: buildCurrentWithTrend(todayHours, tempest),
-    tomorrow: buildPeriodNarrative(tomorrowCtx, "tomorrow")
-  };
-}
-
-// ============================================================
-// PRECIP TYPE (GLOBAL — REQUIRED)
-// ============================================================
-
-function getPrecipType({
-  precipProbability = 0,
-  precipAmount = 0,
-  hours = []
-}) {
-
-  const maxProb = precipProbability;
-
-  const maxRate = Math.max(
-    ...hours.map(h => h.precipAmount ?? 0),
-    0
-  );
-
-  const activeHours = hours.filter(
-    h => (h.precipAmount ?? 0) > 0
-  ).length;
-
-  // 🌧️ INTENSITY FIRST
-  if (maxRate >= 0.10) return "steady_rain";
-  if (maxRate >= 0.03) return "light_rain";
-
-  // 🌦️ COVERAGE
-  if (maxProb >= 70 && activeHours >= 6) return "periods_of_rain";
-  if (maxProb >= 50) return "scattered_showers";
-  if (maxProb >= 20) return "isolated_showers";
-
-  return "none";
-}
-
-function buildSnapshot(hours = []) {
-  if (!hours.length) return null;
-
-  const first = hours[0];
-
-  const maxProb = Math.max(...hours.map(h => h.precipProbability ?? 0), 0);
-  const maxAmt  = Math.max(...hours.map(h => h.precipAmount ?? 0), 0);
-  const avgAmt  = avg(hours.map(h => h.precipAmount ?? 0)) ?? 0;
-
-  const snapshot = {
-    temp: first.temperatureF,
-    dewPoint: first.dewpointF,
-    wind: first.windSpeed,
-    gust: first.windGust,
-
-    precipProbability: maxProb,
-    precipAmount: maxAmt,
-    precipAmountAvg: avgAmt,
-
-    isRainingNow: (hours[0]?.precipAmount ?? 0) > 0
-  };
-
-  snapshot.precipType = getPrecipType({
-    precipProbability: snapshot.precipProbability,
-    precipAmount: snapshot.precipAmount,
-    hours
-  });
-
-  return snapshot;
-}
-
-// ============================================================
-// BUILD PERIOD CORE (SMOOTHED + CONSISTENT)
-// ============================================================
-
-function buildPeriod(hours, label, change = {}) {
-  if (!Array.isArray(hours) || !hours.length) return null;
-
-  // ✅ ADD THIS LINE
-  const snapshot = buildSnapshot(hours);
-  console.log("🌧️ SNAPSHOT IN PERIOD:", snapshot);
-
-  const scores = hours.map((h, i) => {
-    let adjusted = { ...h };
-
-    // ------------------------------------------------------------
-    // 🆕 APPLY REALISM TO NEAR-TERM HOURS ONLY
-    // ------------------------------------------------------------
-    if (i < 3) {
-      adjusted.windSpeed = smoothWind(adjusted, hours);
-      adjusted.windGust = smoothGust(adjusted, hours);
-
-      const gustiness = calculateGustiness(
-        adjusted.windSpeed,
-        adjusted.windGust
-      );
-
-      let score = calculateComfort(adjusted)?.score;
-
-      if (!Number.isFinite(score)) return null;
-
-      // 🆕 GUST PENALTY
-      if (gustiness >= 12) score -= 0.5;
-      else if (gustiness >= 7) score -= 0.25;
-
-      return Math.round(score * 10);
-    }
-
-    // ------------------------------------------------------------
-    // FARTHER HOURS = RAW MODEL
-    // ------------------------------------------------------------
-    const base = calculateComfort(h)?.score;
-    return Number.isFinite(base) ? Math.round(base * 10) : null;
-
-  }).filter(Number.isFinite);
-
-  if (!scores.length) return null;
-
-  const score = Math.round(average(scores));
-  const trend = scores.at(-1) - scores[0];
-
-
-// ------------------------------------------------------------
-// WIND METRICS (FIXED + SAFE)
-// ------------------------------------------------------------
-const windValues = hours.map((h, i) => {
-  const raw = Number.isFinite(h.windSpeed) ? Math.max(0, h.windSpeed) : 0;
-
-  // smooth near-term hours only
-  if (i < 3) {
-    const smoothed = smoothWind(h, hours);
-    return Number.isFinite(smoothed) ? Math.max(0, smoothed) : raw;
-  }
-
-  return raw;
-});
-
-const gustValues = hours.map(h =>
-  Number.isFinite(h.windGust) ? Math.max(0, h.windGust) : 0
-);
-
-const maxWind = windValues.length ? Math.max(...windValues) : 0;
-const maxGust = gustValues.length ? Math.max(...gustValues) : 0;
-
-// ------------------------------------------------------------
-// 🔍 DEBUG (CORRECT + USEFUL)
-// ------------------------------------------------------------
-if (label === "tomorrow") {
-  console.log("🌬️ TOMORROW WIND FINAL", {
-    maxWind,
-    maxGust,
-    avgWind: avg(windValues),
-    sample: hours.slice(0, 8).map(h => ({
-      hour: new Date(h._ts).getHours(),
-      wind: h.windSpeed,
-      gust: h.windGust
-    }))
-  });
-}
-
-if (label === "tomorrow") {
-  console.log("💧 HUMIDITY + DEW CHECK", {
-    humidity: hours.map(h => ({
-      raw: h.humidity,
-      rh: h.relativeHumidity,
-      rh_alt: h.relative_humidity
-    })),
-    dew: hours.map(h => h.dewpointF)
-  });
-}
-
-// ------------------------------------------------------------
-// WIND IMPACT (STABLE)
-// ------------------------------------------------------------
-const windImpact = Math.max(
-  ...hours.map(h => {
-    const w = Number.isFinite(h.windSpeed) ? Math.max(0, h.windSpeed) : 0;
-    const g = Number.isFinite(h.windGust) ? Math.max(0, h.windGust) : 0;
-    return Math.max(w, g * 0.7);
-  }),
-  0
-);
-
-// ------------------------------------------------------------
-// CHANGE METRICS (UNCHANGED)
-// ------------------------------------------------------------
-const { tempDrop = 0, windJump = 0, tomorrowMin = null } = change;
-
-// ------------------------------------------------------------
-// WIND CHILL (SAFE)
-// ------------------------------------------------------------
-const windChill = calcWindChill(snapshot.temp, snapshot.wind ?? 0);
-const chillDelta = snapshot.temp - windChill;
-
-// ------------------------------------------------------------
-// FLAGS (UNCHANGED)
-// ------------------------------------------------------------
-const isShockDay = label === "tomorrow" && tempDrop >= 18;
-
-const hasColdStart =
-  label === "tomorrow" &&
-  Number.isFinite(tomorrowMin) &&
-  tomorrowMin <= 50;
-
-  // ------------------------------------------------------------
-  // INTEL + NARRATIVE (UNCHANGED)
-  // ------------------------------------------------------------
-  const intel = buildIntel(
-    snapshot,
-    score,
-    trend,
-    windImpact,
-    maxGust,
-    label
-  );
-
-  let narrative;
-  try {
-    narrative = assembleWithVoice(
-      intel,
-      label,
-      mapScoreToCategory(score),
-      score >= 85
-    );
-  } catch {
-    narrative = null;
-  }
-
-return {
-  label,
-  score,
-  snapshot,
-  trend,
-
-  hours, 
-
-  narrativeText:
-    narrative?.longNarrative ||
-    narrative?.headline ||
-    "",
-
-  flags: {
-    isShockDay,
-    hasColdStart
-  },
-
-  change: {
-    tempDrop,
-    windJump,
-    chillDelta,
-    tomorrowMin
-  },
-
-  wind: {
-    maxWind,
-    maxGust,
-    avgWind: avg(windValues),
-    breezyHours: windValues.filter(w => w >= 10).length
-  }
-};
-
-// ============================================================
 // BUILD NARRATIVE (UNIFIED + DATA-DRIVEN + PRECIP-AWARE)
 // ============================================================
 
@@ -931,6 +551,374 @@ bullets = [...new Set(bullets)].slice(0, 4);
   };
 }
 
+// ============================================================
+// MAIN ENTRY
+// ============================================================
+export function buildHumanActionIntelFS(raw) {
+
+  const tempest = raw?.tempest ?? null;
+
+  const rawHourly = Array.isArray(raw?.hourly) ? raw.hourly : [];
+
+  console.log("FEELSCORE INPUT SAMPLE:", rawHourly[0]);
+console.log("TEMPEST IN FEELSCORE:", tempest);
+  console.log("RAW HOURLY SAMPLE (first 5):");
+
+  rawHourly.slice(0, 5).forEach((h, i) => {
+    console.log(i, {
+      temp: h.temperatureF,
+      dew: h.dewpointF,
+      wind: h.windSpeed,
+      ts: h.timestamp,
+      date: new Date(getTs(h)).toString()
+    });
+  });
+
+  if (!rawHourly.length) return fallbackAll();
+
+  const now = Date.now();
+
+  // 🔥 FIX 1: ALIGN TIMELINE
+  const hourly = alignHourly(rawHourly);
+  if (!hourly.length) return fallbackAll();
+
+  // 🔥 FIX 2: CORRECT DAY SPLIT
+  const { today: todayHours, tomorrow: tomorrowHours } = splitDays(hourly, now);
+
+  console.log("NOW:", new Date(now).toString());
+
+  console.log(
+    "TODAY HOURS (sample):",
+    todayHours.slice(0, 3).map(h => ({
+      temp: h.temperatureF,
+      ts: h._ts,
+      date: new Date(h._ts).toString()
+    }))
+  );
+
+  console.log(
+    "TOMORROW HOURS (sample):",
+    tomorrowHours.slice(0, 3).map(h => ({
+      temp: h.temperatureF,
+      ts: h._ts,
+      date: new Date(h._ts).toString()
+    }))
+  );
+
+  // ==========================================================
+  // TEMPERATURE ANALYSIS
+  // ==========================================================
+
+  const todayTemps = todayHours.map(h => h.temperatureF).filter(Number.isFinite);
+  const tomorrowTemps = tomorrowHours.map(h => h.temperatureF).filter(Number.isFinite);
+
+  const todayMax = todayTemps.length ? Math.max(...todayTemps) : null;
+  const tomorrowMax = tomorrowTemps.length ? Math.max(...tomorrowTemps) : null;
+
+  const tempDrop =
+    todayMax !== null && tomorrowMax !== null
+      ? todayMax - tomorrowMax
+      : 0;
+
+  const tomorrowMorning = tomorrowHours.filter(h => {
+    const hr = new Date(h._ts).getHours();
+    return hr >= 5 && hr <= 10;
+  });
+
+  const tomorrowMorningTemps = tomorrowMorning
+    .map(h => h.temperatureF)
+    .filter(Number.isFinite);
+
+  const tomorrowMin = tomorrowMorningTemps.length
+    ? Math.min(...tomorrowMorningTemps)
+    : null;
+
+  console.log("TEMP DEBUG:", {
+    todayMax,
+    tomorrowMax,
+    tempDrop,
+    tomorrowMin,
+    counts: {
+      today: todayHours.length,
+      tomorrow: tomorrowHours.length,
+      tomorrowMorning: tomorrowMorning.length
+    }
+  });
+
+  // ==========================================================
+  // WIND ANALYSIS
+  // ==========================================================
+
+  const todayWindMax = Math.max(
+    ...todayHours.map(h => h.windSpeed ?? 0),
+    0
+  );
+
+  const tomorrowWindMax = Math.max(
+    ...tomorrowHours.map(h => h.windSpeed ?? 0),
+    0
+  );
+
+  const windJump = tomorrowWindMax - todayWindMax;
+
+  // ==========================================================
+  // BUILD OUTPUT
+  // ==========================================================
+
+  const tomorrowCtx = buildPeriod(tomorrowHours, "tomorrow", {
+    tempDrop,
+    windJump,
+    tomorrowMin
+  });
+
+  return {
+    feelscore: buildCurrentWithTrend(todayHours, tempest),
+    tomorrow: buildPeriodNarrative(tomorrowCtx, "tomorrow")
+  };
+}
+
+// ============================================================
+// PRECIP TYPE (GLOBAL — REQUIRED)
+// ============================================================
+
+function getPrecipType({
+  precipProbability = 0,
+  precipAmount = 0,
+  hours = []
+}) {
+
+  const maxProb = precipProbability;
+
+  const maxRate = Math.max(
+    ...hours.map(h => h.precipAmount ?? 0),
+    0
+  );
+
+  const activeHours = hours.filter(
+    h => (h.precipAmount ?? 0) > 0
+  ).length;
+
+  // 🌧️ INTENSITY FIRST
+  if (maxRate >= 0.10) return "steady_rain";
+  if (maxRate >= 0.03) return "light_rain";
+
+  // 🌦️ COVERAGE
+  if (maxProb >= 70 && activeHours >= 6) return "periods_of_rain";
+  if (maxProb >= 50) return "scattered_showers";
+  if (maxProb >= 20) return "isolated_showers";
+
+  return "none";
+}
+
+function buildSnapshot(hours = []) {
+  if (!hours.length) return null;
+
+  const first = hours[0];
+
+  const maxProb = Math.max(...hours.map(h => h.precipProbability ?? 0), 0);
+  const maxAmt  = Math.max(...hours.map(h => h.precipAmount ?? 0), 0);
+  const avgAmt  = avg(hours.map(h => h.precipAmount ?? 0)) ?? 0;
+
+  const snapshot = {
+    temp: first.temperatureF,
+    dewPoint: first.dewpointF,
+    wind: first.windSpeed,
+    gust: first.windGust,
+
+    precipProbability: maxProb,
+    precipAmount: maxAmt,
+    precipAmountAvg: avgAmt,
+
+    isRainingNow: (hours[0]?.precipAmount ?? 0) > 0
+  };
+
+  snapshot.precipType = getPrecipType({
+    precipProbability: snapshot.precipProbability,
+    precipAmount: snapshot.precipAmount,
+    hours
+  });
+
+  return snapshot;
+}
+
+// ============================================================
+// BUILD PERIOD CORE (STABLE + IMMUTABLE + PRECIP SAFE)
+// ============================================================
+
+function buildPeriod(hoursInput, label, change = {}) {
+  if (!Array.isArray(hoursInput) || !hoursInput.length) return null;
+
+  // ------------------------------------------------------------
+  // 🛡️ IMMUTABLE SOURCE (CRITICAL FIX)
+  // ------------------------------------------------------------
+  const hours = hoursInput.map(h => ({ ...h })); // working copy
+  const originalHours = hoursInput; // untouched reference for narrative
+
+  // ------------------------------------------------------------
+  // SNAPSHOT
+  // ------------------------------------------------------------
+  const snapshot = buildSnapshot(hours);
+  console.log("🌧️ SNAPSHOT IN PERIOD:", snapshot);
+
+  // ------------------------------------------------------------
+  // SCORE BUILD
+  // ------------------------------------------------------------
+  const scores = hours.map((h, i) => {
+    let adjusted = { ...h };
+
+    // 🌬️ Near-term smoothing only
+    if (i < 3) {
+      adjusted.windSpeed = smoothWind(adjusted, hours);
+      adjusted.windGust = smoothGust(adjusted, hours);
+
+      const gustiness = calculateGustiness(
+        adjusted.windSpeed,
+        adjusted.windGust
+      );
+
+      let score = calculateComfort(adjusted)?.score;
+
+      if (!Number.isFinite(score)) return null;
+
+      // gust penalty
+      if (gustiness >= 12) score -= 0.5;
+      else if (gustiness >= 7) score -= 0.25;
+
+      return Math.round(score * 10);
+    }
+
+    // farther hours = raw
+    const base = calculateComfort(h)?.score;
+    return Number.isFinite(base) ? Math.round(base * 10) : null;
+
+  }).filter(Number.isFinite);
+
+  if (!scores.length) return null;
+
+  const score = Math.round(avg(scores));
+  const trend = scores.at(-1) - scores[0];
+
+  // ------------------------------------------------------------
+  // WIND METRICS
+  // ------------------------------------------------------------
+  const windValues = hours.map((h, i) => {
+    const raw = Number.isFinite(h.windSpeed) ? Math.max(0, h.windSpeed) : 0;
+
+    if (i < 3) {
+      const smoothed = smoothWind(h, hours);
+      return Number.isFinite(smoothed) ? Math.max(0, smoothed) : raw;
+    }
+
+    return raw;
+  });
+
+  const gustValues = hours.map(h =>
+    Number.isFinite(h.windGust) ? Math.max(0, h.windGust) : 0
+  );
+
+  const maxWind = windValues.length ? Math.max(...windValues) : 0;
+  const maxGust = gustValues.length ? Math.max(...gustValues) : 0;
+
+  // ------------------------------------------------------------
+  // DEBUG
+  // ------------------------------------------------------------
+  if (label === "tomorrow") {
+    console.log("🌬️ TOMORROW WIND FINAL", {
+      maxWind,
+      maxGust,
+      avgWind: avg(windValues),
+      hours: originalHours.length
+    });
+  }
+
+  // ------------------------------------------------------------
+  // WIND IMPACT
+  // ------------------------------------------------------------
+  const windImpact = Math.max(
+    ...hours.map(h => {
+      const w = Number.isFinite(h.windSpeed) ? Math.max(0, h.windSpeed) : 0;
+      const g = Number.isFinite(h.windGust) ? Math.max(0, h.windGust) : 0;
+      return Math.max(w, g * 0.7);
+    }),
+    0
+  );
+
+  // ------------------------------------------------------------
+  // CHANGE METRICS
+  // ------------------------------------------------------------
+  const { tempDrop = 0, windJump = 0, tomorrowMin = null } = change;
+
+  const windChill = calcWindChill(snapshot.temp, snapshot.wind ?? 0);
+  const chillDelta = snapshot.temp - windChill;
+
+  const isShockDay = label === "tomorrow" && tempDrop >= 18;
+
+  const hasColdStart =
+    label === "tomorrow" &&
+    Number.isFinite(tomorrowMin) &&
+    tomorrowMin <= 50;
+
+  // ------------------------------------------------------------
+  // INTEL + NARRATIVE
+  // ------------------------------------------------------------
+  const intel = buildIntel(
+    snapshot,
+    score,
+    trend,
+    windImpact,
+    maxGust,
+    label
+  );
+
+  let narrative;
+  try {
+    narrative = assembleWithVoice(
+      intel,
+      label,
+      mapScoreToCategory(score),
+      score >= 85
+    );
+  } catch {
+    narrative = null;
+  }
+
+  // ------------------------------------------------------------
+  // FINAL RETURN (IMMUTABLE HOURS FIX)
+  // ------------------------------------------------------------
+  return {
+    label,
+    score,
+    snapshot,
+    trend,
+
+    // 🔥 CRITICAL FIX — pass untouched hours
+    hours: originalHours,
+
+    narrativeText:
+      narrative?.longNarrative ||
+      narrative?.headline ||
+      "",
+
+    flags: {
+      isShockDay,
+      hasColdStart
+    },
+
+    change: {
+      tempDrop,
+      windJump,
+      chillDelta,
+      tomorrowMin
+    },
+
+    wind: {
+      maxWind,
+      maxGust,
+      avgWind: avg(windValues),
+      breezyHours: windValues.filter(w => w >= 10).length
+    }
+  };
+}
 
 // ============================================================
 // HELPERS
@@ -1147,5 +1135,4 @@ function resolveComfortIcon({
   if (score >= 70) return "🌤️";
 
   return "🌥️";
-}
 }
