@@ -174,7 +174,13 @@ const temps = hours.map(h => h.temperatureF).filter(isNum);
 const tempMax = temps.length ? Math.max(...temps) : null;
 const tempMin = temps.length ? Math.min(...temps) : null;
 
-const avgAll = avg(hourlyComfort.map(h => h.score));
+const validScores = hourlyComfort
+  .map(h => h.score)
+  .filter(Number.isFinite);
+
+const avgAll = validScores.length
+  ? avg(validScores)
+  : 50; // safe fallback
 
 let score =
   label === "today"

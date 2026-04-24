@@ -390,25 +390,34 @@ const scores = next.map((h, i) => {
   // ------------------------------------------------------------
   // 🆕 APPLY SAME LOGIC AS "NOW"
   // ------------------------------------------------------------
-  if (i < 3) {
-   adjusted.windSpeed = smoothWind(adjusted, hourly);
-adjusted.windGust = smoothGust(adjusted, hourly);
+if (i < 3) {
+  adjusted.windSpeed = smoothWind(adjusted, hourly);
+  adjusted.windGust = smoothGust(adjusted, hourly);
 
-    const g = calculateGustiness(
-      adjusted.windSpeed,
-      adjusted.windGust
-    );
+  const g = calculateGustiness(
+    adjusted.windSpeed,
+    adjusted.windGust
+  );
 
-    let score = calculateComfort(adjusted)?.score ?? 0;
+  let raw = calculateComfort(adjusted)?.score;
 
-    if (g >= 12) score -= 0.5;
-    else if (g >= 7) score -= 0.25;
-
-    const scaled = Math.round(score * 10);
-
-    return Math.min(scaled, 98);
+  // 🔒 HARD GUARD
+  if (!Number.isFinite(raw)) {
+    console.warn("⚠️ BAD COMFORT SCORE", adjusted);
+    raw = 5; // neutral baseline
   }
 
+  // apply gust penalty
+  if (g >= 12) raw -= 0.5;
+  else if (g >= 7) raw -= 0.25;
+
+  const scaled = Math.round(raw * 10);
+
+  // 🔒 FINAL GUARD
+  return Number.isFinite(scaled)
+    ? Math.min(scaled, 98)
+    : 50;
+}
   // ------------------------------------------------------------
   // FARTHER HOURS (unchanged)
   // ------------------------------------------------------------
