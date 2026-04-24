@@ -87,8 +87,41 @@ function normalizeHourly(hourly = []) {
 
   // 👇 LOG INSIDE FUNCTION
   console.log("🌧️ NORMALIZED SAMPLE:", normalized[0]);
+  console.log("🌧️ RAW SAMPLE:", hourly[0]);
 
   return normalized;
+}
+
+function normalizeCurrent(c = {}) {
+  return {
+    ...c,
+
+    // normalize naming across sources
+    temp:
+      c.temp ??
+      c.temperature ??
+      c.temperatureF ??
+      c.air_temperature ??
+      null,
+
+    wind:
+      c.wind ??
+      c.wind_avg ??
+      c.windSpeed ??
+      0,
+
+    rh:
+      c.rh ??
+      c.relative_humidity ??
+      c.relativeHumidity ??
+      null,
+
+    // 🌧️ optional but helpful for consistency
+    precipRate:
+      c.precipRate ??
+      c.precip_rate ??
+      0
+  };
 }
 
 // ------------------------------------------------------------
@@ -194,7 +227,6 @@ export async function renderNewLayout(container) {
 
 // 👇 ADD THESE TWO LINES
 console.log("FULL API DATA:", data);
-console.log("WIND STATION:", data?.wind_station);
 
     // ------------------------------------------------------------
     // NORMALIZE ONCE
