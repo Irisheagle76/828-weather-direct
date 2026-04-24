@@ -1,11 +1,11 @@
 // ============================================================
-// WEATHER API — V6 (TEMPEST + REAL RAIN + CLEANED)
+// WEATHER API — V8 (PRECIP COMPLETE + STABLE)
 // ============================================================
 
 let cache = {};
 let lastGood = {};
 
-const CACHE_TTL = 60 * 1000; // 1 min
+const CACHE_TTL = 60 * 1000;
 
 // ------------------------------------------------------------
 // ROUTER
@@ -47,7 +47,7 @@ async function handleHourly(req, res) {
   const tempest = await fetchTempest();
 
   // ----------------------------------------------------------
-  // CACHE HIT
+  // CACHE
   // ----------------------------------------------------------
   if (cache[key] && Date.now() - cache[key].ts < CACHE_TTL) {
     return res.status(200).json({
@@ -63,7 +63,11 @@ async function handleHourly(req, res) {
     "temperature_2m",
     "dew_point_2m",
     "relative_humidity_2m",
+
+    // 🌧️ CRITICAL FIX
     "precipitation",
+    "precipitation_probability",
+
     "cloudcover",
     "wind_speed_10m",
     "wind_gusts_10m",
@@ -77,7 +81,7 @@ async function handleHourly(req, res) {
     `&forecast_days=3` +
     `&temperature_unit=fahrenheit` +
     `&wind_speed_unit=mph` +
-    `&precipitation_unit=inch` +
+    `&precipitation_unit=inch` + // already inches
     `&timezone=auto`;
 
   const response = await fetchWithTimeout(url);
@@ -105,9 +109,12 @@ async function handleHourly(req, res) {
     windSpeed: data.hourly.wind_speed_10m?.[i] ?? 0,
     windGust: data.hourly.wind_gusts_10m?.[i] ?? null,
 
+    // 🌧️ FULL PRECIP MODEL
     precipitation: data.hourly.precipitation?.[i] ?? 0,
-    cloudCover: data.hourly.cloudcover?.[i] ?? null,
+    precipitation_probability:
+      data.hourly.precipitation_probability?.[i] ?? null,
 
+    cloudCover: data.hourly.cloudcover?.[i] ?? null,
     uv: data.hourly.uv_index?.[i] ?? null
   }));
 
@@ -122,14 +129,7 @@ async function handleHourly(req, res) {
   const payload = {
     hourly: hourlySmoothed,
 
-    hourly_legacy: {
-      time: data.hourly.time,
-      temperature_2m: data.hourly.temperature_2m,
-      relative_humidity_2m: data.hourly.relative_humidity_2m,
-      wind_speed_10m: data.hourly.wind_speed_10m
-    },
-
-    // 🔥 THIS IS THE IMPORTANT PART
+    // 🌧️ REAL-TIME
     current: tempest
       ? {
           ...tempest,
@@ -143,8 +143,10 @@ async function handleHourly(req, res) {
           relative_humidity: tempest.relative_humidity,
           wind_gust: tempest.windGust,
           wind_avg: tempest.windSpeed,
-          precip_rate: tempest.precipRate,   // ✅ NEW
-          precip: tempest.precip,           // ✅ NEW
+
+          precip_rate: tempest.precipRate,
+          precip: tempest.precip,
+
           timestamp: tempest.timestamp
         }
       : null,
@@ -163,136 +165,4 @@ async function handleHourly(req, res) {
   lastGood[key] = payload;
 
   return res.status(200).json(payload);
-}
-
-// ------------------------------------------------------------
-// TEMPEST (FIXED + RAIN ENABLED)
-// ------------------------------------------------------------
-async function fetchTempest() {
-  try {
-    const stationId = process.env.TEMPEST_STATION_ID;
-    const token = process.env.TEMPEST_TOKEN;
-
-    if (!stationId || !token) return null;
-
-    const url =
-      `https://swd.weatherflow.com/swd/rest/observations/station/` +
-      `${stationId}?token=${token}`;
-
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) return null;
-
-    const data = await res.json();
-    const obs = data?.obs?.[0];
-
-    if (!obs) return null;
-
-    const toF = c => (c * 9) / 5 + 32;
-
-    return {
-      timestamp: obs[0] * 1000,
-
-      temperatureF: Math.round(toF(obs[7])),
-      dewpointF: obs[6] != null ? Math.round(toF(obs[6])) : null,
-      relative_humidity: obs[8] ?? null,
-
-      windSpeed: obs[2] ?? 0,
-      windGust: obs[3] ?? obs[2] ?? 0,
-
-      // 🌧️ THIS WAS MISSING
-      precip: obs[12] ?? 0,
-      precipRate: obs[13] ?? 0
-    };
-
-  } catch (err) {
-    console.warn("Tempest error:", err);
-    return null;
-  }
-}
-
-// ------------------------------------------------------------
-// SMOOTHING (UNCHANGED)
-// ------------------------------------------------------------
-function smoothTransitionWithTempest(hourly = [], tempest = null) {
-  if (!hourly.length || !tempest?.temperatureF) return hourly;
-
-  const now = Date.now();
-  const startIndex = hourly.findIndex(h => h.timestamp >= now);
-  if (startIndex === -1) return hourly;
-
-  const first = hourly[startIndex];
-
-  const baseHumidity = first.relative_humidity ?? 50;
-
-  const deltaTemp = tempest.temperatureF - first.temperatureF;
-  const deltaHumidity =
-    (tempest.relative_humidity ?? baseHumidity) - baseHumidity;
-
-  const deltaWind =
-    (tempest.windSpeed ?? first.windSpeed ?? 0) -
-    (first.windSpeed ?? 0);
-
-  return hourly.map((h, i) => {
-    if (i < startIndex) return h;
-
-    const hoursOut = (h.timestamp - first.timestamp) / 3600000;
-
-    const decay =
-      hoursOut <= 1
-        ? 1
-        : Math.max(0, 1 - hoursOut / 3);
-
-    return {
-      ...h,
-      temperatureF:
-        h.temperatureF != null
-          ? h.temperatureF + deltaTemp * decay
-          : h.temperatureF,
-
-      relative_humidity:
-        h.relative_humidity != null
-          ? h.relative_humidity + deltaHumidity * decay
-          : h.relative_humidity,
-
-      windSpeed:
-        h.windSpeed != null
-          ? h.windSpeed + deltaWind * decay
-          : h.windSpeed
-    };
-  });
-}
-
-// ------------------------------------------------------------
-// FETCH TIMEOUT
-// ------------------------------------------------------------
-async function fetchWithTimeout(url, timeout = 4000) {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
-
-  try {
-    const res = await fetch(url, { signal: controller.signal });
-    clearTimeout(id);
-    return res;
-  } catch {
-    clearTimeout(id);
-    return null;
-  }
-}
-
-// ------------------------------------------------------------
-// FALLBACK
-// ------------------------------------------------------------
-function respondWithFallback(res, key, reason, tempest) {
-  return res.status(200).json({
-    hourly: [],
-    hourly_legacy: {
-      time: [],
-      temperature_2m: [],
-      relative_humidity_2m: [],
-      wind_speed_10m: []
-    },
-    _fallback: true,
-    _reason: reason,
-    current: tempest || lastGood[key]?.current || null
-  });
 }

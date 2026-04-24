@@ -1,5 +1,5 @@
 // ============================================================
-// WEATHER FETCH LAYER — v8 (TEMP + WIND STATION INTEGRATED)
+// WEATHER FETCH LAYER — v9 (PRECIP-SAFE + SINGLE CONTRACT)
 // ============================================================
 
 // ------------------------------------------------------------
@@ -22,37 +22,29 @@ export async function fetchAllIntel({ lat, lon }) {
   const data = await getWeatherUnified(lat, lon);
 
   // ------------------------------------------------------------
-  // 🆕 FETCH TEMPEST (PERSONAL + WIND STATION)
+  // 🌧️ TEMPEST FETCH
   // ------------------------------------------------------------
-let tempestData = null;
+  let tempestData = null;
 
-try {
-  const url = `/api/tempest/device`;
+  try {
+    const res = await fetch(`/api/tempest/device`);
 
-  const res = await fetch(url);
-
-  if (res?.ok) {
-    tempestData = await res.json();
-  } else {
-    console.warn("⚠️ Tempest fetch failed");
+    if (res?.ok) {
+      tempestData = await res.json();
+    } else {
+      console.warn("⚠️ Tempest fetch failed");
+    }
+  } catch (err) {
+    console.warn("⚠️ Tempest fetch error:", err);
   }
-} catch (err) {
-  console.warn("⚠️ Tempest fetch error:", err);
-}
 
-return {
-  ...data,
+  return {
+    ...data,
 
-    // ----------------------------------------------------------
-    // 🆕 TEMPEST + WIND STATION
-    // ----------------------------------------------------------
     current_conditions: tempestData?.current_conditions ?? null,
     wind_station: tempestData?.wind_station ?? null,
 
-    // compatibility
     tempest: tempestData?.current_conditions ?? null,
-    wu: null,
-    mrms: null,
 
     meta: {
       fetchedAt: start,
@@ -67,7 +59,7 @@ return {
 }
 
 // ============================================================
-// ALIGNMENT (🔥 SINGLE SOURCE OF TRUTH)
+// ALIGNMENT
 // ============================================================
 
 function alignToNow(hourly = []) {
@@ -92,17 +84,16 @@ function alignToNow(hourly = []) {
 
   const aligned = sorted.slice(closestIndex);
 
-  console.log("🧭 ALIGNMENT CHECK:", {
-    now: new Date(now).toString(),
+  console.log("🧭 ALIGN:", {
     start: new Date(aligned[0]?.timestamp).toString(),
-    totalHours: aligned.length
+    hours: aligned.length
   });
 
   return aligned;
 }
 
 // ============================================================
-// SINGLE SOURCE FETCH
+// FETCH CORE
 // ============================================================
 
 async function getWeatherUnified(lat, lon) {
@@ -112,19 +103,19 @@ async function getWeatherUnified(lat, lon) {
   }
 
   const url = `/api/weather?type=hourly&lat=${lat}&lon=${lon}`;
-  console.log("🌐 Fetching unified weather:", url);
+  console.log("🌐 Fetch:", url);
 
-  // ----------------------------------------------------------
-  // CACHE HIT
-  // ----------------------------------------------------------
+  // ------------------------------------------------------------
+  // CACHE
+  // ------------------------------------------------------------
   if (lastGood.data && Date.now() - lastGood.timestamp < CACHE_TTL) {
     console.log("🟢 Using cached weather");
     return lastGood.data;
   }
 
-  // ----------------------------------------------------------
+  // ------------------------------------------------------------
   // RETRY LOOP
-  // ----------------------------------------------------------
+  // ------------------------------------------------------------
   for (let attempt = 1; attempt <= 2; attempt++) {
     console.log(`🔁 Attempt ${attempt}`);
 
@@ -133,47 +124,26 @@ async function getWeatherUnified(lat, lon) {
       if (!res || !res.ok) continue;
 
       const json = await res.json();
-      console.log("Raw keys:", Object.keys(json));
 
-      let hourly = null;
-
-      if (Array.isArray(json.hourly) && json.hourly.length > 0) {
-        hourly = json.hourly;
-      } else if (json.hourly_legacy?.time?.length) {
-        console.log("🟡 Using legacy hourly format");
-
-        hourly = json.hourly_legacy.time.map((t, i) => ({
-          timestamp: new Date(t).getTime(),
-
-          temperatureF:
-            json.hourly_legacy.temperature_2m?.[i] ?? null,
-
-          relativeHumidity:
-            json.hourly_legacy.relative_humidity_2m?.[i] ?? null,
-
-          windSpeed:
-            json.hourly_legacy.wind_speed_10m?.[i] ?? 0,
-
-          windGust:
-            json.hourly_legacy.wind_gusts_10m?.[i] ?? null
-        }));
-      }
-
-      const current =
-        json.current ||
-        json.current_conditions ||
-        null;
-
-      if (!Array.isArray(hourly) || hourly.length === 0) {
-        console.warn("❌ Invalid hourly data");
+      // --------------------------------------------------------
+      // ✅ STRICT CONTRACT: hourly must exist
+      // --------------------------------------------------------
+      if (!Array.isArray(json.hourly) || json.hourly.length === 0) {
+        console.warn("❌ No valid hourly data");
         continue;
       }
 
-      const alignedHourly = alignToNow(hourly);
+      // 🧪 DEBUG — VERIFY PRECIP IS PRESENT
+      console.log("🌧️ SAMPLE:", {
+        precip: json.hourly[0]?.precipitation,
+        prob: json.hourly[0]?.precipitation_probability
+      });
+
+      const alignedHourly = alignToNow(json.hourly);
 
       const payload = {
         hourly: alignedHourly,
-        current
+        current: json.current || json.current_conditions || null
       };
 
       lastGood = {
@@ -182,9 +152,11 @@ async function getWeatherUnified(lat, lon) {
       };
 
       console.log("✅ WEATHER OK", {
-        rawHours: hourly.length,
-        alignedHours: alignedHourly.length,
-        hasCurrent: !!current
+        hours: alignedHourly.length,
+        hasPrecip:
+          alignedHourly.some(h => (h.precipitation ?? 0) > 0),
+        hasProbability:
+          alignedHourly.some(h => h.precipitation_probability != null)
       });
 
       return payload;
@@ -194,6 +166,9 @@ async function getWeatherUnified(lat, lon) {
     }
   }
 
+  // ------------------------------------------------------------
+  // FALLBACKS
+  // ------------------------------------------------------------
   if (lastGood.data) {
     console.warn("🟡 Using cached fallback");
     return lastGood.data;

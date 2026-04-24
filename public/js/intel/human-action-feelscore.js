@@ -744,8 +744,8 @@ return {
   bullets: [explanation]
 };
 }
- // ============================================================
-// BUILD NARRATIVE (UNIFIED + DATA-DRIVEN)
+// ============================================================
+// BUILD NARRATIVE (UNIFIED + DATA-DRIVEN + PRECIP-AWARE)
 // ============================================================
 
 function buildPeriodNarrative(ctx, label) {
@@ -764,8 +764,20 @@ function buildPeriodNarrative(ctx, label) {
   const temp = snapshot?.temp ?? null;
   const dp = snapshot?.dewPoint ?? null;
 
+// ==========================================================
+// 🌧️ PRECIP SIGNAL (PRIMARY DRIVER — SHARED LOGIC)
+// ==========================================================
+
+const precipProbability = snapshot?.precipProbability ?? 0;
+const precipAmount = snapshot?.precipAmount ?? 0;
+
+const precipSignal = getPrecipSignal({
+  precipProbability,
+  precipAmount
+});
+
   // ==========================================================
-  // 🔥 SINGLE CONDITION MODEL (FIXES EVERYTHING)
+  // CORE CONDITIONS
   // ==========================================================
 
   const isWindy = maxGust >= 30 || avgWind >= 15;
@@ -787,12 +799,21 @@ function buildPeriodNarrative(ctx, label) {
   else if (temp <= 55) tempBand = "cool";
 
   // ==========================================================
-  // HEADLINE
+  // HEADLINE (PRECIP FIRST)
   // ==========================================================
 
   let headline;
 
-  if (isShockDay) {
+  if (precipSignal !== "none") {
+    if (precipSignal === "high") {
+      headline = "Rain likely throughout the day";
+    } else if (precipSignal === "moderate") {
+      headline = "Scattered showers expected";
+    } else {
+      headline = "A few showers possible";
+    }
+  }
+  else if (isShockDay) {
     headline =
       tempDrop >= 25
         ? "A sharp cooldown hits tomorrow"
@@ -838,8 +859,22 @@ function buildPeriodNarrative(ctx, label) {
   const maxT = temp != null ? Math.round(temp) : null;
 
   if (label === "tomorrow") {
-    narrative = "A generally comfortable and stable day overall.";
 
+    // 🌧️ PRECIP FIRST
+    if (precipSignal === "high") {
+      narrative = "Periods of rain are likely through the day.";
+    }
+    else if (precipSignal === "moderate") {
+      narrative = "Scattered showers develop at times.";
+    }
+    else if (precipSignal === "low") {
+      narrative = "A few showers are possible.";
+    }
+    else {
+      narrative = "A generally comfortable and stable day overall.";
+    }
+
+    // temps
     if (minT != null && maxT != null) {
       narrative += ` Temperatures start near ${minT}° and rise into the ${maxT}° range by afternoon.`;
     }
@@ -851,7 +886,7 @@ function buildPeriodNarrative(ctx, label) {
       narrative += " Humidity adds a heavier feel at times.";
     }
 
-    // wind (uses SAME logic)
+    // wind
     if (isWindy) {
       narrative += " Winds may be strong enough to impact plans.";
     } else if (isBreezy) {
@@ -862,10 +897,21 @@ function buildPeriodNarrative(ctx, label) {
   }
 
   // ==========================================================
-  // BULLETS (SAME SOURCE OF TRUTH)
+  // BULLETS
   // ==========================================================
 
   let bullets = [];
+
+  // 🌧️ PRECIP BULLETS
+  if (precipSignal === "high") {
+    bullets.push("Rain likely");
+  }
+  else if (precipSignal === "moderate") {
+    bullets.push("Scattered showers");
+  }
+  else if (precipSignal === "low") {
+    bullets.push("Slight chance of rain");
+  }
 
   if (isShockDay) {
     bullets.push("Much cooler than today");
@@ -909,19 +955,19 @@ function buildPeriodNarrative(ctx, label) {
   // FINAL
   // ==========================================================
 
-return {
-  label,
-  score,
-  emoji: resolveComfortIcon({
+  return {
+    label,
     score,
-    temp,
-    dewPoint: dp,
-    wind
-  }),
-  headline,
-  narrative,
-  bullets
-};
+    emoji: resolveComfortIcon({
+      score,
+      temp,
+      dewPoint: dp,
+      wind
+    }),
+    headline,
+    narrative,
+    bullets
+  };
 }
 
 // ============================================================
@@ -1022,8 +1068,8 @@ return {
 // ============================================================
 
 function getPrecipSignal({ precipProbability = 0, precipAmount = 0 }) {
-  if (precipProbability >= 70 || precipAmount >= 0.25) return "high";
-  if (precipProbability >= 40 || precipAmount >= 0.05) return "moderate";
+  if (precipProbability >= 70 || precipAmount >= 0.15) return "high";
+  if (precipProbability >= 40 || precipAmount >= 0.03) return "moderate";
   if (precipProbability >= 20) return "low";
   return "none";
 }

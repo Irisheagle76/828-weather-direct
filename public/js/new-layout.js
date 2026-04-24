@@ -60,14 +60,28 @@ function normalizeHourly(hourly = []) {
     temperatureF: h.temperatureF ?? h.temp ?? null,
 
     // HUMIDITY
-    relativeHumidity: h.relativeHumidity ?? h.rh ?? h.relative_humidity ?? null,
+    relativeHumidity:
+      h.relativeHumidity ?? h.rh ?? h.relative_humidity ?? null,
 
-    // WIND (FIXED)
+    // WIND
     windSpeed: h.windSpeed ?? h.wind ?? 0,
-    windGust: h.windGust ?? null,   // 🔥 THIS WAS MISSING
+    windGust: h.windGust ?? null,
 
-    // OPTIONAL
-    dewpointF: h.dewpointF ?? h.dewPoint ?? null
+    // DEW
+    dewpointF: h.dewpointF ?? h.dewPoint ?? null,
+
+    // 🌧️ CRITICAL — KEEP THESE
+    precipAmount:
+      h.precipAmount ?? h.precipitation ?? 0,
+
+    precipProbability:
+      h.precipProbability ?? h.precipitation_probability ?? null,
+
+    precipType:
+      h.precipType ?? null,
+
+    isRainingNow:
+      h.isRainingNow ?? false
   }));
 }
 
