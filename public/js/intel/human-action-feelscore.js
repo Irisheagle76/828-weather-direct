@@ -1188,6 +1188,15 @@ function formatTempBand(t) {
   return `upper ${decade}s`;
 }
 
+function avg(arr = []) {
+  if (!arr.length) return null;
+
+  const valid = arr.filter(Number.isFinite);
+  if (!valid.length) return null;
+
+  return valid.reduce((a, b) => a + b, 0) / valid.length;
+}
+
 // ============================================================
 // PRECIP SIGNAL (CORE INTEL — PROBABILITY FIRST)
 // ============================================================
