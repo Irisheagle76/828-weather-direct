@@ -343,6 +343,39 @@ console.log("TEMPEST IN FEELSCORE:", tempest);
   };
 }
 
+// ============================================================
+// PRECIP TYPE (GLOBAL — REQUIRED)
+// ============================================================
+
+function getPrecipType({
+  precipProbability = 0,
+  precipAmount = 0,
+  hours = []
+}) {
+
+  const maxProb = precipProbability;
+
+  const maxRate = Math.max(
+    ...hours.map(h => h.precipAmount ?? 0),
+    0
+  );
+
+  const activeHours = hours.filter(
+    h => (h.precipAmount ?? 0) > 0
+  ).length;
+
+  // 🌧️ INTENSITY FIRST
+  if (maxRate >= 0.10) return "steady_rain";
+  if (maxRate >= 0.03) return "light_rain";
+
+  // 🌦️ COVERAGE
+  if (maxProb >= 70 && activeHours >= 6) return "periods_of_rain";
+  if (maxProb >= 50) return "scattered_showers";
+  if (maxProb >= 20) return "isolated_showers";
+
+  return "none";
+}
+
 function buildSnapshot(hours = []) {
   if (!hours.length) return null;
 
@@ -1166,7 +1199,7 @@ function detectDominantFactor(s = {}) {
   });
 
   const precipType = snapshot?.precipType ?? "none";
-  
+
   // ------------------------------------------------------------
   // 🌧️ PRECIP — HUMAN-FIRST PRIORITY
   // ------------------------------------------------------------
