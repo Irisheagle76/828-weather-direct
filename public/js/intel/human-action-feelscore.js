@@ -1145,3 +1145,4 @@ function resolveComfortIcon({
 
   return "🌥️";
 }
+}
