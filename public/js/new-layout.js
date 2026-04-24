@@ -52,7 +52,8 @@ function getTrendMeta(trend) {
 // ============================================================
 
 function normalizeHourly(hourly = []) {
-  return hourly.map(h => ({
+
+  const normalized = hourly.map(h => ({
     // TIME
     timestamp: h.timestamp ?? h.ts ?? h.time,
 
@@ -83,16 +84,11 @@ function normalizeHourly(hourly = []) {
     isRainingNow:
       h.isRainingNow ?? false
   }));
-}
-console.log("🌧️ NORMALIZED SAMPLE:", normalized[0]);
 
-function normalizeCurrent(c = {}) {
-  return {
-    ...c,
-    temp: c.temp ?? c.temperature ?? c.temperatureF ?? null,
-    wind: c.wind ?? c.wind_avg ?? c.windSpeed ?? 0,
-    rh: c.rh ?? c.relative_humidity ?? null
-  };
+  // 👇 LOG INSIDE FUNCTION
+  console.log("🌧️ NORMALIZED SAMPLE:", normalized[0]);
+
+  return normalized;
 }
 
 // ------------------------------------------------------------
