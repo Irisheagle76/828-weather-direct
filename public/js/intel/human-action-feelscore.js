@@ -1087,13 +1087,6 @@ bullets = [...new Set(bullets)].slice(0, 4);
 // HELPERS
 // ============================================================
 
-const avg = arr => {
-  const valid = arr.filter(Number.isFinite);
-  return valid.length
-    ? valid.reduce((a, b) => a + b, 0) / valid.length
-    : null;
-};
-
 function average(arr) {
   return arr.reduce((a, b) => a + b, 0) / arr.length;
 }
