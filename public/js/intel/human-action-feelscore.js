@@ -43,6 +43,17 @@ function alignHourly(hourlyRaw = []) {
   return startIndex === -1 ? [] : sorted.slice(startIndex);
 }
 
+function formatTempRange(min, max) {
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return "";
+
+  const minBand = formatTempBand(min);
+  const maxBand = formatTempBand(max);
+
+  if (minBand === maxBand) return minBand;
+
+  return `${minBand} to ${maxBand}`;
+}
+
 // 🔥 SPLIT INTO CALENDAR DAYS (FIXES TOMORROW BUG)
 function splitDays(hourly, now) {
   const d = new Date(now);
@@ -1062,19 +1073,6 @@ return {
   shortTerm
 };
 }
-
-function formatTempBand(t) {
-  if (t == null || !Number.isFinite(t)) return null;
-
-  const rounded = Math.round(t);
-  const decade = Math.floor(rounded / 10) * 10;
-  const offset = rounded - decade;
-
-  if (offset <= 2) return `low ${decade}s`;
-  if (offset <= 6) return `mid ${decade}s`;
-  return `upper ${decade}s`;
-}
-
 
 function detectDominantFactor(s = {}) {
   const gustiness = s.gustiness ?? 0;
