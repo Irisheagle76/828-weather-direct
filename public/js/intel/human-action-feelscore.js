@@ -1090,8 +1090,10 @@ function detectDominantFactor(s = {}) {
     precipAmount: s.precipAmount
   });
 
-  if (precipSignal === "high") return "rain";
-  if (precipSignal === "moderate") return "rain";
+// 🌧️ MAKE ALL RAIN MATTER
+if (precipSignal === "high") return "rain";
+if (precipSignal === "moderate") return "rain";
+if (precipSignal === "low") return "rain";
 
   // ------------------------------------------------------------
   // 🌬️ WIND (EXISTING)
