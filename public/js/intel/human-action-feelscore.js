@@ -564,36 +564,38 @@ const hasColdStart =
     narrative = null;
   }
 
-  // ------------------------------------------------------------
-  // FINAL RETURN (UNCHANGED)
-  // ------------------------------------------------------------
-  return {
-    label,
-    score,
-    snapshot,
-    trend,
-    narrativeText:
-      narrative?.longNarrative ||
-      narrative?.headline ||
-      "",
-    flags: {
-      isShockDay,
-      hasColdStart
-    },
-    change: {
-      tempDrop,
-      windJump,
-      chillDelta,
-      tomorrowMin
-    },
-    wind: {
-  maxWind,
-  maxGust,
-  avgWind: avg(windValues),        // ✅ ADD
-  breezyHours: windValues.filter(w => w >= 10).length  // ✅ ADD
-}
-  };
-}
+return {
+  label,
+  score,
+  snapshot,
+  trend,
+
+  hours, 
+
+  narrativeText:
+    narrative?.longNarrative ||
+    narrative?.headline ||
+    "",
+
+  flags: {
+    isShockDay,
+    hasColdStart
+  },
+
+  change: {
+    tempDrop,
+    windJump,
+    chillDelta,
+    tomorrowMin
+  },
+
+  wind: {
+    maxWind,
+    maxGust,
+    avgWind: avg(windValues),
+    breezyHours: windValues.filter(w => w >= 10).length
+  }
+};
 
 // ============================================================
 // CURRENT FEELSCORE (STABLE + RESPONSIVE)
@@ -850,7 +852,7 @@ return {
 function buildPeriodNarrative(ctx, label) {
   if (!ctx) return fallback(label);
 
-  const { score, flags, change, wind, snapshot } = ctx;
+  const { score, flags, change, wind, snapshot, hours } = ctx;
 
   const { isShockDay, hasColdStart } = flags || {};
   const { tempDrop = 0, chillDelta = 0, tomorrowMin = null } = change || {};
@@ -950,14 +952,10 @@ if (precipSignal !== "none") {
 
   let narrative = "";
 
-  const minT =
-    tomorrowMin != null
-      ? Math.round(tomorrowMin)
-      : temp != null
-      ? Math.round(temp - 10)
-      : null;
+const temps = ctx?.hours?.map(h => h.temperatureF).filter(Number.isFinite) || [];
 
-  const maxT = temp != null ? Math.round(temp) : null;
+const minT = temps.length ? Math.round(Math.min(...temps)) : null;
+const maxT = temps.length ? Math.round(Math.max(...temps)) : null;
 
   if (label === "tomorrow") {
 
@@ -1304,4 +1302,5 @@ function resolveComfortIcon({
   if (score >= 70) return "🌤️";
 
   return "🌥️";
+}
 }
