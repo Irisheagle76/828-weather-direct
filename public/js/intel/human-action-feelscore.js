@@ -946,113 +946,123 @@ if (precipSignal !== "none") {
     }
   }
 
-  // ==========================================================
-  // NARRATIVE
-  // ==========================================================
+// ==========================================================
+// NARRATIVE
+// ==========================================================
 
-  let narrative = "";
+let narrative = "";
 
+// ----------------------------------------------------------
+// 🌡️ TEMPERATURES (NATURAL LANGUAGE)
+// ----------------------------------------------------------
 const temps = ctx?.hours?.map(h => h.temperatureF).filter(Number.isFinite) || [];
 
-const minT = temps.length ? Math.round(Math.min(...temps)) : null;
-const maxT = temps.length ? Math.round(Math.max(...temps)) : null;
+const minT = temps.length ? Math.min(...temps) : null;
+const maxT = temps.length ? Math.max(...temps) : null;
 
-  if (label === "tomorrow") {
+const minBand = formatTempBand(minT);
+const maxBand = formatTempBand(maxT);
 
-    // 🌧️ PRECIP FIRST
-if (precipSignal !== "none") {
-  if (precipType === "steady_rain") {
-    narrative = "Steady rain is expected through much of the day.";
+// ==========================================================
+// TOMORROW NARRATIVE
+// ==========================================================
+
+if (label === "tomorrow") {
+
+  // 🌧️ PRECIP FIRST
+  if (precipSignal !== "none") {
+    if (precipType === "steady_rain") {
+      narrative = "Steady rain is expected through much of the day.";
+    } else if (precipType === "periods_of_rain") {
+      narrative = "Rain moves through at times during the day.";
+    } else if (precipType === "light_rain") {
+      narrative = "Light rain develops at times.";
+    } else if (precipType === "scattered_showers") {
+      narrative = "Scattered showers develop at times.";
+    } else {
+      narrative = "A few passing showers are possible.";
+    }
   }
-  else if (precipType === "periods_of_rain") {
-    narrative = "Rain moves through at times during the day.";
+
+  // 🌡️ TEMPS (NATURAL)
+  if (minBand && maxBand) {
+    if (minBand === maxBand) {
+      narrative += ` Temperatures hold in the ${maxBand} through the day.`;
+    } else {
+      narrative += ` Temperatures start in the ${minBand} and rise into the ${maxBand} by afternoon.`;
+    }
   }
-  else if (precipType === "light_rain") {
-    narrative = "Light rain develops at times.";
+
+  // 💧 MOISTURE
+  if (moisture === "dry") {
+    narrative += " Dry air keeps things feeling crisp and clean.";
+  } else if (moisture === "humid") {
+    narrative += " Humidity adds a heavier feel at times.";
   }
-  else if (precipType === "scattered_showers") {
-    narrative = "Scattered showers develop at times.";
-  }
-  else {
-    narrative = "A few passing showers are possible.";
+
+  // 🌬️ WIND
+  if (isWindy) {
+    narrative += " Winds may be strong enough to impact plans.";
+  } else if (isBreezy) {
+    narrative += " A light breeze develops through the day.";
+  } else {
+    narrative += " Winds stay light and out of the way.";
   }
 }
-    // temps
-    if (minT != null && maxT != null) {
-      narrative += ` Temperatures start near ${minT}° and rise into the ${maxT}° range by afternoon.`;
-    }
 
-    // moisture
-    if (moisture === "dry") {
-      narrative += " Dry air keeps things feeling crisp and clean.";
-    } else if (moisture === "humid") {
-      narrative += " Humidity adds a heavier feel at times.";
-    }
+// ==========================================================
+// BULLETS
+// ==========================================================
 
-    // wind
-    if (isWindy) {
-      narrative += " Winds may be strong enough to impact plans.";
-    } else if (isBreezy) {
-      narrative += " A light breeze develops through the day.";
-    } else {
-      narrative += " Winds stay light and out of the way.";
-    }
+let bullets = [];
+
+// 🌧️ PRECIP BULLETS
+if (precipSignal === "high") {
+  bullets.push("Rain likely");
+} else if (precipSignal === "moderate") {
+  bullets.push("Scattered showers");
+} else if (precipSignal === "low") {
+  bullets.push("Slight chance of rain");
+}
+
+// 🌡️ COLD START
+if (isShockDay) {
+  bullets.push("Much cooler than today");
+}
+
+if (hasColdStart && tomorrowMin != null) {
+  if (tomorrowMin <= 42) {
+    bullets.push(`Cold start in the ${formatTempBand(tomorrowMin)}`);
+  } else {
+    bullets.push("Cool start early");
   }
+}
 
-  // ==========================================================
-  // BULLETS
-  // ==========================================================
+// 🌬️ WIND
+if (isWindy) {
+  bullets.push("Windy at times");
+} else if (isBreezy) {
+  bullets.push("Light breeze develops");
+} else {
+  bullets.push("Light winds");
+}
 
-  let bullets = [];
+// 💧 MOISTURE
+if (moisture === "dry") {
+  bullets.push("Dry, crisp air");
+} else if (moisture === "humid") {
+  bullets.push("Humid at times");
+} else {
+  bullets.push("Comfortable humidity");
+}
 
-  // 🌧️ PRECIP BULLETS
-  if (precipSignal === "high") {
-    bullets.push("Rain likely");
-  }
-  else if (precipSignal === "moderate") {
-    bullets.push("Scattered showers");
-  }
-  else if (precipSignal === "low") {
-    bullets.push("Slight chance of rain");
-  }
+// 🧊 FEELS COOLER
+if (chillDelta >= 5) {
+  bullets.push("Feels cooler than actual temperature");
+}
 
-  if (isShockDay) {
-    bullets.push("Much cooler than today");
-  }
-
-  if (hasColdStart && tomorrowMin != null) {
-    bullets.push(
-      tomorrowMin <= 42
-        ? `Cold start near ${Math.round(tomorrowMin)}°`
-        : "Cool start early"
-    );
-  }
-
-  if (isWindy) {
-    bullets.push("Windy at times");
-  } 
-  else if (isBreezy) {
-    bullets.push("Light breeze develops");
-  }
-  else {
-    bullets.push("Light winds");
-  }
-
-  if (moisture === "dry") {
-    bullets.push("Dry, crisp air");
-  } 
-  else if (moisture === "humid") {
-    bullets.push("Humid at times");
-  } 
-  else {
-    bullets.push("Comfortable humidity");
-  }
-
-  if (chillDelta >= 5) {
-    bullets.push("Feels cooler than actual temperature");
-  }
-
-  bullets = [...new Set(bullets)].slice(0, 4);
+// CLEAN + LIMIT
+bullets = [...new Set(bullets)].slice(0, 4);
 
   // ==========================================================
   // FINAL
@@ -1164,6 +1174,18 @@ return {
 
   shortTerm
 };
+}
+
+function formatTempBand(t) {
+  if (t == null || !Number.isFinite(t)) return null;
+
+  const rounded = Math.round(t);
+  const decade = Math.floor(rounded / 10) * 10;
+  const offset = rounded - decade;
+
+  if (offset <= 2) return `low ${decade}s`;
+  if (offset <= 6) return `mid ${decade}s`;
+  return `upper ${decade}s`;
 }
 
 // ============================================================
