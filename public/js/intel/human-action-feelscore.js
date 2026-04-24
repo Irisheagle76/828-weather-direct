@@ -343,6 +343,37 @@ console.log("TEMPEST IN FEELSCORE:", tempest);
   };
 }
 
+function buildSnapshot(hours = []) {
+  if (!hours.length) return null;
+
+  const first = hours[0];
+
+  const maxProb = Math.max(...hours.map(h => h.precipProbability ?? 0), 0);
+  const maxAmt  = Math.max(...hours.map(h => h.precipAmount ?? 0), 0);
+  const avgAmt  = avg(hours.map(h => h.precipAmount ?? 0)) ?? 0;
+
+  const snapshot = {
+    temp: first.temperatureF,
+    dewPoint: first.dewpointF,
+    wind: first.windSpeed,
+    gust: first.windGust,
+
+    precipProbability: maxProb,
+    precipAmount: maxAmt,
+    precipAmountAvg: avgAmt,
+
+    isRainingNow: (hours[0]?.precipAmount ?? 0) > 0
+  };
+
+  snapshot.precipType = getPrecipType({
+    precipProbability: snapshot.precipProbability,
+    precipAmount: snapshot.precipAmount,
+    hours
+  });
+
+  return snapshot;
+}
+
 // ============================================================
 // BUILD PERIOD CORE (SMOOTHED + CONSISTENT)
 // ============================================================
@@ -1134,6 +1165,8 @@ function detectDominantFactor(s = {}) {
     precipAmount: s.precipAmount
   });
 
+  const precipType = snapshot?.precipType ?? "none";
+  
   // ------------------------------------------------------------
   // 🌧️ PRECIP — HUMAN-FIRST PRIORITY
   // ------------------------------------------------------------
