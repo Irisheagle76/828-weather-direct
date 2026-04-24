@@ -10,6 +10,19 @@ import { buildFullExplanation } from "../intel/explanations/buildFullExplanation
 // TIME HELPERS
 // ============================================================
 
+// ============================================================
+// HELPERS
+// ============================================================
+
+function avg(arr = []) {
+  if (!arr.length) return null;
+
+  const valid = arr.filter(Number.isFinite);
+  if (!valid.length) return null;
+
+  return valid.reduce((a, b) => a + b, 0) / valid.length;
+}
+
 function getTs(h) {
   const ts = h?.timestamp ?? h?.ts ?? null;
   if (!ts) return null;
@@ -1179,15 +1192,6 @@ function formatTempBand(t) {
   if (offset <= 2) return `low ${decade}s`;
   if (offset <= 6) return `mid ${decade}s`;
   return `upper ${decade}s`;
-}
-
-function avg(arr = []) {
-  if (!arr.length) return null;
-
-  const valid = arr.filter(Number.isFinite);
-  if (!valid.length) return null;
-
-  return valid.reduce((a, b) => a + b, 0) / valid.length;
 }
 
 // ============================================================
