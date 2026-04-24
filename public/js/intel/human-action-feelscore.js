@@ -661,21 +661,30 @@ console.log("TEMPEST IN FEELSCORE:", tempest);
 
   const windJump = tomorrowWindMax - todayWindMax;
 
-  // ==========================================================
-  // BUILD OUTPUT
-  // ==========================================================
+ // ==========================================================
+// BUILD OUTPUT
+// ==========================================================
 
-  const tomorrowCtx = buildPeriod(tomorrowHours, "tomorrow", {
-    tempDrop,
-    windJump,
-    tomorrowMin
-  });
+// 👉 build TODAY the same way as TOMORROW
+const todayCtx = buildPeriod(todayHours, "today", {
+  tempDrop: 0,
+  windJump: 0,
+  tomorrowMin: null
+});
 
-  return {
-    feelscore: buildCurrentWithTrend(todayHours, tempest),
-    tomorrow: buildPeriodNarrative(tomorrowCtx, "tomorrow")
-  };
-}
+const tomorrowCtx = buildPeriod(tomorrowHours, "tomorrow", {
+  tempDrop,
+  windJump,
+  tomorrowMin
+});
+
+return {
+  // ✅ now returns full structured object
+  feelscore: buildPeriodNarrative(todayCtx, "today"),
+
+  // ✅ unchanged
+  tomorrow: buildPeriodNarrative(tomorrowCtx, "tomorrow")
+};
 
 // ============================================================
 // PRECIP TYPE (GLOBAL — REQUIRED)
