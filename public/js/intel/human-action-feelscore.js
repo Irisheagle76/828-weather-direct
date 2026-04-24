@@ -252,6 +252,27 @@ function resolveDewpoint(first, tempest) {
   return Math.min(resolved, first?.temperatureF ?? resolved);
 }
 
+function smoothFirstHoursWithTempest(hours = [], tempest = null) {
+  if (!hours.length || !tempest?.air_temperature) return hours;
+
+  const baseTemp = hours[0].temperatureF;
+  const delta = tempest.air_temperature - baseTemp;
+
+  return hours.map((h, i) => {
+    if (i > 2) return h; // only adjust first ~2–3 hours
+
+    const decay = 1 - i / 2;
+
+    return {
+      ...h,
+      temperatureF:
+        h.temperatureF != null
+          ? h.temperatureF + delta * decay
+          : h.temperatureF
+    };
+  });
+}
+
 function buildCurrentWithTrend(hours, tempest = null) {
   if (!hours.length) return fallback("today");
 
@@ -1069,26 +1090,7 @@ function calcWindChill(temp, wind) {
     0.4275 * temp * Math.pow(wind, 0.16)
   );
 }
-function smoothFirstHoursWithTempest(hours = [], tempest = null) {
-  if (!hours.length || !tempest?.air_temperature) return hours;
 
-  const baseTemp = hours[0].temperatureF;
-  const delta = tempest.air_temperature - baseTemp;
-
-  return hours.map((h, i) => {
-    if (i > 2) return h; // only adjust first ~2–3 hours
-
-    const decay = 1 - i / 2;
-
-    return {
-      ...h,
-      temperatureF:
-        h.temperatureF != null
-          ? h.temperatureF + delta * decay
-          : h.temperatureF
-    };
-  });
-}
 
 // ============================================================
 // ICON RESOLUTION (FEELSCORE-DRIVEN)
