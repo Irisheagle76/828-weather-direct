@@ -392,11 +392,15 @@ function buildPeriod(hours, label, change = {}) {
   // ------------------------------------------------------------
   // SNAPSHOT (UNCHANGED)
   // ------------------------------------------------------------
-  const snapshot = {
-    temp: avg(hours.map(h => h.temperatureF)),
-    dewPoint: avg(hours.map(h => h.dewpointF)),
-    wind: avg(hours.map(h => h.windSpeed))
-  };
+ const snapshot = {
+  temp: avg(hours.map(h => h.temperatureF)),
+  dewPoint: avg(hours.map(h => h.dewpointF)),
+  wind: avg(hours.map(h => h.windSpeed)),
+
+  // 👇 NEW
+  precipProbability: Math.max(...hours.map(h => h.precipProbability ?? 0), 0),
+  precipAmount: avg(hours.map(h => h.precipAmount ?? 0)) ?? 0
+};
 
   if (!Number.isFinite(snapshot.temp)) return null;
 
@@ -985,27 +989,68 @@ function buildIntel(
   maxGust,
   label,
   shortTerm = {}
-) {
-  return {
-    signals: {
-      temp: snapshot.temp,
-      dewPoint: snapshot.dewPoint ?? null,
-      wind: snapshot.wind ?? 0
-    },
-    pattern: { trend, avg: score },
-    context: { label },
-    dominantFactor: detectDominantFactor(snapshot),
-    shortTerm: shortTerm   // ✅ correct
-  };
+){
+return {
+  signals: {
+    temp: snapshot.temp,
+    dewPoint: snapshot.dewPoint ?? null,
+    wind: snapshot.wind ?? 0,
+
+    // 👇 ADD THESE
+    precipProbability: snapshot.precipProbability ?? 0,
+    precipAmount: snapshot.precipAmount ?? 0
+  },
+  pattern: { trend, avg: score },
+  context: { label },
+
+  // 👇 IMPORTANT: pass full snapshot
+  precipProbability: snapshot.precipProbability ?? 0,
+  precipAmount: snapshot.precipAmount ?? 0,
+
+  dominantFactor: detectDominantFactor({
+    ...snapshot,
+    precipProbability: snapshot.precipProbability,
+    precipAmount: snapshot.precipAmount
+  }),
+
+  shortTerm
+};
+}
+
+// ============================================================
+// PRECIP SIGNAL (NEW — CORE INTEL)
+// ============================================================
+
+function getPrecipSignal({ precipProbability = 0, precipAmount = 0 }) {
+  if (precipProbability >= 70 || precipAmount >= 0.25) return "high";
+  if (precipProbability >= 40 || precipAmount >= 0.05) return "moderate";
+  if (precipProbability >= 20) return "low";
+  return "none";
 }
 
 function detectDominantFactor(s = {}) {
   const gustiness = s.gustiness ?? 0;
 
-  // 🆕 gust-driven discomfort
+  // ------------------------------------------------------------
+  // 🌧️ PRECIP (NEW — HIGHEST PRIORITY WHEN PRESENT)
+  // ------------------------------------------------------------
+  const precipSignal = getPrecipSignal({
+    precipProbability: s.precipProbability,
+    precipAmount: s.precipAmount
+  });
+
+  if (precipSignal === "high") return "rain";
+  if (precipSignal === "moderate") return "rain";
+
+  // ------------------------------------------------------------
+  // 🌬️ WIND (EXISTING)
+  // ------------------------------------------------------------
   if (gustiness >= 12) return "gusty_wind";
   if (gustiness >= 7) return "breezy";
 
+  // ------------------------------------------------------------
+  // 🌡️ TEMP / HUMIDITY (EXISTING)
+  // ------------------------------------------------------------
   if (s.dewPoint >= 65) return "muggy";
   if (s.temp >= 85) return "heat";
   if (s.temp <= 45) return "cold";

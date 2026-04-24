@@ -1,8 +1,11 @@
 // ============================================================
-// WEATHER ADAPTER (V3 — CANONICAL + GUST SUPPORT)
+// WEATHER ADAPTER — v5 (UNIT-SAFE + PRECIP INTELLIGENCE)
 // ============================================================
 
 import { fetchAllIntel } from '/js/weather-fetch.js';
+
+// 🌧️ UNIT CONSTANT
+const MM_TO_IN = 0.0393701;
 
 // ============================================================
 // MAIN ENTRY
@@ -11,25 +14,33 @@ import { fetchAllIntel } from '/js/weather-fetch.js';
 export async function getWeatherForUI({ lat, lon }) {
   const raw = await fetchAllIntel({ lat, lon });
 
-return {
-  current: adaptCurrent(raw?.current || raw?.current_conditions),
-  hourly: adaptHourly(raw?.hourly),
-  daily: raw?.daily || [],
+  return {
+    current: adaptCurrent(raw?.current || raw?.current_conditions),
+    hourly: adaptHourly(raw?.hourly),
+    daily: adaptDaily(raw?.daily),
 
-  // ✅ FIXED: correct source
-  tempest: raw?.current_conditions ?? null,
-
-  // 🆕 ADD THIS
-  wind_station: raw?.wind_station ?? null
-};
+    tempest: raw?.current_conditions ?? null,
+    wind_station: raw?.wind_station ?? null
+  };
 }
 
 // ============================================================
-// CURRENT → NORMALIZED
+// CURRENT CONDITIONS
 // ============================================================
 
 function adaptCurrent(c) {
   if (!c) return null;
+
+  const rawPrecip =
+    c.precipitation ??
+    c.rain ??
+    0;
+
+  const isMetric = c.precipitation != null && c.rain == null;
+
+  const precipAmount = isMetric
+    ? rawPrecip * MM_TO_IN
+    : rawPrecip;
 
   return {
     timestamp: c.timestamp ?? c.time ?? Date.now(),
@@ -64,10 +75,14 @@ function adaptCurrent(c) {
       c.wind_gust ??
       null,
 
-    precipitation:
-      c.precipitation ??
-      c.rain ??
-      0,
+    // 🌧️ PRECIP
+    precipAmount,
+    precipProbability:
+      c.precipitation_probability ??
+      c.precipProbability ??
+      null,
+
+    isRainingNow: precipAmount > 0,
 
     cloudCover:
       c.cloudCover ??
@@ -78,83 +93,147 @@ function adaptCurrent(c) {
 }
 
 // ============================================================
-// HOURLY → NORMALIZED ARRAY
+// HOURLY NORMALIZATION
 // ============================================================
 
 function adaptHourly(hourly) {
   if (!hourly) return [];
 
-  // ------------------------------------------------------------
-  // CASE 1: Already normalized (array)
-  // ------------------------------------------------------------
   if (Array.isArray(hourly)) {
     return hourly.map(normalizeHourObject).filter(Boolean);
   }
 
-  // ------------------------------------------------------------
-  // CASE 2: Open-Meteo style (arrays)
-  // ------------------------------------------------------------
-if (hourly?.time?.length) {
-  const out = hourly.time
-    .map((t, i) =>
-      normalizeHourObject({
-        timestamp: new Date(t).getTime(),
+  if (hourly?.time?.length) {
+    return hourly.time
+      .map((t, i) =>
+        normalizeHourObject({
+          timestamp: new Date(t).getTime(),
 
-        temperatureF: hourly.temperature_2m?.[i] ?? null,
-        dewpointF: hourly.dew_point_2m?.[i] ?? null,
+          temperatureF: hourly.temperature_2m?.[i] ?? null,
+          dewpointF: hourly.dew_point_2m?.[i] ?? null,
 
-        relativeHumidity:
-          hourly.relative_humidity_2m?.[i] ?? null,
+          relativeHumidity:
+            hourly.relative_humidity_2m?.[i] ?? null,
 
-        windSpeed: hourly.wind_speed_10m?.[i] ?? 0,
-        windGust: hourly.wind_gusts_10m?.[i] ?? null,
-        precipitation: hourly.precipitation?.[i] ?? 0,
-        cloudCover: hourly.cloudcover?.[i] ?? null,
-        uvIndex: hourly.uv_index?.[i] ?? null
-      })
-    )
-    .filter(Boolean)
-    .sort((a, b) => a.timestamp - b.timestamp);
+          windSpeed: hourly.wind_speed_10m?.[i] ?? 0,
+          windGust: hourly.wind_gusts_10m?.[i] ?? null,
 
-  console.log("ADAPTER OUTPUT SAMPLE:", out[0]);
+          // 👇 RAW MM VALUE
+          precipitation: hourly.precipitation?.[i] ?? 0,
 
-  return out;   // ✅ THIS WAS MISSING
+          precipitation_probability:
+            hourly.precipitation_probability?.[i] ?? null,
+
+          cloudCover: hourly.cloudcover?.[i] ?? null,
+          uvIndex: hourly.uv_index?.[i] ?? null
+        })
+      )
+      .filter(Boolean)
+      .sort((a, b) => a.timestamp - b.timestamp);
+  }
+
+  return [];
 }
 
 // ============================================================
-// NORMALIZE SINGLE HOUR
+// DAILY NORMALIZATION
+// ============================================================
+
+function adaptDaily(daily) {
+  if (!daily) return [];
+
+  if (daily?.time?.length) {
+    return daily.time.map((t, i) => ({
+      date: t,
+
+      tempMax: daily.temperature_2m_max?.[i] ?? null,
+      tempMin: daily.temperature_2m_min?.[i] ?? null,
+
+      precipProbabilityMax:
+        daily.precipitation_probability_max?.[i] ?? null
+    }));
+  }
+
+  return [];
+}
+
+// ============================================================
+// NORMALIZE SINGLE HOUR (CORE LOGIC — FINAL)
 // ============================================================
 
 function normalizeHourObject(h) {
   const ts = h.timestamp ?? h.time ?? h.ts;
   if (!ts) return null;
 
+  // ------------------------------------------------------------
+  // 🌧️ UNIT-SAFE PRECIP
+  // ------------------------------------------------------------
+  const rawPrecip =
+    h.precipitation ??
+    h.rain ??
+    0;
+
+  const isMetric =
+    h.precipitation != null && h.rain == null;
+
+  const precipAmount = isMetric
+    ? rawPrecip * MM_TO_IN
+    : rawPrecip;
+
+  const rawProbability =
+    h.precipProbability ??
+    h.precipitation_probability ??
+    null;
+
+  const precipProbability =
+    precipAmount > 0
+      ? Math.max(rawProbability ?? 0, 70)
+      : rawProbability ?? 0;
+
+  // ------------------------------------------------------------
+  // 🌧️ PRECIP TYPE (TUNED FOR INCHES)
+  // ------------------------------------------------------------
+  let precipType = "none";
+
+  if (precipAmount > 0 || precipProbability >= 20) {
+
+    if (precipAmount < 0.005) {
+      precipType =
+        precipProbability >= 50 ? "drizzle" : "sprinkles";
+    }
+
+    else if (precipAmount < 0.03) {
+      precipType =
+        precipProbability >= 60 ? "light_rain" : "isolated_showers";
+    }
+
+    else if (precipAmount < 0.1) {
+      precipType =
+        precipProbability >= 60 ? "steady_rain" : "scattered_showers";
+    }
+
+    else {
+      precipType = "soaking_rain";
+    }
+  }
+
+  const timestamp =
+    typeof ts === "number"
+      ? ts
+      : new Date(ts).getTime();
+
   return {
-    timestamp:
-      typeof ts === "number"
-        ? ts
-        : new Date(ts).getTime(),
+    timestamp,
 
-    // TEMP
-    temperatureF:
-      h.temperatureF ??
-      h.temp ??
-      null,
+    temperatureF: h.temperatureF ?? h.temp ?? null,
+    dewpointF: h.dewpointF ?? h.dew_point ?? null,
 
-    // DEWPOINT
-    dewpointF:
-      h.dewpointF ??
-      h.dew_point ??
-      null,
-
-    // HUMIDITY
     relativeHumidity:
       h.relativeHumidity ??
       h.relative_humidity ??
       h.humidity ??
       null,
 
-    // WIND (FINALIZED)
     windSpeed:
       h.windSpeed ??
       h.wind_speed ??
@@ -166,11 +245,11 @@ function normalizeHourObject(h) {
       h.wind_gust ??
       null,
 
-    // OTHER
-    precipitation:
-      h.precipitation ??
-      h.rain ??
-      0,
+    // 🌧️ FINAL MODEL
+    precipAmount,
+    precipProbability,
+    precipType,
+    isRainingNow: precipAmount > 0,
 
     cloudCover:
       h.cloudCover ??
@@ -182,5 +261,4 @@ function normalizeHourObject(h) {
       h.uv_index ??
       null
   };
-}
 }
