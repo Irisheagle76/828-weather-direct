@@ -228,6 +228,68 @@ function calculateGustiness(windSpeed, windGust) {
   if (!Number.isFinite(windSpeed) || !Number.isFinite(windGust)) return 0;
   return Math.max(0, windGust - windSpeed);
 }
+// ============================================================
+// CURRENT FEELSCORE (STABLE + RESPONSIVE)
+// ============================================================
+function resolveDewpoint(first, tempest) {
+  const model = first?.dewpointF;
+
+  const station =
+    typeof tempest?.dew_point === "number"
+      ? (tempest.dew_point * 9) / 5 + 32
+      : null;
+
+  if (station == null) return model;
+  if (model == null) return station;
+
+  const diff = Math.abs(station - model);
+
+  const resolved =
+    diff <= 2 ? station :
+    diff <= 8 ? station * 0.7 + model * 0.3 :
+                station * 0.5 + model * 0.5;
+
+  return Math.min(resolved, first?.temperatureF ?? resolved);
+}
+
+function buildCurrentWithTrend(hours, tempest = null) {
+  if (!hours.length) return fallback("today");
+
+  // ------------------------------------------------------------
+  // STEP 1: Smooth near-term model hours
+  // ------------------------------------------------------------
+  hours = smoothFirstHoursWithTempest(hours, tempest);
+
+  // ------------------------------------------------------------
+  // STEP 2: Build weighted current baseline (h0 + h1 + h2)
+  // ------------------------------------------------------------
+  let first = buildWeightedCurrent(hours);
+
+  // ------------------------------------------------------------
+  // STEP 3: Inject real-time Tempest conditions
+  // ------------------------------------------------------------
+  if (tempest) {
+    first = {
+      ...first,
+
+      temperatureF:
+        (typeof tempest.air_temperature === "number"
+          ? (tempest.air_temperature * 9) / 5 + 32
+          : null) ?? first.temperatureF,
+
+      dewpointF:
+        resolveDewpoint(first, tempest),
+
+      windSpeed:
+        tempest.wind_avg ?? first.windSpeed,
+
+      windGust: Math.max(
+        first.windGust ?? 0,
+        tempest.wind_gust ?? 0
+      )
+    };
+  }
+
 
 // ============================================================
 // MAIN ENTRY
@@ -609,69 +671,6 @@ return {
     breezyHours: windValues.filter(w => w >= 10).length
   }
 };
-
-// ============================================================
-// CURRENT FEELSCORE (STABLE + RESPONSIVE)
-// ============================================================
-
-function resolveDewpoint(first, tempest) {
-  const model = first?.dewpointF;
-
-  const station =
-    typeof tempest?.dew_point === "number"
-      ? (tempest.dew_point * 9) / 5 + 32
-      : null;
-
-  if (station == null) return model;
-  if (model == null) return station;
-
-  const diff = Math.abs(station - model);
-
-  const resolved =
-    diff <= 2 ? station :
-    diff <= 8 ? station * 0.7 + model * 0.3 :
-                station * 0.5 + model * 0.5;
-
-  return Math.min(resolved, first?.temperatureF ?? resolved);
-}
-
-function buildCurrentWithTrend(hours, tempest = null) {
-  if (!hours.length) return fallback("today");
-
-  // ------------------------------------------------------------
-  // STEP 1: Smooth near-term model hours
-  // ------------------------------------------------------------
-  hours = smoothFirstHoursWithTempest(hours, tempest);
-
-  // ------------------------------------------------------------
-  // STEP 2: Build weighted current baseline (h0 + h1 + h2)
-  // ------------------------------------------------------------
-  let first = buildWeightedCurrent(hours);
-
-  // ------------------------------------------------------------
-  // STEP 3: Inject real-time Tempest conditions
-  // ------------------------------------------------------------
-  if (tempest) {
-    first = {
-      ...first,
-
-      temperatureF:
-        (typeof tempest.air_temperature === "number"
-          ? (tempest.air_temperature * 9) / 5 + 32
-          : null) ?? first.temperatureF,
-
-      dewpointF:
-        resolveDewpoint(first, tempest),
-
-      windSpeed:
-        tempest.wind_avg ?? first.windSpeed,
-
-      windGust: Math.max(
-        first.windGust ?? 0,
-        tempest.wind_gust ?? 0
-      )
-    };
-  }
 
   // ------------------------------------------------------------
   // STEP 4: Wind smoothing (final pass)
