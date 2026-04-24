@@ -66,6 +66,50 @@ function formatTempBand(t) {
   return `upper ${decade}s`;
 }
 
+// ============================================================
+// COMFORT ICON (YOUR VERSION — COMPLETED + SAFE)
+// ============================================================
+
+function resolveComfortIcon({
+  score,
+  temp,
+  dewPoint,
+  wind = {},
+}) {
+  // 🔒 guards
+  if (!Number.isFinite(score)) score = 50;
+  if (!Number.isFinite(temp)) temp = 70;
+  if (!Number.isFinite(dewPoint)) dewPoint = 50;
+
+  const maxWind = wind.maxWind ?? 0;
+  const maxGust = wind.maxGust ?? 0;
+  const avgWind = wind.avgWind ?? 0;
+
+  // ❄️ Cold
+  if (temp <= 40) return "🥶";
+  if (temp <= 50) return "🧥";
+
+  // 🔥 Heat
+  if (temp >= 90) return "🥵";
+  if (temp >= 80 && dewPoint >= 65) return "😓";
+
+  // 💧 Humidity
+  if (dewPoint >= 68) return "😫";
+  if (dewPoint >= 62) return "😅";
+
+  // 🌬️ Wind
+  if (maxGust >= 25) return "💨";
+  if (maxWind >= 15 || avgWind >= 12) return "🌬️";
+
+  // 😊 Comfort tiers (fallback)
+  if (score >= 85) return "😄";
+  if (score >= 70) return "🙂";
+  if (score >= 55) return "😐";
+  if (score >= 40) return "😕";
+
+  return "🥵";
+}
+
 // 🔥 SPLIT INTO CALENDAR DAYS (FIXES TOMORROW BUG)
 function splitDays(hourly, now) {
   const d = new Date(now);
@@ -1128,21 +1172,6 @@ function calcWindChill(temp, wind) {
   );
 }
 
-
-// ============================================================
-// ICON RESOLUTION (FEELSCORE-DRIVEN)
-// ============================================================
-
-function resolveComfortIcon({
-  score,
-  temp,
-  dewPoint,
-  wind = {},
-}) {
-  const maxWind = wind.maxWind ?? 0;
-  const maxGust = wind.maxGust ?? 0;
-  const avgWind = wind.avgWind ?? 0;
-
   // ------------------------------------------------------------
   // DERIVE CONDITIONS (same logic as narrative)
   // ------------------------------------------------------------
@@ -1184,5 +1213,4 @@ function resolveComfortIcon({
   if (score >= 70) return "🌤️";
 
   return "🌥️";
-}
 }
