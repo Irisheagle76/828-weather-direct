@@ -389,27 +389,8 @@ function buildPeriod(hours, label, change = {}) {
   const score = Math.round(average(scores));
   const trend = scores.at(-1) - scores[0];
 
-  // ------------------------------------------------------------
-  // SNAPSHOT (UNCHANGED)
-  // ------------------------------------------------------------
- const snapshot = {
-  temp: avg(hours.map(h => h.temperatureF)),
-  dewPoint: avg(hours.map(h => h.dewpointF)),
-  wind: avg(hours.map(h => h.windSpeed)),
 
-  // 👇 NEW
-  precipProbability: Math.max(...hours.map(h => h.precipProbability ?? 0), 0),
-  precipAmount: avg(hours.map(h => h.precipAmount ?? 0)) ?? 0
-};
-
-  if (!Number.isFinite(snapshot.temp)) return null;
-
-  console.log("🌧️ SNAPSHOT PRECIP:", {
-  prob: snapshot.precipProbability,
-  amt: snapshot.precipAmount
-});
-
- // ------------------------------------------------------------
+// ------------------------------------------------------------
 // WIND METRICS (FIXED + SAFE)
 // ------------------------------------------------------------
 const windValues = hours.map((h, i) => {
@@ -649,7 +630,7 @@ if (gustiness >= 12) {
 }
 
 // ------------------------------------------------------------
-// TREND + SNAPSHOT
+// TREND + SNAPSHOT (MERGED MODEL)
 // ------------------------------------------------------------
 
 const scores = hours
@@ -659,15 +640,60 @@ const scores = hours
 
 const trend = scores.length ? scores.at(-1) - scores[0] : 0;
 
-// 🔥 IMPORTANT: use CURRENT conditions, not averages
+// ------------------------------------------------------------
+// 🌧️ AGGREGATES (EVENT SIGNAL)
+// ------------------------------------------------------------
+
+const maxProb = Math.max(...hours.map(h => h.precipProbability ?? 0), 0);
+const maxAmt  = Math.max(...hours.map(h => h.precipAmount ?? 0), 0);
+const avgAmt  = avg(hours.map(h => h.precipAmount ?? 0)) ?? 0;
+
+// ------------------------------------------------------------
+// 🔥 SNAPSHOT (HYBRID — NOW + EVENT)
+// ------------------------------------------------------------
+
 const snapshot = {
+  // ----------------------------------------------------------
+  // 🌡️ CURRENT FEEL (first hour = most important)
+  // ----------------------------------------------------------
   temp: first.temperatureF,
   dewPoint: first.dewpointF,
   wind: first.windSpeed,
   gust: first.windGust,
-  gustiness
+  gustiness,
+
+  // ----------------------------------------------------------
+  // 🌧️ EVENT SIGNAL (DO NOT use first hour here)
+  // ----------------------------------------------------------
+  precipProbability: maxProb,
+  precipAmount: maxAmt,
+  precipAmountAvg: avgAmt,
+
+  // optional but useful
+  isRainingNow: first.precipAmount > 0
 };
 
+// ------------------------------------------------------------
+// 🌧️ PRECIP TYPE (ATTACHED HERE)
+// ------------------------------------------------------------
+
+snapshot.precipType = getPrecipType({
+  precipProbability: snapshot.precipProbability,
+  precipAmount: snapshot.precipAmount,
+  hours
+});
+
+// ------------------------------------------------------------
+// DEBUG
+// ------------------------------------------------------------
+
+console.log("🌧️ SNAPSHOT (MERGED):", {
+  nowTemp: snapshot.temp,
+  prob: snapshot.precipProbability,
+  amtMax: snapshot.precipAmount,
+  amtAvg: snapshot.precipAmountAvg,
+  type: snapshot.precipType
+});
 // ------------------------------------------------------------
 // INTEL + NARRATIVE
 // ------------------------------------------------------------
@@ -768,17 +794,9 @@ function buildPeriodNarrative(ctx, label) {
 
   const temp = snapshot?.temp ?? null;
   const dp = snapshot?.dewPoint ?? null;
-
-// ==========================================================
-// 🌧️ PRECIP SIGNAL (PRIMARY DRIVER — SHARED LOGIC)
-// ==========================================================
-
-const precipProbability = snapshot?.precipProbability ?? 0;
-const precipAmount = snapshot?.precipAmount ?? 0;
-
 const precipSignal = getPrecipSignal({
-  precipProbability,
-  precipAmount
+  precipProbability: snapshot?.precipProbability ?? 0,
+  precipAmount: snapshot?.precipAmount ?? 0
 });
 
   // ==========================================================
@@ -809,15 +827,24 @@ const precipSignal = getPrecipSignal({
 
   let headline;
 
-  if (precipSignal !== "none") {
-    if (precipSignal === "high") {
-      headline = "Rain likely throughout the day";
-    } else if (precipSignal === "moderate") {
-      headline = "Scattered showers expected";
-    } else {
-      headline = "A few showers possible";
-    }
+if (precipSignal !== "none") {
+  if (precipType === "steady_rain") {
+    headline = "Periods of steady rain";
   }
+  else if (precipType === "periods_of_rain") {
+    headline = "Rain at times through the day";
+  }
+  else if (precipType === "light_rain") {
+    headline = "Light rain at times";
+  }
+  else if (precipType === "scattered_showers") {
+    headline = "Scattered showers expected";
+  }
+  else {
+    headline = "A few showers possible";
+  }
+}
+  
   else if (isShockDay) {
     headline =
       tempDrop >= 25
@@ -866,19 +893,23 @@ const precipSignal = getPrecipSignal({
   if (label === "tomorrow") {
 
     // 🌧️ PRECIP FIRST
-    if (precipSignal === "high") {
-      narrative = "Periods of rain are likely through the day.";
-    }
-    else if (precipSignal === "moderate") {
-      narrative = "Scattered showers develop at times.";
-    }
-    else if (precipSignal === "low") {
-      narrative = "A few showers are possible.";
-    }
-    else {
-      narrative = "A generally comfortable and stable day overall.";
-    }
-
+if (precipSignal !== "none") {
+  if (precipType === "steady_rain") {
+    narrative = "Steady rain is expected through much of the day.";
+  }
+  else if (precipType === "periods_of_rain") {
+    narrative = "Rain moves through at times during the day.";
+  }
+  else if (precipType === "light_rain") {
+    narrative = "Light rain develops at times.";
+  }
+  else if (precipType === "scattered_showers") {
+    narrative = "Scattered showers develop at times.";
+  }
+  else {
+    narrative = "A few passing showers are possible.";
+  }
+}
     // temps
     if (minT != null && maxT != null) {
       narrative += ` Temperatures start near ${minT}° and rise into the ${maxT}° range by afternoon.`;
@@ -1069,44 +1100,54 @@ return {
 }
 
 // ============================================================
-// PRECIP SIGNAL (NEW — CORE INTEL)
+// PRECIP SIGNAL (CORE INTEL — PROBABILITY FIRST)
 // ============================================================
 
 function getPrecipSignal({ precipProbability = 0, precipAmount = 0 }) {
-  if (precipProbability >= 70 || precipAmount >= 0.15) return "high";
-  if (precipProbability >= 40 || precipAmount >= 0.03) return "moderate";
+
+  // 🌧️ PRIMARY: probability drives perception
+  if (precipProbability >= 70) return "high";
+  if (precipProbability >= 40) return "moderate";
   if (precipProbability >= 20) return "low";
+
+  // 🌧️ SECONDARY: amount fallback (for low-prob steady rain)
+  if (precipAmount >= 0.10) return "high";
+  if (precipAmount >= 0.03) return "moderate";
+
   return "none";
 }
+
+
+// ============================================================
+// DOMINANT FACTOR
+// ============================================================
 
 function detectDominantFactor(s = {}) {
   const gustiness = s.gustiness ?? 0;
 
-  // ------------------------------------------------------------
-  // 🌧️ PRECIP (NEW — HIGHEST PRIORITY WHEN PRESENT)
-  // ------------------------------------------------------------
   const precipSignal = getPrecipSignal({
     precipProbability: s.precipProbability,
     precipAmount: s.precipAmount
   });
 
-// 🌧️ MAKE ALL RAIN MATTER
-if (precipSignal === "high") return "rain";
-if (precipSignal === "moderate") return "rain";
-if (precipSignal === "low") return "rain";
+  // ------------------------------------------------------------
+  // 🌧️ PRECIP — HUMAN-FIRST PRIORITY
+  // ------------------------------------------------------------
+  if (precipSignal !== "none") return "rain";
 
   // ------------------------------------------------------------
-  // 🌬️ WIND (EXISTING)
+  // 🌬️ WIND
   // ------------------------------------------------------------
   if (gustiness >= 12) return "gusty_wind";
   if (gustiness >= 7) return "breezy";
 
   // ------------------------------------------------------------
-  // 🌡️ TEMP / HUMIDITY (EXISTING)
+  // 🌡️ THERMAL / MOISTURE
   // ------------------------------------------------------------
   if (s.dewPoint >= 65) return "muggy";
   if (s.temp >= 85) return "heat";
   if (s.temp <= 45) return "cold";
+
   if (s.wind >= 12) return "wind";
 
   return "comfortable";
