@@ -84,6 +84,7 @@ function normalizeHourly(hourly = []) {
       h.isRainingNow ?? false
   }));
 }
+console.log("🌧️ NORMALIZED SAMPLE:", normalized[0]);
 
 function normalizeCurrent(c = {}) {
   return {

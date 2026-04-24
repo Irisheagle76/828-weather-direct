@@ -404,6 +404,11 @@ function buildPeriod(hours, label, change = {}) {
 
   if (!Number.isFinite(snapshot.temp)) return null;
 
+  console.log("🌧️ SNAPSHOT PRECIP:", {
+  prob: snapshot.precipProbability,
+  amt: snapshot.precipAmount
+});
+
  // ------------------------------------------------------------
 // WIND METRICS (FIXED + SAFE)
 // ------------------------------------------------------------
