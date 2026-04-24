@@ -34,8 +34,26 @@ export function buildHumanActionIntel(raw) {
 
   const now = Date.now();
 
-  const todayHours = clean.filter(h => inWindow(h.timestamp, now, 0, 24));
-  const tomorrowHours = clean.filter(h => inWindow(h.timestamp, now, 24, 48));
+const nowDate = new Date();
+
+const todayHours = clean.filter(h => {
+  const d = new Date(h.timestamp);
+  return (
+    d.getDate() === nowDate.getDate() &&
+    d.getMonth() === nowDate.getMonth()
+  );
+});
+
+const tomorrowDate = new Date();
+tomorrowDate.setDate(nowDate.getDate() + 1);
+
+const tomorrowHours = clean.filter(h => {
+  const d = new Date(h.timestamp);
+  return (
+    d.getDate() === tomorrowDate.getDate() &&
+    d.getMonth() === tomorrowDate.getMonth()
+  );
+});
 
   return {
     today: buildPeriod(todayHours, "today", now),
