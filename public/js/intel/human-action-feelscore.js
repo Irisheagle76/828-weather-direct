@@ -295,7 +295,7 @@ function buildCurrentWithTrend(hours, tempest = null) {
 // MAIN ENTRY
 // ============================================================
 
-export function buildHumanActionIntelFS(raw) {
+function buildHumanActionIntelFS(raw) {
 
   const tempest = raw?.tempest ?? null;
 
@@ -1094,6 +1094,8 @@ bullets = [...new Set(bullets)].slice(0, 4);
     bullets
   };
 }
+
+window.buildHumanActionIntelFS = buildHumanActionIntelFS;
 
 // ============================================================
 // HELPERS
