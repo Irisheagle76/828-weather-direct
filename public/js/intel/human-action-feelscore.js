@@ -1186,10 +1186,6 @@ function getPrecipSignal({ precipProbability = 0, precipAmount = 0 }) {
 }
 
 
-// ============================================================
-// DOMINANT FACTOR
-// ============================================================
-
 function detectDominantFactor(s = {}) {
   const gustiness = s.gustiness ?? 0;
 
@@ -1198,22 +1194,12 @@ function detectDominantFactor(s = {}) {
     precipAmount: s.precipAmount
   });
 
-  const precipType = snapshot?.precipType ?? "none";
-
-  // ------------------------------------------------------------
-  // 🌧️ PRECIP — HUMAN-FIRST PRIORITY
-  // ------------------------------------------------------------
+  // 🌧️ Rain always matters
   if (precipSignal !== "none") return "rain";
 
-  // ------------------------------------------------------------
-  // 🌬️ WIND
-  // ------------------------------------------------------------
   if (gustiness >= 12) return "gusty_wind";
   if (gustiness >= 7) return "breezy";
 
-  // ------------------------------------------------------------
-  // 🌡️ THERMAL / MOISTURE
-  // ------------------------------------------------------------
   if (s.dewPoint >= 65) return "muggy";
   if (s.temp >= 85) return "heat";
   if (s.temp <= 45) return "cold";
