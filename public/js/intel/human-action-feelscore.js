@@ -314,6 +314,25 @@ function buildCurrentWithTrend(hours, tempest = null) {
 }
 
 // ============================================================
+// PRECIP SIGNAL (CORE INTEL — PROBABILITY FIRST)
+// ============================================================
+
+function getPrecipSignal({ precipProbability = 0, precipAmount = 0 }) {
+
+  // 🌧️ PRIMARY: probability drives perception
+  if (precipProbability >= 70) return "high";
+  if (precipProbability >= 40) return "moderate";
+  if (precipProbability >= 20) return "low";
+
+  // 🌧️ SECONDARY: amount fallback (for low-prob steady rain)
+  if (precipAmount >= 0.10) return "high";
+  if (precipAmount >= 0.03) return "moderate";
+
+  return "none";
+}
+
+
+// ============================================================
 // BUILD NARRATIVE (UNIFIED + DATA-DRIVEN + PRECIP-AWARE)
 // ============================================================
 
@@ -664,6 +683,35 @@ console.log("TEMPEST IN FEELSCORE:", tempest);
  // ==========================================================
 // BUILD OUTPUT
 // ==========================================================
+
+if (tempest && todayHours.length) {
+  const h0 = todayHours[0];
+
+  todayHours[0] = {
+    ...h0,
+
+    temperatureF:
+      typeof tempest.air_temperature === "number"
+        ? (tempest.air_temperature * 9) / 5 + 32
+        : h0.temperatureF,
+
+    dewpointF:
+      typeof tempest.dew_point === "number"
+        ? (tempest.dew_point * 9) / 5 + 32
+        : h0.dewpointF,
+
+    windSpeed:
+      typeof tempest.wind_avg === "number"
+        ? tempest.wind_avg
+        : h0.windSpeed,
+
+    windGust:
+      Math.max(
+        h0.windGust ?? 0,
+        tempest.wind_gust ?? 0
+      )
+  };
+}
 
 // 👉 build TODAY the same way as TOMORROW
 const todayCtx = buildPeriod(todayHours, "today", {
@@ -1025,24 +1073,6 @@ function formatTempBand(t) {
   if (offset <= 2) return `low ${decade}s`;
   if (offset <= 6) return `mid ${decade}s`;
   return `upper ${decade}s`;
-}
-
-// ============================================================
-// PRECIP SIGNAL (CORE INTEL — PROBABILITY FIRST)
-// ============================================================
-
-function getPrecipSignal({ precipProbability = 0, precipAmount = 0 }) {
-
-  // 🌧️ PRIMARY: probability drives perception
-  if (precipProbability >= 70) return "high";
-  if (precipProbability >= 40) return "moderate";
-  if (precipProbability >= 20) return "low";
-
-  // 🌧️ SECONDARY: amount fallback (for low-prob steady rain)
-  if (precipAmount >= 0.10) return "high";
-  if (precipAmount >= 0.03) return "moderate";
-
-  return "none";
 }
 
 
