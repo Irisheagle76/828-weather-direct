@@ -7,10 +7,6 @@ import { assembleWithVoice } from "./synthesizer/assembleWithVoice.js";
 import { buildFullExplanation } from "../intel/explanations/buildFullExplanation.js";
 
 // ============================================================
-// TIME HELPERS
-// ============================================================
-
-// ============================================================
 // HELPERS
 // ============================================================
 
@@ -52,6 +48,22 @@ function formatTempRange(min, max) {
   if (minBand === maxBand) return minBand;
 
   return `${minBand} to ${maxBand}`;
+}
+
+// ============================================================
+// TEMP BAND (SINGLE VALUE)
+// ============================================================
+
+function formatTempBand(t) {
+  if (t == null || !Number.isFinite(t)) return null;
+
+  const rounded = Math.round(t);
+  const decade = Math.floor(rounded / 10) * 10;
+  const offset = rounded - decade;
+
+  if (offset <= 2) return `low ${decade}s`;
+  if (offset <= 6) return `mid ${decade}s`;
+  return `upper ${decade}s`;
 }
 
 // 🔥 SPLIT INTO CALENDAR DAYS (FIXES TOMORROW BUG)
