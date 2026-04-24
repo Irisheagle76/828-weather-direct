@@ -350,6 +350,10 @@ console.log("TEMPEST IN FEELSCORE:", tempest);
 function buildPeriod(hours, label, change = {}) {
   if (!Array.isArray(hours) || !hours.length) return null;
 
+  // ✅ ADD THIS LINE
+  const snapshot = buildSnapshot(hours);
+  console.log("🌧️ SNAPSHOT IN PERIOD:", snapshot);
+
   const scores = hours.map((h, i) => {
     let adjusted = { ...h };
 
