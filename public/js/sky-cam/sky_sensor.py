@@ -1,22 +1,24 @@
 import cv2
 import numpy as np
 import json
+import os
 from datetime import datetime
 
 # -------- CONFIG --------
-IMAGE_PATH = "frame.jpg"
-CROP_TOP_RATIO = 0.5   # keep top 50% (sky + ridges)
-BRIGHTNESS_THRESHOLD = 145
+BASE_DIR = os.path.dirname(__file__)
+IMAGE_PATH = os.path.join(BASE_DIR, "frame.jpg")
+OUTPUT_PATH = os.path.join(BASE_DIR, "output.json")
+
+CROP_TOP_RATIO = 0.5
 # ------------------------
 
 def load_and_crop(image_path):
     img = cv2.imread(image_path)
     if img is None:
-        raise ValueError("Image not found")
+        raise ValueError(f"Image not found at {image_path}")
 
     h, w, _ = img.shape
-    cropped = img[0:int(h * CROP_TOP_RATIO), :]
-    return cropped
+    return img[0:int(h * CROP_TOP_RATIO), :]
 
 def compute_metrics(img):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -24,12 +26,24 @@ def compute_metrics(img):
     brightness = np.mean(gray) / 255.0
     contrast = np.std(gray) / 255.0
 
-    # Cloud cover (simple threshold)
-    _, thresh = cv2.threshold(gray, BRIGHTNESS_THRESHOLD, 255, cv2.THRESH_BINARY)
+    is_night = brightness < 0.35
+
+    # --- Cloud detection ---
+    gray_blur = cv2.GaussianBlur(gray, (5, 5), 0)
+
+    thresh = cv2.adaptiveThreshold(
+        gray_blur,
+        255,
+        cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+        cv2.THRESH_BINARY,
+        11,
+        2
+    )
+
     cloud_pixels = np.sum(thresh == 255)
     cloud_cover = int((cloud_pixels / thresh.size) * 100)
 
-    # Visibility score (edge detection)
+    # --- Visibility ---
     h, w = gray.shape
     bands = [
         gray[int(h*0.6):h, :],
@@ -42,27 +56,98 @@ def compute_metrics(img):
     for band in bands:
         edges = cv2.Canny(band, 50, 150)
         edge_density = np.sum(edges > 0) / edges.size
-        if edge_density > 0.015:
+
+        if edge_density > 0.01:
             visibility_score += 1
+
+    if is_night:
+        cloud_cover = None
+        visibility_score = None
+        mode = "night"
+    else:
+        mode = "day"
 
     return {
         "cloudCoverWest": cloud_cover,
         "brightness": round(float(brightness), 2),
         "contrast": round(float(contrast), 2),
         "visibilityScore": visibility_score,
-        "precipVisible": False
+        "precipVisible": False,
+        "mode": mode
     }
+
+# --- NEW: Trend Logic ---
+def compute_trend(current, previous):
+    if not previous:
+        return None
+
+    def trend(val_now, val_prev, threshold):
+        if val_now is None or val_prev is None:
+            return "unknown"
+        delta = val_now - val_prev
+        if delta > threshold:
+            return "increasing"
+        elif delta < -threshold:
+            return "decreasing"
+        else:
+            return "steady"
+
+    cloud_trend = trend(
+        current["cloudCoverWest"],
+        previous["metrics"].get("cloudCoverWest"),
+        5
+    )
+
+    brightness_trend = trend(
+        current["brightness"],
+        previous["metrics"].get("brightness"),
+        0.03
+    )
+
+    # Overall interpretation
+    if cloud_trend == "decreasing" and brightness_trend == "increasing":
+        overall = "improving"
+    elif cloud_trend == "increasing" and brightness_trend == "decreasing":
+        overall = "deteriorating"
+    else:
+        overall = "steady"
+
+    return {
+        "cloudTrend": cloud_trend,
+        "brightnessTrend": brightness_trend,
+        "overallTrend": overall
+    }
+
+def load_previous():
+    if not os.path.exists(OUTPUT_PATH):
+        return None
+    try:
+        with open(OUTPUT_PATH, "r") as f:
+            return json.load(f)
+    except:
+        return None
 
 def main():
-    img = load_and_crop(IMAGE_PATH)
-    metrics = compute_metrics(img)
+    try:
+        img = load_and_crop(IMAGE_PATH)
+        metrics = compute_metrics(img)
 
-    output = {
-        "timestamp": datetime.now().isoformat(),
-        "metrics": metrics
-    }
+        previous = load_previous()
+        trend = compute_trend(metrics, previous)
 
-    print(json.dumps(output, indent=2))
+        output = {
+            "timestamp": datetime.now().isoformat(),
+            "metrics": metrics,
+            "trend": trend
+        }
+
+        print(json.dumps(output, indent=2))
+
+        with open(OUTPUT_PATH, "w") as f:
+            json.dump(output, f, indent=2)
+
+    except Exception as e:
+        print(f"Error: {e}")
 
 if __name__ == "__main__":
     main()
