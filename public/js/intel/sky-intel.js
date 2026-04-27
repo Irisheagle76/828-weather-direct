@@ -1,6 +1,6 @@
 // /intel/sky-intel.js
 // ============================================================
-// SKY INTEL — Structure-aware + clearing detection
+// SKY INTEL — Structure-aware + clearing detection (refined)
 // ============================================================
 
 import { LOCATION } from "/js/config/location.js";
@@ -40,9 +40,9 @@ function computeSolarElevation(timestamp, lat, lon) {
 function classifyCloudState(c) {
   if (c == null) return "unknown";
   if (c < 10) return "clear";
-  if (c < 30) return "mostly clear";
-  if (c < 60) return "partly cloudy";
-  if (c < 85) return "mostly cloudy";
+  if (c < 30) return "mostly_clear";
+  if (c < 60) return "partly_cloudy";
+  if (c < 85) return "mostly_cloudy";
   return "overcast";
 }
 
@@ -58,7 +58,7 @@ function classifyVisibility(visKm) {
 }
 
 // ------------------------------------------------------------
-// 🔧 MEDIAN
+// 🔧 MEDIAN (smoothing)
 // ------------------------------------------------------------
 function median(values) {
   const v = values.filter(x => x != null).sort((a, b) => a - b);
@@ -120,15 +120,19 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
   const visInfo = classifyVisibility(visibilityKm);
 
   // ------------------------------------------------------------
-  // 🌫️ FOG
+  // 🌫️ FOG DETECTION
   // ------------------------------------------------------------
   const valleyFog =
     solarElevation < 15 &&
+    contrast != null &&
     contrast < 0.07 &&
+    visibilityScore != null &&
     visibilityScore <= 1;
 
   const visualFog =
+    contrast != null &&
     contrast < 0.06 &&
+    visibilityScore != null &&
     visibilityScore <= 1;
 
   const sensorFog =
@@ -147,47 +151,62 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
   }
 
   // ------------------------------------------------------------
-  // 🌤️ ATMOSPHERIC STATE
+  // 🌤️ CLEARING SIGNAL (IMPROVED)
   // ------------------------------------------------------------
-  let atmosphericState = "clear";
-
   const clearingSignal =
     prev &&
     cloud != null &&
     prev.cloudCoverWest != null &&
-    cloud < prev.cloudCoverWest &&         // clouds decreasing
-    contrast > prev.contrast &&            // more structure
+    contrast != null &&
+    prev.contrast != null &&
+    visibilityScore != null &&
+    prev.visibilityScore != null &&
+    (
+      // Clouds decreasing OR staying high but structure increasing
+      cloud < prev.cloudCoverWest ||
+      contrast > prev.contrast + 0.02
+    ) &&
     visibilityScore >= prev.visibilityScore;
 
-  // 🌫️ Fog
+  // ------------------------------------------------------------
+  // 🌤️ ATMOSPHERIC STATE
+  // ------------------------------------------------------------
+  let atmosphericState = "clear";
+
+  // 🌫️ Fog (highest priority)
   if (fogDetected) {
     atmosphericState = "fog";
   }
 
-  // ☁️ TRUE OVERCAST (flat deck only)
+  // ☁️ TRUE OVERCAST (must be flat + uniform)
   else if (
+    cloud != null &&
     cloud >= 80 &&
-    contrast < 0.08 &&
+    contrast != null &&
+    contrast < 0.075 &&
     visibilityScore >= 2
   ) {
     atmosphericState = "overcast";
   }
 
-  // 🌤️ CLEARING CLOUDS (NEW CORE STATE)
+  // 🌤️ CLEARING CLOUD FIELD
   else if (clearingSignal && cloud >= 50) {
     atmosphericState = "mostly_cloudy";
   }
 
-  // 🌤️ STRUCTURED CLOUDS (not uniform anymore)
+  // 🌤️ STRUCTURED CLOUDS (breaks visible)
   else if (
+    cloud != null &&
     cloud >= 60 &&
-    contrast >= 0.08
+    contrast != null &&
+    contrast >= 0.075
   ) {
     atmosphericState = "mostly_cloudy";
   }
 
-  // 🌫️ Haze (only when clouds aren't dominant)
+  // 🌫️ Haze (only when sky not dominant)
   else if (
+    cloud != null &&
     cloud < 70 &&
     (
       visInfo.category === "haze" ||
@@ -218,7 +237,7 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
   }
 
   // ------------------------------------------------------------
-  // 🔄 TRANSITIONS (UPGRADED)
+  // 🔄 TRANSITIONS
   // ------------------------------------------------------------
   let transition = null;
 
@@ -228,12 +247,16 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
       transition = "fog_lifting";
     }
 
-    // 🔥 TRUE clearing signal
     if (clearingSignal) {
       transition = "clearing";
     }
 
-    if (visibilityScore === 3 && contrast > 0.15 && cloud < 40) {
+    if (
+      visibilityScore === 3 &&
+      contrast > 0.15 &&
+      cloud != null &&
+      cloud < 40
+    ) {
       transition = "cleared";
     }
   }
