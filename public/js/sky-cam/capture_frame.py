@@ -26,12 +26,12 @@ def capture_frame():
 
     print("📸 Capturing frame...")
     subprocess.run([
-        "ffmpeg",
-        "-y",
-        "-i", stream_url,
-        "-frames:v", "1",
-        "-q:v", "2",
-        OUTPUT_PATH
+     "-y",                 # overwrite
+"-i", stream_url,
+"-frames:v", "1",
+"-update", "1",       # 👈 THIS fixes the warning
+"-q:v", "2",
+OUTPUT_PATH
     ])
 
     print("✅ Frame saved:", OUTPUT_PATH)
