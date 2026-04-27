@@ -1,6 +1,6 @@
 // /intel/sky-intel.js
 // ============================================================
-// SKY INTEL — Clean, stable, Asheville-tuned
+// SKY INTEL — Refined (overcast > haze, uniform sky detection)
 // ============================================================
 
 import { LOCATION } from "/js/config/location.js";
@@ -46,15 +46,6 @@ function classifyCloudState(c) {
   return "overcast";
 }
 
-function classifyUV(uv) {
-  if (uv == null) return "unknown";
-  if (uv < 3) return "low";
-  if (uv < 6) return "moderate";
-  if (uv < 8) return "high";
-  if (uv < 11) return "very high";
-  return "extreme";
-}
-
 function classifyVisibility(visKm) {
   if (visKm == null) return { category: "unknown", fogPotential: 0 };
 
@@ -82,7 +73,7 @@ function median(values) {
 export function computeSkyIntel({ tempest, wu, hourly, camera }) {
 
   // ------------------------------------------------------------
-  // ⏱️ TIME
+  // TIME
   // ------------------------------------------------------------
   const nowTs =
     tempest?.timestamp ??
@@ -92,13 +83,10 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
       : Date.now());
 
   // ------------------------------------------------------------
-  // ☁️ CLOUD INPUT
+  // CAMERA INPUT
   // ------------------------------------------------------------
   const cloud = camera?.metrics?.cloudCoverWest ?? null;
 
-  // ------------------------------------------------------------
-  // 📷 CAMERA SMOOTHING (3-frame)
-  // ------------------------------------------------------------
   const history = [
     camera?.metrics,
     camera?.previous?.metrics,
@@ -109,20 +97,8 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
   const visibilityScore = median(history.map(m => m?.visibilityScore));
 
   // ------------------------------------------------------------
-  // ☀️ SOLAR / UV
+  // SOLAR
   // ------------------------------------------------------------
-  const uv =
-    tempest?.uv ??
-    wu?.uv ??
-    (Array.isArray(hourly?.uv_index) ? hourly.uv_index[0] : null);
-
-  const uvCategory = classifyUV(uv);
-
-  const solar =
-    tempest?.solarRadiation ??
-    wu?.solarRadiation ??
-    null;
-
   const solarElevation = computeSolarElevation(
     nowTs,
     LOCATION.lat,
@@ -130,7 +106,7 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
   );
 
   // ------------------------------------------------------------
-  // 🌫️ VISIBILITY (sensor)
+  // VISIBILITY
   // ------------------------------------------------------------
   let visibilityKm = null;
 
@@ -142,17 +118,14 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
   const visInfo = classifyVisibility(visibilityKm);
 
   // ------------------------------------------------------------
-  // 🌫️ FOG DETECTION (Asheville tuned)
+  // 🌫️ FOG DETECTION
   // ------------------------------------------------------------
   const valleyFog =
     solarElevation < 15 &&
-    contrast != null &&
     contrast < 0.07 &&
     visibilityScore <= 1;
 
   const visualFog =
-    contrast != null &&
-    visibilityScore != null &&
     contrast < 0.06 &&
     visibilityScore <= 1;
 
@@ -172,25 +145,41 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
   }
 
   // ------------------------------------------------------------
-  // 🌤️ ATMOSPHERIC STATE (FIXED + IMPROVED)
+  // 🌤️ ATMOSPHERIC STATE (FINAL REFINED LOGIC)
   // ------------------------------------------------------------
   let atmosphericState = "clear";
 
+  // 🌫️ Fog (always wins)
   if (fogDetected) {
     atmosphericState = "fog";
   }
 
+  // ☁️ Uniform overcast refinement (NEW)
   else if (
-    visInfo.category === "haze" ||
-    (contrast < 0.12 && visibilityScore === 2)
+    cloud != null &&
+    cloud >= 70 &&
+    contrast < 0.10 &&
+    visibilityScore >= 2
+  ) {
+    atmosphericState = "overcast";
+  }
+
+  // 🌫️ Haze (ONLY if sky not dominant)
+  else if (
+    cloud != null &&
+    cloud < 70 &&
+    (
+      visInfo.category === "haze" ||
+      (contrast < 0.12 && visibilityScore === 2)
+    )
   ) {
     atmosphericState = "haze";
   }
 
+  // ☁️ Cloud structure
   else if (cloud != null) {
 
-    // Overcast (this fixes your issue)
-    if (cloud >= 70 && contrast < 0.18) {
+    if (cloud >= 70) {
       atmosphericState = "overcast";
     }
 
@@ -198,7 +187,7 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
       atmosphericState = "mostly_cloudy";
     }
 
-    else if (cloud >= 30 && contrast >= 0.12) {
+    else if (cloud >= 30) {
       atmosphericState = "partly_cloudy";
     }
 
@@ -212,7 +201,7 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
   }
 
   // ------------------------------------------------------------
-  // 🔄 TRANSITIONS
+  // TRANSITIONS
   // ------------------------------------------------------------
   let transition = null;
 
@@ -220,7 +209,6 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
 
   if (prev) {
     const contrastDelta = contrast - prev.contrast;
-    const visDelta = visibilityScore - prev.visibilityScore;
 
     if (!fogDetected && prev.visibilityScore <= 1 && visibilityScore >= 2) {
       transition = "fog_lifting";
@@ -236,7 +224,7 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
   }
 
   // ------------------------------------------------------------
-  // 📊 CONFIDENCE
+  // CONFIDENCE
   // ------------------------------------------------------------
   let confidence = 0.5;
 
@@ -247,16 +235,12 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
   confidence = Math.min(confidence, 1);
 
   // ------------------------------------------------------------
-  // FINAL OUTPUT
+  // OUTPUT
   // ------------------------------------------------------------
   return {
     cloud,
     cloudState: classifyCloudState(cloud),
 
-    uv,
-    uvCategory,
-
-    solar,
     solarElevation,
 
     visibilityKm,
@@ -269,8 +253,6 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
     atmosphericState,
     transition,
 
-    confidence,
-
-    smokeIndex: wu?.smokeIndex ?? null
+    confidence
   };
 }
