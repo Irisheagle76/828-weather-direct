@@ -128,21 +128,20 @@ def compute_metrics(sky_img, full_img):
     # OUTPUT
     # --------------------------------------------------------
     return {
-        "cloudCoverWest": cloud_cover,
-        "brightness": round(float(brightness), 2),
-        "contrast": round(float(contrast), 2),
-        "visibilityScore": visibility_score,
+    "cloudCoverWest": int(cloud_cover) if cloud_cover is not None else None,
+    "brightness": float(round(brightness, 2)) if brightness is not None else None,
+    "contrast": float(round(contrast, 2)) if contrast is not None else None,
+    "visibilityScore": int(visibility_score) if visibility_score is not None else None,
 
-        "sunlightDetected": sunlight_detected,
-        "sunlightStrength": round(float(sunlight_strength), 2),
-        "sunlightLevel": sunlight_level,
+    "sunlightDetected": bool(sunlight_detected),
+    "sunlightStrength": float(round(sunlight_strength, 2)),
+    "sunlightLevel": str(sunlight_level),
 
-        "skyBlueSignal": sky_blue_signal,
+    "skyBlueSignal": float(sky_blue_signal) if sky_blue_signal is not None else None,
 
-        "precipVisible": False,
-        "mode": mode
-    }
-
+    "precipVisible": False,
+    "mode": str(mode)
+}
 
 # ------------------------------------------------------------
 # 📈 TREND
