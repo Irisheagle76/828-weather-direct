@@ -2,59 +2,164 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Sky Cam Preview</title>
+  <meta charset="UTF-8">
+  <title>828 Sky Update (Preview)</title>
 
   <style>
+    :root {
+      --bg: #0f1115;
+      --card: #171a21;
+      --border: #2a2f3a;
+      --text: #e6e8ee;
+      --muted: #9aa3b2;
+      --accent: #6ea8ff;
+      --fog: #8a8f98;
+      --cloud: #7aa2ff;
+      --clear: #4fd1c5;
+    }
+
+    * { box-sizing: border-box; }
+
     body {
-      font-family: Arial;
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 900px;
+      margin: 0 auto;
       padding: 20px;
-      background: #111;
-      color: #eee;
     }
 
     h1 {
-      margin-bottom: 5px;
+      margin: 0 0 6px 0;
+      font-weight: 600;
     }
 
-    #lastUpdate {
+    .sub {
+      color: var(--muted);
       font-size: 12px;
-      color: #aaa;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
 
+    /* --- HERO CARD --- */
+    .hero {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .hero img {
+      width: 100%;
+      display: block;
+      background: #000;
+    }
+
+    .hero-body {
+      padding: 16px;
+    }
+
+    .chip {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      margin-bottom: 10px;
+      border: 1px solid var(--border);
+      background: #11141a;
+    }
+
+    .chip.fog { color: #fff; background: var(--fog); }
+    .chip.cloud { color: #fff; background: var(--cloud); }
+    .chip.clear { color: #001; background: var(--clear); }
+
+    .headline {
+      font-size: 20px;
+      margin-bottom: 6px;
+    }
+
+    .detail {
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .confidence {
+      height: 6px;
+      background: #222;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .confidence-bar {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+    }
+
+    /* --- DEBUG CARDS --- */
     .card {
-      border: 1px solid #444;
-      padding: 15px;
-      margin-bottom: 15px;
-      border-radius: 8px;
-      background: #1a1a1a;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .card h3 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      color: var(--muted);
     }
 
     pre {
       font-size: 12px;
       white-space: pre-wrap;
+      margin: 0;
     }
   </style>
 </head>
 
 <body>
+<div class="wrap">
 
-<h1>🌤 Sky Cam Debug</h1>
-<div id="lastUpdate">Loading...</div>
+  <h1>🌤 828 Sky Update</h1>
+  <div class="sub" id="lastUpdate">Loading…</div>
 
-<div class="card">
-  <h2>📷 Camera Data</h2>
-  <pre id="metrics">Loading...</pre>
-</div>
+  <!-- HERO -->
+  <div class="hero">
+    <img id="skyImage" src="./js/sky-cam/frame.jpg" />
 
-<div class="card">
-  <h2>🧠 Sky Intel</h2>
-  <pre id="intel">Loading...</pre>
-</div>
+    <div class="hero-body">
+      <div id="chip" class="chip">Loading</div>
+      <div id="headline" class="headline">—</div>
+      <div id="detail" class="detail">—</div>
 
-<div class="card">
-  <h2>🗣 Narrative</h2>
-  <pre id="narrative">Loading...</pre>
+      <div class="confidence">
+        <div id="confidenceBar" class="confidence-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEBUG -->
+  <div class="card">
+    <h3>📷 Camera Data</h3>
+    <pre id="metrics">Loading...</pre>
+  </div>
+
+  <div class="card">
+    <h3>🧠 Sky Intel</h3>
+    <pre id="intel">Loading...</pre>
+  </div>
+
+  <div class="card">
+    <h3>🗣 Narrative</h3>
+    <pre id="narrative">Loading...</pre>
+  </div>
+
 </div>
 
 <script type="module">
@@ -62,22 +167,24 @@
 import { computeSkyIntel } from "./js/intel/sky-intel.js";
 import { generateSkyNarrative } from "./js/intel/sky-narrative.js";
 
-// --------------------------------------------------
-// 🧠 MEMORY (for smoothing + transitions)
-// --------------------------------------------------
+// memory for smoothing
 window.prev1 = window.prev1 || null;
 window.prev2 = window.prev2 || null;
 
-// --------------------------------------------------
-// MAIN RUN FUNCTION
-// --------------------------------------------------
+function getChipClass(type) {
+  if (type === "fog") return "chip fog";
+  if (type === "cloud") return "chip cloud";
+  if (type === "clear") return "chip clear";
+  return "chip";
+}
+
 async function run() {
   try {
-    // 🚫 prevent caching
+    // fetch fresh JSON
     const res = await fetch(`./js/sky-cam/output.json?t=${Date.now()}`);
     const cameraData = await res.json();
 
-    // 🧠 compute sky intel with history
+    // compute intel
     const skyIntel = computeSkyIntel({
       camera: {
         ...cameraData,
@@ -88,9 +195,23 @@ async function run() {
 
     const narrative = generateSkyNarrative(cameraData, skyIntel);
 
-    // --------------------------------------------------
-    // DISPLAY
-    // --------------------------------------------------
+    // update hero
+    document.getElementById("headline").textContent = narrative.headline;
+    document.getElementById("detail").textContent = narrative.detail;
+
+    const chip = document.getElementById("chip");
+    chip.textContent = skyIntel.atmosphericState.replace("_", " ");
+    chip.className = getChipClass(narrative.type);
+
+    // confidence bar
+    const conf = Math.round((skyIntel.confidence || 0) * 100);
+    document.getElementById("confidenceBar").style.width = conf + "%";
+
+    // refresh image (cache bust)
+    document.getElementById("skyImage").src =
+      `./js/sky-cam/frame.jpg?t=${Date.now()}`;
+
+    // debug panels
     document.getElementById("metrics").textContent =
       JSON.stringify(cameraData, null, 2);
 
@@ -103,29 +224,23 @@ async function run() {
     document.getElementById("lastUpdate").textContent =
       "Last update: " + new Date().toLocaleTimeString();
 
-    // --------------------------------------------------
-    // UPDATE HISTORY (IMPORTANT ORDER)
-    // --------------------------------------------------
+    // update memory
     window.prev2 = window.prev1;
     window.prev1 = cameraData;
 
   } catch (err) {
-    document.getElementById("metrics").textContent =
-      "ERROR: " + err.message;
+    document.getElementById("headline").textContent = "Error loading data";
   }
 }
 
-// --------------------------------------------------
-// 🔁 AUTO REFRESH LOOP
-// --------------------------------------------------
+// loop
 async function loop() {
   await run();
-  setTimeout(loop, 5000); // refresh every 5 seconds
+  setTimeout(loop, 5000);
 }
 
 loop();
 
 </script>
-
 </body>
 </html>
