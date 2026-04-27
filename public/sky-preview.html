@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sky Cam Preview</title>
+  <style>
+    body {
+      font-family: Arial;
+      padding: 20px;
+      background: #111;
+      color: #eee;
+    }
+
+    .card {
+      border: 1px solid #444;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      background: #1a1a1a;
+    }
+
+    pre {
+      font-size: 12px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>🌤 Sky Cam Debug</h1>
+
+<div class="card">
+  <h2>📷 Camera Data</h2>
+  <pre id="metrics">Loading...</pre>
+</div>
+
+<div class="card">
+  <h2>🧠 Sky Intel</h2>
+  <pre id="intel">Loading...</pre>
+</div>
+
+<div class="card">
+  <h2>🗣 Narrative</h2>
+  <pre id="narrative">Loading...</pre>
+</div>
+
+<script type="module">
+
+import { computeSkyIntel } from "./js/intel/sky-intel.js";
+import { generateSkyNarrative } from "./js/intel/sky-narrative.js";
+
+async function run() {
+  try {
+    // ✅ CORRECT PATH for your structure
+    const res = await fetch("./js/sky-cam/output.json");
+    const cameraData = await res.json();
+
+    const skyIntel = computeSkyIntel({
+      camera: cameraData
+    });
+
+    const narrative = generateSkyNarrative(cameraData, skyIntel);
+
+    document.getElementById("metrics").textContent =
+      JSON.stringify(cameraData, null, 2);
+
+    document.getElementById("intel").textContent =
+      JSON.stringify(skyIntel, null, 2);
+
+    document.getElementById("narrative").textContent =
+      JSON.stringify(narrative, null, 2);
+
+  } catch (err) {
+    document.getElementById("metrics").textContent =
+      "ERROR: " + err.message;
+  }
+}
+
+run();
+
+</script>
+
+</body>
+</html>

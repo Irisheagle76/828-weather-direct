@@ -1,10 +1,16 @@
-export function generateSkyNarrative(data) {
+export function generateSkyNarrative(data, skyIntel = null) {
   if (!data || !data.metrics) return null;
 
   const m = data.metrics;
   const t = data.trend;
 
+  // Pull from broader sky intel if available
+  const visCategory = skyIntel?.visibilityCategory;
+  const fogPotential = skyIntel?.fogPotential ?? 0;
+
+  // --------------------------------------------------
   // 🌙 NIGHT MODE
+  // --------------------------------------------------
   if (m.mode === "night") {
     return {
       headline: "Quiet evening conditions settling in.",
@@ -15,7 +21,46 @@ export function generateSkyNarrative(data) {
     };
   }
 
-  // --- CLOUD DESCRIPTION ---
+  // --------------------------------------------------
+  // 🌫️ FOG / VISIBILITY (PRIORITY SIGNAL)
+  // --------------------------------------------------
+  const fogFromCamera = m.fogDetected;
+  const fogFromSensors =
+    visCategory === "dense fog" || visCategory === "fog";
+
+  if (fogFromCamera || fogFromSensors) {
+    let intensityText = "";
+
+    if (
+      visCategory === "dense fog" ||
+      (fogFromCamera && m.visibilityScore <= 1)
+    ) {
+      intensityText = "Dense fog is blanketing the area";
+    } else {
+      intensityText = "Fog is present across the area";
+    }
+
+    let detail = "";
+
+    if (t?.overallTrend === "improving") {
+      detail = "Visibility may gradually improve as conditions lift.";
+    } else if (t?.overallTrend === "deteriorating") {
+      detail = "Visibility may continue to worsen in the near term.";
+    } else {
+      detail = "Visibility is holding fairly steady for now.";
+    }
+
+    return {
+      headline: `${intensityText}, sharply limiting visibility.`,
+      detail,
+      confidence: fogFromCamera && fogFromSensors ? "high" : "medium",
+      type: "fog"
+    };
+  }
+
+  // --------------------------------------------------
+  // ☁️ CLOUDS (ONLY IF NOT FOG)
+  // --------------------------------------------------
   let cloudText = "";
 
   if (m.cloudCoverWest > 70) {
@@ -26,7 +71,9 @@ export function generateSkyNarrative(data) {
     cloudText = "Mostly clear skies extend to the west";
   }
 
-  // --- LIGHT / SKY QUALITY ---
+  // --------------------------------------------------
+  // ☀️ LIGHT QUALITY
+  // --------------------------------------------------
   let lightText = "";
 
   if (m.brightness > 0.65) {
@@ -37,7 +84,9 @@ export function generateSkyNarrative(data) {
     lightText = "with dimmer light indicating thicker cloud presence";
   }
 
-  // --- TREND ---
+  // --------------------------------------------------
+  // 📈 TREND
+  // --------------------------------------------------
   let trendText = "";
 
   if (t?.overallTrend === "improving") {
@@ -48,7 +97,9 @@ export function generateSkyNarrative(data) {
     trendText = "Conditions remain fairly steady upstream.";
   }
 
-  // --- VISIBILITY ---
+  // --------------------------------------------------
+  // 🌄 VISIBILITY (NON-FOG)
+  // --------------------------------------------------
   let visibilityText = "";
 
   if (m.visibilityScore === 3) {
@@ -56,7 +107,7 @@ export function generateSkyNarrative(data) {
   } else if (m.visibilityScore === 2) {
     visibilityText = "Visibility is generally good with slight haze.";
   } else if (m.visibilityScore === 1) {
-    visibilityText = "Haze is limiting distant visibility.";
+    visibilityText = "Visibility is somewhat limited.";
   }
 
   return {
