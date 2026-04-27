@@ -3,6 +3,8 @@ export function generateSkyNarrative(data, skyIntel = null) {
 
   const m = data.metrics;
   const t = data.trend;
+  const state = skyIntel.atmosphericState;
+  const transition = skyIntel.transition;
 
   // --------------------------------------------------
   // 🌙 NIGHT MODE
@@ -18,9 +20,42 @@ export function generateSkyNarrative(data, skyIntel = null) {
   }
 
   // --------------------------------------------------
-  // 🌫️ FOG (HIGHEST PRIORITY)
+  // 🔄 TRANSITIONS (OVERRIDE LAYER)
   // --------------------------------------------------
-  if (skyIntel.atmosphericState === "fog") {
+  if (transition === "fog_lifting") {
+    return {
+      headline: "Fog is beginning to lift across the area.",
+      detail:
+        "Visibility is improving as earlier low clouds gradually thin.",
+      confidence: "high",
+      type: "transition"
+    };
+  }
+
+  if (transition === "clearing") {
+    return {
+      headline: "Clouds are gradually breaking up.",
+      detail:
+        "Skies are trending clearer with increasing visibility and light.",
+      confidence: "medium",
+      type: "transition"
+    };
+  }
+
+  if (transition === "cleared") {
+    return {
+      headline: "Skies have cleared compared to earlier conditions.",
+      detail:
+        "Visibility is now strong with much improved sky definition.",
+      confidence: "high",
+      type: "clear"
+    };
+  }
+
+  // --------------------------------------------------
+  // 🌫️ FOG
+  // --------------------------------------------------
+  if (state === "fog") {
     let headline = "Fog is limiting visibility across the area.";
     let detail =
       "The skyline and surrounding ridgelines are largely obscured.";
@@ -31,10 +66,11 @@ export function generateSkyNarrative(data, skyIntel = null) {
         "Visibility is sharply limited with very little sky definition.";
     }
 
-    // trend-aware detail
     if (t?.overallTrend === "improving") {
       detail = "Visibility may gradually improve as fog begins to lift.";
-    } else if (t?.overallTrend === "deteriorating") {
+    }
+
+    if (t?.overallTrend === "deteriorating") {
       detail = "Fog may continue to thicken in the near term.";
     }
 
@@ -49,31 +85,50 @@ export function generateSkyNarrative(data, skyIntel = null) {
   // --------------------------------------------------
   // 🌫️ HAZE
   // --------------------------------------------------
-  if (skyIntel.atmosphericState === "haze") {
+  if (state === "haze") {
     return {
       headline: "A light haze is limiting clarity across the area.",
       detail:
-        "Visibility is somewhat reduced, especially at a distance.",
+        "Distant features appear muted with reduced definition.",
       confidence: "medium",
       type: "haze"
     };
   }
 
   // --------------------------------------------------
-  // ☁️ LOW CLOUDS (FOG LIFTED)
+  // ☁️ OVERCAST (NEW — IMPORTANT FIX)
   // --------------------------------------------------
-  if (skyIntel.atmosphericState === "low_clouds") {
+  if (state === "overcast") {
     let detail =
-      "A low cloud deck is in place with limited sky definition.";
+      "A solid cloud deck is in place with little sun breaking through.";
 
     if (t?.overallTrend === "improving") {
       detail =
-        "Low clouds may gradually break as earlier fog continues to lift.";
+        "Cloud cover may gradually thin, but skies remain largely overcast.";
     }
 
     return {
-      headline:
-        "Low clouds have settled in after earlier fog lifted.",
+      headline: "Overcast skies are in place.",
+      detail,
+      confidence: "high",
+      type: "cloud"
+    };
+  }
+
+  // --------------------------------------------------
+  // ☁️ MOSTLY CLOUDY
+  // --------------------------------------------------
+  if (state === "mostly_cloudy") {
+    let detail =
+      "Cloud cover remains widespread with only limited breaks.";
+
+    if (t?.overallTrend === "improving") {
+      detail =
+        "Clouds may begin to thin with gradual improvement possible.";
+    }
+
+    return {
+      headline: "Mostly cloudy skies dominate the area.",
       detail,
       confidence: "medium",
       type: "cloud"
@@ -81,15 +136,28 @@ export function generateSkyNarrative(data, skyIntel = null) {
   }
 
   // --------------------------------------------------
-  // 🌥️ PARTLY CLOUDY
+  // ☁️ LOW CLOUDS
   // --------------------------------------------------
-  if (skyIntel.atmosphericState === "partly_cloudy") {
+  if (state === "low_clouds") {
+    return {
+      headline: "Low clouds are hanging over the area.",
+      detail:
+        "A low cloud deck is limiting sky definition and sunlight.",
+      confidence: "medium",
+      type: "cloud"
+    };
+  }
+
+  // --------------------------------------------------
+  // 🌤️ PARTLY CLOUDY
+  // --------------------------------------------------
+  if (state === "partly_cloudy") {
     let detail =
-      "Clouds are scattered with improving visibility across the area.";
+      "Clouds are scattered with some breaks allowing filtered sunlight.";
 
     if (t?.overallTrend === "improving") {
       detail =
-        "Skies are gradually opening up with increasing sunshine.";
+        "Cloud cover is gradually breaking with increasing sunshine.";
     }
 
     return {
@@ -101,32 +169,25 @@ export function generateSkyNarrative(data, skyIntel = null) {
   }
 
   // --------------------------------------------------
-  // ☁️ OVERCAST (fallback if needed)
+  // ☀️ MOSTLY CLEAR
   // --------------------------------------------------
-  if (skyIntel.cloudState === "overcast") {
+  if (state === "mostly_clear") {
     return {
-      headline: "A thick cloud deck is in place overhead.",
+      headline: "Skies are mostly clear across the area.",
       detail:
-        "Light is muted with limited variation across the sky.",
-      confidence: "medium",
-      type: "cloud"
+        "Only minimal cloud cover is present with strong visibility.",
+      confidence: "high",
+      type: "clear"
     };
   }
 
   // --------------------------------------------------
-  // ☀️ CLEAR
+  // ☀️ CLEAR (DEFAULT FALLBACK)
   // --------------------------------------------------
-  let detail =
-    "Visibility is excellent with clear views across the area.";
-
-  if (t?.overallTrend === "improving") {
-    detail =
-      "Conditions continue to improve with clear skies expanding.";
-  }
-
   return {
-    headline: "Skies are mostly clear with strong visibility.",
-    detail,
+    headline: "Clear conditions are in place.",
+    detail:
+      "Visibility is excellent with well-defined views across the area.",
     confidence: "high",
     type: "clear"
   };

@@ -87,25 +87,30 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
       ? new Date(hourly.time[0]).getTime()
       : Date.now());
 
-  // ------------------------------------------------------------
-  // CLOUD (with camera fallback)
-  // ------------------------------------------------------------
-  let cloud = null;
+// ------------------------------------------------------------
+// ☁️ CLOUD STRUCTURE REFINEMENT
+// ------------------------------------------------------------
+else if (cloud != null) {
 
-  if (wu?.cloudCover != null) cloud = wu.cloudCover;
-
-  if (cloud == null && tempest?.illuminance != null) {
-    const illum = tempest.illuminance;
-    cloud = Math.max(0, Math.min(100, 100 - (illum / 120000) * 100));
+  // 🌫️ Thick, uniform cloud deck (overcast feel)
+  if (cloud >= 70 && contrast < 0.18) {
+    atmosphericState = "overcast";
   }
 
-  if (cloud == null && Array.isArray(hourly?.cloudcover)) {
-    cloud = hourly.cloudcover[0];
+  // ☁️ Mostly cloudy (some variation but still dominant clouds)
+  else if (cloud >= 60) {
+    atmosphericState = "mostly_cloudy";
   }
 
-  if (cloud == null && camera?.metrics?.cloudCoverWest != null) {
-    cloud = camera.metrics.cloudCoverWest;
+  // 🌤️ True partly cloudy (defined clouds + blue sky gaps)
+  else if (cloud >= 30 && contrast >= 0.12) {
+    atmosphericState = "partly_cloudy";
   }
+
+  else {
+    atmosphericState = "mostly_clear";
+  }
+}
 
   // ------------------------------------------------------------
   // UV / SOLAR
