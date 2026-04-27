@@ -1,6 +1,6 @@
 // /intel/sky-intel.js
 // ============================================================
-// SKY INTEL — Refined (overcast > haze, uniform sky detection)
+// SKY INTEL — Structure-aware + clearing detection
 // ============================================================
 
 import { LOCATION } from "/js/config/location.js";
@@ -58,7 +58,7 @@ function classifyVisibility(visKm) {
 }
 
 // ------------------------------------------------------------
-// 🔧 MEDIAN (smoothing)
+// 🔧 MEDIAN
 // ------------------------------------------------------------
 function median(values) {
   const v = values.filter(x => x != null).sort((a, b) => a - b);
@@ -96,6 +96,8 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
   const contrast = median(history.map(m => m?.contrast));
   const visibilityScore = median(history.map(m => m?.visibilityScore));
 
+  const prev = camera?.previous?.metrics;
+
   // ------------------------------------------------------------
   // SOLAR
   // ------------------------------------------------------------
@@ -118,7 +120,7 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
   const visInfo = classifyVisibility(visibilityKm);
 
   // ------------------------------------------------------------
-  // 🌫️ FOG DETECTION
+  // 🌫️ FOG
   // ------------------------------------------------------------
   const valleyFog =
     solarElevation < 15 &&
@@ -145,28 +147,47 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
   }
 
   // ------------------------------------------------------------
-  // 🌤️ ATMOSPHERIC STATE (FINAL REFINED LOGIC)
+  // 🌤️ ATMOSPHERIC STATE
   // ------------------------------------------------------------
   let atmosphericState = "clear";
 
-  // 🌫️ Fog (always wins)
+  const clearingSignal =
+    prev &&
+    cloud != null &&
+    prev.cloudCoverWest != null &&
+    cloud < prev.cloudCoverWest &&         // clouds decreasing
+    contrast > prev.contrast &&            // more structure
+    visibilityScore >= prev.visibilityScore;
+
+  // 🌫️ Fog
   if (fogDetected) {
     atmosphericState = "fog";
   }
 
-  // ☁️ Uniform overcast refinement (NEW)
+  // ☁️ TRUE OVERCAST (flat deck only)
   else if (
-    cloud != null &&
-    cloud >= 70 &&
-    contrast < 0.10 &&
+    cloud >= 80 &&
+    contrast < 0.08 &&
     visibilityScore >= 2
   ) {
     atmosphericState = "overcast";
   }
 
-  // 🌫️ Haze (ONLY if sky not dominant)
+  // 🌤️ CLEARING CLOUDS (NEW CORE STATE)
+  else if (clearingSignal && cloud >= 50) {
+    atmosphericState = "mostly_cloudy";
+  }
+
+  // 🌤️ STRUCTURED CLOUDS (not uniform anymore)
   else if (
-    cloud != null &&
+    cloud >= 60 &&
+    contrast >= 0.08
+  ) {
+    atmosphericState = "mostly_cloudy";
+  }
+
+  // 🌫️ Haze (only when clouds aren't dominant)
+  else if (
     cloud < 70 &&
     (
       visInfo.category === "haze" ||
@@ -176,14 +197,10 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
     atmosphericState = "haze";
   }
 
-  // ☁️ Cloud structure
+  // ☁️ Standard tiers
   else if (cloud != null) {
 
-    if (cloud >= 70) {
-      atmosphericState = "overcast";
-    }
-
-    else if (cloud >= 60) {
+    if (cloud >= 60) {
       atmosphericState = "mostly_cloudy";
     }
 
@@ -201,24 +218,22 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
   }
 
   // ------------------------------------------------------------
-  // TRANSITIONS
+  // 🔄 TRANSITIONS (UPGRADED)
   // ------------------------------------------------------------
   let transition = null;
 
-  const prev = camera?.previous?.metrics;
-
   if (prev) {
-    const contrastDelta = contrast - prev.contrast;
 
     if (!fogDetected && prev.visibilityScore <= 1 && visibilityScore >= 2) {
       transition = "fog_lifting";
     }
 
-    if (contrastDelta > 0.05) {
-      transition = transition ?? "clearing";
+    // 🔥 TRUE clearing signal
+    if (clearingSignal) {
+      transition = "clearing";
     }
 
-    if (visibilityScore === 3 && contrast > 0.15) {
+    if (visibilityScore === 3 && contrast > 0.15 && cloud < 40) {
       transition = "cleared";
     }
   }
