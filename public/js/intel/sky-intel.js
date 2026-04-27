@@ -1,12 +1,12 @@
 // /intel/sky-intel.js
 // ============================================================
-// SKY INTEL — Asheville-tuned + smoothing + confidence
+// SKY INTEL — Clean, stable, Asheville-tuned
 // ============================================================
 
 import { LOCATION } from "/js/config/location.js";
 
 // ------------------------------------------------------------
-// SOLAR
+// ☀️ SOLAR
 // ------------------------------------------------------------
 function computeSolarElevation(timestamp, lat, lon) {
   const date = new Date(timestamp);
@@ -35,7 +35,7 @@ function computeSolarElevation(timestamp, lat, lon) {
 }
 
 // ------------------------------------------------------------
-// CLASSIFIERS
+// 📊 CLASSIFIERS
 // ------------------------------------------------------------
 function classifyCloudState(c) {
   if (c == null) return "unknown";
@@ -67,7 +67,7 @@ function classifyVisibility(visKm) {
 }
 
 // ------------------------------------------------------------
-// HELPER: MEDIAN (for smoothing)
+// 🔧 MEDIAN (smoothing)
 // ------------------------------------------------------------
 function median(values) {
   const v = values.filter(x => x != null).sort((a, b) => a - b);
@@ -77,9 +77,13 @@ function median(values) {
 }
 
 // ============================================================
-// MAIN
+// 🧠 MAIN
 // ============================================================
 export function computeSkyIntel({ tempest, wu, hourly, camera }) {
+
+  // ------------------------------------------------------------
+  // ⏱️ TIME
+  // ------------------------------------------------------------
   const nowTs =
     tempest?.timestamp ??
     wu?.obsTimeLocal ??
@@ -87,33 +91,25 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
       ? new Date(hourly.time[0]).getTime()
       : Date.now());
 
-// ------------------------------------------------------------
-// ☁️ CLOUD STRUCTURE REFINEMENT
-// ------------------------------------------------------------
-else if (cloud != null) {
-
-  // 🌫️ Thick, uniform cloud deck (overcast feel)
-  if (cloud >= 70 && contrast < 0.18) {
-    atmosphericState = "overcast";
-  }
-
-  // ☁️ Mostly cloudy (some variation but still dominant clouds)
-  else if (cloud >= 60) {
-    atmosphericState = "mostly_cloudy";
-  }
-
-  // 🌤️ True partly cloudy (defined clouds + blue sky gaps)
-  else if (cloud >= 30 && contrast >= 0.12) {
-    atmosphericState = "partly_cloudy";
-  }
-
-  else {
-    atmosphericState = "mostly_clear";
-  }
-}
+  // ------------------------------------------------------------
+  // ☁️ CLOUD INPUT
+  // ------------------------------------------------------------
+  const cloud = camera?.metrics?.cloudCoverWest ?? null;
 
   // ------------------------------------------------------------
-  // UV / SOLAR
+  // 📷 CAMERA SMOOTHING (3-frame)
+  // ------------------------------------------------------------
+  const history = [
+    camera?.metrics,
+    camera?.previous?.metrics,
+    camera?.previous2?.metrics
+  ];
+
+  const contrast = median(history.map(m => m?.contrast));
+  const visibilityScore = median(history.map(m => m?.visibilityScore));
+
+  // ------------------------------------------------------------
+  // ☀️ SOLAR / UV
   // ------------------------------------------------------------
   const uv =
     tempest?.uv ??
@@ -134,7 +130,7 @@ else if (cloud != null) {
   );
 
   // ------------------------------------------------------------
-  // VISIBILITY (sensor)
+  // 🌫️ VISIBILITY (sensor)
   // ------------------------------------------------------------
   let visibilityKm = null;
 
@@ -146,22 +142,10 @@ else if (cloud != null) {
   const visInfo = classifyVisibility(visibilityKm);
 
   // ------------------------------------------------------------
-  // CAMERA INPUTS + SMOOTHING (3-frame)
-  // ------------------------------------------------------------
-  const history = [
-    camera?.metrics,
-    camera?.previous?.metrics,
-    camera?.previous2?.metrics
-  ];
-
-  const contrast = median(history.map(m => m?.contrast));
-  const visibilityScore = median(history.map(m => m?.visibilityScore));
-
-  // ------------------------------------------------------------
-  // 🌫️ ASHEVILLE-TUNED FOG DETECTION
+  // 🌫️ FOG DETECTION (Asheville tuned)
   // ------------------------------------------------------------
   const valleyFog =
-    solarElevation < 15 &&  // early morning bias
+    solarElevation < 15 &&
     contrast != null &&
     contrast < 0.07 &&
     visibilityScore <= 1;
@@ -188,42 +172,39 @@ else if (cloud != null) {
   }
 
   // ------------------------------------------------------------
-  // VISIBILITY CATEGORY
-  // ------------------------------------------------------------
-  let visibilityCategory = visInfo.category;
-
-  if (visualFog && visibilityCategory === "good") {
-    visibilityCategory = "fog";
-  }
-
-  // ------------------------------------------------------------
-  // 🌤️ ATMOSPHERIC STATE (TUNED)
+  // 🌤️ ATMOSPHERIC STATE (FIXED + IMPROVED)
   // ------------------------------------------------------------
   let atmosphericState = "clear";
 
-  if (fogDetected) atmosphericState = "fog";
+  if (fogDetected) {
+    atmosphericState = "fog";
+  }
 
   else if (
-    visibilityCategory === "haze" ||
+    visInfo.category === "haze" ||
     (contrast < 0.12 && visibilityScore === 2)
   ) {
     atmosphericState = "haze";
   }
 
-  else if (
-    cloud != null &&
-    cloud > 80 &&
-    contrast < 0.10
-  ) {
-    atmosphericState = "low_clouds";
-  }
+  else if (cloud != null) {
 
-  else if (
-    cloud != null &&
-    cloud > 40 &&
-    contrast >= 0.10
-  ) {
-    atmosphericState = "partly_cloudy";
+    // Overcast (this fixes your issue)
+    if (cloud >= 70 && contrast < 0.18) {
+      atmosphericState = "overcast";
+    }
+
+    else if (cloud >= 60) {
+      atmosphericState = "mostly_cloudy";
+    }
+
+    else if (cloud >= 30 && contrast >= 0.12) {
+      atmosphericState = "partly_cloudy";
+    }
+
+    else {
+      atmosphericState = "mostly_clear";
+    }
   }
 
   else {
@@ -231,7 +212,7 @@ else if (cloud != null) {
   }
 
   // ------------------------------------------------------------
-  // 🔄 TRANSITIONS (SMOOTHED)
+  // 🔄 TRANSITIONS
   // ------------------------------------------------------------
   let transition = null;
 
@@ -255,7 +236,7 @@ else if (cloud != null) {
   }
 
   // ------------------------------------------------------------
-  // 📊 CONFIDENCE SCORE (0–1)
+  // 📊 CONFIDENCE
   // ------------------------------------------------------------
   let confidence = 0.5;
 
@@ -266,7 +247,7 @@ else if (cloud != null) {
   confidence = Math.min(confidence, 1);
 
   // ------------------------------------------------------------
-  // FINAL
+  // FINAL OUTPUT
   // ------------------------------------------------------------
   return {
     cloud,
@@ -279,7 +260,7 @@ else if (cloud != null) {
     solarElevation,
 
     visibilityKm,
-    visibilityCategory,
+    visibilityCategory: visInfo.category,
     fogPotential: visInfo.fogPotential,
 
     fogDetected,
