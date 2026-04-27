@@ -60,8 +60,8 @@
     }
 
     .hero-body {
-      padding: 16px;
-    }
+  padding: 16px;
+}
 
     .chip {
       display: inline-block;
@@ -201,7 +201,7 @@ async function run() {
 
     const chip = document.getElementById("chip");
     chip.textContent = skyIntel.atmosphericState.replace("_", " ");
-    chip.className = getChipClass(narrative.type);
+  chip.className = getChipClass(skyIntel.atmosphericState);
 
     // confidence bar
     const conf = Math.round((skyIntel.confidence || 0) * 100);
