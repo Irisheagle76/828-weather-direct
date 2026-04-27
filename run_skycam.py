@@ -1,7 +1,7 @@
 import subprocess
 import time
 
-INTERVAL = 60  # seconds between updates
+INTERVAL = 300  # seconds between updates
 
 while True:
     print("📷 Capturing frame...")
