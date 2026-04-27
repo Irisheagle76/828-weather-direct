@@ -1,7 +1,7 @@
 // /intel/sky-intel.js
 // ============================================================
-// SKY INTEL — Unified cloud, solar, UV, visibility, haze/smoke
-// NOW WITH CAMERA FUSION (fog / visibility awareness)
+// SKY INTEL — Unified cloud, solar, UV, visibility + camera fusion
+// Enhanced with atmospheric states (fog → haze → low clouds → clear)
 // ============================================================
 
 import { LOCATION } from "/js/config/location.js";
@@ -61,7 +61,7 @@ function classifyUV(uv) {
 }
 
 // ------------------------------------------------------------
-// Visibility classifier
+// Visibility classifier (sensor-based)
 // ------------------------------------------------------------
 function classifyVisibility(visKm) {
   if (visKm == null) return { category: "unknown", fogPotential: 0 };
@@ -109,13 +109,9 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
   // ------------------------------------------------------------
   let uv = null;
 
-  if (tempest?.uv != null) {
-    uv = tempest.uv;
-  } else if (wu?.uv != null) {
-    uv = wu.uv;
-  } else if (Array.isArray(hourly?.uv_index)) {
-    uv = hourly.uv_index[0];
-  }
+  if (tempest?.uv != null) uv = tempest.uv;
+  else if (wu?.uv != null) uv = wu.uv;
+  else if (Array.isArray(hourly?.uv_index)) uv = hourly.uv_index[0];
 
   const uvCategory = classifyUV(uv);
 
@@ -124,11 +120,8 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
   // ------------------------------------------------------------
   let solar = null;
 
-  if (tempest?.solarRadiation != null) {
-    solar = tempest.solarRadiation;
-  } else if (wu?.solarRadiation != null) {
-    solar = wu.solarRadiation;
-  }
+  if (tempest?.solarRadiation != null) solar = tempest.solarRadiation;
+  else if (wu?.solarRadiation != null) solar = wu.solarRadiation;
 
   const solarElevation = computeSolarElevation(
     nowTs,
@@ -153,38 +146,38 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
   // ------------------------------------------------------------
   // CAMERA INPUTS
   // ------------------------------------------------------------
-  const cameraFog = camera?.metrics?.fogDetected ?? false;
   const cameraVisibilityScore =
     camera?.metrics?.visibilityScore ?? null;
-  const cameraContrast = camera?.metrics?.contrast ?? null;
+
+  const cameraContrast =
+    camera?.metrics?.contrast ?? null;
 
   // ------------------------------------------------------------
-  // 🌫️ FOG FUSION (KEY UPGRADE)
+  // 🌫️ FOG DETECTION (camera-driven)
   // ------------------------------------------------------------
+  const visualFog =
+    cameraContrast != null &&
+    cameraVisibilityScore != null &&
+    cameraContrast < 0.06 &&
+    cameraVisibilityScore <= 1;
+
   const sensorFog =
     visInfo.category === "dense fog" ||
     visInfo.category === "fog";
 
-  const visualFog =
-    cameraFog ||
-    (cameraContrast != null &&
-      cameraContrast < 0.06 &&
-      cameraVisibilityScore != null &&
-      cameraVisibilityScore <= 1);
-
   let fogDetected = false;
   let fogConfidence = "low";
 
-  if (sensorFog && visualFog) {
+  if (visualFog && sensorFog) {
     fogDetected = true;
     fogConfidence = "high";
-  } else if (sensorFog || visualFog) {
+  } else if (visualFog || sensorFog) {
     fogDetected = true;
     fogConfidence = "medium";
   }
 
   // ------------------------------------------------------------
-  // VISIBILITY CATEGORY OVERRIDE
+  // VISIBILITY CATEGORY OVERRIDE (camera wins locally)
   // ------------------------------------------------------------
   let visibilityCategory = visInfo.category;
 
@@ -197,16 +190,48 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
   }
 
   // ------------------------------------------------------------
-  // ATMOSPHERIC STATE (NEW CORE SIGNAL)
+  // 🌤️ ATMOSPHERIC STATE (ENHANCED)
   // ------------------------------------------------------------
   let atmosphericState = "clear";
 
+  // Fog dominates
   if (fogDetected) {
     atmosphericState = "fog";
-  } else if (visibilityCategory === "haze") {
+  }
+
+  // Haze (reduced clarity but visible)
+  else if (
+    visibilityCategory === "haze" ||
+    (cameraContrast != null &&
+      cameraContrast < 0.12 &&
+      cameraVisibilityScore === 2)
+  ) {
     atmosphericState = "haze";
-  } else if (cloud > 85) {
-    atmosphericState = "overcast";
+  }
+
+  // Low clouds / stratus (fog lifted)
+  else if (
+    cloud != null &&
+    cloud > 80 &&
+    cameraContrast != null &&
+    cameraContrast < 0.10
+  ) {
+    atmosphericState = "low_clouds";
+  }
+
+  // Broken clouds
+  else if (
+    cloud != null &&
+    cloud > 40 &&
+    cameraContrast != null &&
+    cameraContrast >= 0.10
+  ) {
+    atmosphericState = "partly_cloudy";
+  }
+
+  // Clear fallback
+  else {
+    atmosphericState = "clear";
   }
 
   // ------------------------------------------------------------
@@ -220,8 +245,10 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
   return {
     cloud,
     cloudState: classifyCloudState(cloud),
+
     uv,
     uvCategory,
+
     solar,
     solarElevation,
 
@@ -229,9 +256,9 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
     visibilityCategory,
     fogPotential: visInfo.fogPotential,
 
-    // 🔥 NEW
     fogDetected,
     fogConfidence,
+
     atmosphericState,
 
     smokeIndex
