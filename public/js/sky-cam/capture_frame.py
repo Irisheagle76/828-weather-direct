@@ -15,13 +15,14 @@ def get_stream_url():
 def capture_frame():
     stream_url = get_stream_url()
 
-    subprocess.run([
-        "ffmpeg",
-        "-y",
-        "-i", stream_url,
-        "-frames:v", "1",
-        OUTPUT_PATH
-    ])
+subprocess.run([
+    "ffmpeg",
+    "-y",
+    "-i", stream_url,
+    "-frames:v", "1",
+    "-update", "1",
+    OUTPUT_PATH
+])
 
 if __name__ == "__main__":
     capture_frame()
