@@ -9,7 +9,7 @@ BASE_DIR = os.path.dirname(__file__)
 IMAGE_PATH = os.path.join(BASE_DIR, "frame.jpg")
 OUTPUT_PATH = os.path.join(BASE_DIR, "output.json")
 
-CROP_TOP_RATIO = 0.5  # top half = sky
+CROP_TOP_RATIO = 0.5  # top = sky
 # ------------------------
 
 
@@ -22,7 +22,9 @@ def load_and_crop(image_path):
         raise ValueError(f"Image not found at {image_path}")
 
     h, w, _ = img.shape
-    return img[0:int(h * CROP_TOP_RATIO), :], img  # return BOTH sky + full image
+
+    sky = img[0:int(h * CROP_TOP_RATIO), :]
+    return sky, img  # return sky + full frame
 
 
 # ------------------------------------------------------------
@@ -40,10 +42,10 @@ def compute_metrics(sky_img, full_img):
     # --------------------------------------------------------
     # ☁️ CLOUD DETECTION (adaptive)
     # --------------------------------------------------------
-    gray_blur = cv2.GaussianBlur(gray, (5, 5), 0)
+    blur = cv2.GaussianBlur(gray, (5, 5), 0)
 
     thresh = cv2.adaptiveThreshold(
-        gray_blur,
+        blur,
         255,
         cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
         cv2.THRESH_BINARY,
@@ -53,6 +55,10 @@ def compute_metrics(sky_img, full_img):
 
     cloud_pixels = np.sum(thresh == 255)
     cloud_cover = int((cloud_pixels / thresh.size) * 100)
+
+    # Reduce false high cloud in bright sunny scenes
+    if brightness > 0.6 and contrast > 0.1:
+        cloud_cover = int(cloud_cover * 0.75)
 
     # --------------------------------------------------------
     # 🌄 VISIBILITY (ridge detection)
@@ -69,23 +75,32 @@ def compute_metrics(sky_img, full_img):
 
     for band in bands:
         edges = cv2.Canny(band, 50, 150)
-        edge_density = np.sum(edges > 0) / edges.size
+        density = np.sum(edges > 0) / edges.size
 
-        if edge_density > 0.01:
+        if density > 0.01:
             visibility_score += 1
 
     # --------------------------------------------------------
-    # ☀️ SUNLIGHT DETECTION (NEW)
+    # 🌈 SKY COLOR (BLUE SIGNAL)
+    # --------------------------------------------------------
+    b, g, r = cv2.split(sky_img)
+
+    blue_ratio = np.mean(b) / (np.mean(r) + 1e-5)
+    sky_blue_signal = round(float(blue_ratio), 2)
+
+    # --------------------------------------------------------
+    # ☀️ SUNLIGHT DETECTION (GROUND-BASED)
     # --------------------------------------------------------
     full_gray = cv2.cvtColor(full_img, cv2.COLOR_BGR2GRAY)
 
     fh, fw = full_gray.shape
-    ground = full_gray[int(fh * 0.5):fh, :]  # bottom half
+    ground = full_gray[int(fh * 0.5):fh, :]
 
     ground_brightness = np.mean(ground) / 255.0
     ground_contrast = np.std(ground) / 255.0
 
-    sunlight_strength = ground_brightness * ground_contrast
+    # more stable blend (less flicker)
+    sunlight_strength = (ground_brightness * 0.6) + (ground_contrast * 0.4)
 
     if sunlight_strength > 0.12:
         sunlight_level = "strong"
@@ -97,13 +112,14 @@ def compute_metrics(sky_img, full_img):
     sunlight_detected = sunlight_strength > 0.07
 
     # --------------------------------------------------------
-    # 🌙 NIGHT MODE HANDLING
+    # 🌙 NIGHT HANDLING
     # --------------------------------------------------------
     if is_night:
         cloud_cover = None
         visibility_score = None
         sunlight_detected = False
         sunlight_level = "none"
+        sky_blue_signal = None
         mode = "night"
     else:
         mode = "day"
@@ -121,23 +137,25 @@ def compute_metrics(sky_img, full_img):
         "sunlightStrength": round(float(sunlight_strength), 2),
         "sunlightLevel": sunlight_level,
 
+        "skyBlueSignal": sky_blue_signal,
+
         "precipVisible": False,
         "mode": mode
     }
 
 
 # ------------------------------------------------------------
-# 📈 TREND LOGIC
+# 📈 TREND
 # ------------------------------------------------------------
 def compute_trend(current, previous):
     if not previous:
         return None
 
-    def trend(val_now, val_prev, threshold):
-        if val_now is None or val_prev is None:
+    def trend(now, prev, threshold):
+        if now is None or prev is None:
             return "unknown"
 
-        delta = val_now - val_prev
+        delta = now - prev
 
         if delta > threshold:
             return "increasing"
