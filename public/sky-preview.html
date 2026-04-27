@@ -3,12 +3,23 @@
 <html>
 <head>
   <title>Sky Cam Preview</title>
+
   <style>
     body {
       font-family: Arial;
       padding: 20px;
       background: #111;
       color: #eee;
+    }
+
+    h1 {
+      margin-bottom: 5px;
+    }
+
+    #lastUpdate {
+      font-size: 12px;
+      color: #aaa;
+      margin-bottom: 20px;
     }
 
     .card {
@@ -21,6 +32,7 @@
 
     pre {
       font-size: 12px;
+      white-space: pre-wrap;
     }
   </style>
 </head>
@@ -28,6 +40,7 @@
 <body>
 
 <h1>🌤 Sky Cam Debug</h1>
+<div id="lastUpdate">Loading...</div>
 
 <div class="card">
   <h2>📷 Camera Data</h2>
@@ -49,18 +62,35 @@
 import { computeSkyIntel } from "./js/intel/sky-intel.js";
 import { generateSkyNarrative } from "./js/intel/sky-narrative.js";
 
+// --------------------------------------------------
+// 🧠 MEMORY (for smoothing + transitions)
+// --------------------------------------------------
+window.prev1 = window.prev1 || null;
+window.prev2 = window.prev2 || null;
+
+// --------------------------------------------------
+// MAIN RUN FUNCTION
+// --------------------------------------------------
 async function run() {
   try {
-    // ✅ CORRECT PATH for your structure
-    const res = await fetch("./js/sky-cam/output.json");
+    // 🚫 prevent caching
+    const res = await fetch(`./js/sky-cam/output.json?t=${Date.now()}`);
     const cameraData = await res.json();
 
+    // 🧠 compute sky intel with history
     const skyIntel = computeSkyIntel({
-      camera: cameraData
+      camera: {
+        ...cameraData,
+        previous: window.prev1,
+        previous2: window.prev2
+      }
     });
 
     const narrative = generateSkyNarrative(cameraData, skyIntel);
 
+    // --------------------------------------------------
+    // DISPLAY
+    // --------------------------------------------------
     document.getElementById("metrics").textContent =
       JSON.stringify(cameraData, null, 2);
 
@@ -70,13 +100,30 @@ async function run() {
     document.getElementById("narrative").textContent =
       JSON.stringify(narrative, null, 2);
 
+    document.getElementById("lastUpdate").textContent =
+      "Last update: " + new Date().toLocaleTimeString();
+
+    // --------------------------------------------------
+    // UPDATE HISTORY (IMPORTANT ORDER)
+    // --------------------------------------------------
+    window.prev2 = window.prev1;
+    window.prev1 = cameraData;
+
   } catch (err) {
     document.getElementById("metrics").textContent =
       "ERROR: " + err.message;
   }
 }
 
-run();
+// --------------------------------------------------
+// 🔁 AUTO REFRESH LOOP
+// --------------------------------------------------
+async function loop() {
+  await run();
+  setTimeout(loop, 5000); // refresh every 5 seconds
+}
+
+loop();
 
 </script>
 

@@ -1,13 +1,12 @@
 // /intel/sky-intel.js
 // ============================================================
-// SKY INTEL — Unified cloud, solar, UV, visibility + camera fusion
-// Includes atmospheric states + transition detection
+// SKY INTEL — Asheville-tuned + smoothing + confidence
 // ============================================================
 
 import { LOCATION } from "/js/config/location.js";
 
 // ------------------------------------------------------------
-// SOLAR ELEVATION
+// SOLAR
 // ------------------------------------------------------------
 function computeSolarElevation(timestamp, lat, lon) {
   const date = new Date(timestamp);
@@ -36,20 +35,17 @@ function computeSolarElevation(timestamp, lat, lon) {
 }
 
 // ------------------------------------------------------------
-// CLOUD CLASSIFICATION
+// CLASSIFIERS
 // ------------------------------------------------------------
-function classifyCloudState(cloudPct) {
-  if (cloudPct == null) return "unknown";
-  if (cloudPct < 10) return "clear";
-  if (cloudPct < 30) return "mostly clear";
-  if (cloudPct < 60) return "partly cloudy";
-  if (cloudPct < 85) return "mostly cloudy";
+function classifyCloudState(c) {
+  if (c == null) return "unknown";
+  if (c < 10) return "clear";
+  if (c < 30) return "mostly clear";
+  if (c < 60) return "partly cloudy";
+  if (c < 85) return "mostly cloudy";
   return "overcast";
 }
 
-// ------------------------------------------------------------
-// UV CLASSIFICATION
-// ------------------------------------------------------------
 function classifyUV(uv) {
   if (uv == null) return "unknown";
   if (uv < 3) return "low";
@@ -59,9 +55,6 @@ function classifyUV(uv) {
   return "extreme";
 }
 
-// ------------------------------------------------------------
-// VISIBILITY (SENSOR-BASED)
-// ------------------------------------------------------------
 function classifyVisibility(visKm) {
   if (visKm == null) return { category: "unknown", fogPotential: 0 };
 
@@ -73,8 +66,18 @@ function classifyVisibility(visKm) {
   return { category: "good", fogPotential: 0 };
 }
 
+// ------------------------------------------------------------
+// HELPER: MEDIAN (for smoothing)
+// ------------------------------------------------------------
+function median(values) {
+  const v = values.filter(x => x != null).sort((a, b) => a - b);
+  if (!v.length) return null;
+  const mid = Math.floor(v.length / 2);
+  return v.length % 2 ? v[mid] : (v[mid - 1] + v[mid]) / 2;
+}
+
 // ============================================================
-// MAIN FUNCTION
+// MAIN
 // ============================================================
 export function computeSkyIntel({ tempest, wu, hourly, camera }) {
   const nowTs =
@@ -85,47 +88,39 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
       : Date.now());
 
   // ------------------------------------------------------------
-  // CLOUD (sensor + camera fallback)
+  // CLOUD (with camera fallback)
   // ------------------------------------------------------------
   let cloud = null;
 
-  if (wu?.cloudCover != null) {
-    cloud = wu.cloudCover;
-  }
+  if (wu?.cloudCover != null) cloud = wu.cloudCover;
 
   if (cloud == null && tempest?.illuminance != null) {
     const illum = tempest.illuminance;
-    const inferred = 100 - (illum / 120000) * 100;
-    cloud = Math.max(0, Math.min(100, inferred));
+    cloud = Math.max(0, Math.min(100, 100 - (illum / 120000) * 100));
   }
 
   if (cloud == null && Array.isArray(hourly?.cloudcover)) {
     cloud = hourly.cloudcover[0];
   }
 
-  // 🔥 camera fallback
   if (cloud == null && camera?.metrics?.cloudCoverWest != null) {
     cloud = camera.metrics.cloudCoverWest;
   }
 
   // ------------------------------------------------------------
-  // UV
+  // UV / SOLAR
   // ------------------------------------------------------------
-  let uv = null;
-
-  if (tempest?.uv != null) uv = tempest.uv;
-  else if (wu?.uv != null) uv = wu.uv;
-  else if (Array.isArray(hourly?.uv_index)) uv = hourly.uv_index[0];
+  const uv =
+    tempest?.uv ??
+    wu?.uv ??
+    (Array.isArray(hourly?.uv_index) ? hourly.uv_index[0] : null);
 
   const uvCategory = classifyUV(uv);
 
-  // ------------------------------------------------------------
-  // SOLAR
-  // ------------------------------------------------------------
-  let solar = null;
-
-  if (tempest?.solarRadiation != null) solar = tempest.solarRadiation;
-  else if (wu?.solarRadiation != null) solar = wu.solarRadiation;
+  const solar =
+    tempest?.solarRadiation ??
+    wu?.solarRadiation ??
+    null;
 
   const solarElevation = computeSolarElevation(
     nowTs,
@@ -134,36 +129,43 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
   );
 
   // ------------------------------------------------------------
-  // VISIBILITY (SENSORS)
+  // VISIBILITY (sensor)
   // ------------------------------------------------------------
   let visibilityKm = null;
 
   if (wu?.visibility != null) {
     const v = wu.visibility;
     visibilityKm = v < 40 ? v * 1.60934 : v;
-  } else if (Array.isArray(hourly?.visibility)) {
-    visibilityKm = hourly.visibility[0];
   }
 
   const visInfo = classifyVisibility(visibilityKm);
 
   // ------------------------------------------------------------
-  // CAMERA INPUTS
+  // CAMERA INPUTS + SMOOTHING (3-frame)
   // ------------------------------------------------------------
-  const cameraVisibility =
-    camera?.metrics?.visibilityScore ?? null;
+  const history = [
+    camera?.metrics,
+    camera?.previous?.metrics,
+    camera?.previous2?.metrics
+  ];
 
-  const cameraContrast =
-    camera?.metrics?.contrast ?? null;
+  const contrast = median(history.map(m => m?.contrast));
+  const visibilityScore = median(history.map(m => m?.visibilityScore));
 
   // ------------------------------------------------------------
-  // 🌫️ FOG DETECTION
+  // 🌫️ ASHEVILLE-TUNED FOG DETECTION
   // ------------------------------------------------------------
+  const valleyFog =
+    solarElevation < 15 &&  // early morning bias
+    contrast != null &&
+    contrast < 0.07 &&
+    visibilityScore <= 1;
+
   const visualFog =
-    cameraContrast != null &&
-    cameraVisibility != null &&
-    cameraContrast < 0.06 &&
-    cameraVisibility <= 1;
+    contrast != null &&
+    visibilityScore != null &&
+    contrast < 0.06 &&
+    visibilityScore <= 1;
 
   const sensorFog =
     visInfo.category === "dense fog" ||
@@ -172,7 +174,7 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
   let fogDetected = false;
   let fogConfidence = "low";
 
-  if (visualFog && sensorFog) {
+  if (valleyFog || (visualFog && sensorFog)) {
     fogDetected = true;
     fogConfidence = "high";
   } else if (visualFog || sensorFog) {
@@ -181,28 +183,24 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
   }
 
   // ------------------------------------------------------------
-  // VISIBILITY CATEGORY (camera override)
+  // VISIBILITY CATEGORY
   // ------------------------------------------------------------
   let visibilityCategory = visInfo.category;
 
-  if (visualFog && visInfo.category === "good") {
+  if (visualFog && visibilityCategory === "good") {
     visibilityCategory = "fog";
   }
 
   // ------------------------------------------------------------
-  // 🌤️ ATMOSPHERIC STATE
+  // 🌤️ ATMOSPHERIC STATE (TUNED)
   // ------------------------------------------------------------
   let atmosphericState = "clear";
 
-  if (fogDetected) {
-    atmosphericState = "fog";
-  }
+  if (fogDetected) atmosphericState = "fog";
 
   else if (
     visibilityCategory === "haze" ||
-    (cameraContrast != null &&
-      cameraContrast < 0.12 &&
-      cameraVisibility === 2)
+    (contrast < 0.12 && visibilityScore === 2)
   ) {
     atmosphericState = "haze";
   }
@@ -210,8 +208,7 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
   else if (
     cloud != null &&
     cloud > 80 &&
-    cameraContrast != null &&
-    cameraContrast < 0.10
+    contrast < 0.10
   ) {
     atmosphericState = "low_clouds";
   }
@@ -219,8 +216,7 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
   else if (
     cloud != null &&
     cloud > 40 &&
-    cameraContrast != null &&
-    cameraContrast >= 0.10
+    contrast >= 0.10
   ) {
     atmosphericState = "partly_cloudy";
   }
@@ -230,46 +226,42 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
   }
 
   // ------------------------------------------------------------
-  // 🔄 TRANSITION DETECTION
+  // 🔄 TRANSITIONS (SMOOTHED)
   // ------------------------------------------------------------
   let transition = null;
 
-  const prev = camera?.previous ?? null;
+  const prev = camera?.previous?.metrics;
 
-  if (prev && prev.metrics) {
-    const prevContrast = prev.metrics.contrast ?? null;
-    const prevVisibility = prev.metrics.visibilityScore ?? null;
+  if (prev) {
+    const contrastDelta = contrast - prev.contrast;
+    const visDelta = visibilityScore - prev.visibilityScore;
 
-    // fog lifting
-    if (
-      !fogDetected &&
-      prevVisibility <= 1 &&
-      cameraVisibility >= 2 &&
-      cameraContrast > prevContrast
-    ) {
+    if (!fogDetected && prev.visibilityScore <= 1 && visibilityScore >= 2) {
       transition = "fog_lifting";
     }
 
-    // clearing
-    if (
-      prevContrast != null &&
-      cameraContrast != null &&
-      cameraContrast - prevContrast > 0.05
-    ) {
+    if (contrastDelta > 0.05) {
       transition = transition ?? "clearing";
     }
 
-    // cleared
-    if (
-      cameraVisibility === 3 &&
-      cameraContrast > 0.15
-    ) {
+    if (visibilityScore === 3 && contrast > 0.15) {
       transition = "cleared";
     }
   }
 
   // ------------------------------------------------------------
-  // FINAL OBJECT
+  // 📊 CONFIDENCE SCORE (0–1)
+  // ------------------------------------------------------------
+  let confidence = 0.5;
+
+  if (contrast != null) confidence += Math.min(contrast, 0.3);
+  if (visibilityScore === 3) confidence += 0.2;
+  if (fogDetected) confidence += 0.2;
+
+  confidence = Math.min(confidence, 1);
+
+  // ------------------------------------------------------------
+  // FINAL
   // ------------------------------------------------------------
   return {
     cloud,
@@ -290,6 +282,8 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
 
     atmosphericState,
     transition,
+
+    confidence,
 
     smokeIndex: wu?.smokeIndex ?? null
   };
