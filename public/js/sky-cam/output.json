@@ -1,8 +1,8 @@
 {
-  "timestamp": "2026-04-27T13:01:13.479530",
+  "timestamp": "2026-04-27T13:10:11.865602",
   "metrics": {
-    "cloudCoverWest": 92,
-    "brightness": 0.5,
+    "cloudCoverWest": 90,
+    "brightness": 0.48,
     "contrast": 0.08,
     "visibilityScore": 2,
     "precipVisible": false,
@@ -10,7 +10,7 @@
   },
   "trend": {
     "cloudTrend": "steady",
-    "brightnessTrend": "steady",
+    "brightnessTrend": "decreasing",
     "overallTrend": "steady"
   }
 }
