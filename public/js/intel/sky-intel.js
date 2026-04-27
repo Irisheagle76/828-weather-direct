@@ -88,7 +88,30 @@ export function computeSkyIntel({ tempest, wu, hourly, camera }) {
   // ------------------------------------------------------------
   // CLOUD
   // ------------------------------------------------------------
-  let cloud = null;
+  // ------------------------------------------------------------
+// CLOUD (sensor + camera fallback)
+// ------------------------------------------------------------
+let cloud = null;
+
+// Primary sources
+if (wu?.cloudCover != null) {
+  cloud = wu.cloudCover;
+}
+
+if (cloud == null && tempest?.illuminance != null) {
+  const illum = tempest.illuminance;
+  const inferred = 100 - (illum / 120000) * 100;
+  cloud = Math.max(0, Math.min(100, inferred));
+}
+
+if (cloud == null && Array.isArray(hourly?.cloudcover)) {
+  cloud = hourly.cloudcover[0];
+}
+
+// 🔥 NEW: Camera fallback
+if (cloud == null && camera?.metrics?.cloudCoverWest != null) {
+  cloud = camera.metrics.cloudCoverWest;
+}
 
   if (wu?.cloudCover != null) {
     cloud = wu.cloudCover;
