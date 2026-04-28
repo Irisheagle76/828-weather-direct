@@ -1,5 +1,5 @@
 // ============================================================
-// SKY INTEL — Clean, Sun + Blue Aware System
+// SKY INTEL — Balanced Dominance System (Sun vs Clouds)
 // ============================================================
 
 export function computeSkyIntel({ camera, previous = null }) {
@@ -11,22 +11,19 @@ export function computeSkyIntel({ camera, previous = null }) {
   // INPUTS
   // --------------------------------------------------
   const cloud = m.cloudCoverWest ?? null;
-  const brightness = m.brightness ?? null;
   const contrast = m.contrast ?? null;
   const visibility = m.visibilityScore ?? null;
 
   const sunlightDetected = m.sunlightDetected ?? false;
   const sunlightLevel = m.sunlightLevel ?? "weak";
-  const sunlightStrength = m.sunlightStrength ?? 0;
 
   const skyBlueSignal = m.skyBlueSignal ?? null;
-
   const mode = m.mode;
 
   let atmosphericState = "unknown";
   let cloudState = "unknown";
   let transition = null;
-  let confidence = 0.6;
+  let confidence = 0.65;
 
   // --------------------------------------------------
   // 🌙 NIGHT
@@ -59,87 +56,71 @@ export function computeSkyIntel({ camera, previous = null }) {
   }
 
   // --------------------------------------------------
-  // 🌈 BLUE SKY SIGNAL
+  // 🌈 SIGNALS
   // --------------------------------------------------
-  const blueSkyPresent =
-    skyBlueSignal != null && skyBlueSignal > 1.1;
+  const strongSun = sunlightDetected && sunlightLevel === "strong";
+  const moderateSun = sunlightDetected && sunlightLevel === "moderate";
 
-  // --------------------------------------------------
-  // ☀️ SUN STRENGTH CLASSIFICATION
-  // --------------------------------------------------
-  const strongSun =
-    sunlightDetected && sunlightLevel === "strong";
+  const blueSky = skyBlueSignal != null && skyBlueSignal > 1.1;
 
-  const moderateSun =
-    sunlightDetected && sunlightLevel === "moderate";
-
-  const weakSun =
-    sunlightDetected && sunlightLevel === "weak";
+  const heavyCloud = cloud != null && cloud >= 85;
+  const midCloud = cloud != null && cloud >= 65;
+  const lowCloud = cloud != null && cloud >= 40;
 
   // --------------------------------------------------
-  // ☀️ PRIMARY DECISION TREE
+  // 🧠 DOMINANCE LOGIC
   // --------------------------------------------------
 
-  // ☀️ STRONG SUN (dominates everything except fog)
-  if (strongSun) {
-
-    if (cloud != null && cloud > 75) {
-      atmosphericState = "partly_cloudy";
+  // ☁️ HEAVY CLOUD DOMINATES (cannot be overridden by sun)
+  if (heavyCloud) {
+    if (strongSun || blueSky) {
+      atmosphericState = "overcast_bright"; // 👈 key fix
+      confidence = 0.85;
     } else {
-      atmosphericState = "mostly_clear";
-    }
-
-    confidence = 0.9;
-  }
-
-  // ☀️ MODERATE SUN
-  else if (moderateSun) {
-
-    atmosphericState = "partly_cloudy";
-    confidence = 0.85;
-  }
-
-  // 🌈 BLUE SKY (even without strong sun)
-  else if (blueSkyPresent) {
-
-    if (cloud != null && cloud > 70) {
-      atmosphericState = "partly_cloudy";
-    } else {
-      atmosphericState = "mostly_clear";
-    }
-
-    confidence = 0.8;
-  }
-
-  // --------------------------------------------------
-  // ☁️ CLOUD-ONLY FALLBACK
-  // --------------------------------------------------
-  else if (cloud != null) {
-
-    // strict overcast (must be flat)
-    if (cloud >= 85 && contrast != null && contrast < 0.075) {
       atmosphericState = "overcast";
+      confidence = 0.8;
+    }
+  }
+
+  // ☁️ MOSTLY CLOUDY
+  else if (midCloud) {
+    if (strongSun || blueSky) {
+      atmosphericState = "partly_cloudy";
+      confidence = 0.85;
+    } else {
+      atmosphericState = "mostly_cloudy";
       confidence = 0.75;
     }
+  }
 
-    else if (cloud >= 65) {
+  // 🌤 PARTLY CLOUDY RANGE
+  else if (lowCloud) {
+    if (strongSun) {
+      atmosphericState = "partly_cloudy";
+      confidence = 0.85;
+    } else if (moderateSun || blueSky) {
+      atmosphericState = "partly_cloudy";
+      confidence = 0.8;
+    } else {
       atmosphericState = "mostly_cloudy";
       confidence = 0.7;
     }
+  }
 
-    else if (cloud >= 40) {
-      atmosphericState = "partly_cloudy";
-      confidence = 0.65;
-    }
-
-    else {
+  // ☀️ LOW CLOUD → SUN CAN DOMINATE
+  else if (cloud != null) {
+    if (strongSun || blueSky) {
       atmosphericState = "mostly_clear";
-      confidence = 0.7;
+      confidence = 0.9;
+    } else {
+      atmosphericState = "partly_cloudy";
+      confidence = 0.75;
     }
   }
 
   else {
     atmosphericState = "clear";
+    confidence = 0.7;
   }
 
   // --------------------------------------------------
@@ -156,36 +137,23 @@ export function computeSkyIntel({ camera, previous = null }) {
   // 🔄 TRANSITIONS
   // --------------------------------------------------
   if (previous?.atmosphericState) {
-
     if (
       previous.atmosphericState === "overcast" &&
       atmosphericState === "partly_cloudy"
     ) {
       transition = "improving";
-    }
-
-    else if (
+    } else if (
       previous.atmosphericState === "partly_cloudy" &&
       atmosphericState === "overcast"
     ) {
       transition = "deteriorating";
-    }
-
-    else if (
-      sunlightDetected &&
+    } else if (
+      strongSun &&
       previous.atmosphericState !== atmosphericState
     ) {
       transition = "sun_breaking_through";
     }
   }
-
-  // --------------------------------------------------
-  // 🎯 CONFIDENCE ADJUSTMENTS
-  // --------------------------------------------------
-  if (strongSun) confidence += 0.05;
-  if (blueSkyPresent) confidence += 0.05;
-
-  confidence = Math.min(confidence, 1);
 
   // --------------------------------------------------
   // FINAL OUTPUT
@@ -195,6 +163,6 @@ export function computeSkyIntel({ camera, previous = null }) {
     cloudState,
     atmosphericState,
     transition,
-    confidence: Number(confidence.toFixed(2))
+    confidence: Number(Math.min(confidence, 1).toFixed(2))
   };
 }

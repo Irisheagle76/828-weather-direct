@@ -17,7 +17,7 @@ export function generateSkyNarrative(data, skyIntel = null) {
     return {
       headline: "Quiet conditions have settled in for the night.",
       detail:
-        "Limited light makes sky conditions harder to assess until daybreak.",
+        "It’s too dark to reliably assess sky conditions right now.",
       confidence: "low",
       type: "night"
     };
@@ -28,9 +28,9 @@ export function generateSkyNarrative(data, skyIntel = null) {
   // --------------------------------------------------
   if (transition === "sun_breaking_through") {
     return {
-      headline: "Sun is starting to break through.",
+      headline: "Some breaks are starting to show up in the clouds.",
       detail:
-        "Clouds are still around, but brighter conditions are beginning to take over.",
+        "It’s still mostly cloudy, but brighter spots are beginning to develop.",
       confidence: "high",
       type: "improving"
     };
@@ -38,9 +38,9 @@ export function generateSkyNarrative(data, skyIntel = null) {
 
   if (transition === "improving") {
     return {
-      headline: "Conditions are beginning to improve.",
+      headline: "Cloud cover is starting to thin out.",
       detail:
-        "Cloud cover is easing with gradual increases in light and visibility.",
+        "Gradual clearing is underway with more light getting through.",
       confidence: "medium",
       type: "improving"
     };
@@ -48,9 +48,9 @@ export function generateSkyNarrative(data, skyIntel = null) {
 
   if (transition === "deteriorating") {
     return {
-      headline: "Conditions are becoming more unsettled.",
+      headline: "Clouds are building back in.",
       detail:
-        "Clouds are thickening with a gradual loss of brightness.",
+        "Skies are trending more gray with less light getting through.",
       confidence: "medium",
       type: "deteriorating"
     };
@@ -61,83 +61,65 @@ export function generateSkyNarrative(data, skyIntel = null) {
   // --------------------------------------------------
   if (state === "fog") {
     return {
-      headline: "Fog is reducing visibility across the area.",
+      headline: "Fog is limiting visibility across the area.",
       detail:
-        "Landmarks and ridgelines are partially or fully obscured.",
+        "Views are obscured with very little definition in the distance.",
       confidence: "high",
       type: "fog"
     };
   }
 
   // --------------------------------------------------
-  // 🌫️ HAZE (DE-EMPHASIZED)
-  // --------------------------------------------------
-  if (state === "haze") {
-    return {
-      headline: "Slight haze is noticeable in the distance.",
-      detail:
-        "Views are a bit muted, but overall conditions remain stable.",
-      confidence: "low",
-      type: "haze"
-    };
-  }
-
-  // --------------------------------------------------
-  // ☁️ OVERCAST
+  // ☁️ OVERCAST (DARK)
   // --------------------------------------------------
   if (state === "overcast") {
     return {
       headline: "Gray, overcast skies are in place.",
       detail:
-        "Clouds are widespread and keeping sunshine limited.",
+        "Clouds are firmly in control with very little sunlight getting through.",
       confidence: "high",
       type: "cloud"
     };
   }
 
   // --------------------------------------------------
-  // ☁️ MOSTLY CLOUDY (SUN CHECK ADDED)
+  // ☁️ OVERCAST BUT BRIGHT (NEW STATE)
+  // --------------------------------------------------
+  if (state === "overcast_bright") {
+    return {
+      headline: "Clouds are in control, but it’s fairly bright.",
+      detail:
+        "A solid cloud deck is in place, though filtered light is getting through.",
+      confidence: "high",
+      type: "cloud"
+    };
+  }
+
+  // --------------------------------------------------
+  // ☁️ MOSTLY CLOUDY
   // --------------------------------------------------
   if (state === "mostly_cloudy") {
-
-    if (sunlightDetected) {
-      return {
-        headline: "Clouds are around, but the sun is still getting through.",
-        detail:
-          "There’s a good amount of light despite the cloud cover.",
-        confidence: "medium",
-        type: "cloud"
-      };
-    }
-
     return {
       headline: "Clouds are covering most of the sky.",
       detail:
-        "Only occasional breaks are allowing light through.",
+        sunlightDetected
+          ? "There’s still some light getting through, but clouds remain dominant."
+          : "Only limited breaks are allowing light through.",
       confidence: "medium",
       type: "cloud"
     };
   }
 
   // --------------------------------------------------
-  // 🌤️ PARTLY CLOUDY (SUN-DRIVEN)
+  // 🌤️ PARTLY CLOUDY (BALANCED — NO HYPE)
   // --------------------------------------------------
   if (state === "partly_cloudy") {
-
-    if (sunlightLevel === "strong") {
-      return {
-        headline: "Sunshine is winning out with a few clouds around.",
-        detail:
-          "Bright conditions are in place with clouds passing through at times.",
-        confidence: "high",
-        type: "cloud"
-      };
-    }
-
     return {
-      headline: "A mix of sun and clouds across the area.",
+      headline: "A mix of clouds and sun across the area.",
       detail:
-        "Clouds are drifting through, but sunshine is still getting through.",
+        sunlightLevel === "strong"
+          ? "There are brighter breaks, but clouds are still a noticeable part of the sky."
+          : "Clouds and sun are sharing the sky with no clear winner.",
       confidence: "medium",
       type: "cloud"
     };
@@ -150,7 +132,7 @@ export function generateSkyNarrative(data, skyIntel = null) {
     return {
       headline: "Mostly sunny skies are in place.",
       detail:
-        "Only a few clouds are around with strong visibility.",
+        "Just a few clouds around with plenty of open sky.",
       confidence: "high",
       type: "clear"
     };
@@ -162,7 +144,7 @@ export function generateSkyNarrative(data, skyIntel = null) {
   return {
     headline: "Clear skies are in place.",
     detail:
-      "Excellent visibility with bright, open conditions.",
+      "Wide open visibility with bright conditions overhead.",
     confidence: "high",
     type: "clear"
   };
