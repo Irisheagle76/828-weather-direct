@@ -2,10 +2,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>828 Sky Update (Preview)</title>
+<meta charset="UTF-8">
+<title>828 Sky Update</title>
 
-  <style>
+<style>
 :root {
   --bg: #0f1115;
   --card: #171a21;
@@ -22,7 +22,7 @@
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
   background: var(--bg);
   color: var(--text);
 }
@@ -35,7 +35,6 @@ body {
 
 h1 {
   font-size: 28px;
-  font-weight: 600;
   margin-bottom: 4px;
 }
 
@@ -45,7 +44,7 @@ h1 {
   margin-bottom: 18px;
 }
 
-/* --- HERO --- */
+/* HERO */
 .hero {
   background: var(--card);
   border: 1px solid var(--border);
@@ -64,7 +63,6 @@ h1 {
   padding: 20px;
 }
 
-/* --- CONDITION CHIP --- */
 .chip {
   display: inline-block;
   padding: 6px 12px;
@@ -74,26 +72,28 @@ h1 {
   font-weight: 500;
 }
 
-.chip.fog { background: var(--fog); color: white; }
-.chip.cloud { background: var(--cloud); color: white; }
+.chip.fog { background: var(--fog); color: #fff; }
+.chip.cloud { background: var(--cloud); color: #fff; }
 .chip.clear { background: var(--clear); color: #002; }
 
-/* --- TEXT --- */
 .headline {
   font-size: 28px;
-  line-height: 1.2;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .detail {
   font-size: 18px;
-  line-height: 1.4;
   color: var(--muted);
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
-/* --- CONFIDENCE --- */
+.condition {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
 .confidence {
   height: 8px;
   background: #222;
@@ -103,12 +103,12 @@ h1 {
 
 .confidence-bar {
   height: 100%;
-  background: linear-gradient(90deg, #6ea8ff, #4fd1c5);
   width: 0%;
+  background: linear-gradient(90deg,#6ea8ff,#4fd1c5);
   transition: width 0.6s ease;
 }
 
-/* --- DEBUG --- */
+/* DEBUG */
 .card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -118,56 +118,53 @@ h1 {
 }
 
 .card h3 {
-  margin: 0 0 8px 0;
   font-size: 13px;
   color: var(--muted);
+  margin-bottom: 6px;
 }
 
 pre {
   font-size: 12px;
   white-space: pre-wrap;
 }
-
-  </style>
+</style>
 </head>
 
 <body>
 <div class="wrap">
 
-  <h1>🌤 828 Sky Update</h1>
-  <div class="sub" id="lastUpdate">Loading…</div>
+<h1>🌤 828 Sky Update</h1>
+<div class="sub" id="lastUpdate">Loading…</div>
 
-  <!-- HERO -->
-  <div class="hero">
-    <img id="skyImage" src="./js/sky-cam/frame.jpg" />
+<div class="hero">
+  <img id="skyImage" src="./js/sky-cam/frame.jpg">
 
-    <div class="hero-body">
-      <div id="chip" class="chip">Loading</div>
-      <div id="headline" class="headline">—</div>
-      <div id="conditionLabel" style="font-size:12px;color:#9aa3b2;margin-bottom:6px;"></div>
-      <div id="detail" class="detail">—</div>
+  <div class="hero-body">
+    <div id="chip" class="chip">Loading</div>
+    <div id="headline" class="headline">—</div>
+    <div id="conditionLabel" class="condition"></div>
+    <div id="detail" class="detail">—</div>
 
-      <div class="confidence">
-        <div id="confidenceBar" class="confidence-bar"></div>
-      </div>
+    <div class="confidence">
+      <div id="confidenceBar" class="confidence-bar"></div>
     </div>
   </div>
+</div>
 
-  <!-- DEBUG -->
-  <div class="card">
-    <h3>📷 Camera Data</h3>
-    <pre id="metrics">Loading...</pre>
-  </div>
+<div class="card">
+  <h3>📷 Camera Data</h3>
+  <pre id="metrics"></pre>
+</div>
 
-  <div class="card">
-    <h3>🧠 Sky Intel</h3>
-    <pre id="intel">Loading...</pre>
-  </div>
+<div class="card">
+  <h3>🧠 Sky Intel</h3>
+  <pre id="intel"></pre>
+</div>
 
-  <div class="card">
-    <h3>🗣 Narrative</h3>
-    <pre id="narrative">Loading...</pre>
-  </div>
+<div class="card">
+  <h3>🗣 Narrative</h3>
+  <pre id="narrative"></pre>
+</div>
 
 </div>
 
@@ -176,74 +173,58 @@ pre {
 import { computeSkyIntel } from "./js/intel/sky-intel.js";
 import { generateSkyNarrative } from "./js/intel/sky-narrative.js";
 
-// memory for smoothing
-window.prev1 = window.prev1 || null;
-window.prev2 = window.prev2 || null;
+let prev1 = null;
+let prev2 = null;
 
-function getChipClass(type) {
-  if (type === "fog") return "chip fog";
-  if (type === "cloud") return "chip cloud";
-  if (type === "clear") return "chip clear";
-  return "chip";
+function mapChip(state) {
+  if (state === "fog") return "fog";
+  if (state.includes("cloud")) return "cloud";
+  return "clear";
 }
 
 async function run() {
   try {
     const res = await fetch(`./js/sky-cam/output.json?t=${Date.now()}`);
-    const cameraData = await res.json();
+    const data = await res.json();
 
     const skyIntel = computeSkyIntel({
       camera: {
-        ...cameraData,
-        previous: window.prev1,
-        previous2: window.prev2
+        ...data,
+        previous: prev1,
+        previous2: prev2
       }
     });
 
-    const narrative = generateSkyNarrative(cameraData, skyIntel);
+    const narrative = generateSkyNarrative(data, skyIntel);
 
-    // -------------------------
-    // HERO TEXT
-    // -------------------------
-    document.getElementById("headline").textContent = narrative.headline;
-    document.getElementById("detail").textContent = narrative.detail;
+    const state = skyIntel?.atmosphericState || "unknown";
 
-    // -------------------------
-    // CONDITION LABEL
-    // -------------------------
+    // UI TEXT
+    document.getElementById("headline").textContent =
+      narrative?.headline || "—";
+
+    document.getElementById("detail").textContent =
+      narrative?.detail || "—";
+
     document.getElementById("conditionLabel").textContent =
-      skyIntel.atmosphericState.replace("_", " ");
+      state.replace("_"," ");
 
-    // -------------------------
-    // CHIP (clean mapping)
-    // -------------------------
+    // CHIP
     const chip = document.getElementById("chip");
+    chip.textContent = state.replace("_"," ");
+    chip.className = "chip " + mapChip(state);
 
-    const chipType =
-      skyIntel.atmosphericState === "fog" ? "fog" :
-      skyIntel.atmosphericState.includes("cloud") ? "cloud" :
-      "clear";
-
-    chip.textContent = skyIntel.atmosphericState.replace("_", " ");
-    chip.className = getChipClass(chipType);
-
-    // -------------------------
-    // CONFIDENCE BAR (FIXED)
-    // -------------------------
-    const conf = Math.round((skyIntel.confidence || 0) * 100);
+    // CONFIDENCE
+    const conf = Math.round((skyIntel?.confidence || 0) * 100);
     document.getElementById("confidenceBar").style.width = conf + "%";
 
-    // -------------------------
-    // IMAGE REFRESH
-    // -------------------------
+    // IMAGE
     document.getElementById("skyImage").src =
       `./js/sky-cam/frame.jpg?t=${Date.now()}`;
 
-    // -------------------------
-    // DEBUG PANELS
-    // -------------------------
+    // DEBUG
     document.getElementById("metrics").textContent =
-      JSON.stringify(cameraData, null, 2);
+      JSON.stringify(data, null, 2);
 
     document.getElementById("intel").textContent =
       JSON.stringify(skyIntel, null, 2);
@@ -251,25 +232,20 @@ async function run() {
     document.getElementById("narrative").textContent =
       JSON.stringify(narrative, null, 2);
 
-    // -------------------------
-    // TIMESTAMP
-    // -------------------------
+    // TIME
     document.getElementById("lastUpdate").textContent =
       "Last update: " + new Date().toLocaleTimeString();
 
-    // -------------------------
     // MEMORY
-    // -------------------------
-    window.prev2 = window.prev1;
-    window.prev1 = cameraData;
+    prev2 = prev1;
+    prev1 = data;
 
-  } catch (err) {
-    document.getElementById("headline").textContent = "Error loading data";
-    console.error(err);
+  } catch (e) {
+    console.error(e);
+    document.getElementById("headline").textContent = "Data unavailable";
   }
 }
 
-// loop
 async function loop() {
   await run();
   setTimeout(loop, 5000);
