@@ -1,11 +1,49 @@
 // ============================================================
-// FUTURE COMFORT (V4 — FIXED + CONSISTENT)
+// FUTURE COMFORT (V5 — LIGHTNING + IMPACT AWARE)
 // ============================================================
 
 import { calculateComfort } from "../intel/comfort.js";
 
 // ============================================================
-// NORMALIZE HOURS (STRICT + FINAL)
+// ⚡ IMPACT ENGINE (NEW)
+// ============================================================
+
+function computeImpact(h = {}) {
+  let impact = 0;
+
+  const lightning = h.lightning;
+
+  if (lightning?.detected) {
+    const d = lightning.distanceMiles ?? 10;
+
+    if (d <= 3) impact += 70;
+    else if (d <= 6) impact += 55;
+    else if (d <= 10) impact += 40;
+    else impact += 25;
+  }
+
+  if (h.thunder) impact += 15;
+
+  if (h.precipitation > 0) {
+    if (h.precipitation < 0.1) impact += 5;
+    else if (h.precipitation < 0.5) impact += 10;
+    else if (h.precipitation < 1.5) impact += 20;
+    else impact += 30;
+  }
+
+  return Math.min(impact, 100);
+}
+
+function getImpactLabel(impact) {
+  if (impact >= 80) return "Hazardous";
+  if (impact >= 60) return "Stormy";
+  if (impact >= 40) return "Unsettled";
+  if (impact >= 20) return "Active";
+  return "Calm";
+}
+
+// ============================================================
+// NORMALIZE HOURS
 // ============================================================
 
 function normalizeHours(hours = []) {
@@ -17,6 +55,9 @@ function normalizeHours(hours = []) {
 
       const ts = h.timestamp ?? h.ts;
       if (!Number.isFinite(ts)) return null;
+
+      const score = calculateAdjustedScore(h, i, arr);
+      const impact = computeImpact(h);
 
       return {
         timestamp: ts,
@@ -32,8 +73,12 @@ function normalizeHours(hours = []) {
         windGust: h.windGust ?? null,
         precipitation: h.precipitation ?? 0,
 
-        // 🔥 CRITICAL: use adjusted scoring (NOT raw)
-        score: calculateAdjustedScore(h, i, arr),
+        lightning: h.lightning ?? null,
+        thunder: h.thunder ?? false,
+
+        score,
+        impact,
+        impactLabel: getImpactLabel(impact),
 
         goldilocks: !!h.goldilocks,
         hourLabel: h.hourLabel ?? formatHour(ts)
@@ -44,9 +89,6 @@ function normalizeHours(hours = []) {
 
   if (!normalized.length) return [];
 
-  // ------------------------------------------------------------
-  // FIND CLOSEST TO NOW
-  // ------------------------------------------------------------
   let closestIndex = 0;
   let smallestDiff = Infinity;
 
@@ -114,7 +156,7 @@ export function renderFutureComfort(container, items, trend) {
 }
 
 // ============================================================
-// HOUR CARD
+// HOUR CARD (UPDATED)
 // ============================================================
 
 function renderHourCard(h) {
@@ -130,7 +172,8 @@ function renderHourCard(h) {
   const emoji = getComfortEmoji(score);
   const scoreClass = getScoreClass(score);
   const goldiClass = h.goldilocks ? "goldilocks" : "";
-  const tint = getFeelScoreBackground(score ?? 50);
+
+  const tint = getImpactBackground(h.impact, score);
 
   return `
     <div class="next6-hour ${goldiClass}" style="
@@ -140,13 +183,25 @@ function renderHourCard(h) {
     ">
 
       <div class="next6-hour-label">${h.hourLabel}</div>
-      <div class="next6-hour-emoji">${emoji}</div>
+
+      <div class="next6-hour-emoji">
+        ${h.impact >= 60 ? "⚡" : emoji}
+      </div>
+
       <div class="next6-hour-temp">${temp}</div>
 
       ${
         score != null
           ? `<div class="next6-hour-score ${scoreClass}">
               ${score}
+            </div>`
+          : ""
+      }
+
+      ${
+        h.impact >= 40
+          ? `<div class="next6-hour-impact">
+              ${h.impactLabel}
             </div>`
           : ""
       }
@@ -162,55 +217,48 @@ function renderHourCard(h) {
 }
 
 // ============================================================
-// SUMMARY + TREND
+// SUMMARY (UPDATED FOR STORMS)
 // ============================================================
 
 function buildSummary(hours, trend) {
   if (!hours.length) return "";
 
-  const first = hours[0];
-  const last = hours.at(-1);
+  const maxImpact = Math.max(...hours.map(h => h.impact));
 
-  const tempDiff = (last.temperatureF ?? 0) - (first.temperatureF ?? 0);
-  const scoreDiff = (last.score ?? 0) - (first.score ?? 0);
+  if (maxImpact >= 60) {
+    return "Thunderstorms likely to impact conditions";
+  }
 
-  const avgWind =
-    hours.reduce((s, h) => s + (h.windSpeed ?? 0), 0) / hours.length;
+  if (maxImpact >= 40) {
+    return "Unsettled weather may affect comfort";
+  }
 
-  const maxGust = Math.max(...hours.map(h => h.windGust ?? 0));
   const precipTotal =
     hours.reduce((s, h) => s + (h.precipitation ?? 0), 0);
 
   if (precipTotal > 0.05) return "Rain may impact comfort";
-  if (maxGust >= 35) return "Gusty winds will impact comfort";
 
-  if (trend === "improving") {
-    return tempDiff > 2
-      ? "Warming and becoming more comfortable"
-      : "Gradually improving";
-  }
+  const diff =
+    (hours.at(-1).score ?? 0) - (hours[0].score ?? 0);
 
-  if (trend === "worsening") {
-    return tempDiff < -2
-      ? "Cooling and becoming less comfortable"
-      : "Gradually worsening";
-  }
+  if (trend === "improving") return "Gradually improving";
+  if (trend === "worsening") return "Gradually worsening";
 
-  if (avgWind > 8) return "A steady breeze influences how it feels";
-
-  if (tempDiff >= 4) return "Warming through this period";
-  if (tempDiff <= -4) return "Cooling through this period";
-
-  if (scoreDiff >= 0.2) return "Comfort improves slightly";
-  if (scoreDiff <= -0.2) return "Comfort dips slightly";
+  if (diff > 0.2) return "Comfort improves slightly";
+  if (diff < -0.2) return "Comfort dips slightly";
 
   return "Conditions remain fairly steady";
 }
 
+// ============================================================
+// TREND
+// ============================================================
+
 function detectTrend(hours) {
   if (!hours.length) return "steady";
 
-  const diff = (hours.at(-1).score ?? 0) - (hours[0].score ?? 0);
+  const diff =
+    (hours.at(-1).score ?? 0) - (hours[0].score ?? 0);
 
   if (diff > 0.2) return "improving";
   if (diff < -0.2) return "worsening";
@@ -218,7 +266,7 @@ function detectTrend(hours) {
 }
 
 // ============================================================
-// SCORE ENGINE (THE FIX)
+// SCORE ENGINE (UNCHANGED CORE)
 // ============================================================
 
 function calculateAdjustedScore(h, i, hours = []) {
@@ -245,7 +293,7 @@ function calculateAdjustedScore(h, i, hours = []) {
 }
 
 // ============================================================
-// WIND HELPERS (FIXED INDEX BUG)
+// WIND HELPERS
 // ============================================================
 
 function smoothWind(current, hours = []) {
@@ -332,10 +380,19 @@ function getComfortEmoji(s) {
   return "🥵";
 }
 
-function getFeelScoreBackground(s) {
-  if (s >= 85) return "rgba(80, 200, 120, 0.12)";
-  if (s >= 70) return "rgba(100, 180, 255, 0.12)";
-  if (s >= 55) return "rgba(255, 200, 100, 0.12)";
-  if (s >= 40) return "rgba(255, 140, 80, 0.12)";
+// ============================================================
+// 🎨 IMPACT-BASED BACKGROUND (NEW)
+// ============================================================
+
+function getImpactBackground(impact, score) {
+  if (impact >= 70) return "rgba(120, 60, 160, 0.18)"; // storm purple
+  if (impact >= 50) return "rgba(80, 120, 200, 0.16)"; // storm blue
+  if (impact >= 40) return "rgba(120, 140, 200, 0.14)";
+
+  // fallback to comfort colors
+  if (score >= 85) return "rgba(80, 200, 120, 0.12)";
+  if (score >= 70) return "rgba(100, 180, 255, 0.12)";
+  if (score >= 55) return "rgba(255, 200, 100, 0.12)";
+  if (score >= 40) return "rgba(255, 140, 80, 0.12)";
   return "rgba(255, 80, 80, 0.12)";
 }

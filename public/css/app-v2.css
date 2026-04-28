@@ -1431,3 +1431,17 @@ body {
   font-size: 11px;
   opacity: 0.5;
 }
+
+.comfort-score-block.storm {
+  background: linear-gradient(
+    135deg,
+    rgba(80, 120, 200, 0.25),
+    rgba(120, 60, 160, 0.25)
+  );
+}
+
+.comfort-impact-badge {
+  font-size: 12px;
+  margin-top: 4px;
+  opacity: 0.9;
+}
