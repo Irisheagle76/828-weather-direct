@@ -1,37 +1,88 @@
 // ============================================================
-// FUTURE COMFORT (V5 — LIGHTNING + IMPACT AWARE)
+// FUTURE COMFORT (V7 — LIGHTNING INGESTED FROM TEMPEST)
 // ============================================================
 
 import { calculateComfort } from "../intel/comfort.js";
 
 // ============================================================
-// ⚡ IMPACT ENGINE (NEW)
+// ⚡ LIGHTNING PARSER (NEW)
+// Handles BOTH:
+// - Raw Tempest fields
+// - Already-normalized lightning objects
+// ============================================================
+
+function parseLightning(h = {}) {
+  // ------------------------------------------------------------
+  // CASE 1: Already normalized (pass-through)
+  // ------------------------------------------------------------
+  if (h.lightning?.detected) {
+    return {
+      lightning: h.lightning,
+      thunder: h.thunder ?? true
+    };
+  }
+
+  // ------------------------------------------------------------
+  // CASE 2: Raw Tempest fields
+  // ------------------------------------------------------------
+  const count =
+    h.lightning_strike_count ??
+    h.lightningStrikeCount ??
+    0;
+
+  const distanceKm =
+    h.lightning_strike_avg_distance ??
+    h.lightningStrikeAvgDistance ??
+    null;
+
+  const distanceMiles =
+    distanceKm != null
+      ? distanceKm * 0.621371
+      : null;
+
+  if (count > 0) {
+    return {
+      lightning: {
+        detected: true,
+        distanceMiles: distanceMiles ?? 10
+      },
+      thunder: true
+    };
+  }
+
+  return {
+    lightning: null,
+    thunder: false
+  };
+}
+
+// ============================================================
+// ⚡ IMPACT ENGINE (UNCHANGED)
 // ============================================================
 
 function computeImpact(h = {}) {
-  let impact = 0;
-
   const lightning = h.lightning;
+  const precip = h.precipitation ?? 0;
 
   if (lightning?.detected) {
     const d = lightning.distanceMiles ?? 10;
 
-    if (d <= 3) impact += 70;
-    else if (d <= 6) impact += 55;
-    else if (d <= 10) impact += 40;
-    else impact += 25;
+    if (d <= 3) return 85;
+    if (d <= 6) return 70;
+    if (d <= 10) return 55;
+    return 40;
   }
 
-  if (h.thunder) impact += 15;
+  if (h.thunder) return 50;
 
-  if (h.precipitation > 0) {
-    if (h.precipitation < 0.1) impact += 5;
-    else if (h.precipitation < 0.5) impact += 10;
-    else if (h.precipitation < 1.5) impact += 20;
-    else impact += 30;
+  if (precip > 0) {
+    if (precip < 0.1) return 15;
+    if (precip < 0.5) return 25;
+    if (precip < 1.5) return 35;
+    return 45;
   }
 
-  return Math.min(impact, 100);
+  return 0;
 }
 
 function getImpactLabel(impact) {
@@ -43,7 +94,7 @@ function getImpactLabel(impact) {
 }
 
 // ============================================================
-// NORMALIZE HOURS
+// NORMALIZE HOURS (UPDATED)
 // ============================================================
 
 function normalizeHours(hours = []) {
@@ -56,8 +107,18 @@ function normalizeHours(hours = []) {
       const ts = h.timestamp ?? h.ts;
       if (!Number.isFinite(ts)) return null;
 
+      // ⚡ NEW: parse lightning
+      const { lightning, thunder } = parseLightning(h);
+
       const score = calculateAdjustedScore(h, i, arr);
-      const impact = computeImpact(h);
+
+      const enriched = {
+        ...h,
+        lightning,
+        thunder
+      };
+
+      const impact = computeImpact(enriched);
 
       return {
         timestamp: ts,
@@ -73,8 +134,8 @@ function normalizeHours(hours = []) {
         windGust: h.windGust ?? null,
         precipitation: h.precipitation ?? 0,
 
-        lightning: h.lightning ?? null,
-        thunder: h.thunder ?? false,
+        lightning,
+        thunder,
 
         score,
         impact,
@@ -104,7 +165,7 @@ function normalizeHours(hours = []) {
 }
 
 // ============================================================
-// MAIN RENDER
+// MAIN RENDER (UNCHANGED)
 // ============================================================
 
 export function renderFutureComfort(container, items, trend) {
@@ -156,7 +217,7 @@ export function renderFutureComfort(container, items, trend) {
 }
 
 // ============================================================
-// HOUR CARD (UPDATED)
+// HOUR CARD (UNCHANGED)
 // ============================================================
 
 function renderHourCard(h) {
@@ -169,7 +230,11 @@ function renderHourCard(h) {
       ? Math.round(h.score * 10)
       : null;
 
-  const emoji = getComfortEmoji(score);
+  const emoji =
+    h.impact >= 60
+      ? "⚡"
+      : getComfortEmoji(score);
+
   const scoreClass = getScoreClass(score);
   const goldiClass = h.goldilocks ? "goldilocks" : "";
 
@@ -183,11 +248,7 @@ function renderHourCard(h) {
     ">
 
       <div class="next6-hour-label">${h.hourLabel}</div>
-
-      <div class="next6-hour-emoji">
-        ${h.impact >= 60 ? "⚡" : emoji}
-      </div>
-
+      <div class="next6-hour-emoji">${emoji}</div>
       <div class="next6-hour-temp">${temp}</div>
 
       ${
@@ -217,7 +278,7 @@ function renderHourCard(h) {
 }
 
 // ============================================================
-// SUMMARY (UPDATED FOR STORMS)
+// SUMMARY + HELPERS (UNCHANGED)
 // ============================================================
 
 function buildSummary(hours, trend) {
@@ -225,18 +286,22 @@ function buildSummary(hours, trend) {
 
   const maxImpact = Math.max(...hours.map(h => h.impact));
 
-  if (maxImpact >= 60) {
-    return "Thunderstorms likely to impact conditions";
+  if (maxImpact >= 70) {
+    return "Thunderstorms likely, with lightning nearby";
+  }
+
+  if (maxImpact >= 50) {
+    return "Storms may impact conditions at times";
   }
 
   if (maxImpact >= 40) {
-    return "Unsettled weather may affect comfort";
+    return "Unsettled conditions expected";
   }
 
   const precipTotal =
     hours.reduce((s, h) => s + (h.precipitation ?? 0), 0);
 
-  if (precipTotal > 0.05) return "Rain may impact comfort";
+  if (precipTotal > 0.05) return "Rain may affect comfort";
 
   const diff =
     (hours.at(-1).score ?? 0) - (hours[0].score ?? 0);
@@ -249,10 +314,6 @@ function buildSummary(hours, trend) {
 
   return "Conditions remain fairly steady";
 }
-
-// ============================================================
-// TREND
-// ============================================================
 
 function detectTrend(hours) {
   if (!hours.length) return "steady";
