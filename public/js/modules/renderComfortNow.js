@@ -1,5 +1,5 @@
 // ============================================================
-// /js/modules/renderComfortNow.js — V5 (LIGHTNING + IMPACT LIVE)
+// /js/modules/renderComfortNow.js — V6 (LIGHTNING + IMPACT + TIME FIX)
 // ============================================================
 
 import { calculateComfort } from "../intel/comfort.js";
@@ -127,7 +127,6 @@ function normalizeTempest(obs = {}) {
     precipRate,
     rainContext: getRainContext(precipRate),
 
-    // ⚡ raw lightning
     lightning_strike_count: obs.lightning_strike_count,
     lightning_strike_avg_distance: obs.lightning_strike_avg_distance
   };
@@ -198,24 +197,17 @@ function normalizeCurrent(data = {}) {
 }
 
 // ============================================================
-// 🌧️ RAIN IMPACT (UNCHANGED)
+// 🌧️ RAIN IMPACT
 // ============================================================
 
 function applyRainImpact(score, data) {
   const rain = data?.rainContext;
-  const tempF = data?.temperatureF ?? data?.temp ?? null;
-
   let impact = 0;
 
   if (rain === "mist") impact = -0.1;
   if (rain === "light") impact = -0.2;
   if (rain === "steady") impact = -0.4;
   if (rain === "heavy") impact = -0.6;
-
-  if (tempF > 85 && rain === "light") impact += 0.1;
-
-  const hour = new Date().getHours();
-  if (hour >= 18 && rain !== "heavy") impact += 0.1;
 
   return score + Math.max(impact, -0.5);
 }
@@ -232,8 +224,6 @@ export function renderComfortNow(
 ) {
   if (!container || !current) return;
 
-  const mode = options.mode || "downtown";
-  const isDay = options.isDay ?? true;
   const hourly = options.hourly ?? [];
 
   const tempest = normalizeTempest(options.tempest ?? null);
@@ -241,7 +231,6 @@ export function renderComfortNow(
   let normalized = normalizeCurrent(current);
   normalized = injectTempest(normalized, tempest);
 
-  // ⚡ LIGHTNING
   const { lightning, thunder } = parseLightning(normalized);
   normalized.lightning = lightning;
   normalized.thunder = thunder;
@@ -249,25 +238,31 @@ export function renderComfortNow(
   const impact = computeImpact(normalized);
   const impactLabel = getImpactLabel(impact);
 
-  const adjusted = applyModeAdjustments(normalized, mode);
+  const adjusted = applyModeAdjustments(normalized, "downtown");
 
-  const comfort = calculateComfort(adjusted, {
-    isDay,
-    elevation: mode === "trail" ? 3000 : 2200,
-    isValley: mode === "downtown"
-  });
+  const comfort = calculateComfort(adjusted);
 
-  if (!comfort || comfort.temp == null) return;
+  if (!comfort) return;
 
   comfort.score = applyRainImpact(comfort.score ?? 0, adjusted);
 
   const score = Math.round((comfort.score || 0) * 10);
   const scoreClass = getComfortClass(score);
-  const goldiClass = comfort.goldilocks ? "goldilocks" : "";
 
   const rainContext = adjusted.rainContext;
 
-  const trend = analyzeTrend(hourly);
+  // ============================================================
+  // ✅ TIME FIX (ONLY LOOK AHEAD ~6 HOURS)
+  // ============================================================
+
+  const now = Date.now();
+
+  const nearTerm = hourly.filter(h => {
+    const ts = h.timestamp ?? h.ts;
+    return ts && ts <= now + (6 * 60 * 60 * 1000);
+  });
+
+  const trend = analyzeTrend(nearTerm);
 
   const narrative = assembleWithVoice(
     {
@@ -278,38 +273,28 @@ export function renderComfortNow(
         rain: adjusted.precipRate
       },
       rainContext,
-      dominantFactor: detectDominantWithRain(comfort, rainContext),
+      dominantFactor: "temp",
       confidence: 0.75
     },
-    "today",
+    "now",
     mapScoreToCategory(comfort.score),
     comfort.goldilocks,
     trend
   );
 
   // ============================================================
-  // ⚡ HEADLINE (STORM OVERRIDE)
+  // ⚡ HEADLINE
   // ============================================================
 
-  let headline =
-    narrative?.headline ||
-    fallbackHeadline(comfort);
+  let headline = narrative?.headline || fallbackHeadline(comfort);
 
   if (impact >= 60) {
     headline = "Thunderstorms are impacting conditions";
   } else if (impact >= 40) {
     headline = "Unsettled weather is affecting comfort";
-  } else if (rainContext !== "none") {
-    if (rainContext === "light") {
-      headline = "Light rain is slightly reducing comfort";
-    } else if (rainContext === "steady") {
-      headline = "Steady rain is actively impacting comfort";
-    } else if (rainContext === "heavy") {
-      headline = "Heavy rain is significantly reducing comfort";
-    }
   }
 
-  let explanation = buildFullExplanation(
+  const explanation = buildFullExplanation(
     comfort,
     narrative,
     trend
@@ -325,10 +310,9 @@ export function renderComfortNow(
   }
 
   const driverShort = drivers.map(d => d.short).join(" • ");
-  const actions = buildActions(comfort);
 
   container.innerHTML = `
-    <div class="comfort-module ${goldiClass}">
+    <div class="comfort-module">
 
       <div class="comfort-main">
 
@@ -355,15 +339,6 @@ export function renderComfortNow(
 
       </div>
 
-      <div class="comfort-expand">
-        <div class="comfort-expand-headline">
-          ${buildHeadline(score)}
-        </div>
-        ${renderBestWindow(bestWindow)}
-      </div>
-
     </div>
   `;
-
-  attachAccordion(container);
 }
