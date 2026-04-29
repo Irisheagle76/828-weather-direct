@@ -158,7 +158,7 @@ export function renderFutureComfort(container, {
   const computedTrend = detectTrend(hours);
   const safeTrend = trend ?? computedTrend;
 
-  const summary = buildSummary(hours, safeTrend);
+const narrative = buildTomorrowNarrative(hours);
 
   container.innerHTML = `
     <div class="comfort-module next6-module">
@@ -181,9 +181,9 @@ export function renderFutureComfort(container, {
             ${getTrendText(safeTrend)}
           </div>
 
-          <div class="comfort-support">
-            ${summary}
-          </div>
+        <div class="comfort-support">
+  ${narrative}
+</div>
 
         </div>
 
@@ -301,6 +301,123 @@ function detectTrend(hours) {
   if (diff > 0.2) return "improving";
   if (diff < -0.2) return "worsening";
   return "steady";
+}
+
+export function buildTomorrowNarrative(hours = []) {
+  if (!Array.isArray(hours) || !hours.length) return "";
+
+  const normalized = hours
+    .map(h => {
+      const ts = h.timestamp ?? h.ts;
+      if (!Number.isFinite(ts)) return null;
+
+      const d = new Date(ts);
+      const hour = d.getHours();
+
+      return {
+        ...h,
+        ts,
+        hour,
+        score: h.score ?? 0,
+        impact: h.impact ?? 0,
+        precipitation: h.precipitation ?? 0,
+        isDaytime: hour >= 10 && hour <= 18
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.ts - b.ts);
+
+  if (!normalized.length) return "";
+
+  // -----------------------------
+  // SEGMENTS
+  // -----------------------------
+  const morning = normalized.filter(h => h.hour >= 6 && h.hour < 11);
+  const afternoon = normalized.filter(h => h.hour >= 11 && h.hour < 17);
+  const evening = normalized.filter(h => h.hour >= 17 && h.hour < 22);
+  const daytime = normalized.filter(h => h.isDaytime);
+
+  // -----------------------------
+  // HELPERS
+  // -----------------------------
+  const avg = (arr, key) =>
+    arr.length
+      ? arr.reduce((s, h) => s + (h[key] ?? 0), 0) / arr.length
+      : 0;
+
+  const max = (arr, key) =>
+    arr.length
+      ? Math.max(...arr.map(h => h[key] ?? 0))
+      : 0;
+
+  const totalPrecip = normalized.reduce(
+    (s, h) => s + (h.precipitation ?? 0),
+    0
+  );
+
+  const peakImpact = max(normalized, "impact");
+  const daytimeImpact = max(daytime, "impact");
+
+  const morningScore = avg(morning, "score");
+  const afternoonScore = avg(afternoon, "score");
+  const eveningScore = avg(evening, "score");
+  const daytimeScore = avg(daytime, "score");
+
+  // -----------------------------
+  // FEELSCORE PHRASES
+  // -----------------------------
+  function describeScore(score) {
+    if (score >= 0.8) return "excellent";
+    if (score >= 0.65) return "very comfortable";
+    if (score >= 0.5) return "fairly comfortable";
+    if (score >= 0.35) return "a bit uncomfortable";
+    return "uncomfortable";
+  }
+
+  // -----------------------------
+  // NARRATIVE BUILD
+  // -----------------------------
+
+  let narrative = "";
+
+  // --- OPENING (based on daytime feel)
+  narrative += `Tomorrow trends ${describeScore(daytimeScore)} overall, especially during the daytime hours. `;
+
+  // --- MORNING → AFTERNOON EVOLUTION
+  if (afternoonScore > morningScore + 0.15) {
+    narrative += `The day starts somewhat subdued, but conditions improve into the afternoon. `;
+  } else if (afternoonScore < morningScore - 0.15) {
+    narrative += `A decent start gives way to less comfortable conditions by afternoon. `;
+  } else {
+    narrative += `Conditions stay relatively consistent from morning through afternoon. `;
+  }
+
+  // --- STORM / PRECIP LOGIC (dominant signal)
+  if (daytimeImpact >= 70) {
+    narrative += `Thunderstorms are likely during the afternoon, with lightning and brief heavy downpours reducing comfort at times. `;
+  } else if (daytimeImpact >= 50) {
+    narrative += `Storms may develop during the afternoon, bringing occasional disruptions and brief dips in comfort. `;
+  } else if (daytimeImpact >= 40 || totalPrecip > 0.1) {
+    narrative += `There is a chance for scattered showers, mainly later in the day, but it won't be a complete washout. `;
+  }
+
+  // --- PEAK FEELSCORE CALLOUT
+  if (afternoonScore > daytimeScore + 0.1) {
+    narrative += `FeelScore likely peaks in the afternoon when conditions are at their most comfortable. `;
+  } else if (eveningScore > afternoonScore + 0.1) {
+    narrative += `Conditions may become more comfortable toward the evening hours. `;
+  }
+
+  // --- CLOSING TONE
+  if (peakImpact < 30 && daytimeScore >= 0.6) {
+    narrative += `Overall, a solid day with a good stretch for outdoor plans.`;
+  } else if (peakImpact >= 60) {
+    narrative += `Expect interruptions at times, especially later in the day.`;
+  } else {
+    narrative += `Overall, a fairly typical day with some variability but nothing extreme.`;
+  }
+
+  return narrative.trim();
 }
 
 // ============================================================
