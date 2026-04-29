@@ -47,7 +47,7 @@ export const phrases = {
     dry: [
       "dry air keeping things crisp",
       "low humidity keeping the air light",
-      "a clean and comfortable feel to the air"
+      "a clean feel to the air"
     ],
 
     neutral: [
@@ -145,3 +145,10 @@ export const phrases = {
     ]
   }
 };
+
+if (/comfortable/i.test(narrative)) {
+  narrative = narrative.replace(
+    /comfortable feel to the air/i,
+    "a clean feel to the air"
+  );
+}

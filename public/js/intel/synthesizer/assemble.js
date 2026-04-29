@@ -191,14 +191,27 @@ if (core.length) {
   const connectors = ["with", "bringing", "featuring"];
   const connector = random(connectors);
 
-  narrative += `, ${connector} ${joinPhrases(core)}`;
+const connectors = [
+  "with",
+  "featuring",
+  "highlighted by"
+];
+
+const connector = random(connectors);
+
+// 👇 CRITICAL FIX: remove gerund stacking
+const cleanedCore = core.map(p =>
+  p.replace(/^temperatures\s+holding/i, "temperatures hold")
+);
+
+narrative += `, ${connector} ${joinPhrases(cleanedCore)}`;
 }
 
 // ------------------------------------------------------------
 // LIGHT / SKY ADDITION
 // ------------------------------------------------------------
 if (light && maybe(0.5)) {
-  const lightJoiners = ["and", "along with", "plus"];
+ const lightJoiners = ["with", "and", "along with"];
   const joiner = random(lightJoiners);
 
   narrative += core.length
