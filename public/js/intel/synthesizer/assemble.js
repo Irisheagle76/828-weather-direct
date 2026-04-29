@@ -209,7 +209,15 @@ if (light && maybe(0.5)) {
     ? `, ${joiner} ${light}`
     : `, ${light}`;
 }
-
+// ------------------------------------------------------------
+// FINAL CLEANUP (ANTI-REPETITION)
+// ------------------------------------------------------------
+if (/comfortable/i.test(narrative)) {
+  narrative = narrative.replace(
+    /comfortable feel to the air/i,
+    "a clean feel to the air"
+  );
+}
 // ------------------------------------------------------------
 // FINALIZE
 // ------------------------------------------------------------

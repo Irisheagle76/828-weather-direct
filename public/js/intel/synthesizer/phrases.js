@@ -146,9 +146,3 @@ export const phrases = {
   }
 };
 
-if (/comfortable/i.test(narrative)) {
-  narrative = narrative.replace(
-    /comfortable feel to the air/i,
-    "a clean feel to the air"
-  );
-}
