@@ -1,5 +1,5 @@
 // ============================================================
-// HUMAN ACTION — FEELSCORE (FULL REWRITE - NON REDUCTIVE)
+// HUMAN ACTION — FEELSCORE (CLEAN ARCHITECTURE)
 // ============================================================
 
 import { calculateComfort } from "./comfort.js";
@@ -11,12 +11,8 @@ import { buildFullExplanation } from "../intel/explanations/buildFullExplanation
 // ============================================================
 
 function avg(arr = []) {
-  if (!arr.length) return null;
-
   const valid = arr.filter(Number.isFinite);
-  if (!valid.length) return null;
-
-  return valid.reduce((a, b) => a + b, 0) / valid.length;
+  return valid.length ? valid.reduce((a, b) => a + b, 0) / valid.length : null;
 }
 
 function getTs(h) {
@@ -25,7 +21,10 @@ function getTs(h) {
   return ts < 1e12 ? ts * 1000 : ts;
 }
 
-// 🔥 ALIGN DATA TO "NOW" (CORE FIX)
+// ============================================================
+// ALIGN + SPLIT
+// ============================================================
+
 function alignHourly(hourlyRaw = []) {
   const now = Date.now();
 
@@ -35,82 +34,9 @@ function alignHourly(hourlyRaw = []) {
     .sort((a, b) => a._ts - b._ts);
 
   const startIndex = sorted.findIndex(h => h._ts >= now);
-
   return startIndex === -1 ? [] : sorted.slice(startIndex);
 }
 
-function formatTempRange(min, max) {
-  if (!Number.isFinite(min) || !Number.isFinite(max)) return "";
-
-  const minBand = formatTempBand(min);
-  const maxBand = formatTempBand(max);
-
-  if (minBand === maxBand) return minBand;
-
-  return `${minBand} to ${maxBand}`;
-}
-
-// ============================================================
-// TEMP BAND (SINGLE VALUE)
-// ============================================================
-
-function formatTempBand(t) {
-  if (t == null || !Number.isFinite(t)) return null;
-
-  const rounded = Math.round(t);
-  const decade = Math.floor(rounded / 10) * 10;
-  const offset = rounded - decade;
-
-  if (offset <= 2) return `low ${decade}s`;
-  if (offset <= 6) return `mid ${decade}s`;
-  return `upper ${decade}s`;
-}
-
-// ============================================================
-// COMFORT ICON (YOUR VERSION — COMPLETED + SAFE)
-// ============================================================
-
-function resolveComfortIcon({
-  score,
-  temp,
-  dewPoint,
-  wind = {},
-}) {
-  // 🔒 guards
-  if (!Number.isFinite(score)) score = 50;
-  if (!Number.isFinite(temp)) temp = 70;
-  if (!Number.isFinite(dewPoint)) dewPoint = 50;
-
-  const maxWind = wind.maxWind ?? 0;
-  const maxGust = wind.maxGust ?? 0;
-  const avgWind = wind.avgWind ?? 0;
-
-  // ❄️ Cold
-  if (temp <= 40) return "🥶";
-  if (temp <= 50) return "🧥";
-
-  // 🔥 Heat
-  if (temp >= 90) return "🥵";
-  if (temp >= 80 && dewPoint >= 65) return "😓";
-
-  // 💧 Humidity
-  if (dewPoint >= 68) return "😫";
-  if (dewPoint >= 62) return "😅";
-
-  // 🌬️ Wind
-  if (maxGust >= 25) return "💨";
-  if (maxWind >= 15 || avgWind >= 12) return "🌬️";
-
-  // 😊 Comfort tiers (fallback)
-  if (score >= 85) return "😄";
-  if (score >= 70) return "🙂";
-  if (score >= 55) return "😐";
-  if (score >= 40) return "😕";
-
-  return "🥵";
-}
-
-// 🔥 SPLIT INTO CALENDAR DAYS (FIXES TOMORROW BUG)
 function splitDays(hourly, now) {
   const d = new Date(now);
 
@@ -127,709 +53,36 @@ function splitDays(hourly, now) {
   const tomorrow = [];
 
   for (const h of hourly) {
-    const ts = h._ts;
-    if (!ts) continue;
-
-    if (ts >= startToday && ts < startTomorrow) {
-      today.push(h);
-    } else if (ts >= startTomorrow && ts < startNext) {
-      tomorrow.push(h);
-    }
+    if (h._ts >= startToday && h._ts < startTomorrow) today.push(h);
+    else if (h._ts >= startTomorrow && h._ts < startNext) tomorrow.push(h);
   }
 
   return { today, tomorrow };
 }
-// ============================================================
-// WEIGHTED CURRENT CONDITIONS (NEW)
-// ============================================================
-
-function buildWeightedCurrent(hours = []) {
-  const h0 = hours[0] || {};
-  const h1 = hours[1] || {};
-  const h2 = hours[2] || {};
-
-  const weights = [0.6, 0.3, 0.1];
-
-  const wAvg = (vals) => {
-    const valid = vals.map((v, i) =>
-      Number.isFinite(v) ? v * weights[i] : null
-    ).filter(v => v != null);
-
-    const totalWeight = vals.reduce((sum, v, i) =>
-      Number.isFinite(v) ? sum + weights[i] : sum
-    , 0);
-
-    return totalWeight
-      ? valid.reduce((a, b) => a + b, 0) / totalWeight
-      : null;
-  };
-
-  return {
-    temperatureF: wAvg([h0.temperatureF, h1.temperatureF, h2.temperatureF]),
-    dewpointF:    wAvg([h0.dewpointF,    h1.dewpointF,    h2.dewpointF]),
-    windSpeed:    wAvg([h0.windSpeed,    h1.windSpeed,    h2.windSpeed]),
-    windGust: Math.max(
-      h0.windGust ?? 0,
-      h1.windGust ?? 0,
-      h2.windGust ?? 0
-    )
-  };
-}
-// ============================================================
-// SHORT-TERM TREND (NEW)
-// ============================================================
-function computeShortTermTrend(hours = []) {
-  const [h0 = {}, h1 = {}, h2 = {}] = hours;
-
-  const get = (v) => (Number.isFinite(v) ? v : null);
-
-  const t0 = get(h0.temperatureF);
-  const t2 = get(h2.temperatureF);
-
-  const d0 = get(h0.dewpointF);
-  const d2 = get(h2.dewpointF);
-
-  const w0 = get(h0.windSpeed);
-  const w2 = get(h2.windSpeed);
-
-  const tempTrend =
-    t0 != null && t2 != null ? t2 - t0 : null;
-
-  const dewTrend =
-    d0 != null && d2 != null ? d2 - d0 : null;
-
-  const windTrend =
-    w0 != null && w2 != null ? w2 - w0 : null;
-
-  return {
-    tempTrend,
-    dewTrend,
-    windTrend
-  };
-}
 
 // ============================================================
-// NARRATIVE TREND FLAVOR (ANTI-REPEAT)
-// ============================================================
-
-function applyTrendFlavor(text, shortTerm = {}) {
-  if (!text) return text;
-
-  const { tempTrend = 0, dewTrend = 0, windTrend = 0 } = shortTerm;
-
-  let additions = [];
-
-  if (tempTrend >= 2 && !text.includes("climbing")) {
-    additions.push("Temperatures are climbing over the next couple of hours.");
-  }
-
-  if (tempTrend <= -2 && !text.includes("ease downward")) {
-    additions.push("Temperatures are starting to ease downward.");
-  }
-
-  if (dewTrend >= 2 && !text.includes("increasing")) {
-    additions.push("Humidity is gradually increasing.");
-  }
-
-  if (dewTrend <= -2 && !text.includes("drying out")) {
-    additions.push("The air is drying out a bit.");
-  }
-
-  if (windTrend >= 3 && !text.includes("pick up")) {
-    additions.push("Winds are beginning to pick up.");
-  }
-
-  if (windTrend <= -3 && !text.includes("easing")) {
-    additions.push("Winds are easing.");
-  }
-
-  if (!additions.length) return text;
-
-  return text + " " + additions.join(" ");
-}
-
-// ------------------------------------------------------------
-// WIND SMOOTHING
-// ------------------------------------------------------------
-
-function smoothWind(current, hours = []) {
-  const idx = hours.findIndex(h => h.timestamp === current.timestamp);
-
-  if (idx === -1) return current.windSpeed;
-
-  const window = hours.slice(idx, idx + 3);
-
-  const values = [
-    current.windSpeed,
-    ...window.map(h => h.windSpeed)
-  ].filter(Number.isFinite);
-
-  if (!values.length) return current.windSpeed;
-
-  return values.reduce((a, b) => a + b, 0) / values.length;
-}
-
-function smoothGust(current, hours = []) {
-  const idx = hours.findIndex(h => h.timestamp === current.timestamp);
-
-  if (idx === -1) return current.windGust;
-
-  const window = hours.slice(idx, idx + 3);
-
-  const values = [
-    current.windGust,
-    ...window.map(h => h.windGust)
-  ].filter(Number.isFinite);
-
-  if (!values.length) return current.windGust;
-
-  const avg = values.reduce((a, b) => a + b, 0) / values.length;
-
-  return Math.min(avg, (current.windSpeed ?? 0) * 2.5);
-}
-
-// ------------------------------------------------------------
-// GUSTINESS
-// ------------------------------------------------------------
-function calculateGustiness(windSpeed, windGust) {
-  if (!Number.isFinite(windSpeed) || !Number.isFinite(windGust)) return 0;
-  return Math.max(0, windGust - windSpeed);
-}
-// ============================================================
-// CURRENT FEELSCORE (STABLE + RESPONSIVE)
-// ============================================================
-function resolveDewpoint(first, tempest) {
-  const model = first?.dewpointF;
-
-  const station =
-    typeof tempest?.dew_point === "number"
-      ? (tempest.dew_point * 9) / 5 + 32
-      : null;
-
-  if (station == null) return model;
-  if (model == null) return station;
-
-  const diff = Math.abs(station - model);
-
-  const resolved =
-    diff <= 2 ? station :
-    diff <= 8 ? station * 0.7 + model * 0.3 :
-                station * 0.5 + model * 0.5;
-
-  return Math.min(resolved, first?.temperatureF ?? resolved);
-}
-
-function smoothFirstHoursWithTempest(hours = [], tempest = null) {
-  if (!hours.length || !tempest?.air_temperature) return hours;
-
-  const baseTemp = hours[0].temperatureF;
-  const delta = tempest.air_temperature - baseTemp;
-
-  return hours.map((h, i) => {
-    if (i > 2) return h; // only adjust first ~2–3 hours
-
-    const decay = 1 - i / 2;
-
-    return {
-      ...h,
-      temperatureF:
-        h.temperatureF != null
-          ? h.temperatureF + delta * decay
-          : h.temperatureF
-    };
-  });
-}
-
-function buildCurrentWithTrend(hours, tempest = null) {
-  if (!hours.length) return fallback("today");
-
-  // ------------------------------------------------------------
-  // STEP 1: Smooth near-term model hours
-  // ------------------------------------------------------------
-  hours = smoothFirstHoursWithTempest(hours, tempest);
-
-  // ------------------------------------------------------------
-  // STEP 2: Build weighted current baseline (h0 + h1 + h2)
-  // ------------------------------------------------------------
-  let first = buildWeightedCurrent(hours);
-
-  // ------------------------------------------------------------
-  // STEP 3: Inject real-time Tempest conditions
-  // ------------------------------------------------------------
-  if (tempest) {
-    first = {
-      ...first,
-
-      temperatureF:
-        (typeof tempest.air_temperature === "number"
-          ? (tempest.air_temperature * 9) / 5 + 32
-          : null) ?? first.temperatureF,
-
-      dewpointF:
-        resolveDewpoint(first, tempest),
-
-      windSpeed:
-        tempest.wind_avg ?? first.windSpeed,
-
-      windGust: Math.max(
-        first.windGust ?? 0,
-        tempest.wind_gust ?? 0
-      )
-    };
-  }
-  return first;
-}
-
-// ============================================================
-// PRECIP SIGNAL (CORE INTEL — PROBABILITY FIRST)
+// PRECIP + SNAPSHOT (UNCHANGED)
 // ============================================================
 
 function getPrecipSignal({ precipProbability = 0, precipAmount = 0 }) {
-
-  // 🌧️ PRIMARY: probability drives perception
   if (precipProbability >= 70) return "high";
   if (precipProbability >= 40) return "moderate";
   if (precipProbability >= 20) return "low";
-
-  // 🌧️ SECONDARY: amount fallback (for low-prob steady rain)
   if (precipAmount >= 0.10) return "high";
   if (precipAmount >= 0.03) return "moderate";
-
   return "none";
 }
 
+function getPrecipType({ precipProbability = 0, precipAmount = 0, hours = [] }) {
+  const maxRate = Math.max(...hours.map(h => h.precipAmount ?? 0), 0);
+  const activeHours = hours.filter(h => (h.precipAmount ?? 0) > 0).length;
 
-// ============================================================
-// BUILD NARRATIVE (UNIFIED + DATA-DRIVEN + PRECIP-AWARE)
-// ============================================================
-
-function buildPeriodNarrative(ctx, label) {
-  if (!ctx) return fallback(label);
-
-  const { score, flags, change, wind, snapshot, hours } = ctx;
-
-  const { isShockDay, hasColdStart } = flags || {};
-  const { tempDrop = 0, chillDelta = 0, tomorrowMin = null } = change || {};
-
-  const maxWind = wind?.maxWind ?? 0;
-  const maxGust = wind?.maxGust ?? 0;
-  const avgWind = wind?.avgWind ?? 0;
-  const breezyHours = wind?.breezyHours ?? 0;
-
-  const temp = snapshot?.temp ?? null;
-  const dp = snapshot?.dewPoint ?? null;
-const precipSignal = getPrecipSignal({
-  precipProbability: snapshot?.precipProbability ?? 0,
-  precipAmount: snapshot?.precipAmount ?? 0
-});
-
-const precipType = snapshot?.precipType ?? "none";
-  // ==========================================================
-  // CORE CONDITIONS
-  // ==========================================================
-
-  const isWindy = maxGust >= 30 || avgWind >= 15;
-
-  const isBreezy =
-    !isWindy &&
-    ((breezyHours >= 4 && avgWind >= 8) || avgWind >= 12);
-
-  let moisture = "dry";
-  if (dp != null) {
-    if (dp >= 65) moisture = "humid";
-    else if (dp >= 55) moisture = "slightly_humid";
-    else if (dp >= 45) moisture = "comfortable";
-  }
-
-  let tempBand = "mild";
-  if (temp >= 88) tempBand = "hot";
-  else if (temp >= 75) tempBand = "warm";
-  else if (temp <= 55) tempBand = "cool";
-
-  // ==========================================================
-  // HEADLINE (PRECIP FIRST)
-  // ==========================================================
-
-  let headline;
-
-if (precipSignal !== "none") {
-  if (precipType === "steady_rain") {
-    headline = "Periods of steady rain";
-  }
-  else if (precipType === "periods_of_rain") {
-    headline = "Rain at times through the day";
-  }
-  else if (precipType === "light_rain") {
-    headline = "Light rain at times";
-  }
-  else if (precipType === "scattered_showers") {
-    headline = "Scattered showers expected";
-  }
-  else {
-    headline = "A few showers possible";
-  }
-}
-  
-  else if (isShockDay) {
-    headline =
-      tempDrop >= 25
-        ? "A sharp cooldown hits tomorrow"
-        : "A noticeably cooler day arrives tomorrow";
-  } 
-  else if (hasColdStart) {
-    headline = "A chilly start leads into a cool day";
-  }
-  else if (isWindy) {
-    headline = "Windy conditions may impact plans";
-  }
-  else if (isBreezy) {
-    headline = "A light breeze develops during the day";
-  }
-  else {
-    if (tempBand === "hot" && moisture === "humid") {
-      headline = "Hot and humid conditions build tomorrow";
-    } 
-    else if (tempBand === "hot") {
-      headline = "Hot conditions settle in tomorrow";
-    }
-    else if (tempBand === "cool") {
-      headline = "Cool and crisp conditions tomorrow";
-    }
-    else {
-      headline = "Comfortable and steady conditions";
-    }
-  }
-
-// ==========================================================
-// NARRATIVE
-// ==========================================================
-
-let narrative = "";
-
-// ----------------------------------------------------------
-// 🌡️ TEMPERATURES (NATURAL LANGUAGE)
-// ----------------------------------------------------------
-const temps = ctx?.hours?.map(h => h.temperatureF).filter(Number.isFinite) || [];
-
-const minT = temps.length ? Math.min(...temps) : null;
-const maxT = temps.length ? Math.max(...temps) : null;
-
-const minBand = formatTempBand(minT);
-const maxBand = formatTempBand(maxT);
-
-// ==========================================================
-// TOMORROW NARRATIVE
-// ==========================================================
-
-if (label === "tomorrow") {
-
-  // 🌧️ PRECIP FIRST
-  if (precipSignal !== "none") {
-    if (precipType === "steady_rain") {
-      narrative = "Steady rain is expected through much of the day.";
-    } else if (precipType === "periods_of_rain") {
-      narrative = "Rain moves through at times during the day.";
-    } else if (precipType === "light_rain") {
-      narrative = "Light rain develops at times.";
-    } else if (precipType === "scattered_showers") {
-      narrative = "Scattered showers develop at times.";
-    } else {
-      narrative = "A few passing showers are possible.";
-    }
-  }
-
-  // 🌡️ TEMPS (NATURAL)
-  if (minBand && maxBand) {
-    if (minBand === maxBand) {
-      narrative += ` Temperatures hold in the ${maxBand} through the day.`;
-    } else {
-      narrative += ` Temperatures start in the ${minBand} and rise into the ${maxBand} by afternoon.`;
-    }
-  }
-
-  // 💧 MOISTURE
-  if (moisture === "dry") {
-    narrative += " Dry air keeps things feeling crisp and clean.";
-  } else if (moisture === "humid") {
-    narrative += " Humidity adds a heavier feel at times.";
-  }
-
-  // 🌬️ WIND
-  if (isWindy) {
-    narrative += " Winds may be strong enough to impact plans.";
-  } else if (isBreezy) {
-    narrative += " A light breeze develops through the day.";
-  } else {
-    narrative += " Winds stay light and out of the way.";
-  }
-}
-
-// ==========================================================
-// BULLETS
-// ==========================================================
-
-let bullets = [];
-
-// 🌧️ PRECIP BULLETS
-if (precipSignal === "high") {
-  bullets.push("Rain likely");
-} else if (precipSignal === "moderate") {
-  bullets.push("Scattered showers");
-} else if (precipSignal === "low") {
-  bullets.push("Slight chance of rain");
-}
-
-// 🌡️ COLD START
-if (isShockDay) {
-  bullets.push("Much cooler than today");
-}
-
-if (hasColdStart && tomorrowMin != null) {
-  if (tomorrowMin <= 42) {
-    bullets.push(`Cold start in the ${formatTempBand(tomorrowMin)}`);
-  } else {
-    bullets.push("Cool start early");
-  }
-}
-
-// 🌬️ WIND
-if (isWindy) {
-  bullets.push("Windy at times");
-} else if (isBreezy) {
-  bullets.push("Light breeze develops");
-} else {
-  bullets.push("Light winds");
-}
-
-// 💧 MOISTURE
-if (moisture === "dry") {
-  bullets.push("Dry, crisp air");
-} else if (moisture === "humid") {
-  bullets.push("Humid at times");
-} else {
-  bullets.push("Comfortable humidity");
-}
-
-// 🧊 FEELS COOLER
-if (chillDelta >= 5) {
-  bullets.push("Feels cooler than actual temperature");
-}
-
-// CLEAN + LIMIT
-bullets = [...new Set(bullets)].slice(0, 4);
-
-  // ==========================================================
-  // FINAL
-  // ==========================================================
-
-  return {
-    label,
-    score,
-    emoji: resolveComfortIcon({
-      score,
-      temp,
-      dewPoint: dp,
-      wind
-    }),
-    headline,
-    narrative,
-    bullets
-  };
-}
-
-// ============================================================
-// MAIN ENTRY
-// ============================================================
-export function buildHumanActionIntelFS(raw) {
-
-  const tempest = raw?.tempest ?? null;
-
-  const rawHourly = Array.isArray(raw?.hourly) ? raw.hourly : [];
-
-  console.log("FEELSCORE INPUT SAMPLE:", rawHourly[0]);
-console.log("TEMPEST IN FEELSCORE:", tempest);
-  console.log("RAW HOURLY SAMPLE (first 5):");
-
-  rawHourly.slice(0, 5).forEach((h, i) => {
-    console.log(i, {
-      temp: h.temperatureF,
-      dew: h.dewpointF,
-      wind: h.windSpeed,
-      ts: h.timestamp,
-      date: new Date(getTs(h)).toString()
-    });
-  });
-
-  if (!rawHourly.length) return fallbackAll();
-
-  const now = Date.now();
-
-  // 🔥 FIX 1: ALIGN TIMELINE
-  const hourly = alignHourly(rawHourly);
-  if (!hourly.length) return fallbackAll();
-
-  // 🔥 FIX 2: CORRECT DAY SPLIT
-  const { today: todayHours, tomorrow: tomorrowHours } = splitDays(hourly, now);
-
-  console.log("NOW:", new Date(now).toString());
-
-  console.log(
-    "TODAY HOURS (sample):",
-    todayHours.slice(0, 3).map(h => ({
-      temp: h.temperatureF,
-      ts: h._ts,
-      date: new Date(h._ts).toString()
-    }))
-  );
-
-  console.log(
-    "TOMORROW HOURS (sample):",
-    tomorrowHours.slice(0, 3).map(h => ({
-      temp: h.temperatureF,
-      ts: h._ts,
-      date: new Date(h._ts).toString()
-    }))
-  );
-
-  // ==========================================================
-  // TEMPERATURE ANALYSIS
-  // ==========================================================
-
-  const todayTemps = todayHours.map(h => h.temperatureF).filter(Number.isFinite);
-  const tomorrowTemps = tomorrowHours.map(h => h.temperatureF).filter(Number.isFinite);
-
-  const todayMax = todayTemps.length ? Math.max(...todayTemps) : null;
-  const tomorrowMax = tomorrowTemps.length ? Math.max(...tomorrowTemps) : null;
-
-  const tempDrop =
-    todayMax !== null && tomorrowMax !== null
-      ? todayMax - tomorrowMax
-      : 0;
-
-  const tomorrowMorning = tomorrowHours.filter(h => {
-    const hr = new Date(h._ts).getHours();
-    return hr >= 5 && hr <= 10;
-  });
-
-  const tomorrowMorningTemps = tomorrowMorning
-    .map(h => h.temperatureF)
-    .filter(Number.isFinite);
-
-  const tomorrowMin = tomorrowMorningTemps.length
-    ? Math.min(...tomorrowMorningTemps)
-    : null;
-
-  console.log("TEMP DEBUG:", {
-    todayMax,
-    tomorrowMax,
-    tempDrop,
-    tomorrowMin,
-    counts: {
-      today: todayHours.length,
-      tomorrow: tomorrowHours.length,
-      tomorrowMorning: tomorrowMorning.length
-    }
-  });
-
-  // ==========================================================
-  // WIND ANALYSIS
-  // ==========================================================
-
-  const todayWindMax = Math.max(
-    ...todayHours.map(h => h.windSpeed ?? 0),
-    0
-  );
-
-  const tomorrowWindMax = Math.max(
-    ...tomorrowHours.map(h => h.windSpeed ?? 0),
-    0
-  );
-
-  const windJump = tomorrowWindMax - todayWindMax;
-
- // ==========================================================
-// BUILD OUTPUT
-// ==========================================================
-
-if (tempest && todayHours.length) {
-  const h0 = todayHours[0];
-
-  todayHours[0] = {
-    ...h0,
-
-    temperatureF:
-      typeof tempest.air_temperature === "number"
-        ? (tempest.air_temperature * 9) / 5 + 32
-        : h0.temperatureF,
-
-    dewpointF:
-      typeof tempest.dew_point === "number"
-        ? (tempest.dew_point * 9) / 5 + 32
-        : h0.dewpointF,
-
-    windSpeed:
-      typeof tempest.wind_avg === "number"
-        ? tempest.wind_avg
-        : h0.windSpeed,
-
-    windGust:
-      Math.max(
-        h0.windGust ?? 0,
-        tempest.wind_gust ?? 0
-      )
-  };
-}
-
-// 👉 build TODAY the same way as TOMORROW
-const todayCtx = buildPeriod(todayHours, "today", {
-  tempDrop: 0,
-  windJump: 0,
-  tomorrowMin: null
-});
-
-const tomorrowCtx = buildPeriod(tomorrowHours, "tomorrow", {
-  tempDrop,
-  windJump,
-  tomorrowMin
-});
-
-return {
-  // ✅ now returns full structured object
-  feelscore: buildPeriodNarrative(todayCtx, "today"),
-
-  // ✅ unchanged
-  tomorrow: buildPeriodNarrative(tomorrowCtx, "tomorrow")
-};
-
-// ============================================================
-// PRECIP TYPE (GLOBAL — REQUIRED)
-// ============================================================
-
-function getPrecipType({
-  precipProbability = 0,
-  precipAmount = 0,
-  hours = []
-}) {
-
-  const maxProb = precipProbability;
-
-  const maxRate = Math.max(
-    ...hours.map(h => h.precipAmount ?? 0),
-    0
-  );
-
-  const activeHours = hours.filter(
-    h => (h.precipAmount ?? 0) > 0
-  ).length;
-
-  // 🌧️ INTENSITY FIRST
   if (maxRate >= 0.10) return "steady_rain";
   if (maxRate >= 0.03) return "light_rain";
 
-  // 🌦️ COVERAGE
-  if (maxProb >= 70 && activeHours >= 6) return "periods_of_rain";
-  if (maxProb >= 50) return "scattered_showers";
-  if (maxProb >= 20) return "isolated_showers";
+  if (precipProbability >= 70 && activeHours >= 6) return "periods_of_rain";
+  if (precipProbability >= 50) return "scattered_showers";
+  if (precipProbability >= 20) return "isolated_showers";
 
   return "none";
 }
@@ -848,12 +101,10 @@ function buildSnapshot(hours = []) {
     dewPoint: first.dewpointF,
     wind: first.windSpeed,
     gust: first.windGust,
-
     precipProbability: maxProb,
     precipAmount: maxAmt,
     precipAmountAvg: avgAmt,
-
-    isRainingNow: (hours[0]?.precipAmount ?? 0) > 0
+    isRainingNow: (first.precipAmount ?? 0) > 0
   };
 
   snapshot.precipType = getPrecipType({
@@ -866,175 +117,74 @@ function buildSnapshot(hours = []) {
 }
 
 // ============================================================
-// BUILD PERIOD CORE (STABLE + IMMUTABLE + PRECIP SAFE)
+// INTEL
+// ============================================================
+
+function detectDominantFactor(s = {}) {
+  const precipSignal = getPrecipSignal(s);
+  if (precipSignal !== "none") return "rain";
+
+  if (s.dewPoint >= 65) return "muggy";
+  if (s.temp >= 85) return "heat";
+  if (s.temp <= 45) return "cold";
+  if (s.wind >= 12) return "wind";
+
+  return "comfortable";
+}
+
+function buildIntel(snapshot, score, trend, windImpact, maxGust, label) {
+  return {
+    signals: {
+      temp: snapshot.temp,
+      dewPoint: snapshot.dewPoint,
+      wind: snapshot.wind,
+      precipProbability: snapshot.precipProbability,
+      precipAmount: snapshot.precipAmount
+    },
+    pattern: { trend, avg: score },
+    context: { label },
+    precipProbability: snapshot.precipProbability,
+    precipAmount: snapshot.precipAmount,
+    dominantFactor: detectDominantFactor(snapshot)
+  };
+}
+
+// ============================================================
+// BUILD PERIOD (DATA ONLY)
 // ============================================================
 
 function buildPeriod(hoursInput, label, change = {}) {
-  if (!Array.isArray(hoursInput) || !hoursInput.length) return null;
+  if (!hoursInput?.length) return null;
 
-  // ------------------------------------------------------------
-  // 🛡️ IMMUTABLE SOURCE (CRITICAL FIX)
-  // ------------------------------------------------------------
-  const hours = hoursInput.map(h => ({ ...h })); // working copy
-  const originalHours = hoursInput; // untouched reference for narrative
-
-  // ------------------------------------------------------------
-  // SNAPSHOT
-  // ------------------------------------------------------------
+  const hours = hoursInput.map(h => ({ ...h }));
   const snapshot = buildSnapshot(hours);
-  console.log("🌧️ SNAPSHOT IN PERIOD:", snapshot);
 
-  // ------------------------------------------------------------
-  // SCORE BUILD
-  // ------------------------------------------------------------
-  const scores = hours.map((h, i) => {
-    let adjusted = { ...h };
-
-    // 🌬️ Near-term smoothing only
-    if (i < 3) {
-      adjusted.windSpeed = smoothWind(adjusted, hours);
-      adjusted.windGust = smoothGust(adjusted, hours);
-
-      const gustiness = calculateGustiness(
-        adjusted.windSpeed,
-        adjusted.windGust
-      );
-
-      let score = calculateComfort(adjusted)?.score;
-
-      if (!Number.isFinite(score)) return null;
-
-      // gust penalty
-      if (gustiness >= 12) score -= 0.5;
-      else if (gustiness >= 7) score -= 0.25;
-
-      return Math.round(score * 10);
-    }
-
-    // farther hours = raw
-    const base = calculateComfort(h)?.score;
-    return Number.isFinite(base) ? Math.round(base * 10) : null;
-
-  }).filter(Number.isFinite);
+  const scores = hours
+    .map(h => calculateComfort(h)?.score)
+    .filter(Number.isFinite)
+    .map(s => Math.round(s * 10));
 
   if (!scores.length) return null;
 
   const score = Math.round(avg(scores));
   const trend = scores.at(-1) - scores[0];
 
-  // ------------------------------------------------------------
-  // WIND METRICS
-  // ------------------------------------------------------------
-  const windValues = hours.map((h, i) => {
-    const raw = Number.isFinite(h.windSpeed) ? Math.max(0, h.windSpeed) : 0;
+  const windValues = hours.map(h => h.windSpeed ?? 0);
+  const gustValues = hours.map(h => h.windGust ?? 0);
 
-    if (i < 3) {
-      const smoothed = smoothWind(h, hours);
-      return Number.isFinite(smoothed) ? Math.max(0, smoothed) : raw;
-    }
+  const maxWind = Math.max(...windValues, 0);
+  const maxGust = Math.max(...gustValues, 0);
 
-    return raw;
-  });
+  const windImpact = Math.max(...windValues, ...gustValues.map(g => g * 0.7));
 
-  const gustValues = hours.map(h =>
-    Number.isFinite(h.windGust) ? Math.max(0, h.windGust) : 0
-  );
+  const intel = buildIntel(snapshot, score, trend, windImpact, maxGust, label);
 
-  const maxWind = windValues.length ? Math.max(...windValues) : 0;
-  const maxGust = gustValues.length ? Math.max(...gustValues) : 0;
-
-  // ------------------------------------------------------------
-  // DEBUG
-  // ------------------------------------------------------------
-  if (label === "tomorrow") {
-    console.log("🌬️ TOMORROW WIND FINAL", {
-      maxWind,
-      maxGust,
-      avgWind: avg(windValues),
-      hours: originalHours.length
-    });
-  }
-
-  // ------------------------------------------------------------
-  // WIND IMPACT
-  // ------------------------------------------------------------
-  const windImpact = Math.max(
-    ...hours.map(h => {
-      const w = Number.isFinite(h.windSpeed) ? Math.max(0, h.windSpeed) : 0;
-      const g = Number.isFinite(h.windGust) ? Math.max(0, h.windGust) : 0;
-      return Math.max(w, g * 0.7);
-    }),
-    0
-  );
-
-  // ------------------------------------------------------------
-  // CHANGE METRICS
-  // ------------------------------------------------------------
-  const { tempDrop = 0, windJump = 0, tomorrowMin = null } = change;
-
-  const windChill = calcWindChill(snapshot.temp, snapshot.wind ?? 0);
-  const chillDelta = snapshot.temp - windChill;
-
-  const isShockDay = label === "tomorrow" && tempDrop >= 18;
-
-  const hasColdStart =
-    label === "tomorrow" &&
-    Number.isFinite(tomorrowMin) &&
-    tomorrowMin <= 50;
-
-  // ------------------------------------------------------------
-  // INTEL + NARRATIVE
-  // ------------------------------------------------------------
-  const intel = buildIntel(
-    snapshot,
-    score,
-    trend,
-    windImpact,
-    maxGust,
-    label
-  );
-
-  let narrative;
-  try {
-    narrative = assembleWithVoice(
-      intel,
-      label,
-      mapScoreToCategory(score),
-      score >= 85
-    );
-  } catch {
-    narrative = null;
-  }
-
-  // ------------------------------------------------------------
-  // FINAL RETURN (IMMUTABLE HOURS FIX)
-  // ------------------------------------------------------------
   return {
     label,
     score,
     snapshot,
     trend,
-
-    // 🔥 CRITICAL FIX — pass untouched hours
-    hours: originalHours,
-
-    narrativeText:
-      narrative?.longNarrative ||
-      narrative?.headline ||
-      "",
-
-    flags: {
-      isShockDay,
-      hasColdStart
-    },
-
-    change: {
-      tempDrop,
-      windJump,
-      chillDelta,
-      tomorrowMin
-    },
-
+    intel,
     wind: {
       maxWind,
       maxGust,
@@ -1045,35 +195,94 @@ function buildPeriod(hoursInput, label, change = {}) {
 }
 
 // ============================================================
-// HELPERS
+// FINAL NARRATIVE (ONLY SYSTEM)
 // ============================================================
 
-function average(arr) {
-  return arr.reduce((a, b) => a + b, 0) / arr.length;
+function buildFinalNarrative(ctx, label) {
+  if (!ctx) return fallback(label);
+
+  const narrativeObj = assembleWithVoice(
+    ctx.intel,
+    label,
+    mapScoreToCategory(ctx.score),
+    ctx.score >= 85
+  );
+
+  return {
+    label,
+    score: ctx.score,
+    headline: narrativeObj?.headline || "Conditions are steady",
+    narrative: narrativeObj?.notes || "",
+    bullets: narrativeObj?.bullets || [],
+    emoji: resolveComfortIcon({
+      score: ctx.score,
+      temp: ctx.snapshot?.temp,
+      dewPoint: ctx.snapshot?.dewPoint,
+      wind: ctx.wind
+    })
+  };
 }
 
-function extractHeadline(text = "") {
-  return text.split(".")[0]?.trim() || "";
+// ============================================================
+// ICON
+// ============================================================
+
+function resolveComfortIcon({ score, temp, dewPoint, wind = {} }) {
+  const maxWind = wind.maxWind ?? 0;
+  const maxGust = wind.maxGust ?? 0;
+  const avgWind = wind.avgWind ?? 0;
+
+  if (temp <= 40) return "🥶";
+  if (temp <= 50) return "🧥";
+  if (temp >= 90) return "🥵";
+  if (temp >= 80 && dewPoint >= 65) return "😓";
+  if (dewPoint >= 68) return "😫";
+  if (dewPoint >= 62) return "😅";
+  if (maxGust >= 25) return "💨";
+  if (maxWind >= 15 || avgWind >= 12) return "🌬️";
+
+  if (score >= 85) return "😄";
+  if (score >= 70) return "🙂";
+  if (score >= 55) return "😐";
+  if (score >= 40) return "😕";
+
+  return "🥵";
 }
 
-function extractBullets(text = "", { trend, snapshot, label }) {
-  const bullets = [];
-  const t = text.toLowerCase();
+// ============================================================
+// MAIN ENTRY
+// ============================================================
 
-  if (t.includes("dry")) bullets.push("Dry air keeps things comfortable");
-  if (t.includes("wind")) bullets.push("Wind plays a noticeable role");
-  if (t.includes("cool") && label === "tomorrow") bullets.push("Cooler air settles in");
+export function buildHumanActionIntelFS(raw) {
+  const rawHourly = raw?.hourly ?? [];
+  if (!rawHourly.length) return fallbackAll();
 
-  if (trend > 5) bullets.push("Improves through the day");
-  if (trend < -5) bullets.push("Slight drop in comfort later");
+  const now = Date.now();
 
-  return bullets;
+  const hourly = alignHourly(rawHourly);
+  if (!hourly.length) return fallbackAll();
+
+  const { today, tomorrow } = splitDays(hourly, now);
+
+  const todayCtx = buildPeriod(today, "today");
+  const tomorrowCtx = buildPeriod(tomorrow, "tomorrow");
+
+  return {
+    feelscore: buildFinalNarrative(todayCtx, "today"),
+    tomorrow: buildFinalNarrative(tomorrowCtx, "tomorrow")
+  };
 }
 
-function pickEmoji(score) {
-  if (score >= 80) return "😌";
-  if (score >= 65) return "🙂";
-  return "😐";
+// ============================================================
+// MISC
+// ============================================================
+
+function mapScoreToCategory(score) {
+  if (score >= 85) return "veryComfortable";
+  if (score >= 70) return "comfortable";
+  if (score >= 55) return "slight";
+  if (score >= 40) return "uncomfortable";
+  return "harsh";
 }
 
 function fallback(label) {
@@ -1092,125 +301,4 @@ function fallbackAll() {
     feelscore: fallback("today"),
     tomorrow: fallback("tomorrow")
   };
-}
-
-function buildIntel(
-  snapshot,
-  score,
-  trend,
-  windImpact,
-  maxGust,
-  label,
-  shortTerm = {}
-){
-return {
-  signals: {
-    temp: snapshot.temp,
-    dewPoint: snapshot.dewPoint ?? null,
-    wind: snapshot.wind ?? 0,
-
-    // 👇 ADD THESE
-    precipProbability: snapshot.precipProbability ?? 0,
-    precipAmount: snapshot.precipAmount ?? 0
-  },
-  pattern: { trend, avg: score },
-  context: { label },
-
-  // 👇 IMPORTANT: pass full snapshot
-  precipProbability: snapshot.precipProbability ?? 0,
-  precipAmount: snapshot.precipAmount ?? 0,
-
-  dominantFactor: detectDominantFactor({
-    ...snapshot,
-    precipProbability: snapshot.precipProbability,
-    precipAmount: snapshot.precipAmount
-  }),
-
-  shortTerm
-};
-}
-
-function detectDominantFactor(s = {}) {
-  const gustiness = s.gustiness ?? 0;
-
-  const precipSignal = getPrecipSignal({
-    precipProbability: s.precipProbability,
-    precipAmount: s.precipAmount
-  });
-
-  // 🌧️ Rain always matters
-  if (precipSignal !== "none") return "rain";
-
-  if (gustiness >= 12) return "gusty_wind";
-  if (gustiness >= 7) return "breezy";
-
-  if (s.dewPoint >= 65) return "muggy";
-  if (s.temp >= 85) return "heat";
-  if (s.temp <= 45) return "cold";
-
-  if (s.wind >= 12) return "wind";
-
-  return "comfortable";
-}
-
-function mapScoreToCategory(score) {
-  if (score >= 85) return "veryComfortable";
-  if (score >= 70) return "comfortable";
-  if (score >= 55) return "slight";
-  if (score >= 40) return "uncomfortable";
-  return "harsh";
-}
-
-function calcWindChill(temp, wind) {
-  if (temp > 50 || wind < 3) return temp;
-
-  return (
-    35.74 +
-    0.6215 * temp -
-    35.75 * Math.pow(wind, 0.16) +
-    0.4275 * temp * Math.pow(wind, 0.16)
-  );
-}
-
-  // ------------------------------------------------------------
-  // DERIVE CONDITIONS (same logic as narrative)
-  // ------------------------------------------------------------
-
-  let moisture = "dry";
-  if (dewPoint != null) {
-    if (dewPoint >= 65) moisture = "humid";
-    else if (dewPoint >= 55) moisture = "slightly_humid";
-    else if (dewPoint >= 45) moisture = "comfortable";
-  }
-
-  let tempBand = "mild";
-  if (temp >= 88) tempBand = "hot";
-  else if (temp >= 75) tempBand = "warm";
-  else if (temp <= 55) tempBand = "cool";
-
-  const isWindy = maxGust >= 30 || avgWind >= 15;
-  const isBreezy =
-    !isWindy &&
-    (avgWind >= 12 || (avgWind >= 8 && wind.breezyHours >= 4));
-
-  // ------------------------------------------------------------
-  // ICON LOGIC (ordered by impact)
-  // ------------------------------------------------------------
-
-  // 🌬️ Wind dominates
-  if (isWindy) return "🌬️";
-  if (isBreezy) return "🌤️"; // light movement, still pleasant
-
-  // 💧 Humidity dominates
-  if (moisture === "humid") return "💧";
-
-  // 🌡️ Temperature extremes
-  if (tempBand === "hot") return "☀️";
-  if (tempBand === "cool") return "🌤️";
-
-  // 🌤️ Default comfort-driven
-  if (score >= 85) return "☀️";
-  if (score >= 70) return "🌤️";
-
-  return "🌥️";
 }
