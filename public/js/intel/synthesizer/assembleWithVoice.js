@@ -34,7 +34,10 @@ export function assembleWithVoice(
   // ------------------------------------------------------------
   // NOTES
   // ------------------------------------------------------------
-  const notes = bullets.length ? bullets.join(" ") : null;
+ const notes =
+  cleanPhrase(base?.narrative) ||
+  cleanPhrase(base?.longNarrative) ||
+  (bullets.length ? bullets.join(" ") : null);
 
   // ------------------------------------------------------------
   // TREND RESOLUTION (REAL > TEXT)

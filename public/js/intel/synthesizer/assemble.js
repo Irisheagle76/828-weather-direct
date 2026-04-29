@@ -147,11 +147,11 @@ function buildNarrative(intel, dayType, category, isGoldilocks) {
   // ------------------------------------------------------------
   const scoreTone = random(getScoreTone(score));
 
-  const baseNarrative =
-    score >= 90 && maybe(0.3)
-      ? scoreTone
-      : categoryBase;
-
+const baseNarrative =
+  score >= 90 && maybe(0.3) && !categoryBase.includes("good")
+    ? scoreTone
+    : categoryBase;
+    
   const intro = `${temporalFrame} ${
     baseNarrative.charAt(0).toLowerCase() + baseNarrative.slice(1)
   }`;
