@@ -52,13 +52,9 @@ export function assembleWithVoice(
     else if (trendData.drying) trend = "drying";
   }
 
-  // fallback to bullet inference if no structured trend
-  if (!trend) {
-    const has = (r) => bullets.some(b => r.test(b));
-
-    if (has(/warm|improve|rise|clear|dry/i)) trend = "improving";
-    else if (has(/cool|drop|worse|cloud|humid/i)) trend = "worsening";
-  }
+if (!trend && intel?.pattern) {
+  if (intel.pattern.trend > 5) trend = "improving";
+  else if (intel.pattern.trend < -5) trend = "worsening";
 
 // ------------------------------------------------------------
 // HEADLINE MODULATION (context-aware)

@@ -151,50 +151,70 @@ const baseNarrative =
   score >= 90 && maybe(0.3) && !categoryBase.includes("good")
     ? scoreTone
     : categoryBase;
-    
+
   const intro = `${temporalFrame} ${
     baseNarrative.charAt(0).toLowerCase() + baseNarrative.slice(1)
   }`;
 
-  // ------------------------------------------------------------
-  // CORE SIGNALS
-  // ------------------------------------------------------------
-  const temp = pickTempPhrase(safeIntel);
-  const moisture = pickMoisturePhrase(safeIntel);
-  const wind = pickWindPhrase(safeIntel);
-  const light = pickLightPhrase(safeIntel);
+// ------------------------------------------------------------
+// CORE SIGNALS
+// ------------------------------------------------------------
+let temp = pickTempPhrase(safeIntel);
 
-  const core = [temp, moisture, wind].filter(Boolean).slice(0, 2);
+// Reduce repetition (comfortable → mild)
+if (/comfortable/i.test(temp) && /comfortable/i.test(categoryBase)) {
+  temp = temp.replace(/comfortable/i, "mild");
+}
 
-  let narrative = intro;
+const moisture = pickMoisturePhrase(safeIntel);
+const wind = pickWindPhrase(safeIntel);
+const light = pickLightPhrase(safeIntel);
 
-  if (core.length === 1) {
-    narrative += `, with ${core[0]}`;
-  } else if (core.length === 2) {
-   const joinPhrases = (arr) => {
+// Prioritize top 2 core signals
+const core = [temp, moisture, wind].filter(Boolean).slice(0, 2);
+
+let narrative = intro;
+
+// ------------------------------------------------------------
+// CORE PHRASE JOINER
+// ------------------------------------------------------------
+const joinPhrases = (arr) => {
   if (arr.length === 1) return arr[0];
   if (arr.length === 2) return `${arr[0]} and ${arr[1]}`;
   return `${arr.slice(0, -1).join(", ")}, and ${arr[arr.length - 1]}`;
 };
 
+// ------------------------------------------------------------
+// CONNECTOR VARIATION
+// ------------------------------------------------------------
 if (core.length) {
-  narrative += `, with ${joinPhrases(core)}`;
+  const connectors = ["with", "bringing", "featuring"];
+  const connector = random(connectors);
+
+  narrative += `, ${connector} ${joinPhrases(core)}`;
 }
-  }
 
-  if (light && maybe(0.5)) {
-    narrative += core.length
-      ? `, and ${light}`
-      : `, with ${light}`;
-  }
+// ------------------------------------------------------------
+// LIGHT / SKY ADDITION
+// ------------------------------------------------------------
+if (light && maybe(0.5)) {
+  const lightJoiners = ["and", "along with", "plus"];
+  const joiner = random(lightJoiners);
 
-  narrative += ".";
-
-  return {
-    narrative: narrative.trim(),
-    temporal: temporalFrame
-  };
+  narrative += core.length
+    ? `, ${joiner} ${light}`
+    : `, ${light}`;
 }
+
+// ------------------------------------------------------------
+// FINALIZE
+// ------------------------------------------------------------
+narrative += ".";
+
+return {
+  narrative: narrative.trim(),
+  temporal: temporalFrame
+};
 
 // ------------------------------------------------------------
 // MASTER
