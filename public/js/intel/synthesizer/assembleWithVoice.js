@@ -110,3 +110,4 @@ if (headline && trend) {
     emoji: base?.emoji ?? "🌤️"
   };
 }
+}
