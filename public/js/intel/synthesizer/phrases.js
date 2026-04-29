@@ -46,7 +46,7 @@ export const phrases = {
   moisture: {
     dry: [
       "dry air keeping things crisp",
-      "low humidity keeping the air light",
+      "low humidity keeping things light",
       "a clean feel to the air"
     ],
 

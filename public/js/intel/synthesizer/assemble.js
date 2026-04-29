@@ -188,13 +188,13 @@ const joinPhrases = (arr) => {
 // CONNECTOR VARIATION
 // ------------------------------------------------------------
 if (core.length) {
-  const connectors = ["with", "featuring", "highlighted by"];
+  const connectors = ["with", "featuring", "as"];
   const connector = random(connectors);
 
   // Fix awkward phrasing like "bringing temperatures holding..."
-  const cleanedCore = core.map(p =>
-    p.replace(/^temperatures\s+holding/i, "temperatures hold")
-  );
+const cleanedCore = core.map(p =>
+  p.replace(/^temperatures\s+holding/i, "temperatures staying")
+);
 
   narrative += `, ${connector} ${joinPhrases(cleanedCore)}`;
 }
