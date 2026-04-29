@@ -1,20 +1,14 @@
 // ============================================================
-// FUTURE COMFORT (V7 — LIGHTNING INGESTED FROM TEMPEST)
+// FUTURE COMFORT (V8 — TIME-ANCHORED + CLEAN SEPARATION)
 // ============================================================
 
 import { calculateComfort } from "../intel/comfort.js";
 
 // ============================================================
-// ⚡ LIGHTNING PARSER (NEW)
-// Handles BOTH:
-// - Raw Tempest fields
-// - Already-normalized lightning objects
+// ⚡ LIGHTNING PARSER
 // ============================================================
 
 function parseLightning(h = {}) {
-  // ------------------------------------------------------------
-  // CASE 1: Already normalized (pass-through)
-  // ------------------------------------------------------------
   if (h.lightning?.detected) {
     return {
       lightning: h.lightning,
@@ -22,9 +16,6 @@ function parseLightning(h = {}) {
     };
   }
 
-  // ------------------------------------------------------------
-  // CASE 2: Raw Tempest fields
-  // ------------------------------------------------------------
   const count =
     h.lightning_strike_count ??
     h.lightningStrikeCount ??
@@ -36,9 +27,7 @@ function parseLightning(h = {}) {
     null;
 
   const distanceMiles =
-    distanceKm != null
-      ? distanceKm * 0.621371
-      : null;
+    distanceKm != null ? distanceKm * 0.621371 : null;
 
   if (count > 0) {
     return {
@@ -57,7 +46,7 @@ function parseLightning(h = {}) {
 }
 
 // ============================================================
-// ⚡ IMPACT ENGINE (UNCHANGED)
+// ⚡ IMPACT ENGINE
 // ============================================================
 
 function computeImpact(h = {}) {
@@ -66,7 +55,6 @@ function computeImpact(h = {}) {
 
   if (lightning?.detected) {
     const d = lightning.distanceMiles ?? 10;
-
     if (d <= 3) return 85;
     if (d <= 6) return 70;
     if (d <= 10) return 55;
@@ -94,12 +82,10 @@ function getImpactLabel(impact) {
 }
 
 // ============================================================
-// NORMALIZE HOURS (UPDATED)
+// 🧠 NORMALIZE HOURS (FIXED — NO GLOBAL "NOW")
 // ============================================================
 
-function normalizeHours(hours = []) {
-  const now = Date.now();
-
+function normalizeHours(hours = [], referenceTime = Date.now()) {
   const normalized = hours
     .map((h, i, arr) => {
       if (!h) return null;
@@ -107,29 +93,17 @@ function normalizeHours(hours = []) {
       const ts = h.timestamp ?? h.ts;
       if (!Number.isFinite(ts)) return null;
 
-      // ⚡ NEW: parse lightning
       const { lightning, thunder } = parseLightning(h);
 
       const score = calculateAdjustedScore(h, i, arr);
 
-      const enriched = {
-        ...h,
-        lightning,
-        thunder
-      };
-
+      const enriched = { ...h, lightning, thunder };
       const impact = computeImpact(enriched);
 
       return {
         timestamp: ts,
-
         temperatureF:
-          Number.isFinite(h.temperatureF)
-            ? h.temperatureF
-            : Number.isFinite(h.temp)
-              ? h.temp
-              : null,
-
+          h.temperatureF ?? h.temp ?? null,
         windSpeed: h.windSpeed ?? 0,
         windGust: h.windGust ?? null,
         precipitation: h.precipitation ?? 0,
@@ -150,11 +124,12 @@ function normalizeHours(hours = []) {
 
   if (!normalized.length) return [];
 
+  // 🔑 anchor to provided reference time
   let closestIndex = 0;
   let smallestDiff = Infinity;
 
   for (let i = 0; i < normalized.length; i++) {
-    const diff = Math.abs(normalized[i].timestamp - now);
+    const diff = Math.abs(normalized[i].timestamp - referenceTime);
     if (diff < smallestDiff) {
       smallestDiff = diff;
       closestIndex = i;
@@ -165,18 +140,24 @@ function normalizeHours(hours = []) {
 }
 
 // ============================================================
-// MAIN RENDER (UNCHANGED)
+// 🎯 MAIN RENDER (NOW + TOMORROW SAFE)
 // ============================================================
 
-export function renderFutureComfort(container, items, trend) {
+export function renderFutureComfort(container, {
+  items,
+  referenceTime = Date.now(),
+  trend = null
+}) {
   if (!container || !Array.isArray(items) || !items.length) {
     container.innerHTML = "";
     return;
   }
 
-  const hours = normalizeHours(items);
+  const hours = normalizeHours(items, referenceTime);
 
-  const safeTrend = trend || detectTrend(hours);
+  const computedTrend = detectTrend(hours);
+  const safeTrend = trend ?? computedTrend;
+
   const summary = buildSummary(hours, safeTrend);
 
   container.innerHTML = `
@@ -217,7 +198,17 @@ export function renderFutureComfort(container, items, trend) {
 }
 
 // ============================================================
-// HOUR CARD (UNCHANGED)
+// ⏱️ TIME HELPERS (NEW)
+// ============================================================
+
+export function getTomorrowAnchor() {
+  const t = new Date();
+  t.setHours(24, 0, 0, 0); // midnight next day
+  return t.getTime();
+}
+
+// ============================================================
+// 🧱 HOUR CARD
 // ============================================================
 
 function renderHourCard(h) {
@@ -226,14 +217,10 @@ function renderHourCard(h) {
     : "--";
 
   const score =
-    h.score != null
-      ? Math.round(h.score * 10)
-      : null;
+    h.score != null ? Math.round(h.score * 10) : null;
 
   const emoji =
-    h.impact >= 60
-      ? "⚡"
-      : getComfortEmoji(score);
+    h.impact >= 60 ? "⚡" : getComfortEmoji(score);
 
   const scoreClass = getScoreClass(score);
   const goldiClass = h.goldilocks ? "goldilocks" : "";
@@ -246,7 +233,6 @@ function renderHourCard(h) {
         linear-gradient(${tint}, ${tint}),
         rgba(255,255,255,0.05);
     ">
-
       <div class="next6-hour-label">${h.hourLabel}</div>
       <div class="next6-hour-emoji">${emoji}</div>
       <div class="next6-hour-temp">${temp}</div>
@@ -272,13 +258,12 @@ function renderHourCard(h) {
           ? `<div class="next6-hour-goldi">✨</div>`
           : ""
       }
-
     </div>
   `;
 }
 
 // ============================================================
-// SUMMARY + HELPERS (UNCHANGED)
+// 📊 SUMMARY + TREND
 // ============================================================
 
 function buildSummary(hours, trend) {
@@ -286,31 +271,23 @@ function buildSummary(hours, trend) {
 
   const maxImpact = Math.max(...hours.map(h => h.impact));
 
-  if (maxImpact >= 70) {
+  if (maxImpact >= 70)
     return "Thunderstorms likely, with lightning nearby";
-  }
 
-  if (maxImpact >= 50) {
+  if (maxImpact >= 50)
     return "Storms may impact conditions at times";
-  }
 
-  if (maxImpact >= 40) {
+  if (maxImpact >= 40)
     return "Unsettled conditions expected";
-  }
 
   const precipTotal =
     hours.reduce((s, h) => s + (h.precipitation ?? 0), 0);
 
-  if (precipTotal > 0.05) return "Rain may affect comfort";
-
-  const diff =
-    (hours.at(-1).score ?? 0) - (hours[0].score ?? 0);
+  if (precipTotal > 0.05)
+    return "Rain may affect comfort";
 
   if (trend === "improving") return "Gradually improving";
   if (trend === "worsening") return "Gradually worsening";
-
-  if (diff > 0.2) return "Comfort improves slightly";
-  if (diff < -0.2) return "Comfort dips slightly";
 
   return "Conditions remain fairly steady";
 }
@@ -327,7 +304,7 @@ function detectTrend(hours) {
 }
 
 // ============================================================
-// SCORE ENGINE (UNCHANGED CORE)
+// 🌬️ SCORE ENGINE
 // ============================================================
 
 function calculateAdjustedScore(h, i, hours = []) {
@@ -352,10 +329,6 @@ function calculateAdjustedScore(h, i, hours = []) {
 
   return calculateComfort(h)?.score ?? null;
 }
-
-// ============================================================
-// WIND HELPERS
-// ============================================================
 
 function smoothWind(current, hours = []) {
   const idx = hours.findIndex(h => h.timestamp === current.timestamp);
@@ -397,7 +370,7 @@ function calculateGustiness(windSpeed, windGust) {
 }
 
 // ============================================================
-// UI HELPERS
+// 🎨 UI HELPERS
 // ============================================================
 
 function formatHour(ts) {
@@ -441,16 +414,11 @@ function getComfortEmoji(s) {
   return "🥵";
 }
 
-// ============================================================
-// 🎨 IMPACT-BASED BACKGROUND (NEW)
-// ============================================================
-
 function getImpactBackground(impact, score) {
-  if (impact >= 70) return "rgba(120, 60, 160, 0.18)"; // storm purple
-  if (impact >= 50) return "rgba(80, 120, 200, 0.16)"; // storm blue
+  if (impact >= 70) return "rgba(120, 60, 160, 0.18)";
+  if (impact >= 50) return "rgba(80, 120, 200, 0.16)";
   if (impact >= 40) return "rgba(120, 140, 200, 0.14)";
 
-  // fallback to comfort colors
   if (score >= 85) return "rgba(80, 200, 120, 0.12)";
   if (score >= 70) return "rgba(100, 180, 255, 0.12)";
   if (score >= 55) return "rgba(255, 200, 100, 0.12)";
