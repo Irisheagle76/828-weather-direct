@@ -215,6 +215,7 @@ return {
   narrative: narrative.trim(),
   temporal: temporalFrame
 };
+}
 
 // ------------------------------------------------------------
 // MASTER
@@ -273,5 +274,4 @@ function getScoreTone(score = 75) {
     return ["a tougher setup overall", "noticeable discomfort"];
   }
   return ["a rough day overall", "conditions are hard to ignore"];
-}
 }
