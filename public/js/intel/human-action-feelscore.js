@@ -198,6 +198,34 @@ function buildPeriod(hoursInput, label, change = {}) {
 // FINAL NARRATIVE (ONLY SYSTEM)
 // ============================================================
 
+function finalizeSentence(text = "") {
+  if (!text) return "";
+
+  const trimmed = text.trim();
+  const capitalized =
+    trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+
+  return /[.!?]$/.test(capitalized)
+    ? capitalized
+    : capitalized + ".";
+}
+
+function buildBulletSentence(bullets = []) {
+  if (!bullets.length) return "";
+
+  if (bullets.length === 1) return bullets[0];
+
+  if (bullets.length === 2) {
+    return `${bullets[0]} and ${bullets[1]}`;
+  }
+
+  return (
+    bullets.slice(0, -1).join(", ") +
+    ", and " +
+    bullets[bullets.length - 1]
+  );
+}
+
 function buildFinalNarrative(ctx, label) {
   if (!ctx) return fallback(label);
 
@@ -208,12 +236,26 @@ function buildFinalNarrative(ctx, label) {
     ctx.score >= 85
   );
 
+  const bullets = narrativeObj?.bullets || [];
+
+  // ✅ PRIORITY: use full assembled sentence (what you saw in console)
+  let narrative =
+    narrativeObj?.notes ||
+    buildBulletSentence(bullets);
+
+  narrative = finalizeSentence(narrative);
+
   return {
     label,
     score: ctx.score,
-    headline: narrativeObj?.headline || "Conditions are steady",
-    narrative: narrativeObj?.notes || "",
-    bullets: narrativeObj?.bullets || [],
+
+    headline:
+      narrativeObj?.headline || "Conditions are steady",
+
+    narrative,
+
+    bullets,
+
     emoji: resolveComfortIcon({
       score: ctx.score,
       temp: ctx.snapshot?.temp,
