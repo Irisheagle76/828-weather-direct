@@ -1,5 +1,5 @@
 // ============================================================
-// HUMAN ACTION — FEELSCORE (CLEAN ARCHITECTURE)
+// HUMAN ACTION — FEELSCORE (CLEAN + INTELLIGENCE MERGED)
 // ============================================================
 
 import { calculateComfort } from "./comfort.js";
@@ -61,7 +61,7 @@ function splitDays(hourly, now) {
 }
 
 // ============================================================
-// PRECIP + SNAPSHOT (UNCHANGED)
+// PRECIP + SNAPSHOT
 // ============================================================
 
 function getPrecipSignal({ precipProbability = 0, precipAmount = 0 }) {
@@ -93,8 +93,8 @@ function buildSnapshot(hours = []) {
   const first = hours[0];
 
   const maxProb = Math.max(...hours.map(h => h.precipProbability ?? 0), 0);
-  const maxAmt  = Math.max(...hours.map(h => h.precipAmount ?? 0), 0);
-  const avgAmt  = avg(hours.map(h => h.precipAmount ?? 0)) ?? 0;
+  const maxAmt = Math.max(...hours.map(h => h.precipAmount ?? 0), 0);
+  const avgAmt = avg(hours.map(h => h.precipAmount ?? 0)) ?? 0;
 
   const snapshot = {
     temp: first.temperatureF,
@@ -117,6 +117,45 @@ function buildSnapshot(hours = []) {
 }
 
 // ============================================================
+// 🆕 SHORT-TERM TREND
+// ============================================================
+
+function computeShortTermTrend(hours = []) {
+  const [h0 = {}, h1 = {}, h2 = {}] = hours;
+
+  const get = (v) => (Number.isFinite(v) ? v : null);
+
+  return {
+    tempTrend: (get(h2.temperatureF) ?? 0) - (get(h0.temperatureF) ?? 0),
+    dewTrend:  (get(h2.dewpointF) ?? 0) - (get(h0.dewpointF) ?? 0),
+    windTrend: (get(h2.windSpeed) ?? 0) - (get(h0.windSpeed) ?? 0)
+  };
+}
+
+// ============================================================
+// 🆕 TREND FLAVOR
+// ============================================================
+
+function applyTrendFlavor(text, shortTerm = {}) {
+  if (!text) return text;
+
+  const { tempTrend = 0, dewTrend = 0, windTrend = 0 } = shortTerm;
+
+  let additions = [];
+
+  if (tempTrend >= 2) additions.push("Temperatures are climbing.");
+  if (tempTrend <= -2) additions.push("Temperatures are easing.");
+
+  if (dewTrend >= 2) additions.push("Humidity is increasing.");
+  if (dewTrend <= -2) additions.push("The air is drying out.");
+
+  if (windTrend >= 3) additions.push("Winds are picking up.");
+  if (windTrend <= -3) additions.push("Winds are easing.");
+
+  return additions.length ? text + " " + additions.join(" ") : text;
+}
+
+// ============================================================
 // INTEL
 // ============================================================
 
@@ -132,7 +171,7 @@ function detectDominantFactor(s = {}) {
   return "comfortable";
 }
 
-function buildIntel(snapshot, score, trend, windImpact, maxGust, label) {
+function buildIntel(snapshot, score, trend, windImpact, maxGust, label, shortTerm) {
   return {
     signals: {
       temp: snapshot.temp,
@@ -145,15 +184,16 @@ function buildIntel(snapshot, score, trend, windImpact, maxGust, label) {
     context: { label },
     precipProbability: snapshot.precipProbability,
     precipAmount: snapshot.precipAmount,
-    dominantFactor: detectDominantFactor(snapshot)
+    dominantFactor: detectDominantFactor(snapshot),
+    shortTerm
   };
 }
 
 // ============================================================
-// BUILD PERIOD (DATA ONLY)
+// BUILD PERIOD
 // ============================================================
 
-function buildPeriod(hoursInput, label, change = {}) {
+function buildPeriod(hoursInput, label) {
   if (!hoursInput?.length) return null;
 
   const hours = hoursInput.map(h => ({ ...h }));
@@ -177,7 +217,17 @@ function buildPeriod(hoursInput, label, change = {}) {
 
   const windImpact = Math.max(...windValues, ...gustValues.map(g => g * 0.7));
 
-  const intel = buildIntel(snapshot, score, trend, windImpact, maxGust, label);
+  const shortTerm = computeShortTermTrend(hours.slice(0, 3));
+
+  const intel = buildIntel(
+    snapshot,
+    score,
+    trend,
+    windImpact,
+    maxGust,
+    label,
+    shortTerm
+  );
 
   return {
     label,
@@ -195,15 +245,14 @@ function buildPeriod(hoursInput, label, change = {}) {
 }
 
 // ============================================================
-// FINAL NARRATIVE (ONLY SYSTEM)
+// FINAL NARRATIVE
 // ============================================================
 
 function finalizeSentence(text = "") {
   if (!text) return "";
 
   const trimmed = text.trim();
-  const capitalized =
-    trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+  const capitalized = trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
 
   return /[.!?]$/.test(capitalized)
     ? capitalized
@@ -214,10 +263,7 @@ function buildBulletSentence(bullets = []) {
   if (!bullets.length) return "";
 
   if (bullets.length === 1) return bullets[0];
-
-  if (bullets.length === 2) {
-    return `${bullets[0]} and ${bullets[1]}`;
-  }
+  if (bullets.length === 2) return `${bullets[0]} and ${bullets[1]}`;
 
   return (
     bullets.slice(0, -1).join(", ") +
@@ -238,24 +284,21 @@ function buildFinalNarrative(ctx, label) {
 
   const bullets = narrativeObj?.bullets || [];
 
-  // ✅ PRIORITY: use full assembled sentence (what you saw in console)
   let narrative =
     narrativeObj?.notes ||
     buildBulletSentence(bullets);
+
+  // 🔥 APPLY TREND INTELLIGENCE
+  narrative = applyTrendFlavor(narrative, ctx.intel?.shortTerm);
 
   narrative = finalizeSentence(narrative);
 
   return {
     label,
     score: ctx.score,
-
-    headline:
-      narrativeObj?.headline || "Conditions are steady",
-
+    headline: narrativeObj?.headline || "Conditions are steady",
     narrative,
-
     bullets,
-
     emoji: resolveComfortIcon({
       score: ctx.score,
       temp: ctx.snapshot?.temp,
