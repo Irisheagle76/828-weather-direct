@@ -274,3 +274,4 @@ function getScoreTone(score = 75) {
   }
   return ["a rough day overall", "conditions are hard to ignore"];
 }
+}
