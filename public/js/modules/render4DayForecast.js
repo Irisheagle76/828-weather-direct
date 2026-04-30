@@ -333,6 +333,19 @@ function renderSummary(days) {
     </div>
   `;
 }
+// ============================================================
+// CATEGORY (RESTORED)
+// ============================================================
+
+function classifyCategory(intel) {
+  const s = intel?.score ?? 50;
+
+  if (s >= 90) return "veryComfortable";
+  if (s >= 75) return "comfortable";
+  if (s >= 60) return "slightlyUncomfortable";
+  if (s >= 45) return "uncomfortable";
+  return "harsh";
+}
 
 // ============================================================
 // EXPAND
