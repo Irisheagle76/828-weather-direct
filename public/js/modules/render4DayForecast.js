@@ -142,18 +142,47 @@ function buildDay(day, index) {
 // ============================================================
 
 function analyzeRain(hours) {
-  if (!hours.length) return { isRain: false, peak: 0, coverage: 0 };
+  if (!hours.length) return { type: "none", coverage: 0, peak: 0 };
 
-  const meaningful = hours.filter(h => getProb(h) >= 0.15);
+  const buckets = {
+    morning: [],
+    midday: [],
+    afternoon: [],
+    evening: []
+  };
 
-  const coverage = meaningful.length / hours.length;
+  hours.forEach(h => {
+    const hr = new Date(h.timestamp).getHours();
+    const p = getProb(h);
 
-  const peak = Math.max(...hours.map(h => getProb(h)));
+    // 🔥 ignore model noise
+    if (p < 0.2) return;
+
+    if (hr >= 5 && hr < 10) buckets.morning.push(p);
+    else if (hr < 14) buckets.midday.push(p);
+    else if (hr < 18) buckets.afternoon.push(p);
+    else buckets.evening.push(p);
+  });
+
+  const counts = Object.entries(buckets).map(([k,v]) => ({
+    key: k,
+    count: v.length,
+    peak: v.length ? Math.max(...v) : 0
+  }));
+
+  const totalRain = counts.reduce((s,c)=>s+c.count,0);
+  const coverage = totalRain / hours.length;
+
+  const dominant = counts.sort((a,b)=>b.count-a.count)[0];
+
+  if (coverage < 0.2) {
+    return { type: "none", coverage, peak: 0 };
+  }
 
   return {
-    isRain: coverage > 0.2,
-    peak,
-    coverage
+    type: dominant.key, // 👈 THIS FIXES SATURDAY
+    coverage,
+    peak: dominant.peak
   };
 }
 
@@ -162,20 +191,24 @@ function analyzeRain(hours) {
 // ============================================================
 
 function pickIcon(hours, rain) {
-  if (rain.isRain) {
+  if (rain.type !== "none") {
     if (rain.coverage > 0.5) return "🌧️";
+
+    // 👇 nuanced rain
+    if (rain.type === "morning") return "🌦️";
+    if (rain.type === "afternoon") return "🌦️";
+
     return "🌦️";
   }
 
   const cloud =
     hours.reduce((s,h)=>s+(h.cloudCover||0),0)/hours.length;
 
-  if (cloud > 0.65) return "☁️";
-  if (cloud > 0.35) return "⛅";
+  if (cloud > 0.7) return "☁️";
+  if (cloud > 0.4) return "⛅";
 
   return "☀️";
 }
-
 // ============================================================
 // PROB NORMALIZATION
 // ============================================================
@@ -270,13 +303,15 @@ function renderHour(h) {
 function getPrecipLevel(h) {
   const prob = getProb(h);
 
-  if (prob >= 0.6) return 5;
-  if (prob >= 0.4) return 4;
-  if (prob >= 0.25) return 3;
-  if (prob >= 0.15) return 2;
-  if (prob >= 0.05) return 1;
+  // 🔥 ignore noise completely
+  if (prob < 0.15) return 0;
 
-  return 0;
+  if (prob >= 0.7) return 5;
+  if (prob >= 0.5) return 4;
+  if (prob >= 0.35) return 3;
+  if (prob >= 0.25) return 2;
+
+  return 1;
 }
 
 // ============================================================
