@@ -1,5 +1,5 @@
 // ============================================================
-// 4-DAY FORECAST (STABLE + NORMALIZED)
+// 4-DAY FORECAST (CLEAN + TRUSTED SIGNAL)
 // ============================================================
 
 import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
@@ -70,10 +70,7 @@ function buildDays(hourly) {
 
     console.log("DAY:", d.toDateString(), {
       hours: hours.length,
-      sample: hours.slice(6,12).map(h => ({
-        hr: new Date(h.timestamp).getHours(),
-        prob: h.precipProbability
-      }))
+      rainHours: hours.filter(h => getProb(h) > 0.2).length
     });
 
     days.push({ date: d, hours });
@@ -95,6 +92,8 @@ function buildDay(day, index) {
 
   const fs = computeFS(hours);
 
+  const rain = analyzeRain(hours);
+
   const anchor =
     hours.find(h => {
       const hr = new Date(h.timestamp).getHours();
@@ -108,9 +107,9 @@ function buildDay(day, index) {
         windSpeed: anchor.windSpeed,
         windGust: anchor.windGust,
         cloudCover: anchor.cloudCover,
-        precipProbability: getProb(anchor),
+        precipProbability: rain.peak,
         score: fs,
-        dominantFactor: detectDominant(hours)
+        dominantFactor: rain.isRain ? "rain" : "sun"
       }
     : null;
 
@@ -118,13 +117,12 @@ function buildDay(day, index) {
 
   if (intel) {
     const category = classifyCategory(intel);
-    const gold = category === "veryComfortable";
 
     narrative = assemble.assemble(
       intel,
       index === 0 ? "tomorrow" : "future",
       category,
-      gold
+      category === "veryComfortable"
     );
   }
 
@@ -134,57 +132,57 @@ function buildDay(day, index) {
     high,
     low,
     fs,
-    icon: narrative?.emoji || pickIcon(hours),
+    icon: pickIcon(hours, rain),
     takeaway: narrative?.narrative || ""
   };
 }
 
 // ============================================================
-// NORMALIZE PROBABILITY (CRITICAL FIX)
+// RAIN ANALYSIS (REAL FIX)
+// ============================================================
+
+function analyzeRain(hours) {
+  if (!hours.length) return { isRain: false, peak: 0, coverage: 0 };
+
+  const meaningful = hours.filter(h => getProb(h) >= 0.15);
+
+  const coverage = meaningful.length / hours.length;
+
+  const peak = Math.max(...hours.map(h => getProb(h)));
+
+  return {
+    isRain: coverage > 0.2,
+    peak,
+    coverage
+  };
+}
+
+// ============================================================
+// ICON (FIXED)
+// ============================================================
+
+function pickIcon(hours, rain) {
+  if (rain.isRain) {
+    if (rain.coverage > 0.5) return "🌧️";
+    return "🌦️";
+  }
+
+  const cloud =
+    hours.reduce((s,h)=>s+(h.cloudCover||0),0)/hours.length;
+
+  if (cloud > 0.65) return "☁️";
+  if (cloud > 0.35) return "⛅";
+
+  return "☀️";
+}
+
+// ============================================================
+// PROB NORMALIZATION
 // ============================================================
 
 function getProb(h) {
   const p = h.precipProbability ?? 0;
   return p > 1 ? p / 100 : p;
-}
-
-// ============================================================
-// DOMINANT FACTOR
-// ============================================================
-
-function detectDominant(hours) {
-  const maxProb = Math.max(...hours.map(h => getProb(h)));
-
-  if (maxProb > 0.5) return "rain";
-
-  const wind = Math.max(...hours.map(h => h.windSpeed || 0));
-  if (wind > 20) return "wind";
-
-  const temp = hours[Math.floor(hours.length/2)]?.temperatureF || 70;
-
-  if (temp > 85) return "heat";
-  if (temp < 40) return "cold";
-
-  return "sun";
-}
-
-// ============================================================
-// ICON
-// ============================================================
-
-function pickIcon(hours) {
-  const maxProb = Math.max(...hours.map(h => getProb(h)));
-
-  if (maxProb > 0.6) return "🌧️";
-  if (maxProb > 0.3) return "🌦️";
-
-  const cloud =
-    hours.reduce((s,h)=>s+(h.cloudCover||0),0)/hours.length;
-
-  if (cloud > 0.6) return "⛅";
-  if (cloud > 0.3) return "🌤️";
-
-  return "☀️";
 }
 
 // ============================================================
@@ -266,20 +264,17 @@ function renderHour(h) {
 }
 
 // ============================================================
-// PRECIP VISUAL (PROBABILITY-BASED)
+// PRECIP LEVEL (FIXED)
 // ============================================================
 
 function getPrecipLevel(h) {
-  const prob = getProb(h); // already normalized 0–1
+  const prob = getProb(h);
 
-  // amplify weak signals so UI doesn't go dead
-  if (prob >= 0.6) return 5;   // strong rain
+  if (prob >= 0.6) return 5;
   if (prob >= 0.4) return 4;
   if (prob >= 0.25) return 3;
-  if (prob >= 0.12) return 2;
-
-  // 👇 THIS is the key change
-  if (prob >= 0.03) return 1;  // light signal still visible
+  if (prob >= 0.15) return 2;
+  if (prob >= 0.05) return 1;
 
   return 0;
 }
@@ -336,8 +331,9 @@ function renderSummary(days) {
     </div>
   `;
 }
+
 // ============================================================
-// CATEGORY (RESTORED)
+// CATEGORY
 // ============================================================
 
 function classifyCategory(intel) {
