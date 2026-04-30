@@ -1445,3 +1445,173 @@ body {
   margin-top: 4px;
   opacity: 0.9;
 }
+
+/* =========================
+   FORECAST PAGE (VERTICAL)
+   ========================= */
+
+.forecast-page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* =========================
+   SUMMARY CARD
+   ========================= */
+
+.forecast-summary {
+  font-size: 0.95rem;
+}
+
+.summary-line {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.summary-meta {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+/* =========================
+   FORECAST ROW
+   ========================= */
+
+.forecast-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.forecast-row:active {
+  transform: scale(0.98);
+}
+
+/* =========================
+   TOP ROW
+   ========================= */
+
+.row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.day {
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  opacity: 0.85;
+}
+
+.icon {
+  font-size: 1.3rem;
+}
+
+/* =========================
+   MAIN ROW
+   ========================= */
+
+.row-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.temps {
+  display: flex;
+  gap: 10px;
+  font-size: 1.2rem;
+}
+
+.high {
+  font-weight: 700;
+}
+
+.low {
+  opacity: 0.6;
+}
+
+/* =========================
+   FEELSCORE
+   ========================= */
+
+.feelscore {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.fs-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.fs-label {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+/* =========================
+   FEELSCORE BAR
+   ========================= */
+
+.fs-bar {
+  height: 5px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.fs-fill {
+  height: 100%;
+  background: var(--accent-color);
+  border-radius: 4px;
+}
+
+/* Optional smarter coloring */
+.fs-fill.good { background: #4caf50; }
+.fs-fill.ok { background: #ffc107; }
+.fs-fill.bad { background: #f44336; }
+
+/* =========================
+   BOTTOM ROW
+   ========================= */
+
+.row-bottom {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  gap: 8px;
+}
+
+.takeaway {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.timing {
+  opacity: 0.6;
+  white-space: nowrap;
+}
+
+/* =========================
+   FORECAST LINK CARD
+   ========================= */
+
+.forecast-link-card {
+  text-align: center;
+  font-size: 0.95rem;
+  opacity: 0.85;
+}
+
+.forecast-link-card a {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}

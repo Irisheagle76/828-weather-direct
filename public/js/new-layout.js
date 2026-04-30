@@ -214,6 +214,7 @@ export async function renderNewLayout(container) {
     
       <div id="timeline" class="fade-in"></div>
       <div id="tomorrow" class="fade-in"></div>
+      <div id="forecast-link" class="fade-in"></div>
       <div id="pulse" class="fade-in"></div>
       <div id="update" class="fade-in"></div>
     </div>
@@ -271,6 +272,7 @@ console.log("CURRENT DEBUG:", {
   renderFeelScore(human?.feelscore);
     renderTimeline(hourly);
 renderTomorrow(human?.tomorrow);
+renderForecastLink();
 
     // ------------------------------------------------------------
     // CONTENT
@@ -802,4 +804,18 @@ function renderTomorrow(data) {
     </div>
   `;
 }
+// ============================================================
+// Forecast LINK
+// ============================================================
+function renderForecastLink() {
+  const el = document.getElementById('forecast-link');
+  if (!el) return;
 
+  el.innerHTML = `
+    <div class="card forecast-link-card">
+      <a href="/forecast.html">
+        Next 4 Days →
+      </a>
+    </div>
+  `;
+}
