@@ -1,5 +1,5 @@
 // ============================================================
-// WEATHER API — V9 (STABLE + PRECIP + TEMPEST SAFE)
+// WEATHER API — V10 (HOURLY + DAILY + TEMPEST SAFE)
 // ============================================================
 
 let cache = {};
@@ -15,7 +15,7 @@ export default async function handler(req, res) {
     const { type } = req.query;
 
     if (type === "hourly") {
-      return await handleHourly(req, res);
+      return await handleForecast(req, res);
     }
 
     return res.status(400).json({ error: "Invalid type" });
@@ -30,9 +30,9 @@ export default async function handler(req, res) {
 }
 
 // ------------------------------------------------------------
-// MAIN HANDLER
+// MAIN HANDLER (HOURLY + DAILY)
 // ------------------------------------------------------------
-async function handleHourly(req, res) {
+async function handleForecast(req, res) {
   const { lat, lon } = req.query;
 
   if (!lat || !lon) {
@@ -41,9 +41,6 @@ async function handleHourly(req, res) {
 
   const key = `${lat},${lon}`;
 
-  // ----------------------------------------------------------
-  // 🌧️ TEMPEST (SAFE — NEVER BREAKS API)
-  // ----------------------------------------------------------
   const tempest = await fetchTempest();
 
   // ----------------------------------------------------------
@@ -57,7 +54,7 @@ async function handleHourly(req, res) {
   }
 
   // ----------------------------------------------------------
-  // OPEN-METEO
+  // OPEN-METEO REQUEST (FIXED)
   // ----------------------------------------------------------
   const hourlyFields = [
     "temperature_2m",
@@ -71,11 +68,19 @@ async function handleHourly(req, res) {
     "uv_index"
   ].join(",");
 
+  const dailyFields = [
+    "temperature_2m_max",
+    "temperature_2m_min",
+    "precipitation_probability_max",
+    "cloudcover_mean"
+  ].join(",");
+
   const url =
     `https://api.open-meteo.com/v1/forecast` +
     `?latitude=${lat}&longitude=${lon}` +
     `&hourly=${hourlyFields}` +
-    `&forecast_days=3` +
+    `&daily=${dailyFields}` + // 🔥 ADDED
+    `&forecast_days=5` +      // 🔥 INCREASED
     `&temperature_unit=fahrenheit` +
     `&wind_speed_unit=mph` +
     `&precipitation_unit=inch` +
@@ -94,7 +99,7 @@ async function handleHourly(req, res) {
   }
 
   // ----------------------------------------------------------
-  // NORMALIZE
+  // NORMALIZE HOURLY
   // ----------------------------------------------------------
   const hourly = data.hourly.time.map((t, i) => ({
     timestamp: new Date(t).getTime(),
@@ -107,15 +112,27 @@ async function handleHourly(req, res) {
     windGust: data.hourly.wind_gusts_10m?.[i] ?? null,
 
     precipitation: data.hourly.precipitation?.[i] ?? 0,
-    precipitation_probability:
-      data.hourly.precipitation_probability?.[i] ?? null,
+    precipProbability:
+      data.hourly.precipitation_probability?.[i] ?? 0,
 
-    cloudCover: data.hourly.cloudcover?.[i] ?? null,
+    cloudCover: data.hourly.cloudcover?.[i] ?? 0,
     uv: data.hourly.uv_index?.[i] ?? null
   }));
 
   // ----------------------------------------------------------
-  // OPTIONAL SMOOTHING (SAFE)
+  // NORMALIZE DAILY (🔥 NEW)
+  // ----------------------------------------------------------
+  const daily = data.daily?.time?.map((t, i) => ({
+    timestamp: new Date(t).getTime(),
+    tempMax: data.daily.temperature_2m_max?.[i] ?? null,
+    tempMin: data.daily.temperature_2m_min?.[i] ?? null,
+    precipProbability:
+      data.daily.precipitation_probability_max?.[i] ?? 0,
+    cloudCover: data.daily.cloudcover_mean?.[i] ?? 0
+  })) || [];
+
+  // ----------------------------------------------------------
+  // SMOOTHING
   // ----------------------------------------------------------
   const hourlySmoothed = smoothTransitionWithTempest(hourly, tempest);
 
@@ -124,6 +141,7 @@ async function handleHourly(req, res) {
   // ----------------------------------------------------------
   const payload = {
     hourly: hourlySmoothed,
+    daily, // 🔥 CRITICAL FIX
 
     current: tempest
       ? {
@@ -147,42 +165,33 @@ async function handleHourly(req, res) {
     _source: "open-meteo+tempest"
   };
 
-  cache[key] = {
-    ts: Date.now(),
-    data: payload
-  };
-
+  cache[key] = { ts: Date.now(), data: payload };
   lastGood[key] = payload;
 
   return res.status(200).json(payload);
 }
 
 // ============================================================
-// 🌧️ SAFE TEMPEST FETCH (NEW)
+// TEMPEST
 // ============================================================
 
 async function fetchTempest() {
   try {
     const res = await fetch("https://avlweather.com/api/tempest/device");
-
     if (!res || !res.ok) return null;
-
     const json = await res.json();
-
     return json?.current_conditions ?? null;
-
-  } catch (err) {
-    console.warn("⚠️ Tempest fetch failed:", err);
+  } catch {
     return null;
   }
 }
 
 // ============================================================
-// FALLBACK HANDLER
+// FALLBACK
 // ============================================================
 
 function respondWithFallback(res, key, reason, tempest) {
-  console.warn("⚠️ Fallback triggered:", reason);
+  console.warn("⚠️ Fallback:", reason);
 
   if (lastGood[key]) {
     return res.status(200).json({
@@ -193,19 +202,19 @@ function respondWithFallback(res, key, reason, tempest) {
 
   return res.status(200).json({
     hourly: [],
+    daily: [],
     current: tempest || null,
     _fallback: reason
   });
 }
 
 // ============================================================
-// SAFE SMOOTHING (NO-OP IF MISSING DATA)
+// SMOOTHING
 // ============================================================
 
 function smoothTransitionWithTempest(hourly, tempest) {
   if (!tempest || !hourly?.length) return hourly;
 
-  // simple, safe blend (only first hour)
   return hourly.map((h, i) => {
     if (i > 0) return h;
 
