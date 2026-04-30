@@ -29,12 +29,34 @@ async function init() {
 
     const hourly = Array.isArray(data?.hourly) ? data.hourly : [];
 
+    console.log("==== TIMEZONE CHECK ====");
+    console.log("Browser TZ:", Intl.DateTimeFormat().resolvedOptions().timeZone);
+
+    console.log("==== RAW HOURLY SAMPLE ====");
+    hourly.slice(0, 5).forEach(h => {
+      console.log({
+        raw: h.timestamp,
+        local: new Date(h.timestamp).toString(),
+        iso: new Date(h.timestamp).toISOString()
+      });
+    });
+
     if (!hourly.length) {
       root.innerHTML = fallback("No forecast data available");
       return;
     }
 
     const days = buildCleanDays(hourly);
+
+    console.log("==== FINAL FORECAST DAYS ====");
+    days.forEach((d, i) => {
+      console.log(
+        `Day ${i + 1}`,
+        new Date(d.dayStart).toDateString(),
+        "| hours:", d.hours.length
+      );
+    });
+
     const enriched = days.map(buildDay);
 
     root.innerHTML = `
@@ -53,7 +75,7 @@ async function init() {
 
 //
 // =========================
-// FORCE 4 DAYS (KEY FIX)
+// FORCE 4 DAYS
 // =========================
 //
 function buildCleanDays(hourly) {
@@ -67,6 +89,16 @@ function buildCleanDays(hourly) {
 
     if (!byDay[key]) byDay[key] = [];
     byDay[key].push(h);
+  });
+
+  console.log("==== DAY GROUPING ====");
+  Object.entries(byDay).forEach(([key, hours]) => {
+    console.log(
+      new Date(Number(key)).toDateString(),
+      "| hours:", hours.length,
+      "| first:", new Date(hours[0]?.timestamp).toString(),
+      "| last:", new Date(hours[hours.length - 1]?.timestamp).toString()
+    );
   });
 
   const today = new Date();
@@ -97,8 +129,17 @@ function buildCleanDays(hourly) {
 function buildDay(day) {
   const hours = day.hours;
 
-  const temps = hours.map(h => h.temperatureF).filter(Number.isFinite);
+  console.log("==== BUILD DAY ====");
+  console.log({
+    label: new Date(day.dayStart).toDateString(),
+    hours: hours.length,
+    firstHour: hours[0] ? new Date(hours[0].timestamp).toString() : null,
+    lastHour: hours.length
+      ? new Date(hours[hours.length - 1].timestamp).toString()
+      : null
+  });
 
+  const temps = hours.map(h => h.temperatureF).filter(Number.isFinite);
   const fs = computeDailyFS(hours);
 
   const narrative = generateNarrative({
@@ -131,7 +172,7 @@ function buildDay(day) {
 
 //
 // =========================
-// DAY PARTS (FALLBACK)
+// DAY PARTS
 // =========================
 //
 function buildDayParts(hours) {
@@ -214,7 +255,6 @@ function renderSummary(days) {
 function renderDay(d) {
   return `
     <div class="card forecast-row expandable">
-
       <div class="row-top">
         <div class="day">${formatDay(d.date)}</div>
         <div class="icon">${d.icon}</div>
@@ -244,39 +284,23 @@ function renderDay(d) {
       <div class="expand-content">
         ${renderExpanded(d)}
       </div>
-
     </div>
   `;
 }
 
-//
-// =========================
-// EXPANDED VIEW
-// =========================
-//
 function renderExpanded(d) {
-
-  // 🔥 HOURLY (RICH DATA)
   if (d.isHourlyRich) {
     const slice = d.hours.slice(4, 16);
 
     return `
       <div class="expanded-inner">
-
         <div class="hourly-strip">
           ${slice.map(renderHour).join("")}
         </div>
-
-        <div class="expanded-row subtle">
-          Wind: ${Math.round(avg(slice, 'windSpeed'))} mph
-          • Humidity: ${Math.round(avg(slice, 'relativeHumidity'))}%
-        </div>
-
       </div>
     `;
   }
 
-  // 🔥 DAY PARTS (FALLBACK)
   if (d.dayParts) {
     return `
       <div class="expanded-inner">
@@ -384,6 +408,25 @@ function formatHour(h) {
 
 function fallback(msg) {
   return `<div style="padding:20px;">${msg}</div>`;
+
+  function bindExpand() {
+  const cards = document.querySelectorAll('.forecast-row.expandable');
+
+  cards.forEach(card => {
+    card.addEventListener('click', () => {
+      const isOpen = card.classList.contains('open');
+
+      // close all
+      cards.forEach(c => c.classList.remove('open'));
+
+      // reopen clicked one
+      if (!isOpen) {
+        card.classList.add('open');
+      }
+    });
+  });
+}
+
 }
 </script>
 
