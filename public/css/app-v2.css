@@ -1610,9 +1610,8 @@ body {
 
 .takeaway {
   font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 0.9rem;
+  opacity: 0.9;
 }
 
 .timing {

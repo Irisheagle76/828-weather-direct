@@ -86,7 +86,9 @@ function buildCleanDays(hourly) {
   const futureDays = sorted.filter(d => d.dayStart > todayKey);
 
   // 🔥 TAKE FIRST 4 FULL DAYS
-  return futureDays.slice(0, 4);
+  return sorted
+  .filter(d => d.dayStart > todayKey)
+  .slice(0, 4);
 }
 
 //
@@ -117,7 +119,7 @@ function buildDay(day) {
     icon: pickIcon(hours),
 
     // ✅ FIXED (this was your missing voice)
-    takeaway: narrative?.headline || narrative?.narrative || "",
+  takeaway: narrative?.headline || narrative?.narrative || "Conditions stable",
     timing: narrative?.trend || ""
   };
 }
@@ -296,8 +298,8 @@ function getPrecipLevel(p) {
 
 // ✅ MUCH BETTER ICON LOGIC
 function pickIcon(hours) {
-  const rainHours = hours.filter(h => (h.precipProbability ?? 0) > 0.4);
-  const cloudHours = hours.filter(h => (h.cloudCover ?? 0) > 0.5);
+  const rainHours = hours.filter(h => (h.precipProbability ?? 0) > 0.5);
+  const cloudHours = hours.filter(h => (h.cloudCover ?? 0) > 0.6);
 
   const rainRatio = rainHours.length / hours.length;
   const cloudRatio = cloudHours.length / hours.length;
