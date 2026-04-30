@@ -4,206 +4,268 @@
   <meta charset="UTF-8" />
   <title>4-Day Forecast • 828 Weather</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- Your existing app styles -->
   <link rel="stylesheet" href="/css/app-v2.css" />
 </head>
 
 <body>
 
-  <!-- APP CONTAINER -->
-  <div id="forecast-root" class="page-container forecast-page"></div>
+<div id="forecast-root" class="page-container forecast-page"></div>
 
-  <!-- SCRIPT -->
-  <script type="module">
-    import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
-    import { calculateComfort } from '/js/intel/comfort.js';
+<script type="module">
+import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
+import { calculateComfort } from '/js/intel/comfort.js';
 
-    const root = document.getElementById('forecast-root');
+const root = document.getElementById('forecast-root');
 
-    init();
+init();
 
-    async function init() {
-      try {
-        const data = await getWeatherForUI({
-          lat: 35.5951,
-          lon: -82.5515
-        });
+async function init() {
+  try {
+    const data = await getWeatherForUI({
+      lat: 35.5951,
+      lon: -82.5515
+    });
 
-        const hourly = Array.isArray(data?.hourly) ? data.hourly : [];
+    const hourly = Array.isArray(data?.hourly) ? data.hourly : [];
 
-        if (!hourly.length) {
-          root.innerHTML = "<div style='padding:20px;'>No data</div>";
-          return;
-        }
-
-        const days = groupByDay(hourly).slice(0, 4);
-        const enriched = days.map(buildDay);
-
-        root.innerHTML = `
-          ${renderHeader()}
-          ${renderSummary(enriched)}
-          ${enriched.map(renderDay).join("")}
-        `;
-
-      } catch (err) {
-        console.error("Forecast load error:", err);
-        root.innerHTML = "<div style='padding:20px;'>Error loading forecast</div>";
-      }
+    if (!hourly.length) {
+      root.innerHTML = "<div style='padding:20px;'>No data</div>";
+      return;
     }
 
-    // =========================
-    // GROUP BY DAY
-    // =========================
-    function groupByDay(hourly) {
-      const days = {};
+    const days = buildCleanDays(hourly);
+    const enriched = days.map(d => buildDay(d.hours));
 
-      hourly.forEach(h => {
-        if (!h?.timestamp) return;
+    root.innerHTML = `
+      ${renderHeader()}
+      ${renderSummary(enriched)}
+      ${enriched.map(renderDay).join("")}
+    `;
 
-        const key = new Date(h.timestamp).toDateString();
-        if (!days[key]) days[key] = [];
-        days[key].push(h);
-      });
+  } catch (err) {
+    console.error("Forecast load error:", err);
+    root.innerHTML = "<div style='padding:20px;'>Error loading forecast</div>";
+  }
+}
 
-      return Object.values(days);
+//
+// =========================
+// CLEAN DAY BUILDER
+// =========================
+//
+function buildCleanDays(hourly) {
+  const now = Date.now();
+  const byDay = {};
+
+  hourly.forEach(h => {
+    if (!h?.timestamp) return;
+
+    const d = new Date(h.timestamp);
+    const key = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+
+    if (!byDay[key]) byDay[key] = [];
+    byDay[key].push(h);
+  });
+
+  const sorted = Object.entries(byDay)
+    .map(([k, hours]) => ({ dayStart: Number(k), hours }))
+    .sort((a, b) => a.dayStart - b.dayStart);
+
+  const todayKey = new Date(
+    new Date().getFullYear(),
+    new Date().getMonth(),
+    new Date().getDate()
+  ).getTime();
+
+  const result = [];
+
+  // TODAY (future only)
+  const today = sorted.find(d => d.dayStart === todayKey);
+  if (today) {
+    const future = today.hours.filter(h => h.timestamp >= now);
+    if (future.length) {
+      result.push({ dayStart: today.dayStart, hours: future });
     }
+  }
 
-    // =========================
-    // BUILD DAY OBJECT
-    // =========================
-    function buildDay(hours) {
-      const temps = hours.map(h => h.temperatureF).filter(Number.isFinite);
+  // NEXT FULL DAYS
+  const futureDays = sorted.filter(d => d.dayStart > todayKey);
+  result.push(...futureDays.slice(0, 3));
 
-      const high = Math.max(...temps);
-      const low = Math.min(...temps);
+  return result.slice(0, 4);
+}
 
-      const mid = hours[Math.floor(hours.length / 2)];
+//
+// =========================
+// BUILD DAY
+// =========================
+//
+function buildDay(hours) {
+  const temps = hours.map(h => h.temperatureF).filter(Number.isFinite);
 
-      let fs = Math.round((calculateComfort(mid)?.score ?? 5) * 10);
-      fs = Math.min(Math.max(fs, 0), 98);
+  const high = Math.max(...temps);
+  const low = Math.min(...temps);
 
-      return {
-        date: new Date(hours[0].timestamp),
-        high: Math.round(high),
-        low: Math.round(low),
-        fs,
-        icon: pickIcon(hours),
-        takeaway: getTakeaway(fs),
-        timing: getTiming(hours)
-      };
-    }
+  const fs = computeDailyFS(hours);
 
-    // =========================
-    // RENDER
-    // =========================
-    function renderHeader() {
-      return `
-        <div class="section-header">
-          <h1>4-Day Forecast</h1>
-          <p class="subtitle">Quick look ahead</p>
+  return {
+    date: new Date(hours[0].timestamp),
+    high: Math.round(high),
+    low: Math.round(low),
+    fs,
+    icon: pickIcon(hours),
+    takeaway: getTakeaway(fs),
+    timing: getTiming(hours)
+  };
+}
+
+//
+// =========================
+// BETTER FEELSCORE
+// =========================
+//
+function computeDailyFS(hours) {
+  const scores = hours.map(h => {
+    const raw = calculateComfort(h)?.score ?? 5;
+    return raw * 10;
+  });
+
+  if (!scores.length) return 50;
+
+  const midStart = Math.floor(scores.length * 0.3);
+  const midEnd = Math.floor(scores.length * 0.7);
+
+  const mid = scores.slice(midStart, midEnd);
+
+  const avg =
+    (mid.length ? mid : scores).reduce((a, b) => a + b, 0) /
+    (mid.length || scores.length);
+
+  return Math.round(Math.min(Math.max(avg, 0), 98));
+}
+
+//
+// =========================
+// RENDER
+// =========================
+//
+function renderHeader() {
+  return `
+    <div class="section-header">
+      <h1>4-Day Forecast</h1>
+      <p class="subtitle">Quick look ahead</p>
+    </div>
+  `;
+}
+
+function renderSummary(days = []) {
+  const valid = days.filter(d => Number.isFinite(d?.fs));
+
+  if (!valid.length) {
+    return `<div class="card forecast-summary">Limited forecast data</div>`;
+  }
+
+  const best = valid.reduce((a, b) => b.fs > a.fs ? b : a);
+  const worst = valid.reduce((a, b) => b.fs < a.fs ? b : a);
+
+  return `
+    <div class="card forecast-summary">
+      <div class="summary-line">${trend(valid)}</div>
+      <div class="summary-meta">
+        Best Day: ${formatDay(best.date)} • Turning Point: ${formatDay(worst.date)}
+      </div>
+    </div>
+  `;
+}
+
+function renderDay(d) {
+  if (!d || !Number.isFinite(d.fs)) return "";
+
+  return `
+    <div class="card forecast-row">
+
+      <div class="row-top">
+        <div class="day">${formatDay(d.date)}</div>
+        <div class="icon">${d.icon}</div>
+      </div>
+
+      <div class="row-main">
+        <div class="temps">
+          <span class="high">${d.high}°</span>
+          <span class="low">${d.low}°</span>
         </div>
-      `;
-    }
 
-    function renderSummary(days) {
-      const best = days.reduce((a, b) => b.fs > a.fs ? b : a);
-      const worst = days.reduce((a, b) => b.fs < a.fs ? b : a);
-
-      return `
-        <div class="card forecast-summary">
-          <div class="summary-line">
-            ${trend(days)}
-          </div>
-          <div class="summary-meta">
-            Best Day: ${formatDay(best.date)} • Turning Point: ${formatDay(worst.date)}
-          </div>
+        <div class="feelscore">
+          <span class="fs-value">${d.fs}</span>
+          <span class="fs-label">${mapLabel(d.fs)}</span>
         </div>
-      `;
-    }
+      </div>
 
-    function renderDay(d) {
-      return `
-        <div class="card forecast-row">
+      <div class="fs-bar">
+        <div class="fs-fill" style="width:${d.fs}%"></div>
+      </div>
 
-          <div class="row-top">
-            <div class="day">${formatDay(d.date)}</div>
-            <div class="icon">${d.icon}</div>
-          </div>
+      <div class="row-bottom">
+        <div class="takeaway">${d.takeaway}</div>
+        <div class="timing">${d.timing}</div>
+      </div>
 
-          <div class="row-main">
-            <div class="temps">
-              <span class="high">${d.high}°</span>
-              <span class="low">${d.low}°</span>
-            </div>
+    </div>
+  `;
+}
 
-            <div class="feelscore">
-              <span class="fs-value">${d.fs}</span>
-              <span class="fs-label">${mapLabel(d.fs)}</span>
-            </div>
-          </div>
+//
+// =========================
+// HELPERS
+// =========================
+//
+function pickIcon(hours) {
+  const rain = hours.some(h => (h.precipProbability ?? 0) > 0.5);
+  if (rain) return "🌧️";
+  return "☀️";
+}
 
-          <div class="fs-bar">
-            <div class="fs-fill" style="width:${d.fs}%"></div>
-          </div>
+function mapLabel(fs) {
+  if (fs >= 90) return "Ideal";
+  if (fs >= 75) return "Excellent";
+  if (fs >= 60) return "Comfortable";
+  if (fs >= 45) return "Unsettled";
+  return "Harsh";
+}
 
-          <div class="row-bottom">
-            <div class="takeaway">${d.takeaway}</div>
-            <div class="timing">${d.timing}</div>
-          </div>
+function getTakeaway(fs) {
+  if (fs >= 80) return "Best day to be outside";
+  if (fs >= 65) return "Still comfortable";
+  if (fs >= 50) return "Some discomfort";
+  return "Indoor conditions favored";
+}
 
-        </div>
-      `;
-    }
+function getTiming(hours) {
+  const rain = hours.find(h => (h.precipProbability ?? 0) > 0.5);
+  if (!rain) return "Dry all day";
 
-    // =========================
-    // HELPERS
-    // =========================
-    function pickIcon(hours) {
-      const rain = hours.some(h => (h.precipProbability ?? 0) > 0.5);
+  const hour = new Date(rain.timestamp).getHours();
+  if (hour < 12) return "Rain early";
+  if (hour < 17) return "Rain midday";
+  return "Rain late";
+}
 
-      if (rain) return "🌧️";
-      return "☀️";
-    }
+function formatDay(date) {
+  return date.toLocaleDateString([], { weekday: "long" }).toUpperCase();
+}
 
-    function mapLabel(fs) {
-      if (fs >= 90) return "Ideal";
-      if (fs >= 75) return "Excellent";
-      if (fs >= 60) return "Comfortable";
-      if (fs >= 45) return "Unsettled";
-      return "Harsh";
-    }
+function trend(days) {
+  if (days.length < 2) return "Limited forecast data";
 
-    function getTakeaway(fs) {
-      if (fs >= 80) return "Best day to be outside";
-      if (fs >= 65) return "Still comfortable";
-      if (fs >= 50) return "Some discomfort";
-      return "Indoor conditions favored";
-    }
+  const first = days[0].fs;
+  const last = days[days.length - 1].fs;
 
-    function getTiming(hours) {
-      const rainHour = hours.find(h => (h.precipProbability ?? 0) > 0.5);
+  if (first > last) return "Comfort peaks early → fades later";
+  if (last > first) return "Conditions improve through the period";
+  return "Little overall change";
+}
 
-      if (!rainHour) return "Dry all day";
-
-      const hour = new Date(rainHour.timestamp).getHours();
-
-      if (hour < 12) return "Rain early";
-      if (hour < 17) return "Rain midday";
-      return "Rain late";
-    }
-
-    function formatDay(date) {
-      return date.toLocaleDateString([], { weekday: "long" }).toUpperCase();
-    }
-
-    function trend(days) {
-      if (days[0].fs > days[3].fs) {
-        return "Comfort peaks early → fades later";
-      }
-      return "Conditions improve through the period";
-    }
-  </script>
+</script>
 
 </body>
 </html>
