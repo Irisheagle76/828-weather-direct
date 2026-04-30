@@ -31,33 +31,10 @@ async function init() {
     const hourly = Array.isArray(data?.hourly) ? data.hourly : [];
     const daily = Array.isArray(data?.daily) ? data.daily : [];
 
-    console.log("==== TIMEZONE ====");
-    console.log(Intl.DateTimeFormat().resolvedOptions().timeZone);
-
-    console.log("==== HOURLY SAMPLE ====");
-    hourly.slice(0,5).forEach(h => {
-      console.log(new Date(h.timestamp).toString());
-    });
-
-    console.log("==== DAILY ====");
-    daily.forEach(d => {
-      console.log(
-        new Date(d.timestamp).toDateString(),
-        d.tempMax,
-        d.tempMin
-      );
-    });
+    console.log("==== RAW DAILY OBJECT ====");
+    console.log(daily);
 
     const days = buildCleanDays(hourly, daily);
-
-    console.log("==== FINAL DAYS ====");
-    days.forEach(d => {
-      console.log(
-        new Date(d.dayStart).toDateString(),
-        "| hourly:", d.hours.length,
-        "| daily:", !!d.daily
-      );
-    });
 
     const enriched = days.map(buildDay);
 
@@ -137,7 +114,15 @@ function buildDay(day) {
     low = "--";
   }
 
-  const fs = computeDailyFS(hours);
+  // 🔥 FIXED FEELSCORE
+  let fs;
+  if (hours.length) {
+    fs = computeDailyFS(hours);
+  } else if (day.daily) {
+    fs = Math.round((day.daily.tempMax + day.daily.tempMin) / 2);
+  } else {
+    fs = 50;
+  }
 
   const narrative = generateNarrative({
     current: hours[0] || null,
@@ -151,6 +136,7 @@ function buildDay(day) {
     fs,
     high,
     low,
+
     icon: hours.length
       ? pickIcon(hours)
       : pickDailyIcon(day.daily),
@@ -224,6 +210,11 @@ function renderDay(d) {
   `;
 }
 
+//
+// =========================
+// EXPANDED
+// =========================
+//
 function renderExpanded(d) {
   if (!d.hours.length) return "";
 
@@ -240,11 +231,16 @@ function renderExpanded(d) {
 
 function renderHour(h) {
   const hour = new Date(h.timestamp).getHours();
+  const p = h.precipProbability || 0;
+  const level = getPrecipLevel(p);
 
   return `
     <div class="hour">
       <div class="hour-time">${formatHour(hour)}</div>
       <div class="hour-temp">${Math.round(h.temperatureF)}°</div>
+      <div class="precip-bar">
+        <div class="precip-fill level-${level}"></div>
+      </div>
     </div>
   `;
 }
@@ -269,11 +265,11 @@ function pickIcon(hours) {
 }
 
 function pickDailyIcon(d) {
-  if (!d) return "—";
+  if (!d) return "☁️";
 
-  if (d.precipProbability > 0.6) return "🌧️";
-  if (d.precipProbability > 0.3) return "🌦️";
-  if (d.cloudCover > 0.6) return "⛅";
+  if ((d.precipProbability || 0) > 0.6) return "🌧️";
+  if ((d.precipProbability || 0) > 0.3) return "🌦️";
+  if ((d.cloudCover || 0) > 0.6) return "⛅";
 
   return "☀️";
 }
@@ -291,6 +287,15 @@ function computeDailyFS(hours) {
   );
 
   return Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
+}
+
+function getPrecipLevel(p) {
+  if (p > 0.7) return 5;
+  if (p > 0.5) return 4;
+  if (p > 0.3) return 3;
+  if (p > 0.15) return 2;
+  if (p > 0.05) return 1;
+  return 0;
 }
 
 function mapLabel(fs) {
@@ -325,7 +330,7 @@ function fallback(msg) {
 
 //
 // =========================
-// EXPAND FIX (IMPORTANT)
+// EXPAND
 // =========================
 //
 function bindExpand() {
