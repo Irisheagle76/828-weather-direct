@@ -16,6 +16,7 @@ import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
 import { calculateComfort } from '/js/intel/comfort.js';
 import { generateNarrative } from '/js/intel/synthesizer/index.js';
 
+const DEBUG = false;
 const root = document.getElementById('forecast-root');
 
 init();
@@ -34,17 +35,15 @@ async function init() {
       return;
     }
 
-    const cleanDays = buildCleanDays(hourly);
-    const enriched = cleanDays.map(d => buildDay(d));
+    const days = buildCleanDays(hourly);
+    const enriched = days.map(buildDay);
 
-    // 👇 RENDER
     root.innerHTML = `
       ${renderHeader()}
-      ${renderSummary(cleanDays)}
+      ${renderSummary(days)}
       ${enriched.map(renderDay).join("")}
     `;
 
-    // 👇 BIND EXPAND AFTER RENDER
     bindExpand();
 
   } catch (err) {
@@ -55,7 +54,7 @@ async function init() {
 
 //
 // =========================
-// BUILD CLEAN DAYS
+// CLEAN DAYS
 // =========================
 //
 function buildCleanDays(hourly) {
@@ -76,11 +75,7 @@ function buildCleanDays(hourly) {
     .map(([k, hours]) => ({ dayStart: Number(k), hours }))
     .sort((a, b) => a.dayStart - b.dayStart);
 
-  const todayKey = new Date(
-    new Date().getFullYear(),
-    new Date().getMonth(),
-    new Date().getDate()
-  ).getTime();
+  const todayKey = new Date().setHours(0,0,0,0);
 
   const result = [];
 
@@ -90,8 +85,7 @@ function buildCleanDays(hourly) {
     if (future.length) result.push({ ...today, hours: future });
   }
 
-  const futureDays = sorted.filter(d => d.dayStart > todayKey);
-  result.push(...futureDays.slice(0, 3));
+  result.push(...sorted.filter(d => d.dayStart > todayKey).slice(0, 3));
 
   return result.slice(0, 4);
 }
@@ -113,6 +107,8 @@ function buildDay(day) {
     hourly: hours.slice(0, 8)
   });
 
+  if (DEBUG) console.log("DAY NARRATIVE:", narrative);
+
   return {
     date: new Date(day.dayStart),
     hours,
@@ -120,7 +116,9 @@ function buildDay(day) {
     low: Math.round(Math.min(...temps)),
     fs,
     icon: pickIcon(hours),
-    takeaway: narrative?.headline || "",
+
+    // ✅ FIXED (this was your missing voice)
+    takeaway: narrative?.headline || narrative?.narrative || "",
     timing: narrative?.trend || ""
   };
 }
@@ -174,8 +172,12 @@ function renderSummary(days) {
 
   return `
     <div class="card forecast-summary">
-      <div class="summary-line">${narrative?.headline || "Conditions evolving"}</div>
-      <div class="summary-meta">${narrative?.trend || ""}</div>
+      <div class="summary-line">
+        ${narrative?.headline || narrative?.narrative || "Conditions evolving"}
+      </div>
+      <div class="summary-meta">
+        ${narrative?.trend || ""}
+      </div>
     </div>
   `;
 }
@@ -220,7 +222,7 @@ function renderDay(d) {
 
 //
 // =========================
-// EXPANDED CONTENT
+// EXPANDED
 // =========================
 //
 function renderExpanded(d) {
@@ -228,9 +230,16 @@ function renderExpanded(d) {
 
   return `
     <div class="expanded-inner">
+
       <div class="hourly-strip">
         ${slice.map(renderHour).join("")}
       </div>
+
+      <div class="expanded-row subtle">
+        Wind: ${Math.round(avg(slice, 'windSpeed'))} mph
+        • Humidity: ${Math.round(avg(slice, 'relativeHumidity'))}%
+      </div>
+
     </div>
   `;
 }
@@ -248,7 +257,7 @@ function renderHour(h) {
 
 //
 // =========================
-// INTERACTION (EXPAND)
+// INTERACTION
 // =========================
 //
 function bindExpand() {
@@ -260,9 +269,7 @@ function bindExpand() {
 
       cards.forEach(c => c.classList.remove('open'));
 
-      if (!isOpen) {
-        card.classList.add('open');
-      }
+      if (!isOpen) card.classList.add('open');
     });
   });
 }
@@ -272,9 +279,24 @@ function bindExpand() {
 // HELPERS
 // =========================
 //
+
+// ✅ MUCH BETTER ICON LOGIC
 function pickIcon(hours) {
-  const rain = hours.some(h => (h.precipProbability ?? 0) > 0.5);
-  return rain ? "🌧️" : "☀️";
+  const rain = hours.filter(h => (h.precipProbability ?? 0) > 0.4).length;
+  const clouds = hours.filter(h => (h.cloudCover ?? 0) > 0.5).length;
+
+  const rainRatio = rain / hours.length;
+  const cloudRatio = clouds / hours.length;
+
+  if (rainRatio > 0.3) return "🌧️";
+  if (cloudRatio > 0.5) return "⛅";
+  return "☀️";
+}
+
+function avg(arr, key) {
+  const vals = arr.map(h => h[key]).filter(Number.isFinite);
+  if (!vals.length) return 0;
+  return vals.reduce((a, b) => a + b, 0) / vals.length;
 }
 
 function mapLabel(fs) {

@@ -1447,7 +1447,17 @@ body {
 }
 
 /* =========================
-   FORECAST PAGE (CONTAINED)
+   PAGE CONTAINER (FIXES CONTAINMENT)
+   ========================= */
+
+.page-container {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* =========================
+   FORECAST PAGE
    ========================= */
 
 .forecast-page {
@@ -1475,19 +1485,19 @@ body {
 }
 
 /* =========================
-   FORECAST CARD
+   FORECAST CARD (IMPROVED)
    ========================= */
 
 .forecast-row {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  min-width: 0;
 
   padding: 14px;
   border-radius: 16px;
 
-  background: rgba(255,255,255,0.03);
+  background: rgba(255,255,255,0.035);
+  backdrop-filter: blur(6px);
 
   transition: transform 0.15s ease, background 0.2s ease;
 }
@@ -1496,10 +1506,10 @@ body {
   transform: scale(0.98);
 }
 
-/* subtle hover (desktop only) */
+/* subtle hover */
 @media (hover: hover) {
   .forecast-row:hover {
-    background: rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.06);
   }
 }
 
@@ -1586,11 +1596,6 @@ body {
   transition: width 0.3s ease;
 }
 
-/* Optional tiers */
-.fs-fill.good { background: #4caf50; }
-.fs-fill.ok { background: #ffc107; }
-.fs-fill.bad { background: #f44336; }
-
 /* =========================
    BOTTOM ROW
    ========================= */
@@ -1615,39 +1620,57 @@ body {
 }
 
 /* =========================
-   EXPANDABLE CONTENT
+   EXPANDABLE CONTENT (FIXED)
    ========================= */
 
 .expand-content {
   max-height: 0;
   overflow: hidden;
   opacity: 0;
-  transition: all 0.25s ease;
+  transition: max-height 0.3s ease, opacity 0.2s ease;
 }
 
 .forecast-row.open .expand-content {
-  max-height: 220px;
+  max-height: 400px;
   opacity: 1;
-  margin-top: 10px;
+  margin-top: 12px;
 }
 
-/* expanded inner */
-
+/* VISUAL SEPARATION (CRITICAL FIX) */
 .expanded-inner {
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+
   font-size: 0.85rem;
-  opacity: 0.8;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
-.expanded-row {
+/* =========================
+   HOURLY STRIP (NEW VISIBILITY)
+   ========================= */
+
+.hourly-strip {
   display: flex;
-  justify-content: space-between;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
 }
 
-.subtle {
+.hour {
+  min-width: 42px;
+  text-align: center;
+  font-size: 0.8rem;
+}
+
+.hour-time {
   opacity: 0.6;
+}
+
+.hour-temp {
+  font-weight: 600;
 }
 
 /* =========================
@@ -1674,18 +1697,4 @@ body {
   margin-top: 10px;
   font-size: 11px;
   opacity: 0.5;
-}
-
-.comfort-score-block.storm {
-  background: linear-gradient(
-    135deg,
-    rgba(80, 120, 200, 0.25),
-    rgba(120, 60, 160, 0.25)
-  );
-}
-
-.comfort-impact-badge {
-  font-size: 12px;
-  margin-top: 4px;
-  opacity: 0.9;
 }
