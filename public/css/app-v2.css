@@ -1486,7 +1486,7 @@ body {
 }
 
 /* =========================
-   FORECAST CARD (IMPROVED)
+   FORECAST CARD
    ========================= */
 
 .forecast-row {
@@ -1498,6 +1498,9 @@ body {
   border-radius: 16px;
 
   background: rgba(255,255,255,0.035);
+
+  /* Safari support */
+  -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
 
   transition: transform 0.15s ease, background 0.2s ease;
@@ -1507,7 +1510,6 @@ body {
   transform: scale(0.98);
 }
 
-/* subtle hover */
 @media (hover: hover) {
   .forecast-row:hover {
     background: rgba(255,255,255,0.06);
@@ -1604,8 +1606,10 @@ body {
 .row-bottom {
   display: flex;
   justify-content: space-between;
-  font-size: 0.85rem;
+  align-items: center;
   gap: 10px;
+  margin-top: 4px;
+  font-size: 0.85rem;
 }
 
 .takeaway {
@@ -1620,7 +1624,7 @@ body {
 }
 
 /* =========================
-   EXPANDABLE CONTENT (FIXED)
+   EXPANDABLE CONTENT
    ========================= */
 
 .expand-content {
@@ -1631,25 +1635,28 @@ body {
 }
 
 .forecast-row.open .expand-content {
-  max-height: 400px;
+  max-height: 420px;
   opacity: 1;
   margin-top: 12px;
 }
 
-/* VISUAL SEPARATION (CRITICAL FIX) */
+/* =========================
+   EXPANDED INNER
+   ========================= */
+
 .expanded-inner {
-  margin-top: 8px;
+  margin-top: 10px;
   padding-top: 10px;
   border-top: 1px solid rgba(255,255,255,0.06);
 
-  font-size: 0.85rem;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  font-size: 0.85rem;
 }
 
 /* =========================
-   HOURLY STRIP (NEW VISIBILITY)
+   HOURLY STRIP
    ========================= */
 
 .hourly-strip {
@@ -1657,6 +1664,13 @@ body {
   gap: 12px;
   overflow-x: auto;
   padding-bottom: 4px;
+
+  /* nicer scroll feel */
+  scrollbar-width: none;
+}
+
+.hourly-strip::-webkit-scrollbar {
+  display: none;
 }
 
 .hour {
@@ -1671,6 +1685,70 @@ body {
 
 .hour-temp {
   font-weight: 600;
+}
+
+/* =========================
+   PRECIP VISUAL
+   ========================= */
+
+.precip-bar {
+  height: 16px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.precip-fill {
+  width: 4px;
+  border-radius: 2px;
+  transition: height 0.2s ease, background 0.2s ease, opacity 0.2s ease;
+}
+
+/* =========================
+   PRECIP INTENSITY (IMPROVED)
+   ========================= */
+
+/* none */
+.precip-fill.level-0 {
+  height: 2px;
+  opacity: 0.05;
+  background: rgba(120,170,255,0.2);
+}
+
+/* very light */
+.precip-fill.level-1 {
+  height: 4px;
+  opacity: 0.25;
+  background: rgba(120,170,255,0.5);
+}
+
+/* light */
+.precip-fill.level-2 {
+  height: 7px;
+  opacity: 0.5;
+  background: #8fb8ff;
+}
+
+/* moderate */
+.precip-fill.level-3 {
+  height: 11px;
+  opacity: 0.8;
+  background: #6ea8ff;
+}
+
+/* steady rain */
+.precip-fill.level-4 {
+  height: 15px;
+  opacity: 0.95;
+  background: #4f8cff;
+}
+
+/* heavy */
+.precip-fill.level-5 {
+  height: 20px;
+  opacity: 1;
+  background: #2f6fff;
 }
 
 /* =========================
@@ -1690,96 +1768,11 @@ body {
 }
 
 /* =========================
-   FOOTER / MISC
+   FOOTER
    ========================= */
 
 .footer-bottom {
   margin-top: 10px;
   font-size: 11px;
   opacity: 0.5;
-}
-/* =========================
-   PRECIP VISUAL
-   ========================= */
-
-.precip-bar {
-  height: 14px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  margin-top: 4px;
-}
-
-.precip-fill {
-  width: 4px;
-  border-radius: 2px;
-  background: rgba(120, 170, 255, 0.8);
-  opacity: 0.9;
-  transition: height 0.2s ease;
-}
-
-/* =========================
-   PRECIP INTENSITY (ENHANCED)
-   ========================= */
-
-.precip-fill {
-  width: 4px;
-  border-radius: 2px;
-  transition: height 0.2s ease, background 0.2s ease, opacity 0.2s ease;
-}
-
-/* no precip */
-.precip-fill.level-0 {
-  height: 2px;
-  opacity: 0.06;
-  background: rgba(120, 170, 255, 0.2);
-}
-
-/* very light */
-.precip-fill.level-1 {
-  height: 3px;
-  opacity: 0.15;
-  background: rgba(120, 170, 255, 0.4);
-}
-
-/* light */
-.precip-fill.level-2 {
-  height: 6px;
-  opacity: 0.4;
-  background: #8fb8ff;
-}
-
-/* moderate */
-.precip-fill.level-3 {
-  height: 9px;
-  opacity: 0.75;
-  background: #6ea8ff;
-}
-
-/* steady rain */
-.precip-fill.level-4 {
-  height: 12px;
-  opacity: 0.95;
-  background: #4f8cff;
-}
-
-/* heavy */
-.precip-fill.level-5 {
-  height: 16px;
-  opacity: 1;
-  background: #2f6fff;
-}
-
-.expanded-inner {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid rgba(255,255,255,0.06);
-}
-.row-bottom {
-  margin-top: 4px;
-}
-
-.takeaway {
-  font-size: 0.9rem;
-  opacity: 0.9;
 }
