@@ -341,7 +341,34 @@ function formatHour(h) {
   if (h === 12) return "12p";
   return `${h - 12}p`;
 }
+// ============================================================
+// HEADER
+// ============================================================
 
+function renderHeader() {
+  return `
+    <div class="section-header">
+      <h1>4-Day Forecast</h1>
+      <p class="subtitle">Quick look ahead</p>
+    </div>
+  `;
+}
+
+// ============================================================
+// SUMMARY
+// ============================================================
+
+function renderSummary(days) {
+  if (!days.length) return "";
+
+  const best = days.reduce((a, b) => b.fs > a.fs ? b : a);
+
+  return `
+    <div class="card forecast-summary">
+      Best conditions: ${formatDay(best.date)}
+    </div>
+  `;
+}
 // ============================================================
 // EXPAND
 // ============================================================
