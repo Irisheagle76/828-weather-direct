@@ -2,7 +2,7 @@
 // WEATHER API — V11 (NORMALIZED + STABLE)
 // ============================================================
 
-import { normalizeHourly } from '/js/normalizeWeather.js';
+import { normalizeHourly } from './js/normalizeWeather.js';
 
 let cache = {};
 let lastGood = {};
