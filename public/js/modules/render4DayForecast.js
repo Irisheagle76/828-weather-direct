@@ -158,7 +158,10 @@ function analyzeRain(hours) {
     const p = getProb(h);
 
     // Require meaningful probability
-    if (p < 0.35) return;
+   const hasRealRain =
+  (h.precipAmount ?? 0) > 0.01 || p >= 0.45;
+
+if (!hasRealRain) return;
 
     if (hr >= 5 && hr < 10) buckets.morning.push(p);
     else if (hr < 14) buckets.midday.push(p);
@@ -193,8 +196,8 @@ function analyzeRain(hours) {
 // ============================================================
 
 function pickIcon(hours, rain) {
-  if (rain.coverage > 0.55) return "🌧️";
-  if (rain.coverage > 0.30) return "🌦️";
+if (rain.peak >= 0.7 && rain.coverage > 0.2) return "🌧️";
+if (rain.coverage > 0.30) return "🌦️";
 
   const cloud =
     hours.reduce((s,h)=>s+(h.cloudCover||0),0)/hours.length;
@@ -298,12 +301,15 @@ function renderHour(h) {
 
 function getPrecipLevel(h) {
   const prob = getProb(h);
+  const amt = h.precipAmount ?? 0;
 
-  if (prob < 0.30) return 0;
-  if (prob >= 0.80) return 5;
-  if (prob >= 0.65) return 4;
-  if (prob >= 0.50) return 3;
-  if (prob >= 0.40) return 2;
+  // require real signal
+  if (amt < 0.005 && prob < 0.30) return 0;
+
+  if (prob >= 0.80 || amt > 0.15) return 5;
+  if (prob >= 0.65 || amt > 0.08) return 4;
+  if (prob >= 0.50 || amt > 0.04) return 3;
+  if (prob >= 0.40 || amt > 0.02) return 2;
 
   return 1;
 }
