@@ -1,5 +1,5 @@
 // ============================================================
-// 4-DAY FORECAST MODULE (HYBRID + EXPANDABLE)
+// 4-DAY FORECAST (CLEAN REBUILD)
 // ============================================================
 
 import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
@@ -7,7 +7,7 @@ import { calculateComfort } from '/js/intel/comfort.js';
 import { generateNarrative } from '/js/intel/synthesizer/index.js';
 
 // ============================================================
-// MAIN ENTRY
+// MAIN
 // ============================================================
 
 export async function render4DayForecast(container) {
@@ -20,33 +20,35 @@ export async function render4DayForecast(container) {
       includeDaily: true
     });
 
-    const hourly = Array.isArray(data?.hourly) ? data.hourly : [];
-    const daily = Array.isArray(data?.daily) ? data.daily : [];
+    const hourly = data?.hourly || [];
+    const daily = data?.daily || [];
 
-    const days = buildCleanDays(hourly, daily);
+    console.log("==== RAW DAILY ====", daily);
+    console.log("==== RAW HOURLY COUNT ====", hourly.length);
+
+    const days = buildDays(hourly, daily);
     const enriched = days.map(buildDay);
 
     container.innerHTML = `
       <div class="page-container forecast-page">
         ${renderHeader()}
         ${renderSummary(enriched)}
-        ${enriched.map(renderDayCard).join("")}
+        ${enriched.map(renderDay).join("")}
       </div>
     `;
 
     bindExpand();
 
   } catch (err) {
-    console.error("4-day forecast error:", err);
-    container.innerHTML = "";
+    console.error("Forecast error:", err);
   }
 }
 
 // ============================================================
-// BUILD DAYS (HYBRID)
+// BUILD DAYS (TOMORROW → +4)
 // ============================================================
 
-function buildCleanDays(hourly, daily) {
+function buildDays(hourly, daily) {
   const byDay = {};
 
   hourly.forEach(h => {
@@ -71,8 +73,13 @@ function buildCleanDays(hourly, daily) {
       new Date(dd.timestamp).toDateString() === d.toDateString()
     );
 
+    console.log("DAY BUILD:", d.toDateString(), {
+      hours: (byDay[key] || []).length,
+      hasDaily: !!dailyMatch
+    });
+
     days.push({
-      dayStart: key,
+      date: d,
       hours: byDay[key] || [],
       daily: dailyMatch || null
     });
@@ -82,52 +89,97 @@ function buildCleanDays(hourly, daily) {
 }
 
 // ============================================================
-// BUILD DAY
+// BUILD DAY (CORE LOGIC)
 // ============================================================
 
 function buildDay(day) {
   const hours = day.hours;
 
-  let high, low;
+  const temps = hours.map(h => h.temperatureF);
+  const high = temps.length ? Math.round(Math.max(...temps)) : "--";
+  const low = temps.length ? Math.round(Math.min(...temps)) : "--";
 
-  if (hours.length) {
-    const temps = hours.map(h => h.temperatureF);
-    high = Math.round(Math.max(...temps));
-    low = Math.round(Math.min(...temps));
-  } else if (day.daily) {
-    high = Math.round(day.daily.tempMax);
-    low = Math.round(day.daily.tempMin);
-  } else {
-    high = "--";
-    low = "--";
-  }
+  const fs = computeFS(hours);
 
-  let fs;
-  if (hours.length) {
-    fs = computeDailyFS(hours);
-  } else if (day.daily) {
-    fs = Math.round((day.daily.tempMax + day.daily.tempMin) / 2);
-  } else {
-    fs = 50;
-  }
+  const precip = analyzePrecip(hours);
 
-  const narrative = generateNarrative({
-    current: hours[0] || null,
-    hourly: hours,
-    span: "day"
-  });
+  const anchor =
+    hours.find(h => {
+      const hr = new Date(h.timestamp).getHours();
+      return hr >= 10 && hr <= 15;
+    }) || hours[Math.floor(hours.length / 2)];
+
+  const narrative = hours.length
+    ? generateNarrative({
+        current: anchor,
+        hourly: hours,
+        span: "day",
+        precipTiming: precip
+      })
+    : null;
 
   return {
-    date: new Date(day.dayStart),
+    date: day.date,
     hours,
-    daily: day.daily,
     high,
     low,
     fs,
-    icon: hours.length ? pickIcon(hours) : pickDailyIcon(day.daily),
-    takeaway: narrative?.narrative || "Comfortable conditions",
+    icon: pickIcon(hours, precip),
+    takeaway: narrative?.narrative || "Conditions evolving",
     timing: narrative?.trend || ""
   };
+}
+
+// ============================================================
+// PRECIP ANALYSIS (CRITICAL)
+// ============================================================
+
+function analyzePrecip(hours) {
+  const rainy = hours.filter(h => (h.precipProbability || 0) > 0.4);
+
+  if (!rainy.length) return null;
+
+  const first = new Date(rainy[0].timestamp).getHours();
+
+  return {
+    start: first,
+    duration: rainy.length
+  };
+}
+
+// ============================================================
+// ICON LOGIC (FIXED)
+// ============================================================
+
+function pickIcon(hours, precip) {
+  if (!hours.length) return "☁️";
+
+  if (precip) {
+    if (precip.start < 12) return "🌧️"; // morning rain
+    return "🌦️"; // later rain
+  }
+
+  const cloud =
+    hours.reduce((s, h) => s + (h.cloudCover || 0), 0) / hours.length;
+
+  if (cloud > 0.6) return "⛅";
+  if (cloud > 0.3) return "🌤️";
+
+  return "☀️";
+}
+
+// ============================================================
+// FEELSCORE
+// ============================================================
+
+function computeFS(hours) {
+  if (!hours.length) return 50;
+
+  const scores = hours.map(h =>
+    (calculateComfort(h)?.score ?? 5) * 10
+  );
+
+  return Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
 }
 
 // ============================================================
@@ -144,18 +196,16 @@ function renderHeader() {
 }
 
 function renderSummary(days) {
-  const best = days.reduce((a, b) => b.fs > a.fs ? b : a, days[0]);
+  const best = days.reduce((a,b)=> b.fs > a.fs ? b : a);
 
   return `
     <div class="card forecast-summary">
-      <div class="summary-line">
-        Best conditions: ${formatDay(best.date)}
-      </div>
+      Best conditions: ${formatDay(best.date)}
     </div>
   `;
 }
 
-function renderDayCard(d) {
+function renderDay(d) {
   return `
     <div class="card forecast-row expandable">
 
@@ -172,7 +222,7 @@ function renderDayCard(d) {
 
         <div class="feelscore">
           <span class="fs-value">${d.fs}</span>
-          <span class="fs-label">${mapFSLabel(d.fs)}</span>
+          <span class="fs-label">${mapFS(d.fs)}</span>
         </div>
       </div>
 
@@ -186,7 +236,9 @@ function renderDayCard(d) {
       </div>
 
       <div class="expand-content">
-        ${renderExpanded(d)}
+        <div class="hourly-strip">
+          ${d.hours.slice(6,18).map(renderHour).join("")}
+        </div>
       </div>
 
     </div>
@@ -194,39 +246,16 @@ function renderDayCard(d) {
 }
 
 // ============================================================
-// EXPANDED CONTENT
+// HOURLY (HORIZONTAL FIX)
 // ============================================================
 
-function renderExpanded(d) {
-  if (d.hours.length) {
-    return `
-      <div class="expanded-inner">
-        ${d.hours.slice(4,16).map(renderHour).join("")}
-      </div>
-    `;
-  }
-
-  if (d.daily) {
-    return `
-      <div class="expanded-inner">
-        ${renderPart("Morning", d.daily.tempMin + 5)}
-        ${renderPart("Afternoon", d.daily.tempMax)}
-        ${renderPart("Evening", d.daily.tempMin + 2)}
-      </div>
-    `;
-  }
-
-  return "";
-}
-
 function renderHour(h) {
-  const hour = new Date(h.timestamp).getHours();
-  const p = h.precipProbability || 0;
-  const level = getPrecipLevel(p);
+  const hr = new Date(h.timestamp).getHours();
+  const level = getPrecipLevel(h);
 
   return `
     <div class="hour">
-      <div class="hour-time">${formatHour(hour)}</div>
+      <div class="hour-time">${formatHour(hr)}</div>
       <div class="hour-temp">${Math.round(h.temperatureF)}°</div>
       <div class="precip-bar">
         <div class="precip-fill level-${level}"></div>
@@ -235,60 +264,26 @@ function renderHour(h) {
   `;
 }
 
-function renderPart(label, temp) {
-  return `
-    <div class="expanded-row">
-      <div>${label}</div>
-      <div>${Math.round(temp)}°</div>
-    </div>
-  `;
+// ============================================================
+// PRECIP LEVEL (AMOUNT-BASED)
+// ============================================================
+
+function getPrecipLevel(h) {
+  const amt = h.precipitation || 0;
+
+  if (amt > 0.25) return 5;
+  if (amt > 0.1) return 4;
+  if (amt > 0.05) return 3;
+  if (amt > 0.01) return 2;
+  if (amt > 0.001) return 1;
+  return 0;
 }
 
 // ============================================================
 // HELPERS
 // ============================================================
 
-function computeDailyFS(hours) {
-  if (!hours.length) return 50;
-
-  const scores = hours.map(h =>
-    (calculateComfort(h)?.score ?? 5) * 10
-  );
-
-  return Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
-}
-
-function pickIcon(hours) {
-  const peak = Math.max(...hours.map(h => h.precipProbability || 0));
-  if (peak > 0.7) return "🌧️";
-  if (peak > 0.4) return "🌦️";
-
-  const cloud = hours.reduce((s,h)=>s+(h.cloudCover||0),0)/hours.length;
-  if (cloud > 0.6) return "⛅";
-
-  return "☀️";
-}
-
-function pickDailyIcon(d) {
-  if (!d) return "☁️";
-
-  if ((d.precipProbability || 0) > 0.6) return "🌧️";
-  if ((d.precipProbability || 0) > 0.3) return "🌦️";
-  if ((d.cloudCover || 0) > 0.6) return "⛅";
-
-  return "☀️";
-}
-
-function getPrecipLevel(p) {
-  if (p > 0.7) return 5;
-  if (p > 0.5) return 4;
-  if (p > 0.3) return 3;
-  if (p > 0.15) return 2;
-  if (p > 0.05) return 1;
-  return 0;
-}
-
-function mapFSLabel(fs) {
+function mapFS(fs) {
   if (fs >= 90) return "Ideal";
   if (fs >= 75) return "Excellent";
   if (fs >= 60) return "Comfortable";
@@ -315,19 +310,17 @@ function formatHour(h) {
 }
 
 // ============================================================
-// EXPAND BEHAVIOR
+// EXPAND
 // ============================================================
 
 function bindExpand() {
-  const cards = document.querySelectorAll('.forecast-row.expandable');
+  const cards = document.querySelectorAll('.forecast-row');
 
   cards.forEach(card => {
     card.addEventListener('click', () => {
-      const isOpen = card.classList.contains('open');
-
+      const open = card.classList.contains('open');
       cards.forEach(c => c.classList.remove('open'));
-
-      if (!isOpen) card.classList.add('open');
+      if (!open) card.classList.add('open');
     });
   });
 }

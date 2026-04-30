@@ -1656,16 +1656,29 @@ body {
 }
 
 /* =========================
-   HOURLY STRIP
+   HOURLY STRIP (HARDENED)
    ========================= */
 
 .hourly-strip {
   display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  padding-bottom: 4px;
+  flex-direction: row;
 
-  /* nicer scroll feel */
+  gap: 12px;
+  width: 100%;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  padding: 6px 2px 8px;
+
+  /* smoother scrolling */
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+
+  /* snap for nicer UX */
+  scroll-snap-type: x proximity;
+
+  /* hide scrollbar */
   scrollbar-width: none;
 }
 
@@ -1673,20 +1686,32 @@ body {
   display: none;
 }
 
+/* =========================
+   HOURLY ITEM
+   ========================= */
+
 .hour {
-  min-width: 42px;
+  flex: 0 0 auto;          /* 🔑 prevents shrinking */
+  min-width: 48px;
+
   text-align: center;
   font-size: 0.8rem;
+
+  scroll-snap-align: start;
+
+  /* subtle structure */
+  padding: 4px 2px;
 }
 
+/* optional: better spacing feel */
 .hour-time {
   opacity: 0.6;
+  margin-bottom: 2px;
 }
 
 .hour-temp {
   font-weight: 600;
 }
-
 /* =========================
    PRECIP VISUAL
    ========================= */
