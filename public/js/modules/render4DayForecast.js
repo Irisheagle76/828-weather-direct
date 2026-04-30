@@ -1,5 +1,5 @@
 // ============================================================
-// 4-DAY FORECAST (TIME-AWARE + TRUSTED SIGNAL)
+// 4-DAY FORECAST (TIME-AWARE + TRUSTED SIGNAL — FIXED)
 // ============================================================
 
 import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
@@ -21,8 +21,6 @@ export async function render4DayForecast(container) {
     });
 
     const hourly = data?.hourly || [];
-
-    console.log("==== HOURLY COUNT ====", hourly.length);
 
     const days = buildDays(hourly);
     const enriched = days.map((d, i) => buildDay(d, i));
@@ -68,11 +66,6 @@ function buildDays(hourly) {
     const key = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
     const hours = byDay[key] || [];
 
-    console.log("DAY:", d.toDateString(), {
-      hours: hours.length,
-      rainHours: hours.filter(h => getProb(h) > 0.2).length
-    });
-
     days.push({ date: d, hours });
   }
 
@@ -80,7 +73,7 @@ function buildDays(hourly) {
 }
 
 // ============================================================
-// BUILD DAY (TIME CONTEXT FIX)
+// BUILD DAY (TIME CONTEXT + HONEST PRECIP)
 // ============================================================
 
 function buildDay(day, index) {
@@ -118,27 +111,15 @@ function buildDay(day, index) {
   if (intel) {
     const category = classifyCategory(intel);
 
-    // ============================================================
-    // 🔥 TIME CONTEXT INJECTION
-    // ============================================================
-
     let timeContext = null;
 
-    if (rain.type === "morning") {
-      timeContext = "rain early, then clearing";
-    } else if (rain.type === "afternoon") {
-      timeContext = "dry early, showers later";
-    } else if (rain.type === "evening") {
-      timeContext = "dry through the day, rain late";
-    } else if (rain.type === "midday") {
-      timeContext = "periods of rain midday";
-    }
+    if (rain.type === "morning") timeContext = "rain early, then clearing";
+    else if (rain.type === "midday") timeContext = "periods of rain midday";
+    else if (rain.type === "afternoon") timeContext = "dry early, showers later";
+    else if (rain.type === "evening") timeContext = "dry through the day, rain late";
 
     const result = assemble.assemble(
-      {
-        ...intel,
-        timeContext
-      },
+      { ...intel, timeContext },
       index === 0 ? "tomorrow" : "future",
       category,
       category === "veryComfortable"
@@ -159,7 +140,7 @@ function buildDay(day, index) {
 }
 
 // ============================================================
-// RAIN ANALYSIS
+// RAIN ANALYSIS (FIXED — NO FALSE POSITIVES)
 // ============================================================
 
 function analyzeRain(hours) {
@@ -176,7 +157,8 @@ function analyzeRain(hours) {
     const hr = new Date(h.timestamp).getHours();
     const p = getProb(h);
 
-    if (p < 0.25) return; // 🔥 stricter
+    // Require meaningful probability
+    if (p < 0.35) return;
 
     if (hr >= 5 && hr < 10) buckets.morning.push(p);
     else if (hr < 14) buckets.midday.push(p);
@@ -193,11 +175,11 @@ function analyzeRain(hours) {
   const totalRain = counts.reduce((s,c)=>s+c.count,0);
   const coverage = totalRain / hours.length;
 
-  const dominant = counts.sort((a,b)=>b.count-a.count)[0];
-
-  if (coverage < 0.2) {
+  if (coverage < 0.25) {
     return { type: "none", coverage, peak: 0 };
   }
+
+  const dominant = counts.sort((a,b)=>b.count-a.count)[0];
 
   return {
     type: dominant.key,
@@ -207,18 +189,18 @@ function analyzeRain(hours) {
 }
 
 // ============================================================
-// ICON (FIXED)
+// ICON SELECTION (FIXED — HONEST CLOUD + RAIN)
 // ============================================================
 
 function pickIcon(hours, rain) {
-  if (rain.coverage > 0.3) return "🌧️";
-  if (rain.coverage > 0.15) return "🌦️";
+  if (rain.coverage > 0.55) return "🌧️";
+  if (rain.coverage > 0.30) return "🌦️";
 
   const cloud =
     hours.reduce((s,h)=>s+(h.cloudCover||0),0)/hours.length;
 
-  if (cloud > 0.7) return "☁️";
-  if (cloud > 0.4) return "⛅";
+  if (cloud > 0.75) return "☁️";
+  if (cloud > 0.45) return "⛅";
 
   return "☀️";
 }
@@ -311,17 +293,17 @@ function renderHour(h) {
 }
 
 // ============================================================
-// PRECIP LEVEL (FIXED)
+// PRECIP LEVEL (FIXED — NO FALSE BARS)
 // ============================================================
 
 function getPrecipLevel(h) {
   const prob = getProb(h);
 
-  if (prob < 0.2) return 0;
-  if (prob >= 0.75) return 5;
-  if (prob >= 0.6) return 4;
-  if (prob >= 0.45) return 3;
-  if (prob >= 0.3) return 2;
+  if (prob < 0.30) return 0;
+  if (prob >= 0.80) return 5;
+  if (prob >= 0.65) return 4;
+  if (prob >= 0.50) return 3;
+  if (prob >= 0.40) return 2;
 
   return 1;
 }
