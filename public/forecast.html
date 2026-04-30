@@ -36,6 +36,12 @@ async function init() {
     }
 
     const days = buildCleanDays(hourly);
+
+    console.log(
+  "FORECAST DAYS:",
+  days.map(d => new Date(d.dayStart).toDateString())
+);
+
     const enriched = days.map(buildDay);
 
     root.innerHTML = `
@@ -58,7 +64,6 @@ async function init() {
 // =========================
 //
 function buildCleanDays(hourly) {
-  const now = Date.now();
   const byDay = {};
 
   hourly.forEach(h => {
@@ -77,17 +82,11 @@ function buildCleanDays(hourly) {
 
   const todayKey = new Date().setHours(0,0,0,0);
 
-  const result = [];
+  // 🔥 ONLY FUTURE DAYS (skip today entirely)
+  const futureDays = sorted.filter(d => d.dayStart > todayKey);
 
-  const today = sorted.find(d => d.dayStart === todayKey);
-  if (today) {
-    const future = today.hours.filter(h => h.timestamp >= now);
-    if (future.length) result.push({ ...today, hours: future });
-  }
-
-  result.push(...sorted.filter(d => d.dayStart > todayKey).slice(0, 3));
-
-  return result.slice(0, 4);
+  // 🔥 TAKE FIRST 4 FULL DAYS
+  return futureDays.slice(0, 4);
 }
 
 //
@@ -323,6 +322,14 @@ function mapLabel(fs) {
 }
 
 function formatDay(date) {
+  const today = new Date();
+  const tomorrow = new Date();
+  tomorrow.setDate(today.getDate() + 1);
+
+  if (date.toDateString() === tomorrow.toDateString()) {
+    return "TOMORROW";
+  }
+
   return date.toLocaleDateString([], { weekday: "long" }).toUpperCase();
 }
 
