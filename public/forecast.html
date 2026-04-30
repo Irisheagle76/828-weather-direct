@@ -16,7 +16,6 @@ import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
 import { calculateComfort } from '/js/intel/comfort.js';
 import { generateNarrative } from '/js/intel/synthesizer/index.js';
 
-const DEBUG = false;
 const root = document.getElementById('forecast-root');
 
 init();
@@ -36,17 +35,11 @@ async function init() {
     }
 
     const days = buildCleanDays(hourly);
-
-    console.log(
-  "FORECAST DAYS:",
-  days.map(d => new Date(d.dayStart).toDateString())
-);
-
     const enriched = days.map(buildDay);
 
     root.innerHTML = `
       ${renderHeader()}
-      ${renderSummary(days)}
+      ${renderSummary(enriched)}
       ${enriched.map(renderDay).join("")}
     `;
 
@@ -60,7 +53,7 @@ async function init() {
 
 //
 // =========================
-// CLEAN DAYS
+// FORCE 4 DAYS (KEY FIX)
 // =========================
 //
 function buildCleanDays(hourly) {
@@ -76,16 +69,24 @@ function buildCleanDays(hourly) {
     byDay[key].push(h);
   });
 
-  const sorted = Object.entries(byDay)
-    .map(([k, hours]) => ({ dayStart: Number(k), hours }))
-    .sort((a, b) => a.dayStart - b.dayStart);
+  const today = new Date();
+  today.setHours(0,0,0,0);
 
-  const todayKey = new Date().setHours(0,0,0,0);
+  const days = [];
 
-  // 🔥 include ALL future days, even partial
-  return sorted
-    .filter(d => d.dayStart > todayKey)
-    .slice(0, 4);
+  for (let i = 1; i <= 4; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+
+    const key = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+
+    days.push({
+      dayStart: key,
+      hours: byDay[key] || []
+    });
+  }
+
+  return days;
 }
 
 //
@@ -100,26 +101,67 @@ function buildDay(day) {
 
   const fs = computeDailyFS(hours);
 
- const narrative = generateNarrative({
-  current: hours[0],              // start of day
-  hourly: hours.slice(0, 12),     // more context
-  mode: "day"                     // 👈 if your engine supports it
-});
+  const narrative = generateNarrative({
+    current: hours[0] || null,
+    hourly: hours,
+    span: "day"
+  });
 
-  if (DEBUG) console.log("DAY NARRATIVE:", narrative);
+  const isHourlyRich = hours.length >= 12;
+  const dayParts = buildDayParts(hours);
 
   return {
     date: new Date(day.dayStart),
     hours,
-    high: Math.round(Math.max(...temps)),
-    low: Math.round(Math.min(...temps)),
     fs,
+    isHourlyRich,
+    dayParts,
+    high: temps.length ? Math.round(Math.max(...temps)) : "--",
+    low: temps.length ? Math.round(Math.min(...temps)) : "--",
     icon: pickIcon(hours),
 
-    // ✅ FIXED (this was your missing voice)
-  takeaway: narrative?.headline || narrative?.narrative || "Conditions stable",
+    takeaway:
+      narrative?.headline ||
+      narrative?.narrative ||
+      (fs >= 75 ? "Comfortable overall" : "Some variability expected"),
+
     timing: narrative?.trend || ""
   };
+}
+
+//
+// =========================
+// DAY PARTS (FALLBACK)
+// =========================
+//
+function buildDayParts(hours) {
+  if (!hours.length) return null;
+
+  const parts = {
+    morning: hours.filter(h => hour(h) >= 6 && hour(h) < 12),
+    afternoon: hours.filter(h => hour(h) >= 12 && hour(h) < 18),
+    evening: hours.filter(h => hour(h) >= 18 && hour(h) < 24),
+  };
+
+  return {
+    morning: summarize(parts.morning),
+    afternoon: summarize(parts.afternoon),
+    evening: summarize(parts.evening)
+  };
+}
+
+function summarize(part) {
+  if (!part.length) return null;
+
+  return {
+    temp: avg(part, "temperatureF"),
+    rain: Math.max(...part.map(h => h.precipProbability || 0)),
+    cloud: avg(part, "cloudCover")
+  };
+}
+
+function hour(h) {
+  return new Date(h.timestamp).getHours();
 }
 
 //
@@ -128,23 +170,16 @@ function buildDay(day) {
 // =========================
 //
 function computeDailyFS(hours) {
+  if (!hours.length) return 50;
+
   const scores = hours.map(h => {
     const raw = calculateComfort(h)?.score ?? 5;
     return raw * 10;
   });
 
-  if (!scores.length) return 50;
-
-  const mid = scores.slice(
-    Math.floor(scores.length * 0.3),
-    Math.floor(scores.length * 0.7)
+  return Math.round(
+    scores.reduce((a, b) => a + b, 0) / scores.length
   );
-
-  const avg =
-    (mid.length ? mid : scores).reduce((a, b) => a + b, 0) /
-    (mid.length || scores.length);
-
-  return Math.round(Math.min(Math.max(avg, 0), 98));
 }
 
 //
@@ -162,20 +197,15 @@ function renderHeader() {
 }
 
 function renderSummary(days) {
-  const allHours = days.flatMap(d => d.hours);
-
-  const narrative = generateNarrative({
-    current: allHours[0],
-    hourly: allHours.slice(0, 12)
-  });
+  const best = days.reduce((a, b) => (b.fs > a.fs ? b : a), days[0]);
 
   return `
     <div class="card forecast-summary">
       <div class="summary-line">
-        ${narrative?.headline || narrative?.narrative || "Conditions evolving"}
+        Best conditions: ${formatDay(best.date)}
       </div>
       <div class="summary-meta">
-        ${narrative?.trend || ""}
+        Comfort peaks early → slight changes later
       </div>
     </div>
   `;
@@ -221,63 +251,74 @@ function renderDay(d) {
 
 //
 // =========================
-// EXPANDED
+// EXPANDED VIEW
 // =========================
 //
 function renderExpanded(d) {
-  const slice = d.hours.slice(5, 17);
 
-  return `
-    <div class="expanded-inner">
+  // 🔥 HOURLY (RICH DATA)
+  if (d.isHourlyRich) {
+    const slice = d.hours.slice(4, 16);
 
-      <div class="hourly-strip">
-        ${slice.map(renderHour).join("")}
+    return `
+      <div class="expanded-inner">
+
+        <div class="hourly-strip">
+          ${slice.map(renderHour).join("")}
+        </div>
+
+        <div class="expanded-row subtle">
+          Wind: ${Math.round(avg(slice, 'windSpeed'))} mph
+          • Humidity: ${Math.round(avg(slice, 'relativeHumidity'))}%
+        </div>
+
       </div>
+    `;
+  }
 
-      <div class="expanded-row subtle">
-        Wind: ${Math.round(avg(slice, 'windSpeed'))} mph
-        • Humidity: ${Math.round(avg(slice, 'relativeHumidity'))}%
+  // 🔥 DAY PARTS (FALLBACK)
+  if (d.dayParts) {
+    return `
+      <div class="expanded-inner">
+        ${renderPart("Morning", d.dayParts.morning)}
+        ${renderPart("Afternoon", d.dayParts.afternoon)}
+        ${renderPart("Evening", d.dayParts.evening)}
       </div>
+    `;
+  }
 
-    </div>
-  `;
+  return "";
 }
 
 function renderHour(h) {
-  const hour = new Date(h.timestamp).getHours();
-
-  const precip = h.precipProbability ?? 0;
-  const intensity = getPrecipLevel(precip);
+  const hNum = hour(h);
+  const level = getPrecipLevel(h.precipProbability || 0);
 
   return `
     <div class="hour">
-      <div class="hour-time">${formatHour(hour)}</div>
+      <div class="hour-time">${formatHour(hNum)}</div>
       <div class="hour-temp">${Math.round(h.temperatureF)}°</div>
-
       <div class="precip-bar">
-        <div class="precip-fill level-${intensity}"></div>
+        <div class="precip-fill level-${level}"></div>
       </div>
     </div>
   `;
 }
 
-//
-// =========================
-// INTERACTION
-// =========================
-//
-function bindExpand() {
-  const cards = document.querySelectorAll('.forecast-row.expandable');
+function renderPart(label, part) {
+  if (!part) return "";
 
-  cards.forEach(card => {
-    card.addEventListener('click', () => {
-      const isOpen = card.classList.contains('open');
+  const icon =
+    part.rain > 0.6 ? "🌧️" :
+    part.cloud > 0.6 ? "⛅" :
+    "☀️";
 
-      cards.forEach(c => c.classList.remove('open'));
-
-      if (!isOpen) card.classList.add('open');
-    });
-  });
+  return `
+    <div class="expanded-row">
+      <div>${label}</div>
+      <div>${icon} ${Math.round(part.temp)}°</div>
+    </div>
+  `;
 }
 
 //
@@ -294,24 +335,25 @@ function getPrecipLevel(p) {
   return 0;
 }
 
-// ✅ MUCH BETTER ICON LOGIC
 function pickIcon(hours) {
-  const rainHours = hours.filter(h => (h.precipProbability ?? 0) > 0.6);
-  const rainRatio = rainHours.length / hours.length;
+  if (!hours.length) return "—";
 
-  if (rainRatio > 0.5) return "🌧️";
+  const peak = Math.max(...hours.map(h => h.precipProbability || 0));
 
-  const cloudHours = hours.filter(h => (h.cloudCover ?? 0) > 0.6);
-  const cloudRatio = cloudHours.length / hours.length;
+  if (peak > 0.7) return "🌧️";
+  if (peak > 0.4) return "🌦️";
 
-  if (cloudRatio > 0.6) return "⛅";
+  const cloud =
+    hours.reduce((sum, h) => sum + (h.cloudCover || 0), 0) / hours.length;
+
+  if (cloud > 0.6) return "⛅";
 
   return "☀️";
 }
+
 function avg(arr, key) {
   const vals = arr.map(h => h[key]).filter(Number.isFinite);
-  if (!vals.length) return 0;
-  return vals.reduce((a, b) => a + b, 0) / vals.length;
+  return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
 }
 
 function mapLabel(fs) {
@@ -323,9 +365,8 @@ function mapLabel(fs) {
 }
 
 function formatDay(date) {
-  const today = new Date();
   const tomorrow = new Date();
-  tomorrow.setDate(today.getDate() + 1);
+  tomorrow.setDate(new Date().getDate() + 1);
 
   if (date.toDateString() === tomorrow.toDateString()) {
     return "TOMORROW";
