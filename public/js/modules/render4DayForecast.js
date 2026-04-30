@@ -1,10 +1,10 @@
 // ============================================================
-// 4-DAY FORECAST (CLEAN REBUILD)
+// 4-DAY FORECAST (SYSTEM-INTEGRATED REBUILD)
 // ============================================================
 
 import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
 import { calculateComfort } from '/js/intel/comfort.js';
-import { generateNarrative } from '/js/intel/synthesizer/index.js';
+import { assemble } from '/js/intel/synthesizer/assemble.js';
 
 // ============================================================
 // MAIN
@@ -27,7 +27,7 @@ export async function render4DayForecast(container) {
     console.log("==== RAW HOURLY COUNT ====", hourly.length);
 
     const days = buildDays(hourly, daily);
-    const enriched = days.map(buildDay);
+    const enriched = days.map((d, i) => buildDay(d, i));
 
     container.innerHTML = `
       <div class="page-container forecast-page">
@@ -54,6 +54,7 @@ function buildDays(hourly, daily) {
   hourly.forEach(h => {
     const d = new Date(h.timestamp);
     const key = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+
     if (!byDay[key]) byDay[key] = [];
     byDay[key].push(h);
   });
@@ -73,14 +74,21 @@ function buildDays(hourly, daily) {
       new Date(dd.timestamp).toDateString() === d.toDateString()
     );
 
+    const hours = byDay[key] || [];
+
     console.log("DAY BUILD:", d.toDateString(), {
-      hours: (byDay[key] || []).length,
+      hours: hours.length,
+      samplePrecip: hours.slice(6,12).map(h => ({
+        hr: new Date(h.timestamp).getHours(),
+        p: h.precipitation,
+        prob: h.precipProbability
+      })),
       hasDaily: !!dailyMatch
     });
 
     days.push({
       date: d,
-      hours: byDay[key] || [],
+      hours,
       daily: dailyMatch || null
     });
   }
@@ -89,10 +97,10 @@ function buildDays(hourly, daily) {
 }
 
 // ============================================================
-// BUILD DAY (CORE LOGIC)
+// BUILD DAY (SYSTEM-ALIGNED)
 // ============================================================
 
-function buildDay(day) {
+function buildDay(day, index) {
   const hours = day.hours;
 
   const temps = hours.map(h => h.temperatureF);
@@ -101,22 +109,47 @@ function buildDay(day) {
 
   const fs = computeFS(hours);
 
-  const precip = analyzePrecip(hours);
+  // --------------------------------------------------
+  // BUILD INTEL OBJECT FOR NARRATIVE ENGINE
+  // --------------------------------------------------
 
   const anchor =
     hours.find(h => {
       const hr = new Date(h.timestamp).getHours();
-      return hr >= 10 && hr <= 15;
+      return hr >= 11 && hr <= 15;
     }) || hours[Math.floor(hours.length / 2)];
 
-  const narrative = hours.length
-    ? generateNarrative({
-        current: anchor,
-        hourly: hours,
-        span: "day",
-        precipTiming: precip
-      })
+  const intel = anchor
+    ? {
+        temperature: anchor.temperatureF,
+        dewpoint: anchor.dewpointF,
+        windSpeed: anchor.windSpeed,
+        windGust: anchor.windGust,
+        cloudCover: anchor.cloudCover,
+        precipProbability: anchor.precipProbability,
+        precipAmount: anchor.precipitation,
+        score: fs,
+        dominantFactor: detectDominant(hours)
+      }
     : null;
+
+  // --------------------------------------------------
+  // 🔥 USE YOUR REAL ASSEMBLER (NOT GENERATE NARRATIVE)
+  // --------------------------------------------------
+
+  let narrative = null;
+
+  if (intel) {
+    const category = classifyCategory(intel);
+    const gold = category === "veryComfortable";
+
+    narrative = assemble.assemble(
+      intel,
+      index === 0 ? "tomorrow" : "future",
+      category,
+      gold
+    );
+  }
 
   return {
     date: day.date,
@@ -124,43 +157,60 @@ function buildDay(day) {
     high,
     low,
     fs,
-    icon: pickIcon(hours, precip),
-    takeaway: narrative?.narrative || "Conditions evolving",
-    timing: narrative?.trend || ""
+    icon: narrative?.emoji || pickIcon(hours),
+    takeaway: narrative?.narrative || "",
+    timing: narrative?.temporal || ""
   };
 }
 
 // ============================================================
-// PRECIP ANALYSIS (CRITICAL)
+// DOMINANT FACTOR DETECTION (CRITICAL FIX)
 // ============================================================
 
-function analyzePrecip(hours) {
-  const rainy = hours.filter(h => (h.precipProbability || 0) > 0.4);
+function detectDominant(hours) {
+  const rain = hours.reduce((s,h)=>s+(h.precipitation||0),0);
+  const maxProb = Math.max(...hours.map(h=>h.precipProbability||0));
 
-  if (!rainy.length) return null;
+  if (rain > 0.2 || maxProb > 0.5) return "rain";
 
-  const first = new Date(rainy[0].timestamp).getHours();
+  const wind = Math.max(...hours.map(h=>h.windSpeed||0));
+  if (wind > 20) return "wind";
 
-  return {
-    start: first,
-    duration: rainy.length
-  };
+  const temp = hours[Math.floor(hours.length/2)]?.temperatureF || 70;
+
+  if (temp > 85) return "heat";
+  if (temp < 40) return "cold";
+
+  return "sun";
 }
 
 // ============================================================
-// ICON LOGIC (FIXED)
+// CATEGORY (MATCHES YOUR SYSTEM)
 // ============================================================
 
-function pickIcon(hours, precip) {
+function classifyCategory(intel) {
+  if (intel.score >= 90) return "veryComfortable";
+  if (intel.score >= 75) return "comfortable";
+  if (intel.score >= 60) return "slightlyUncomfortable";
+  if (intel.score >= 45) return "uncomfortable";
+  return "harsh";
+}
+
+// ============================================================
+// ICON (NOW ALIGNED)
+// ============================================================
+
+function pickIcon(hours) {
   if (!hours.length) return "☁️";
 
-  if (precip) {
-    if (precip.start < 12) return "🌧️"; // morning rain
-    return "🌦️"; // later rain
-  }
+  const rain = hours.reduce((s,h)=>s+(h.precipitation||0),0);
+  const prob = Math.max(...hours.map(h=>h.precipProbability||0));
+
+  if (rain > 0.2) return "🌧️";
+  if (prob > 0.4) return "🌦️";
 
   const cloud =
-    hours.reduce((s, h) => s + (h.cloudCover || 0), 0) / hours.length;
+    hours.reduce((s,h)=>s+(h.cloudCover||0),0)/hours.length;
 
   if (cloud > 0.6) return "⛅";
   if (cloud > 0.3) return "🌤️";
@@ -185,25 +235,6 @@ function computeFS(hours) {
 // ============================================================
 // RENDER
 // ============================================================
-
-function renderHeader() {
-  return `
-    <div class="section-header">
-      <h1>4-Day Forecast</h1>
-      <p class="subtitle">Quick look ahead</p>
-    </div>
-  `;
-}
-
-function renderSummary(days) {
-  const best = days.reduce((a,b)=> b.fs > a.fs ? b : a);
-
-  return `
-    <div class="card forecast-summary">
-      Best conditions: ${formatDay(best.date)}
-    </div>
-  `;
-}
 
 function renderDay(d) {
   return `
@@ -230,10 +261,12 @@ function renderDay(d) {
         <div class="fs-fill" style="width:${d.fs}%"></div>
       </div>
 
-      <div class="row-bottom">
-        <div class="takeaway">${d.takeaway}</div>
-        <div class="timing">${d.timing}</div>
-      </div>
+      ${d.takeaway ? `
+        <div class="row-bottom">
+          <div class="takeaway">${d.takeaway}</div>
+          <div class="timing">${d.timing}</div>
+        </div>
+      ` : ""}
 
       <div class="expand-content">
         <div class="hourly-strip">
@@ -246,7 +279,7 @@ function renderDay(d) {
 }
 
 // ============================================================
-// HOURLY (HORIZONTAL FIX)
+// HOURLY (FIXED)
 // ============================================================
 
 function renderHour(h) {
@@ -265,11 +298,11 @@ function renderHour(h) {
 }
 
 // ============================================================
-// PRECIP LEVEL (AMOUNT-BASED)
+// PRECIP LEVEL (FIXED)
 // ============================================================
 
 function getPrecipLevel(h) {
-  const amt = h.precipitation || 0;
+  const amt = h.precipitation ?? h.rain ?? 0;
 
   if (amt > 0.25) return 5;
   if (amt > 0.1) return 4;
