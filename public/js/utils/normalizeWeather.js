@@ -8,67 +8,109 @@ export function normalizeHourly(rawHourly = []) {
       const timestamp = h.timestamp;
       if (!Number.isFinite(timestamp)) return null;
 
+      // ------------------------------------------------------------
+      // TEMPERATURE / DEWPOINT
+      // ------------------------------------------------------------
+
+      const temperatureF = Number.isFinite(h.temperatureF)
+        ? h.temperatureF
+        : null;
+
+      const dewpointF = Number.isFinite(h.dewpointF)
+        ? h.dewpointF
+        : null;
+
+      // ------------------------------------------------------------
+      // HUMIDITY (DERIVED IF NEEDED)
+      // ------------------------------------------------------------
+
+      let rh = h.relativeHumidity;
+
+      if (!Number.isFinite(rh)) {
+        if (Number.isFinite(temperatureF) && Number.isFinite(dewpointF)) {
+          const t = (temperatureF - 32) * 5/9;
+          const d = (dewpointF - 32) * 5/9;
+
+          const es = 6.112 * Math.exp((17.67 * t) / (t + 243.5));
+          const e  = 6.112 * Math.exp((17.67 * d) / (d + 243.5));
+
+          rh = (e / es) * 100;
+        } else {
+          rh = null;
+        }
+      }
+
+      if (Number.isFinite(rh)) {
+        rh = Math.max(0, Math.min(100, rh));
+      }
+
+      // ------------------------------------------------------------
+      // 🚨 PRECIP PROBABILITY (CRITICAL FIX)
+      // ------------------------------------------------------------
+
+      let precipProbability = h.precipProbability;
+
+      if (Number.isFinite(precipProbability)) {
+        // normalize 0–100 → 0–1
+        if (precipProbability > 1) {
+          precipProbability = precipProbability / 100;
+        }
+
+        precipProbability = Math.max(0, Math.min(1, precipProbability));
+      } else {
+        precipProbability = 0;
+      }
+
+      // ------------------------------------------------------------
+      // PRECIP AMOUNT
+      // ------------------------------------------------------------
+
+      let precipitation = h.precipitation;
+
+      if (!Number.isFinite(precipitation)) {
+        precipitation = h.rain ?? 0;
+      }
+
+      if (!Number.isFinite(precipitation)) {
+        precipitation = 0;
+      }
+
+      // ------------------------------------------------------------
+      // CLOUD COVER NORMALIZATION
+      // ------------------------------------------------------------
+
+      let cloudCover = h.cloudCover;
+
+      if (Number.isFinite(cloudCover)) {
+        // normalize 0–100 → 0–1 if needed
+        if (cloudCover > 1) {
+          cloudCover = cloudCover / 100;
+        }
+
+        cloudCover = Math.max(0, Math.min(1, cloudCover));
+      } else {
+        cloudCover = null;
+      }
+
+      // ------------------------------------------------------------
+      // RETURN CLEAN OBJECT
+      // ------------------------------------------------------------
+
       return {
         timestamp,
 
-        temperatureF: Number.isFinite(h.temperatureF)
-          ? h.temperatureF
-          : null,
+        temperatureF,
+        dewpointF,
+        relativeHumidity: rh,
 
-        dewpointF: Number.isFinite(h.dewpointF)
-          ? h.dewpointF
-          : null,
+        windSpeed: Number.isFinite(h.windSpeed) ? h.windSpeed : 0,
+        windGust: Number.isFinite(h.windGust) ? h.windGust : null,
 
-        relativeHumidity: (() => {
-  let rh = h.relativeHumidity;
+        precipitation,
+        precipProbability, // 🔥 now always 0–1
 
-  // ------------------------------------------------------------
-  // 1. Fix NaN / bad values
-  // ------------------------------------------------------------
-  if (!Number.isFinite(rh)) {
-    // fallback: derive from temp + dewpoint if possible
-    if (
-      Number.isFinite(h.temperatureF) &&
-      Number.isFinite(h.dewpointF)
-    ) {
-      const t = (h.temperatureF - 32) * 5/9;
-      const d = (h.dewpointF - 32) * 5/9;
-
-      const es = 6.112 * Math.exp((17.67 * t) / (t + 243.5));
-      const e  = 6.112 * Math.exp((17.67 * d) / (d + 243.5));
-
-      rh = (e / es) * 100;
-    } else {
-      return null;
-    }
-  }
-
-  // ------------------------------------------------------------
-  // 2. Clamp to physical bounds
-  // ------------------------------------------------------------
-  return Math.max(0, Math.min(100, rh));
-})(),
-
-
-        windSpeed: Number.isFinite(h.windSpeed)
-          ? h.windSpeed
-          : 0,
-
-        windGust: Number.isFinite(h.windGust)
-          ? h.windGust
-          : null,
-
-        precipitation: Number.isFinite(h.precipitation)
-          ? h.precipitation
-          : 0,
-
-        cloudCover: Number.isFinite(h.cloudCover)
-          ? h.cloudCover
-          : null,
-
-        uvIndex: Number.isFinite(h.uvIndex)
-          ? h.uvIndex
-          : null
+        cloudCover,
+        uvIndex: Number.isFinite(h.uvIndex) ? h.uvIndex : null
       };
     })
     .filter(Boolean)
@@ -76,7 +118,10 @@ export function normalizeHourly(rawHourly = []) {
 
   if (!normalized.length) return [];
 
-  // 🔥 CRITICAL FIX — align to closest to now
+  // ------------------------------------------------------------
+  // ALIGN TO "NOW"
+  // ------------------------------------------------------------
+
   let closestIndex = 0;
   let smallestDiff = Infinity;
 

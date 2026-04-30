@@ -1,6 +1,8 @@
 // ============================================================
-// WEATHER API — V10 (HOURLY + DAILY + TEMPEST SAFE)
+// WEATHER API — V11 (NORMALIZED + STABLE)
 // ============================================================
+
+import { normalizeHourly } from '../../js/normalizeWeather.js';
 
 let cache = {};
 let lastGood = {};
@@ -22,15 +24,12 @@ export default async function handler(req, res) {
 
   } catch (err) {
     console.error("🚨 TOP LEVEL ERROR:", err);
-
-    return res.status(500).json({
-      error: err.message
-    });
+    return res.status(500).json({ error: err.message });
   }
 }
 
 // ------------------------------------------------------------
-// MAIN HANDLER (HOURLY + DAILY)
+// MAIN HANDLER
 // ------------------------------------------------------------
 async function handleForecast(req, res) {
   const { lat, lon } = req.query;
@@ -40,7 +39,6 @@ async function handleForecast(req, res) {
   }
 
   const key = `${lat},${lon}`;
-
   const tempest = await fetchTempest();
 
   // ----------------------------------------------------------
@@ -54,33 +52,14 @@ async function handleForecast(req, res) {
   }
 
   // ----------------------------------------------------------
-  // OPEN-METEO REQUEST (FIXED)
+  // REQUEST
   // ----------------------------------------------------------
-  const hourlyFields = [
-    "temperature_2m",
-    "dew_point_2m",
-    "relative_humidity_2m",
-    "precipitation",
-    "precipitation_probability",
-    "cloudcover",
-    "wind_speed_10m",
-    "wind_gusts_10m",
-    "uv_index"
-  ].join(",");
-
-  const dailyFields = [
-    "temperature_2m_max",
-    "temperature_2m_min",
-    "precipitation_probability_max",
-    "cloudcover_mean"
-  ].join(",");
-
   const url =
     `https://api.open-meteo.com/v1/forecast` +
     `?latitude=${lat}&longitude=${lon}` +
-    `&hourly=${hourlyFields}` +
-    `&daily=${dailyFields}` + // 🔥 ADDED
-    `&forecast_days=5` +      // 🔥 INCREASED
+    `&hourly=temperature_2m,dew_point_2m,relative_humidity_2m,precipitation,precipitation_probability,cloudcover,wind_speed_10m,wind_gusts_10m,uv_index` +
+    `&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,cloudcover_mean` +
+    `&forecast_days=5` +
     `&temperature_unit=fahrenheit` +
     `&wind_speed_unit=mph` +
     `&precipitation_unit=inch` +
@@ -99,40 +78,57 @@ async function handleForecast(req, res) {
   }
 
   // ----------------------------------------------------------
-  // NORMALIZE HOURLY
+  // RAW HOURLY (STRUCTURED)
   // ----------------------------------------------------------
-  const hourly = data.hourly.time.map((t, i) => ({
+  const rawHourly = data.hourly.time.map((t, i) => ({
     timestamp: new Date(t).getTime(),
 
     temperatureF: data.hourly.temperature_2m?.[i] ?? null,
     dewpointF: data.hourly.dew_point_2m?.[i] ?? null,
-    relative_humidity: data.hourly.relative_humidity_2m?.[i] ?? null,
+    relativeHumidity: data.hourly.relative_humidity_2m?.[i] ?? null,
 
     windSpeed: data.hourly.wind_speed_10m?.[i] ?? 0,
     windGust: data.hourly.wind_gusts_10m?.[i] ?? null,
 
     precipitation: data.hourly.precipitation?.[i] ?? 0,
-    precipProbability:
-      data.hourly.precipitation_probability?.[i] ?? 0,
 
-    cloudCover: data.hourly.cloudcover?.[i] ?? 0,
-    uv: data.hourly.uv_index?.[i] ?? null
+    // 🔥 NORMALIZE HERE
+    precipProbability: normalizeProbability(
+      data.hourly.precipitation_probability?.[i]
+    ),
+
+    cloudCover: normalizeProbability(
+      data.hourly.cloudcover?.[i]
+    ),
+
+    uvIndex: data.hourly.uv_index?.[i] ?? null
   }));
 
   // ----------------------------------------------------------
-  // NORMALIZE DAILY (🔥 NEW)
+  // FINAL HOURLY NORMALIZATION (YOUR ENGINE)
   // ----------------------------------------------------------
-  const daily = data.daily?.time?.map((t, i) => ({
-    timestamp: new Date(t).getTime(),
-    tempMax: data.daily.temperature_2m_max?.[i] ?? null,
-    tempMin: data.daily.temperature_2m_min?.[i] ?? null,
-    precipProbability:
-      data.daily.precipitation_probability_max?.[i] ?? 0,
-    cloudCover: data.daily.cloudcover_mean?.[i] ?? 0
-  })) || [];
+  const hourly = normalizeHourly(rawHourly);
 
   // ----------------------------------------------------------
-  // SMOOTHING
+  // DAILY NORMALIZATION
+  // ----------------------------------------------------------
+  const daily = (data.daily?.time || []).map((t, i) => ({
+    timestamp: new Date(t).getTime(),
+
+    tempMax: data.daily.temperature_2m_max?.[i] ?? null,
+    tempMin: data.daily.temperature_2m_min?.[i] ?? null,
+
+    precipProbability: normalizeProbability(
+      data.daily.precipitation_probability_max?.[i]
+    ),
+
+    cloudCover: normalizeProbability(
+      data.daily.cloudcover_mean?.[i]
+    )
+  }));
+
+  // ----------------------------------------------------------
+  // TEMPEST SMOOTHING
   // ----------------------------------------------------------
   const hourlySmoothed = smoothTransitionWithTempest(hourly, tempest);
 
@@ -141,24 +137,12 @@ async function handleForecast(req, res) {
   // ----------------------------------------------------------
   const payload = {
     hourly: hourlySmoothed,
-    daily, // 🔥 CRITICAL FIX
+    daily,
 
     current: tempest
       ? {
           ...tempest,
           isRainingNow: (tempest.precipRate ?? 0) > 0
-        }
-      : null,
-
-    current_conditions: tempest
-      ? {
-          air_temperature: tempest.temperatureF,
-          relative_humidity: tempest.relative_humidity,
-          wind_gust: tempest.windGust,
-          wind_avg: tempest.windSpeed,
-          precip_rate: tempest.precipRate,
-          precip: tempest.precip,
-          timestamp: tempest.timestamp
         }
       : null,
 
@@ -168,7 +152,22 @@ async function handleForecast(req, res) {
   cache[key] = { ts: Date.now(), data: payload };
   lastGood[key] = payload;
 
+  // 🔍 DEBUG (leave this in for now)
+  console.log("=== WEATHER NORMALIZED ===");
+  console.log("hourly sample:", hourlySmoothed.slice(0, 5));
+  console.log("daily sample:", daily.slice(0, 3));
+
   return res.status(200).json(payload);
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+
+// 🔥 CRITICAL: Normalize 0–100 → 0–1
+function normalizeProbability(val) {
+  if (!Number.isFinite(val)) return 0;
+  return val > 1 ? val / 100 : val;
 }
 
 // ============================================================

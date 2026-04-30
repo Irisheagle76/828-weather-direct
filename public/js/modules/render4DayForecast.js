@@ -270,13 +270,16 @@ function renderHour(h) {
 // ============================================================
 
 function getPrecipLevel(h) {
-  const prob = getProb(h);
+  const prob = getProb(h); // already normalized 0–1
 
-  if (prob > 0.7) return 5;
-  if (prob > 0.5) return 4;
-  if (prob > 0.35) return 3;
-  if (prob > 0.2) return 2;
-  if (prob > 0.1) return 1;
+  // amplify weak signals so UI doesn't go dead
+  if (prob >= 0.6) return 5;   // strong rain
+  if (prob >= 0.4) return 4;
+  if (prob >= 0.25) return 3;
+  if (prob >= 0.12) return 2;
+
+  // 👇 THIS is the key change
+  if (prob >= 0.03) return 1;  // light signal still visible
 
   return 0;
 }
