@@ -296,13 +296,13 @@ function getPrecipLevel(p) {
 
 // ✅ MUCH BETTER ICON LOGIC
 function pickIcon(hours) {
-  const rain = hours.filter(h => (h.precipProbability ?? 0) > 0.4).length;
-  const clouds = hours.filter(h => (h.cloudCover ?? 0) > 0.5).length;
+  const rainHours = hours.filter(h => (h.precipProbability ?? 0) > 0.4);
+  const cloudHours = hours.filter(h => (h.cloudCover ?? 0) > 0.5);
 
-  const rainRatio = rain / hours.length;
-  const cloudRatio = clouds / hours.length;
+  const rainRatio = rainHours.length / hours.length;
+  const cloudRatio = cloudHours.length / hours.length;
 
-  if (rainRatio > 0.3) return "🌧️";
+  if (rainRatio > 0.4) return "🌧️";
   if (cloudRatio > 0.5) return "⛅";
   return "☀️";
 }

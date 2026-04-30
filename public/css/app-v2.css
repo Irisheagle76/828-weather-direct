@@ -1726,3 +1726,9 @@ body {
 .precip-fill.level-3 { height: 8px; opacity: 0.7; }
 .precip-fill.level-4 { height: 11px; opacity: 0.85; }
 .precip-fill.level-5 { height: 14px; opacity: 1; }
+
+.expanded-inner {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
