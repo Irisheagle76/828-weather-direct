@@ -82,13 +82,10 @@ function buildCleanDays(hourly) {
 
   const todayKey = new Date().setHours(0,0,0,0);
 
-  // 🔥 ONLY FUTURE DAYS (skip today entirely)
-  const futureDays = sorted.filter(d => d.dayStart > todayKey);
-
-  // 🔥 TAKE FIRST 4 FULL DAYS
+  // 🔥 include ALL future days, even partial
   return sorted
-  .filter(d => d.dayStart > todayKey)
-  .slice(0, 4);
+    .filter(d => d.dayStart > todayKey)
+    .slice(0, 4);
 }
 
 //
@@ -103,10 +100,11 @@ function buildDay(day) {
 
   const fs = computeDailyFS(hours);
 
-  const narrative = generateNarrative({
-    current: hours[Math.floor(hours.length / 2)],
-    hourly: hours.slice(0, 8)
-  });
+ const narrative = generateNarrative({
+  current: hours[0],              // start of day
+  hourly: hours.slice(0, 12),     // more context
+  mode: "day"                     // 👈 if your engine supports it
+});
 
   if (DEBUG) console.log("DAY NARRATIVE:", narrative);
 
@@ -298,17 +296,18 @@ function getPrecipLevel(p) {
 
 // ✅ MUCH BETTER ICON LOGIC
 function pickIcon(hours) {
-  const rainHours = hours.filter(h => (h.precipProbability ?? 0) > 0.5);
-  const cloudHours = hours.filter(h => (h.cloudCover ?? 0) > 0.6);
-
+  const rainHours = hours.filter(h => (h.precipProbability ?? 0) > 0.6);
   const rainRatio = rainHours.length / hours.length;
+
+  if (rainRatio > 0.5) return "🌧️";
+
+  const cloudHours = hours.filter(h => (h.cloudCover ?? 0) > 0.6);
   const cloudRatio = cloudHours.length / hours.length;
 
-  if (rainRatio > 0.4) return "🌧️";
-  if (cloudRatio > 0.5) return "⛅";
+  if (cloudRatio > 0.6) return "⛅";
+
   return "☀️";
 }
-
 function avg(arr, key) {
   const vals = arr.map(h => h[key]).filter(Number.isFinite);
   if (!vals.length) return 0;
