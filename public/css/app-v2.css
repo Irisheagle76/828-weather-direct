@@ -1447,17 +1447,17 @@ body {
 }
 
 /* =========================
-   FORECAST PAGE (VERTICAL)
+   FORECAST PAGE (CONTAINED)
    ========================= */
 
 .forecast-page {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
 /* =========================
-   SUMMARY CARD
+   SUMMARY
    ========================= */
 
 .forecast-summary {
@@ -1470,24 +1470,37 @@ body {
 }
 
 .summary-meta {
-  font-size: 0.85rem;
-  opacity: 0.7;
+  font-size: 0.8rem;
+  opacity: 0.65;
 }
 
 /* =========================
-   FORECAST ROW
+   FORECAST CARD
    ========================= */
 
 .forecast-row {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   min-width: 0;
-  transition: transform 0.15s ease, opacity 0.15s ease;
+
+  padding: 14px;
+  border-radius: 16px;
+
+  background: rgba(255,255,255,0.03);
+
+  transition: transform 0.15s ease, background 0.2s ease;
 }
 
 .forecast-row:active {
   transform: scale(0.98);
+}
+
+/* subtle hover (desktop only) */
+@media (hover: hover) {
+  .forecast-row:hover {
+    background: rgba(255,255,255,0.05);
+  }
 }
 
 /* =========================
@@ -1501,14 +1514,14 @@ body {
 }
 
 .day {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.6px;
-  opacity: 0.85;
+  opacity: 0.75;
 }
 
 .icon {
-  font-size: 1.3rem;
+  font-size: 1.4rem;
 }
 
 /* =========================
@@ -1524,7 +1537,7 @@ body {
 .temps {
   display: flex;
   gap: 10px;
-  font-size: 1.2rem;
+  font-size: 1.25rem;
 }
 
 .high {
@@ -1532,7 +1545,7 @@ body {
 }
 
 .low {
-  opacity: 0.6;
+  opacity: 0.55;
 }
 
 /* =========================
@@ -1546,13 +1559,13 @@ body {
 }
 
 .fs-value {
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   font-weight: 700;
 }
 
 .fs-label {
-  font-size: 0.75rem;
-  opacity: 0.7;
+  font-size: 0.7rem;
+  opacity: 0.6;
 }
 
 /* =========================
@@ -1561,18 +1574,19 @@ body {
 
 .fs-bar {
   height: 5px;
-  background: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.06);
   border-radius: 4px;
   overflow: hidden;
 }
 
 .fs-fill {
   height: 100%;
-  background: var(--accent-color);
   border-radius: 4px;
+  background: var(--accent-color);
+  transition: width 0.3s ease;
 }
 
-/* Optional smarter coloring */
+/* Optional tiers */
 .fs-fill.good { background: #4caf50; }
 .fs-fill.ok { background: #ffc107; }
 .fs-fill.bad { background: #f44336; }
@@ -1585,7 +1599,7 @@ body {
   display: flex;
   justify-content: space-between;
   font-size: 0.85rem;
-  gap: 8px;
+  gap: 10px;
 }
 
 .takeaway {
@@ -1601,17 +1615,77 @@ body {
 }
 
 /* =========================
-   FORECAST LINK CARD
+   EXPANDABLE CONTENT
+   ========================= */
+
+.expand-content {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: all 0.25s ease;
+}
+
+.forecast-row.open .expand-content {
+  max-height: 220px;
+  opacity: 1;
+  margin-top: 10px;
+}
+
+/* expanded inner */
+
+.expanded-inner {
+  font-size: 0.85rem;
+  opacity: 0.8;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.expanded-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.subtle {
+  opacity: 0.6;
+}
+
+/* =========================
+   LINK CARD
    ========================= */
 
 .forecast-link-card {
   text-align: center;
-  font-size: 0.95rem;
-  opacity: 0.85;
+  font-size: 0.9rem;
+  opacity: 0.75;
 }
 
 .forecast-link-card a {
   text-decoration: none;
   color: inherit;
   display: block;
+}
+
+/* =========================
+   FOOTER / MISC
+   ========================= */
+
+.footer-bottom {
+  margin-top: 10px;
+  font-size: 11px;
+  opacity: 0.5;
+}
+
+.comfort-score-block.storm {
+  background: linear-gradient(
+    135deg,
+    rgba(80, 120, 200, 0.25),
+    rgba(120, 60, 160, 0.25)
+  );
+}
+
+.comfort-impact-badge {
+  font-size: 12px;
+  margin-top: 4px;
+  opacity: 0.9;
 }

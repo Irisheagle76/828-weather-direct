@@ -14,6 +14,7 @@
 <script type="module">
 import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
 import { calculateComfort } from '/js/intel/comfort.js';
+import { generateNarrative } from '/js/intel/synthesizer/index.js';
 
 const root = document.getElementById('forecast-root');
 
@@ -29,28 +30,32 @@ async function init() {
     const hourly = Array.isArray(data?.hourly) ? data.hourly : [];
 
     if (!hourly.length) {
-      root.innerHTML = "<div style='padding:20px;'>No data</div>";
+      root.innerHTML = fallback("No forecast data available");
       return;
     }
 
-    const days = buildCleanDays(hourly);
-    const enriched = days.map(d => buildDay(d.hours));
+    const cleanDays = buildCleanDays(hourly);
+    const enriched = cleanDays.map(d => buildDay(d));
 
+    // 👇 RENDER
     root.innerHTML = `
       ${renderHeader()}
-      ${renderSummary(enriched)}
+      ${renderSummary(cleanDays)}
       ${enriched.map(renderDay).join("")}
     `;
 
+    // 👇 BIND EXPAND AFTER RENDER
+    bindExpand();
+
   } catch (err) {
-    console.error("Forecast load error:", err);
-    root.innerHTML = "<div style='padding:20px;'>Error loading forecast</div>";
+    console.error("Forecast error:", err);
+    root.innerHTML = fallback("Error loading forecast");
   }
 }
 
 //
 // =========================
-// CLEAN DAY BUILDER
+// BUILD CLEAN DAYS
 // =========================
 //
 function buildCleanDays(hourly) {
@@ -79,16 +84,12 @@ function buildCleanDays(hourly) {
 
   const result = [];
 
-  // TODAY (future only)
   const today = sorted.find(d => d.dayStart === todayKey);
   if (today) {
     const future = today.hours.filter(h => h.timestamp >= now);
-    if (future.length) {
-      result.push({ dayStart: today.dayStart, hours: future });
-    }
+    if (future.length) result.push({ ...today, hours: future });
   }
 
-  // NEXT FULL DAYS
   const futureDays = sorted.filter(d => d.dayStart > todayKey);
   result.push(...futureDays.slice(0, 3));
 
@@ -100,28 +101,33 @@ function buildCleanDays(hourly) {
 // BUILD DAY
 // =========================
 //
-function buildDay(hours) {
-  const temps = hours.map(h => h.temperatureF).filter(Number.isFinite);
+function buildDay(day) {
+  const hours = day.hours;
 
-  const high = Math.max(...temps);
-  const low = Math.min(...temps);
+  const temps = hours.map(h => h.temperatureF).filter(Number.isFinite);
 
   const fs = computeDailyFS(hours);
 
+  const narrative = generateNarrative({
+    current: hours[Math.floor(hours.length / 2)],
+    hourly: hours.slice(0, 8)
+  });
+
   return {
-    date: new Date(hours[0].timestamp),
-    high: Math.round(high),
-    low: Math.round(low),
+    date: new Date(day.dayStart),
+    hours,
+    high: Math.round(Math.max(...temps)),
+    low: Math.round(Math.min(...temps)),
     fs,
     icon: pickIcon(hours),
-    takeaway: getTakeaway(fs),
-    timing: getTiming(hours)
+    takeaway: narrative?.headline || "",
+    timing: narrative?.trend || ""
   };
 }
 
 //
 // =========================
-// BETTER FEELSCORE
+// FEELSCORE
 // =========================
 //
 function computeDailyFS(hours) {
@@ -132,10 +138,10 @@ function computeDailyFS(hours) {
 
   if (!scores.length) return 50;
 
-  const midStart = Math.floor(scores.length * 0.3);
-  const midEnd = Math.floor(scores.length * 0.7);
-
-  const mid = scores.slice(midStart, midEnd);
+  const mid = scores.slice(
+    Math.floor(scores.length * 0.3),
+    Math.floor(scores.length * 0.7)
+  );
 
   const avg =
     (mid.length ? mid : scores).reduce((a, b) => a + b, 0) /
@@ -158,31 +164,25 @@ function renderHeader() {
   `;
 }
 
-function renderSummary(days = []) {
-  const valid = days.filter(d => Number.isFinite(d?.fs));
+function renderSummary(days) {
+  const allHours = days.flatMap(d => d.hours);
 
-  if (!valid.length) {
-    return `<div class="card forecast-summary">Limited forecast data</div>`;
-  }
-
-  const best = valid.reduce((a, b) => b.fs > a.fs ? b : a);
-  const worst = valid.reduce((a, b) => b.fs < a.fs ? b : a);
+  const narrative = generateNarrative({
+    current: allHours[0],
+    hourly: allHours.slice(0, 12)
+  });
 
   return `
     <div class="card forecast-summary">
-      <div class="summary-line">${trend(valid)}</div>
-      <div class="summary-meta">
-        Best Day: ${formatDay(best.date)} • Turning Point: ${formatDay(worst.date)}
-      </div>
+      <div class="summary-line">${narrative?.headline || "Conditions evolving"}</div>
+      <div class="summary-meta">${narrative?.trend || ""}</div>
     </div>
   `;
 }
 
 function renderDay(d) {
-  if (!d || !Number.isFinite(d.fs)) return "";
-
   return `
-    <div class="card forecast-row">
+    <div class="card forecast-row expandable">
 
       <div class="row-top">
         <div class="day">${formatDay(d.date)}</div>
@@ -210,8 +210,61 @@ function renderDay(d) {
         <div class="timing">${d.timing}</div>
       </div>
 
+      <div class="expand-content">
+        ${renderExpanded(d)}
+      </div>
+
     </div>
   `;
+}
+
+//
+// =========================
+// EXPANDED CONTENT
+// =========================
+//
+function renderExpanded(d) {
+  const slice = d.hours.slice(0, 8);
+
+  return `
+    <div class="expanded-inner">
+      <div class="hourly-strip">
+        ${slice.map(renderHour).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderHour(h) {
+  const hour = new Date(h.timestamp).getHours();
+
+  return `
+    <div class="hour">
+      <div class="hour-time">${formatHour(hour)}</div>
+      <div class="hour-temp">${Math.round(h.temperatureF)}°</div>
+    </div>
+  `;
+}
+
+//
+// =========================
+// INTERACTION (EXPAND)
+// =========================
+//
+function bindExpand() {
+  const cards = document.querySelectorAll('.forecast-row.expandable');
+
+  cards.forEach(card => {
+    card.addEventListener('click', () => {
+      const isOpen = card.classList.contains('open');
+
+      cards.forEach(c => c.classList.remove('open'));
+
+      if (!isOpen) {
+        card.classList.add('open');
+      }
+    });
+  });
 }
 
 //
@@ -221,8 +274,7 @@ function renderDay(d) {
 //
 function pickIcon(hours) {
   const rain = hours.some(h => (h.precipProbability ?? 0) > 0.5);
-  if (rain) return "🌧️";
-  return "☀️";
+  return rain ? "🌧️" : "☀️";
 }
 
 function mapLabel(fs) {
@@ -233,38 +285,20 @@ function mapLabel(fs) {
   return "Harsh";
 }
 
-function getTakeaway(fs) {
-  if (fs >= 80) return "Best day to be outside";
-  if (fs >= 65) return "Still comfortable";
-  if (fs >= 50) return "Some discomfort";
-  return "Indoor conditions favored";
-}
-
-function getTiming(hours) {
-  const rain = hours.find(h => (h.precipProbability ?? 0) > 0.5);
-  if (!rain) return "Dry all day";
-
-  const hour = new Date(rain.timestamp).getHours();
-  if (hour < 12) return "Rain early";
-  if (hour < 17) return "Rain midday";
-  return "Rain late";
-}
-
 function formatDay(date) {
   return date.toLocaleDateString([], { weekday: "long" }).toUpperCase();
 }
 
-function trend(days) {
-  if (days.length < 2) return "Limited forecast data";
-
-  const first = days[0].fs;
-  const last = days[days.length - 1].fs;
-
-  if (first > last) return "Comfort peaks early → fades later";
-  if (last > first) return "Conditions improve through the period";
-  return "Little overall change";
+function formatHour(h) {
+  if (h === 0) return "12a";
+  if (h < 12) return `${h}a`;
+  if (h === 12) return "12p";
+  return `${h - 12}p`;
 }
 
+function fallback(msg) {
+  return `<div style="padding:20px;">${msg}</div>`;
+}
 </script>
 
 </body>
