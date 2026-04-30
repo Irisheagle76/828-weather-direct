@@ -110,7 +110,8 @@ body {
   letter-spacing: 0.02em;
 
   background: rgba(255,255,255,0.08);
-  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
 
   min-height: 36px;
@@ -1698,3 +1699,30 @@ body {
   font-size: 11px;
   opacity: 0.5;
 }
+/* =========================
+   PRECIP VISUAL
+   ========================= */
+
+.precip-bar {
+  height: 14px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.precip-fill {
+  width: 4px;
+  border-radius: 2px;
+  background: rgba(120, 170, 255, 0.8);
+  opacity: 0.9;
+  transition: height 0.2s ease;
+}
+
+/* intensity levels */
+.precip-fill.level-0 { height: 2px; opacity: 0.15; }
+.precip-fill.level-1 { height: 4px; opacity: 0.3; }
+.precip-fill.level-2 { height: 6px; opacity: 0.5; }
+.precip-fill.level-3 { height: 8px; opacity: 0.7; }
+.precip-fill.level-4 { height: 11px; opacity: 0.85; }
+.precip-fill.level-5 { height: 14px; opacity: 1; }

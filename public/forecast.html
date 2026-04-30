@@ -247,10 +247,17 @@ function renderExpanded(d) {
 function renderHour(h) {
   const hour = new Date(h.timestamp).getHours();
 
+  const precip = h.precipProbability ?? 0;
+  const intensity = getPrecipLevel(precip);
+
   return `
     <div class="hour">
       <div class="hour-time">${formatHour(hour)}</div>
       <div class="hour-temp">${Math.round(h.temperatureF)}°</div>
+
+      <div class="precip-bar">
+        <div class="precip-fill level-${intensity}"></div>
+      </div>
     </div>
   `;
 }
@@ -279,6 +286,14 @@ function bindExpand() {
 // HELPERS
 // =========================
 //
+function getPrecipLevel(p) {
+  if (p > 0.8) return 5;
+  if (p > 0.6) return 4;
+  if (p > 0.4) return 3;
+  if (p > 0.2) return 2;
+  if (p > 0.05) return 1;
+  return 0;
+}
 
 // ✅ MUCH BETTER ICON LOGIC
 function pickIcon(hours) {
