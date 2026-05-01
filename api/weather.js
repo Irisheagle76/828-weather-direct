@@ -1,5 +1,5 @@
 // ============================================================
-// WEATHER API — V12 (RAIN‑HONEST + NORMALIZED + STABLE)
+// WEATHER API — V13 (RAIN‑HONEST + NORMALIZED + STABLE)
 // ============================================================
 
 import { normalizeHourly } from '../lib/normalizeWeather.js';
@@ -52,8 +52,8 @@ async function handleForecast(req, res) {
   }
 
   // ----------------------------------------------------------
-  // REQUEST
-  // ----------------------------------------------------------
+  // REQUEST (RAIN INCLUDED)
+// ----------------------------------------------------------
   const url =
     `https://api.open-meteo.com/v1/forecast` +
     `?latitude=${lat}&longitude=${lon}` +
@@ -78,13 +78,16 @@ async function handleForecast(req, res) {
   }
 
   // ----------------------------------------------------------
-  // RAW HOURLY (STRUCTURED + RAIN‑HONEST)
+  // RAW HOURLY (RAIN-FIRST, INCH-NATIVE)
 // ----------------------------------------------------------
   const rawHourly = data.hourly.time.map((t, i) => {
-    // Prefer rain (rain-only), fall back to total precipitation
-    const precipIn =
-      (data.hourly.rain?.[i] ?? null) ??
-      (data.hourly.precipitation?.[i] ?? 0);
+    const rainIn = data.hourly.rain?.[i];
+    const precipIn = data.hourly.precipitation?.[i];
+
+    const finalPrecip =
+      Number.isFinite(rainIn) ? rainIn :
+      Number.isFinite(precipIn) ? precipIn :
+      0;
 
     return {
       timestamp: new Date(t).getTime(),
@@ -97,7 +100,7 @@ async function handleForecast(req, res) {
       windGust: data.hourly.wind_gusts_10m?.[i] ?? null,
 
       // inches of rain (or total precip if rain missing)
-      precipitation: precipIn,
+      precipitation: finalPrecip,
 
       // 0–1 probability
       precipProbability: normalizeProbability(
@@ -163,7 +166,7 @@ async function handleForecast(req, res) {
 
   console.log("=== WEATHER NORMALIZED ===");
   console.log("hourly sample:", hourlySmoothed.slice(0, 5));
-  console.log("daily sample:", daily.slice(0, 3));
+ console.log("daily sample:", daily.slice(0, 3));
 
   return res.status(200).json(payload);
 }
