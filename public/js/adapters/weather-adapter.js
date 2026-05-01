@@ -1,11 +1,8 @@
 // ============================================================
-// WEATHER ADAPTER — v6 (UNIT-SAFE + HONEST PRECIP)
+// WEATHER ADAPTER — v7 (INCH‑NATIVE + PROB‑NATIVE + CLEAN)
 // ============================================================
 
 import { fetchAllIntel } from '/js/weather-fetch.js';
-
-// 🌧️ UNIT CONSTANT
-const MM_TO_IN = 0.0393701;
 
 // ============================================================
 // MAIN ENTRY
@@ -31,18 +28,13 @@ export async function getWeatherForUI({ lat, lon }) {
 function adaptCurrent(c) {
   if (!c) return null;
 
-  const rawPrecip =
-    c.precipitation ??
-    c.rain ??
-    0;
+  // precipitation is already in inches from weather.js
+  const precipAmount = Number.isFinite(c.precipitation)
+    ? c.precipitation
+    : Number.isFinite(c.rain)
+      ? c.rain
+      : 0;
 
-  const isMetric = c.precipitation != null && c.rain == null;
-
-  const precipAmount = isMetric
-    ? rawPrecip * MM_TO_IN
-    : rawPrecip;
-
-  // Treat tiny noise as dry
   const effectivePrecip = precipAmount < 0.005 ? 0 : precipAmount;
 
   return {
@@ -78,12 +70,11 @@ function adaptCurrent(c) {
       c.wind_gust ??
       null,
 
-    // 🌧️ PRECIP
     precipAmount: effectivePrecip,
     precipProbability:
-      c.precipitation_probability ??
       c.precipProbability ??
-      0,
+      c.precipitation_probability ??
+      0, // already 0–1
 
     isRainingNow: effectivePrecip > 0,
 
@@ -91,7 +82,7 @@ function adaptCurrent(c) {
       c.cloudCover ??
       c.cloud_cover ??
       c.cloudcover ??
-      null
+      null // already 0–1
   };
 }
 
@@ -115,19 +106,20 @@ function adaptHourly(hourly) {
           temperatureF: hourly.temperature_2m?.[i] ?? null,
           dewpointF: hourly.dew_point_2m?.[i] ?? null,
 
-          relativeHumidity:
-            hourly.relative_humidity_2m?.[i] ?? null,
+          relativeHumidity: hourly.relative_humidity_2m?.[i] ?? null,
 
           windSpeed: hourly.wind_speed_10m?.[i] ?? 0,
           windGust: hourly.wind_gusts_10m?.[i] ?? null,
 
-          // 👇 RAW MM VALUE
+          // inches (already correct)
           precipitation: hourly.precipitation?.[i] ?? 0,
 
-          precipitation_probability:
-            hourly.precipitation_probability?.[i] ?? null,
+          // 0–1
+          precipProbability: hourly.precipitation_probability?.[i] ?? 0,
 
+          // 0–1
           cloudCover: hourly.cloudcover?.[i] ?? null,
+
           uvIndex: hourly.uv_index?.[i] ?? null
         })
       )
@@ -153,7 +145,7 @@ function adaptDaily(daily) {
       tempMin: daily.temperature_2m_min?.[i] ?? null,
 
       precipProbabilityMax:
-        daily.precipitation_probability_max?.[i] ?? null
+        daily.precipitation_probability_max?.[i] ?? null // already 0–1
     }));
   }
 
@@ -161,62 +153,38 @@ function adaptDaily(daily) {
 }
 
 // ============================================================
-// NORMALIZE SINGLE HOUR (CORE LOGIC — FIXED)
+// NORMALIZE SINGLE HOUR (FINAL, CLEAN)
 // ============================================================
 
 function normalizeHourObject(h) {
   const ts = h.timestamp ?? h.time ?? h.ts;
   if (!ts) return null;
 
-  // ------------------------------------------------------------
-  // 🌧️ UNIT-SAFE PRECIP (FIXED)
-  // ------------------------------------------------------------
-  const rawPrecip =
-    h.precipitation ??
-    h.rain ??
-    0;
+  // precipitation already in inches
+  let precipAmount = Number.isFinite(h.precipitation)
+    ? h.precipitation
+    : 0;
 
-  const isMetric =
-    h.precipitation != null && h.rain == null;
+  if (precipAmount < 0.005) precipAmount = 0;
 
-  const precipAmount = isMetric
-    ? rawPrecip * MM_TO_IN
-    : rawPrecip;
-
-  // Ignore microscopic noise (< 0.005")
-  const effectivePrecip = precipAmount < 0.005 ? 0 : precipAmount;
-
-  // Use raw probability; never force 70%
-  const rawProbability =
-    h.precipProbability ??
-    h.precipitation_probability ??
-    0;
-
-  const precipProbability = rawProbability ?? 0;
+  const precipProbability =
+    Number.isFinite(h.precipProbability)
+      ? h.precipProbability
+      : 0; // already 0–1
 
   // ------------------------------------------------------------
-  // 🌧️ PRECIP TYPE (TUNED FOR INCHES, FIXED)
+  // PRECIP TYPE (INCH‑NATIVE)
 // ------------------------------------------------------------
   let precipType = "none";
 
-  if (effectivePrecip > 0 || precipProbability >= 20) {
-
-    if (effectivePrecip < 0.005) {
-      precipType =
-        precipProbability >= 50 ? "drizzle" : "sprinkles";
-    }
-
-    else if (effectivePrecip < 0.03) {
-      precipType =
-        precipProbability >= 60 ? "light_rain" : "isolated_showers";
-    }
-
-    else if (effectivePrecip < 0.1) {
-      precipType =
-        precipProbability >= 60 ? "steady_rain" : "scattered_showers";
-    }
-
-    else {
+  if (precipAmount > 0 || precipProbability >= 0.45) {
+    if (precipAmount < 0.005) {
+      precipType = precipProbability >= 0.5 ? "drizzle" : "sprinkles";
+    } else if (precipAmount < 0.03) {
+      precipType = precipProbability >= 0.6 ? "light_rain" : "isolated_showers";
+    } else if (precipAmount < 0.1) {
+      precipType = precipProbability >= 0.6 ? "steady_rain" : "scattered_showers";
+    } else {
       precipType = "soaking_rain";
     }
   }
@@ -249,16 +217,15 @@ function normalizeHourObject(h) {
       h.wind_gust ??
       null,
 
-    // 🌧️ FINAL MODEL (FIXED)
-    precipAmount: effectivePrecip,
+    precipAmount,
     precipProbability,
     precipType,
-    isRainingNow: effectivePrecip > 0,
+    isRainingNow: precipAmount > 0,
 
     cloudCover:
       h.cloudCover ??
       h.cloud_cover ??
-      null,
+      null, // already 0–1
 
     uvIndex:
       h.uvIndex ??

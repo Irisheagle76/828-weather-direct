@@ -1,5 +1,5 @@
 // ============================================================
-// 4-DAY FORECAST (TIME-AWARE + TRUSTED SIGNAL — FIXED)
+// 4-DAY FORECAST (RAIN-HONEST + TIME-AWARE + COMFORT-AWARE)
 // ============================================================
 
 import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
@@ -16,8 +16,7 @@ export async function render4DayForecast(container) {
   try {
     const data = await getWeatherForUI({
       lat: 35.5951,
-      lon: -82.5515,
-      includeDaily: true
+      lon: -82.5515
     });
 
     const hourly = data?.hourly || [];
@@ -73,7 +72,7 @@ function buildDays(hourly) {
 }
 
 // ============================================================
-// BUILD DAY (TIME CONTEXT + HONEST PRECIP)
+// BUILD SINGLE DAY
 // ============================================================
 
 function buildDay(day, index) {
@@ -84,7 +83,6 @@ function buildDay(day, index) {
   const low = temps.length ? Math.round(Math.min(...temps)) : "--";
 
   const fs = computeFS(hours);
-
   const rain = analyzeRain(hours);
 
   const anchor =
@@ -100,7 +98,7 @@ function buildDay(day, index) {
         windSpeed: anchor.windSpeed,
         windGust: anchor.windGust,
         cloudCover: anchor.cloudCover,
-        precipProbability: rain.peak,
+        precipProbability: rain.type === "none" ? 0 : rain.peak,
         score: fs,
         dominantFactor: rain.type !== "none" ? "rain" : "sun"
       }
@@ -140,7 +138,7 @@ function buildDay(day, index) {
 }
 
 // ============================================================
-// RAIN ANALYSIS (FIXED — NO FALSE POSITIVES)
+// RAIN ANALYSIS (NO FALSE POSITIVES)
 // ============================================================
 
 function analyzeRain(hours) {
@@ -155,13 +153,12 @@ function analyzeRain(hours) {
 
   hours.forEach(h => {
     const hr = new Date(h.timestamp).getHours();
-    const p = getProb(h);
+    const p = h.precipProbability ?? 0; // 0–1
+    const amt = h.precipAmount ?? 0;    // inches
 
-    // Require meaningful probability
-   const hasRealRain =
-  (h.precipAmount ?? 0) > 0.01 || p >= 0.45;
-
-if (!hasRealRain) return;
+    // Require real rain signal
+    const hasRealRain = amt > 0.01 || p >= 0.45;
+    if (!hasRealRain) return;
 
     if (hr >= 5 && hr < 10) buckets.morning.push(p);
     else if (hr < 14) buckets.midday.push(p);
@@ -178,7 +175,7 @@ if (!hasRealRain) return;
   const totalRain = counts.reduce((s,c)=>s+c.count,0);
   const coverage = totalRain / hours.length;
 
-  if (coverage < 0.25) {
+  if (coverage < 0.20) {
     return { type: "none", coverage, peak: 0 };
   }
 
@@ -192,29 +189,20 @@ if (!hasRealRain) return;
 }
 
 // ============================================================
-// ICON SELECTION (FIXED — HONEST CLOUD + RAIN)
+// ICON SELECTION
 // ============================================================
 
 function pickIcon(hours, rain) {
-if (rain.peak >= 0.7 && rain.coverage > 0.2) return "🌧️";
-if (rain.coverage > 0.30) return "🌦️";
+  if (rain.coverage > 0.55) return "🌧️";
+  if (rain.coverage > 0.30) return "🌦️";
 
   const cloud =
-    hours.reduce((s,h)=>s+(h.cloudCover||0),0)/hours.length;
+    hours.reduce((s,h)=>s+(h.cloudCover || 0),0)/hours.length;
 
   if (cloud > 0.75) return "☁️";
   if (cloud > 0.45) return "⛅";
 
   return "☀️";
-}
-
-// ============================================================
-// PROB NORMALIZATION
-// ============================================================
-
-function getProb(h) {
-  const p = h.precipProbability ?? 0;
-  return p > 1 ? p / 100 : p;
 }
 
 // ============================================================
@@ -277,7 +265,7 @@ function renderDay(d) {
 }
 
 // ============================================================
-// HOURLY
+// HOURLY STRIP
 // ============================================================
 
 function renderHour(h) {
@@ -296,14 +284,13 @@ function renderHour(h) {
 }
 
 // ============================================================
-// PRECIP LEVEL (FIXED — NO FALSE BARS)
+// PRECIP BAR LEVELS (NO FALSE SPIKES)
 // ============================================================
 
 function getPrecipLevel(h) {
-  const prob = getProb(h);
+  const prob = h.precipProbability ?? 0;
   const amt = h.precipAmount ?? 0;
 
-  // require real signal
   if (amt < 0.005 && prob < 0.30) return 0;
 
   if (prob >= 0.80 || amt > 0.15) return 5;
@@ -344,10 +331,6 @@ function formatHour(h) {
   return `${h - 12}p`;
 }
 
-// ============================================================
-// HEADER + SUMMARY
-// ============================================================
-
 function renderHeader() {
   return `
     <div class="section-header">
@@ -367,10 +350,6 @@ function renderSummary(days) {
   `;
 }
 
-// ============================================================
-// CATEGORY
-// ============================================================
-
 function classifyCategory(intel) {
   const s = intel?.score ?? 50;
 
@@ -380,10 +359,6 @@ function classifyCategory(intel) {
   if (s >= 45) return "uncomfortable";
   return "harsh";
 }
-
-// ============================================================
-// EXPAND
-// ============================================================
 
 function bindExpand() {
   const cards = document.querySelectorAll('.forecast-row');
