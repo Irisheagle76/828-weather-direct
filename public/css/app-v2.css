@@ -1750,49 +1750,41 @@ body {
   display: none;
 }
 
-/* each hour = slimmer */
 .hour {
-  flex: 0 0 auto;
-  min-width: 38px;          /* 👈 key change (was ~50) */
-
+  min-width: 48px;
   text-align: center;
-  font-size: 0.72rem;
+  font-size: 0.8rem;
 
-  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-/* cleaner hierarchy */
+/* time */
 .hour-time {
-  font-size: 0.65rem;
-  opacity: 0.55;
+  opacity: 0.6;
   margin-bottom: 2px;
 }
 
+/* temp */
 .hour-temp {
   font-weight: 600;
-  font-size: 0.8rem;
+  margin-bottom: 6px; /* 🔥 critical spacing */
 }
 
-/* =========================
-   PRECIP (FIXED SCALE)
-   ========================= */
-
+/* precip container */
 .precip-bar {
-  height: 16px;
+  height: 14px;              /* fixed vertical zone */
   display: flex;
-  align-items: flex-end;
+  align-items: flex-end;     /* anchor bottom */
   justify-content: center;
 }
 
+/* precip bar */
 .precip-fill {
-  width: 3px;
-  border-radius: 3px;
-
-  background: linear-gradient(to top, #3b82f6, #60a5fa);
-
-  box-shadow:
-    0 0 6px rgba(96,165,250,0.6),
-    0 0 12px rgba(96,165,250,0.3);
+  width: 4px;
+  border-radius: 2px;
+  transition: height 0.2s ease;
 }
 
 /* tuned thresholds */
