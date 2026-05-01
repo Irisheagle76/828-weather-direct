@@ -173,82 +173,113 @@ function normalizeHourObject(h) {
   const ts = h.timestamp ?? h.time ?? h.ts;
   if (!ts) return null;
 
-  // ------------------------------------------------------------
-  // PRECIP AMOUNT (INCHES)
+ // ------------------------------------------------------------
+// PRECIP AMOUNT (INCHES)
 // ------------------------------------------------------------
-  let precipAmount = Number.isFinite(h.precipAmount)
-    ? h.precipAmount
-    : 0;
+let precipAmount = Number.isFinite(h.precipAmount)
+  ? h.precipAmount
+  : 0;
 
-  if (precipAmount < 0.005) precipAmount = 0;
+// kill noise
+if (precipAmount < 0.005) precipAmount = 0;
 
-  // ------------------------------------------------------------
-  // PRECIP PROBABILITY (0–1)
 // ------------------------------------------------------------
-  let precipProbability = 0;
+// PRECIP PROBABILITY (0–1)
+// ------------------------------------------------------------
+const precipProbability = Number.isFinite(h.precipProbability)
+  ? h.precipProbability
+  : 0;
 
-  if (Number.isFinite(h.precipProbability)) {
-    precipProbability = h.precipProbability;
+// ------------------------------------------------------------
+// COVERAGE (single source of truth)
+// ------------------------------------------------------------
+const coverage =
+  precipProbability >= 0.7 ? "widespread" :
+  precipProbability >= 0.5 ? "scattered" :
+  precipProbability >= 0.25 ? "isolated" :
+  "none";
+
+// ------------------------------------------------------------
+// PRECIP TYPE (amount drives, coverage refines)
+// ------------------------------------------------------------
+let precipType = "none";
+
+// entry condition (real signal only)
+if (precipAmount >= 0.005 || coverage !== "none") {
+
+  // TRACE / NEAR-ZERO
+  if (precipAmount === 0) {
+    precipType =
+      coverage === "widespread" ? "drizzle" :
+      coverage === "scattered" ? "sprinkles" :
+      "none";
   }
 
-  // ------------------------------------------------------------
-  // PRECIP TYPE
-// ------------------------------------------------------------
-  let precipType = "none";
-
-  if (precipAmount > 0 || precipProbability >= 0.45) {
-    if (precipAmount < 0.005) {
-      precipType = precipProbability >= 0.5 ? "drizzle" : "sprinkles";
-    } else if (precipAmount < 0.03) {
-      precipType = precipProbability >= 0.6 ? "light_rain" : "isolated_showers";
-    } else if (precipAmount < 0.1) {
-      precipType = precipProbability >= 0.6 ? "steady_rain" : "scattered_showers";
-    } else {
-      precipType = "soaking_rain";
-    }
+  // LIGHT
+  else if (precipAmount < 0.03) {
+    precipType =
+      coverage === "widespread" ? "light_rain" :
+      coverage === "scattered" ? "scattered_showers" :
+      "isolated_showers";
   }
 
-  const timestamp =
-    typeof ts === "number" ? ts : new Date(ts).getTime();
+  // MODERATE
+  else if (precipAmount < 0.1) {
+    precipType =
+      coverage === "widespread" ? "steady_rain" :
+      "scattered_showers";
+  }
 
-  return {
-    timestamp,
-
-    temperatureF: h.temperatureF ?? h.temp ?? null,
-    dewpointF: h.dewpointF ?? h.dew_point ?? null,
-
-    relativeHumidity:
-      h.relativeHumidity ??
-      h.relative_humidity ??
-      h.humidity ??
-      null,
-
-    windSpeed:
-      h.windSpeed ??
-      h.wind_speed ??
-      h.wind ??
-      0,
-
-    windGust:
-      h.windGust ??
-      h.wind_gust ??
-      null,
-
-    precipAmount,
-    precipProbability,
-    precipType,
-    isRainingNow: precipAmount > 0,
-
-    cloudCover:
-      Number.isFinite(h.cloudCover)
-        ? h.cloudCover
-        : Number.isFinite(h.cloud_cover)
-          ? h.cloud_cover
-          : null,
-
-    uvIndex:
-      h.uvIndex ??
-      h.uv_index ??
-      null
-  };
+  // HEAVY
+  else {
+    precipType = "soaking_rain";
+  }
 }
+
+// ------------------------------------------------------------
+// FINAL OBJECT
+// ------------------------------------------------------------
+const timestamp =
+  typeof ts === "number" ? ts : new Date(ts).getTime();
+
+return {
+  timestamp,
+
+  temperatureF: h.temperatureF ?? h.temp ?? null,
+  dewpointF: h.dewpointF ?? h.dew_point ?? null,
+
+  relativeHumidity:
+    h.relativeHumidity ??
+    h.relative_humidity ??
+    h.humidity ??
+    null,
+
+  windSpeed:
+    h.windSpeed ??
+    h.wind_speed ??
+    h.wind ??
+    0,
+
+  windGust:
+    h.windGust ??
+    h.wind_gust ??
+    null,
+
+  precipAmount,
+  precipProbability,
+  precipType,
+  coverage,                 // 🔥 NEW: expose this (very useful)
+  isRainingNow: precipAmount > 0,
+
+  cloudCover:
+    Number.isFinite(h.cloudCover)
+      ? h.cloudCover
+      : Number.isFinite(h.cloud_cover)
+        ? h.cloud_cover
+        : null,
+
+  uvIndex:
+    h.uvIndex ??
+    h.uv_index ??
+    null
+};
