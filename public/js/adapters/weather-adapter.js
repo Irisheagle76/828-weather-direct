@@ -160,17 +160,30 @@ function normalizeHourObject(h) {
   const ts = h.timestamp ?? h.time ?? h.ts;
   if (!ts) return null;
 
-  // precipitation already in inches
-  let precipAmount = Number.isFinite(h.precipitation)
-    ? h.precipitation
-    : 0;
+  // ------------------------------------------------------------
+  // PRECIP AMOUNT (INCHES, SUPPORT BOTH SHAPES)
+  // ------------------------------------------------------------
+  let precipAmount = Number.isFinite(h.precipAmount)
+    ? h.precipAmount
+    : Number.isFinite(h.precipitation)
+      ? h.precipitation
+      : 0;
 
   if (precipAmount < 0.005) precipAmount = 0;
 
-  const precipProbability =
-    Number.isFinite(h.precipProbability)
-      ? h.precipProbability
-      : 0; // already 0–1
+  // ------------------------------------------------------------
+  // PRECIP PROBABILITY (0–1, SUPPORT BOTH SHAPES)
+  // ------------------------------------------------------------
+  let precipProbability;
+
+  if (Number.isFinite(h.precipProbability)) {
+    precipProbability = h.precipProbability;
+  } else if (Number.isFinite(h.precipitation_probability)) {
+    const raw = h.precipitation_probability;
+    precipProbability = raw > 1 ? raw / 100 : raw;
+  } else {
+    precipProbability = 0;
+  }
 
   // ------------------------------------------------------------
   // PRECIP TYPE (INCH‑NATIVE)
@@ -225,7 +238,7 @@ function normalizeHourObject(h) {
     cloudCover:
       h.cloudCover ??
       h.cloud_cover ??
-      null, // already 0–1
+      null,
 
     uvIndex:
       h.uvIndex ??
