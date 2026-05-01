@@ -804,12 +804,17 @@ function renderTomorrow(data) {
     </div>
   `;
 }
+
+let liveTimerStarted = false;
+
 export async function initGlobalWeatherUI() {
   try {
     const data = await getWeatherForUI({
       lat: 35.5951,
       lon: -82.5515
     });
+
+    const fetchedAt = Date.now();
 
     const hourly = Array.isArray(data?.hourly)
       ? normalizeHourly(data.hourly)
@@ -821,27 +826,34 @@ export async function initGlobalWeatherUI() {
 
     const tempest = data?.tempest ?? null;
 
-    // 🔥 populate header chips
+    // 🔥 header metrics
     if (current) {
       renderHeaderMetrics(current, tempest);
     }
 
-    // 🔥 update "UPDATED JUST NOW"
+    // 🔥 live time
     const live = document.getElementById("liveAge");
+
     if (live) {
       live.textContent = "UPDATED JUST NOW";
 
-      setInterval(() => {
-        const minutes = Math.floor((Date.now() - (data.timestamp || Date.now())) / 60000);
+      if (!liveTimerStarted) {
+        liveTimerStarted = true;
 
-        live.textContent =
-          minutes < 1
-            ? "UPDATED JUST NOW"
-            : `${minutes} min ago`;
-      }, 60000);
+        setInterval(() => {
+          const minutes = Math.floor(
+            (Date.now() - fetchedAt) / 60000
+          );
+
+          live.textContent =
+            minutes < 1
+              ? "UPDATED JUST NOW"
+              : `${minutes} min ago`;
+        }, 60000);
+      }
     }
 
-    return { data, hourly, current };
+    return { data, hourly, current, fetchedAt };
 
   } catch (err) {
     console.error("Global UI init failed:", err);
