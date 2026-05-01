@@ -1730,15 +1730,15 @@ body {
 }
 
 /* =========================
-   HOURLY STRIP (FIXED UX)
+   HOURLY STRIP (12-HOUR FIT)
    ========================= */
 
 .hourly-strip {
   display: flex;
-  gap: 12px;
+  gap: 8px;                 /* tighter spacing */
 
   overflow-x: auto;
-  padding: 8px 2px 12px;
+  padding: 6px 2px 10px;
 
   scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
@@ -1750,23 +1750,27 @@ body {
   display: none;
 }
 
+/* each hour = slimmer */
 .hour {
   flex: 0 0 auto;
-  min-width: 50px;
+  min-width: 38px;          /* 👈 key change (was ~50) */
 
   text-align: center;
-  font-size: 0.8rem;
+  font-size: 0.72rem;
 
   scroll-snap-align: start;
 }
 
+/* cleaner hierarchy */
 .hour-time {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   opacity: 0.55;
+  margin-bottom: 2px;
 }
 
 .hour-temp {
   font-weight: 600;
+  font-size: 0.8rem;
 }
 
 /* =========================
@@ -1774,14 +1778,14 @@ body {
    ========================= */
 
 .precip-bar {
-  height: 18px;
+  height: 16px;
   display: flex;
   align-items: flex-end;
   justify-content: center;
 }
 
 .precip-fill {
-  width: 4px;
+  width: 3px;
   border-radius: 3px;
 
   background: linear-gradient(to top, #3b82f6, #60a5fa);

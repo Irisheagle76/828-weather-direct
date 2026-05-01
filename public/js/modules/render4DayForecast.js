@@ -222,6 +222,15 @@ function computeFS(hours) {
 // ============================================================
 
 function renderDay(d) {
+
+  // 🔥 FIX: real time-based window (7am → 6pm = 12 hours)
+  const displayHours = (d.hours || [])
+    .sort((a, b) => a.timestamp - b.timestamp)
+    .filter(h => {
+      const hr = new Date(h.timestamp).getHours();
+      return hr >= 7 && hr < 19;
+    });
+
   return `
     <div class="card forecast-row expandable">
 
@@ -254,7 +263,7 @@ function renderDay(d) {
 
       <div class="expand-content">
         <div class="hourly-strip">
-          ${d.hours.slice(6,18).map(renderHour).join("")}
+          ${displayHours.map(renderHour).join("")}
         </div>
       </div>
 
