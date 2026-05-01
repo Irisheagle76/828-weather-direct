@@ -5,14 +5,13 @@
   <title>4-Day Forecast • 828 Weather</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- shared app styles -->
   <link rel="stylesheet" href="/css/app-v2.css" />
 </head>
 
 <body>
 
   <!-- =====================================
-       HEADER (SHARED)
+       HEADER (IDENTICAL TO INDEX)
        ===================================== -->
   <div class="app-header">
     <div class="header-inner">
@@ -37,20 +36,82 @@
   </div>
 
   <!-- =====================================
-       FORECAST PAGE
+       FORECAST CONTENT
        ===================================== -->
   <main class="page-container forecast-page">
 
-    <!-- optional title block (recommended) -->
     <div class="section-header">
       <h1>4-Day Forecast</h1>
       <p class="subhead">A quick look ahead across Asheville</p>
     </div>
 
-    <!-- render target -->
     <div id="forecast-root"></div>
 
   </main>
+
+  <!-- =====================================
+       FOOTER (IDENTICAL TO INDEX)
+       ===================================== -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+
+      <div class="footer-brand">
+        <div class="footer-logo">828 Weather Direct</div>
+        <div class="footer-tagline">
+          Hyper-local weather, written for how it actually feels across Western North Carolina.
+        </div>
+      </div>
+
+      <div class="footer-links">
+        <a href="/">Home</a>
+        <a href="/forecast.html">Forecast</a>
+        <a href="#">About</a>
+        <a href="mailto:tballisty@gmail.com">Contact</a>
+      </div>
+
+      <div class="footer-social">
+
+        <a href="https://instagram.com/828weather" target="_blank" rel="noopener noreferrer">
+          <!-- Instagram -->
+          <svg viewBox="0 0 24 24" class="social-icon">
+            <rect x="2" y="2" width="20" height="20" rx="5" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <circle cx="17.5" cy="6.5" r="1" fill="currentColor"/>
+          </svg>
+        </a>
+
+        <a href="https://bsky.app/profile/irisheagle.bsky.social" target="_blank" rel="noopener noreferrer">
+          <!-- Bluesky -->
+          <svg viewBox="0 0 24 24" class="social-icon">
+            <path d="M12 12c2-3 5-6 7-6-1 3-3 6-5 7 2 1 4 3 5 5-2 0-5-3-7-6-2 3-5 6-7 6 1-2 3-4 5-5-2-1-4-4-5-7 2 0 5 3 7 6z" fill="currentColor"/>
+          </svg>
+        </a>
+
+        <a href="https://timothyballisty.substack.com" target="_blank" rel="noopener noreferrer">
+          <!-- Substack -->
+          <svg viewBox="0 0 24 24" class="social-icon">
+            <rect x="3" y="5" width="18" height="2" fill="currentColor"/>
+            <rect x="3" y="9" width="18" height="2" fill="currentColor"/>
+            <rect x="3" y="13" width="18" height="6" fill="currentColor"/>
+          </svg>
+        </a>
+
+      </div>
+
+      <div class="footer-meta">
+        <div>Data: Tempest • NOAA • NWS • OpenWeather</div>
+        <div>Serving Asheville and the greater 828 region</div>
+        <div class="footer-disclaimer">
+          For general awareness only—not a substitute for official forecasts or warnings.
+        </div>
+      </div>
+
+      <div class="footer-bottom" id="footerLiveText">
+        © 2026 828 Weather Direct
+      </div>
+
+    </div>
+  </footer>
 
   <!-- =====================================
        SCRIPT
@@ -59,9 +120,18 @@
     import { render4DayForecast } from '/js/modules/render4DayForecast.js';
 
     const root = document.getElementById('forecast-root');
-
-    // render forecast inside page container
     render4DayForecast(root);
+
+    // 🔥 sync footer time like homepage
+    function syncFooterTime() {
+      const main = document.getElementById("liveAge");
+      const footer = document.getElementById("footerLiveText");
+      if (!main || !footer) return;
+      footer.textContent = main.textContent;
+    }
+
+    setTimeout(syncFooterTime, 2000);
+    setInterval(syncFooterTime, 60000);
   </script>
 
 </body>
