@@ -11,7 +11,7 @@
 <body>
 
   <!-- =====================================
-       HEADER (IDENTICAL TO INDEX)
+       HEADER (SHARED)
        ===================================== -->
   <div class="app-header">
     <div class="header-inner">
@@ -50,7 +50,7 @@
   </main>
 
   <!-- =====================================
-       FOOTER (IDENTICAL TO INDEX)
+       FOOTER (SHARED)
        ===================================== -->
   <footer class="site-footer">
     <div class="footer-inner">
@@ -70,32 +70,7 @@
       </div>
 
       <div class="footer-social">
-
-        <a href="https://instagram.com/828weather" target="_blank" rel="noopener noreferrer">
-          <!-- Instagram -->
-          <svg viewBox="0 0 24 24" class="social-icon">
-            <rect x="2" y="2" width="20" height="20" rx="5" fill="none" stroke="currentColor" stroke-width="1.5"/>
-            <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.5"/>
-            <circle cx="17.5" cy="6.5" r="1" fill="currentColor"/>
-          </svg>
-        </a>
-
-        <a href="https://bsky.app/profile/irisheagle.bsky.social" target="_blank" rel="noopener noreferrer">
-          <!-- Bluesky -->
-          <svg viewBox="0 0 24 24" class="social-icon">
-            <path d="M12 12c2-3 5-6 7-6-1 3-3 6-5 7 2 1 4 3 5 5-2 0-5-3-7-6-2 3-5 6-7 6 1-2 3-4 5-5-2-1-4-4-5-7 2 0 5 3 7 6z" fill="currentColor"/>
-          </svg>
-        </a>
-
-        <a href="https://timothyballisty.substack.com" target="_blank" rel="noopener noreferrer">
-          <!-- Substack -->
-          <svg viewBox="0 0 24 24" class="social-icon">
-            <rect x="3" y="5" width="18" height="2" fill="currentColor"/>
-            <rect x="3" y="9" width="18" height="2" fill="currentColor"/>
-            <rect x="3" y="13" width="18" height="6" fill="currentColor"/>
-          </svg>
-        </a>
-
+        <!-- your icons here -->
       </div>
 
       <div class="footer-meta">
@@ -117,12 +92,27 @@
        SCRIPT
        ===================================== -->
   <script type="module">
+    import { initGlobalWeatherUI } from '/js/new-layout.js';
     import { render4DayForecast } from '/js/modules/render4DayForecast.js';
 
     const root = document.getElementById('forecast-root');
-    render4DayForecast(root);
 
-    // 🔥 sync footer time like homepage
+    async function init() {
+      // 🔥 1. initialize shared header system
+      try {
+        await initGlobalWeatherUI();
+      } catch (e) {
+        console.warn('Global UI init failed:', e);
+      }
+
+      // 🔥 2. render forecast
+      render4DayForecast(root);
+
+      // 🔥 3. sync footer time with header
+      syncFooterTime();
+      setInterval(syncFooterTime, 60000);
+    }
+
     function syncFooterTime() {
       const main = document.getElementById("liveAge");
       const footer = document.getElementById("footerLiveText");
@@ -130,8 +120,12 @@
       footer.textContent = main.textContent;
     }
 
-    setTimeout(syncFooterTime, 2000);
-    setInterval(syncFooterTime, 60000);
+    // 🔥 ensure DOM is ready
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", init);
+    } else {
+      init();
+    }
   </script>
 
 </body>

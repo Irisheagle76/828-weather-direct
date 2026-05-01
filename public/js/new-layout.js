@@ -804,6 +804,51 @@ function renderTomorrow(data) {
     </div>
   `;
 }
+export async function initGlobalWeatherUI() {
+  try {
+    const data = await getWeatherForUI({
+      lat: 35.5951,
+      lon: -82.5515
+    });
+
+    const hourly = Array.isArray(data?.hourly)
+      ? normalizeHourly(data.hourly)
+      : [];
+
+    const current = data?.current
+      ? normalizeCurrent(data.current)
+      : null;
+
+    const tempest = data?.tempest ?? null;
+
+    // 🔥 populate header chips
+    if (current) {
+      renderHeaderMetrics(current, tempest);
+    }
+
+    // 🔥 update "UPDATED JUST NOW"
+    const live = document.getElementById("liveAge");
+    if (live) {
+      live.textContent = "UPDATED JUST NOW";
+
+      setInterval(() => {
+        const minutes = Math.floor((Date.now() - (data.timestamp || Date.now())) / 60000);
+
+        live.textContent =
+          minutes < 1
+            ? "UPDATED JUST NOW"
+            : `${minutes} min ago`;
+      }, 60000);
+    }
+
+    return { data, hourly, current };
+
+  } catch (err) {
+    console.error("Global UI init failed:", err);
+    return null;
+  }
+}
+
 // ============================================================
 // Forecast LINK
 // ============================================================
