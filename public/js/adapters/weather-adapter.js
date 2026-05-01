@@ -1,5 +1,5 @@
 // ============================================================
-// WEATHER ADAPTER — v7 (INCH‑NATIVE + PROB‑NATIVE + CLEAN)
+// WEATHER ADAPTER — v8 (INCH‑NATIVE + PROB‑NATIVE + CLEAN)
 // ============================================================
 
 import { fetchAllIntel } from '/js/weather-fetch.js';
@@ -28,7 +28,7 @@ export async function getWeatherForUI({ lat, lon }) {
 function adaptCurrent(c) {
   if (!c) return null;
 
-  // precipitation is already in inches from weather.js
+  // precipitation already in inches from weather.js
   const precipAmount = Number.isFinite(c.precipitation)
     ? c.precipitation
     : Number.isFinite(c.rain)
@@ -72,17 +72,24 @@ function adaptCurrent(c) {
 
     precipAmount: effectivePrecip,
     precipProbability:
-      c.precipProbability ??
-      c.precipitation_probability ??
-      0, // already 0–1
+      Number.isFinite(c.precipProbability)
+        ? c.precipProbability
+        : Number.isFinite(c.precipitation_probability)
+          ? (c.precipitation_probability > 1
+              ? c.precipitation_probability / 100
+              : c.precipitation_probability)
+          : 0,
 
     isRainingNow: effectivePrecip > 0,
 
     cloudCover:
-      c.cloudCover ??
-      c.cloud_cover ??
-      c.cloudcover ??
-      null // already 0–1
+      Number.isFinite(c.cloudCover)
+        ? c.cloudCover
+        : Number.isFinite(c.cloud_cover)
+          ? c.cloud_cover
+          : Number.isFinite(c.cloudcover)
+            ? c.cloudcover
+            : null
   };
 }
 
@@ -93,10 +100,12 @@ function adaptCurrent(c) {
 function adaptHourly(hourly) {
   if (!hourly) return [];
 
+  // Already normalized array from backend
   if (Array.isArray(hourly)) {
     return hourly.map(normalizeHourObject).filter(Boolean);
   }
 
+  // Raw Open-Meteo shape
   if (hourly?.time?.length) {
     return hourly.time
       .map((t, i) =>
@@ -112,7 +121,7 @@ function adaptHourly(hourly) {
           windGust: hourly.wind_gusts_10m?.[i] ?? null,
 
           // inches (already correct)
-          precipitation: hourly.precipitation?.[i] ?? 0,
+          precipAmount: hourly.precipitation?.[i] ?? 0,
 
           // 0–1
           precipProbability: hourly.precipitation_probability?.[i] ?? 0,
@@ -145,7 +154,11 @@ function adaptDaily(daily) {
       tempMin: daily.temperature_2m_min?.[i] ?? null,
 
       precipProbabilityMax:
-        daily.precipitation_probability_max?.[i] ?? null // already 0–1
+        Number.isFinite(daily.precipitation_probability_max?.[i])
+          ? (daily.precipitation_probability_max[i] > 1
+              ? daily.precipitation_probability_max[i] / 100
+              : daily.precipitation_probability_max[i])
+          : 0
     }));
   }
 
@@ -161,32 +174,25 @@ function normalizeHourObject(h) {
   if (!ts) return null;
 
   // ------------------------------------------------------------
-  // PRECIP AMOUNT (INCHES, SUPPORT BOTH SHAPES)
-  // ------------------------------------------------------------
+  // PRECIP AMOUNT (INCHES)
+// ------------------------------------------------------------
   let precipAmount = Number.isFinite(h.precipAmount)
     ? h.precipAmount
-    : Number.isFinite(h.precipitation)
-      ? h.precipitation
-      : 0;
+    : 0;
 
   if (precipAmount < 0.005) precipAmount = 0;
 
   // ------------------------------------------------------------
-  // PRECIP PROBABILITY (0–1, SUPPORT BOTH SHAPES)
-  // ------------------------------------------------------------
-  let precipProbability;
+  // PRECIP PROBABILITY (0–1)
+// ------------------------------------------------------------
+  let precipProbability = 0;
 
   if (Number.isFinite(h.precipProbability)) {
     precipProbability = h.precipProbability;
-  } else if (Number.isFinite(h.precipitation_probability)) {
-    const raw = h.precipitation_probability;
-    precipProbability = raw > 1 ? raw / 100 : raw;
-  } else {
-    precipProbability = 0;
   }
 
   // ------------------------------------------------------------
-  // PRECIP TYPE (INCH‑NATIVE)
+  // PRECIP TYPE
 // ------------------------------------------------------------
   let precipType = "none";
 
@@ -203,9 +209,7 @@ function normalizeHourObject(h) {
   }
 
   const timestamp =
-    typeof ts === "number"
-      ? ts
-      : new Date(ts).getTime();
+    typeof ts === "number" ? ts : new Date(ts).getTime();
 
   return {
     timestamp,
@@ -236,9 +240,11 @@ function normalizeHourObject(h) {
     isRainingNow: precipAmount > 0,
 
     cloudCover:
-      h.cloudCover ??
-      h.cloud_cover ??
-      null,
+      Number.isFinite(h.cloudCover)
+        ? h.cloudCover
+        : Number.isFinite(h.cloud_cover)
+          ? h.cloud_cover
+          : null,
 
     uvIndex:
       h.uvIndex ??
