@@ -4,19 +4,65 @@
   <meta charset="UTF-8" />
   <title>4-Day Forecast • 828 Weather</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- shared app styles -->
   <link rel="stylesheet" href="/css/app-v2.css" />
 </head>
 
 <body>
 
-<div id="forecast-root"></div>
+  <!-- =====================================
+       HEADER (SHARED)
+       ===================================== -->
+  <div class="app-header">
+    <div class="header-inner">
 
-<script type="module">
-  import { render4DayForecast } from '/js/modules/render4DayForecast.js';
+      <div class="brand">
+        <div class="brand-title">828 Weather Direct</div>
+        <div class="brand-sub">
+          Hyper-local Asheville forecast built by Tim Ballisty
+        </div>
+      </div>
 
-  const root = document.getElementById('forecast-root');
-  render4DayForecast(root);
-</script>
+      <div class="live-row" id="wx-metrics">
+        <div class="live-indicator">
+          <span class="live-dot"></span>
+          <span class="live-age" id="liveAge">UPDATED JUST NOW</span>
+        </div>
+
+        <div id="metric-chips"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =====================================
+       FORECAST PAGE
+       ===================================== -->
+  <main class="page-container forecast-page">
+
+    <!-- optional title block (recommended) -->
+    <div class="section-header">
+      <h1>4-Day Forecast</h1>
+      <p class="subhead">A quick look ahead across Asheville</p>
+    </div>
+
+    <!-- render target -->
+    <div id="forecast-root"></div>
+
+  </main>
+
+  <!-- =====================================
+       SCRIPT
+       ===================================== -->
+  <script type="module">
+    import { render4DayForecast } from '/js/modules/render4DayForecast.js';
+
+    const root = document.getElementById('forecast-root');
+
+    // render forecast inside page container
+    render4DayForecast(root);
+  </script>
 
 </body>
 </html>

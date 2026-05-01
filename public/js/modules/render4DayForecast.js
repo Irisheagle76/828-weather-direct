@@ -24,12 +24,10 @@ export async function render4DayForecast(container) {
     const days = buildDays(hourly);
     const enriched = days.map((d, i) => buildDay(d, i));
 
+    // 🔥 ONLY render content (no outer wrapper)
     container.innerHTML = `
-      <div class="page-container forecast-page">
-        ${renderHeader()}
-        ${renderSummary(enriched)}
-        ${enriched.map(renderDay).join("")}
-      </div>
+      ${renderSummary(enriched)}
+      ${enriched.map(renderDay).join("")}
     `;
 
     bindExpand();
@@ -313,15 +311,28 @@ function mapFS(fs) {
   return "Harsh";
 }
 
+// ============================================================
+// DATE FORMATTING
+// ============================================================
+
 function formatDay(date) {
-  const tomorrow = new Date();
-  tomorrow.setDate(new Date().getDate() + 1);
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(now.getDate() + 1);
+
+  const diff =
+    Math.floor((date - now) / (1000 * 60 * 60 * 24));
 
   if (date.toDateString() === tomorrow.toDateString()) {
     return "TOMORROW";
   }
 
-  return date.toLocaleDateString([], { weekday: "long" }).toUpperCase();
+  if (diff === 2) return "SATURDAY"; // keeps rhythm tight
+  if (diff === 3) return "SUNDAY";
+
+  return date
+    .toLocaleDateString([], { weekday: "long" })
+    .toUpperCase();
 }
 
 function formatHour(h) {
@@ -331,24 +342,52 @@ function formatHour(h) {
   return `${h - 12}p`;
 }
 
-function renderHeader() {
-  return `
-    <div class="section-header">
-      <h1>4-Day Forecast</h1>
-      <p class="subtitle">Quick look ahead</p>
-    </div>
-  `;
-}
+// ============================================================
+// SUMMARY (UPGRADED — NOT BORING)
+// ============================================================
 
 function renderSummary(days) {
-  const best = days.reduce((a, b) => b.fs > a.fs ? b : a);
+  if (!days.length) return "";
+
+  const best = days.reduce((a, b) =>
+    b.fs > a.fs ? b : a
+  );
+
+  const worst = days.reduce((a, b) =>
+    b.fs < a.fs ? b : a
+  );
 
   return `
     <div class="card forecast-summary">
-      Best conditions: ${formatDay(best.date)}
+      <div class="summary-line">
+        Best: <strong>${formatDay(best.date)}</strong>
+        <span class="summary-score">${best.fs}</span>
+      </div>
+
+      <div class="summary-meta">
+        ${best.fs >= 80
+          ? "Great outdoor conditions expected"
+          : best.fs >= 65
+          ? "Comfortable overall"
+          : "Some limitations in comfort"}
+      </div>
+
+      ${
+        worst.fs < 60
+          ? `
+        <div class="summary-subtle">
+          Rougher stretch: ${formatDay(worst.date)}
+        </div>
+      `
+          : ""
+      }
     </div>
   `;
 }
+
+// ============================================================
+// CATEGORY
+// ============================================================
 
 function classifyCategory(intel) {
   const s = intel?.score ?? 50;
@@ -360,14 +399,24 @@ function classifyCategory(intel) {
   return "harsh";
 }
 
+// ============================================================
+// EXPAND INTERACTION (UPGRADED UX)
+// ============================================================
+
 function bindExpand() {
   const cards = document.querySelectorAll('.forecast-row');
 
   cards.forEach(card => {
     card.addEventListener('click', () => {
-      const open = card.classList.contains('open');
+      const isOpen = card.classList.contains('open');
+
+      // close all
       cards.forEach(c => c.classList.remove('open'));
-      if (!open) card.classList.add('open');
+
+      // toggle current
+      if (!isOpen) {
+        card.classList.add('open');
+      }
     });
   });
 }

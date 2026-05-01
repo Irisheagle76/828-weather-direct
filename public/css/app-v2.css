@@ -1486,34 +1486,140 @@ body {
 }
 
 /* =========================
+   PAGE BACKDROP + FLOW
+   ========================= */
+
+body {
+  background:
+    radial-gradient(circle at top, rgba(80,120,200,0.25), transparent 55%),
+    linear-gradient(to bottom, #0a1325 0%, #060b18 100%);
+
+  color: #e6edf7;
+}
+
+/* subtle glow behind forecast */
+.forecast-page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 18px 16px 28px;
+}
+
+.forecast-page::before {
+  content: "";
+  position: absolute;
+  top: -120px;
+  left: 0;
+  right: 0;
+  height: 220px;
+
+  background: radial-gradient(
+    circle,
+    rgba(100,140,255,0.18),
+    transparent 70%
+  );
+
+  pointer-events: none;
+}
+
+/* =========================
+   HEADER (BLENDED)
+   ========================= */
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+
+  background: linear-gradient(
+    to bottom,
+    rgba(20,35,70,0.95),
+    rgba(10,20,40,0.75)
+  );
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+/* =========================
    FORECAST CARD
    ========================= */
 
 .forecast-row {
+  position: relative;
+  overflow: hidden;
+
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
 
-  padding: 14px;
-  border-radius: 16px;
+  padding: 18px;
+  border-radius: 20px;
 
-  background: rgba(255,255,255,0.035);
+  background: linear-gradient(
+    160deg,
+    rgba(255,255,255,0.07),
+    rgba(255,255,255,0.015)
+  );
 
-  /* Safari support */
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 
-  transition: transform 0.15s ease, background 0.2s ease;
+  border: 1px solid rgba(255,255,255,0.07);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    inset 0 -1px 0 rgba(0,0,0,0.3),
+    0 12px 34px rgba(0,0,0,0.45);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.25s ease;
 }
 
-.forecast-row:active {
-  transform: scale(0.98);
-}
-
-@media (hover: hover) {
+@media (hover:hover) {
   .forecast-row:hover {
-    background: rgba(255,255,255,0.06);
+    transform: translateY(-4px);
+
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.1),
+      0 18px 44px rgba(0,0,0,0.55);
   }
+}
+
+/* =========================
+   ATMOSPHERIC OVERLAY
+   ========================= */
+
+.forecast-row::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* sunny */
+.forecast-row.sunny::before {
+  background: radial-gradient(circle at top right, rgba(255,200,80,0.28), transparent 60%);
+}
+
+/* partly */
+.forecast-row.partly::before {
+  background: radial-gradient(circle at top right, rgba(255,170,120,0.2), transparent 60%);
+}
+
+/* cloudy */
+.forecast-row.cloudy::before {
+  background: radial-gradient(circle at top right, rgba(180,200,220,0.18), transparent 60%);
+}
+
+/* rain */
+.forecast-row.rain::before {
+  background: radial-gradient(circle at top right, rgba(80,140,255,0.28), transparent 60%);
 }
 
 /* =========================
@@ -1527,14 +1633,15 @@ body {
 }
 
 .day {
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   font-weight: 600;
-  letter-spacing: 0.6px;
-  opacity: 0.75;
+  letter-spacing: 0.8px;
+  opacity: 0.6;
 }
 
 .icon {
-  font-size: 1.4rem;
+  font-size: 1.6rem;
+  filter: drop-shadow(0 3px 8px rgba(0,0,0,0.6));
 }
 
 /* =========================
@@ -1550,7 +1657,7 @@ body {
 .temps {
   display: flex;
   gap: 10px;
-  font-size: 1.25rem;
+  font-size: 1.35rem;
 }
 
 .high {
@@ -1558,21 +1665,19 @@ body {
 }
 
 .low {
-  opacity: 0.55;
+  opacity: 0.4;
 }
 
 /* =========================
-   FEELSCORE
+   FEELSCORE (INTEGRATED)
    ========================= */
 
 .feelscore {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  text-align: right;
 }
 
 .fs-value {
-  font-size: 1.5rem;
+  font-size: 1.7rem;
   font-weight: 700;
 }
 
@@ -1581,57 +1686,48 @@ body {
   opacity: 0.6;
 }
 
-/* =========================
-   FEELSCORE BAR
-   ========================= */
-
+/* glow bar */
 .fs-bar {
-  height: 5px;
-  background: rgba(255,255,255,0.06);
-  border-radius: 4px;
+  height: 6px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 6px;
   overflow: hidden;
 }
 
 .fs-fill {
   height: 100%;
-  border-radius: 4px;
-  background: var(--accent-color);
-  transition: width 0.3s ease;
+  border-radius: 6px;
+
+  background: linear-gradient(90deg, #4ade80, #22c55e);
+
+  box-shadow:
+    0 0 12px rgba(34,197,94,0.7),
+    0 0 24px rgba(34,197,94,0.4);
+
+  transition: width 0.35s ease;
 }
 
 /* =========================
-   BOTTOM ROW
+   NARRATIVE
    ========================= */
 
-.row-bottom {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  margin-top: 4px;
-  font-size: 0.85rem;
-}
-
 .takeaway {
-  font-weight: 500;
-  font-size: 0.9rem;
-  opacity: 0.9;
-}
+  font-size: 0.95rem;
+  line-height: 1.5;
+  opacity: 0.95;
 
-.timing {
-  opacity: 0.6;
-  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
 }
 
 /* =========================
-   EXPANDABLE CONTENT
+   EXPANDABLE
    ========================= */
 
 .expand-content {
   max-height: 0;
   overflow: hidden;
   opacity: 0;
-  transition: max-height 0.3s ease, opacity 0.2s ease;
+  transition: max-height 0.35s ease, opacity 0.25s ease;
 }
 
 .forecast-row.open .expand-content {
@@ -1641,44 +1737,19 @@ body {
 }
 
 /* =========================
-   EXPANDED INNER
-   ========================= */
-
-.expanded-inner {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid rgba(255,255,255,0.06);
-
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  font-size: 0.85rem;
-}
-
-/* =========================
-   HOURLY STRIP (HARDENED)
+   HOURLY STRIP
    ========================= */
 
 .hourly-strip {
   display: flex;
-  flex-direction: row;
-
-  gap: 12px;
-  width: 100%;
+  gap: 14px;
 
   overflow-x: auto;
-  overflow-y: hidden;
+  padding: 8px 2px 12px;
 
-  padding: 6px 2px 8px;
-
-  /* smoother scrolling */
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-
-  /* snap for nicer UX */
   scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
 
-  /* hide scrollbar */
   scrollbar-width: none;
 }
 
@@ -1686,98 +1757,57 @@ body {
   display: none;
 }
 
-/* =========================
-   HOURLY ITEM
-   ========================= */
-
 .hour {
-  flex: 0 0 auto;          /* 🔑 prevents shrinking */
-  min-width: 48px;
+  flex: 0 0 auto;
+  min-width: 52px;
 
   text-align: center;
   font-size: 0.8rem;
 
   scroll-snap-align: start;
-
-  /* subtle structure */
-  padding: 4px 2px;
 }
 
-/* optional: better spacing feel */
 .hour-time {
-  opacity: 0.6;
-  margin-bottom: 2px;
+  font-size: 0.7rem;
+  opacity: 0.55;
 }
 
 .hour-temp {
   font-weight: 600;
 }
+
 /* =========================
-   PRECIP VISUAL
+   PRECIP (MORE READABLE)
    ========================= */
 
 .precip-bar {
-  height: 16px;
+  height: 22px;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  margin-top: 4px;
 }
 
 .precip-fill {
   width: 4px;
-  border-radius: 2px;
-  transition: height 0.2s ease, background 0.2s ease, opacity 0.2s ease;
+  border-radius: 3px;
+
+  background: linear-gradient(to top, #3b82f6, #60a5fa);
+
+  box-shadow:
+    0 0 8px rgba(96,165,250,0.7),
+    0 0 16px rgba(96,165,250,0.4);
 }
+
+/* smoother scaling */
+.precip-fill.level-0 { height: 2px; opacity: 0.05; }
+.precip-fill.level-1 { height: 6px; opacity: 0.3; }
+.precip-fill.level-2 { height: 10px; opacity: 0.55; }
+.precip-fill.level-3 { height: 14px; opacity: 0.75; }
+.precip-fill.level-4 { height: 18px; opacity: 0.9; }
+.precip-fill.level-5 { height: 24px; opacity: 1; }
 
 /* =========================
-   PRECIP INTENSITY (IMPROVED)
-   ========================= */
-
-/* none */
-.precip-fill.level-0 {
-  height: 2px;
-  opacity: 0.05;
-  background: rgba(120,170,255,0.2);
-}
-
-/* very light */
-.precip-fill.level-1 {
-  height: 4px;
-  opacity: 0.25;
-  background: rgba(120,170,255,0.5);
-}
-
-/* light */
-.precip-fill.level-2 {
-  height: 7px;
-  opacity: 0.5;
-  background: #8fb8ff;
-}
-
-/* moderate */
-.precip-fill.level-3 {
-  height: 11px;
-  opacity: 0.8;
-  background: #6ea8ff;
-}
-
-/* steady rain */
-.precip-fill.level-4 {
-  height: 15px;
-  opacity: 0.95;
-  background: #4f8cff;
-}
-
-/* heavy */
-.precip-fill.level-5 {
-  height: 20px;
-  opacity: 1;
-  background: #2f6fff;
-}
-
-/* =========================
-   LINK CARD
+   FOOTER / LINKS
    ========================= */
 
 .forecast-link-card {
@@ -1786,18 +1816,8 @@ body {
   opacity: 0.75;
 }
 
-.forecast-link-card a {
-  text-decoration: none;
-  color: inherit;
-  display: block;
-}
-
-/* =========================
-   FOOTER
-   ========================= */
-
 .footer-bottom {
-  margin-top: 10px;
+  margin-top: 12px;
   font-size: 11px;
   opacity: 0.5;
 }
