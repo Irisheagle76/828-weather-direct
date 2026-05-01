@@ -282,4 +282,5 @@ return {
     h.uvIndex ??
     h.uv_index ??
     null
-};
+  };
+}
