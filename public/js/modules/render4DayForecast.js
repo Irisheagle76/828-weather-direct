@@ -289,20 +289,31 @@ function renderHour(h) {
   `;
 }
 
-// ============================================================
-// PRECIP LEVELS
-// ============================================================
-
 function getPrecipLevel(h) {
   const prob = h.precipProbability ?? 0;
   const amt = h.precipAmount ?? 0;
 
-  if (amt < 0.005 && prob < 0.30) return 0;
+  // --------------------------------------------------
+  // 1. HARD FILTER (kill noise completely)
+  // --------------------------------------------------
+  if (amt < 0.005 && prob < 0.50) return 0;
 
-  if (prob >= 0.80 || amt > 0.15) return 5;
-  if (prob >= 0.65 || amt > 0.08) return 4;
-  if (prob >= 0.50 || amt > 0.04) return 3;
-  if (prob >= 0.40 || amt > 0.02) return 2;
+  // --------------------------------------------------
+  // 2. REQUIRE REAL SIGNAL
+  // (amount OR strong probability)
+  // --------------------------------------------------
+  const hasSignal =
+    amt >= 0.01 || prob >= 0.60;
+
+  if (!hasSignal) return 0;
+
+  // --------------------------------------------------
+  // 3. INTENSITY SCALING
+  // --------------------------------------------------
+  if (amt >= 0.15 || prob >= 0.85) return 5;
+  if (amt >= 0.08 || prob >= 0.70) return 4;
+  if (amt >= 0.04 || prob >= 0.60) return 3;
+  if (amt >= 0.02 || prob >= 0.55) return 2;
 
   return 1;
 }
