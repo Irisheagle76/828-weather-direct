@@ -1,10 +1,34 @@
 // ============================================================
-// 4-DAY FORECAST (STABLE + TIME-CORRECT + RAIN-HONEST)
+// 4-DAY FORECAST (WITH EDITORIAL OVERRIDES)
 // ============================================================
 
 import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
 import { calculateComfort } from '/js/intel/comfort.js';
 import { assemble } from '/js/intel/synthesizer/assemble.js';
+
+// ============================================================
+// OVERRIDES (NEW)
+// ============================================================
+
+let forecastOverrides = {};
+
+async function loadForecastOverrides() {
+  try {
+    const res = await fetch('/data/forecast-overrides.json');
+    forecastOverrides = await res.json();
+  } catch {
+    forecastOverrides = {};
+  }
+}
+
+// safer date key (avoids timezone bugs)
+function getDateKey(date) {
+  return new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate()
+  ).toISOString().split('T')[0];
+}
 
 // ============================================================
 // MAIN
@@ -18,6 +42,8 @@ export async function render4DayForecast(container) {
       lat: 35.5951,
       lon: -82.5515
     });
+
+    await loadForecastOverrides(); // 🔥 NEW
 
     const hourly = data?.hourly || [];
 
@@ -37,7 +63,7 @@ export async function render4DayForecast(container) {
 }
 
 // ============================================================
-// BUILD DAYS (FORWARD-ONLY — NO DRIFT)
+// BUILD DAYS
 // ============================================================
 
 function buildDays(hourly) {
@@ -70,15 +96,15 @@ function buildDays(hourly) {
 }
 
 // ============================================================
-// BUILD SINGLE DAY
+// BUILD DAY (OVERRIDE APPLIED HERE)
 // ============================================================
 
 function buildDay(day, index) {
   const hours = day.hours;
 
   const temps = hours.map(h => h.temperatureF);
-  const high = temps.length ? Math.round(Math.max(...temps)) : "--";
-  const low = temps.length ? Math.round(Math.min(...temps)) : "--";
+  const high = temps.length ? Math.max(...temps) : "--";
+  const low = temps.length ? Math.min(...temps) : "--";
 
   const fs = computeFS(hours);
   const rain = analyzeRain(hours);
@@ -102,7 +128,7 @@ function buildDay(day, index) {
       }
     : null;
 
-  let narrative = null;
+  let narrative = "";
 
   if (intel) {
     const category = classifyCategory(intel);
@@ -124,15 +150,35 @@ function buildDay(day, index) {
     narrative = result?.narrative || "";
   }
 
+  // ============================================================
+  // APPLY OVERRIDE (🔥 CORE FEATURE)
+  // ============================================================
+
+  const key = getDateKey(day.date);
+  const override = forecastOverrides[key];
+
+let takeaway = narrative;
+
+if (override) {
+  if (override.type === "override") {
+    takeaway = override.text;
+  } else {
+    takeaway = {
+      base: narrative || null,
+      extra: override
+    };
+  }
+}
+
   return {
     date: day.date,
     hours,
-    high,
-    low,
+    high: Math.round(high),
+    low: Math.round(low),
     fs,
     icon: pickIcon(hours, rain),
-    takeaway: narrative,
-    index // 🔥 CRITICAL FIX
+    takeaway,
+    index
   };
 }
 
@@ -218,7 +264,7 @@ function computeFS(hours) {
 }
 
 // ============================================================
-// RENDER
+// RENDER (UPDATED FOR OVERRIDES)
 // ============================================================
 
 function renderDay(d) {
@@ -256,7 +302,16 @@ function renderDay(d) {
 
       ${d.takeaway ? `
         <div class="row-bottom">
-          <div class="takeaway">${d.takeaway}</div>
+          ${
+typeof d.takeaway === "string"
+  ? `<div class="takeaway">${d.takeaway}</div>`
+  : `
+      ${d.takeaway.base ? `<div class="takeaway">${d.takeaway.base}</div>` : ""}
+      <div class="override-note ${d.takeaway.extra.type}">
+        ${d.takeaway.extra.text}
+      </div>
+    `
+          }
         </div>
       ` : ""}
 
