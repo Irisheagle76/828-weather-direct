@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Forecast Overrides</title>
+
+  <style>
+    body {
+      font-family: system-ui;
+      background: #0b1220;
+      color: #fff;
+      padding: 20px;
+      max-width: 520px;
+      margin: auto;
+    }
+
+    h1 {
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+
+    .row {
+      margin-bottom: 14px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      background: #1c2438;
+      color: white;
+      font-size: 14px;
+    }
+
+    textarea {
+      min-height: 80px;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 10px;
+      width: 100%;
+      border: none;
+      border-radius: 8px;
+      background: #4ade80;
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    pre {
+      margin-top: 20px;
+      background: #111;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>4-Day Forecast Overrides</h1>
+
+<div class="row">
+  <label>Date</label>
+  <input type="date" id="date">
+</div>
+
+<div class="row">
+  <label>Type</label>
+  <select id="type">
+    <option value="highlight">Highlight</option>
+    <option value="override">Override</option>
+    <option value="alert">Alert</option>
+  </select>
+</div>
+
+<div class="row">
+  <label>Text</label>
+  <textarea id="text"></textarea>
+</div>
+
+<button onclick="save()">Add / Update</button>
+
+<pre id="output"></pre>
+
+<script>
+let data = {};
+
+async function load() {
+  try {
+    const res = await fetch('/data/forecast-overrides.json');
+    data = await res.json();
+  } catch {
+    data = {};
+  }
+
+  render();
+}
+
+function save() {
+  const date = document.getElementById('date').value;
+  const type = document.getElementById('type').value;
+  const text = document.getElementById('text').value;
+
+  if (!date || !text) {
+    alert("Need date + text");
+    return;
+  }
+
+  data[date] = { type, text };
+
+  render();
+
+  // copy to clipboard (manual save step)
+  navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+  alert("Copied JSON. Paste into /data/forecast-overrides.json");
+}
+
+function render() {
+  document.getElementById('output').textContent =
+    JSON.stringify(data, null, 2);
+}
+
+load();
+</script>
+
+</body>
+</html>
