@@ -1,5 +1,5 @@
 // ============================================================
-// 4-DAY FORECAST (RAIN-HONEST + TIME-AWARE + COMFORT-AWARE)
+// 4-DAY FORECAST (STABLE + TIME-CORRECT + RAIN-HONEST)
 // ============================================================
 
 import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
@@ -24,7 +24,6 @@ export async function render4DayForecast(container) {
     const days = buildDays(hourly);
     const enriched = days.map((d, i) => buildDay(d, i));
 
-    // 🔥 ONLY render content (no outer wrapper)
     container.innerHTML = `
       ${renderSummary(enriched)}
       ${enriched.map(renderDay).join("")}
@@ -38,32 +37,33 @@ export async function render4DayForecast(container) {
 }
 
 // ============================================================
-// BUILD DAYS
+// BUILD DAYS (FORWARD-ONLY — NO DRIFT)
 // ============================================================
 
 function buildDays(hourly) {
-  const byDay = {};
+  const now = new Date();
 
-  hourly.forEach(h => {
-    const d = new Date(h.timestamp);
-    const key = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-    if (!byDay[key]) byDay[key] = [];
-    byDay[key].push(h);
-  });
-
-  const today = new Date();
-  today.setHours(0,0,0,0);
+  const start = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate()
+  );
 
   const days = [];
 
   for (let i = 1; i <= 4; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
+    const dayStart = new Date(start);
+    dayStart.setDate(start.getDate() + i);
 
-    const key = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-    const hours = byDay[key] || [];
+    const dayEnd = new Date(dayStart);
+    dayEnd.setHours(23, 59, 59, 999);
 
-    days.push({ date: d, hours });
+    const hours = hourly.filter(h => {
+      const t = new Date(h.timestamp);
+      return t >= dayStart && t <= dayEnd;
+    });
+
+    days.push({ date: dayStart, hours });
   }
 
   return days;
@@ -131,12 +131,13 @@ function buildDay(day, index) {
     low,
     fs,
     icon: pickIcon(hours, rain),
-    takeaway: narrative
+    takeaway: narrative,
+    index // 🔥 CRITICAL FIX
   };
 }
 
 // ============================================================
-// RAIN ANALYSIS (NO FALSE POSITIVES)
+// RAIN ANALYSIS
 // ============================================================
 
 function analyzeRain(hours) {
@@ -151,10 +152,9 @@ function analyzeRain(hours) {
 
   hours.forEach(h => {
     const hr = new Date(h.timestamp).getHours();
-    const p = h.precipProbability ?? 0; // 0–1
-    const amt = h.precipAmount ?? 0;    // inches
+    const p = h.precipProbability ?? 0;
+    const amt = h.precipAmount ?? 0;
 
-    // Require real rain signal
     const hasRealRain = amt > 0.01 || p >= 0.45;
     if (!hasRealRain) return;
 
@@ -187,7 +187,7 @@ function analyzeRain(hours) {
 }
 
 // ============================================================
-// ICON SELECTION
+// ICONS
 // ============================================================
 
 function pickIcon(hours, rain) {
@@ -223,7 +223,6 @@ function computeFS(hours) {
 
 function renderDay(d) {
 
-  // 🔥 FIX: real time-based window (7am → 6pm = 12 hours)
   const displayHours = (d.hours || [])
     .sort((a, b) => a.timestamp - b.timestamp)
     .filter(h => {
@@ -235,7 +234,7 @@ function renderDay(d) {
     <div class="card forecast-row expandable">
 
       <div class="row-top">
-        <div class="day">${formatDay(d.date)}</div>
+        <div class="day">${formatDay(d.date, d.index)}</div>
         <div class="icon">${d.icon}</div>
       </div>
 
@@ -272,7 +271,7 @@ function renderDay(d) {
 }
 
 // ============================================================
-// HOURLY STRIP
+// HOURLY
 // ============================================================
 
 function renderHour(h) {
@@ -291,7 +290,7 @@ function renderHour(h) {
 }
 
 // ============================================================
-// PRECIP BAR LEVELS (NO FALSE SPIKES)
+// PRECIP LEVELS
 // ============================================================
 
 function getPrecipLevel(h) {
@@ -321,28 +320,20 @@ function mapFS(fs) {
 }
 
 // ============================================================
-// DATE FORMATTING
+// DAY LABEL (FIXED — NO HARDCODING)
 // ============================================================
 
-function formatDay(date) {
-  const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setDate(now.getDate() + 1);
-
-  const diff =
-    Math.floor((date - now) / (1000 * 60 * 60 * 24));
-
-  if (date.toDateString() === tomorrow.toDateString()) {
-    return "TOMORROW";
-  }
-
-  if (diff === 2) return "SATURDAY"; // keeps rhythm tight
-  if (diff === 3) return "SUNDAY";
+function formatDay(date, index) {
+  if (index === 0) return "TOMORROW";
 
   return date
     .toLocaleDateString([], { weekday: "long" })
     .toUpperCase();
 }
+
+// ============================================================
+// TIME
+// ============================================================
 
 function formatHour(h) {
   if (h === 0) return "12a";
@@ -352,7 +343,7 @@ function formatHour(h) {
 }
 
 // ============================================================
-// SUMMARY (UPGRADED — NOT BORING)
+// SUMMARY
 // ============================================================
 
 function renderSummary(days) {
@@ -362,14 +353,10 @@ function renderSummary(days) {
     b.fs > a.fs ? b : a
   );
 
-  const worst = days.reduce((a, b) =>
-    b.fs < a.fs ? b : a
-  );
-
   return `
     <div class="card forecast-summary">
       <div class="summary-line">
-        Best: <strong>${formatDay(best.date)}</strong>
+        Best: <strong>${formatDay(best.date, best.index)}</strong>
         <span class="summary-score">${best.fs}</span>
       </div>
 
@@ -380,36 +367,12 @@ function renderSummary(days) {
           ? "Comfortable overall"
           : "Some limitations in comfort"}
       </div>
-
-      ${
-        worst.fs < 60
-          ? `
-        <div class="summary-subtle">
-          Rougher stretch: ${formatDay(worst.date)}
-        </div>
-      `
-          : ""
-      }
     </div>
   `;
 }
 
 // ============================================================
-// CATEGORY
-// ============================================================
-
-function classifyCategory(intel) {
-  const s = intel?.score ?? 50;
-
-  if (s >= 90) return "veryComfortable";
-  if (s >= 75) return "comfortable";
-  if (s >= 60) return "slightlyUncomfortable";
-  if (s >= 45) return "uncomfortable";
-  return "harsh";
-}
-
-// ============================================================
-// EXPAND INTERACTION (UPGRADED UX)
+// UX
 // ============================================================
 
 function bindExpand() {
@@ -418,14 +381,8 @@ function bindExpand() {
   cards.forEach(card => {
     card.addEventListener('click', () => {
       const isOpen = card.classList.contains('open');
-
-      // close all
       cards.forEach(c => c.classList.remove('open'));
-
-      // toggle current
-      if (!isOpen) {
-        card.classList.add('open');
-      }
+      if (!isOpen) card.classList.add('open');
     });
   });
 }
