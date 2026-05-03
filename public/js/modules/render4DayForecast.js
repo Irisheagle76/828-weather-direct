@@ -348,7 +348,16 @@ typeof d.takeaway === "string"
 // ============================================================
 
 function renderHour(h) {
-  const hr = new Date(h.timestamp).getHours();
+
+  // 🔍 DEBUG HERE (top of function)
+  console.log({
+    shown: formatHour(h.localHour),
+    actual: h.localDate?.toString(),
+    rawTimestamp: h.timestamp,
+    temp: h.temperatureF
+  });
+
+  const hr = h.localHour; // make sure you're using this now
   const level = getPrecipLevel(h);
 
   return `
