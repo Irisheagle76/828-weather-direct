@@ -1,5 +1,5 @@
 // ============================================================
-// 4-DAY FORECAST (WITH EDITORIAL OVERRIDES)
+// 4-DAY FORECAST (STABLE TIME + OVERRIDES)
 // ============================================================
 
 import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
@@ -7,7 +7,7 @@ import { calculateComfort } from '/js/intel/comfort.js';
 import { assemble } from '/js/intel/synthesizer/assemble.js';
 
 // ============================================================
-// OVERRIDES (NEW)
+// OVERRIDES
 // ============================================================
 
 let forecastOverrides = {};
@@ -21,7 +21,6 @@ async function loadForecastOverrides() {
   }
 }
 
-// safer date key (avoids timezone bugs)
 function getDateKey(date) {
   return new Date(
     date.getFullYear(),
@@ -43,9 +42,19 @@ export async function render4DayForecast(container) {
       lon: -82.5515
     });
 
-    await loadForecastOverrides(); // 🔥 NEW
+    await loadForecastOverrides();
 
-    const hourly = data?.hourly || [];
+    // 🔥 Normalize ONCE (single source of truth)
+    const hourly = (data?.hourly || []).map(h => {
+      const d = new Date(h.timestamp);
+
+      return {
+        ...h,
+        localDate: d,
+        localHour: d.getHours(),
+        dayKey: d.toISOString().split('T')[0]
+      };
+    });
 
     const days = buildDays(hourly);
     const enriched = days.map((d, i) => buildDay(d, i));
@@ -63,7 +72,7 @@ export async function render4DayForecast(container) {
 }
 
 // ============================================================
-// BUILD DAYS
+// BUILD DAYS (timezone-safe)
 // ============================================================
 
 function buildDays(hourly) {
@@ -75,46 +84,26 @@ function buildDays(hourly) {
     now.getDate()
   );
 
-  const buckets = {};
-
-  // 🔥 STEP 1: group ALL hours by local date
-  hourly.forEach(h => {
-    const t = new Date(h.timestamp);
-
-    const key = new Date(
-      t.getFullYear(),
-      t.getMonth(),
-      t.getDate()
-    ).toISOString();
-
-    if (!buckets[key]) buckets[key] = [];
-    buckets[key].push(h);
-  });
-
-  // 🔥 STEP 2: pull next 4 days cleanly
   const days = [];
 
   for (let i = 1; i <= 4; i++) {
     const d = new Date(start);
     d.setDate(start.getDate() + i);
 
-    const key = new Date(
-      d.getFullYear(),
-      d.getMonth(),
-      d.getDate()
-    ).toISOString();
+    const key = d.toISOString().split('T')[0];
 
-    days.push({
-      date: d,
-      hours: buckets[key] || []
-    });
+    const hours = hourly
+      .filter(h => h.dayKey === key)
+      .sort((a, b) => a.localDate - b.localDate);
+
+    days.push({ date: d, hours });
   }
 
   return days;
 }
 
 // ============================================================
-// BUILD DAY (OVERRIDE APPLIED HERE)
+// BUILD DAY
 // ============================================================
 
 function buildDay(day, index) {
@@ -127,11 +116,10 @@ function buildDay(day, index) {
   const fs = computeFS(hours);
   const rain = analyzeRain(hours);
 
+  // 🔥 anchor uses localHour ONLY
   const anchor =
-    hours.find(h => {
-      const hr = new Date(h.timestamp).getHours();
-      return hr >= 11 && hr <= 15;
-    }) || hours[Math.floor(hours.length / 2)];
+    hours.find(h => h.localHour >= 11 && h.localHour <= 15) ||
+    hours[Math.floor(hours.length / 2)];
 
   const intel = anchor
     ? {
@@ -169,24 +157,24 @@ function buildDay(day, index) {
   }
 
   // ============================================================
-  // APPLY OVERRIDE (🔥 CORE FEATURE)
+  // OVERRIDES
   // ============================================================
 
   const key = getDateKey(day.date);
   const override = forecastOverrides[key];
 
-let takeaway = narrative;
+  let takeaway = narrative;
 
-if (override) {
-  if (override.type === "override") {
-    takeaway = override.text;
-  } else {
-    takeaway = {
-      base: narrative || null,
-      extra: override
-    };
+  if (override) {
+    if (override.type === "override") {
+      takeaway = override.text;
+    } else {
+      takeaway = {
+        base: narrative || null,
+        extra: override
+      };
+    }
   }
-}
 
   return {
     date: day.date,
@@ -201,7 +189,7 @@ if (override) {
 }
 
 // ============================================================
-// RAIN ANALYSIS
+// RAIN ANALYSIS (uses localHour)
 // ============================================================
 
 function analyzeRain(hours) {
@@ -215,12 +203,12 @@ function analyzeRain(hours) {
   };
 
   hours.forEach(h => {
-    const hr = new Date(h.timestamp).getHours();
+    const hr = h.localHour;
     const p = h.precipProbability ?? 0;
     const amt = h.precipAmount ?? 0;
 
-    const hasRealRain = amt > 0.01 || p >= 0.45;
-    if (!hasRealRain) return;
+    const hasRain = amt > 0.01 || p >= 0.45;
+    if (!hasRain) return;
 
     if (hr >= 5 && hr < 10) buckets.morning.push(p);
     else if (hr < 14) buckets.midday.push(p);
@@ -282,17 +270,13 @@ function computeFS(hours) {
 }
 
 // ============================================================
-// RENDER (UPDATED FOR OVERRIDES)
+// RENDER
 // ============================================================
 
 function renderDay(d) {
 
-  const displayHours = (d.hours || [])
-    .sort((a, b) => a.timestamp - b.timestamp)
-    .filter(h => {
-      const hr = new Date(h.timestamp).getHours();
-      return hr >= 7 && hr < 19;
-    });
+  const displayHours = d.hours
+    .filter(h => h.localHour >= 7 && h.localHour < 19);
 
   return `
     <div class="card forecast-row expandable">
@@ -318,20 +302,7 @@ function renderDay(d) {
         <div class="fs-fill" style="width:${d.fs}%"></div>
       </div>
 
-      ${d.takeaway ? `
-        <div class="row-bottom">
-          ${
-typeof d.takeaway === "string"
-  ? `<div class="takeaway">${d.takeaway}</div>`
-  : `
-      ${d.takeaway.base ? `<div class="takeaway">${d.takeaway.base}</div>` : ""}
-      <div class="override-note ${d.takeaway.extra.type}">
-        ${d.takeaway.extra.text}
-      </div>
-    `
-          }
-        </div>
-      ` : ""}
+      ${renderTakeaway(d.takeaway)}
 
       <div class="expand-content">
         <div class="hourly-strip">
@@ -343,26 +314,33 @@ typeof d.takeaway === "string"
   `;
 }
 
+function renderTakeaway(t) {
+  if (!t) return "";
+
+  if (typeof t === "string") {
+    return `<div class="row-bottom"><div class="takeaway">${t}</div></div>`;
+  }
+
+  return `
+    <div class="row-bottom">
+      ${t.base ? `<div class="takeaway">${t.base}</div>` : ""}
+      <div class="override-note ${t.extra.type}">
+        ${t.extra.text}
+      </div>
+    </div>
+  `;
+}
+
 // ============================================================
 // HOURLY
 // ============================================================
 
 function renderHour(h) {
-
-  // 🔍 DEBUG HERE (top of function)
-  console.log({
-    shown: formatHour(h.localHour),
-    actual: h.localDate?.toString(),
-    rawTimestamp: h.timestamp,
-    temp: h.temperatureF
-  });
-
-  const hr = h.localHour; // make sure you're using this now
   const level = getPrecipLevel(h);
 
   return `
     <div class="hour">
-      <div class="hour-time">${formatHour(hr)}</div>
+      <div class="hour-time">${formatHour(h.localHour)}</div>
       <div class="hour-temp">${Math.round(h.temperatureF)}°</div>
       <div class="precip-bar">
         <div class="precip-fill level-${level}"></div>
@@ -371,27 +349,19 @@ function renderHour(h) {
   `;
 }
 
+// ============================================================
+// HELPERS
+// ============================================================
+
 function getPrecipLevel(h) {
   const prob = h.precipProbability ?? 0;
   const amt = h.precipAmount ?? 0;
 
-  // --------------------------------------------------
-  // 1. HARD FILTER (kill noise completely)
-  // --------------------------------------------------
   if (amt < 0.005 && prob < 0.50) return 0;
 
-  // --------------------------------------------------
-  // 2. REQUIRE REAL SIGNAL
-  // (amount OR strong probability)
-  // --------------------------------------------------
-  const hasSignal =
-    amt >= 0.01 || prob >= 0.60;
-
+  const hasSignal = amt >= 0.01 || prob >= 0.60;
   if (!hasSignal) return 0;
 
-  // --------------------------------------------------
-  // 3. INTENSITY SCALING
-  // --------------------------------------------------
   if (amt >= 0.15 || prob >= 0.85) return 5;
   if (amt >= 0.08 || prob >= 0.70) return 4;
   if (amt >= 0.04 || prob >= 0.60) return 3;
@@ -399,10 +369,6 @@ function getPrecipLevel(h) {
 
   return 1;
 }
-
-// ============================================================
-// HELPERS
-// ============================================================
 
 function mapFS(fs) {
   if (fs >= 90) return "Ideal";
@@ -412,21 +378,10 @@ function mapFS(fs) {
   return "Harsh";
 }
 
-// ============================================================
-// DAY LABEL (FIXED — NO HARDCODING)
-// ============================================================
-
 function formatDay(date, index) {
   if (index === 0) return "TOMORROW";
-
-  return date
-    .toLocaleDateString([], { weekday: "long" })
-    .toUpperCase();
+  return date.toLocaleDateString([], { weekday: "long" }).toUpperCase();
 }
-
-// ============================================================
-// TIME
-// ============================================================
 
 function formatHour(h) {
   if (h === 0) return "12a";
@@ -445,16 +400,10 @@ function classifyCategory(intel) {
   return "harsh";
 }
 
-// ============================================================
-// SUMMARY
-// ============================================================
-
 function renderSummary(days) {
   if (!days.length) return "";
 
-  const best = days.reduce((a, b) =>
-    b.fs > a.fs ? b : a
-  );
+  const best = days.reduce((a, b) => b.fs > a.fs ? b : a);
 
   return `
     <div class="card forecast-summary">
