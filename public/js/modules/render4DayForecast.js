@@ -75,21 +75,39 @@ function buildDays(hourly) {
     now.getDate()
   );
 
+  const buckets = {};
+
+  // 🔥 STEP 1: group ALL hours by local date
+  hourly.forEach(h => {
+    const t = new Date(h.timestamp);
+
+    const key = new Date(
+      t.getFullYear(),
+      t.getMonth(),
+      t.getDate()
+    ).toISOString();
+
+    if (!buckets[key]) buckets[key] = [];
+    buckets[key].push(h);
+  });
+
+  // 🔥 STEP 2: pull next 4 days cleanly
   const days = [];
 
   for (let i = 1; i <= 4; i++) {
-    const dayStart = new Date(start);
-    dayStart.setDate(start.getDate() + i);
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
 
-    const dayEnd = new Date(dayStart);
-    dayEnd.setHours(23, 59, 59, 999);
+    const key = new Date(
+      d.getFullYear(),
+      d.getMonth(),
+      d.getDate()
+    ).toISOString();
 
-    const hours = hourly.filter(h => {
-      const t = new Date(h.timestamp);
-      return t >= dayStart && t <= dayEnd;
+    days.push({
+      date: d,
+      hours: buckets[key] || []
     });
-
-    days.push({ date: dayStart, hours });
   }
 
   return days;
