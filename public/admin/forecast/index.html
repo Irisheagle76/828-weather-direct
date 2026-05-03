@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Forecast Overrides</title>
 
   <style>
@@ -9,21 +10,34 @@
       font-family: system-ui;
       background: #0b1220;
       color: #fff;
+      margin: 0;
+      display: flex;
+      gap: 20px;
       padding: 20px;
+    }
+
+    .panel {
+      flex: 1;
       max-width: 520px;
-      margin: auto;
     }
 
     h1 {
-      font-size: 20px;
-      margin-bottom: 16px;
-    }
-
-    .row {
+      font-size: 18px;
       margin-bottom: 14px;
     }
 
-    input, select, textarea {
+    .row {
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      margin-bottom: 4px;
+      opacity: 0.7;
+    }
+
+    input, textarea {
       width: 100%;
       padding: 10px;
       border-radius: 8px;
@@ -34,11 +48,11 @@
     }
 
     textarea {
-      min-height: 80px;
+      min-height: 70px;
     }
 
     button {
-      margin-top: 10px;
+      margin-top: 8px;
       padding: 10px;
       width: 100%;
       border: none;
@@ -49,80 +63,236 @@
       cursor: pointer;
     }
 
+    .secondary {
+      background: #334155;
+      color: white;
+    }
+
     pre {
-      margin-top: 20px;
+      margin-top: 16px;
       background: #111;
       padding: 10px;
       border-radius: 8px;
       font-size: 12px;
       overflow-x: auto;
     }
+
+    /* --- PREVIEW --- */
+
+    .preview {
+      background: linear-gradient(180deg, #1e293b, #0f172a);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+
+    .preview-date {
+      font-size: 12px;
+      opacity: 0.6;
+      margin-bottom: 6px;
+    }
+
+    .preview-headline {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .preview-narrative {
+      font-size: 14px;
+      line-height: 1.4;
+      opacity: 0.9;
+      margin-bottom: 10px;
+    }
+
+    .preview-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag {
+      background: #334155;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+    }
+
+    .confidence {
+      margin-top: 10px;
+      font-size: 11px;
+      opacity: 0.6;
+    }
+
   </style>
 </head>
 
 <body>
 
-<h1>4-Day Forecast Overrides</h1>
+<!-- LEFT: EDITOR -->
+<div class="panel">
 
-<div class="row">
-  <label>Date</label>
-  <input type="date" id="date">
+  <h1>Forecast Overrides</h1>
+
+  <div class="row">
+    <label for="date">Date</label>
+    <input type="date" id="date" onchange="loadDay(); updatePreview();">
+  </div>
+
+  <div class="row">
+    <label for="headline">Headline</label>
+    <input id="headline" oninput="updatePreview()">
+  </div>
+
+  <div class="row">
+    <label for="narrative">Narrative</label>
+    <textarea id="narrative" oninput="updatePreview()"></textarea>
+  </div>
+
+  <div class="row">
+    <label for="tags">Tags (comma separated)</label>
+    <input id="tags" oninput="updatePreview()">
+  </div>
+
+  <div class="row">
+    <label for="confidence">Confidence (0–1)</label>
+    <input id="confidence" type="number" step="0.1" min="0" max="1" oninput="updatePreview()">
+  </div>
+
+  <button onclick="save()">Save / Update</button>
+  <button class="secondary" onclick="clearDay()">Clear Day</button>
+
+  <pre id="output"></pre>
+
 </div>
 
-<div class="row">
-  <label>Type</label>
-  <select id="type">
-    <option value="highlight">Highlight</option>
-    <option value="override">Override</option>
-    <option value="alert">Alert</option>
-  </select>
+<!-- RIGHT: LIVE PREVIEW -->
+<div class="panel">
+
+  <h1>Live Preview</h1>
+
+  <div class="preview">
+    <div class="preview-date" id="p-date">—</div>
+    <div class="preview-headline" id="p-headline">No headline</div>
+    <div class="preview-narrative" id="p-narrative">No narrative</div>
+    <div class="preview-tags" id="p-tags"></div>
+    <div class="confidence" id="p-confidence"></div>
+  </div>
+
 </div>
-
-<div class="row">
-  <label>Text</label>
-  <textarea id="text"></textarea>
-</div>
-
-<button onclick="save()">Add / Update</button>
-
-<pre id="output"></pre>
 
 <script>
-let data = {};
+let data = {
+  lastUpdated: null,
+  days: {},
+  global: {
+    tone: "neutral",
+    style: "concise",
+    overrideNarrative: false
+  }
+};
 
 async function load() {
   try {
-    const res = await fetch('/data/forecast-overrides.json');
-    data = await res.json();
-  } catch {
-    data = {};
-  }
+    const res = await fetch('/forecast-overrides.json');
+    if (res.ok) data = await res.json();
+  } catch {}
 
   render();
 }
 
+function loadDay() {
+  const date = document.getElementById('date').value;
+  if (!date || !data.days[date]) return;
+
+  const d = data.days[date];
+
+  document.getElementById('headline').value = d.headline || '';
+  document.getElementById('narrative').value = d.narrative || '';
+  document.getElementById('tags').value = (d.tags || []).join(', ');
+  document.getElementById('confidence').value = d.confidence ?? '';
+
+  updatePreview();
+}
+
 function save() {
   const date = document.getElementById('date').value;
-  const type = document.getElementById('type').value;
-  const text = document.getElementById('text').value;
 
-  if (!date || !text) {
-    alert("Need date + text");
+  if (!date) {
+    alert("Date required");
     return;
   }
 
-  data[date] = { type, text };
+  const tags = document.getElementById('tags').value
+    .split(',')
+    .map(t => t.trim())
+    .filter(Boolean);
+
+  const confidence = parseFloat(document.getElementById('confidence').value);
+
+  data.days[date] = {
+    headline: document.getElementById('headline').value || null,
+    narrative: document.getElementById('narrative').value || null,
+    tags,
+    confidence: isNaN(confidence) ? null : confidence
+  };
+
+  data.lastUpdated = new Date().toISOString();
 
   render();
+  copy();
+}
 
-  // copy to clipboard (manual save step)
-  navigator.clipboard.writeText(JSON.stringify(data, null, 2));
-  alert("Copied JSON. Paste into /data/forecast-overrides.json");
+function clearDay() {
+  const date = document.getElementById('date').value;
+  if (!date) return;
+
+  delete data.days[date];
+
+  document.getElementById('headline').value = '';
+  document.getElementById('narrative').value = '';
+  document.getElementById('tags').value = '';
+  document.getElementById('confidence').value = '';
+
+  render();
+  updatePreview();
+  copy();
 }
 
 function render() {
   document.getElementById('output').textContent =
     JSON.stringify(data, null, 2);
+}
+
+function copy() {
+  navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+}
+
+function updatePreview() {
+  const date = document.getElementById('date').value;
+  const headline = document.getElementById('headline').value;
+  const narrative = document.getElementById('narrative').value;
+  const tags = document.getElementById('tags').value
+    .split(',')
+    .map(t => t.trim())
+    .filter(Boolean);
+  const confidence = document.getElementById('confidence').value;
+
+  document.getElementById('p-date').textContent = date || '—';
+  document.getElementById('p-headline').textContent = headline || 'No headline';
+  document.getElementById('p-narrative').textContent = narrative || 'No narrative';
+
+  const tagContainer = document.getElementById('p-tags');
+  tagContainer.innerHTML = '';
+  tags.forEach(t => {
+    const el = document.createElement('div');
+    el.className = 'tag';
+    el.textContent = t;
+    tagContainer.appendChild(el);
+  });
+
+  document.getElementById('p-confidence').textContent =
+    confidence ? `Confidence: ${confidence}` : '';
 }
 
 load();
