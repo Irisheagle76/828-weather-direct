@@ -14,7 +14,7 @@ let forecastOverrides = {};
 
 async function loadForecastOverrides() {
   try {
-    const res = await fetch('/data/forecast-overrides.json');
+    const res = await fetch('/forecast-overrides.json');
     forecastOverrides = await res.json();
   } catch {
     forecastOverrides = {};
