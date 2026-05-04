@@ -76,19 +76,61 @@ button {
   margin-bottom:8px;
 }
 
-.preview {
-  background: linear-gradient(180deg,#1e293b,#0f172a);
-  border-radius:16px;
-  padding:18px;
-}
-
-.preview-headline {
-  font-size:18px;
-  font-weight:600;
+/* DAY STRIP */
+.day-strip {
+  display:flex;
+  gap:6px;
   margin-bottom:10px;
 }
 
-.preview-narrative {
+.day-pill {
+  flex:1;
+  padding:6px;
+  text-align:center;
+  font-size:12px;
+  background:#1c2438;
+  border-radius:6px;
+  cursor:pointer;
+  opacity:.7;
+}
+
+.day-pill.active {
+  background:#4ade80;
+  color:black;
+  opacity:1;
+}
+
+/* PREVIEW CARD */
+.card {
+  background:#1e293b;
+  border-radius:16px;
+  padding:16px;
+}
+
+.row-top,
+.row-main {
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:10px;
+}
+
+.high { font-size:20px; font-weight:bold; }
+.low { opacity:0.6; margin-left:6px; }
+
+.fs-bar {
+  height:6px;
+  background:#334155;
+  border-radius:4px;
+  overflow:hidden;
+  margin-bottom:10px;
+}
+
+.fs-fill {
+  height:100%;
+  background:#4ade80;
+}
+
+.takeaway {
   font-size:14px;
   line-height:1.4;
 }
@@ -97,17 +139,50 @@ button {
 
 <body>
 
+<!-- LEFT -->
 <div class="panel">
 
 <h1>Forecast Composer</h1>
 <div class="hint">Signals → Generate → Refine</div>
 
+<!-- DAY STRIP -->
+<div class="day-strip" id="dayStrip"></div>
+
 <label for="date">Date</label>
 <input type="date" id="date">
+
+<div id="day-context" style="margin:6px 0; font-size:13px; opacity:0.8;"></div>
 
 <div class="btn-row">
 <button class="secondary" id="loadBtn">Load System</button>
 <button class="danger" id="clearBtn">Clear</button>
+</div>
+
+<!-- TEMPS -->
+<div class="group">
+<div class="group-title">Temperatures</div>
+
+<label for="high">High</label>
+<input id="high" type="number">
+
+<label for="low">Low</label>
+<input id="low" type="number">
+</div>
+
+<!-- WIND -->
+<div class="group">
+<div class="group-title">Wind</div>
+
+<label for="wind-speed">Speed (mph)</label>
+<input id="wind-speed" type="number">
+
+<label for="wind-dir">Direction</label>
+<select id="wind-dir">
+<option value="">Select</option>
+<option>N</option><option>NE</option><option>E</option>
+<option>SE</option><option>S</option><option>SW</option>
+<option>W</option><option>NW</option>
+</select>
 </div>
 
 <!-- CONDITIONS -->
@@ -138,7 +213,7 @@ button {
 <div class="group">
 <div class="group-title">Drivers</div>
 
-<label for="drv-temp">Temperature Trend</label>
+<label for="drv-temp">Temp Trend</label>
 <select id="drv-temp">
 <option value="">Select</option>
 <option value="warming">Warming</option>
@@ -203,8 +278,8 @@ button {
 <label for="loc-terrain">Terrain</label>
 <select id="loc-terrain">
 <option value="">Select</option>
-<option value="nw_flow">NW Flow Clouds</option>
-<option value="upslope">Upslope Clouds</option>
+<option value="nw_flow">NW Flow</option>
+<option value="upslope">Upslope</option>
 <option value="none">None</option>
 </select>
 
@@ -221,7 +296,6 @@ button {
 <button class="secondary" id="generateBtn">Generate Forecast</button>
 </div>
 
-<!-- OUTPUT -->
 <div class="group">
 <div class="group-title">Output</div>
 
@@ -232,76 +306,97 @@ button {
 <textarea id="narrative"></textarea>
 </div>
 
-<div class="btn-row">
-<button class="primary" id="saveBtn">Save</button>
 </div>
 
-</div>
-
-<!-- PREVIEW -->
+<!-- RIGHT -->
 <div class="panel">
+
 <h1>Preview</h1>
-<div class="preview">
-<div class="preview-headline" id="p-headline">—</div>
-<div class="preview-narrative" id="p-narrative">—</div>
+
+<div class="card">
+<div class="row-top">
+<div id="p-day">—</div>
+<div>☀️</div>
 </div>
+
+<div class="row-main">
+<div>
+<span class="high" id="p-high">--</span>
+<span class="low" id="p-low">--</span>
+</div>
+<div id="p-wind">—</div>
+</div>
+
+<div class="fs-bar">
+<div class="fs-fill" style="width:80%"></div>
+</div>
+
+<div class="takeaway" id="p-text">—</div>
+</div>
+
 </div>
 
 <script>
 const el = id => document.getElementById(id);
 
+/* DAY STRIP */
+function initDayStrip() {
+  const strip = el('dayStrip');
+  const today = new Date();
+
+  for (let i=1;i<=4;i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate()+i);
+
+    const label = d.toLocaleDateString(undefined,{weekday:'short'});
+
+    const div = document.createElement('div');
+    div.className = 'day-pill';
+    div.textContent = i===1 ? 'Tomorrow' : label;
+
+    div.onclick = () => {
+      document.querySelectorAll('.day-pill').forEach(p=>p.classList.remove('active'));
+      div.classList.add('active');
+      el('date').value = d.toISOString().split('T')[0];
+      updateDayContext();
+    };
+
+    if (i===1) div.classList.add('active');
+
+    strip.appendChild(div);
+  }
+}
+
+function updateDayContext() {
+  const dateVal = el('date').value;
+  if (!dateVal) return;
+
+  const d = new Date(dateVal);
+
+  el('p-day').textContent = d.toLocaleDateString(undefined,{
+    weekday:'long',
+    month:'short',
+    day:'numeric'
+  });
+}
+
+/* GENERATE */
 function generateForecast() {
 
-  const f = {
-    sky: el('cond-sky').value,
-    evo: el('cond-evolution').value,
-    temp: el('drv-temp').value,
-    inst: el('drv-instability').value,
-    moisture: el('drv-moisture').value,
-    storm: el('haz-storm').value,
-    start: el('haz-start').value,
-    end: el('haz-end').value,
-    terrain: el('loc-terrain').value,
-    fog: el('loc-fog').value
-  };
-
-  // HEADLINE
   let headline = "Quiet conditions";
+  if (el('haz-storm').value === "scattered")
+    headline = "Scattered storms possible";
 
-  if (f.storm === "scattered") headline = "Building clouds with scattered storms";
-  else if (f.sky === "mostly_sunny") headline = "Mostly sunny and warm";
-  else if (f.sky === "overcast") headline = "Cloudy skies dominate";
-
-  // NARRATIVE
   const parts = [];
 
-  // evolution
-  if (f.evo === "building") parts.push("Clouds increase through the day.");
-  if (f.evo === "clearing") parts.push("Clouds gradually break for more sun.");
-  if (f.evo === "steady") parts.push("Conditions stay fairly steady.");
+  if (el('cond-evolution').value === "building")
+    parts.push("Clouds increase through the day.");
 
-  // temp
-  if (f.temp === "warming") parts.push("Temperatures rise through the day.");
+  if (el('drv-instability').value === "moderate")
+    parts.push("Instability supports storm development.");
 
-  // storms
-  if (f.inst === "moderate" && f.moisture === "humid")
-    parts.push("Instability and moisture support storm development.");
-
-  if (f.storm === "scattered")
-    parts.push("Scattered storms develop.");
-
-  // timing
-  if (f.start && f.end)
-    parts.push(`Rain develops ${f.start} and continues into the ${f.end}.`);
-  else if (f.start)
-    parts.push(`Rain develops in the ${f.start}.`);
-
-  // local
-  if (f.terrain === "nw_flow")
-    parts.push("NW flow may hold clouds along the ridges.");
-
-  if (f.fog === "patchy")
-    parts.push("Patchy fog possible early.");
+  if (el('haz-start').value && el('haz-end').value)
+    parts.push(`Rain develops ${el('haz-start').value} into ${el('haz-end').value}.`);
 
   el('headline').value = headline;
   el('narrative').value = parts.join(" ");
@@ -309,16 +404,29 @@ function generateForecast() {
   updatePreview();
 }
 
+/* PREVIEW */
 function updatePreview() {
-  el('p-headline').textContent = el('headline').value || "—";
-  el('p-narrative').textContent = el('narrative').value || "—";
+  el('p-high').textContent = el('high').value || "--";
+  el('p-low').textContent = el('low').value || "--";
+
+  const wind = el('wind-speed').value;
+  const dir = el('wind-dir').value;
+  el('p-wind').textContent = wind ? `${dir} ${wind} mph` : "—";
+
+  const text = el('headline').value + ". " + el('narrative').value;
+  el('p-text').textContent = text;
 }
+
+/* EVENTS */
+initDayStrip();
+
+el('date').addEventListener('change', updateDayContext);
+
+['headline','narrative','high','low','wind-speed','wind-dir']
+.forEach(id => el(id).addEventListener('input', updatePreview));
 
 el('generateBtn').onclick = generateForecast;
 
-['headline','narrative'].forEach(id => {
-  el(id).addEventListener('input', updatePreview);
-});
 </script>
 
 </body>
