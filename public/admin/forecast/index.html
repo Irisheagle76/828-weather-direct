@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Forecast Overrides</title>
+  <title>Forecast Composer</title>
 
   <style>
     body {
@@ -23,18 +23,22 @@
 
     h1 {
       font-size: 18px;
-      margin-bottom: 14px;
-    }
-
-    .row {
       margin-bottom: 12px;
     }
 
-    label {
-      display: block;
+    .hint {
       font-size: 12px;
-      margin-bottom: 4px;
+      opacity: 0.6;
+      margin-bottom: 14px;
+    }
+
+    .row { margin-bottom: 12px; }
+
+    label {
+      font-size: 12px;
       opacity: 0.7;
+      display: block;
+      margin-bottom: 4px;
     }
 
     input, textarea {
@@ -47,29 +51,28 @@
       font-size: 14px;
     }
 
-    textarea {
-      min-height: 70px;
+    textarea { min-height: 80px; }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
     }
 
     button {
-      margin-top: 8px;
+      flex: 1;
       padding: 10px;
-      width: 100%;
-      border: none;
       border-radius: 8px;
-      background: #4ade80;
-      color: black;
+      border: none;
       font-weight: bold;
       cursor: pointer;
     }
 
-    .secondary {
-      background: #334155;
-      color: white;
-    }
+    .primary { background: #4ade80; color: black; }
+    .secondary { background: #334155; color: white; }
+    .danger { background: #ef4444; }
 
     pre {
-      margin-top: 16px;
+      margin-top: 14px;
       background: #111;
       padding: 10px;
       border-radius: 8px;
@@ -77,13 +80,16 @@
       overflow-x: auto;
     }
 
-    /* --- PREVIEW --- */
-
     .preview {
       background: linear-gradient(180deg, #1e293b, #0f172a);
       border-radius: 16px;
       padding: 18px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+
+    .preview-title {
+      font-size: 13px;
+      opacity: 0.5;
+      margin-bottom: 6px;
     }
 
     .preview-date {
@@ -101,7 +107,6 @@
     .preview-narrative {
       font-size: 14px;
       line-height: 1.4;
-      opacity: 0.9;
       margin-bottom: 10px;
     }
 
@@ -119,62 +124,70 @@
     }
 
     .confidence {
-      margin-top: 10px;
+      margin-top: 8px;
       font-size: 11px;
       opacity: 0.6;
     }
-
   </style>
 </head>
 
 <body>
 
-<!-- LEFT: EDITOR -->
+<!-- LEFT -->
 <div class="panel">
 
-  <h1>Forecast Overrides</h1>
+  <h1>Forecast Composer</h1>
+  <div class="hint">Load system → refine → save → publish</div>
 
   <div class="row">
     <label for="date">Date</label>
-    <input type="date" id="date" onchange="loadDay(); updatePreview();">
+    <input type="date" id="date">
+  </div>
+
+  <div class="btn-row">
+    <button class="secondary" id="loadBtn">Load System</button>
+    <button class="danger" id="clearBtn">Clear</button>
   </div>
 
   <div class="row">
     <label for="headline">Headline</label>
-    <input id="headline" oninput="updatePreview()">
+    <input id="headline">
   </div>
 
   <div class="row">
     <label for="narrative">Narrative</label>
-    <textarea id="narrative" oninput="updatePreview()"></textarea>
+    <textarea id="narrative"></textarea>
   </div>
 
   <div class="row">
-    <label for="tags">Tags (comma separated)</label>
-    <input id="tags" oninput="updatePreview()">
+    <label for="tags">Tags</label>
+    <input id="tags">
   </div>
 
   <div class="row">
-    <label for="confidence">Confidence (0–1)</label>
-    <input id="confidence" type="number" step="0.1" min="0" max="1" oninput="updatePreview()">
+    <label for="confidence">Confidence</label>
+    <input id="confidence" type="number" step="0.1" min="0" max="1">
   </div>
 
-  <button onclick="save()">Save / Update</button>
-  <button class="secondary" onclick="clearDay()">Clear Day</button>
+  <div class="btn-row">
+    <button class="primary" id="saveBtn">Save</button>
+    <button class="secondary" id="downloadBtn">Download JSON</button>
+  </div>
 
   <pre id="output"></pre>
 
 </div>
 
-<!-- RIGHT: LIVE PREVIEW -->
+<!-- RIGHT -->
 <div class="panel">
 
-  <h1>Live Preview</h1>
+  <h1>Preview</h1>
 
   <div class="preview">
+    <div class="preview-title">Edited Forecast</div>
     <div class="preview-date" id="p-date">—</div>
-    <div class="preview-headline" id="p-headline">No headline</div>
-    <div class="preview-narrative" id="p-narrative">No narrative</div>
+    <div class="preview-headline" id="p-headline">—</div>
+    <div class="preview-narrative" id="p-narrative">—</div>
     <div class="preview-tags" id="p-tags"></div>
     <div class="confidence" id="p-confidence"></div>
   </div>
@@ -182,118 +195,123 @@
 </div>
 
 <script>
+const el = id => document.getElementById(id);
+
 let data = {
   lastUpdated: null,
   days: {},
-  global: {
-    tone: "neutral",
-    style: "concise",
-    overrideNarrative: false
-  }
+  global: {}
 };
 
+// LOAD FILE
 async function load() {
   try {
     const res = await fetch('/forecast-overrides.json');
     if (res.ok) data = await res.json();
   } catch {}
-
   render();
 }
 
+// LOAD DAY
 function loadDay() {
-  const date = document.getElementById('date').value;
-  if (!date || !data.days[date]) return;
+  const d = data.days[el('date').value];
+  if (!d) return;
 
-  const d = data.days[date];
-
-  document.getElementById('headline').value = d.headline || '';
-  document.getElementById('narrative').value = d.narrative || '';
-  document.getElementById('tags').value = (d.tags || []).join(', ');
-  document.getElementById('confidence').value = d.confidence ?? '';
-
-  updatePreview();
+  el('headline').value = d.headline || '';
+  el('narrative').value = d.narrative || '';
+  el('tags').value = (d.tags || []).join(', ');
+  el('confidence').value = d.confidence ?? '';
 }
 
+// SAVE
 function save() {
-  const date = document.getElementById('date').value;
-
-  if (!date) {
-    alert("Date required");
-    return;
-  }
-
-  const tags = document.getElementById('tags').value
-    .split(',')
-    .map(t => t.trim())
-    .filter(Boolean);
-
-  const confidence = parseFloat(document.getElementById('confidence').value);
+  const date = el('date').value;
+  if (!date) return alert("Pick a date");
 
   data.days[date] = {
-    headline: document.getElementById('headline').value || null,
-    narrative: document.getElementById('narrative').value || null,
-    tags,
-    confidence: isNaN(confidence) ? null : confidence
+    headline: el('headline').value || null,
+    narrative: el('narrative').value || null,
+    tags: el('tags').value.split(',').map(t => t.trim()).filter(Boolean),
+    confidence: parseFloat(el('confidence').value) || null
   };
 
   data.lastUpdated = new Date().toISOString();
-
   render();
-  copy();
 }
 
+// CLEAR
 function clearDay() {
-  const date = document.getElementById('date').value;
-  if (!date) return;
-
-  delete data.days[date];
-
-  document.getElementById('headline').value = '';
-  document.getElementById('narrative').value = '';
-  document.getElementById('tags').value = '';
-  document.getElementById('confidence').value = '';
-
-  render();
+  delete data.days[el('date').value];
+  ['headline','narrative','tags','confidence'].forEach(id => el(id).value = '');
   updatePreview();
-  copy();
 }
 
+// RENDER JSON
 function render() {
-  document.getElementById('output').textContent =
-    JSON.stringify(data, null, 2);
+  el('output').textContent = JSON.stringify(data, null, 2);
 }
 
-function copy() {
-  navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+// DOWNLOAD
+function download() {
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "forecast-overrides.json";
+  a.click();
 }
 
+// PREVIEW
 function updatePreview() {
-  const date = document.getElementById('date').value;
-  const headline = document.getElementById('headline').value;
-  const narrative = document.getElementById('narrative').value;
-  const tags = document.getElementById('tags').value
-    .split(',')
-    .map(t => t.trim())
-    .filter(Boolean);
-  const confidence = document.getElementById('confidence').value;
+  const date = el('date').value;
+  const headline = el('headline').value;
+  const narrative = el('narrative').value;
+  const tags = el('tags').value.split(',').map(t => t.trim()).filter(Boolean);
+  const confidence = el('confidence').value;
 
-  document.getElementById('p-date').textContent = date || '—';
-  document.getElementById('p-headline').textContent = headline || 'No headline';
-  document.getElementById('p-narrative').textContent = narrative || 'No narrative';
+  el('p-date').textContent = date || '—';
+  el('p-headline').textContent = headline || 'No headline';
+  el('p-narrative').textContent = narrative || 'No narrative';
 
-  const tagContainer = document.getElementById('p-tags');
-  tagContainer.innerHTML = '';
+  const container = el('p-tags');
+  container.innerHTML = '';
   tags.forEach(t => {
-    const el = document.createElement('div');
-    el.className = 'tag';
-    el.textContent = t;
-    tagContainer.appendChild(el);
+    const div = document.createElement('div');
+    div.className = 'tag';
+    div.textContent = t;
+    container.appendChild(div);
   });
 
-  document.getElementById('p-confidence').textContent =
+  el('p-confidence').textContent =
     confidence ? `Confidence: ${confidence}` : '';
 }
+
+// MOCK SYSTEM LOAD
+function loadFromSystem() {
+  el('headline').value = "Warm with building clouds";
+  el('narrative').value = "Clouds increase through the day with scattered afternoon storms.";
+  el('tags').value = "increasing clouds, storms";
+  el('confidence').value = 0.7;
+  updatePreview();
+}
+
+// EVENTS
+el('date').addEventListener('change', () => {
+  loadDay();
+  updatePreview();
+});
+
+['headline','narrative','tags','confidence'].forEach(id => {
+  el(id).addEventListener('input', updatePreview);
+});
+
+el('saveBtn').onclick = save;
+el('clearBtn').onclick = clearDay;
+el('downloadBtn').onclick = download;
+el('loadBtn').onclick = loadFromSystem;
+
+// URL param
+const params = new URLSearchParams(location.search);
+if (params.get("date")) el('date').value = params.get("date");
 
 load();
 </script>
