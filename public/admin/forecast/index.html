@@ -1,341 +1,327 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Forecast Composer</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Forecast Composer</title>
 
-  <style>
-    body {
-      font-family: system-ui;
-      background: #0b1220;
-      color: #fff;
-      margin: 0;
-      display: flex;
-      gap: 20px;
-      padding: 20px;
-    }
+<style>
+body {
+  font-family: system-ui;
+  background: #0b1220;
+  color: #fff;
+  margin: 0;
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+}
 
-    .panel {
-      flex: 1;
-      max-width: 520px;
-    }
+.panel { flex:1; max-width:520px; }
 
-    h1 {
-      font-size: 18px;
-      margin-bottom: 12px;
-    }
+h1 { font-size:18px; margin-bottom:12px; }
 
-    .hint {
-      font-size: 12px;
-      opacity: 0.6;
-      margin-bottom: 14px;
-    }
+.hint { font-size:12px; opacity:.6; margin-bottom:14px; }
 
-    .row { margin-bottom: 12px; }
+.row { margin-bottom:12px; }
 
-    label {
-      font-size: 12px;
-      opacity: 0.7;
-      display: block;
-      margin-bottom: 4px;
-    }
+label { font-size:12px; opacity:.7; display:block; margin-bottom:4px; }
 
-    input, textarea {
-      width: 100%;
-      padding: 10px;
-      border-radius: 8px;
-      border: none;
-      background: #1c2438;
-      color: white;
-      font-size: 14px;
-    }
+input, textarea, select {
+  width:100%;
+  padding:10px;
+  border-radius:8px;
+  border:none;
+  background:#1c2438;
+  color:white;
+  font-size:14px;
+}
 
-    textarea { min-height: 80px; }
+textarea { min-height:90px; }
 
-    .btn-row {
-      display: flex;
-      gap: 8px;
-    }
+.btn-row { display:flex; gap:8px; }
 
-    button {
-      flex: 1;
-      padding: 10px;
-      border-radius: 8px;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-    }
+button {
+  flex:1;
+  padding:10px;
+  border-radius:8px;
+  border:none;
+  font-weight:bold;
+  cursor:pointer;
+}
 
-    .primary { background: #4ade80; color: black; }
-    .secondary { background: #334155; color: white; }
-    .danger { background: #ef4444; }
+.primary { background:#4ade80; color:black; }
+.secondary { background:#334155; color:white; }
+.danger { background:#ef4444; }
 
-    pre {
-      margin-top: 14px;
-      background: #111;
-      padding: 10px;
-      border-radius: 8px;
-      font-size: 12px;
-      overflow-x: auto;
-    }
+.preview {
+  background: linear-gradient(180deg,#1e293b,#0f172a);
+  border-radius:16px;
+  padding:18px;
+}
 
-    .preview {
-      background: linear-gradient(180deg, #1e293b, #0f172a);
-      border-radius: 16px;
-      padding: 18px;
-    }
-
-    .preview-title {
-      font-size: 13px;
-      opacity: 0.5;
-      margin-bottom: 6px;
-    }
-
-    .preview-date {
-      font-size: 12px;
-      opacity: 0.6;
-      margin-bottom: 6px;
-    }
-
-    .preview-headline {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 10px;
-    }
-
-    .preview-narrative {
-      font-size: 14px;
-      line-height: 1.4;
-      margin-bottom: 10px;
-    }
-
-    .preview-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .tag {
-      background: #334155;
-      padding: 4px 8px;
-      border-radius: 999px;
-      font-size: 11px;
-    }
-
-    .confidence {
-      margin-top: 8px;
-      font-size: 11px;
-      opacity: 0.6;
-    }
-  </style>
+.preview-headline { font-size:18px; font-weight:600; margin-bottom:10px; }
+.preview-narrative { font-size:14px; line-height:1.4; }
+</style>
 </head>
 
 <body>
 
-<!-- LEFT -->
 <div class="panel">
 
-  <h1>Forecast Composer</h1>
-  <div class="hint">Load system → refine → save → publish</div>
+<h1>Forecast Composer</h1>
+<div class="hint">System → Adjust Signals → Generate → Refine → Save</div>
 
-  <div class="row">
-    <label for="date">Date</label>
-    <input type="date" id="date">
+<div class="row">
+  <label for="date">Date</label>
+  <input type="date" id="date">
+</div>
+
+<div class="btn-row">
+  <button class="secondary" id="loadBtn">Load System</button>
+  <button class="danger" id="clearBtn">Clear</button>
+</div>
+
+<div class="row">
+  <label>Forecast Signals</label>
+
+  <label for="cond-type">Dominant Type</label>
+  <select id="cond-type">
+    <option value="">Dominant Type</option>
+    <option value="sun">Sunny</option>
+    <option value="clouds">Clouds</option>
+    <option value="rain">Rain</option>
+    <option value="storms">Storms</option>
+    <option value="mixed">Mixed</option>
+  </select>
+
+  <label for="cond-variability">Variability</label>
+  <select id="cond-variability">
+    <option value="">Variability</option>
+    <option value="steady">Steady</option>
+    <option value="changing">Changing</option>
+  </select>
+
+  <label for="drv-temp">Temp Trend</label>
+  <select id="drv-temp">
+    <option value="">Temp Trend</option>
+    <option value="warming">Warming</option>
+    <option value="cooling">Cooling</option>
+    <option value="steady">Steady</option>
+  </select>
+
+  <label for="drv-instability">Instability</label>
+  <select id="drv-instability">
+    <option value="">Instability</option>
+    <option value="none">None</option>
+    <option value="low">Low</option>
+    <option value="moderate">Moderate</option>
+    <option value="high">High</option>
+  </select>
+
+  <label for="drv-sky">Sky Cover</label>
+  <select id="drv-sky">
+    <option value="">Sky Cover</option>
+    <option value="clear">Clear</option>
+    <option value="partly">Partly Cloudy</option>
+    <option value="cloudy">Cloudy</option>
+  </select>
+
+  <label for="haz-storm">Storm Risk</label>
+  <select id="haz-storm">
+    <option value="">Storm Risk</option>
+    <option value="none">None</option>
+    <option value="isolated">Isolated</option>
+    <option value="scattered">Scattered</option>
+    <option value="numerous">Numerous</option>
+  </select>
+
+  <label for="haz-timing">Rain Timing</label>
+  <select id="haz-timing">
+    <option value="">Rain Timing</option>
+    <option value="morning">Morning</option>
+    <option value="midday">Midday</option>
+    <option value="afternoon">Afternoon</option>
+    <option value="evening">Evening</option>
+  </select>
+
+  <label for="loc-terrain">Terrain</label>
+  <select id="loc-terrain">
+    <option value="">Terrain</option>
+    <option value="nw_flow">NW Flow</option>
+    <option value="upslope">Upslope</option>
+    <option value="none">None</option>
+  </select>
+
+  <label for="loc-fog">Fog</label>
+  <select id="loc-fog">
+    <option value="">Fog</option>
+    <option value="none">None</option>
+    <option value="patchy">Patchy</option>
+    <option value="likely">Likely</option>
+  </select>
+
+  <div class="btn-row" style="margin-top:8px;">
+    <button class="secondary" id="generateBtn">Generate Forecast</button>
   </div>
+</div>
 
-  <div class="btn-row">
-    <button class="secondary" id="loadBtn">Load System</button>
-    <button class="danger" id="clearBtn">Clear</button>
-  </div>
+<div class="row">
+  <label for="headline">Headline</label>
+  <input id="headline">
+</div>
 
-  <div class="row">
-    <label for="headline">Headline</label>
-    <input id="headline">
-  </div>
+<div class="row">
+  <label for="narrative">Narrative</label>
+  <textarea id="narrative"></textarea>
+</div>
 
-  <div class="row">
-    <label for="narrative">Narrative</label>
-    <textarea id="narrative"></textarea>
-  </div>
+<div class="row">
+  <label for="tags">Tags</label>
+  <input id="tags">
+</div>
 
-  <div class="row">
-    <label for="tags">Tags</label>
-    <input id="tags">
-  </div>
+<div class="row">
+  <label for="confidence">Confidence</label>
+  <input id="confidence" type="number" step="0.1">
+</div>
 
-  <div class="row">
-    <label for="confidence">Confidence</label>
-    <input id="confidence" type="number" step="0.1" min="0" max="1">
-  </div>
-
-  <div class="btn-row">
-    <button class="primary" id="saveBtn">Save</button>
-    <button class="secondary" id="downloadBtn">Download JSON</button>
-  </div>
-
-  <pre id="output"></pre>
+<div class="btn-row">
+  <button class="primary" id="saveBtn">Save</button>
+</div>
 
 </div>
 
-<!-- RIGHT -->
 <div class="panel">
+<h1>Preview</h1>
 
-  <h1>Preview</h1>
-
-  <div class="preview">
-    <div class="preview-title">Edited Forecast</div>
-    <div class="preview-date" id="p-date">—</div>
-    <div class="preview-headline" id="p-headline">—</div>
-    <div class="preview-narrative" id="p-narrative">—</div>
-    <div class="preview-tags" id="p-tags"></div>
-    <div class="confidence" id="p-confidence"></div>
-  </div>
-
+<div class="preview">
+  <div class="preview-headline" id="p-headline">—</div>
+  <div class="preview-narrative" id="p-narrative">—</div>
+</div>
 </div>
 
 <script>
 const el = id => document.getElementById(id);
 
-let data = {
-  lastUpdated: null,
-  days: {},
-  global: {}
-};
+let data = { days:{} };
 
-// LOAD FILE
-async function load() {
-  try {
-    const res = await fetch('/forecast-overrides.json');
-    if (res.ok) data = await res.json();
-  } catch {}
-  render();
-}
-
-// LOAD DAY
-function loadDay() {
- const d = data.days?.[el('date').value];
-  if (!d) return;
-
-  el('headline').value = d.headline || '';
-  el('narrative').value = d.narrative || '';
-  el('tags').value = (d.tags || []).join(', ');
-  el('confidence').value = d.confidence ?? '';
-}
-
-// SAVE
-function save() {
-  const date = el('date').value;
-  if (!date) return alert("Pick a date");
-
-  data.days[date] = {
-    headline: el('headline').value || null,
-    narrative: el('narrative').value || null,
-    tags: el('tags').value.split(',').map(t => t.trim()).filter(Boolean),
-    confidence: parseFloat(el('confidence').value) || null
-  };
-
-  data.lastUpdated = new Date().toISOString();
-  render();
-}
-
-// CLEAR
-function clearDay() {
-  delete data.days[el('date').value];
-  ['headline','narrative','tags','confidence'].forEach(id => el(id).value = '');
-  updatePreview();
-}
-
-// RENDER JSON
-function render() {
-  el('output').textContent = JSON.stringify(data, null, 2);
-}
-
-// DOWNLOAD
-function download() {
-  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "forecast-overrides.json";
-  a.click();
-}
-
-// PREVIEW
-function updatePreview() {
-  const date = el('date').value;
-  const headline = el('headline').value;
-  const narrative = el('narrative').value;
-  const tags = el('tags').value.split(',').map(t => t.trim()).filter(Boolean);
-  const confidence = el('confidence').value;
-
-  el('p-date').textContent = date || '—';
-  el('p-headline').textContent = headline || 'No headline';
-  el('p-narrative').textContent = narrative || 'No narrative';
-
-  const container = el('p-tags');
-  container.innerHTML = '';
-  tags.forEach(t => {
-    const div = document.createElement('div');
-    div.className = 'tag';
-    div.textContent = t;
-    container.appendChild(div);
-  });
-
-  el('p-confidence').textContent =
-    confidence ? `Confidence: ${confidence}` : '';
-}
-
-// MOCK SYSTEM LOAD
+// LOAD SYSTEM
 async function loadFromSystem() {
   const date = el('date').value;
-
-  if (!date) {
-    alert("Select a date first");
-    return;
-  }
+  if (!date) return alert("Pick date");
 
   try {
     const { getSystemForecastForDate } =
       await import('/js/modules/forecast-engine.js');
 
     const sys = await getSystemForecastForDate(date);
+    if (!sys) return alert("No data");
 
-    if (!sys) {
-      alert("No system forecast available for that date");
-      return;
-    }
+    const s = sys.structured || {};
 
-el('headline').value = sys.human.headline || '';
-el('narrative').value = sys.human.narrative || '';
-el('tags').value = (sys.meta.tags || []).join(', ');
-el('confidence').value = sys.meta.confidence ?? '';
+    el('cond-type').value = s.conditions?.dominantType || '';
+    el('cond-variability').value = s.conditions?.variability || '';
+
+    el('drv-temp').value = s.drivers?.tempTrend || '';
+    el('drv-instability').value = s.drivers?.instability || '';
+    el('drv-sky').value = s.drivers?.skyCover || '';
+
+    el('haz-storm').value = s.hazards?.stormRisk || '';
+    el('haz-timing').value = s.hazards?.rainWindow || '';
+
+    el('loc-terrain').value = s.localEffects?.terrainInfluence || '';
+    el('loc-fog').value = s.localEffects?.fog || '';
+
+    el('headline').value = sys.human?.headline || '';
+    el('narrative').value = sys.human?.narrative || '';
 
     updatePreview();
 
-  } catch (e) {
+  } catch(e){
     console.error(e);
     alert("Failed to load system forecast");
   }
 }
 
+// GENERATE
+function generateForecast() {
+
+  const f = {
+    cond: el('cond-type').value,
+    var: el('cond-variability').value,
+    temp: el('drv-temp').value,
+    inst: el('drv-instability').value,
+    sky: el('drv-sky').value,
+    storm: el('haz-storm').value,
+    timing: el('haz-timing').value,
+    terrain: el('loc-terrain').value,
+    fog: el('loc-fog').value
+  };
+
+  let headline = "Quiet conditions";
+
+  if (f.cond === "storms") headline = "Storms possible later";
+  if (f.cond === "rain") headline = "Rain at times";
+
+  const parts = [];
+
+  parts.push(f.var === "changing"
+    ? "Conditions evolve through the day."
+    : "Conditions stay fairly steady.");
+
+  if (f.temp === "warming") parts.push("Temperatures rise.");
+  if (f.inst === "moderate" || f.inst === "high")
+    parts.push("Instability builds supporting storms.");
+
+  if (f.storm === "scattered") parts.push("Scattered storms develop.");
+  if (f.timing) parts.push(`Most active ${f.timing}.`);
+
+  if (f.terrain === "nw_flow")
+    parts.push("NW flow keeps clouds along ridges.");
+
+  if (f.fog === "patchy")
+    parts.push("Patchy fog early.");
+
+  el('headline').value = headline;
+  el('narrative').value = parts.join(" ");
+
+  updatePreview();
+}
+
+// SAVE
+function save() {
+  const d = el('date').value;
+  if (!d) return;
+
+  data.days[d] = {
+    headline: el('headline').value,
+    narrative: el('narrative').value
+  };
+
+  console.log("Saved:", data);
+}
+
+// CLEAR
+function clearDay() {
+  ['headline','narrative'].forEach(id => el(id).value = '');
+  updatePreview();
+}
+
+// PREVIEW
+function updatePreview() {
+  el('p-headline').textContent = el('headline').value || '—';
+  el('p-narrative').textContent = el('narrative').value || '—';
+}
+
 // EVENTS
 el('loadBtn').onclick = loadFromSystem;
+el('generateBtn').onclick = generateForecast;
 el('saveBtn').onclick = save;
 el('clearBtn').onclick = clearDay;
-el('downloadBtn').onclick = download;
 
-// INPUT LIVE PREVIEW
-['headline','narrative','tags','confidence'].forEach(id => {
+['headline','narrative'].forEach(id => {
   el(id).addEventListener('input', updatePreview);
 });
-
-// DATE CHANGE
-el('date').addEventListener('change', () => {
-  loadDay();
-  updatePreview();
-});
-
-load();
 </script>
 
 </body>
