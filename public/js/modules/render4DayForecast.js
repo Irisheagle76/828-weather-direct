@@ -104,7 +104,7 @@ console.log("FORECAST:", forecast);
     // 🔥 Continue with older code
     // ==================================================
     const days = buildDays(hourly);
-    const enriched = days.map((d, i) => buildDay(d, i));
+   const enriched = days.map((d, i) => buildDay(d, i, forecast));
 
 container.innerHTML = `
   <div style="padding:12px;font-size:18px;font-weight:600;">
@@ -164,7 +164,7 @@ function buildDays(hourly) {
 // BUILD DAY
 // ============================================================
 
-function buildDay(day, index) {
+function buildDay(day, index, forecast) {
   const hours = day.hours;
 
   const temps = hours.map(h => h.temperatureF);
