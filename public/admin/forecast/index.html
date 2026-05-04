@@ -16,15 +16,30 @@ body {
   padding: 20px;
 }
 
-.panel { flex:1; max-width:520px; }
+.panel {
+  flex:1;
+  max-width:520px;
+}
 
-h1 { font-size:18px; margin-bottom:12px; }
+h1 {
+  font-size:18px;
+  margin-bottom:12px;
+}
 
-.hint { font-size:12px; opacity:.6; margin-bottom:14px; }
+.hint {
+  font-size:12px;
+  opacity:.6;
+  margin-bottom:14px;
+}
 
 .row { margin-bottom:12px; }
 
-label { font-size:12px; opacity:.7; display:block; margin-bottom:4px; }
+label {
+  font-size:12px;
+  opacity:.7;
+  display:block;
+  margin-bottom:4px;
+}
 
 input, textarea, select {
   width:100%;
@@ -38,7 +53,11 @@ input, textarea, select {
 
 textarea { min-height:90px; }
 
-.btn-row { display:flex; gap:8px; }
+.btn-row {
+  display:flex;
+  gap:8px;
+  margin-top:10px;
+}
 
 button {
   flex:1;
@@ -53,19 +72,50 @@ button {
 .secondary { background:#334155; color:white; }
 .danger { background:#ef4444; }
 
+.group {
+  background: rgba(255,255,255,0.03);
+  padding:12px;
+  border-radius:10px;
+  margin-bottom:12px;
+  border:1px solid rgba(255,255,255,0.05);
+}
+
+.group-title {
+  font-size:12px;
+  text-transform:uppercase;
+  opacity:.6;
+  margin-bottom:8px;
+  letter-spacing:.05em;
+}
+
+.group select,
+.group input,
+.group textarea {
+  margin-bottom:8px;
+}
+
 .preview {
   background: linear-gradient(180deg,#1e293b,#0f172a);
   border-radius:16px;
   padding:18px;
 }
 
-.preview-headline { font-size:18px; font-weight:600; margin-bottom:10px; }
-.preview-narrative { font-size:14px; line-height:1.4; }
+.preview-headline {
+  font-size:18px;
+  font-weight:600;
+  margin-bottom:10px;
+}
+
+.preview-narrative {
+  font-size:14px;
+  line-height:1.4;
+}
 </style>
 </head>
 
 <body>
 
+<!-- ================= LEFT ================= -->
 <div class="panel">
 
 <h1>Forecast Composer</h1>
@@ -81,14 +131,15 @@ button {
   <button class="danger" id="clearBtn">Clear</button>
 </div>
 
-<div class="row">
-  <label>Forecast Signals</label>
+<!-- CONDITIONS -->
+<div class="group">
+  <div class="group-title">Conditions</div>
 
   <label for="cond-type">Dominant Type</label>
   <select id="cond-type">
-    <option value="">Dominant Type</option>
+    <option value="">Select</option>
     <option value="sun">Sunny</option>
-    <option value="clouds">Clouds</option>
+    <option value="clouds">Cloudy</option>
     <option value="rain">Rain</option>
     <option value="storms">Storms</option>
     <option value="mixed">Mixed</option>
@@ -96,14 +147,19 @@ button {
 
   <label for="cond-variability">Variability</label>
   <select id="cond-variability">
-    <option value="">Variability</option>
+    <option value="">Select</option>
     <option value="steady">Steady</option>
     <option value="changing">Changing</option>
   </select>
+</div>
 
-  <label for="drv-temp">Temp Trend</label>
+<!-- DRIVERS -->
+<div class="group">
+  <div class="group-title">Drivers</div>
+
+  <label for="drv-temp">Temperature Trend</label>
   <select id="drv-temp">
-    <option value="">Temp Trend</option>
+    <option value="">Select</option>
     <option value="warming">Warming</option>
     <option value="cooling">Cooling</option>
     <option value="steady">Steady</option>
@@ -111,7 +167,7 @@ button {
 
   <label for="drv-instability">Instability</label>
   <select id="drv-instability">
-    <option value="">Instability</option>
+    <option value="">Select</option>
     <option value="none">None</option>
     <option value="low">Low</option>
     <option value="moderate">Moderate</option>
@@ -120,15 +176,20 @@ button {
 
   <label for="drv-sky">Sky Cover</label>
   <select id="drv-sky">
-    <option value="">Sky Cover</option>
+    <option value="">Select</option>
     <option value="clear">Clear</option>
     <option value="partly">Partly Cloudy</option>
     <option value="cloudy">Cloudy</option>
   </select>
+</div>
+
+<!-- HAZARDS -->
+<div class="group">
+  <div class="group-title">Hazards</div>
 
   <label for="haz-storm">Storm Risk</label>
   <select id="haz-storm">
-    <option value="">Storm Risk</option>
+    <option value="">Select</option>
     <option value="none">None</option>
     <option value="isolated">Isolated</option>
     <option value="scattered">Scattered</option>
@@ -137,50 +198,52 @@ button {
 
   <label for="haz-timing">Rain Timing</label>
   <select id="haz-timing">
-    <option value="">Rain Timing</option>
+    <option value="">Select</option>
     <option value="morning">Morning</option>
     <option value="midday">Midday</option>
     <option value="afternoon">Afternoon</option>
     <option value="evening">Evening</option>
   </select>
+</div>
 
-  <label for="loc-terrain">Terrain</label>
+<!-- LOCAL -->
+<div class="group">
+  <div class="group-title">Local Effects (Asheville)</div>
+
+  <label for="loc-terrain">Terrain Influence</label>
   <select id="loc-terrain">
-    <option value="">Terrain</option>
-    <option value="nw_flow">NW Flow</option>
-    <option value="upslope">Upslope</option>
+    <option value="">Select</option>
+    <option value="nw_flow">NW Flow Clouds</option>
+    <option value="upslope">Upslope Clouds</option>
     <option value="none">None</option>
   </select>
 
-  <label for="loc-fog">Fog</label>
+  <label for="loc-fog">Fog Potential</label>
   <select id="loc-fog">
-    <option value="">Fog</option>
+    <option value="">Select</option>
     <option value="none">None</option>
     <option value="patchy">Patchy</option>
     <option value="likely">Likely</option>
   </select>
-
-  <div class="btn-row" style="margin-top:8px;">
-    <button class="secondary" id="generateBtn">Generate Forecast</button>
-  </div>
 </div>
 
-<div class="row">
+<div class="btn-row">
+  <button class="secondary" id="generateBtn">Generate Forecast</button>
+</div>
+
+<!-- OUTPUT -->
+<div class="group">
+  <div class="group-title">Output</div>
+
   <label for="headline">Headline</label>
   <input id="headline">
-</div>
 
-<div class="row">
   <label for="narrative">Narrative</label>
   <textarea id="narrative"></textarea>
-</div>
 
-<div class="row">
   <label for="tags">Tags</label>
   <input id="tags">
-</div>
 
-<div class="row">
   <label for="confidence">Confidence</label>
   <input id="confidence" type="number" step="0.1">
 </div>
@@ -191,6 +254,7 @@ button {
 
 </div>
 
+<!-- ================= RIGHT ================= -->
 <div class="panel">
 <h1>Preview</h1>
 
@@ -265,16 +329,21 @@ function generateForecast() {
 
   const parts = [];
 
-  parts.push(f.var === "changing"
-    ? "Conditions evolve through the day."
-    : "Conditions stay fairly steady.");
+  parts.push(
+    f.var === "changing"
+      ? "Conditions evolve through the day."
+      : "Conditions stay fairly steady."
+  );
 
   if (f.temp === "warming") parts.push("Temperatures rise.");
   if (f.inst === "moderate" || f.inst === "high")
     parts.push("Instability builds supporting storms.");
 
-  if (f.storm === "scattered") parts.push("Scattered storms develop.");
-  if (f.timing) parts.push(`Most active ${f.timing}.`);
+  if (f.storm === "scattered")
+    parts.push("Scattered storms develop.");
+
+  if (f.timing)
+    parts.push(`Most active ${f.timing}.`);
 
   if (f.terrain === "nw_flow")
     parts.push("NW flow keeps clouds along ridges.");
