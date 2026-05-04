@@ -16,23 +16,11 @@ body {
   padding: 20px;
 }
 
-.panel {
-  flex:1;
-  max-width:520px;
-}
+.panel { flex:1; max-width:520px; }
 
-h1 {
-  font-size:18px;
-  margin-bottom:12px;
-}
+h1 { font-size:18px; margin-bottom:12px; }
 
-.hint {
-  font-size:12px;
-  opacity:.6;
-  margin-bottom:14px;
-}
-
-.row { margin-bottom:12px; }
+.hint { font-size:12px; opacity:.6; margin-bottom:14px; }
 
 label {
   font-size:12px;
@@ -49,6 +37,7 @@ input, textarea, select {
   background:#1c2438;
   color:white;
   font-size:14px;
+  margin-bottom:8px;
 }
 
 textarea { min-height:90px; }
@@ -69,7 +58,7 @@ button {
 }
 
 .primary { background:#4ade80; color:black; }
-.secondary { background:#334155; color:white; }
+.secondary { background:#334155; }
 .danger { background:#ef4444; }
 
 .group {
@@ -84,13 +73,6 @@ button {
   font-size:12px;
   text-transform:uppercase;
   opacity:.6;
-  margin-bottom:8px;
-  letter-spacing:.05em;
-}
-
-.group select,
-.group input,
-.group textarea {
   margin-bottom:8px;
 }
 
@@ -115,241 +97,211 @@ button {
 
 <body>
 
-<!-- ================= LEFT ================= -->
 <div class="panel">
 
 <h1>Forecast Composer</h1>
-<div class="hint">System → Adjust Signals → Generate → Refine → Save</div>
+<div class="hint">Signals → Generate → Refine</div>
 
-<div class="row">
-  <label for="date">Date</label>
-  <input type="date" id="date">
-</div>
+<label for="date">Date</label>
+<input type="date" id="date">
 
 <div class="btn-row">
-  <button class="secondary" id="loadBtn">Load System</button>
-  <button class="danger" id="clearBtn">Clear</button>
+<button class="secondary" id="loadBtn">Load System</button>
+<button class="danger" id="clearBtn">Clear</button>
 </div>
 
 <!-- CONDITIONS -->
 <div class="group">
-  <div class="group-title">Conditions</div>
+<div class="group-title">Conditions</div>
 
-  <label for="cond-type">Dominant Type</label>
-  <select id="cond-type">
-    <option value="">Select</option>
-    <option value="sun">Sunny</option>
-    <option value="clouds">Cloudy</option>
-    <option value="rain">Rain</option>
-    <option value="storms">Storms</option>
-    <option value="mixed">Mixed</option>
-  </select>
+<label for="cond-sky">Sky</label>
+<select id="cond-sky">
+<option value="">Select</option>
+<option value="clear">Clear</option>
+<option value="mostly_sunny">Mostly Sunny</option>
+<option value="partly_cloudy">Partly Cloudy</option>
+<option value="mostly_cloudy">Mostly Cloudy</option>
+<option value="overcast">Overcast</option>
+</select>
 
-  <label for="cond-variability">Variability</label>
-  <select id="cond-variability">
-    <option value="">Select</option>
-    <option value="steady">Steady</option>
-    <option value="changing">Changing</option>
-  </select>
+<label for="cond-evolution">Day Evolution</label>
+<select id="cond-evolution">
+<option value="">Select</option>
+<option value="steady">Little Change</option>
+<option value="building">Building Clouds</option>
+<option value="clearing">Clearing Trend</option>
+<option value="mixed">Back and Forth</option>
+</select>
 </div>
 
 <!-- DRIVERS -->
 <div class="group">
-  <div class="group-title">Drivers</div>
+<div class="group-title">Drivers</div>
 
-  <label for="drv-temp">Temperature Trend</label>
-  <select id="drv-temp">
-    <option value="">Select</option>
-    <option value="warming">Warming</option>
-    <option value="cooling">Cooling</option>
-    <option value="steady">Steady</option>
-  </select>
+<label for="drv-temp">Temperature Trend</label>
+<select id="drv-temp">
+<option value="">Select</option>
+<option value="warming">Warming</option>
+<option value="cooling">Cooling</option>
+<option value="steady">Steady</option>
+</select>
 
-  <label for="drv-instability">Instability</label>
-  <select id="drv-instability">
-    <option value="">Select</option>
-    <option value="none">None</option>
-    <option value="low">Low</option>
-    <option value="moderate">Moderate</option>
-    <option value="high">High</option>
-  </select>
+<label for="drv-instability">Instability</label>
+<select id="drv-instability">
+<option value="">Select</option>
+<option value="none">None</option>
+<option value="low">Low</option>
+<option value="moderate">Moderate</option>
+<option value="high">High</option>
+</select>
 
-  <label for="drv-sky">Sky Cover</label>
-  <select id="drv-sky">
-    <option value="">Select</option>
-    <option value="clear">Clear</option>
-    <option value="partly">Partly Cloudy</option>
-    <option value="cloudy">Cloudy</option>
-  </select>
+<label for="drv-moisture">Moisture</label>
+<select id="drv-moisture">
+<option value="">Select</option>
+<option value="dry">Dry</option>
+<option value="moderate">Moderate</option>
+<option value="humid">Humid</option>
+</select>
 </div>
 
 <!-- HAZARDS -->
 <div class="group">
-  <div class="group-title">Hazards</div>
+<div class="group-title">Hazards</div>
 
-  <label for="haz-storm">Storm Risk</label>
-  <select id="haz-storm">
-    <option value="">Select</option>
-    <option value="none">None</option>
-    <option value="isolated">Isolated</option>
-    <option value="scattered">Scattered</option>
-    <option value="numerous">Numerous</option>
-  </select>
+<label for="haz-storm">Storm Risk</label>
+<select id="haz-storm">
+<option value="">Select</option>
+<option value="none">None</option>
+<option value="isolated">Isolated</option>
+<option value="scattered">Scattered</option>
+<option value="numerous">Numerous</option>
+</select>
 
-  <label for="haz-timing">Rain Timing</label>
-  <select id="haz-timing">
-    <option value="">Select</option>
-    <option value="morning">Morning</option>
-    <option value="midday">Midday</option>
-    <option value="afternoon">Afternoon</option>
-    <option value="evening">Evening</option>
-  </select>
+<label for="haz-start">Rain Start</label>
+<select id="haz-start">
+<option value="">Start</option>
+<option value="morning">Morning</option>
+<option value="midday">Midday</option>
+<option value="afternoon">Afternoon</option>
+<option value="evening">Evening</option>
+</select>
+
+<label for="haz-end">Rain End</label>
+<select id="haz-end">
+<option value="">End</option>
+<option value="midday">Midday</option>
+<option value="afternoon">Afternoon</option>
+<option value="evening">Evening</option>
+<option value="overnight">Overnight</option>
+</select>
 </div>
 
 <!-- LOCAL -->
 <div class="group">
-  <div class="group-title">Local Effects (Asheville)</div>
+<div class="group-title">Local Effects</div>
 
-  <label for="loc-terrain">Terrain Influence</label>
-  <select id="loc-terrain">
-    <option value="">Select</option>
-    <option value="nw_flow">NW Flow Clouds</option>
-    <option value="upslope">Upslope Clouds</option>
-    <option value="none">None</option>
-  </select>
+<label for="loc-terrain">Terrain</label>
+<select id="loc-terrain">
+<option value="">Select</option>
+<option value="nw_flow">NW Flow Clouds</option>
+<option value="upslope">Upslope Clouds</option>
+<option value="none">None</option>
+</select>
 
-  <label for="loc-fog">Fog Potential</label>
-  <select id="loc-fog">
-    <option value="">Select</option>
-    <option value="none">None</option>
-    <option value="patchy">Patchy</option>
-    <option value="likely">Likely</option>
-  </select>
+<label for="loc-fog">Fog</label>
+<select id="loc-fog">
+<option value="">Select</option>
+<option value="none">None</option>
+<option value="patchy">Patchy</option>
+<option value="likely">Likely</option>
+</select>
 </div>
 
 <div class="btn-row">
-  <button class="secondary" id="generateBtn">Generate Forecast</button>
+<button class="secondary" id="generateBtn">Generate Forecast</button>
 </div>
 
 <!-- OUTPUT -->
 <div class="group">
-  <div class="group-title">Output</div>
+<div class="group-title">Output</div>
 
-  <label for="headline">Headline</label>
-  <input id="headline">
+<label for="headline">Headline</label>
+<input id="headline">
 
-  <label for="narrative">Narrative</label>
-  <textarea id="narrative"></textarea>
-
-  <label for="tags">Tags</label>
-  <input id="tags">
-
-  <label for="confidence">Confidence</label>
-  <input id="confidence" type="number" step="0.1">
+<label for="narrative">Narrative</label>
+<textarea id="narrative"></textarea>
 </div>
 
 <div class="btn-row">
-  <button class="primary" id="saveBtn">Save</button>
+<button class="primary" id="saveBtn">Save</button>
 </div>
 
 </div>
 
-<!-- ================= RIGHT ================= -->
+<!-- PREVIEW -->
 <div class="panel">
 <h1>Preview</h1>
-
 <div class="preview">
-  <div class="preview-headline" id="p-headline">—</div>
-  <div class="preview-narrative" id="p-narrative">—</div>
+<div class="preview-headline" id="p-headline">—</div>
+<div class="preview-narrative" id="p-narrative">—</div>
 </div>
 </div>
 
 <script>
 const el = id => document.getElementById(id);
 
-let data = { days:{} };
-
-// LOAD SYSTEM
-async function loadFromSystem() {
-  const date = el('date').value;
-  if (!date) return alert("Pick date");
-
-  try {
-    const { getSystemForecastForDate } =
-      await import('/js/modules/forecast-engine.js');
-
-    const sys = await getSystemForecastForDate(date);
-    if (!sys) return alert("No data");
-
-    const s = sys.structured || {};
-
-    el('cond-type').value = s.conditions?.dominantType || '';
-    el('cond-variability').value = s.conditions?.variability || '';
-
-    el('drv-temp').value = s.drivers?.tempTrend || '';
-    el('drv-instability').value = s.drivers?.instability || '';
-    el('drv-sky').value = s.drivers?.skyCover || '';
-
-    el('haz-storm').value = s.hazards?.stormRisk || '';
-    el('haz-timing').value = s.hazards?.rainWindow || '';
-
-    el('loc-terrain').value = s.localEffects?.terrainInfluence || '';
-    el('loc-fog').value = s.localEffects?.fog || '';
-
-    el('headline').value = sys.human?.headline || '';
-    el('narrative').value = sys.human?.narrative || '';
-
-    updatePreview();
-
-  } catch(e){
-    console.error(e);
-    alert("Failed to load system forecast");
-  }
-}
-
-// GENERATE
 function generateForecast() {
 
   const f = {
-    cond: el('cond-type').value,
-    var: el('cond-variability').value,
+    sky: el('cond-sky').value,
+    evo: el('cond-evolution').value,
     temp: el('drv-temp').value,
     inst: el('drv-instability').value,
-    sky: el('drv-sky').value,
+    moisture: el('drv-moisture').value,
     storm: el('haz-storm').value,
-    timing: el('haz-timing').value,
+    start: el('haz-start').value,
+    end: el('haz-end').value,
     terrain: el('loc-terrain').value,
     fog: el('loc-fog').value
   };
 
+  // HEADLINE
   let headline = "Quiet conditions";
 
-  if (f.cond === "storms") headline = "Storms possible later";
-  if (f.cond === "rain") headline = "Rain at times";
+  if (f.storm === "scattered") headline = "Building clouds with scattered storms";
+  else if (f.sky === "mostly_sunny") headline = "Mostly sunny and warm";
+  else if (f.sky === "overcast") headline = "Cloudy skies dominate";
 
+  // NARRATIVE
   const parts = [];
 
-  parts.push(
-    f.var === "changing"
-      ? "Conditions evolve through the day."
-      : "Conditions stay fairly steady."
-  );
+  // evolution
+  if (f.evo === "building") parts.push("Clouds increase through the day.");
+  if (f.evo === "clearing") parts.push("Clouds gradually break for more sun.");
+  if (f.evo === "steady") parts.push("Conditions stay fairly steady.");
 
-  if (f.temp === "warming") parts.push("Temperatures rise.");
-  if (f.inst === "moderate" || f.inst === "high")
-    parts.push("Instability builds supporting storms.");
+  // temp
+  if (f.temp === "warming") parts.push("Temperatures rise through the day.");
+
+  // storms
+  if (f.inst === "moderate" && f.moisture === "humid")
+    parts.push("Instability and moisture support storm development.");
 
   if (f.storm === "scattered")
     parts.push("Scattered storms develop.");
 
-  if (f.timing)
-    parts.push(`Most active ${f.timing}.`);
+  // timing
+  if (f.start && f.end)
+    parts.push(`Rain develops ${f.start} and continues into the ${f.end}.`);
+  else if (f.start)
+    parts.push(`Rain develops in the ${f.start}.`);
 
+  // local
   if (f.terrain === "nw_flow")
-    parts.push("NW flow keeps clouds along ridges.");
+    parts.push("NW flow may hold clouds along the ridges.");
 
   if (f.fog === "patchy")
-    parts.push("Patchy fog early.");
+    parts.push("Patchy fog possible early.");
 
   el('headline').value = headline;
   el('narrative').value = parts.join(" ");
@@ -357,36 +309,12 @@ function generateForecast() {
   updatePreview();
 }
 
-// SAVE
-function save() {
-  const d = el('date').value;
-  if (!d) return;
-
-  data.days[d] = {
-    headline: el('headline').value,
-    narrative: el('narrative').value
-  };
-
-  console.log("Saved:", data);
-}
-
-// CLEAR
-function clearDay() {
-  ['headline','narrative'].forEach(id => el(id).value = '');
-  updatePreview();
-}
-
-// PREVIEW
 function updatePreview() {
-  el('p-headline').textContent = el('headline').value || '—';
-  el('p-narrative').textContent = el('narrative').value || '—';
+  el('p-headline').textContent = el('headline').value || "—";
+  el('p-narrative').textContent = el('narrative').value || "—";
 }
 
-// EVENTS
-el('loadBtn').onclick = loadFromSystem;
 el('generateBtn').onclick = generateForecast;
-el('saveBtn').onclick = save;
-el('clearBtn').onclick = clearDay;
 
 ['headline','narrative'].forEach(id => {
   el(id).addEventListener('input', updatePreview);
