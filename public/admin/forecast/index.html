@@ -305,10 +305,10 @@ async function loadFromSystem() {
       return;
     }
 
-    el('headline').value = sys.headline || '';
-    el('narrative').value = sys.narrative || '';
-    el('tags').value = (sys.tags || []).join(', ');
-    el('confidence').value = sys.confidence ?? '';
+el('headline').value = sys.human.headline || '';
+el('narrative').value = sys.human.narrative || '';
+el('tags').value = (sys.meta.tags || []).join(', ');
+el('confidence').value = sys.meta.confidence ?? '';
 
     updatePreview();
 
