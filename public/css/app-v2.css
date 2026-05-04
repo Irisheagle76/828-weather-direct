@@ -1860,3 +1860,13 @@ body {
   background: rgba(255,80,80,0.18);
   border: 1px solid rgba(255,80,80,0.4);
 }
+.composer-trigger {
+  font-size: 12px;
+  opacity: 0.6;
+  cursor: pointer;
+  margin-top: 6px;
+}
+
+.composer-trigger:hover {
+  opacity: 1;
+}
