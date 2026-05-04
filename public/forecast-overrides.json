@@ -1,6 +1,5 @@
 {
   "lastUpdated": "2026-05-03T00:00:00Z",
-
   "days": {
     "2026-05-03": {
       "headline": "Warm with increasing clouds late",
@@ -8,21 +7,18 @@
       "tags": ["warming trend", "increasing clouds"],
       "confidence": 0.85
     },
-
     "2026-05-04": {
       "headline": "Showers possible, not a washout",
       "narrative": "Scattered showers develop at times, but there will be breaks. Coverage looks uneven rather than steady rain.",
       "tags": ["scattered showers", "variable coverage"],
       "confidence": 0.7
     },
-
     "2026-05-05": {
       "headline": null,
       "narrative": null,
       "tags": [],
       "confidence": null
     },
-
     "2026-05-06": {
       "headline": null,
       "narrative": null,
@@ -30,7 +26,6 @@
       "confidence": null
     }
   },
-
   "global": {
     "tone": "neutral",
     "style": "concise",

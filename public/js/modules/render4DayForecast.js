@@ -226,37 +226,50 @@ if (!narrative && intel) {
   narrative = result?.narrative || "";
 }
 
-  // ============================================================
-  // OVERRIDES
-  // ============================================================
+// ============================================================
+// OVERRIDES (NEW SYSTEM)
+// ============================================================
 
-  const key = getDateKey(day.date);
-  const override = forecastOverrides[key];
+const key = getDateKey(day.date);
+const override = forecastOverrides?.days?.[key];
 
-  let takeaway = narrative;
+let takeaway = narrative;
 
-  if (override) {
-    if (override.type === "override") {
-      takeaway = override.text;
-    } else {
-      takeaway = {
-        base: narrative || null,
-        extra: override
-      };
-    }
+if (override) {
+
+  // HEADLINE override (only for tomorrow)
+  if (override.headline && index === 0) {
+    forecast.human.headline = override.headline;
   }
 
-  return {
-    date: day.date,
-    hours,
-    high: Math.round(high),
-    low: Math.round(low),
-    fs,
-    icon: pickIcon(hours, rain),
-    takeaway,
-    index
-  };
+  // NARRATIVE override (full control)
+  if (override.narrative) {
+    takeaway = override.narrative;
+  }
+
+  // TAGS → become emphasis (only if no full narrative override)
+  if (override.tags?.length && !override.narrative) {
+    takeaway += " " + override.tags.join(". ") + ".";
+  }
+
+  // CONFIDENCE → subtle tone adjustment
+  if (override.confidence != null) {
+    if (override.confidence < 0.6) {
+      takeaway += " Some uncertainty remains.";
+    }
+  }
 }
+
+return {
+  date: day.date,
+  hours,
+  high: Math.round(high),
+  low: Math.round(low),
+  fs,
+  icon: pickIcon(hours, rain),
+  takeaway,
+  index
+};
 
 // ============================================================
 // RAIN ANALYSIS (uses localHour)
