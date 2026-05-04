@@ -69,6 +69,9 @@ export async function render4DayForecast(container) {
     const pattern = analyzePattern(inputs);
 
     console.log("PATTERN:", pattern);
+    const timeline = buildTimeline(hourly);
+console.log("TIMELINE:", timeline);
+
 // ==================================================
 // 🔥 BUILD FORECAST OBJECT (SAFE ADD)
 // ==================================================
@@ -106,6 +109,13 @@ console.log("FORECAST:", forecast);
 container.innerHTML = `
   <div style="padding:12px;font-size:18px;font-weight:600;">
     ${forecast.human.headline}
+  </div>
+
+  <div style="padding:8px 12px;font-size:14px;opacity:0.85;">
+    <strong>Morning:</strong> ${timeline.morning} |
+    <strong>Midday:</strong> ${timeline.midday} |
+    <strong>Afternoon:</strong> ${timeline.afternoon} |
+    <strong>Evening:</strong> ${timeline.evening}
   </div>
 
   ${renderSummary(enriched)}
@@ -554,7 +564,7 @@ function buildHumanForecast(pattern) {
 
   if (pattern.localEffects?.terrainInfluence === "upslope clouds") {
     localInsight = "Northwest flow may keep clouds locked in along the ridges.";
-  } else if (pattern.localEffects?.valleyFog) {
+  } else if (pattern.localEffects?.valleyFog) {const pattern = analyzePat
     localInsight = "Patchy valley fog is possible early in the day.";
   }
 
@@ -582,7 +592,47 @@ function buildHumanForecast(pattern) {
     localInsight
   };
 }
+// ============================================================
+// Timeline Builder
+// ============================================================
+function buildTimeline(hourly) {
+  const buckets = {
+    morning: hourly.filter(h => h.localHour >= 6 && h.localHour < 11),
+    midday: hourly.filter(h => h.localHour >= 11 && h.localHour < 14),
+    afternoon: hourly.filter(h => h.localHour >= 14 && h.localHour < 18),
+    evening: hourly.filter(h => h.localHour >= 18 && h.localHour < 22),
+    overnight: hourly.filter(h => h.localHour < 6 || h.localHour >= 22)
+  };
 
+  function summarize(hours) {
+    if (!hours.length) return "—";
+
+    const avgCloud =
+      hours.reduce((s, h) => s + (h.cloudCover || 0), 0) / hours.length;
+
+    const rainHits = hours.filter(h =>
+      (h.precipAmount ?? 0) > 0.01 || (h.precipProbability ?? 0) >= 0.45
+    ).length;
+
+    const rainRatio = rainHits / hours.length;
+
+    if (rainRatio > 0.4) return "showers likely";
+    if (rainRatio > 0.15) return "spotty showers";
+
+    if (avgCloud > 0.7) return "mostly cloudy";
+    if (avgCloud > 0.4) return "partly cloudy";
+
+    return "mostly sunny";
+  }
+
+  return {
+    morning: summarize(buckets.morning),
+    midday: summarize(buckets.midday),
+    afternoon: summarize(buckets.afternoon),
+    evening: summarize(buckets.evening),
+    overnight: summarize(buckets.overnight)
+  };
+}
 // ============================================================
 // UX
 // ============================================================
