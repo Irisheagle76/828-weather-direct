@@ -214,7 +214,7 @@ async function load() {
 
 // LOAD DAY
 function loadDay() {
-  const d = data.days[el('date').value];
+ const d = data.days?.[el('date').value];
   if (!d) return;
 
   el('headline').value = d.headline || '';
@@ -286,32 +286,54 @@ function updatePreview() {
 }
 
 // MOCK SYSTEM LOAD
-function loadFromSystem() {
-  el('headline').value = "Warm with building clouds";
-  el('narrative').value = "Clouds increase through the day with scattered afternoon storms.";
-  el('tags').value = "increasing clouds, storms";
-  el('confidence').value = 0.7;
-  updatePreview();
+async function loadFromSystem() {
+  const date = el('date').value;
+
+  if (!date) {
+    alert("Select a date first");
+    return;
+  }
+
+  try {
+    const { getSystemForecastForDate } =
+      await import('/js/modules/forecast-engine.js');
+
+    const sys = await getSystemForecastForDate(date);
+
+    if (!sys) {
+      alert("No system forecast available for that date");
+      return;
+    }
+
+    el('headline').value = sys.headline || '';
+    el('narrative').value = sys.narrative || '';
+    el('tags').value = (sys.tags || []).join(', ');
+    el('confidence').value = sys.confidence ?? '';
+
+    updatePreview();
+
+  } catch (e) {
+    console.error(e);
+    alert("Failed to load system forecast");
+  }
 }
 
 // EVENTS
-el('date').addEventListener('change', () => {
-  loadDay();
-  updatePreview();
-});
+el('loadBtn').onclick = loadFromSystem;
+el('saveBtn').onclick = save;
+el('clearBtn').onclick = clearDay;
+el('downloadBtn').onclick = download;
 
+// INPUT LIVE PREVIEW
 ['headline','narrative','tags','confidence'].forEach(id => {
   el(id).addEventListener('input', updatePreview);
 });
 
-el('saveBtn').onclick = save;
-el('clearBtn').onclick = clearDay;
-el('downloadBtn').onclick = download;
-el('loadBtn').onclick = loadFromSystem;
-
-// URL param
-const params = new URLSearchParams(location.search);
-if (params.get("date")) el('date').value = params.get("date");
+// DATE CHANGE
+el('date').addEventListener('change', () => {
+  loadDay();
+  updatePreview();
+});
 
 load();
 </script>
