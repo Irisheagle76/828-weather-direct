@@ -5,10 +5,10 @@
 import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
 import { calculateComfort } from '/js/intel/comfort.js';
 import { assemble } from '/js/intel/synthesizer/assemble.js';
-import { analyzePattern, mapToInputs } from './modules/analyzePattern.js';
+import { analyzePattern, mapToInputs } from '../modules/analyzePattern.js';
 
 // ============================================================
-// OVERRIDES
+// OVERRIDE
 // ============================================================
 
 let forecastOverrides = {};
