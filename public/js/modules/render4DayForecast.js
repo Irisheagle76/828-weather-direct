@@ -5,6 +5,7 @@
 import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
 import { calculateComfort } from '/js/intel/comfort.js';
 import { assemble } from '/js/intel/synthesizer/assemble.js';
+import { analyzePattern, mapToInputs } from './modules/analyzePattern.js';
 
 // ============================================================
 // OVERRIDES
@@ -56,13 +57,60 @@ export async function render4DayForecast(container) {
       };
     });
 
+    // ==================================================
+    // 🔥 ADD THIS BLOCK RIGHT HERE
+    // ==================================================
+
+    const inputs = mapToInputs({
+      ...data,
+      hourly // pass normalized hourly if needed later
+    });
+
+    const pattern = analyzePattern(inputs);
+
+    console.log("PATTERN:", pattern);
+// ==================================================
+// 🔥 BUILD FORECAST OBJECT (SAFE ADD)
+// ==================================================
+
+const forecast = {
+  conditions: {
+    dominantType: pattern.dayType,
+    confidence: pattern.confidence?.overall,
+    variability: pattern.tension?.length ? "changing" : "steady"
+  },
+
+  drivers: {
+    tempTrend: pattern.temperature?.trend,
+    dewPoint: data?.hourly?.dewpoint?.[12],
+    wind: pattern.windProfile?.speed,
+    skyCover: pattern.skyBehavior?.coverage,
+    instability: pattern.convection?.intensity,
+    moistureDepth: pattern.moistureProfile?.depth
+  },
+
+  hazards: pattern.hazards,
+  localEffects: pattern.localEffects,
+
+human: buildHumanForecast(pattern)
+};
+
+console.log("FORECAST:", forecast);
+
+    // ==================================================
+    // 🔥 Continue with older code
+    // ==================================================
     const days = buildDays(hourly);
     const enriched = days.map((d, i) => buildDay(d, i));
 
-    container.innerHTML = `
-      ${renderSummary(enriched)}
-      ${enriched.map(renderDay).join("")}
-    `;
+container.innerHTML = `
+  <div style="padding:12px;font-size:18px;font-weight:600;">
+    ${forecast.human.headline}
+  </div>
+
+  ${renderSummary(enriched)}
+  ${enriched.map(renderDay).join("")}
+`;
 
     bindExpand();
 
@@ -134,27 +182,39 @@ function buildDay(day, index) {
       }
     : null;
 
-  let narrative = "";
+let narrative = "";
 
-  if (intel) {
-    const category = classifyCategory(intel);
+// ==================================================
+// 🔥 NEW HUMAN NARRATIVE (PRIMARY)
+// ==================================================
 
-    let timeContext = null;
+if (index === 0 && forecast?.human?.narrative) {
+  narrative = forecast.human.narrative;
+}
 
-    if (rain.type === "morning") timeContext = "rain early, then clearing";
-    else if (rain.type === "midday") timeContext = "periods of rain midday";
-    else if (rain.type === "afternoon") timeContext = "dry early, showers later";
-    else if (rain.type === "evening") timeContext = "dry through the day, rain late";
+// ==================================================
+// 🔁 FALLBACK TO OLD SYSTEM (SAFE)
+// ==================================================
 
-    const result = assemble.assemble(
-      { ...intel, timeContext },
-      index === 0 ? "tomorrow" : "future",
-      category,
-      category === "veryComfortable"
-    );
+if (!narrative && intel) {
+  const category = classifyCategory(intel);
 
-    narrative = result?.narrative || "";
-  }
+  let timeContext = null;
+
+  if (rain.type === "morning") timeContext = "rain early, then clearing";
+  else if (rain.type === "midday") timeContext = "periods of rain midday";
+  else if (rain.type === "afternoon") timeContext = "dry early, showers later";
+  else if (rain.type === "evening") timeContext = "dry through the day, rain late";
+
+  const result = assemble.assemble(
+    { ...intel, timeContext },
+    index === 0 ? "tomorrow" : "future",
+    category,
+    category === "veryComfortable"
+  );
+
+  narrative = result?.narrative || "";
+}
 
   // ============================================================
   // OVERRIDES
@@ -421,6 +481,106 @@ function renderSummary(days) {
       </div>
     </div>
   `;
+}
+  // -----------------------------
+  // BUILD HUMAN FORECAST
+  // -----------------------------
+function buildHumanForecast(pattern) {
+  const parts = [];
+
+  // -----------------------------
+  // HEADLINE
+  // -----------------------------
+  let headline = "Quiet and steady conditions";
+
+  if (pattern.dayType === "convective") {
+    headline = "Warm with building clouds and afternoon storm risk";
+  } else if (pattern.dayType === "nw_flow") {
+    headline = "Clouds holding firm with limited breaks";
+  } else if (pattern.skyBehavior?.trend === "clearing") {
+    headline = "Clouds gradually breaking for more sun";
+  }
+
+  // -----------------------------
+  // OPENING (sky + evolution)
+  // -----------------------------
+  if (pattern.skyBehavior?.trend === "increasing clouds") {
+    parts.push("Some early sun gives way to increasing cloud cover through the day.");
+  } else if (pattern.skyBehavior?.trend === "clearing") {
+    parts.push("Cloud cover gradually breaks, allowing more sun as the day goes on.");
+  } else {
+    parts.push("Conditions remain fairly steady through the day.");
+  }
+
+  // -----------------------------
+  // CONVECTION (storms)
+  // -----------------------------
+  if (pattern.convection?.present) {
+    const timing =
+      pattern.convection.triggerTime <= 14
+        ? "early to mid afternoon"
+        : "mid to late afternoon";
+
+    const coverage = pattern.convection.coverage;
+
+    parts.push(
+      `By ${timing}, ${coverage} showers and storms develop.`
+    );
+
+    if (pattern.convection.intensity === "strong") {
+      parts.push("A few storms could be on the stronger side.");
+    }
+  }
+
+  // -----------------------------
+  // TENSION (this makes it human)
+  // -----------------------------
+  if (pattern.tension?.includes("sun vs clouds")) {
+    parts.push("There’s a bit of a battle between sun and clouds, especially midday.");
+  }
+
+  if (pattern.tension?.includes("instability vs limited moisture")) {
+    parts.push("Storm development may be uneven, with some areas staying dry.");
+  }
+
+  if (pattern.tension?.includes("clearing vs upslope clouds")) {
+    parts.push("Low clouds may be stubborn, especially along the higher terrain.");
+  }
+
+  // -----------------------------
+  // LOCAL INSIGHT (Asheville edge)
+  // -----------------------------
+  let localInsight = null;
+
+  if (pattern.localEffects?.terrainInfluence === "upslope clouds") {
+    localInsight = "Northwest flow may keep clouds locked in along the ridges.";
+  } else if (pattern.localEffects?.valleyFog) {
+    localInsight = "Patchy valley fog is possible early in the day.";
+  }
+
+  // -----------------------------
+  // CONFIDENCE NOTE
+  // -----------------------------
+  let confidenceNote = null;
+
+  if (pattern.confidence?.overall < 0.6) {
+    confidenceNote = "There’s some uncertainty in how this plays out.";
+  } else if (pattern.convection?.present) {
+    confidenceNote = "Storm coverage will vary from place to place.";
+  }
+
+  // -----------------------------
+  // FINAL NARRATIVE
+  // -----------------------------
+  const narrative = parts.join(" ");
+
+  return {
+    headline,
+    narrative,
+    keyMoments: [],
+    confidenceNote,
+    localInsight
+  };
 }
 
 // ============================================================

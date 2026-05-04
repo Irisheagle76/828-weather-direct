@@ -13,7 +13,7 @@
   <!-- =====================================
        HEADER (SHARED)
        ===================================== -->
-  <div class="app-header">
+  <header class="app-header">
     <div class="header-inner">
 
       <div class="brand">
@@ -33,19 +33,38 @@
       </div>
 
     </div>
-  </div>
+  </header>
 
   <!-- =====================================
-       FORECAST CONTENT
+       MAIN CONTENT
        ===================================== -->
   <main class="page-container forecast-page">
 
-    <div class="section-header">
+    <!-- PAGE HEADER -->
+    <section class="section-header">
       <h1>4-Day Forecast</h1>
       <p class="subhead">A quick look ahead across Asheville</p>
-    </div>
+    </section>
 
-    <div id="forecast-root"></div>
+    <!-- 🔥 NEW FORECAST STRUCTURE ROOT -->
+    <section id="forecast-root">
+
+      <!-- HEADLINE -->
+      <div id="forecast-headline" class="forecast-headline"></div>
+
+      <!-- TIMELINE -->
+      <div id="forecast-timeline" class="forecast-timeline"></div>
+
+      <!-- NARRATIVE -->
+      <div id="forecast-narrative" class="forecast-narrative"></div>
+
+      <!-- KEY SIGNALS -->
+      <div id="forecast-signals" class="forecast-signals"></div>
+
+      <!-- LOCAL INSIGHT -->
+      <div id="forecast-local" class="forecast-local"></div>
+
+    </section>
 
   </main>
 
@@ -67,10 +86,6 @@
         <a href="/forecast.html">Forecast</a>
         <a href="#">About</a>
         <a href="mailto:tballisty@gmail.com">Contact</a>
-      </div>
-
-      <div class="footer-social">
-        <!-- your icons here -->
       </div>
 
       <div class="footer-meta">
@@ -98,17 +113,15 @@
     const root = document.getElementById('forecast-root');
 
     async function init() {
-      // 🔥 1. initialize shared header system
       try {
         await initGlobalWeatherUI();
       } catch (e) {
         console.warn('Global UI init failed:', e);
       }
 
-      // 🔥 2. render forecast
+      // 🔥 Your pipeline entry point
       render4DayForecast(root);
 
-      // 🔥 3. sync footer time with header
       syncFooterTime();
       setInterval(syncFooterTime, 60000);
     }
@@ -120,7 +133,6 @@
       footer.textContent = main.textContent;
     }
 
-    // 🔥 ensure DOM is ready
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", init);
     } else {

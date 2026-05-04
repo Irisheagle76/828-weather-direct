@@ -1,5 +1,5 @@
 // ============================================================
-// WEATHER ADAPTER — v8 (INCH‑NATIVE + PROB‑NATIVE + CLEAN)
+// WEATHER ADAPTER — v9 (INCH‑NATIVE + PROB‑NATIVE + CLEAN)
 // ============================================================
 
 import { fetchAllIntel } from '/js/weather-fetch.js';
@@ -100,9 +100,20 @@ function adaptCurrent(c) {
 function adaptHourly(hourly) {
   if (!hourly) return [];
 
-  // Already normalized array from backend
+  // Already normalized array from backend (normalizeHourly)
   if (Array.isArray(hourly)) {
-    return hourly.map(normalizeHourObject).filter(Boolean);
+    return hourly
+      .map(h => ({
+        ...h,
+        // ensure temperatureF always exists
+        temperatureF:
+          h.temperatureF ??
+          h.temp ??
+          h.temperature ??
+          null
+      }))
+      .map(normalizeHourObject)
+      .filter(Boolean);
   }
 
   // Raw Open-Meteo shape
@@ -112,8 +123,16 @@ function adaptHourly(hourly) {
         normalizeHourObject({
           timestamp: new Date(t).getTime(),
 
-          temperatureF: hourly.temperature_2m?.[i] ?? null,
-          dewpointF: hourly.dew_point_2m?.[i] ?? null,
+          // Celsius → Fahrenheit
+          temperatureF:
+            hourly.temperature_2m?.[i] != null
+              ? (hourly.temperature_2m[i] * 9) / 5 + 32
+              : null,
+
+          dewpointF:
+            hourly.dew_point_2m?.[i] != null
+              ? (hourly.dew_point_2m[i] * 9) / 5 + 32
+              : null,
 
           relativeHumidity: hourly.relative_humidity_2m?.[i] ?? null,
 
@@ -123,11 +142,20 @@ function adaptHourly(hourly) {
           // inches (already correct)
           precipAmount: hourly.precipitation?.[i] ?? 0,
 
-          // 0–1
-          precipProbability: hourly.precipitation_probability?.[i] ?? 0,
+          // 0–1 (convert if 0–100)
+          precipProbability:
+            Number.isFinite(hourly.precipitation_probability?.[i])
+              ? (hourly.precipitation_probability[i] > 1
+                  ? hourly.precipitation_probability[i] / 100
+                  : hourly.precipitation_probability[i])
+              : 0,
 
-          // 0–1
-          cloudCover: hourly.cloudcover?.[i] ?? null,
+          // 0–1 (convert if 0–100)
+          cloudCover: (() => {
+            const cc = hourly.cloudcover?.[i];
+            if (!Number.isFinite(cc)) return null;
+            return cc > 1 ? cc / 100 : cc;
+          })(),
 
           uvIndex: hourly.uv_index?.[i] ?? null
         })
@@ -173,114 +201,113 @@ function normalizeHourObject(h) {
   const ts = h.timestamp ?? h.time ?? h.ts;
   if (!ts) return null;
 
- // ------------------------------------------------------------
-// PRECIP AMOUNT (INCHES)
-// ------------------------------------------------------------
-let precipAmount = Number.isFinite(h.precipAmount)
-  ? h.precipAmount
-  : 0;
+  // ------------------------------------------------------------
+  // PRECIP AMOUNT (INCHES)
+  // ------------------------------------------------------------
+  let precipAmount = Number.isFinite(h.precipAmount)
+    ? h.precipAmount
+    : 0;
 
-// kill noise
-if (precipAmount < 0.005) precipAmount = 0;
+  // kill noise
+  if (precipAmount < 0.005) precipAmount = 0;
 
-// ------------------------------------------------------------
-// PRECIP PROBABILITY (0–1)
-// ------------------------------------------------------------
-const precipProbability = Number.isFinite(h.precipProbability)
-  ? h.precipProbability
-  : 0;
+  // ------------------------------------------------------------
+  // PRECIP PROBABILITY (0–1)
+  // ------------------------------------------------------------
+  const precipProbability = Number.isFinite(h.precipProbability)
+    ? h.precipProbability
+    : 0;
 
-// ------------------------------------------------------------
-// COVERAGE (single source of truth)
-// ------------------------------------------------------------
-const coverage =
-  precipProbability >= 0.7 ? "widespread" :
-  precipProbability >= 0.5 ? "scattered" :
-  precipProbability >= 0.25 ? "isolated" :
-  "none";
+  // ------------------------------------------------------------
+  // COVERAGE (single source of truth)
+  // ------------------------------------------------------------
+  const coverage =
+    precipProbability >= 0.7 ? 'widespread' :
+    precipProbability >= 0.5 ? 'scattered' :
+    precipProbability >= 0.25 ? 'isolated' :
+    'none';
 
-// ------------------------------------------------------------
-// PRECIP TYPE (amount drives, coverage refines)
-// ------------------------------------------------------------
-let precipType = "none";
+  // ------------------------------------------------------------
+  // PRECIP TYPE (amount drives, coverage refines)
+  // ------------------------------------------------------------
+  let precipType = 'none';
 
-// entry condition (real signal only)
-if (precipAmount >= 0.005 || coverage !== "none") {
+  // entry condition (real signal only)
+  if (precipAmount >= 0.005 || coverage !== 'none') {
+    // TRACE / NEAR-ZERO
+    if (precipAmount === 0) {
+      precipType =
+        coverage === 'widespread' ? 'drizzle' :
+        coverage === 'scattered' ? 'sprinkles' :
+        'none';
+    }
 
-  // TRACE / NEAR-ZERO
-  if (precipAmount === 0) {
-    precipType =
-      coverage === "widespread" ? "drizzle" :
-      coverage === "scattered" ? "sprinkles" :
-      "none";
+    // LIGHT
+    else if (precipAmount < 0.03) {
+      precipType =
+        coverage === 'widespread' ? 'light_rain' :
+        coverage === 'scattered' ? 'scattered_showers' :
+        'isolated_showers';
+    }
+
+    // MODERATE
+    else if (precipAmount < 0.1) {
+      precipType =
+        coverage === 'widespread' ? 'steady_rain' :
+        'scattered_showers';
+    }
+
+    // HEAVY
+    else {
+      precipType = 'soaking_rain';
+    }
   }
 
-  // LIGHT
-  else if (precipAmount < 0.03) {
-    precipType =
-      coverage === "widespread" ? "light_rain" :
-      coverage === "scattered" ? "scattered_showers" :
-      "isolated_showers";
-  }
+  // ------------------------------------------------------------
+  // FINAL OBJECT
+  // ------------------------------------------------------------
+  const timestamp =
+    typeof ts === 'number' ? ts : new Date(ts).getTime();
 
-  // MODERATE
-  else if (precipAmount < 0.1) {
-    precipType =
-      coverage === "widespread" ? "steady_rain" :
-      "scattered_showers";
-  }
+  return {
+    timestamp,
 
-  // HEAVY
-  else {
-    precipType = "soaking_rain";
-  }
-}
+    temperatureF: h.temperatureF ?? h.temp ?? null,
+    dewpointF: h.dewpointF ?? h.dew_point ?? null,
 
-// ------------------------------------------------------------
-// FINAL OBJECT
-// ------------------------------------------------------------
-const timestamp =
-  typeof ts === "number" ? ts : new Date(ts).getTime();
+    relativeHumidity:
+      h.relativeHumidity ??
+      h.relative_humidity ??
+      h.humidity ??
+      null,
 
-return {
-  timestamp,
+    windSpeed:
+      h.windSpeed ??
+      h.wind_speed ??
+      h.wind ??
+      0,
 
-  temperatureF: h.temperatureF ?? h.temp ?? null,
-  dewpointF: h.dewpointF ?? h.dew_point ?? null,
+    windGust:
+      h.windGust ??
+      h.wind_gust ??
+      null,
 
-  relativeHumidity:
-    h.relativeHumidity ??
-    h.relative_humidity ??
-    h.humidity ??
-    null,
+    precipAmount,
+    precipProbability,
+    precipType,
+    coverage,
+    isRainingNow: precipAmount > 0,
 
-  windSpeed:
-    h.windSpeed ??
-    h.wind_speed ??
-    h.wind ??
-    0,
+    cloudCover:
+      Number.isFinite(h.cloudCover)
+        ? h.cloudCover
+        : Number.isFinite(h.cloud_cover)
+          ? h.cloud_cover
+          : null,
 
-  windGust:
-    h.windGust ??
-    h.wind_gust ??
-    null,
-
-  precipAmount,
-  precipProbability,
-  precipType,
-  coverage,                 // 🔥 NEW: expose this (very useful)
-  isRainingNow: precipAmount > 0,
-
-  cloudCover:
-    Number.isFinite(h.cloudCover)
-      ? h.cloudCover
-      : Number.isFinite(h.cloud_cover)
-        ? h.cloud_cover
-        : null,
-
-  uvIndex:
-    h.uvIndex ??
-    h.uv_index ??
-    null
+    uvIndex:
+      h.uvIndex ??
+      h.uv_index ??
+      null
   };
 }
