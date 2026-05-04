@@ -104,6 +104,9 @@ console.log("FORECAST:", forecast);
     // 🔥 Continue with older code
     // ==================================================
     const days = buildDays(hourly);
+    initOverrideUI(days, forecastOverrides, () =>
+  render4DayForecast(container)
+);
    const enriched = days.map((d, i) => buildDay(d, i, forecast));
 
 container.innerHTML = `
@@ -270,6 +273,7 @@ return {
   takeaway,
   index
 };
+}
 
 // ============================================================
 // RAIN ANALYSIS (uses localHour)
@@ -577,9 +581,9 @@ function buildHumanForecast(pattern) {
 
   if (pattern.localEffects?.terrainInfluence === "upslope clouds") {
     localInsight = "Northwest flow may keep clouds locked in along the ridges.";
-  } else if (pattern.localEffects?.valleyFog) {const pattern = analyzePat
-    localInsight = "Patchy valley fog is possible early in the day.";
-  }
+} else if (pattern.localEffects?.valleyFog) {
+  localInsight = "Patchy valley fog is possible early in the day.";
+}
 
   // -----------------------------
   // CONFIDENCE NOTE
@@ -646,6 +650,58 @@ function buildTimeline(hourly) {
     overnight: summarize(buckets.overnight)
   };
 }
+// ============================================================
+// Override UI
+// ============================================================
+
+function initOverrideUI(days, forecastOverrides, rerender) {
+  const select = document.getElementById("override-day");
+  const headline = document.getElementById("override-headline");
+  const narrative = document.getElementById("override-narrative");
+  const tags = document.getElementById("override-tags");
+  const saveBtn = document.getElementById("override-save");
+
+  if (!select) return;
+
+  // Populate dropdown
+  select.innerHTML = days.map(d => {
+    const key = getDateKey(d.date);
+    return `<option value="${key}">${key}</option>`;
+  }).join("");
+
+  function loadSelected() {
+    const key = select.value;
+    const o = forecastOverrides?.days?.[key] || {};
+
+    headline.value = o.headline || "";
+    narrative.value = o.narrative || "";
+    tags.value = (o.tags || []).join(", ");
+  }
+
+  select.addEventListener("change", loadSelected);
+
+  saveBtn.onclick = () => {
+    const key = select.value;
+
+    if (!forecastOverrides.days) forecastOverrides.days = {};
+
+    forecastOverrides.days[key] = {
+      headline: headline.value || null,
+      narrative: narrative.value || null,
+      tags: tags.value
+        ? tags.value.split(",").map(t => t.trim())
+        : [],
+      confidence: null
+    };
+
+    console.log("UPDATED OVERRIDES:", forecastOverrides);
+
+    rerender();
+  };
+
+  loadSelected();
+}
+
 // ============================================================
 // UX
 // ============================================================
