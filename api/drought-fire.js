@@ -6,6 +6,11 @@ import { computeDroughtFireIndexLive } from "../lib/drought-fire/computeDroughtF
 const LAT = 35.5951;
 const LON = -82.5515;
 
+const AVL_MONTHLY_MEAN_TEMP_NORMALS_F = [
+  38.7, 42.1, 48.4, 57.0, 64.8, 71.8,
+  75.1, 74.0, 68.3, 57.9, 47.8, 41.4
+];
+
 // -----------------------------
 // WEATHER FETCH (single source of truth)
 // -----------------------------
@@ -62,6 +67,13 @@ export default async function handler(req, res) {
     // DAYS SINCE RAIN
     // -----------------------------
     const daysSinceRain = getDaysSinceRain(weather);
+    const trendInput = getTrendInput(weather, {
+      tempAnomalyF,
+      daysSinceRain,
+      rh,
+      windGust,
+      tempF
+    });
 
     // -----------------------------
     // DEBUG INPUTS (important)
@@ -82,7 +94,8 @@ export default async function handler(req, res) {
       daysSinceRain,
       rh,
       windGust,
-      tempF
+      tempF,
+      trendInput
     });
 
     console.log("✅ DROUGHT/FIRE RESULT:", result);
@@ -104,19 +117,11 @@ export default async function handler(req, res) {
 // -----------------------------
 
 function getNormalTemp(weather) {
-  const temps = weather?.hourly?.temperature_2m;
-
-  if (!temps || !temps.length) return 70;
-
-  const slice = temps.slice(0, 24);
-  const avg =
-    slice.reduce((a, b) => a + b, 0) / slice.length;
-
-  return avg;
+  return AVL_MONTHLY_MEAN_TEMP_NORMALS_F[new Date().getMonth()];
 }
 
 function getDaysSinceRain(weather) {
-  const precip = weather?.hourly?.precipitation;
+  const precip = getHourlyPrecipSeries(weather);
 
   if (!precip || !precip.length) return 10;
 
@@ -130,4 +135,80 @@ function getDaysSinceRain(weather) {
   }
 
   return 10;
+}
+
+function getHourlyPrecipSeries(weather) {
+  const hourly = weather?.hourly;
+
+  if (Array.isArray(hourly)) {
+    return hourly.map(h => h?.precipAmount ?? h?.precipitation ?? 0);
+  }
+
+  return hourly?.precipitation ?? null;
+}
+
+function getTrendInput(weather, current) {
+  const hours = Array.isArray(weather?.hourly) ? weather.hourly : [];
+  const target = getFutureHour(hours, 6);
+
+  if (!target) return null;
+
+  const futureTempF =
+    target.temperatureF ??
+    target.temperature_2m ??
+    current.tempF;
+
+  const futureRh =
+    target.relativeHumidity ??
+    target.relative_humidity ??
+    current.rh;
+
+  const futureWindGust =
+    target.windGust ??
+    target.wind_gust ??
+    target.wind_gusts_10m ??
+    current.windGust;
+
+  const rainNext6h = sumRainThrough(hours, target.timestamp);
+
+  return {
+    tempAnomalyF: futureTempF - getNormalTemp(weather),
+    daysSinceRain: rainNext6h >= 0.25
+      ? 0
+      : current.daysSinceRain + 0.25,
+    rh: futureRh,
+    windGust: futureWindGust,
+    tempF: futureTempF
+  };
+}
+
+function getFutureHour(hours, hoursAhead) {
+  const targetTs = Date.now() + hoursAhead * 60 * 60 * 1000;
+  let best = null;
+  let bestDiff = Infinity;
+
+  for (const h of hours) {
+    const ts = h?.timestamp;
+    if (!Number.isFinite(ts)) continue;
+
+    const diff = Math.abs(ts - targetTs);
+    if (diff < bestDiff) {
+      best = h;
+      bestDiff = diff;
+    }
+  }
+
+  return best;
+}
+
+function sumRainThrough(hours, endTs) {
+  if (!Number.isFinite(endTs)) return 0;
+  const now = Date.now();
+
+  return hours.reduce((total, h) => {
+    const ts = h?.timestamp;
+    if (!Number.isFinite(ts) || ts < now || ts > endTs) return total;
+    const amount = h.precipAmount ?? h.precipitation ?? 0;
+    return total + (Number.isFinite(amount) ? amount : 0);
+  }, 0);
 }
