@@ -233,18 +233,18 @@ select:focus {
 .forecast-card,
 .json-card {
   background:
-    radial-gradient(120% 120% at 20% 0%, rgba(255,255,255,0.06), transparent 60%),
-    linear-gradient(180deg, rgba(255,255,255,0.035), rgba(0,0,0,0.15));
+    linear-gradient(135deg, rgba(23,55,131,0.48), rgba(10,18,32,0.72)),
+    radial-gradient(circle at 90% 10%, rgba(219,110,45,0.18), transparent 34%);
   border: 1px solid var(--panel-border);
-  border-radius: 20px;
+  border-radius: 18px;
   box-shadow:
-    0 10px 28px rgba(0,0,0,0.4),
+    0 16px 42px rgba(0,0,0,0.28),
     inset 0 1px 0 rgba(255,255,255,0.06);
-  padding: 18px;
+  padding: 17px;
 }
 
 .forecast-card > * + * {
-  margin-top: 14px;
+  margin-top: 12px;
 }
 
 .row-top,
@@ -256,31 +256,47 @@ select:focus {
 }
 
 .day {
-  color: var(--muted);
-  font-size: 12px;
+  color: #8dbbff;
+  font-size: clamp(0.9rem, 2.4vw, 1.05rem);
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 .icon {
-  font-size: 28px;
+  font-size: 48px;
+  line-height: 1;
+  filter: drop-shadow(0 5px 12px rgba(0,0,0,0.45));
 }
 
 .temps {
   display: flex;
-  align-items: baseline;
+  align-items: flex-end;
   gap: 12px;
 }
 
+.temp-block {
+  display: grid;
+  gap: 1px;
+  line-height: 1;
+}
+
+.temp-label {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
 .high {
-  font-size: 28px;
+  font-size: clamp(2.15rem, 4vw, 2.75rem);
   font-weight: 800;
 }
 
 .low {
   color: rgba(232,238,252,0.48);
-  font-size: 22px;
+  font-size: clamp(1.55rem, 3vw, 2rem);
   font-weight: 700;
 }
 
@@ -291,9 +307,9 @@ select:focus {
 }
 
 .headline-preview {
-  font-size: 18px;
+  font-size: clamp(1.45rem, 3vw, 2.1rem);
   font-weight: 750;
-  line-height: 1.25;
+  line-height: 1.08;
 }
 
 .takeaway {
@@ -306,14 +322,15 @@ select:focus {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 7px;
+  margin-top: 14px;
 }
 
 .time-block {
   min-width: 0;
   border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 9px 7px;
-  background: rgba(255,255,255,0.04);
+  background: rgba(5,10,20,0.26);
 }
 
 .time-label {
@@ -650,8 +667,14 @@ pre {
 
       <div class="row-main">
         <div class="temps">
-          <span class="high" id="previewHigh">--</span>
-          <span class="low" id="previewLow">--</span>
+          <span class="temp-block high">
+            <span class="temp-label">High</span>
+            <span id="previewHigh">--</span>
+          </span>
+          <span class="temp-block low">
+            <span class="temp-label">Low</span>
+            <span id="previewLow">--</span>
+          </span>
         </div>
         <div class="wind" id="previewWind">Wind: --</div>
       </div>
@@ -735,7 +758,7 @@ init();
 
 async function init() {
   await loadOptionalForecastEngine();
-  loadSavedState();
+  await loadSavedState();
   initDayStrip();
   bindEvents();
 
@@ -1107,7 +1130,7 @@ function persist() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
-function loadSavedState() {
+async function loadSavedState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (saved?.days) {
@@ -1118,7 +1141,113 @@ function loadSavedState() {
     state.days = {};
   }
 
-  getForecastDates().forEach(dateStr => ensureDay(dateStr));
+  const forecastDates = getForecastDates();
+  forecastDates.forEach(dateStr => ensureDay(dateStr));
+  await hydrateBlankDaysFromLatestForecast(forecastDates);
+  forecastDates.forEach(dateStr => ensureDay(dateStr));
+}
+
+async function hydrateBlankDaysFromLatestForecast(forecastDates) {
+  const latest = await loadLatestPublishedForecast();
+  if (!latest?.days || typeof latest.days !== "object") return;
+
+  let hydrated = false;
+
+  forecastDates.forEach(dateStr => {
+    const publishedDay = latest.days[dateStr];
+    if (!publishedDay || !hasPublishedContent(publishedDay)) return;
+    if (hasComposerContent(state.days[dateStr])) return;
+
+    state.days[dateStr] = composerDayFromPublished(dateStr, publishedDay);
+    hydrated = true;
+  });
+
+  if (hydrated) persist();
+}
+
+async function loadLatestPublishedForecast() {
+  const urls = ["/api/forecast/latest", "/forecast-overrides.json"];
+
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) continue;
+      const forecast = await res.json();
+      if (forecast?.days && Object.keys(forecast.days).length) return forecast;
+    } catch {
+      // Try the next source.
+    }
+  }
+
+  return null;
+}
+
+function composerDayFromPublished(dateStr, day = {}) {
+  const wind = day.wind || {};
+  const rainWindow = day.rainWindow || {};
+  const timeline = day.timeline || {};
+
+  return {
+    date: dateStr,
+    confidence: String(day.confidence ?? 0.9),
+    headline: day.headline || "",
+    narrative: day.narrative || "",
+    high: valueToInput(day.high),
+    low: valueToInput(day.low),
+    windDir: wind.direction || "",
+    windSpeedMin: valueToInput(wind.speedMin ?? wind.speed),
+    windSpeedMax: valueToInput(wind.speedMax ?? wind.speed),
+    windCalm: Boolean(wind.calm),
+    windGust: valueToInput(wind.gust),
+    windGustNA: Boolean(wind.gustNA),
+    sky: day.sky || "",
+    evolution: day.evolution || "",
+    humidity: day.humidity || "",
+    stormRisk: day.stormRisk || "none",
+    rainStart: rainWindow.start || "",
+    rainEnd: rainWindow.end || "",
+    morning: timeline.morning || "",
+    midday: timeline.midday || "",
+    afternoon: timeline.afternoon || "",
+    evening: timeline.evening || "",
+    localInsight: day.localInsight || "",
+    signals: Array.isArray(day.tags) ? day.tags.join(", ") : ""
+  };
+}
+
+function hasComposerContent(day = {}) {
+  return [
+    day.headline,
+    day.narrative,
+    day.high,
+    day.low,
+    day.morning,
+    day.midday,
+    day.afternoon,
+    day.evening,
+    day.localInsight,
+    day.signals
+  ].some(value => String(value ?? "").trim());
+}
+
+function hasPublishedContent(day = {}) {
+  const timeline = day.timeline || {};
+  return [
+    day.headline,
+    day.narrative,
+    day.high,
+    day.low,
+    timeline.morning,
+    timeline.midday,
+    timeline.afternoon,
+    timeline.evening,
+    day.localInsight,
+    ...(Array.isArray(day.tags) ? day.tags : [])
+  ].some(value => String(value ?? "").trim());
+}
+
+function valueToInput(value) {
+  return value == null ? "" : String(value);
 }
 
 async function copyText(text) {
@@ -1207,7 +1336,13 @@ function formatShortDate(dateStr) {
 function formatPreviewDay(dateStr) {
   if (!dateStr) return "Selected Day";
   const tomorrow = getDateOffset(1);
-  if (dateStr === tomorrow) return "Tomorrow";
+  if (dateStr === tomorrow) {
+    return `Tomorrow - ${dateFromInput(dateStr).toLocaleDateString([], {
+      weekday: "long",
+      month: "short",
+      day: "numeric"
+    })}`;
+  }
   return dateFromInput(dateStr).toLocaleDateString([], {
     weekday: "long",
     month: "short",

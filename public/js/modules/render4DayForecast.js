@@ -37,9 +37,13 @@ export async function render4DayForecast(container) {
   });
 
   const lead = days[0];
+  const remainingDays = days.slice(1);
 
   container.innerHTML = `
-    ${days.map(renderDay).join('')}
+    ${renderLeadV2(lead)}
+    <div class="forecast-list">
+      ${remainingDays.map(renderDay).join('')}
+    </div>
   `;
 
   bindExpand();
@@ -203,6 +207,56 @@ function renderLoading() {
   `;
 }
 
+function renderLeadV2(day) {
+  if (!day) return '';
+
+  const timeline = day.timeline || {};
+  const blocks = [
+    ['Morning', timeline.morning],
+    ['Midday', timeline.midday],
+    ['Afternoon', timeline.afternoon],
+    ['Evening', timeline.evening]
+  ];
+
+  return `
+    <section class="forecast-lead">
+      <div class="forecast-lead-main">
+        <div>
+          <div class="forecast-kicker">Tomorrow - ${escapeHtml(formatLeadDate(day.date))}</div>
+          <div class="forecast-headline">${escapeHtml(day.headline || '4-Day Forecast')}</div>
+          ${renderTakeaway(day.takeaway)}
+        </div>
+
+        <div class="forecast-lead-metrics">
+          ${renderDaySignal(day)}
+          <div class="temps">
+            <span class="temp-block high">
+              <span>High</span>
+              ${escapeHtml(formatTemp(day.high))}
+            </span>
+            <span class="temp-block low">
+              <span>Low</span>
+              ${escapeHtml(formatTemp(day.low))}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      ${renderSignals(day)}
+      ${renderLocalInsight(day.localInsight)}
+
+      <div class="forecast-timeline">
+        ${blocks.map(([label, text]) => `
+          <div class="forecast-timeline-block">
+            <span>${escapeHtml(label)}</span>
+            <strong>${escapeHtml(text || 'No update')}</strong>
+          </div>
+        `).join('')}
+      </div>
+    </section>
+  `;
+}
+
 function renderLead(day) {
   if (!day) return '';
 
@@ -240,12 +294,19 @@ function renderDay(day) {
     <div class="card forecast-row expandable ${toneClass}">
       <div class="row-top">
         <div class="day">${escapeHtml(formatDay(day.date, day.index))}</div>
+        <div class="forecast-expand-label">Details</div>
       </div>
 
       <div class="row-main">
         <div class="temps">
-          <span class="high">${escapeHtml(formatTemp(day.high))}</span>
-          <span class="low">${escapeHtml(formatTemp(day.low))}</span>
+          <span class="temp-block high">
+            <span>High</span>
+            ${escapeHtml(formatTemp(day.high))}
+          </span>
+          <span class="temp-block low">
+            <span>Low</span>
+            ${escapeHtml(formatTemp(day.low))}
+          </span>
         </div>
 
         ${renderDaySignal(day)}
@@ -337,7 +398,7 @@ function renderManualTimeline(timeline = {}) {
   if (!blocks.some(([, text]) => hasText(text))) return '';
 
   return `
-    <div class="hourly-strip">
+    <div class="hourly-strip manual-timeline-strip">
       ${blocks.map(([label, text]) => `
         <div class="hour">
           <div class="hour-time">${escapeHtml(label)}</div>
@@ -556,6 +617,14 @@ function mapComfortScore(score) {
 function formatDay(date, index) {
   if (index === 0) return 'TOMORROW';
   return date.toLocaleDateString([], { weekday: 'long' }).toUpperCase();
+}
+
+function formatLeadDate(date) {
+  return date.toLocaleDateString([], {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric'
+  });
 }
 
 function formatHour(hour) {
