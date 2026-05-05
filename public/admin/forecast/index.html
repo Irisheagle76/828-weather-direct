@@ -2,432 +2,1181 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Forecast Composer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Forecast Composer - 828 Weather</title>
 
 <style>
+:root {
+  --bg: #0b1220;
+  --panel: #121a2b;
+  --panel-soft: rgba(255,255,255,0.04);
+  --panel-border: rgba(255,255,255,0.07);
+  --text: #e8eefc;
+  --muted: #9fb0d1;
+  --blue: #6ea8ff;
+  --green: #4ade80;
+  --orange: #db6e2d;
+  --danger: #f87171;
+  --radius: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
-  font-family: system-ui;
-  background: #0b1220;
-  color: #fff;
   margin: 0;
-  display: flex;
-  gap: 20px;
-  padding: 20px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 50% -10%, rgba(80,120,200,0.28), transparent 55%),
+    linear-gradient(to bottom, #0a1325 0%, #060b18 100%);
+  color: var(--text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-.panel { flex:1; max-width:520px; }
-
-h1 { font-size:18px; margin-bottom:12px; }
-
-.hint { font-size:12px; opacity:.6; margin-bottom:14px; }
-
-label {
-  font-size:12px;
-  opacity:.7;
-  display:block;
-  margin-bottom:4px;
-}
-
-input, textarea, select {
-  width:100%;
-  padding:10px;
-  border-radius:8px;
-  border:none;
-  background:#1c2438;
-  color:white;
-  font-size:14px;
-  margin-bottom:8px;
-}
-
-textarea { min-height:90px; }
-
-.btn-row {
-  display:flex;
-  gap:8px;
-  margin-top:10px;
+button,
+input,
+textarea,
+select {
+  font: inherit;
 }
 
 button {
-  flex:1;
-  padding:10px;
-  border-radius:8px;
-  border:none;
-  font-weight:bold;
-  cursor:pointer;
+  cursor: pointer;
 }
 
-.primary { background:#4ade80; color:black; }
-.secondary { background:#334155; }
-.danger { background:#ef4444; }
-
-.group {
-  background: rgba(255,255,255,0.03);
-  padding:12px;
-  border-radius:10px;
-  margin-bottom:12px;
-  border:1px solid rgba(255,255,255,0.05);
+.composer-shell {
+  width: min(1160px, 100%);
+  margin: 0 auto;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: minmax(320px, 520px) minmax(320px, 1fr);
+  gap: 18px;
 }
 
-.group-title {
-  font-size:12px;
-  text-transform:uppercase;
-  opacity:.6;
-  margin-bottom:8px;
+.panel {
+  min-width: 0;
 }
 
-/* DAY STRIP */
+.panel-header {
+  margin-bottom: 14px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.hint {
+  margin-top: 5px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
 .day-strip {
-  display:flex;
-  gap:6px;
-  margin-bottom:10px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
 .day-pill {
-  flex:1;
-  padding:6px;
-  text-align:center;
-  font-size:12px;
-  background:#1c2438;
-  border-radius:6px;
-  cursor:pointer;
-  opacity:.7;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  padding: 9px 7px;
+  background: rgba(255,255,255,0.05);
+  color: var(--text);
+  text-align: center;
+}
+
+.day-pill strong {
+  display: block;
+  font-size: 12px;
+}
+
+.day-pill span {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--muted);
 }
 
 .day-pill.active {
-  background:#4ade80;
-  color:black;
-  opacity:1;
+  background: var(--green);
+  border-color: var(--green);
+  color: #06120b;
 }
 
-/* PREVIEW CARD */
-.card {
-  background:#1e293b;
-  border-radius:16px;
-  padding:16px;
+.day-pill.active span {
+  color: rgba(6,18,11,0.72);
+}
+
+.group {
+  background:
+    radial-gradient(120% 120% at 20% 0%, rgba(255,255,255,0.05), transparent 60%),
+    rgba(255,255,255,0.035);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.group-title {
+  margin-bottom: 10px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.field-grid.three {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.field {
+  min-width: 0;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  padding: 10px;
+  background: rgba(10,18,34,0.92);
+  color: var(--text);
+  outline: none;
+}
+
+textarea {
+  min-height: 104px;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: rgba(110,168,255,0.65);
+}
+
+.timeline-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.btn {
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 12px;
+  padding: 10px 13px;
+  background: rgba(255,255,255,0.07);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.btn.primary {
+  background: var(--blue);
+  color: #061326;
+  border-color: var(--blue);
+}
+
+.btn.warn {
+  background: rgba(219,110,45,0.17);
+  color: #ffd6a0;
+  border-color: rgba(219,110,45,0.32);
+}
+
+.system-box {
+  min-height: 52px;
+  background: rgba(110,168,255,0.08);
+  border: 1px solid rgba(110,168,255,0.18);
+  border-radius: 12px;
+  padding: 11px;
+  color: rgba(232,238,252,0.88);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.system-box strong {
+  color: #cfe2ff;
+}
+
+.preview-stack {
+  position: sticky;
+  top: 16px;
+}
+
+.forecast-card,
+.json-card {
+  background:
+    radial-gradient(120% 120% at 20% 0%, rgba(255,255,255,0.06), transparent 60%),
+    linear-gradient(180deg, rgba(255,255,255,0.035), rgba(0,0,0,0.15));
+  border: 1px solid var(--panel-border);
+  border-radius: 20px;
+  box-shadow:
+    0 10px 28px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+  padding: 18px;
+}
+
+.forecast-card > * + * {
+  margin-top: 14px;
 }
 
 .row-top,
 .row-main {
-  display:flex;
-  justify-content:space-between;
-  margin-bottom:10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
 }
 
-.high { font-size:20px; font-weight:bold; }
-.low { opacity:0.6; margin-left:6px; }
-
-.fs-bar {
-  height:6px;
-  background:#334155;
-  border-radius:4px;
-  overflow:hidden;
-  margin-bottom:10px;
+.day {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.fs-fill {
-  height:100%;
-  background:#4ade80;
+.icon {
+  font-size: 28px;
+}
+
+.temps {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.high {
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.low {
+  color: rgba(232,238,252,0.48);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.wind {
+  color: var(--muted);
+  font-size: 13px;
+  text-align: right;
+}
+
+.headline-preview {
+  font-size: 18px;
+  font-weight: 750;
+  line-height: 1.25;
 }
 
 .takeaway {
-  font-size:14px;
-  line-height:1.4;
+  color: rgba(255,255,255,0.9);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.timeline-preview {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+}
+
+.time-block {
+  min-width: 0;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 9px 7px;
+  background: rgba(255,255,255,0.04);
+}
+
+.time-label {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.time-text {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.signals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.signal {
+  border-radius: 999px;
+  padding: 5px 8px;
+  background: rgba(110,168,255,0.14);
+  color: #cfe2ff;
+  font-size: 12px;
+}
+
+.local-note,
+.confidence-note {
+  border-radius: 12px;
+  padding: 10px;
+  background: rgba(255,255,255,0.045);
+  color: rgba(232,238,252,0.84);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.json-card {
+  margin-top: 12px;
+}
+
+.json-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.json-title {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+pre {
+  max-height: 360px;
+  overflow: auto;
+  margin: 0;
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(0,0,0,0.28);
+  color: #dbeafe;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.copy-status {
+  min-height: 18px;
+  margin-top: 8px;
+  color: var(--green);
+  font-size: 12px;
+}
+
+@media (max-width: 860px) {
+  .composer-shell {
+    grid-template-columns: 1fr;
+    padding: 14px;
+  }
+
+  .preview-stack {
+    position: static;
+  }
+}
+
+@media (max-width: 520px) {
+  .field-grid,
+  .field-grid.three,
+  .timeline-grid,
+  .timeline-preview {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
 </head>
 
 <body>
+<main class="composer-shell">
+  <section class="panel">
+    <div class="panel-header">
+      <h1>Forecast Composer</h1>
+      <div class="hint">Author the forecast first. System guidance is optional background.</div>
+    </div>
 
-<!-- LEFT -->
-<div class="panel">
+    <div class="day-strip" id="dayStrip"></div>
 
-<h1>Forecast Composer</h1>
-<div class="hint">Signals → Generate → Refine</div>
+    <div class="group">
+      <div class="group-title">Day</div>
+      <div class="field-grid">
+        <div class="field">
+          <label for="date">Date</label>
+          <input type="date" id="date" />
+        </div>
+        <div class="field">
+          <label for="confidence">Confidence</label>
+          <select id="confidence">
+            <option value="0.9">High</option>
+            <option value="0.75">Medium-high</option>
+            <option value="0.6">Medium</option>
+            <option value="0.45">Low</option>
+          </select>
+        </div>
+      </div>
+    </div>
 
-<!-- DAY STRIP -->
-<div class="day-strip" id="dayStrip"></div>
+    <div class="group">
+      <div class="group-title">System Guidance</div>
+      <div id="systemBox" class="system-box">Guidance will appear here if your forecast engine is available.</div>
+    </div>
 
-<label for="date">Date</label>
-<input type="date" id="date">
+    <div class="group">
+      <div class="group-title">Core Forecast</div>
+      <label for="headline">Headline</label>
+      <input id="headline" placeholder="Warm with building afternoon clouds" />
 
-<div id="day-context" style="margin:6px 0; font-size:13px; opacity:0.8;"></div>
+      <label for="narrative">Narrative</label>
+      <textarea id="narrative" placeholder="Write this like the meteorologist. What changes through the day, what matters locally, and what should people actually expect?"></textarea>
+    </div>
 
-<div class="btn-row">
-<button class="secondary" id="loadBtn">Load System</button>
-<button class="danger" id="clearBtn">Clear</button>
-</div>
+    <div class="group">
+      <div class="group-title">Temperatures And Wind</div>
+      <div class="field-grid">
+        <div class="field">
+          <label for="high">High</label>
+          <input id="high" type="number" placeholder="78" />
+        </div>
+        <div class="field">
+          <label for="low">Low</label>
+          <input id="low" type="number" placeholder="61" />
+        </div>
+      </div>
 
-<!-- TEMPS -->
-<div class="group">
-<div class="group-title">Temperatures</div>
+      <div class="field-grid three">
+        <div class="field">
+          <label for="windDir">Direction</label>
+          <select id="windDir">
+            <option value="">Select</option>
+            <option>N</option>
+            <option>NE</option>
+            <option>E</option>
+            <option>SE</option>
+            <option>S</option>
+            <option>SW</option>
+            <option>W</option>
+            <option>NW</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="windSpeed">Speed</label>
+          <input id="windSpeed" type="number" placeholder="8" />
+        </div>
+        <div class="field">
+          <label for="windGust">Gust</label>
+          <input id="windGust" type="number" placeholder="18" />
+        </div>
+      </div>
+    </div>
 
-<label for="high">High</label>
-<input id="high" type="number">
+    <div class="group">
+      <div class="group-title">Weather Setup</div>
+      <div class="field-grid">
+        <div class="field">
+          <label for="sky">Sky</label>
+          <select id="sky">
+            <option value="">Select</option>
+            <option value="clear">Clear</option>
+            <option value="mostly_sunny">Mostly sunny</option>
+            <option value="partly_cloudy">Partly cloudy</option>
+            <option value="mostly_cloudy">Mostly cloudy</option>
+            <option value="overcast">Overcast</option>
+            <option value="showery">Showery</option>
+            <option value="stormy">Stormy</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="evolution">Day Evolution</label>
+          <select id="evolution">
+            <option value="">Select</option>
+            <option value="steady">Little change</option>
+            <option value="building">Building clouds</option>
+            <option value="clearing">Clearing trend</option>
+            <option value="mixed">Back and forth</option>
+          </select>
+        </div>
+      </div>
 
-<label for="low">Low</label>
-<input id="low" type="number">
-</div>
+      <div class="field-grid three">
+        <div class="field">
+          <label for="stormRisk">Storm Risk</label>
+          <select id="stormRisk">
+            <option value="none">None</option>
+            <option value="isolated">Isolated</option>
+            <option value="scattered">Scattered</option>
+            <option value="numerous">Numerous</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="rainStart">Rain Start</label>
+          <select id="rainStart">
+            <option value="">None</option>
+            <option value="morning">Morning</option>
+            <option value="midday">Midday</option>
+            <option value="afternoon">Afternoon</option>
+            <option value="evening">Evening</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="rainEnd">Rain End</label>
+          <select id="rainEnd">
+            <option value="">None</option>
+            <option value="midday">Midday</option>
+            <option value="afternoon">Afternoon</option>
+            <option value="evening">Evening</option>
+            <option value="overnight">Overnight</option>
+          </select>
+        </div>
+      </div>
+    </div>
 
-<!-- WIND -->
-<div class="group">
-<div class="group-title">Wind</div>
+    <div class="group">
+      <div class="group-title">Timeline</div>
+      <div class="timeline-grid">
+        <div class="field">
+          <label for="morning">Morning</label>
+          <input id="morning" placeholder="Cool start, some early sun" />
+        </div>
+        <div class="field">
+          <label for="midday">Midday</label>
+          <input id="midday" placeholder="Clouds build over the ridges" />
+        </div>
+        <div class="field">
+          <label for="afternoon">Afternoon</label>
+          <input id="afternoon" placeholder="Isolated storms possible" />
+        </div>
+        <div class="field">
+          <label for="evening">Evening</label>
+          <input id="evening" placeholder="Activity fades after sunset" />
+        </div>
+      </div>
+    </div>
 
-<label for="wind-speed">Speed (mph)</label>
-<input id="wind-speed" type="number">
+    <div class="group">
+      <div class="group-title">Local Flavor</div>
+      <label for="localInsight">Local Insight</label>
+      <input id="localInsight" placeholder="Higher terrain may hang onto clouds longer." />
 
-<label for="wind-dir">Direction</label>
-<select id="wind-dir">
-<option value="">Select</option>
-<option>N</option><option>NE</option><option>E</option>
-<option>SE</option><option>S</option><option>SW</option>
-<option>W</option><option>NW</option>
-</select>
-</div>
+      <label for="signals">Signals / Tags</label>
+      <input id="signals" placeholder="building clouds, isolated storms, humid feel" />
+    </div>
 
-<!-- CONDITIONS -->
-<div class="group">
-<div class="group-title">Conditions</div>
+    <div class="actions">
+      <button class="btn primary" id="generateBtn" type="button">Generate Draft</button>
+      <button class="btn primary" id="publishBtn" type="button">Publish Forecast</button>
+      <button class="btn" id="copyDayBtn" type="button">Copy Day JSON</button>
+      <button class="btn" id="copyAllBtn" type="button">Copy 4-Day JSON</button>
+      <button class="btn warn" id="clearBtn" type="button">Clear Day</button>
+    </div>
+  </section>
 
-<label for="cond-sky">Sky</label>
-<select id="cond-sky">
-<option value="">Select</option>
-<option value="clear">Clear</option>
-<option value="mostly_sunny">Mostly Sunny</option>
-<option value="partly_cloudy">Partly Cloudy</option>
-<option value="mostly_cloudy">Mostly Cloudy</option>
-<option value="overcast">Overcast</option>
-</select>
+  <section class="panel preview-stack">
+    <div class="panel-header">
+      <h1>Preview</h1>
+      <div class="hint">This mirrors the forecast page content model.</div>
+    </div>
 
-<label for="cond-evolution">Day Evolution</label>
-<select id="cond-evolution">
-<option value="">Select</option>
-<option value="steady">Little Change</option>
-<option value="building">Building Clouds</option>
-<option value="clearing">Clearing Trend</option>
-<option value="mixed">Back and Forth</option>
-</select>
-</div>
+    <article class="forecast-card">
+      <div class="row-top">
+        <div class="day" id="previewDay">Tomorrow</div>
+        <div class="icon" id="previewIcon">☀</div>
+      </div>
 
-<!-- DRIVERS -->
-<div class="group">
-<div class="group-title">Drivers</div>
+      <div class="row-main">
+        <div class="temps">
+          <span class="high" id="previewHigh">--</span>
+          <span class="low" id="previewLow">--</span>
+        </div>
+        <div class="wind" id="previewWind">Wind: --</div>
+      </div>
 
-<label for="drv-temp">Temp Trend</label>
-<select id="drv-temp">
-<option value="">Select</option>
-<option value="warming">Warming</option>
-<option value="cooling">Cooling</option>
-<option value="steady">Steady</option>
-</select>
+      <div class="headline-preview" id="previewHeadline">Forecast headline</div>
+      <div class="takeaway" id="previewNarrative">Your authored forecast narrative appears here.</div>
 
-<label for="drv-instability">Instability</label>
-<select id="drv-instability">
-<option value="">Select</option>
-<option value="none">None</option>
-<option value="low">Low</option>
-<option value="moderate">Moderate</option>
-<option value="high">High</option>
-</select>
+      <div class="timeline-preview">
+        <div class="time-block">
+          <div class="time-label">Morning</div>
+          <div class="time-text" id="previewMorning">--</div>
+        </div>
+        <div class="time-block">
+          <div class="time-label">Midday</div>
+          <div class="time-text" id="previewMidday">--</div>
+        </div>
+        <div class="time-block">
+          <div class="time-label">Afternoon</div>
+          <div class="time-text" id="previewAfternoon">--</div>
+        </div>
+        <div class="time-block">
+          <div class="time-label">Evening</div>
+          <div class="time-text" id="previewEvening">--</div>
+        </div>
+      </div>
 
-<label for="drv-moisture">Moisture</label>
-<select id="drv-moisture">
-<option value="">Select</option>
-<option value="dry">Dry</option>
-<option value="moderate">Moderate</option>
-<option value="humid">Humid</option>
-</select>
-</div>
+      <div class="signals" id="previewSignals"></div>
+      <div class="local-note" id="previewLocal">Local insight will appear here.</div>
+      <div class="confidence-note" id="previewConfidence">Confidence: high</div>
+    </article>
 
-<!-- HAZARDS -->
-<div class="group">
-<div class="group-title">Hazards</div>
+    <div class="json-card">
+      <div class="json-head">
+        <div class="json-title">Composer Output</div>
+        <button class="btn" id="copyVisibleBtn" type="button">Copy Visible JSON</button>
+      </div>
+      <pre id="jsonOutput"></pre>
+      <div class="copy-status" id="copyStatus"></div>
+    </div>
+  </section>
+</main>
 
-<label for="haz-storm">Storm Risk</label>
-<select id="haz-storm">
-<option value="">Select</option>
-<option value="none">None</option>
-<option value="isolated">Isolated</option>
-<option value="scattered">Scattered</option>
-<option value="numerous">Numerous</option>
-</select>
+<script type="module">
+const FIELD_IDS = [
+  "date",
+  "confidence",
+  "headline",
+  "narrative",
+  "high",
+  "low",
+  "windDir",
+  "windSpeed",
+  "windGust",
+  "sky",
+  "evolution",
+  "stormRisk",
+  "rainStart",
+  "rainEnd",
+  "morning",
+  "midday",
+  "afternoon",
+  "evening",
+  "localInsight",
+  "signals"
+];
 
-<label for="haz-start">Rain Start</label>
-<select id="haz-start">
-<option value="">Start</option>
-<option value="morning">Morning</option>
-<option value="midday">Midday</option>
-<option value="afternoon">Afternoon</option>
-<option value="evening">Evening</option>
-</select>
-
-<label for="haz-end">Rain End</label>
-<select id="haz-end">
-<option value="">End</option>
-<option value="midday">Midday</option>
-<option value="afternoon">Afternoon</option>
-<option value="evening">Evening</option>
-<option value="overnight">Overnight</option>
-</select>
-</div>
-
-<!-- LOCAL -->
-<div class="group">
-<div class="group-title">Local Effects</div>
-
-<label for="loc-terrain">Terrain</label>
-<select id="loc-terrain">
-<option value="">Select</option>
-<option value="nw_flow">NW Flow</option>
-<option value="upslope">Upslope</option>
-<option value="none">None</option>
-</select>
-
-<label for="loc-fog">Fog</label>
-<select id="loc-fog">
-<option value="">Select</option>
-<option value="none">None</option>
-<option value="patchy">Patchy</option>
-<option value="likely">Likely</option>
-</select>
-</div>
-
-<div class="btn-row">
-<button class="secondary" id="generateBtn">Generate Forecast</button>
-</div>
-
-<div class="group">
-<div class="group-title">Output</div>
-
-<label for="headline">Headline</label>
-<input id="headline">
-
-<label for="narrative">Narrative</label>
-<textarea id="narrative"></textarea>
-</div>
-
-</div>
-
-<!-- RIGHT -->
-<div class="panel">
-
-<h1>Preview</h1>
-
-<div class="card">
-<div class="row-top">
-<div id="p-day">—</div>
-<div>☀️</div>
-</div>
-
-<div class="row-main">
-<div>
-<span class="high" id="p-high">--</span>
-<span class="low" id="p-low">--</span>
-</div>
-<div id="p-wind">—</div>
-</div>
-
-<div class="fs-bar">
-<div class="fs-fill" style="width:80%"></div>
-</div>
-
-<div class="takeaway" id="p-text">—</div>
-</div>
-
-</div>
-
-<script>
+const DAY_COUNT = 4;
+const STORAGE_KEY = "forecast-composer-v1";
 const el = id => document.getElementById(id);
+const state = {
+  activeDate: "",
+  days: {}
+};
 
-/* DAY STRIP */
-function initDayStrip() {
-  const strip = el('dayStrip');
-  const today = new Date();
+let getSystemForecastForDate = null;
 
-  for (let i=1;i<=4;i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate()+i);
+init();
 
-    const label = d.toLocaleDateString(undefined,{weekday:'short'});
+async function init() {
+  await loadOptionalForecastEngine();
+  loadSavedState();
+  initDayStrip();
+  bindEvents();
 
-    const div = document.createElement('div');
-    div.className = 'day-pill';
-    div.textContent = i===1 ? 'Tomorrow' : label;
+  const firstDate = Object.keys(state.days)[0] || getDateOffset(1);
+  selectDate(firstDate);
+}
 
-    div.onclick = () => {
-      document.querySelectorAll('.day-pill').forEach(p=>p.classList.remove('active'));
-      div.classList.add('active');
-      el('date').value = d.toISOString().split('T')[0];
-      updateDayContext();
-    };
-
-    if (i===1) div.classList.add('active');
-
-    strip.appendChild(div);
+async function loadOptionalForecastEngine() {
+  try {
+    const mod = await import("/js/modules/forecast-engine.js");
+    getSystemForecastForDate = mod.getSystemForecastForDate;
+  } catch {
+    getSystemForecastForDate = null;
   }
 }
 
-function updateDayContext() {
-  const dateVal = el('date').value;
-  if (!dateVal) return;
+function initDayStrip() {
+  const strip = el("dayStrip");
+  strip.innerHTML = "";
 
-  const d = new Date(dateVal);
+  for (let offset = 1; offset <= DAY_COUNT; offset += 1) {
+    const dateStr = getDateOffset(offset);
+    ensureDay(dateStr);
 
-  el('p-day').textContent = d.toLocaleDateString(undefined,{
-    weekday:'long',
-    month:'short',
-    day:'numeric'
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "day-pill";
+    button.dataset.date = dateStr;
+    button.innerHTML = `
+      <strong>${offset === 1 ? "Tomorrow" : formatWeekday(dateStr)}</strong>
+      <span>${formatShortDate(dateStr)}</span>
+    `;
+    button.addEventListener("click", () => selectDate(dateStr));
+    strip.appendChild(button);
+  }
+}
+
+function bindEvents() {
+  FIELD_IDS.forEach(id => {
+    const node = el(id);
+    const eventName = node.tagName === "SELECT" ? "change" : "input";
+    node.addEventListener(eventName, () => {
+      saveFormToActiveDay();
+      updatePreview();
+      updateJson();
+      persist();
+    });
+  });
+
+  el("date").addEventListener("change", () => {
+    const dateStr = el("date").value;
+    if (!dateStr) return;
+    saveFormToActiveDay();
+    ensureDay(dateStr);
+    selectDate(dateStr);
+    initDayStrip();
+  });
+
+  el("generateBtn").addEventListener("click", generateDraft);
+  el("clearBtn").addEventListener("click", clearActiveDay);
+  el("publishBtn").addEventListener("click", publishForecast);
+  el("copyDayBtn").addEventListener("click", () => copyText(JSON.stringify(getActiveDayForecast(), null, 2)));
+  el("copyAllBtn").addEventListener("click", () => copyText(JSON.stringify(buildPublishedForecast(), null, 2)));
+  el("copyVisibleBtn").addEventListener("click", () => copyText(el("jsonOutput").textContent));
+}
+
+function selectDate(dateStr) {
+  if (state.activeDate) saveFormToActiveDay();
+
+  state.activeDate = dateStr;
+  ensureDay(dateStr);
+  loadDayIntoForm(state.days[dateStr]);
+
+  document.querySelectorAll(".day-pill").forEach(pill => {
+    pill.classList.toggle("active", pill.dataset.date === dateStr);
+  });
+
+  loadSystemGuidance(dateStr);
+  updatePreview();
+  updateJson();
+  persist();
+}
+
+async function loadSystemGuidance(dateStr) {
+  const box = el("systemBox");
+
+  if (!getSystemForecastForDate) {
+    box.textContent = "No system guidance loaded. This composer is ready for manual forecasting.";
+    return;
+  }
+
+  box.textContent = "Loading system guidance...";
+
+  try {
+    const sys = await getSystemForecastForDate(dateStr);
+    if (!sys?.human) {
+      box.textContent = "No system guidance found for this date.";
+      return;
+    }
+
+    const timeline = sys.human.timeline ? `<br>${escapeHtml(sys.human.timeline)}` : "";
+    box.innerHTML = `<strong>${escapeHtml(sys.human.headline || "System guidance")}</strong>${timeline}`;
+  } catch {
+    box.textContent = "System guidance is unavailable. Manual forecast mode is still ready.";
+  }
+}
+
+function ensureDay(dateStr) {
+  if (state.days[dateStr]) return;
+
+  state.days[dateStr] = {
+    date: dateStr,
+    confidence: "0.9",
+    headline: "",
+    narrative: "",
+    high: "",
+    low: "",
+    windDir: "",
+    windSpeed: "",
+    windGust: "",
+    sky: "",
+    evolution: "",
+    stormRisk: "none",
+    rainStart: "",
+    rainEnd: "",
+    morning: "",
+    midday: "",
+    afternoon: "",
+    evening: "",
+    localInsight: "",
+    signals: ""
+  };
+}
+
+function saveFormToActiveDay() {
+  if (!state.activeDate) return;
+  ensureDay(state.activeDate);
+
+  FIELD_IDS.forEach(id => {
+    state.days[state.activeDate][id] = el(id).value;
   });
 }
 
-/* GENERATE */
-function generateForecast() {
+function loadDayIntoForm(day) {
+  FIELD_IDS.forEach(id => {
+    el(id).value = day[id] ?? "";
+  });
+}
 
-  let headline = "Quiet conditions";
-  if (el('haz-storm').value === "scattered")
-    headline = "Scattered storms possible";
-
+function generateDraft() {
+  const day = readForm();
   const parts = [];
+  let headline = day.headline.trim();
 
-  if (el('cond-evolution').value === "building")
-    parts.push("Clouds increase through the day.");
+  if (!headline) {
+    if (day.stormRisk === "scattered") headline = "Scattered storms possible later in the day";
+    else if (day.stormRisk === "isolated") headline = "Warm with an isolated storm risk";
+    else if (day.evolution === "clearing") headline = "Clouds gradually breaking for more sun";
+    else if (day.evolution === "building") headline = "Early sun with clouds building later";
+    else if (day.sky === "overcast" || day.sky === "mostly_cloudy") headline = "Clouds hold firm through the day";
+    else headline = "Quiet and seasonable conditions";
+  }
 
-  if (el('drv-instability').value === "moderate")
-    parts.push("Instability supports storm development.");
+  if (day.evolution === "building") parts.push("The day starts quieter before clouds build with daytime heating.");
+  if (day.evolution === "clearing") parts.push("Clouds should gradually break, allowing brighter conditions as the day goes on.");
+  if (day.evolution === "mixed") parts.push("Expect a back-and-forth sky, with breaks of sun interrupted by passing cloud cover.");
+  if (day.evolution === "steady") parts.push("Conditions stay fairly consistent without a major shift through the day.");
 
-  if (el('haz-start').value && el('haz-end').value)
-    parts.push(`Rain develops ${el('haz-start').value} into ${el('haz-end').value}.`);
+  if (day.stormRisk && day.stormRisk !== "none") {
+    const coverage = day.stormRisk === "numerous" ? "more widespread" : day.stormRisk;
+    parts.push(`${capitalize(coverage)} showers and storms are possible, especially where clouds thin enough for extra heating.`);
+  }
 
-  el('headline').value = headline;
-  el('narrative').value = parts.join(" ");
+  if (day.rainStart && day.rainEnd) {
+    parts.push(`The main rain window looks to run from ${day.rainStart} into ${day.rainEnd}.`);
+  } else if (day.rainStart) {
+    parts.push(`Rain chances begin to increase around ${day.rainStart}.`);
+  }
 
+  if (day.windDir === "NW") {
+    parts.push("Northwest flow may keep the higher terrain cloudier and a touch cooler than the valleys.");
+  }
+
+  if (day.localInsight.trim()) parts.push(day.localInsight.trim());
+
+  el("headline").value = headline;
+  el("narrative").value = day.narrative.trim() || parts.join(" ");
+
+  saveFormToActiveDay();
   updatePreview();
+  updateJson();
+  persist();
 }
 
-/* PREVIEW */
+function clearActiveDay() {
+  const dateStr = state.activeDate;
+  state.days[dateStr] = {
+    ...state.days[dateStr],
+    confidence: "0.9",
+    headline: "",
+    narrative: "",
+    high: "",
+    low: "",
+    windDir: "",
+    windSpeed: "",
+    windGust: "",
+    sky: "",
+    evolution: "",
+    stormRisk: "none",
+    rainStart: "",
+    rainEnd: "",
+    morning: "",
+    midday: "",
+    afternoon: "",
+    evening: "",
+    localInsight: "",
+    signals: ""
+  };
+  loadDayIntoForm(state.days[dateStr]);
+  updatePreview();
+  updateJson();
+  persist();
+}
+
+function readForm() {
+  return FIELD_IDS.reduce((acc, id) => {
+    acc[id] = el(id).value;
+    return acc;
+  }, {});
+}
+
+function getActiveDayForecast() {
+  return normalizeDayForPublish(state.days[state.activeDate]);
+}
+
+function buildPublishedForecast() {
+  saveFormToActiveDay();
+
+  const sortedDates = Object.keys(state.days)
+    .sort()
+    .slice(0, DAY_COUNT);
+
+  const days = {};
+  sortedDates.forEach(dateStr => {
+    days[dateStr] = normalizeDayForPublish(state.days[dateStr]);
+  });
+
+  return {
+    lastUpdated: new Date().toISOString(),
+    source: "manual-composer",
+    days,
+    global: {
+      tone: "human",
+      style: "concise",
+      overrideNarrative: true
+    }
+  };
+}
+
+function normalizeDayForPublish(day) {
+  const tags = parseTags(day.signals);
+
+  return {
+    date: day.date,
+    headline: emptyToNull(day.headline),
+    narrative: emptyToNull(day.narrative),
+    high: toNumberOrNull(day.high),
+    low: toNumberOrNull(day.low),
+    wind: {
+      direction: emptyToNull(day.windDir),
+      speed: toNumberOrNull(day.windSpeed),
+      gust: toNumberOrNull(day.windGust)
+    },
+    sky: emptyToNull(day.sky),
+    evolution: emptyToNull(day.evolution),
+    stormRisk: day.stormRisk || "none",
+    rainWindow: {
+      start: emptyToNull(day.rainStart),
+      end: emptyToNull(day.rainEnd)
+    },
+    timeline: {
+      morning: emptyToNull(day.morning),
+      midday: emptyToNull(day.midday),
+      afternoon: emptyToNull(day.afternoon),
+      evening: emptyToNull(day.evening)
+    },
+    localInsight: emptyToNull(day.localInsight),
+    tags,
+    confidence: Number(day.confidence || 0.9)
+  };
+}
+
 function updatePreview() {
-  el('p-high').textContent = el('high').value || "--";
-  el('p-low').textContent = el('low').value || "--";
+  const day = readForm();
+  const tags = parseTags(day.signals);
 
-  const wind = el('wind-speed').value;
-  const dir = el('wind-dir').value;
-  el('p-wind').textContent = wind ? `${dir} ${wind} mph` : "—";
+  el("previewDay").textContent = formatPreviewDay(day.date);
+  el("previewIcon").textContent = pickIcon(day.sky, day.stormRisk);
+  el("previewHigh").textContent = day.high ? `${Math.round(Number(day.high))}°` : "--";
+  el("previewLow").textContent = day.low ? `${Math.round(Number(day.low))}°` : "--";
+  el("previewWind").textContent = formatWind(day);
+  el("previewHeadline").textContent = day.headline.trim() || "Forecast headline";
+  el("previewNarrative").textContent = day.narrative.trim() || "Your authored forecast narrative appears here.";
+  el("previewMorning").textContent = day.morning.trim() || "--";
+  el("previewMidday").textContent = day.midday.trim() || "--";
+  el("previewAfternoon").textContent = day.afternoon.trim() || "--";
+  el("previewEvening").textContent = day.evening.trim() || "--";
+  el("previewLocal").textContent = day.localInsight.trim() || "Local insight will appear here.";
+  el("previewConfidence").textContent = `Confidence: ${confidenceLabel(day.confidence)}`;
 
-  const text = el('headline').value + ". " + el('narrative').value;
-  el('p-text').textContent = text;
+  el("previewSignals").innerHTML = tags.length
+    ? tags.map(tag => `<span class="signal">${escapeHtml(tag)}</span>`).join("")
+    : `<span class="signal">manual forecast</span>`;
 }
 
-/* EVENTS */
-initDayStrip();
+function updateJson() {
+  el("jsonOutput").textContent = JSON.stringify(buildPublishedForecast(), null, 2);
+}
 
-el('date').addEventListener('change', updateDayContext);
+function persist() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
 
-['headline','narrative','high','low','wind-speed','wind-dir']
-.forEach(id => el(id).addEventListener('input', updatePreview));
+function loadSavedState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (saved?.days) {
+      state.activeDate = saved.activeDate || "";
+      state.days = saved.days;
+    }
+  } catch {
+    state.days = {};
+  }
+}
 
-el('generateBtn').onclick = generateForecast;
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    setStatus("Copied.");
+  } catch {
+    setStatus("Select the JSON and copy it manually.");
+  }
 
+  window.setTimeout(() => {
+    setStatus("");
+  }, 1800);
+}
+
+async function publishForecast() {
+  saveFormToActiveDay();
+
+  const button = el("publishBtn");
+  const forecast = buildPublishedForecast();
+
+  button.disabled = true;
+  button.textContent = "Publishing...";
+  setStatus("Publishing approved forecast...");
+
+  try {
+    const response = await fetch("/api/forecast/publish", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(forecast)
+    });
+
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(result.error || "Publish failed");
+    }
+
+    setStatus("Published. Refresh /forecast.html to see the live forecast.");
+  } catch (err) {
+    console.error("Forecast publish failed:", err);
+    setStatus("Publish failed. The copy buttons still work as a fallback.");
+  } finally {
+    button.disabled = false;
+    button.textContent = "Publish Forecast";
+  }
+}
+
+function setStatus(message) {
+  el("copyStatus").textContent = message;
+}
+
+function getDateOffset(offset) {
+  const d = new Date();
+  d.setHours(12, 0, 0, 0);
+  d.setDate(d.getDate() + offset);
+  return toDateInputValue(d);
+}
+
+function toDateInputValue(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function dateFromInput(dateStr) {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day, 12, 0, 0, 0);
+}
+
+function formatWeekday(dateStr) {
+  return dateFromInput(dateStr).toLocaleDateString([], { weekday: "short" });
+}
+
+function formatShortDate(dateStr) {
+  return dateFromInput(dateStr).toLocaleDateString([], { month: "short", day: "numeric" });
+}
+
+function formatPreviewDay(dateStr) {
+  if (!dateStr) return "Selected Day";
+  const tomorrow = getDateOffset(1);
+  if (dateStr === tomorrow) return "Tomorrow";
+  return dateFromInput(dateStr).toLocaleDateString([], {
+    weekday: "long",
+    month: "short",
+    day: "numeric"
+  });
+}
+
+function formatWind(day) {
+  if (!day.windSpeed && !day.windDir) return "Wind: --";
+
+  const dir = day.windDir || "";
+  const speed = day.windSpeed ? `${day.windSpeed} mph` : "";
+  const gust = day.windGust ? `, gusts ${day.windGust}` : "";
+  return `Wind: ${[dir, speed].filter(Boolean).join(" ")}${gust}`;
+}
+
+function pickIcon(sky, stormRisk) {
+  if (stormRisk && stormRisk !== "none") return "⛈";
+  if (sky === "showery") return "🌦";
+  if (sky === "stormy") return "⛈";
+  if (sky === "overcast" || sky === "mostly_cloudy") return "☁";
+  if (sky === "partly_cloudy") return "⛅";
+  return "☀";
+}
+
+function confidenceLabel(value) {
+  const n = Number(value || 0.9);
+  if (n >= 0.85) return "high";
+  if (n >= 0.7) return "medium-high";
+  if (n >= 0.55) return "medium";
+  return "low";
+}
+
+function parseTags(value) {
+  return String(value || "")
+    .split(",")
+    .map(tag => tag.trim())
+    .filter(Boolean);
+}
+
+function emptyToNull(value) {
+  const trimmed = String(value ?? "").trim();
+  return trimmed ? trimmed : null;
+}
+
+function toNumberOrNull(value) {
+  if (value === "" || value == null) return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function capitalize(value) {
+  return value ? value.charAt(0).toUpperCase() + value.slice(1) : value;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
 </script>
-
 </body>
 </html>

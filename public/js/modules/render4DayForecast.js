@@ -1,34 +1,16 @@
 // ============================================================
-// 4-DAY FORECAST (STABLE TIME + OVERRIDES)
+// 4-DAY FORECAST (MANUAL-FIRST)
 // ============================================================
 
 import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
 import { calculateComfort } from '/js/intel/comfort.js';
-import { assemble } from '/js/intel/synthesizer/assemble.js';
-import { analyzePattern, mapToInputs } from '../modules/analyzePattern.js';
 
-// ============================================================
-// OVERRIDE
-// ============================================================
+const LOCATION = {
+  lat: 35.5951,
+  lon: -82.5515
+};
 
 let forecastOverrides = {};
-
-async function loadForecastOverrides() {
-  try {
-    const res = await fetch('/forecast-overrides.json');
-    forecastOverrides = await res.json();
-  } catch {
-    forecastOverrides = {};
-  }
-}
-
-function getDateKey(date) {
-  return new Date(
-    date.getFullYear(),
-    date.getMonth(),
-    date.getDate()
-  ).toISOString().split('T')[0];
-}
 
 // ============================================================
 // MAIN
@@ -37,395 +19,341 @@ function getDateKey(date) {
 export async function render4DayForecast(container) {
   if (!container) return;
 
-  try {
-    const data = await getWeatherForUI({
-      lat: 35.5951,
-      lon: -82.5515
-    });
+  container.innerHTML = renderLoading();
 
-    await loadForecastOverrides();
+  const [manualForecast, weatherData] = await Promise.all([
+    loadForecastOverrides(),
+    loadWeatherFallback()
+  ]);
 
-    // 🔥 Normalize ONCE (single source of truth)
-    const hourly = (data?.hourly || []).map(h => {
-      const d = new Date(h.timestamp);
+  forecastOverrides = manualForecast;
 
-      return {
-        ...h,
-        localDate: d,
-        localHour: d.getHours(),
-        dayKey: d.toISOString().split('T')[0]
-      };
-    });
+  const hourly = normalizeHourly(weatherData?.hourly || []);
+  const days = buildForecastDays(hourly).map((day, index) => {
+    const manual = getManualDay(day.key);
+    return manual
+      ? buildManualDay(day, index, manual)
+      : buildFallbackDay(day, index);
+  });
 
-    // ==================================================
-    // 🔥 ADD THIS BLOCK RIGHT HERE
-    // ==================================================
+  const lead = days[0];
 
-    const inputs = mapToInputs({
-      ...data,
-      hourly // pass normalized hourly if needed later
-    });
+  container.innerHTML = `
+    ${renderLead(lead)}
+    ${renderSummary(days)}
+    ${days.map(renderDay).join('')}
+  `;
 
-    const pattern = analyzePattern(inputs);
-
-    console.log("PATTERN:", pattern);
-    const timeline = buildTimeline(hourly);
-console.log("TIMELINE:", timeline);
-
-// ==================================================
-// 🔥 BUILD FORECAST OBJECT (SAFE ADD)
-// ==================================================
-
-const forecast = {
-  conditions: {
-    dominantType: pattern.dayType,
-    confidence: pattern.confidence?.overall,
-    variability: pattern.tension?.length ? "changing" : "steady"
-  },
-
-  drivers: {
-    tempTrend: pattern.temperature?.trend,
-    dewPoint: data?.hourly?.dewpoint?.[12],
-    wind: pattern.windProfile?.speed,
-    skyCover: pattern.skyBehavior?.coverage,
-    instability: pattern.convection?.intensity,
-    moistureDepth: pattern.moistureProfile?.depth
-  },
-
-  hazards: pattern.hazards,
-  localEffects: pattern.localEffects,
-
-human: buildHumanForecast(pattern)
-};
-
-console.log("FORECAST:", forecast);
-
-    // ==================================================
-    // 🔥 Continue with older code
-    // ==================================================
-    const days = buildDays(hourly);
-   const enriched = days.map((d, i) => buildDay(d, i, forecast));
-
-container.innerHTML = `
-  <div style="padding:12px;font-size:18px;font-weight:600;">
-    ${forecast.human.headline}
-  </div>
-
-  <div style="padding:8px 12px;font-size:14px;opacity:0.85;">
-    <strong>Morning:</strong> ${timeline.morning} |
-    <strong>Midday:</strong> ${timeline.midday} |
-    <strong>Afternoon:</strong> ${timeline.afternoon} |
-    <strong>Evening:</strong> ${timeline.evening}
-  </div>
-
-  ${renderSummary(enriched)}
-  ${enriched.map(renderDay).join("")}
-`;
-
-    bindExpand();
-
-  } catch (err) {
-    console.error("Forecast error:", err);
-  }
+  bindExpand();
 }
 
 // ============================================================
-// BUILD DAYS (timezone-safe)
+// DATA
 // ============================================================
 
-function buildDays(hourly) {
-  const now = new Date();
+async function loadForecastOverrides() {
+  try {
+    const res = await fetch('/api/forecast/latest', { cache: 'no-store' });
+    if (!res.ok) throw new Error(`latest forecast ${res.status}`);
+    const forecast = await res.json();
+    if (forecast?.days && Object.keys(forecast.days).length) {
+      return forecast;
+    }
+  } catch (err) {
+    console.warn('Published forecast API unavailable, trying JSON fallback:', err);
+  }
 
-  const start = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate()
-  );
+  try {
+    const res = await fetch('/forecast-overrides.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error(`forecast-overrides.json ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Manual forecast unavailable:', err);
+    return {};
+  }
+}
+
+async function loadWeatherFallback() {
+  try {
+    return await getWeatherForUI(LOCATION);
+  } catch (err) {
+    console.warn('Automated fallback unavailable:', err);
+    return null;
+  }
+}
+
+function getManualDay(dateKey) {
+  const day = forecastOverrides?.days?.[dateKey];
+  if (!day) return null;
+
+  const hasAuthoredForecast =
+    hasText(day.headline) ||
+    hasText(day.narrative) ||
+    day.high != null ||
+    day.low != null ||
+    hasTimeline(day.timeline);
+
+  return hasAuthoredForecast ? day : null;
+}
+
+function normalizeHourly(hourly) {
+  return hourly.map(hour => {
+    const date = new Date(hour.timestamp);
+
+    return {
+      ...hour,
+      localDate: date,
+      localHour: date.getHours(),
+      dayKey: toDateKey(date)
+    };
+  });
+}
+
+function buildForecastDays(hourly) {
+  const today = new Date();
+  today.setHours(12, 0, 0, 0);
 
   const days = [];
 
-  for (let i = 1; i <= 4; i++) {
-    const d = new Date(start);
-    d.setDate(start.getDate() + i);
+  for (let offset = 1; offset <= 4; offset += 1) {
+    const date = new Date(today);
+    date.setDate(today.getDate() + offset);
 
-    const key = d.toISOString().split('T')[0];
-
+    const key = toDateKey(date);
     const hours = hourly
-      .filter(h => h.dayKey === key)
+      .filter(hour => hour.dayKey === key)
       .sort((a, b) => a.localDate - b.localDate);
 
-    days.push({ date: d, hours });
+    days.push({ date, key, hours });
   }
 
   return days;
 }
 
 // ============================================================
-// BUILD DAY
+// DAY BUILDERS
 // ============================================================
 
-function buildDay(day, index, forecast) {
-  const hours = day.hours;
-
-  const temps = hours.map(h => h.temperatureF);
-  const high = temps.length ? Math.max(...temps) : "--";
-  const low = temps.length ? Math.min(...temps) : "--";
-
-  const fs = computeFS(hours);
-  const rain = analyzeRain(hours);
-
-  // 🔥 anchor uses localHour ONLY
-  const anchor =
-    hours.find(h => h.localHour >= 11 && h.localHour <= 15) ||
-    hours[Math.floor(hours.length / 2)];
-
-  const intel = anchor
-    ? {
-        temperature: anchor.temperatureF,
-        dewpoint: anchor.dewpointF,
-        windSpeed: anchor.windSpeed,
-        windGust: anchor.windGust,
-        cloudCover: anchor.cloudCover,
-        precipProbability: rain.type === "none" ? 0 : rain.peak,
-        score: fs,
-        dominantFactor: rain.type !== "none" ? "rain" : "sun"
-      }
-    : null;
-
-let narrative = "";
-
-// ==================================================
-// 🔥 NEW HUMAN NARRATIVE (PRIMARY)
-// ==================================================
-
-if (index === 0 && forecast?.human?.narrative) {
-  narrative = forecast.human.narrative;
-}
-
-// ==================================================
-// 🔁 FALLBACK TO OLD SYSTEM (SAFE)
-// ==================================================
-
-if (!narrative && intel) {
-  const category = classifyCategory(intel);
-
-  let timeContext = null;
-
-  if (rain.type === "morning") timeContext = "rain early, then clearing";
-  else if (rain.type === "midday") timeContext = "periods of rain midday";
-  else if (rain.type === "afternoon") timeContext = "dry early, showers later";
-  else if (rain.type === "evening") timeContext = "dry through the day, rain late";
-
-  const result = assemble.assemble(
-    { ...intel, timeContext },
-    index === 0 ? "tomorrow" : "future",
-    category,
-    category === "veryComfortable"
-  );
-
-  narrative = result?.narrative || "";
-}
-
-// ============================================================
-// OVERRIDES (NEW SYSTEM)
-// ============================================================
-
-const key = getDateKey(day.date);
-const override = forecastOverrides?.days?.[key];
-
-let takeaway = narrative;
-
-if (override) {
-
-  // HEADLINE override (only for tomorrow)
-  if (override.headline && index === 0) {
-    forecast.human.headline = override.headline;
-  }
-
-  // NARRATIVE override (full control)
-  if (override.narrative) {
-    takeaway = override.narrative;
-  }
-
-  // TAGS → become emphasis (only if no full narrative override)
-  if (override.tags?.length && !override.narrative) {
-    takeaway += " " + override.tags.join(". ") + ".";
-  }
-
-  // CONFIDENCE → subtle tone adjustment
-  if (override.confidence != null) {
-    if (override.confidence < 0.6) {
-      takeaway += " Some uncertainty remains.";
-    }
-  }
-}
-
-return {
-  date: day.date,
-  hours,
-  high: Math.round(high),
-  low: Math.round(low),
-  fs,
-  icon: pickIcon(hours, rain),
-  takeaway,
-  index
-};
-}
-
-// ============================================================
-// RAIN ANALYSIS (uses localHour)
-// ============================================================
-
-function analyzeRain(hours) {
-  if (!hours.length) return { type: "none", coverage: 0, peak: 0 };
-
-  const buckets = {
-    morning: [],
-    midday: [],
-    afternoon: [],
-    evening: []
-  };
-
-  hours.forEach(h => {
-    const hr = h.localHour;
-    const p = h.precipProbability ?? 0;
-    const amt = h.precipAmount ?? 0;
-
-    const hasRain = amt > 0.01 || p >= 0.45;
-    if (!hasRain) return;
-
-    if (hr >= 5 && hr < 10) buckets.morning.push(p);
-    else if (hr < 14) buckets.midday.push(p);
-    else if (hr < 18) buckets.afternoon.push(p);
-    else buckets.evening.push(p);
-  });
-
-  const counts = Object.entries(buckets).map(([k,v]) => ({
-    key: k,
-    count: v.length,
-    peak: v.length ? Math.max(...v) : 0
-  }));
-
-  const totalRain = counts.reduce((s,c)=>s+c.count,0);
-  const coverage = totalRain / hours.length;
-
-  if (coverage < 0.20) {
-    return { type: "none", coverage, peak: 0 };
-  }
-
-  const dominant = counts.sort((a,b)=>b.count-a.count)[0];
+function buildManualDay(day, index, manual) {
+  const fallback = buildFallbackDay(day, index);
+  const confidence = numberOrNull(manual.confidence);
+  const timeline = normalizeTimeline(manual.timeline);
+  const tags = Array.isArray(manual.tags) ? manual.tags.filter(Boolean) : [];
 
   return {
-    type: dominant.key,
-    coverage,
-    peak: dominant.peak
+    ...fallback,
+    source: 'manual',
+    high: manual.high ?? fallback.high,
+    low: manual.low ?? fallback.low,
+    icon: pickManualIcon(manual),
+    headline: manual.headline || fallback.headline,
+    takeaway: manual.narrative || fallback.takeaway,
+    timeline,
+    tags,
+    localInsight: manual.localInsight || null,
+    confidence,
+    score: confidence != null ? Math.round(confidence * 100) : fallback.score,
+    scoreLabel: confidence != null ? 'Confidence' : fallback.scoreLabel,
+    wind: normalizeManualWind(manual.wind),
+    rainWindow: manual.rainWindow || null,
+    sky: manual.sky || null,
+    stormRisk: manual.stormRisk || 'none'
   };
 }
 
-// ============================================================
-// ICONS
-// ============================================================
+function buildFallbackDay(day, index) {
+  const hours = day.hours;
+  const temps = hours.map(hour => numberOrNull(hour.temperatureF)).filter(Number.isFinite);
+  const rain = analyzeRain(hours);
+  const score = computeComfortScore(hours);
+  const high = temps.length ? Math.round(Math.max(...temps)) : '--';
+  const low = temps.length ? Math.round(Math.min(...temps)) : '--';
+  const timeline = buildTimeline(hours);
 
-function pickIcon(hours, rain) {
-  if (rain.coverage > 0.55) return "🌧️";
-  if (rain.coverage > 0.30) return "🌦️";
-
-  const cloud =
-    hours.reduce((s,h)=>s+(h.cloudCover || 0),0)/hours.length;
-
-  if (cloud > 0.75) return "☁️";
-  if (cloud > 0.45) return "⛅";
-
-  return "☀️";
-}
-
-// ============================================================
-// FEELSCORE
-// ============================================================
-
-function computeFS(hours) {
-  if (!hours.length) return 50;
-
-  const scores = hours.map(h =>
-    (calculateComfort(h)?.score ?? 5) * 10
-  );
-
-  return Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
+  return {
+    source: 'fallback',
+    date: day.date,
+    key: day.key,
+    index,
+    hours,
+    high,
+    low,
+    icon: pickFallbackIcon(hours, rain),
+    headline: fallbackHeadline(rain, hours),
+    takeaway: fallbackNarrative(rain, timeline),
+    timeline,
+    tags: [],
+    localInsight: null,
+    confidence: null,
+    score,
+    scoreLabel: mapComfortScore(score),
+    wind: summarizeWind(hours),
+    rainWindow: null,
+    sky: null,
+    stormRisk: rain.type === 'none' ? 'none' : 'possible'
+  };
 }
 
 // ============================================================
 // RENDER
 // ============================================================
 
-function renderDay(d) {
+function renderLoading() {
+  return `
+    <div class="card forecast-summary">
+      Loading the 4-day forecast...
+    </div>
+  `;
+}
 
-  const displayHours = d.hours
-    .filter(h => h.localHour >= 7 && h.localHour < 19);
+function renderLead(day) {
+  if (!day) return '';
+
+  const timeline = day.timeline || {};
 
   return `
-    <div class="card forecast-row expandable">
+    <div class="forecast-headline">
+      ${escapeHtml(day.headline || '4-Day Forecast')}
+    </div>
 
+    <div class="forecast-timeline">
+      <strong>Morning:</strong> ${escapeHtml(timeline.morning || '—')} |
+      <strong>Midday:</strong> ${escapeHtml(timeline.midday || '—')} |
+      <strong>Afternoon:</strong> ${escapeHtml(timeline.afternoon || '—')} |
+      <strong>Evening:</strong> ${escapeHtml(timeline.evening || '—')}
+    </div>
+  `;
+}
+
+function renderSummary(days) {
+  if (!days.length) return '';
+
+  const manualCount = days.filter(day => day.source === 'manual').length;
+  const best = days.reduce((a, b) => Number(b.score) > Number(a.score) ? b : a);
+
+  return `
+    <div class="card forecast-summary">
+      <div class="summary-line">
+        ${manualCount
+          ? `Manual forecast active for <strong>${manualCount}</strong> of 4 days`
+          : 'Automated fallback forecast active'}
+      </div>
+      <div class="summary-meta">
+        Best signal: <strong>${escapeHtml(formatDay(best.date, best.index))}</strong>
+        <span class="summary-score">${escapeHtml(String(best.score))}</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderDay(day) {
+  const toneClass = toneClassFor(day);
+
+  return `
+    <div class="card forecast-row expandable ${toneClass}">
       <div class="row-top">
-        <div class="day">${formatDay(d.date, d.index)}</div>
-        <div class="icon">${d.icon}</div>
+        <div class="day">${escapeHtml(formatDay(day.date, day.index))}</div>
+        <div class="icon">${day.icon}</div>
       </div>
 
       <div class="row-main">
         <div class="temps">
-          <span class="high">${d.high}°</span>
-          <span class="low">${d.low}°</span>
+          <span class="high">${escapeHtml(formatTemp(day.high))}</span>
+          <span class="low">${escapeHtml(formatTemp(day.low))}</span>
         </div>
 
         <div class="feelscore">
-          <span class="fs-value">${d.fs}</span>
-          <span class="fs-label">${mapFS(d.fs)}</span>
+          <div class="fs-value">${escapeHtml(String(day.score))}</div>
+          <div class="fs-label">${escapeHtml(day.scoreLabel)}</div>
         </div>
       </div>
 
       <div class="fs-bar">
-        <div class="fs-fill" style="width:${d.fs}%"></div>
+        <div class="fs-fill" style="width:${clamp(Number(day.score) || 0, 0, 100)}%"></div>
       </div>
 
-  ${renderTakeaway(d.takeaway)}
-  
+      <div class="row-bottom">
+        <div class="day-headline">${escapeHtml(day.headline || '')}</div>
+        ${renderTakeaway(day.takeaway)}
+        ${renderSignals(day)}
+        ${renderLocalInsight(day.localInsight)}
+      </div>
+
       <div class="expand-content">
-        <div class="hourly-strip">
-          ${displayHours.map(renderHour).join("")}
-        </div>
+        ${renderExpandedDetails(day)}
       </div>
-
     </div>
   `;
 }
 
-function renderTakeaway(t) {
-  if (!t) return "";
+function renderTakeaway(text) {
+  if (!text) return '';
+  return `<div class="takeaway">${escapeHtml(text)}</div>`;
+}
 
-  if (typeof t === "string") {
-    return `<div class="row-bottom"><div class="takeaway">${t}</div></div>`;
+function renderSignals(day) {
+  const signals = [
+    ...(day.tags || []),
+    day.wind ? `Wind ${formatWind(day.wind)}` : null,
+    day.rainWindow?.start ? `Rain window: ${day.rainWindow.start}${day.rainWindow.end ? ` to ${day.rainWindow.end}` : ''}` : null
+  ].filter(Boolean);
+
+  if (!signals.length) return '';
+
+  return `
+    <div class="forecast-signals">
+      ${signals.map(signal => `<span class="signal">${escapeHtml(signal)}</span>`).join('')}
+    </div>
+  `;
+}
+
+function renderLocalInsight(text) {
+  if (!text) return '';
+  return `<div class="forecast-local">${escapeHtml(text)}</div>`;
+}
+
+function renderExpandedDetails(day) {
+  if (day.source === 'manual') {
+    return renderManualTimeline(day.timeline);
   }
 
   return `
-    <div class="row-bottom">
-      ${t.base ? `<div class="takeaway">${t.base}</div>` : ""}
-      <div class="override-note ${t.extra.type}">
-        ${t.extra.text}
-      </div>
+    <div class="hourly-strip">
+      ${day.hours
+        .filter(hour => hour.localHour >= 7 && hour.localHour < 19)
+        .map(renderHour)
+        .join('')}
     </div>
   `;
 }
 
-// ============================================================
-// HOURLY
-// ============================================================
+function renderManualTimeline(timeline = {}) {
+  const blocks = [
+    ['Morning', timeline.morning],
+    ['Midday', timeline.midday],
+    ['Afternoon', timeline.afternoon],
+    ['Evening', timeline.evening]
+  ];
 
-function renderHour(h) {
-  const level = getPrecipLevel(h);
+  return `
+    <div class="hourly-strip">
+      ${blocks.map(([label, text]) => `
+        <div class="hour">
+          <div class="hour-time">${escapeHtml(label)}</div>
+          <div class="hour-temp">${escapeHtml(text || '—')}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderHour(hour) {
+  const level = getPrecipLevel(hour);
 
   return `
     <div class="hour">
-      <div class="hour-time">${formatHour(h.localHour)}</div>
-      <div class="hour-temp">${Math.round(h.temperatureF)}°</div>
+      <div class="hour-time">${formatHour(hour.localHour)}</div>
+      <div class="hour-temp">${Math.round(hour.temperatureF)}°</div>
       <div class="precip-bar">
         <div class="precip-fill level-${level}"></div>
       </div>
@@ -434,223 +362,282 @@ function renderHour(h) {
 }
 
 // ============================================================
-// HELPERS
+// WEATHER ANALYSIS
 // ============================================================
 
-function getPrecipLevel(h) {
-  const prob = h.precipProbability ?? 0;
-  const amt = h.precipAmount ?? 0;
+function analyzeRain(hours) {
+  if (!hours.length) return { type: 'none', coverage: 0, peak: 0 };
 
-  if (amt < 0.005 && prob < 0.50) return 0;
+  const buckets = {
+    morning: [],
+    midday: [],
+    afternoon: [],
+    evening: []
+  };
 
-  const hasSignal = amt >= 0.01 || prob >= 0.60;
-  if (!hasSignal) return 0;
+  hours.forEach(hour => {
+    const probability = normalizeProbability(hour.precipProbability);
+    const amount = numberOrNull(hour.precipAmount) || 0;
+    const hasRain = amount > 0.01 || probability >= 45;
 
-  if (amt >= 0.15 || prob >= 0.85) return 5;
-  if (amt >= 0.08 || prob >= 0.70) return 4;
-  if (amt >= 0.04 || prob >= 0.60) return 3;
-  if (amt >= 0.02 || prob >= 0.55) return 2;
+    if (!hasRain) return;
 
-  return 1;
+    if (hour.localHour >= 5 && hour.localHour < 10) buckets.morning.push(probability);
+    else if (hour.localHour < 14) buckets.midday.push(probability);
+    else if (hour.localHour < 18) buckets.afternoon.push(probability);
+    else buckets.evening.push(probability);
+  });
+
+  const counts = Object.entries(buckets).map(([key, values]) => ({
+    key,
+    count: values.length,
+    peak: values.length ? Math.max(...values) : 0
+  }));
+
+  const totalRain = counts.reduce((sum, bucket) => sum + bucket.count, 0);
+  const coverage = totalRain / hours.length;
+
+  if (coverage < 0.2) {
+    return { type: 'none', coverage, peak: 0 };
+  }
+
+  const dominant = counts.sort((a, b) => b.count - a.count)[0];
+
+  return {
+    type: dominant.key,
+    coverage,
+    peak: dominant.peak
+  };
 }
 
-function mapFS(fs) {
-  if (fs >= 90) return "Ideal";
-  if (fs >= 75) return "Excellent";
-  if (fs >= 60) return "Comfortable";
-  if (fs >= 45) return "Unsettled";
-  return "Harsh";
+function buildTimeline(hours) {
+  return {
+    morning: summarizeHours(hours, 6, 11),
+    midday: summarizeHours(hours, 11, 14),
+    afternoon: summarizeHours(hours, 14, 18),
+    evening: summarizeHours(hours, 18, 22)
+  };
+}
+
+function summarizeHours(hours, start, end) {
+  const subset = hours.filter(hour => hour.localHour >= start && hour.localHour < end);
+  if (!subset.length) return '—';
+
+  const avgCloud = average(subset.map(hour => numberOrNull(hour.cloudCover)).filter(Number.isFinite));
+  const rainHits = subset.filter(hour => {
+    const probability = normalizeProbability(hour.precipProbability);
+    const amount = numberOrNull(hour.precipAmount) || 0;
+    return amount > 0.01 || probability >= 45;
+  }).length;
+  const rainRatio = rainHits / subset.length;
+
+  if (rainRatio > 0.4) return 'showers likely';
+  if (rainRatio > 0.15) return 'spotty showers';
+  if (avgCloud > 70 || (avgCloud > 0.7 && avgCloud <= 1)) return 'mostly cloudy';
+  if (avgCloud > 40 || (avgCloud > 0.4 && avgCloud <= 1)) return 'partly cloudy';
+  return 'mostly sunny';
+}
+
+function computeComfortScore(hours) {
+  if (!hours.length) return 50;
+
+  const scores = hours
+    .map(hour => calculateComfort(hour)?.score)
+    .filter(Number.isFinite)
+    .map(score => score * 10);
+
+  if (!scores.length) return 50;
+  return Math.round(average(scores));
+}
+
+function summarizeWind(hours) {
+  if (!hours.length) return null;
+
+  const anchor =
+    hours.find(hour => hour.localHour >= 11 && hour.localHour <= 15) ||
+    hours[Math.floor(hours.length / 2)];
+
+  if (!anchor) return null;
+
+  return {
+    direction: directionFromDegrees(anchor.windDirection ?? anchor.windDir),
+    speed: numberOrNull(anchor.windSpeed),
+    gust: numberOrNull(anchor.windGust)
+  };
+}
+
+// ============================================================
+// COPY / FORMAT HELPERS
+// ============================================================
+
+function fallbackHeadline(rain, hours) {
+  if (rain.coverage > 0.55) return 'Wet periods likely';
+  if (rain.coverage > 0.3) return 'Showers possible at times';
+
+  const cloud = average(hours.map(hour => numberOrNull(hour.cloudCover)).filter(Number.isFinite));
+  if (cloud > 70 || (cloud > 0.7 && cloud <= 1)) return 'Clouds hold through the day';
+  if (cloud > 40 || (cloud > 0.4 && cloud <= 1)) return 'A mix of sun and clouds';
+  return 'Mostly quiet weather';
+}
+
+function fallbackNarrative(rain, timeline) {
+  if (rain.type !== 'none') {
+    return `The automated fallback shows the best rain signal around ${rain.type}. Manual forecast guidance has not been published for this day yet.`;
+  }
+
+  return `Automated fallback guidance: morning ${timeline.morning}, midday ${timeline.midday}, afternoon ${timeline.afternoon}, and evening ${timeline.evening}.`;
+}
+
+function normalizeTimeline(timeline = {}) {
+  return {
+    morning: timeline.morning || null,
+    midday: timeline.midday || null,
+    afternoon: timeline.afternoon || null,
+    evening: timeline.evening || null
+  };
+}
+
+function normalizeManualWind(wind = {}) {
+  if (!wind || typeof wind !== 'object') return null;
+
+  const direction = wind.direction || null;
+  const speed = numberOrNull(wind.speed);
+  const gust = numberOrNull(wind.gust);
+
+  if (!direction && speed == null && gust == null) return null;
+
+  return { direction, speed, gust };
+}
+
+function pickManualIcon(day) {
+  if (day.stormRisk && day.stormRisk !== 'none') return '⛈️';
+  if (day.sky === 'showery') return '🌦️';
+  if (day.sky === 'stormy') return '⛈️';
+  if (day.sky === 'overcast' || day.sky === 'mostly_cloudy') return '☁️';
+  if (day.sky === 'partly_cloudy') return '⛅';
+  return '☀️';
+}
+
+function pickFallbackIcon(hours, rain) {
+  if (rain.coverage > 0.55) return '🌧️';
+  if (rain.coverage > 0.3) return '🌦️';
+
+  const cloud = average(hours.map(hour => numberOrNull(hour.cloudCover)).filter(Number.isFinite));
+
+  if (cloud > 70 || (cloud > 0.7 && cloud <= 1)) return '☁️';
+  if (cloud > 40 || (cloud > 0.4 && cloud <= 1)) return '⛅';
+  return '☀️';
+}
+
+function toneClassFor(day) {
+  if (day.stormRisk && day.stormRisk !== 'none') return 'rain';
+  if (day.sky === 'overcast' || day.sky === 'mostly_cloudy') return 'cloudy';
+  if (day.sky === 'partly_cloudy') return 'partly';
+  if (day.icon.includes('🌧') || day.icon.includes('🌦') || day.icon.includes('⛈')) return 'rain';
+  if (day.icon.includes('☁')) return 'cloudy';
+  if (day.icon.includes('⛅')) return 'partly';
+  return 'sunny';
+}
+
+function mapComfortScore(score) {
+  if (score >= 90) return 'Ideal';
+  if (score >= 75) return 'Excellent';
+  if (score >= 60) return 'Comfortable';
+  if (score >= 45) return 'Unsettled';
+  return 'Harsh';
 }
 
 function formatDay(date, index) {
-  if (index === 0) return "TOMORROW";
-  return date.toLocaleDateString([], { weekday: "long" }).toUpperCase();
+  if (index === 0) return 'TOMORROW';
+  return date.toLocaleDateString([], { weekday: 'long' }).toUpperCase();
 }
 
-function formatHour(h) {
-  if (h === 0) return "12a";
-  if (h < 12) return `${h}a`;
-  if (h === 12) return "12p";
-  return `${h - 12}p`;
+function formatHour(hour) {
+  if (hour === 0) return '12a';
+  if (hour < 12) return `${hour}a`;
+  if (hour === 12) return '12p';
+  return `${hour - 12}p`;
 }
 
-function classifyCategory(intel) {
-  const s = intel?.score ?? 50;
-
-  if (s >= 90) return "veryComfortable";
-  if (s >= 75) return "comfortable";
-  if (s >= 60) return "slightlyUncomfortable";
-  if (s >= 45) return "uncomfortable";
-  return "harsh";
+function formatTemp(value) {
+  if (value === '--' || value == null) return '--';
+  return `${Math.round(Number(value))}°`;
 }
 
-function renderSummary(days) {
-  if (!days.length) return "";
+function formatWind(wind) {
+  if (!wind) return '';
 
-  const best = days.reduce((a, b) => b.fs > a.fs ? b : a);
+  const speed = wind.speed != null ? `${Math.round(wind.speed)} mph` : '';
+  const gust = wind.gust != null ? ` gusts ${Math.round(wind.gust)}` : '';
 
-  return `
-    <div class="card forecast-summary">
-      <div class="summary-line">
-        Best: <strong>${formatDay(best.date, best.index)}</strong>
-        <span class="summary-score">${best.fs}</span>
-      </div>
-
-      <div class="summary-meta">
-        ${best.fs >= 80
-          ? "Great outdoor conditions expected"
-          : best.fs >= 65
-          ? "Comfortable overall"
-          : "Some limitations in comfort"}
-      </div>
-    </div>
-  `;
-}
-  // -----------------------------
-  // BUILD HUMAN FORECAST
-  // -----------------------------
-function buildHumanForecast(pattern) {
-  const parts = [];
-
-  // -----------------------------
-  // HEADLINE
-  // -----------------------------
-  let headline = "Quiet and steady conditions";
-
-  if (pattern.dayType === "convective") {
-    headline = "Warm with building clouds and afternoon storm risk";
-  } else if (pattern.dayType === "nw_flow") {
-    headline = "Clouds holding firm with limited breaks";
-  } else if (pattern.skyBehavior?.trend === "clearing") {
-    headline = "Clouds gradually breaking for more sun";
-  }
-
-  // -----------------------------
-  // OPENING (sky + evolution)
-  // -----------------------------
-  if (pattern.skyBehavior?.trend === "increasing clouds") {
-    parts.push("Some early sun gives way to increasing cloud cover through the day.");
-  } else if (pattern.skyBehavior?.trend === "clearing") {
-    parts.push("Cloud cover gradually breaks, allowing more sun as the day goes on.");
-  } else {
-    parts.push("Conditions remain fairly steady through the day.");
-  }
-
-  // -----------------------------
-  // CONVECTION (storms)
-  // -----------------------------
-  if (pattern.convection?.present) {
-    const timing =
-      pattern.convection.triggerTime <= 14
-        ? "early to mid afternoon"
-        : "mid to late afternoon";
-
-    const coverage = pattern.convection.coverage;
-
-    parts.push(
-      `By ${timing}, ${coverage} showers and storms develop.`
-    );
-
-    if (pattern.convection.intensity === "strong") {
-      parts.push("A few storms could be on the stronger side.");
-    }
-  }
-
-  // -----------------------------
-  // TENSION (this makes it human)
-  // -----------------------------
-  if (pattern.tension?.includes("sun vs clouds")) {
-    parts.push("There’s a bit of a battle between sun and clouds, especially midday.");
-  }
-
-  if (pattern.tension?.includes("instability vs limited moisture")) {
-    parts.push("Storm development may be uneven, with some areas staying dry.");
-  }
-
-  if (pattern.tension?.includes("clearing vs upslope clouds")) {
-    parts.push("Low clouds may be stubborn, especially along the higher terrain.");
-  }
-
-  // -----------------------------
-  // LOCAL INSIGHT (Asheville edge)
-  // -----------------------------
-  let localInsight = null;
-
-  if (pattern.localEffects?.terrainInfluence === "upslope clouds") {
-    localInsight = "Northwest flow may keep clouds locked in along the ridges.";
-} else if (pattern.localEffects?.valleyFog) {
-  localInsight = "Patchy valley fog is possible early in the day.";
+  return [wind.direction, speed].filter(Boolean).join(' ') + gust;
 }
 
-  // -----------------------------
-  // CONFIDENCE NOTE
-  // -----------------------------
-  let confidenceNote = null;
+function getPrecipLevel(hour) {
+  const probability = normalizeProbability(hour.precipProbability);
+  const amount = numberOrNull(hour.precipAmount) || 0;
 
-  if (pattern.confidence?.overall < 0.6) {
-    confidenceNote = "There’s some uncertainty in how this plays out.";
-  } else if (pattern.convection?.present) {
-    confidenceNote = "Storm coverage will vary from place to place.";
-  }
-
-  // -----------------------------
-  // FINAL NARRATIVE
-  // -----------------------------
-  const narrative = parts.join(" ");
-
-  return {
-    headline,
-    narrative,
-    keyMoments: [],
-    confidenceNote,
-    localInsight
-  };
-}
-// ============================================================
-// Timeline Builder
-// ============================================================
-function buildTimeline(hourly) {
-  const buckets = {
-    morning: hourly.filter(h => h.localHour >= 6 && h.localHour < 11),
-    midday: hourly.filter(h => h.localHour >= 11 && h.localHour < 14),
-    afternoon: hourly.filter(h => h.localHour >= 14 && h.localHour < 18),
-    evening: hourly.filter(h => h.localHour >= 18 && h.localHour < 22),
-    overnight: hourly.filter(h => h.localHour < 6 || h.localHour >= 22)
-  };
-
-  function summarize(hours) {
-    if (!hours.length) return "—";
-
-    const avgCloud =
-      hours.reduce((s, h) => s + (h.cloudCover || 0), 0) / hours.length;
-
-    const rainHits = hours.filter(h =>
-      (h.precipAmount ?? 0) > 0.01 || (h.precipProbability ?? 0) >= 0.45
-    ).length;
-
-    const rainRatio = rainHits / hours.length;
-
-    if (rainRatio > 0.4) return "showers likely";
-    if (rainRatio > 0.15) return "spotty showers";
-
-    if (avgCloud > 0.7) return "mostly cloudy";
-    if (avgCloud > 0.4) return "partly cloudy";
-
-    return "mostly sunny";
-  }
-
-  return {
-    morning: summarize(buckets.morning),
-    midday: summarize(buckets.midday),
-    afternoon: summarize(buckets.afternoon),
-    evening: summarize(buckets.evening),
-    overnight: summarize(buckets.overnight)
-  };
+  if (amount < 0.005 && probability < 50) return 0;
+  if (amount >= 0.15 || probability >= 85) return 5;
+  if (amount >= 0.08 || probability >= 70) return 4;
+  if (amount >= 0.04 || probability >= 60) return 3;
+  if (amount >= 0.02 || probability >= 55) return 2;
+  return 1;
 }
 
-// ============================================================
-// UX
-// ============================================================
+function directionFromDegrees(degrees) {
+  const value = numberOrNull(degrees);
+  if (value == null) return null;
+
+  const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  const index = Math.round(value / 45) % 8;
+  return directions[index];
+}
+
+function normalizeProbability(value) {
+  const n = numberOrNull(value);
+  if (n == null) return 0;
+  return n <= 1 ? n * 100 : n;
+}
+
+function numberOrNull(value) {
+  if (value === '' || value == null) return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function average(values) {
+  if (!values.length) return 0;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function toDateKey(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function hasText(value) {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+function hasTimeline(timeline) {
+  return Boolean(timeline && Object.values(timeline).some(hasText));
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
 
 function bindExpand() {
   const cards = document.querySelectorAll('.forecast-row');
@@ -658,7 +645,7 @@ function bindExpand() {
   cards.forEach(card => {
     card.addEventListener('click', () => {
       const isOpen = card.classList.contains('open');
-      cards.forEach(c => c.classList.remove('open'));
+      cards.forEach(other => other.classList.remove('open'));
       if (!isOpen) card.classList.add('open');
     });
   });
