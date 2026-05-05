@@ -673,7 +673,6 @@ pre {
 
 <script type="module">
 const FIELD_IDS = [
-  "date",
   "confidence",
   "headline",
   "narrative",
@@ -715,7 +714,10 @@ async function init() {
   initDayStrip();
   bindEvents();
 
-  const firstDate = Object.keys(state.days)[0] || getDateOffset(1);
+  const forecastDates = getForecastDates();
+  const firstDate = forecastDates.includes(state.activeDate)
+    ? state.activeDate
+    : forecastDates[0];
   selectDate(firstDate);
 }
 
@@ -732,8 +734,7 @@ function initDayStrip() {
   const strip = el("dayStrip");
   strip.innerHTML = "";
 
-  for (let offset = 1; offset <= DAY_COUNT; offset += 1) {
-    const dateStr = getDateOffset(offset);
+  getForecastDates().forEach((dateStr, index) => {
     ensureDay(dateStr);
 
     const button = document.createElement("button");
@@ -741,12 +742,12 @@ function initDayStrip() {
     button.className = "day-pill";
     button.dataset.date = dateStr;
     button.innerHTML = `
-      <strong>${offset === 1 ? "Tomorrow" : formatWeekday(dateStr)}</strong>
+      <strong>${index === 0 ? "Tomorrow" : formatWeekday(dateStr)}</strong>
       <span>${formatShortDate(dateStr)}</span>
     `;
     button.addEventListener("click", () => selectDate(dateStr));
     strip.appendChild(button);
-  }
+  });
 }
 
 function bindEvents() {
@@ -765,7 +766,6 @@ function bindEvents() {
   el("date").addEventListener("change", () => {
     const dateStr = el("date").value;
     if (!dateStr) return;
-    saveFormToActiveDay();
     ensureDay(dateStr);
     selectDate(dateStr);
     initDayStrip();
@@ -780,10 +780,12 @@ function bindEvents() {
 }
 
 function selectDate(dateStr) {
+  if (!dateStr) return;
   if (state.activeDate) saveFormToActiveDay();
 
   state.activeDate = dateStr;
   ensureDay(dateStr);
+  state.days[dateStr].date = dateStr;
   loadDayIntoForm(state.days[dateStr]);
 
   document.querySelectorAll(".day-pill").forEach(pill => {
@@ -821,7 +823,10 @@ async function loadSystemGuidance(dateStr) {
 }
 
 function ensureDay(dateStr) {
-  if (state.days[dateStr]) return;
+  if (state.days[dateStr]) {
+    state.days[dateStr].date = dateStr;
+    return;
+  }
 
   state.days[dateStr] = {
     date: dateStr,
@@ -857,9 +862,13 @@ function saveFormToActiveDay() {
     const node = el(id);
     state.days[state.activeDate][id] = node.type === "checkbox" ? node.checked : node.value;
   });
+
+  state.days[state.activeDate].date = state.activeDate;
 }
 
 function loadDayIntoForm(day) {
+  el("date").value = day.date || state.activeDate || "";
+
   FIELD_IDS.forEach(id => {
     const node = el(id);
     if (node.type === "checkbox") {
@@ -949,11 +958,14 @@ function clearActiveDay() {
 }
 
 function readForm() {
-  return FIELD_IDS.reduce((acc, id) => {
+  const values = FIELD_IDS.reduce((acc, id) => {
     const node = el(id);
     acc[id] = node.type === "checkbox" ? node.checked : node.value;
     return acc;
   }, {});
+
+  values.date = state.activeDate || el("date").value || "";
+  return values;
 }
 
 function getActiveDayForecast() {
@@ -963,12 +975,9 @@ function getActiveDayForecast() {
 function buildPublishedForecast() {
   saveFormToActiveDay();
 
-  const sortedDates = Object.keys(state.days)
-    .sort()
-    .slice(0, DAY_COUNT);
-
   const days = {};
-  sortedDates.forEach(dateStr => {
+  getForecastDates().forEach(dateStr => {
+    ensureDay(dateStr);
     days[dateStr] = normalizeDayForPublish(state.days[dateStr]);
   });
 
@@ -1066,6 +1075,8 @@ function loadSavedState() {
   } catch {
     state.days = {};
   }
+
+  getForecastDates().forEach(dateStr => ensureDay(dateStr));
 }
 
 async function copyText(text) {
@@ -1125,6 +1136,10 @@ function getDateOffset(offset) {
   d.setHours(12, 0, 0, 0);
   d.setDate(d.getDate() + offset);
   return toDateInputValue(d);
+}
+
+function getForecastDates() {
+  return Array.from({ length: DAY_COUNT }, (_, index) => getDateOffset(index + 1));
 }
 
 function toDateInputValue(date) {
