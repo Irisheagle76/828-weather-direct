@@ -93,20 +93,21 @@ function getPrecipSignal(intel) {
 
   if (pop >= 0.7 || qpf >= 0.25) return "high";
   if (pop >= 0.4 || qpf >= 0.05) return "moderate";
-  if (pop >= 0.2 || qpf >= 0.01) return "low";
+  if (pop >= 0.25 || qpf >= 0.02) return "low";
   return "none";
 }
 
 function buildPrecipVoice(intel, dayType) {
-  const signal = getPrecipSignal(intel);
-  if (signal === "none") return null;
+  if (dayType !== "tomorrow") return null;
 
-  const isTomorrow = dayType === "tomorrow";
-  const prefix = isTomorrow ? "Tomorrow" : "Today";
+  const signal = getPrecipSignal(intel);
+  if (signal === "none" || signal === "low") return null;
+
+  const prefix = "Tomorrow";
 
   if (signal === "high") {
     return {
-      headline: isTomorrow ? "Rain moves in tomorrow" : "Rain is a major factor",
+      headline: "Rain moves in tomorrow",
       narrative: `${prefix}, rain is likely to be one of the defining parts of the day, even if temperatures still feel mild.`,
       bullets: [
         "Rain likely at times",
@@ -118,7 +119,7 @@ function buildPrecipVoice(intel, dayType) {
 
   if (signal === "moderate") {
     return {
-      headline: isTomorrow ? "Rain chances return" : "Rain chances are around",
+      headline: "Rain chances return",
       narrative: `${prefix}, it is not necessarily a washout, but showers are likely enough to shape how the day feels.`,
       bullets: [
         "Showers possible at times",
@@ -324,14 +325,30 @@ export const assemble = {
 
     console.log("ASSEMBLE OUTPUT:", narrativeObj.narrative);
 
+    const lowPrecipBullets =
+      dayType === "tomorrow" && getPrecipSignal(intel) === "low"
+        ? ["A few passing showers possible"]
+        : [];
+
+    const lowPrecipNarrative =
+      lowPrecipBullets.length && !narrativeObj.precipVoice
+        ? `${narrativeObj.narrative.replace(/\.$/, "")}. A few passing showers are possible.`
+        : narrativeObj.narrative;
+
+    const comfortBullets = buildBullets(intel).filter(b =>
+      !lowPrecipBullets.length || !/plenty of sunshine/i.test(b)
+    );
+
     return {
       emoji: buildEmoji(intel),
       headline: narrativeObj.precipVoice?.headline ?? null,
 
-      narrative: narrativeObj.narrative,
-      longNarrative: narrativeObj.narrative,
+      narrative: lowPrecipNarrative,
+      longNarrative: lowPrecipNarrative,
 
-      bullets: narrativeObj.precipVoice?.bullets ?? buildBullets(intel), // ✅ now correctly external
+      bullets:
+        narrativeObj.precipVoice?.bullets ??
+        [...lowPrecipBullets, ...comfortBullets].slice(0, 3),
 
       category,
       goldilocks: isGoldilocks,

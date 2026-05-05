@@ -51,7 +51,7 @@ function parseLightning(h = {}) {
 
 function computeImpact(h = {}) {
   const lightning = h.lightning;
-  const precip = h.precipitation ?? 0;
+  const precip = h.precipitation ?? h.precipAmount ?? 0;
 
   if (lightning?.detected) {
     const d = lightning.distanceMiles ?? 10;
@@ -106,7 +106,7 @@ function normalizeHours(hours = [], referenceTime = Date.now()) {
           h.temperatureF ?? h.temp ?? null,
         windSpeed: h.windSpeed ?? 0,
         windGust: h.windGust ?? null,
-        precipitation: h.precipitation ?? 0,
+        precipitation: h.precipitation ?? h.precipAmount ?? 0,
 
         lightning,
         thunder,
@@ -320,7 +320,7 @@ export function buildTomorrowNarrative(hours = []) {
         hour,
         score: h.score ?? 0,
         impact: h.impact ?? 0,
-        precipitation: h.precipitation ?? 0,
+        precipitation: h.precipitation ?? h.precipAmount ?? 0,
         isDaytime: hour >= 10 && hour <= 18
       };
     })
