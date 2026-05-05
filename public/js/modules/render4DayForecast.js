@@ -501,12 +501,14 @@ function normalizeManualWind(wind = {}) {
   if (!wind || typeof wind !== 'object') return null;
 
   const direction = wind.direction || null;
-  const speed = numberOrNull(wind.speed);
-  const gust = numberOrNull(wind.gust);
+  const speedMin = numberOrNull(wind.speedMin ?? wind.speed);
+  const speedMax = numberOrNull(wind.speedMax ?? wind.speed);
+  const gustNA = Boolean(wind.gustNA);
+  const gust = gustNA ? null : numberOrNull(wind.gust);
 
-  if (!direction && speed == null && gust == null) return null;
+  if (!direction && speedMin == null && speedMax == null && gust == null && !gustNA) return null;
 
-  return { direction, speed, gust };
+  return { direction, speedMin, speedMax, gust, gustNA };
 }
 
 function pickManualIcon(day) {
@@ -567,10 +569,24 @@ function formatTemp(value) {
 function formatWind(wind) {
   if (!wind) return '';
 
-  const speed = wind.speed != null ? `${Math.round(wind.speed)} mph` : '';
-  const gust = wind.gust != null ? ` gusts ${Math.round(wind.gust)}` : '';
+  const min = numberOrNull(wind.speedMin ?? wind.speed);
+  const max = numberOrNull(wind.speedMax ?? wind.speed);
+  const speed = formatWindRange(min, max);
+  const gust = wind.gustNA ? ' gust N/A' : wind.gust != null ? ` gusts ${Math.round(wind.gust)}` : '';
 
   return [wind.direction, speed].filter(Boolean).join(' ') + gust;
+}
+
+function formatWindRange(min, max) {
+  if (min != null && max != null && min !== max) {
+    return `${Math.round(min)}-${Math.round(max)} mph`;
+  }
+
+  if (min != null || max != null) {
+    return `${Math.round(min ?? max)} mph`;
+  }
+
+  return '';
 }
 
 function getPrecipLevel(hour) {
