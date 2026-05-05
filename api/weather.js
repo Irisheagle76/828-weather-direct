@@ -63,7 +63,8 @@ async function handleForecast(req, res) {
     `&temperature_unit=fahrenheit` +
     `&wind_speed_unit=mph` +
     `&precipitation_unit=inch` +
-    `&timezone=auto`;
+    `&timezone=auto` +
+    `&timeformat=unixtime`;
 
   const response = await fetchWithTimeout(url);
 
@@ -90,7 +91,7 @@ async function handleForecast(req, res) {
       0;
 
     return {
-      timestamp: new Date(t).getTime(),
+      timestamp: normalizeOpenMeteoTimestamp(t),
 
       temperatureF: data.hourly.temperature_2m?.[i] ?? null,
       dewpointF: data.hourly.dew_point_2m?.[i] ?? null,
@@ -125,7 +126,7 @@ async function handleForecast(req, res) {
   // DAILY NORMALIZATION
   // ----------------------------------------------------------
   const daily = (data.daily?.time || []).map((t, i) => ({
-    timestamp: new Date(t).getTime(),
+    timestamp: normalizeOpenMeteoTimestamp(t),
 
     tempMax: data.daily.temperature_2m_max?.[i] ?? null,
     tempMin: data.daily.temperature_2m_min?.[i] ?? null,
@@ -178,6 +179,11 @@ async function handleForecast(req, res) {
 function normalizeProbability(val) {
   if (!Number.isFinite(val)) return 0;
   return val > 1 ? val / 100 : val;
+}
+
+function normalizeOpenMeteoTimestamp(t) {
+  if (Number.isFinite(t)) return t < 1e12 ? t * 1000 : t;
+  return new Date(t).getTime();
 }
 
 // ============================================================

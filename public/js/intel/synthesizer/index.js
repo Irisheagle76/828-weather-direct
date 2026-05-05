@@ -19,9 +19,9 @@ function getPrecipSignal(intel) {
   const pop = intel?.precipProbability ?? 0;
   const qpf = intel?.precipAmount ?? 0;
 
-  if (pop >= 70 || qpf >= 0.25) return "high";
-  if (pop >= 40 || qpf >= 0.05) return "moderate";
-  if (pop >= 20) return "low";
+  if (pop >= 0.7 || qpf >= 0.25) return "high";
+  if (pop >= 0.4 || qpf >= 0.05) return "moderate";
+  if (pop >= 0.2) return "low";
   return "none";
 }
 

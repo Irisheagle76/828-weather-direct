@@ -121,7 +121,7 @@ function adaptHourly(hourly) {
     return hourly.time
       .map((t, i) =>
         normalizeHourObject({
-          timestamp: new Date(t).getTime(),
+          timestamp: normalizeOpenMeteoTimestamp(t),
 
           // Celsius → Fahrenheit
           temperatureF:
@@ -165,6 +165,11 @@ function adaptHourly(hourly) {
   }
 
   return [];
+}
+
+function normalizeOpenMeteoTimestamp(t) {
+  if (Number.isFinite(t)) return t < 1e12 ? t * 1000 : t;
+  return new Date(t).getTime();
 }
 
 // ============================================================

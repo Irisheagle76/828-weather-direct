@@ -65,9 +65,9 @@ function splitDays(hourly, now) {
 // ============================================================
 
 function getPrecipSignal({ precipProbability = 0, precipAmount = 0 }) {
-  if (precipProbability >= 70) return "high";
-  if (precipProbability >= 40) return "moderate";
-  if (precipProbability >= 20) return "low";
+  if (precipProbability >= 0.7) return "high";
+  if (precipProbability >= 0.4) return "moderate";
+  if (precipProbability >= 0.2) return "low";
   if (precipAmount >= 0.10) return "high";
   if (precipAmount >= 0.03) return "moderate";
   return "none";
@@ -80,9 +80,9 @@ function getPrecipType({ precipProbability = 0, precipAmount = 0, hours = [] }) 
   if (maxRate >= 0.10) return "steady_rain";
   if (maxRate >= 0.03) return "light_rain";
 
-  if (precipProbability >= 70 && activeHours >= 6) return "periods_of_rain";
-  if (precipProbability >= 50) return "scattered_showers";
-  if (precipProbability >= 20) return "isolated_showers";
+  if (precipProbability >= 0.7 && activeHours >= 6) return "periods_of_rain";
+  if (precipProbability >= 0.5) return "scattered_showers";
+  if (precipProbability >= 0.2) return "isolated_showers";
 
   return "none";
 }
