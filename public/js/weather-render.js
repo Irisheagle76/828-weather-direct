@@ -302,6 +302,12 @@ function buildFutureSlice(hourly, isDay) {
       temp: h.temperatureF ?? h.temp ?? null,
       dewpointF: h.dewpointF ?? h.dew_point ?? null,
       windSpeed: h.windSpeed ?? h.wind_speed ?? 0,
+      precipAmount: h.precipAmount ?? h.precipitation ?? 0,
+      precipProbability: h.precipProbability ?? h.precipitation_probability ?? 0,
+      precipType: h.precipType ?? null,
+      thunder: h.thunder ?? false,
+      thunderProb: h.thunderProb ?? h.thunderProbability ?? 0,
+      lightning: h.lightning ?? null,
       obsTimeLocal: h.timestamp
     });
 
@@ -330,6 +336,12 @@ function findBestWindow(hourly) {
         temp: h.temperatureF,
         dewpointF: h.dewpointF,
         windSpeed: h.wind_speed,
+        precipAmount: h.precipAmount ?? h.precipitation ?? 0,
+        precipProbability: h.precipProbability ?? h.precipitation_probability ?? 0,
+        precipType: h.precipType ?? null,
+        thunder: h.thunder ?? false,
+        thunderProb: h.thunderProb ?? h.thunderProbability ?? 0,
+        lightning: h.lightning ?? null,
         obsTimeLocal: h.timestamp
       });
 

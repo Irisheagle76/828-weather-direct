@@ -244,8 +244,6 @@ export function renderComfortNow(
 
   if (!comfort) return;
 
-  comfort.score = applyRainImpact(comfort.score ?? 0, adjusted);
-
   const score = Math.round((comfort.score || 0) * 10);
   const scoreClass = getComfortClass(score);
 

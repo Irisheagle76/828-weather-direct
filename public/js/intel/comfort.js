@@ -37,8 +37,24 @@ function computeSolarElevation(timestamp, lat, lon) {
     23.45 * rad *
     Math.sin(rad * ((360 / 365) * (day - 81)));
 
-  const time = date.getHours() + date.getMinutes() / 60;
-  const solarTime = time + (lon / 15);
+  const time =
+    date.getHours() +
+    date.getMinutes() / 60 +
+    date.getSeconds() / 3600;
+
+  const b = rad * ((360 / 365) * (day - 81));
+  const equationOfTime =
+    9.87 * Math.sin(2 * b) -
+    7.53 * Math.cos(b) -
+    1.5 * Math.sin(b);
+
+  const timezoneOffsetHours = -date.getTimezoneOffset() / 60;
+  const standardMeridian = timezoneOffsetHours * 15;
+  const longitudeCorrection = 4 * (lon - standardMeridian);
+
+  const solarTime =
+    time +
+    (equationOfTime + longitudeCorrection) / 60;
 
   const hourAngle = rad * (15 * (solarTime - 12));
   const latRad = lat * rad;
@@ -94,17 +110,105 @@ function computeWindPenalty(wind) {
 function computeSolarBonus(temp, elev) {
   if (elev < 10) return 0;
 
-  if (temp < 70) return 0.18;
-  if (temp < 78) return 0.12;
+  if (temp < 55) return 0.06;
+  if (temp < 65) return 0.05;
+  if (temp < 72) return 0.03;
+  if (temp < 78) return 0.015;
 
-  return 0.05;
+  return 0;
+}
+
+function normalizeProbability(value) {
+  const n = num(value);
+  if (n == null) return 0;
+  return clamp(n > 1 ? n / 100 : n, 0, 1);
+}
+
+function getPrecipAmount(hour = {}) {
+  return num(
+    hour.precipAmount ??
+    hour.precipitation ??
+    hour.precipRate ??
+    hour.precip_rate ??
+    hour.rain
+  ) ?? 0;
+}
+
+function getLightningDistanceMiles(lightning) {
+  if (!lightning?.detected) return null;
+
+  const miles =
+    num(lightning.distanceMiles) ??
+    num(lightning.distance_miles);
+
+  if (miles != null) return miles;
+
+  const km =
+    num(lightning.distanceKm) ??
+    num(lightning.distance_km);
+
+  return km != null ? km * 0.621371 : null;
+}
+
+function computeWeatherDisruptionPenalty(hour = {}) {
+  const amount = getPrecipAmount(hour);
+  const probability = normalizeProbability(
+    hour.precipProbability ??
+    hour.precipitation_probability ??
+    hour.pop
+  );
+
+  let precipPenalty = 0;
+
+  if (amount >= 0.25) precipPenalty = 0.22;
+  else if (amount >= 0.10) precipPenalty = 0.16;
+  else if (amount >= 0.03) precipPenalty = 0.10;
+  else if (amount >= 0.005) precipPenalty = 0.05;
+
+  const probabilityPenalty =
+    amount > 0
+      ? 0
+      : probability >= 0.7
+        ? 0.10
+        : probability >= 0.5
+          ? 0.07
+          : probability >= 0.3
+            ? 0.04
+            : 0;
+
+  const lightningDistance = getLightningDistanceMiles(hour.lightning);
+  const lightningCount =
+    num(hour.lightning_strike_count) ??
+    num(hour.lightningStrikeCount) ??
+    0;
+
+  let thunderPenalty = 0;
+
+  if (lightningDistance != null) {
+    if (lightningDistance <= 3) thunderPenalty = 0.35;
+    else if (lightningDistance <= 6) thunderPenalty = 0.28;
+    else if (lightningDistance <= 10) thunderPenalty = 0.22;
+    else thunderPenalty = 0.16;
+  } else if (lightningCount > 0) {
+    thunderPenalty = 0.22;
+  } else if (hour.thunder) {
+    thunderPenalty = 0.18;
+  } else if (normalizeProbability(hour.thunderProb ?? hour.thunderProbability) >= 0.3) {
+    thunderPenalty = 0.12;
+  }
+
+  return clamp(
+    Math.max(precipPenalty, probabilityPenalty) + thunderPenalty,
+    0,
+    0.45
+  );
 }
 
 // ============================================================
 // SCORE
 // ============================================================
 
-function computeComfortScore(temp, dew, wind, elev) {
+function computeComfortScore(temp, dew, wind, elev, weatherPenalty = 0) {
   if (temp == null) return null;
 
   const t = computeTemperaturePenalty(temp);
@@ -116,7 +220,8 @@ function computeComfortScore(temp, dew, wind, elev) {
     (t * 0.55) +
     (d * 0.45) +
     w -
-    s;
+    s +
+    weatherPenalty;
 
   let score = 100 - raw * 100;
   score = Math.round(clamp(score, 30, 98));
@@ -157,10 +262,6 @@ export function getComfortColor(score) {
 function computeComfort(hour) {
   const temp = num(hour.temperatureF ?? hour.temp);
 
-  const humidity =
-    num(hour.relative_humidity) ??
-    num(hour.humidity);
-
   const dew =
     num(hour.dewpointF ?? hour.dewPoint);
 
@@ -171,36 +272,20 @@ function computeComfort(hour) {
     hour.ts ?? hour.timestamp ?? hour.obsTimeLocal
   );
 
-  // Dew fallback
-  const estimateDewPoint = (tempF, rh) => {
-    if (tempF == null || rh == null) return null;
-
-    const T = (tempF - 32) * 5 / 9;
-    const a = 17.625;
-    const b = 243.04;
-
-    const alpha =
-      Math.log(rh / 100) +
-      (a * T) / (b + T);
-
-    const dewC = (b * alpha) / (a - alpha);
-    return (dewC * 9 / 5) + 32;
-  };
-
-  const finalDew =
-    dew ?? estimateDewPoint(temp, humidity);
-
   const elev = computeSolarElevation(
     timestamp,
     LOCATION.lat,
     LOCATION.lon
   );
 
+  const weatherPenalty = computeWeatherDisruptionPenalty(hour);
+
   const score = computeComfortScore(
     temp,
-    finalDew,
+    dew,
     wind,
-    elev
+    elev,
+    weatherPenalty
   );
 
   return {
@@ -210,8 +295,9 @@ function computeComfort(hour) {
     color: getComfortColor(score),
 
     temp,
-    dewpoint: finalDew,
-    windSpeed: wind
+    dewpoint: dew,
+    windSpeed: wind,
+    weatherPenalty
   };
 }
 
@@ -265,11 +351,12 @@ export function calculateComfort(hour) {
 
     temp: result.temp,
     dewPoint: result.dewpoint,
+    weatherPenalty: result.weatherPenalty,
 
     flags: {
       veryHot: result.temp >= 88,
-      veryHumid: result.dewpoint >= 67,
-      crisp: result.dewpoint < 55,
+      veryHumid: Number.isFinite(result.dewpoint) && result.dewpoint >= 67,
+      crisp: Number.isFinite(result.dewpoint) && result.dewpoint < 55,
       windy: result.windSpeed >= 12
     },
 
