@@ -39,8 +39,7 @@ export async function render4DayForecast(container) {
   const lead = days[0];
 
   container.innerHTML = `
-    ${renderLead(lead)}
-    ${renderSummary(days)}
+    ${renderLeadClean(lead)}
     ${days.map(renderDay).join('')}
   `;
 
@@ -180,7 +179,7 @@ function buildFallbackDay(day, index) {
     low,
     icon: pickFallbackIcon(hours, rain),
     headline: fallbackHeadline(rain, hours),
-    takeaway: fallbackNarrative(rain, timeline),
+    takeaway: fallbackNarrativePublic(rain, timeline),
     timeline,
     tags: [],
     localInsight: null,
@@ -210,11 +209,18 @@ function renderLead(day) {
   if (!day) return '';
 
   const timeline = day.timeline || {};
+  const blocks = [
+    ['Morning', timeline.morning],
+    ['Midday', timeline.midday],
+    ['Afternoon', timeline.afternoon],
+    ['Evening', timeline.evening]
+  ];
 
   return `
-    <div class="forecast-headline">
+    <section class="forecast-lead">
+      <div class="forecast-headline">
       ${escapeHtml(day.headline || '4-Day Forecast')}
-    </div>
+      </div>
 
     <div class="forecast-timeline">
       <strong>Morning:</strong> ${escapeHtml(timeline.morning || '—')} |
@@ -226,23 +232,35 @@ function renderLead(day) {
 }
 
 function renderSummary(days) {
-  if (!days.length) return '';
+  return '';
+}
 
-  const manualCount = days.filter(day => day.source === 'manual').length;
-  const best = days.reduce((a, b) => Number(b.score) > Number(a.score) ? b : a);
+function renderLeadClean(day) {
+  if (!day) return '';
+
+  const timeline = day.timeline || {};
+  const blocks = [
+    ['Morning', timeline.morning],
+    ['Midday', timeline.midday],
+    ['Afternoon', timeline.afternoon],
+    ['Evening', timeline.evening]
+  ];
 
   return `
-    <div class="card forecast-summary">
-      <div class="summary-line">
-        ${manualCount
-          ? `Manual forecast active for <strong>${manualCount}</strong> of 4 days`
-          : 'Automated fallback forecast active'}
+    <section class="forecast-lead">
+      <div class="forecast-headline">
+        ${escapeHtml(day.headline || '4-Day Forecast')}
       </div>
-      <div class="summary-meta">
-        Best signal: <strong>${escapeHtml(formatDay(best.date, best.index))}</strong>
-        <span class="summary-score">${escapeHtml(String(best.score))}</span>
+
+      <div class="forecast-timeline" aria-label="Forecast timeline">
+        ${blocks.map(([label, text]) => `
+          <div class="forecast-timeline-block">
+            <span>${escapeHtml(label)}</span>
+            <strong>${escapeHtml(text || '-')}</strong>
+          </div>
+        `).join('')}
       </div>
-    </div>
+    </section>
   `;
 }
 
@@ -293,23 +311,32 @@ function renderTakeaway(text) {
 
 function renderSignals(day) {
   const signals = [
-    ...(day.tags || []),
-    day.wind ? `Wind ${formatWind(day.wind)}` : null,
-    day.rainWindow?.start ? `Rain window: ${day.rainWindow.start}${day.rainWindow.end ? ` to ${day.rainWindow.end}` : ''}` : null
+    ...(day.tags || []).map(tag => ({ label: tag, type: 'tag' })),
+    day.wind ? { label: `Wind ${formatWind(day.wind)}`, type: 'wind' } : null,
+    day.rainWindow?.start
+      ? {
+          label: `Rain window: ${day.rainWindow.start}${day.rainWindow.end ? ` to ${day.rainWindow.end}` : ''}`,
+          type: 'rain'
+        }
+      : null
   ].filter(Boolean);
 
   if (!signals.length) return '';
 
   return `
     <div class="forecast-signals">
-      ${signals.map(signal => `<span class="signal">${escapeHtml(signal)}</span>`).join('')}
+      ${signals.map(signal => `
+        <span class="forecast-signal forecast-signal-${signal.type}">
+          ${escapeHtml(signal.label)}
+        </span>
+      `).join('')}
     </div>
   `;
 }
 
 function renderLocalInsight(text) {
   if (!text) return '';
-  return `<div class="forecast-local">${escapeHtml(text)}</div>`;
+  return `<div class="forecast-local"><span>Local note</span>${escapeHtml(text)}</div>`;
 }
 
 function renderExpandedDetails(day) {
@@ -480,12 +507,12 @@ function fallbackHeadline(rain, hours) {
   return 'Mostly quiet weather';
 }
 
-function fallbackNarrative(rain, timeline) {
+function fallbackNarrativePublic(rain, timeline) {
   if (rain.type !== 'none') {
-    return `The automated fallback shows the best rain signal around ${rain.type}. Manual forecast guidance has not been published for this day yet.`;
+    return `Showers are most favored around ${rain.type}, with timing still subject to refinement.`;
   }
 
-  return `Automated fallback guidance: morning ${timeline.morning}, midday ${timeline.midday}, afternoon ${timeline.afternoon}, and evening ${timeline.evening}.`;
+  return `A quieter setup is favored, with ${timeline.morning} conditions early and ${timeline.afternoon} conditions later in the day.`;
 }
 
 function normalizeTimeline(timeline = {}) {
