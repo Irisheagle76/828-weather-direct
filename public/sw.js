@@ -1,7 +1,7 @@
 // ------------------------------------------------------------
 // SERVICE WORKER VERSION (bump this to force iOS to reload SW)
 // ------------------------------------------------------------
-const SW_VERSION = "v1.0.1";
+const SW_VERSION = "v1.0.2-rainfix";
 console.log("SW VERSION:", SW_VERSION);
 
 // ------------------------------------------------------------

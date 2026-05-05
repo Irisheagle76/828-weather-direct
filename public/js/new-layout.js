@@ -2,13 +2,15 @@
 // AVL WEATHER — V3 LAYOUT (STABLE + UNIFIED)
 // ============================================================
 
-import { getWeatherForUI } from '/js/adapters/weather-adapter.js';
+import { getWeatherForUI } from '/js/adapters/weather-adapter.js?v=20260505-rainfix';
 import { calculateComfort } from '/js/intel/comfort.js';
-import { generateNarrative } from '/js/intel/synthesizer/index.js';
-import { buildHumanActionIntelFS } from '/js/intel/human-action-feelscore.js';
+import { generateNarrative } from '/js/intel/synthesizer/index.js?v=20260505-rainfix';
+import { buildHumanActionIntelFS } from '/js/intel/human-action-feelscore.js?v=20260505-rainfix';
 
 import { renderPulseV2 } from '/js/modules/renderPulseV2.js';
 import { renderSubstackV2 } from '/js/modules/renderSubstackV2.js';
+
+console.log("828 Weather layout version: 20260505-rainfix");
 
 // ============================================================
 // FETCH HELPERS
