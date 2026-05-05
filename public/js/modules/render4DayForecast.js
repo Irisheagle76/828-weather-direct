@@ -151,8 +151,6 @@ function buildManualDay(day, index, manual) {
     tags,
     localInsight: manual.localInsight || null,
     confidence,
-    score: confidence != null ? Math.round(confidence * 100) : fallback.score,
-    scoreLabel: confidence != null ? 'Confidence' : fallback.scoreLabel,
     showScore: false,
     wind: normalizeManualWind(manual.wind),
     rainWindow: manual.rainWindow || null,
@@ -186,9 +184,7 @@ function buildFallbackDay(day, index) {
     tags: [],
     localInsight: null,
     confidence: null,
-    score,
-    scoreLabel: mapComfortScore(score),
-    showScore: true,
+    showScore: false,
     wind: summarizeWind(hours),
     rainWindow: null,
     sky: null,
@@ -274,7 +270,6 @@ function renderDay(day) {
     <div class="card forecast-row expandable ${toneClass}">
       <div class="row-top">
         <div class="day">${escapeHtml(formatDay(day.date, day.index))}</div>
-        <div class="icon">${day.icon}</div>
       </div>
 
       <div class="row-main">
@@ -308,26 +303,11 @@ function renderTakeaway(text) {
 }
 
 function renderDaySignal(day) {
-  if (!day.showScore) {
-    return `<div class="forecast-card-icon">${day.icon}</div>`;
-  }
-
-  return `
-    <div class="feelscore">
-      <div class="fs-value">${escapeHtml(String(day.score))}</div>
-      <div class="fs-label">${escapeHtml(day.scoreLabel)}</div>
-    </div>
-  `;
+  return `<div class="forecast-card-icon">${day.icon}</div>`;
 }
 
 function renderScoreBar(day) {
-  if (!day.showScore) return '';
-
-  return `
-    <div class="fs-bar">
-      <div class="fs-fill" style="width:${clamp(Number(day.score) || 0, 0, 100)}%"></div>
-    </div>
-  `;
+  return '';
 }
 
 function renderSignals(day) {
