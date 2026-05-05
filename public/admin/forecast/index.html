@@ -485,6 +485,7 @@ pre {
             <option>SW</option>
             <option>W</option>
             <option>NW</option>
+            <option value="variable">Variable</option>
           </select>
         </div>
         <div class="field">
@@ -498,6 +499,13 @@ pre {
       </div>
 
       <div class="field-grid">
+        <div class="field">
+          <label for="windCalm">Speed</label>
+          <label style="display:flex;align-items:center;gap:8px;padding:10px;border-radius:10px;background:rgba(10,18,34,0.92);border:1px solid rgba(255,255,255,0.06);">
+            <input id="windCalm" type="checkbox" style="width:auto;margin:0;" />
+            <span>Calm</span>
+          </label>
+        </div>
         <div class="field">
           <label for="windGust">Gust</label>
           <input id="windGust" type="number" placeholder="18" />
@@ -536,6 +544,21 @@ pre {
             <option value="building">Building clouds</option>
             <option value="clearing">Clearing trend</option>
             <option value="mixed">Back and forth</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-grid">
+        <div class="field">
+          <label for="humidity">Humidity</label>
+          <select id="humidity">
+            <option value="">Select</option>
+            <option value="dry">Dry</option>
+            <option value="comfortable">Comfortable</option>
+            <option value="moderate">Moderate</option>
+            <option value="humid">Humid</option>
+            <option value="very_humid">Very humid</option>
+            <option value="tropical">Tropical</option>
           </select>
         </div>
       </div>
@@ -681,10 +704,12 @@ const FIELD_IDS = [
   "windDir",
   "windSpeedMin",
   "windSpeedMax",
+  "windCalm",
   "windGust",
   "windGustNA",
   "sky",
   "evolution",
+  "humidity",
   "stormRisk",
   "rainStart",
   "rainEnd",
@@ -755,7 +780,7 @@ function bindEvents() {
     const node = el(id);
     const eventName = node.tagName === "SELECT" || node.type === "checkbox" ? "change" : "input";
     node.addEventListener(eventName, () => {
-      if (id === "windGustNA") syncGustState();
+      if (id === "windGustNA" || id === "windCalm") syncWindState();
       saveFormToActiveDay();
       updatePreview();
       updateJson();
@@ -838,10 +863,12 @@ function ensureDay(dateStr) {
     windDir: "",
     windSpeedMin: "",
     windSpeedMax: "",
+    windCalm: false,
     windGust: "",
     windGustNA: false,
     sky: "",
     evolution: "",
+    humidity: "",
     stormRisk: "none",
     rainStart: "",
     rainEnd: "",
@@ -877,7 +904,7 @@ function loadDayIntoForm(day) {
       node.value = day[id] ?? "";
     }
   });
-  syncGustState();
+  syncWindState();
 }
 
 function generateDraft() {
@@ -937,10 +964,12 @@ function clearActiveDay() {
     windDir: "",
     windSpeedMin: "",
     windSpeedMax: "",
+    windCalm: false,
     windGust: "",
     windGustNA: false,
     sky: "",
     evolution: "",
+    humidity: "",
     stormRisk: "none",
     rainStart: "",
     rainEnd: "",
@@ -1006,11 +1035,13 @@ function normalizeDayForPublish(day) {
       direction: emptyToNull(day.windDir),
       speedMin: toNumberOrNull(day.windSpeedMin),
       speedMax: toNumberOrNull(day.windSpeedMax),
+      calm: Boolean(day.windCalm),
       gust: day.windGustNA ? null : toNumberOrNull(day.windGust),
       gustNA: Boolean(day.windGustNA)
     },
     sky: emptyToNull(day.sky),
     evolution: emptyToNull(day.evolution),
+    humidity: emptyToNull(day.humidity),
     stormRisk: day.stormRisk || "none",
     rainWindow: {
       start: emptyToNull(day.rainStart),
@@ -1051,8 +1082,19 @@ function updatePreview() {
     : `<span class="signal">manual forecast</span>`;
 }
 
-function syncGustState() {
+function syncWindState() {
+  const isCalm = el("windCalm").checked;
   const isNA = el("windGustNA").checked;
+
+  el("windSpeedMin").disabled = isCalm;
+  el("windSpeedMax").disabled = isCalm;
+
+  if (isCalm) {
+    el("windSpeedMin").value = "";
+    el("windSpeedMax").value = "";
+    el("windGustNA").checked = true;
+  }
+
   el("windGust").disabled = isNA;
   if (isNA) el("windGust").value = "";
 }
@@ -1174,9 +1216,10 @@ function formatPreviewDay(dateStr) {
 }
 
 function formatWind(day) {
+  if (day.windCalm) return "Wind: calm";
   if (!day.windSpeedMin && !day.windSpeedMax && !day.windDir) return "Wind: --";
 
-  const dir = day.windDir || "";
+  const dir = day.windDir === "variable" ? "Variable" : day.windDir || "";
   const speed = formatWindRange(day.windSpeedMin, day.windSpeedMax);
   const gust = day.windGustNA ? ", gust N/A" : day.windGust ? `, gusts ${day.windGust}` : "";
   return `Wind: ${[dir, speed].filter(Boolean).join(" ")}${gust}`;

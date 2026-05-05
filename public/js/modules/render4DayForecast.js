@@ -153,9 +153,11 @@ function buildManualDay(day, index, manual) {
     confidence,
     score: confidence != null ? Math.round(confidence * 100) : fallback.score,
     scoreLabel: confidence != null ? 'Confidence' : fallback.scoreLabel,
+    showScore: false,
     wind: normalizeManualWind(manual.wind),
     rainWindow: manual.rainWindow || null,
     sky: manual.sky || null,
+    humidity: manual.humidity || null,
     stormRisk: manual.stormRisk || 'none'
   };
 }
@@ -186,6 +188,7 @@ function buildFallbackDay(day, index) {
     confidence: null,
     score,
     scoreLabel: mapComfortScore(score),
+    showScore: true,
     wind: summarizeWind(hours),
     rainWindow: null,
     sky: null,
@@ -280,15 +283,10 @@ function renderDay(day) {
           <span class="low">${escapeHtml(formatTemp(day.low))}</span>
         </div>
 
-        <div class="feelscore">
-          <div class="fs-value">${escapeHtml(String(day.score))}</div>
-          <div class="fs-label">${escapeHtml(day.scoreLabel)}</div>
-        </div>
+        ${renderDaySignal(day)}
       </div>
 
-      <div class="fs-bar">
-        <div class="fs-fill" style="width:${clamp(Number(day.score) || 0, 0, 100)}%"></div>
-      </div>
+      ${renderScoreBar(day)}
 
       <div class="row-bottom">
         <div class="day-headline">${escapeHtml(day.headline || '')}</div>
@@ -309,9 +307,33 @@ function renderTakeaway(text) {
   return `<div class="takeaway">${escapeHtml(text)}</div>`;
 }
 
+function renderDaySignal(day) {
+  if (!day.showScore) {
+    return `<div class="forecast-card-icon">${day.icon}</div>`;
+  }
+
+  return `
+    <div class="feelscore">
+      <div class="fs-value">${escapeHtml(String(day.score))}</div>
+      <div class="fs-label">${escapeHtml(day.scoreLabel)}</div>
+    </div>
+  `;
+}
+
+function renderScoreBar(day) {
+  if (!day.showScore) return '';
+
+  return `
+    <div class="fs-bar">
+      <div class="fs-fill" style="width:${clamp(Number(day.score) || 0, 0, 100)}%"></div>
+    </div>
+  `;
+}
+
 function renderSignals(day) {
   const signals = [
     ...(day.tags || []).map(tag => ({ label: tag, type: 'tag' })),
+    day.humidity ? { label: `Humidity: ${formatCategory(day.humidity)}`, type: 'humidity' } : null,
     day.wind ? { label: `Wind ${formatWind(day.wind)}`, type: 'wind' } : null,
     day.rainWindow?.start
       ? {
@@ -528,14 +550,17 @@ function normalizeManualWind(wind = {}) {
   if (!wind || typeof wind !== 'object') return null;
 
   const direction = wind.direction || null;
+  const calm = Boolean(wind.calm);
   const speedMin = numberOrNull(wind.speedMin ?? wind.speed);
   const speedMax = numberOrNull(wind.speedMax ?? wind.speed);
   const gustNA = Boolean(wind.gustNA);
   const gust = gustNA ? null : numberOrNull(wind.gust);
 
+  if (calm) return { direction, calm: true, speedMin: null, speedMax: null, gust: null, gustNA: true };
+
   if (!direction && speedMin == null && speedMax == null && gust == null && !gustNA) return null;
 
-  return { direction, speedMin, speedMax, gust, gustNA };
+  return { direction, calm, speedMin, speedMax, gust, gustNA };
 }
 
 function pickManualIcon(day) {
@@ -595,13 +620,22 @@ function formatTemp(value) {
 
 function formatWind(wind) {
   if (!wind) return '';
+  if (wind.calm) return 'calm';
 
   const min = numberOrNull(wind.speedMin ?? wind.speed);
   const max = numberOrNull(wind.speedMax ?? wind.speed);
   const speed = formatWindRange(min, max);
   const gust = wind.gustNA ? ' gust N/A' : wind.gust != null ? ` gusts ${Math.round(wind.gust)}` : '';
 
-  return [wind.direction, speed].filter(Boolean).join(' ') + gust;
+  const direction = wind.direction === 'variable' ? 'Variable' : wind.direction;
+  return [direction, speed].filter(Boolean).join(' ') + gust;
+}
+
+function formatCategory(value) {
+  return String(value || '')
+    .split('_')
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
 }
 
 function formatWindRange(min, max) {

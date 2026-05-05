@@ -1935,6 +1935,14 @@ body {
   margin-top: 0;
 }
 
+.forecast-card-icon {
+  min-width: 58px;
+  text-align: right;
+  font-size: 3.2rem;
+  line-height: 1;
+  filter: drop-shadow(0 5px 12px rgba(0,0,0,0.45));
+}
+
 .forecast-signals {
   display: flex;
   flex-wrap: wrap;
@@ -1965,6 +1973,12 @@ body {
   background: rgba(96,165,250,0.13);
   border-color: rgba(96,165,250,0.22);
   color: #dbeafe;
+}
+
+.forecast-signal-humidity {
+  background: rgba(45,212,191,0.11);
+  border-color: rgba(45,212,191,0.2);
+  color: #ccfbf1;
 }
 
 .forecast-local {
