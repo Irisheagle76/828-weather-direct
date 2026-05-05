@@ -69,6 +69,76 @@ function getCloud(intel) {
   );
 }
 
+function getPrecipProbability(intel) {
+  const value =
+    intel?.precipProbability ??
+    intel?.signals?.precipProbability ??
+    0;
+
+  return Number.isFinite(value) ? value : 0;
+}
+
+function getPrecipAmount(intel) {
+  const value =
+    intel?.precipAmount ??
+    intel?.signals?.precipAmount ??
+    0;
+
+  return Number.isFinite(value) ? value : 0;
+}
+
+function getPrecipSignal(intel) {
+  const pop = getPrecipProbability(intel);
+  const qpf = getPrecipAmount(intel);
+
+  if (pop >= 0.7 || qpf >= 0.25) return "high";
+  if (pop >= 0.4 || qpf >= 0.05) return "moderate";
+  if (pop >= 0.2 || qpf >= 0.01) return "low";
+  return "none";
+}
+
+function buildPrecipVoice(intel, dayType) {
+  const signal = getPrecipSignal(intel);
+  if (signal === "none") return null;
+
+  const isTomorrow = dayType === "tomorrow";
+  const prefix = isTomorrow ? "Tomorrow" : "Today";
+
+  if (signal === "high") {
+    return {
+      headline: isTomorrow ? "Rain moves in tomorrow" : "Rain is a major factor",
+      narrative: `${prefix}, rain is likely to be one of the defining parts of the day, even if temperatures still feel mild.`,
+      bullets: [
+        "Rain likely at times",
+        "Outdoor plans may need adjusting",
+        "Comfort score is mild, but rain drives the day"
+      ]
+    };
+  }
+
+  if (signal === "moderate") {
+    return {
+      headline: isTomorrow ? "Rain chances return" : "Rain chances are around",
+      narrative: `${prefix}, it is not necessarily a washout, but showers are likely enough to shape how the day feels.`,
+      bullets: [
+        "Showers possible at times",
+        "Keep rain in the plan",
+        "Mild air, but not a fully dry setup"
+      ]
+    };
+  }
+
+  return {
+    headline: "A few showers possible",
+    narrative: `${prefix}, most of the day may still behave, but a few passing showers are possible.`,
+    bullets: [
+      "A few passing showers possible",
+      "Most hours may still be usable",
+      "Check radar before longer outdoor plans"
+    ]
+  };
+}
+
 // ------------------------------------------------------------
 // PHRASE PICKERS
 // ------------------------------------------------------------
@@ -131,6 +201,15 @@ function buildEmoji(intel) {
 // ------------------------------------------------------------
 function buildNarrative(intel, dayType, category, isGoldilocks) {
   const safeIntel = intel ?? {};
+  const precipVoice = buildPrecipVoice(safeIntel, dayType);
+
+  if (precipVoice) {
+    return {
+      narrative: precipVoice.narrative,
+      temporal: dayType === "tomorrow" ? "Tomorrow," : "Today,",
+      precipVoice
+    };
+  }
 
   const temporalFrame = temporal.choose(dayType, isGoldilocks);
   const base = getCategoryTemplate(category, isGoldilocks);
@@ -247,12 +326,12 @@ export const assemble = {
 
     return {
       emoji: buildEmoji(intel),
-      headline: null,
+      headline: narrativeObj.precipVoice?.headline ?? null,
 
       narrative: narrativeObj.narrative,
       longNarrative: narrativeObj.narrative,
 
-      bullets: buildBullets(intel), // ✅ now correctly external
+      bullets: narrativeObj.precipVoice?.bullets ?? buildBullets(intel), // ✅ now correctly external
 
       category,
       goldilocks: isGoldilocks,

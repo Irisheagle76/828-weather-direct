@@ -1,7 +1,7 @@
 // ------------------------------------------------------------
 // SERVICE WORKER VERSION (bump this to force iOS to reload SW)
 // ------------------------------------------------------------
-const SW_VERSION = "v1.0.2-rainfix";
+const SW_VERSION = "v1.0.3-precipvoice";
 console.log("SW VERSION:", SW_VERSION);
 
 // ------------------------------------------------------------

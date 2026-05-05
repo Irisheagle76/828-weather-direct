@@ -3,7 +3,7 @@
 // ============================================================
 
 import { calculateComfort } from "./comfort.js";
-import { assembleWithVoice } from "./synthesizer/assembleWithVoice.js";
+import { assembleWithVoice } from "./synthesizer/assembleWithVoice.js?v=20260505-precipvoice";
 import { buildFullExplanation } from "../intel/explanations/buildFullExplanation.js";
 
 // ============================================================
