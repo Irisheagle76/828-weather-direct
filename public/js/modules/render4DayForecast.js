@@ -237,27 +237,10 @@ function renderSummary(days) {
 function renderLeadClean(day) {
   if (!day) return '';
 
-  const timeline = day.timeline || {};
-  const blocks = [
-    ['Morning', timeline.morning],
-    ['Midday', timeline.midday],
-    ['Afternoon', timeline.afternoon],
-    ['Evening', timeline.evening]
-  ];
-
   return `
     <section class="forecast-lead">
       <div class="forecast-headline">
         ${escapeHtml(day.headline || '4-Day Forecast')}
-      </div>
-
-      <div class="forecast-timeline" aria-label="Forecast timeline">
-        ${blocks.map(([label, text]) => `
-          <div class="forecast-timeline-block">
-            <span>${escapeHtml(label)}</span>
-            <strong>${escapeHtml(text || '-')}</strong>
-          </div>
-        `).join('')}
       </div>
     </section>
   `;
