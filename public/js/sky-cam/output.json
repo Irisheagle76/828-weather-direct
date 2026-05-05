@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-05-05T10:38:00.939517",
+  "timestamp": "2026-05-05T10:42:59.986695",
   "metrics": {
     "cloudCoverWest": 70,
     "brightness": 0.41,
@@ -13,8 +13,8 @@
     "mode": "day"
   },
   "trend": {
-    "cloudTrend": "decreasing",
-    "brightnessTrend": "decreasing",
+    "cloudTrend": "steady",
+    "brightnessTrend": "steady",
     "overallTrend": "steady"
   }
 }

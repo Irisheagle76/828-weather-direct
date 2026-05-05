@@ -39,7 +39,6 @@ export async function render4DayForecast(container) {
   const lead = days[0];
 
   container.innerHTML = `
-    ${renderLeadClean(lead)}
     ${days.map(renderDay).join('')}
   `;
 
@@ -234,18 +233,6 @@ function renderSummary(days) {
   return '';
 }
 
-function renderLeadClean(day) {
-  if (!day) return '';
-
-  return `
-    <section class="forecast-lead">
-      <div class="forecast-headline">
-        ${escapeHtml(day.headline || '4-Day Forecast')}
-      </div>
-    </section>
-  `;
-}
-
 function renderDay(day) {
   const toneClass = toneClassFor(day);
 
@@ -346,6 +333,8 @@ function renderManualTimeline(timeline = {}) {
     ['Afternoon', timeline.afternoon],
     ['Evening', timeline.evening]
   ];
+
+  if (!blocks.some(([, text]) => hasText(text))) return '';
 
   return `
     <div class="hourly-strip">
