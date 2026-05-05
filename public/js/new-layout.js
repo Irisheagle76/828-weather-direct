@@ -605,6 +605,7 @@ const showGust =
 
 const windHTML = showGust
   ? `
+    <span class="metric-icon" aria-hidden="true">&#127788;&#65039;</span>
     <span class="label">Wind</span>
     <span class="value">
       ${wind} mph
@@ -612,6 +613,7 @@ const windHTML = showGust
     </span>
   `
   : `
+    <span class="metric-icon" aria-hidden="true">&#127788;&#65039;</span>
     <span class="label">Wind</span>
     <span class="value">${wind}<span class="unit"> mph</span></span>
   `;
@@ -620,14 +622,19 @@ const windHTML = showGust
   // render
   // ---------------------------
   container.innerHTML = `
-    <div class="metric-chip temp">${temp}°</div>
+    <div class="metric-chip temp">
+      <span class="metric-icon" aria-hidden="true">&#127777;&#65039;</span>
+      <span class="value">${temp}°</span>
+    </div>
 
     <div class="metric-chip">
+      <span class="metric-icon" aria-hidden="true">&#128167;</span>
       <span class="label">RH</span>
       <span class="value">${rh}%</span>
     </div>
 
     <div class="metric-chip">
+      <span class="metric-icon" aria-hidden="true">&#128166;</span>
       <span class="label">DP</span>
       <span class="value">${dew}°</span>
     </div>

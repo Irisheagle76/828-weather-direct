@@ -134,6 +134,21 @@ backdrop-filter: blur(6px);
   font-weight: 500;
 }
 
+.metric-chip .metric-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1em;
+  margin-right: 5px;
+  font-size: 0.95em;
+  line-height: 1;
+  opacity: 0.9;
+}
+
+.metric-chip.temp .metric-icon {
+  font-size: 0.9em;
+}
+
 .metric-chip .value {
   font-weight: 700;
 }
