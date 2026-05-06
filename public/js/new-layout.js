@@ -873,7 +873,7 @@ export async function initGlobalWeatherUI() {
 // ============================================================
 // Forecast LINK
 // ============================================================
-function renderForecastLink() {
+function renderForecastLinkLegacy() {
   const el = document.getElementById('forecast-link');
   if (!el) return;
 
@@ -881,6 +881,23 @@ function renderForecastLink() {
     <div class="card forecast-link-card">
       <a href="/forecast.html">
         Next 4 Days →
+      </a>
+    </div>
+  `;
+}
+
+function renderForecastLink() {
+  const el = document.getElementById('forecast-link');
+  if (!el) return;
+
+  el.innerHTML = `
+    <div class="forecast-link-card">
+      <a class="forecast-link" href="/forecast.html" aria-label="Open the next four day forecast">
+        <span class="forecast-link-kicker">Extended Forecast</span>
+        <span class="forecast-link-main">
+          Next 4 Days
+          <span class="forecast-link-arrow" aria-hidden="true">&rarr;</span>
+        </span>
       </a>
     </div>
   `;
