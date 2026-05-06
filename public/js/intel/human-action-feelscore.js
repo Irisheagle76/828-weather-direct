@@ -3,7 +3,7 @@
 // ============================================================
 
 import { calculateComfort } from "./comfort.js";
-import { assembleWithVoice } from "./synthesizer/assembleWithVoice.js?v=20260505-tomorrowvoice";
+import { assembleWithVoice } from "./synthesizer/assembleWithVoice.js?v=20260506-todayrainvoice";
 import { buildFullExplanation } from "../intel/explanations/buildFullExplanation.js";
 
 // ============================================================
@@ -87,6 +87,40 @@ function getPrecipType({ precipProbability = 0, precipAmount = 0, hours = [] }) 
   return "none";
 }
 
+function describeDaypart(ts) {
+  if (!Number.isFinite(ts)) return "later today";
+
+  const hour = new Date(ts).getHours();
+
+  if (hour < 6) return "overnight";
+  if (hour < 10) return "early this morning";
+  if (hour < 12) return "later this morning";
+  if (hour < 17) return "this afternoon";
+  if (hour < 21) return "this evening";
+  return "tonight";
+}
+
+function buildPrecipTiming(hours = []) {
+  const wetHours = hours.filter(h => {
+    const amount = h.precipAmount ?? 0;
+    const probability = h.precipProbability ?? 0;
+    return amount >= 0.005 || probability >= 0.25;
+  });
+
+  if (!wetHours.length) return null;
+
+  const first = wetHours[0];
+  const last = wetHours[wetHours.length - 1];
+
+  return {
+    firstTs: first._ts ?? first.timestamp ?? null,
+    lastTs: last._ts ?? last.timestamp ?? null,
+    starts: describeDaypart(first._ts ?? first.timestamp),
+    ends: describeDaypart(last._ts ?? last.timestamp),
+    activeHours: wetHours.length
+  };
+}
+
 function buildSnapshot(hours = []) {
   if (!hours.length) return null;
 
@@ -104,7 +138,8 @@ function buildSnapshot(hours = []) {
     precipProbability: maxProb,
     precipAmount: maxAmt,
     precipAmountAvg: avgAmt,
-    isRainingNow: (first.precipAmount ?? 0) > 0
+    isRainingNow: (first.precipAmount ?? 0) > 0,
+    precipTiming: buildPrecipTiming(hours)
   };
 
   snapshot.precipType = getPrecipType({
@@ -178,12 +213,14 @@ function buildIntel(snapshot, score, trend, windImpact, maxGust, label, shortTer
       dewPoint: snapshot.dewPoint,
       wind: snapshot.wind,
       precipProbability: snapshot.precipProbability,
-      precipAmount: snapshot.precipAmount
+      precipAmount: snapshot.precipAmount,
+      precipTiming: snapshot.precipTiming
     },
     pattern: { trend, avg: score },
     context: { label },
     precipProbability: snapshot.precipProbability,
     precipAmount: snapshot.precipAmount,
+    precipTiming: snapshot.precipTiming,
     dominantFactor: detectDominantFactor(snapshot),
     shortTerm
   };

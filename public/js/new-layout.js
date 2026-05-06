@@ -5,12 +5,12 @@
 import { getWeatherForUI } from '/js/adapters/weather-adapter.js?v=20260505-tomorrowvoice';
 import { calculateComfort } from '/js/intel/comfort.js';
 import { generateNarrative } from '/js/intel/synthesizer/index.js?v=20260505-tomorrowvoice';
-import { buildHumanActionIntelFS } from '/js/intel/human-action-feelscore.js?v=20260505-tomorrowvoice';
+import { buildHumanActionIntelFS } from '/js/intel/human-action-feelscore.js?v=20260506-todayrainvoice';
 
 import { renderPulseV2 } from '/js/modules/renderPulseV2.js';
 import { renderSubstackV2 } from '/js/modules/renderSubstackV2.js';
 
-console.log("828 Weather layout version: 20260505-tomorrowvoice");
+console.log("828 Weather layout version: 20260506-todayrainvoice");
 
 // ============================================================
 // FETCH HELPERS
@@ -309,7 +309,7 @@ function detectDominantFactor(s = {}) {
 function renderFeelScore(data) {
   if (!data) return;
 
-  const { score, headline, subHeadline, bullets, emoji } = data;
+  const { score, headline, subHeadline, narrative, bullets, emoji } = data;
 
   const color = getFeelScoreColor(score);
   const bgTint = getFeelScoreBackground(score);
@@ -333,8 +333,8 @@ function renderFeelScore(data) {
       <div class="fs-headline">${headline || ""}</div>
 
       ${
-        subHeadline
-          ? `<div class="fs-subhead">${subHeadline}</div>`
+        subHeadline || narrative
+          ? `<div class="fs-subhead">${subHeadline || narrative}</div>`
           : ""
       }
 
