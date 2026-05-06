@@ -10,7 +10,7 @@ import { buildHumanActionIntelFS } from '/js/intel/human-action-feelscore.js?v=2
 import { renderPulseV2 } from '/js/modules/renderPulseV2.js';
 import { renderSubstackV2 } from '/js/modules/renderSubstackV2.js';
 
-console.log("828 Weather layout version: 20260506-todayrainvoice");
+console.log("828 Weather layout version: 20260506-fastcore");
 
 // ============================================================
 // FETCH HELPERS
@@ -222,10 +222,10 @@ export async function renderNewLayout(container) {
   `;
 
   try {
-  const [data, drought] = await Promise.all([
-  getWeatherForUI({ lat: 35.5951, lon: -82.5515 }),
-  fetchDroughtFire()
-]);
+  const weatherPromise = getWeatherForUI({ lat: 35.5951, lon: -82.5515 });
+  const droughtPromise = fetchDroughtFire();
+
+  const data = await weatherPromise;
 
 // 👇 ADD THESE TWO LINES
 console.log("FULL API DATA:", data);
@@ -269,20 +269,20 @@ console.log("CURRENT DEBUG:", {
     // CORE RENDER
     // ------------------------------------------------------------
    
-    renderDroughtFire(drought);
   renderFeelScore(human?.feelscore);
     renderTimeline(hourly);
 renderTomorrow(human?.tomorrow);
 renderForecastLink();
 
-    // ------------------------------------------------------------
-    // CONTENT
-    // ------------------------------------------------------------
-  await loadPulse();
-await loadSubstack();
-
     runStaggerAnimation();
     hideSplash();
+
+    // ------------------------------------------------------------
+    // LOWER-PAGE CONTENT (LOAD AFTER CORE REVEAL)
+    // ------------------------------------------------------------
+    droughtPromise.then(renderDroughtFire).catch(() => renderDroughtFire(null));
+    loadPulse();
+    loadSubstack();
 
   } catch (err) {
     console.error('Layout error:', err);
@@ -531,7 +531,7 @@ function hideSplash() {
   setTimeout(() => {
     splash.classList.add("hide");
     setTimeout(() => splash.remove(), 600);
-  }, 300);
+  }, 100);
 }
 
 // ------------------------------------------------------------
