@@ -1282,6 +1282,17 @@ backdrop-filter: blur(6px);
   background: rgba(255,255,255,0.2);
 }
 
+.feelscore-title,
+.forecast-link-kicker,
+.pulse-card .section-title,
+.update-card .section-title {
+  font-size: 12px;
+  line-height: 1.15;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
 .live-indicator {
   display: inline-flex;
   align-items: center;
