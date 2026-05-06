@@ -212,11 +212,10 @@ export async function renderNewLayout(container) {
   container.innerHTML = `
     <div class="top-stack">
       <div id="feelscore" class="fade-in"></div>
-      <div id="droughtfire" class="fade-in"></div>
-    
       <div id="timeline" class="fade-in"></div>
       <div id="tomorrow" class="fade-in"></div>
       <div id="forecast-link" class="fade-in"></div>
+      <div id="droughtfire" class="fade-in"></div>
       <div id="pulse" class="fade-in"></div>
       <div id="update" class="fade-in"></div>
     </div>
