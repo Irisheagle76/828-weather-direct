@@ -11,7 +11,13 @@ export function renderPulseV2(container, pulse) {
   if (!pulse || pulse.fallback) {
     container.innerHTML = `
       <div class="content-card pulse-card">
-        <div class="section-title">828 Weather Pulse</div>
+        <div class="pulse-heading">
+          <div class="section-title pulse-title">
+            <span class="pulse-title-dot" aria-hidden="true"></span>
+            <span>828 Weather Pulse</span>
+          </div>
+          <div class="pulse-subtitle">Quick hits. Live conditions. 828.</div>
+        </div>
         <div class="pulse-empty">No recent updates</div>
       </div>
     `;
@@ -39,7 +45,13 @@ export function renderPulseV2(container, pulse) {
   container.innerHTML = `
     <div class="content-card pulse-card">
 
-      <div class="section-title">828 Weather Pulse</div>
+      <div class="pulse-heading">
+        <div class="section-title pulse-title">
+          <span class="pulse-title-dot" aria-hidden="true"></span>
+          <span>828 Weather Pulse</span>
+        </div>
+        <div class="pulse-subtitle">Quick hits. Live conditions. 828.</div>
+      </div>
 
       <div class="pulse-meta">${time}</div>
 
