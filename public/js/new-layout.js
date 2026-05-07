@@ -279,7 +279,7 @@ console.log("CURRENT DEBUG:", {
     // ------------------------------------------------------------
    
   renderFeelScore(human?.feelscore);
-    renderTimeline(hourly, data?.daily);
+    renderTimeline(hourly, data?.daily, current, tempest);
 renderTomorrow(human?.tomorrow);
 renderForecastLink();
 
@@ -359,7 +359,7 @@ function renderFeelScore(data) {
 // TIMELINE (CLEAN + FUTURE SAFE — FIXED)
 // ============================================================
 
-function renderTimeline(hourly, daily = []) {
+function renderTimeline(hourly, daily = [], current = null, tempest = null) {
   const container = document.getElementById('timeline');
 
   if (!Array.isArray(hourly) || !hourly.length) {
@@ -393,10 +393,13 @@ function renderTimeline(hourly, daily = []) {
     return;
   }
 
+  const observedTemp = getObservedTempF(current, tempest);
+  const displayHours = applyTemperatureCushion(next, observedTemp);
+
   // ------------------------------------------------------------
   // SCORES
   // ------------------------------------------------------------
-const scores = next.map((h, i) => {
+const scores = displayHours.map((h, i) => {
   let adjusted = { ...h };
 
   // ------------------------------------------------------------
@@ -440,12 +443,12 @@ if (i < 3) {
 });
 
   const best = Math.max(...scores);
-  const editorial = buildTimelineEditorial(next, scores, daily);
+  const editorial = buildTimelineEditorial(displayHours, scores, daily);
 
   // ------------------------------------------------------------
   // BUILD UI
   // ------------------------------------------------------------
-  const html = next.map((h, i) => {
+  const html = displayHours.map((h, i) => {
     const isBest = scores[i] === best ? "best-hour" : "";
     const icon = getHourlyIcon(h);
 
@@ -501,6 +504,46 @@ function animateScoreOnce(selector, score) {
 // ------------------------------------------------------------
 function formatHour(ts) {
   return new Date(ts).toLocaleTimeString([], { hour: "numeric" });
+}
+
+function getObservedTempF(current = null, tempest = null) {
+  const toF = c => (c * 9) / 5 + 32;
+
+  if (Number.isFinite(tempest?.air_temperature)) {
+    return toF(tempest.air_temperature);
+  }
+
+  if (Number.isFinite(current?.temperatureF)) {
+    return current.temperatureF;
+  }
+
+  if (Number.isFinite(current?.temp)) {
+    return current.temp;
+  }
+
+  return null;
+}
+
+function applyTemperatureCushion(hours = [], observedTemp = null) {
+  if (!Number.isFinite(observedTemp)) return hours;
+
+  const weights = [0.72, 0.56, 0.38, 0.22, 0.1, 0];
+
+  return hours.map((hour, index) => {
+    const modelTemp = hour.temperatureF;
+    if (!Number.isFinite(modelTemp)) return hour;
+
+    const difference = observedTemp - modelTemp;
+    const weight = Math.abs(difference) >= 3 ? (weights[index] ?? 0) : 0;
+    const cushionedTemp = modelTemp + difference * weight;
+
+    return {
+      ...hour,
+      modeledTemperatureF: modelTemp,
+      observedTemperatureF: observedTemp,
+      temperatureF: cushionedTemp
+    };
+  });
 }
 
 function formatHourRange(startTs, endTs) {
