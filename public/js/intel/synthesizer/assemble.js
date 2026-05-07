@@ -194,6 +194,60 @@ function pickLightPhrase(intel) {
   return random(phrases.light.filtered);
 }
 
+function softenTemporalIntro(frame, baseNarrative) {
+  const base = (baseNarrative || "").trim();
+  const lower = base.charAt(0).toLowerCase() + base.slice(1);
+  const articleLead = /^[Aa]n?\s/.test(base);
+  const conditionsLead = /conditions$/i.test(base);
+  const looks = conditionsLead
+    ? `has ${lower}`
+    : articleLead
+      ? `looks like ${lower}`
+      : `looks ${lower}`;
+  const stays = conditionsLead
+    ? `keeps ${lower}`
+    : articleLead
+      ? `holds as ${lower}`
+      : `stays ${lower}`;
+  const shaping = conditionsLead
+    ? `is shaping up with ${lower}`
+    : articleLead
+      ? `is shaping up like ${lower}`
+      : `is shaping up to be ${lower}`;
+
+  if (/^For today/i.test(frame)) return `Today ${looks}`;
+  if (/^Today/i.test(frame)) return `Today ${looks}`;
+  if (/^Through today/i.test(frame)) return `Today ${stays}`;
+  if (/^Later today/i.test(frame)) {
+    if (conditionsLead) return `Later today, ${lower} continue`;
+    return articleLead ? `Later today, it looks like ${lower}` : `Later today, it turns ${lower}`;
+  }
+
+  if (/^For tomorrow/i.test(frame)) return `Tomorrow ${looks}`;
+  if (/^Tomorrow/i.test(frame)) return `Tomorrow ${looks}`;
+  if (/^Heading into tomorrow/i.test(frame)) return `Tomorrow ${shaping}`;
+  if (/^Looking ahead to tomorrow/i.test(frame)) return `Tomorrow ${shaping}`;
+
+  return `${frame} ${lower}`;
+}
+
+function polishNarrative(text) {
+  return text
+    .replace(/\bfeaturing temperatures\b/gi, "with temperatures")
+    .replace(/\bfeaturing a\b/gi, "with a")
+    .replace(/\bfeaturing humidity\b/gi, "with humidity")
+    .replace(/\bfeaturing\b/gi, "with")
+    .replace(/\bcomfortable temperature range\b/gi, "pleasant temperature range")
+    .replace(/\btemperatures staying in a nice range\b/gi, "temperatures staying in a pleasant range")
+    .replace(/\btemperatures holding in a nice range\b/gi, "temperatures holding in a pleasant range")
+    .replace(/\bcomfortable and humidity\b/gi, "comfortable, with humidity")
+    .replace(/\bwith a few small changes, with\b/gi, "with a few small changes and")
+    .replace(/\bwith a little movement, with\b/gi, "with a little movement and")
+    .replace(/\s+,/g, ",")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 // ------------------------------------------------------------
 // EMOJI (UNCHANGED — STILL VALID)
 // ------------------------------------------------------------
@@ -246,9 +300,7 @@ const baseNarrative =
     ? scoreTone
     : categoryBase;
 
-  const intro = `${temporalFrame} ${
-    baseNarrative.charAt(0).toLowerCase() + baseNarrative.slice(1)
-  }`;
+  const intro = softenTemporalIntro(temporalFrame, baseNarrative);
 
 // ------------------------------------------------------------
 // CORE SIGNALS
@@ -282,7 +334,7 @@ const joinPhrases = (arr) => {
 // CONNECTOR VARIATION
 // ------------------------------------------------------------
 if (core.length) {
-  const connectors = ["with", "featuring", "as"];
+  const connectors = ["with"];
   const connector = random(connectors);
 
   // Fix awkward phrasing like "bringing temperatures holding..."
@@ -296,7 +348,7 @@ const cleanedCore = core.map(p =>
 // LIGHT / SKY ADDITION
 // ------------------------------------------------------------
 if (light && maybe(0.5)) {
- const lightJoiners = ["with", "and", "along with"];
+ const lightJoiners = ["plus", "along with"];
   const joiner = random(lightJoiners);
 
   narrative += core.length
@@ -312,6 +364,8 @@ if (/comfortable/i.test(narrative)) {
     "a clean feel to the air"
   );
 }
+
+narrative = polishNarrative(narrative);
 // ------------------------------------------------------------
 // FINALIZE
 // ------------------------------------------------------------
@@ -336,8 +390,6 @@ export const assemble = {
       category,
       isGoldilocks
     );
-
-    console.log("ASSEMBLE OUTPUT:", narrativeObj.narrative);
 
     const lowPrecipBullets =
       dayType === "tomorrow" && getPrecipSignal(intel) === "low"

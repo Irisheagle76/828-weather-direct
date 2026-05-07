@@ -5,7 +5,7 @@
 import { getWeatherForUI } from '/js/adapters/weather-adapter.js?v=20260505-tomorrowvoice';
 import { calculateComfort } from '/js/intel/comfort.js';
 import { generateNarrative } from '/js/intel/synthesizer/index.js?v=20260505-tomorrowvoice';
-import { buildHumanActionIntelFS } from '/js/intel/human-action-feelscore.js?v=20260506-todayrainvoice';
+import { buildHumanActionIntelFS } from '/js/intel/human-action-feelscore.js?v=20260507-humanvoice';
 
 import { renderPulseV2 } from '/js/modules/renderPulseV2.js';
 import { renderSubstackV2 } from '/js/modules/renderSubstackV2.js?v=20260506-updatecollapse';

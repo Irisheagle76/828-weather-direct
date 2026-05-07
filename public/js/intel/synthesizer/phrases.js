@@ -11,20 +11,23 @@ export const phrases = {
     cold: [
       "a cold feel that sticks around",
       "chilly air holding through the day",
-      "a noticeable chill from start to finish"
+      "a noticeable chill from start to finish",
+      "cold air staying in the picture"
     ],
 
     cool: [
       "a cool start early",
       "cool air lingering through the morning",
-      "a slight chill staying in place"
+      "a slight chill staying in place",
+      "a cooler feel early before things settle"
     ],
 
   neutral: [
   "temperatures staying comfortable",
   "a comfortable temperature range",
-  "temperatures holding in a nice range",
-  "mild temperatures through the day"
+  "temperatures holding in a pleasant range",
+  "mild temperatures through the day",
+  "temperatures staying easy to work with"
 ],
 
     warm: [
@@ -47,14 +50,16 @@ export const phrases = {
     dry: [
       "dry air keeping things crisp",
       "low humidity keeping things light",
-      "a clean feel to the air"
+      "a clean feel to the air",
+      "the air feeling fresh and dry"
     ],
 
     neutral: [
       "humidity staying comfortable",
       "humidity remains manageable",
       "air feels clean and fresh",
-      "humidity remaining comfortable"
+      "humidity remaining comfortable",
+      "moisture staying in check"
     ],
 
     humid: [
@@ -77,13 +82,15 @@ export const phrases = {
     calm: [
       "winds staying light",
       "very little wind to deal with",
-      "the air staying mostly still"
+      "the air staying mostly still",
+      "wind staying out of the story"
     ],
 
     breezy: [
       "a light breeze developing",
       "a gentle breeze at times",
-      "some movement in the air"
+      "some movement in the air",
+      "enough breeze to notice"
     ],
 
     windy: [
@@ -112,7 +119,8 @@ export const phrases = {
     filtered: [
       "a mix of sun and clouds",
       "sun mixing with some passing clouds",
-      "sun breaking through at times"
+      "sun breaking through at times",
+      "clouds sharing the sky with some sun"
     ],
 
     overcast: [

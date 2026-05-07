@@ -3,7 +3,7 @@
 // ============================================================
 
 import { calculateComfort } from "./comfort.js";
-import { assembleWithVoice } from "./synthesizer/assembleWithVoice.js?v=20260506-todayrainvoice";
+import { assembleWithVoice } from "./synthesizer/assembleWithVoice.js?v=20260507-humanvoice";
 import { buildFullExplanation } from "../intel/explanations/buildFullExplanation.js";
 
 // ============================================================
@@ -178,16 +178,23 @@ function applyTrendFlavor(text, shortTerm = {}) {
 
   let additions = [];
 
-  if (tempTrend >= 2) additions.push("Temperatures are climbing.");
-  if (tempTrend <= -2) additions.push("Temperatures are easing.");
+  if (tempTrend >= 2) additions.push("temperatures climb a bit");
+  if (tempTrend <= -2) additions.push("temperatures ease a little");
 
-  if (dewTrend >= 2) additions.push("Humidity is increasing.");
-  if (dewTrend <= -2) additions.push("The air is drying out.");
+  if (dewTrend >= 2) additions.push("humidity ticks up");
+  if (dewTrend <= -2) additions.push("the air dries out");
 
-  if (windTrend >= 3) additions.push("Winds are picking up.");
-  if (windTrend <= -3) additions.push("Winds are easing.");
+  if (windTrend >= 3) additions.push("the breeze picks up");
+  if (windTrend <= -3) additions.push("the wind eases back");
 
-  return additions.length ? text + " " + additions.join(" ") : text;
+  if (!additions.length) return text;
+
+  const trendSentence =
+    additions.length === 1
+      ? `Later on, ${additions[0]}.`
+      : `Later on, ${additions.slice(0, -1).join(", ")} and ${additions.at(-1)}.`;
+
+  return `${text.replace(/\.$/, "")}. ${trendSentence}`;
 }
 
 // ============================================================
@@ -402,7 +409,7 @@ export function buildHumanActionIntelFS(raw) {
 function mapScoreToCategory(score) {
   if (score >= 85) return "veryComfortable";
   if (score >= 70) return "comfortable";
-  if (score >= 55) return "slight";
+  if (score >= 55) return "slightlyUncomfortable";
   if (score >= 40) return "uncomfortable";
   return "harsh";
 }

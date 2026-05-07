@@ -1,4 +1,4 @@
-import { assemble } from "./assemble.js?v=20260506-todayrainvoice";
+import { assemble } from "./assemble.js?v=20260507-humanvoice";
 import { cleanPhrase } from "./voice-filter.js";
 import { buildHumanVoice } from "../human-voice.js";
 
@@ -7,16 +7,10 @@ export function assembleWithVoice(
   period,
   category,
   goldilocks,
-  trendData = null // 👈 NEW
+  trendData = null
 ) {
-  // ------------------------------------------------------------
-  // BASE SYNTHESIS
-  // ------------------------------------------------------------
   const base = assemble.assemble(intel, period, category, goldilocks);
 
-  // ------------------------------------------------------------
-  // HEADLINE (clean + fallback)
-  // ------------------------------------------------------------
   let headline = cleanPhrase(base?.headline);
 
   if (!headline) {
@@ -24,24 +18,15 @@ export function assembleWithVoice(
     headline = cleanPhrase(fallback?.summary) || "";
   }
 
-  // ------------------------------------------------------------
-  // BULLETS
-  // ------------------------------------------------------------
   const bullets = (base?.bullets ?? [])
     .map(cleanPhrase)
     .filter(Boolean);
 
-  // ------------------------------------------------------------
-  // NOTES
-  // ------------------------------------------------------------
- const notes =
-  cleanPhrase(base?.narrative) ||
-  cleanPhrase(base?.longNarrative) ||
-  (bullets.length ? bullets.join(" ") : null);
+  const notes =
+    cleanPhrase(base?.narrative) ||
+    cleanPhrase(base?.longNarrative) ||
+    (bullets.length ? bullets.join(" ") : null);
 
-  // ------------------------------------------------------------
-  // TREND RESOLUTION (REAL > TEXT)
-  // ------------------------------------------------------------
   let trend = null;
 
   if (trendData) {
@@ -52,56 +37,45 @@ export function assembleWithVoice(
     else if (trendData.drying) trend = "drying";
   }
 
-if (!trend && intel?.pattern) {
-  if (intel.pattern.trend > 5) trend = "improving";
-  else if (intel.pattern.trend < -5) trend = "worsening";
-
-// ------------------------------------------------------------
-// HEADLINE MODULATION (context-aware)
-// ------------------------------------------------------------
-if (headline && trend) {
-
-  const modifiers = {
-    "improving-fast": (h) => {
-      if (/cool|chill/i.test(h)) return "Warming up quickly";
-      return `${h} — turning better quickly`;
-    },
-
-    "improving": (h) => {
-      if (/cool|chill/i.test(h)) return "Losing the chill";
-      return `${h} — trending better`;
-    },
-
-    "cooling": (h) => {
-      if (/warm|heat/i.test(h)) return "Warm, but easing";
-      return `${h} — cooling off`;
-    },
-
-    "breezier": (h) => {
-      if (/calm/i.test(h)) return "Calm now, breeze building";
-      return `${h} with increasing breeze`;
-    },
-
-    "drying": (h) => {
-      return `${h} — drying out`;
-    },
-
-    "worsening": (h) => {
-      if (/ideal|perfect/i.test(h)) return "Still nice, but slipping";
-      return `${h} — becoming less comfortable`;
-    }
-  };
-
-  const fn = modifiers[trend];
-
-  if (fn) {
-    headline = fn(headline);
+  if (!trend && intel?.pattern) {
+    if (intel.pattern.trend > 5) trend = "improving";
+    else if (intel.pattern.trend < -5) trend = "worsening";
   }
-}
 
-  // ------------------------------------------------------------
-  // OUTPUT
-  // ------------------------------------------------------------
+  if (headline && trend) {
+    const modifiers = {
+      "improving-fast": (h) => {
+        if (/cool|chill/i.test(h)) return "Warming up quickly";
+        return `${h}, improving quickly`;
+      },
+
+      improving: (h) => {
+        if (/cool|chill/i.test(h)) return "The chill eases up";
+        return `${h}, trending better`;
+      },
+
+      cooling: (h) => {
+        if (/warm|heat/i.test(h)) return "Warm, but easing";
+        return `${h}, cooling off`;
+      },
+
+      breezier: (h) => {
+        if (/calm/i.test(h)) return "Calm now, breeze building";
+        return `${h} with a breeze building`;
+      },
+
+      drying: (h) => `${h}, with drier air moving in`,
+
+      worsening: (h) => {
+        if (/ideal|perfect/i.test(h)) return "Still nice, but easing back";
+        return `${h}, then a little less comfortable`;
+      }
+    };
+
+    const fn = modifiers[trend];
+    if (fn) headline = fn(headline);
+  }
+
   return {
     headline,
     bullets,
@@ -109,5 +83,4 @@ if (headline && trend) {
     trend,
     emoji: base?.emoji ?? "🌤️"
   };
-}
 }
