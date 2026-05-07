@@ -1073,10 +1073,9 @@ backdrop-filter: blur(6px);
 .forecast-link {
   position: relative;
   z-index: 1;
-  min-height: 112px;
+  min-height: 96px;
   padding: 16px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  display: flex;
   align-items: center;
   gap: 16px;
   color: var(--text);
@@ -1084,10 +1083,13 @@ backdrop-filter: blur(6px);
 }
 
 .forecast-link-copy {
+  position: relative;
+  z-index: 2;
   min-width: 0;
+  max-width: 380px;
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 6px;
 }
 
 .forecast-link-kicker {
@@ -1099,24 +1101,29 @@ backdrop-filter: blur(6px);
 }
 
 .forecast-link-title {
-  max-width: 290px;
+  max-width: 340px;
   color: #fff;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 800;
-  line-height: 1.15;
+  line-height: 1.18;
 }
 
 .forecast-link-sub {
-  max-width: 330px;
+  max-width: 340px;
   color: rgba(232,238,252,0.72);
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.35;
 }
 
 .forecast-link-preview {
-  width: 176px;
-  transform: rotate(-1.5deg);
-  opacity: 0.86;
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  right: 82px;
+  width: 166px;
+  transform: translateY(-50%) rotate(-1.5deg);
+  opacity: 0.55;
+  pointer-events: none;
 }
 
 .forecast-preview-grid {
@@ -1174,6 +1181,8 @@ backdrop-filter: blur(6px);
 }
 
 .forecast-link-main {
+  position: relative;
+  z-index: 2;
   margin-left: auto;
   display: inline-flex;
   align-items: center;
@@ -1217,10 +1226,21 @@ backdrop-filter: blur(6px);
   outline-offset: -4px;
 }
 
+@media (max-width: 820px) {
+  .forecast-link-preview {
+    right: 70px;
+    width: 142px;
+    opacity: 0.42;
+  }
+
+  .forecast-link-copy {
+    max-width: calc(100% - 108px);
+  }
+}
+
 @media (max-width: 680px) {
   .forecast-link {
     min-height: 0;
-    grid-template-columns: minmax(0, 1fr) auto;
     gap: 12px;
   }
 

@@ -1076,7 +1076,7 @@ function renderForecastLink() {
         </span>
 
         <span class="forecast-link-main">
-          Open Forecast
+          Open
           <span class="forecast-link-arrow" aria-hidden="true">→</span>
         </span>
       </a>
