@@ -5,7 +5,7 @@
   <title>4-Day Forecast • 828 Weather</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <link rel="stylesheet" href="/css/app-v2.css?v=forecast-splash-20260507" />
+  <link rel="stylesheet" href="/css/app-v2.css?v=forecast-focus-20260507" />
 </head>
 
 <body>
@@ -21,15 +21,6 @@
         <div class="brand-sub">
           Hyper-local Asheville forecast built by Tim Ballisty
         </div>
-      </div>
-
-      <div class="live-row" id="wx-metrics">
-        <div class="live-indicator">
-          <span class="live-dot"></span>
-          <span class="live-age" id="liveAge">UPDATED JUST NOW</span>
-        </div>
-
-        <div id="metric-chips"></div>
       </div>
 
     </div>
@@ -117,18 +108,11 @@
        SCRIPT
        ===================================== -->
   <script type="module">
-    import { initGlobalWeatherUI } from '/js/new-layout.js';
     import { render4DayForecast } from '/js/modules/render4DayForecast.js?v=timeline-no-update-20260507';
 
     const root = document.getElementById('forecast-root');
 
     async function init() {
-      try {
-        await initGlobalWeatherUI();
-      } catch (e) {
-        console.warn('Global UI init failed:', e);
-      }
-
       try {
         await render4DayForecast(root);
       } catch (e) {
@@ -140,20 +124,11 @@
         setTimeout(hideSplash, 900);
       }
 
-      syncFooterTime();
-      setInterval(syncFooterTime, 60000);
     }
 
     function hideSplash() {
       const splash = document.getElementById('splash');
       if (splash) splash.classList.add('hide');
-    }
-
-    function syncFooterTime() {
-      const main = document.getElementById("liveAge");
-      const footer = document.getElementById("footerLiveText");
-      if (!main || !footer) return;
-      footer.textContent = main.textContent;
     }
 
     if (document.readyState === "loading") {

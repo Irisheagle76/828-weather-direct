@@ -2801,7 +2801,7 @@ body {
 
 .forecast-page .section-header h1 {
   margin: 0;
-  font-size: clamp(2rem, 5vw, 3.6rem);
+  font-size: clamp(1.9rem, 4.4vw, 3.25rem);
   line-height: 0.98;
 }
 
