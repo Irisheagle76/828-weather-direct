@@ -5,7 +5,7 @@
   <title>4-Day Forecast • 828 Weather</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <link rel="stylesheet" href="/css/app-v2.css?v=forecast-compact-20260505" />
+  <link rel="stylesheet" href="/css/app-v2.css?v=forecast-splash-20260507" />
 </head>
 
 <body>
@@ -34,6 +34,16 @@
 
     </div>
   </header>
+
+  <!-- =====================================
+       SPLASH
+       ===================================== -->
+  <div id="splash" class="splash">
+    <div class="splash-inner">
+      <div class="splash-title">4-Day Forecast</div>
+      <div class="splash-sub">Preparing the Asheville outlook...</div>
+    </div>
+  </div>
 
   <!-- =====================================
        MAIN CONTENT
@@ -119,11 +129,24 @@
         console.warn('Global UI init failed:', e);
       }
 
-      // 🔥 Your pipeline entry point
-      render4DayForecast(root);
+      try {
+        await render4DayForecast(root);
+      } catch (e) {
+        console.error('Forecast load failed:', e);
+        if (root) {
+          root.innerHTML = '<div class="card forecast-summary">The 4-day forecast is unavailable right now. Please check back shortly.</div>';
+        }
+      } finally {
+        setTimeout(hideSplash, 900);
+      }
 
       syncFooterTime();
       setInterval(syncFooterTime, 60000);
+    }
+
+    function hideSplash() {
+      const splash = document.getElementById('splash');
+      if (splash) splash.classList.add('hide');
     }
 
     function syncFooterTime() {
