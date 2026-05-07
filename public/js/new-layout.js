@@ -1060,10 +1060,24 @@ function renderForecastLink() {
   el.innerHTML = `
     <div class="forecast-link-card">
       <a class="forecast-link" href="/forecast.html" aria-label="Open the next four day forecast">
-        <span class="forecast-link-kicker">Extended Forecast</span>
+        <span class="forecast-link-copy">
+          <span class="forecast-link-kicker">Extended Forecast</span>
+          <span class="forecast-link-title">See how the next 4 days unfold</span>
+          <span class="forecast-link-sub">Daily cards, timing notes, and comfort signals</span>
+        </span>
+
+        <span class="forecast-link-preview" aria-hidden="true">
+          <span class="forecast-preview-grid">
+            <span class="forecast-preview-day"><b>Day 1</b><i>☀️</i><em></em></span>
+            <span class="forecast-preview-day"><b>Day 2</b><i>⛅</i><em></em></span>
+            <span class="forecast-preview-day"><b>Day 3</b><i>🌧️</i><em></em></span>
+            <span class="forecast-preview-day"><b>Day 4</b><i>🌤️</i><em></em></span>
+          </span>
+        </span>
+
         <span class="forecast-link-main">
-          Next 4 Days
-          <span class="forecast-link-arrow" aria-hidden="true">&rarr;</span>
+          Open Forecast
+          <span class="forecast-link-arrow" aria-hidden="true">→</span>
         </span>
       </a>
     </div>

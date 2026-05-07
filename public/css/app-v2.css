@@ -1043,11 +1043,22 @@ backdrop-filter: blur(6px);
   position: relative;
   overflow: hidden;
   border-radius: var(--radius);
-  border: 1px solid rgba(130, 180, 255, 0.2);
+  border: 1px solid rgba(130, 180, 255, 0.24);
   background:
-    linear-gradient(135deg, rgba(110,168,255,0.16), rgba(219,110,45,0.09)),
+    linear-gradient(135deg, rgba(110,168,255,0.18), rgba(125,211,160,0.08) 44%, rgba(219,110,45,0.12)),
     #101b33;
-  box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+  box-shadow: 0 14px 32px rgba(0,0,0,0.22);
+}
+
+.forecast-link-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 82% 16%, rgba(156,196,255,0.18), transparent 34%),
+    linear-gradient(90deg, transparent, rgba(255,255,255,0.045), transparent);
+  opacity: 0.9;
+  pointer-events: none;
 }
 
 .forecast-link-card::after {
@@ -1062,14 +1073,21 @@ backdrop-filter: blur(6px);
 .forecast-link {
   position: relative;
   z-index: 1;
-  min-height: 68px;
-  padding: 14px 16px;
-  display: flex;
+  min-height: 112px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 14px;
+  gap: 16px;
   color: var(--text);
   text-decoration: none;
+}
+
+.forecast-link-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
 }
 
 .forecast-link-kicker {
@@ -1080,26 +1098,104 @@ backdrop-filter: blur(6px);
   color: var(--muted);
 }
 
+.forecast-link-title {
+  max-width: 290px;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.forecast-link-sub {
+  max-width: 330px;
+  color: rgba(232,238,252,0.72);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.forecast-link-preview {
+  width: 176px;
+  transform: rotate(-1.5deg);
+  opacity: 0.86;
+}
+
+.forecast-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+  padding: 8px;
+  border-radius: 14px;
+  background: rgba(5,12,27,0.46);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+.forecast-preview-day {
+  min-width: 0;
+  min-height: 58px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.055);
+  border: 1px solid rgba(255,255,255,0.055);
+}
+
+.forecast-preview-day b,
+.forecast-preview-day em {
+  font-style: normal;
+  line-height: 1;
+}
+
+.forecast-preview-day b {
+  color: rgba(159,176,209,0.84);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.forecast-preview-day i {
+  font-style: normal;
+  font-size: 17px;
+  line-height: 1;
+}
+
+.forecast-preview-day em {
+  width: 22px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(125,211,160,0.58);
+  color: rgba(255,255,255,0.92);
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .forecast-link-main {
   margin-left: auto;
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  font-size: 18px;
-  font-weight: 700;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 800;
   line-height: 1.2;
   color: #ffffff;
 }
 
 .forecast-link-arrow {
-  width: 30px;
-  height: 30px;
+  width: 42px;
+  height: 42px;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255,255,255,0.1);
-  color: #9cc4ff;
+  background: rgba(156,196,255,0.16);
+  border: 1px solid rgba(156,196,255,0.22);
+  color: #cfe2ff;
+  font-size: 24px;
   transition:
     transform 0.18s ease,
     background 0.18s ease;
@@ -1107,13 +1203,38 @@ backdrop-filter: blur(6px);
 
 .forecast-link:hover .forecast-link-arrow,
 .forecast-link:focus-visible .forecast-link-arrow {
-  transform: translateX(2px);
-  background: rgba(255,255,255,0.16);
+  transform: translateX(3px);
+  background: rgba(156,196,255,0.24);
+}
+
+.forecast-link:hover .forecast-link-preview,
+.forecast-link:focus-visible .forecast-link-preview {
+  opacity: 1;
 }
 
 .forecast-link:focus-visible {
   outline: 2px solid rgba(156,196,255,0.75);
   outline-offset: -4px;
+}
+
+@media (max-width: 680px) {
+  .forecast-link {
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+  }
+
+  .forecast-link-preview {
+    display: none;
+  }
+
+  .forecast-link-title {
+    font-size: 18px;
+  }
+
+  .forecast-link-main {
+    font-size: 0;
+  }
 }
 /* ============================================================
    TITLES (PULSE + UPDATE)
