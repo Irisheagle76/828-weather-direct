@@ -216,7 +216,7 @@ function renderLeadV2(day) {
     ['Midday', timeline.midday],
     ['Afternoon', timeline.afternoon],
     ['Evening', timeline.evening]
-  ];
+  ].filter(([, text]) => hasTimelineText(text));
 
   return `
     <section class="forecast-lead">
@@ -245,14 +245,7 @@ function renderLeadV2(day) {
       ${renderSignals(day)}
       ${renderLocalInsight(day.localInsight)}
 
-      <div class="forecast-timeline">
-        ${blocks.map(([label, text]) => `
-          <div class="forecast-timeline-block">
-            <span>${escapeHtml(label)}</span>
-            <strong>${escapeHtml(text || 'No update')}</strong>
-          </div>
-        `).join('')}
-      </div>
+      ${renderTimelineBlocks(blocks)}
     </section>
   `;
 }
@@ -393,9 +386,9 @@ function renderManualTimeline(timeline = {}) {
     ['Midday', timeline.midday],
     ['Afternoon', timeline.afternoon],
     ['Evening', timeline.evening]
-  ];
+  ].filter(([, text]) => hasTimelineText(text));
 
-  if (!blocks.some(([, text]) => hasText(text))) return '';
+  if (!blocks.length) return '';
 
   return `
     <div class="hourly-strip manual-timeline-strip">
@@ -557,6 +550,21 @@ function normalizeTimeline(timeline = {}) {
     afternoon: timeline.afternoon || null,
     evening: timeline.evening || null
   };
+}
+
+function renderTimelineBlocks(blocks) {
+  if (!blocks.length) return '';
+
+  return `
+    <div class="forecast-timeline">
+      ${blocks.map(([label, text]) => `
+        <div class="forecast-timeline-block">
+          <span>${escapeHtml(label)}</span>
+          <strong>${escapeHtml(text)}</strong>
+        </div>
+      `).join('')}
+    </div>
+  `;
 }
 
 function normalizeManualWind(wind = {}) {
@@ -721,7 +729,11 @@ function hasText(value) {
 }
 
 function hasTimeline(timeline) {
-  return Boolean(timeline && Object.values(timeline).some(hasText));
+  return Boolean(timeline && Object.values(timeline).some(hasTimelineText));
+}
+
+function hasTimelineText(value) {
+  return hasText(value) && value.trim().toLowerCase() !== 'no update';
 }
 
 function clamp(value, min, max) {
