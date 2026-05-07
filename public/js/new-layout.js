@@ -851,7 +851,9 @@ function renderDroughtFire(data) {
     dssTrend = 0,
     friTrend = 0,
     narrative,
-    fireDriver
+    fireDriver,
+    dssLabel,
+    friLabel
   } = data;
 
   const droughtMonitor =
@@ -877,8 +879,14 @@ function renderDroughtFire(data) {
     ">
 
       <div class="df-header">
-        ASHEVILLE DROUGHT AND FIRE THREAT
-        <span class="info-btn" onclick="openInfo('drought', ${FRI})">ⓘ</span>
+        <div>
+          <div class="df-title">ASHEVILLE DROUGHT AND FIRE THREAT</div>
+          <div class="df-subtitle">Fuel dryness, rainfall deficits, wind, and humidity</div>
+        </div>
+        <button class="df-info-cta" type="button" onclick="openInfo('drought', ${FRI})">
+          <span aria-hidden="true">i</span>
+          More Info
+        </button>
       </div>
 
       <div class="df-grid">
@@ -892,6 +900,7 @@ function renderDroughtFire(data) {
             <span class="df-value">${DSS ?? "--"}</span>
             <span class="df-trend">${dTrend.arrow}</span>
           </div>
+          <div class="df-scale-label">${dssLabel || labelDroughtStress(DSS)}</div>
 
           <div class="df-sub">
             ${dTrend.label}
@@ -908,6 +917,7 @@ function renderDroughtFire(data) {
             <span class="df-value">${FRI ?? "--"}</span>
             <span class="df-trend">${fTrend.arrow}</span>
           </div>
+          <div class="df-scale-label">${friLabel || labelFireRisk(FRI)}</div>
 
           <div class="df-sub">
             ${fTrend.label}
@@ -920,6 +930,11 @@ function renderDroughtFire(data) {
       <!-- HEADLINE -->
       <div class="df-headline">
         ${narrative?.headline || ""}
+      </div>
+
+      <div class="df-explain-strip">
+        <span>Drought Stress: landscape dryness.</span>
+        <span>Fire Risk: ignition and spread potential today.</span>
       </div>
 
       <!-- 🔥 DRIVER (NEW INTELLIGENCE LAYER) -->
@@ -1051,6 +1066,24 @@ function renderForecastLinkLegacy() {
       </a>
     </div>
   `;
+}
+
+function labelDroughtStress(score) {
+  if (!Number.isFinite(score)) return "Unavailable";
+  if (score < 20) return "Normal";
+  if (score < 40) return "Dry";
+  if (score < 60) return "Moderate";
+  if (score < 80) return "Severe";
+  return "Extreme";
+}
+
+function labelFireRisk(score) {
+  if (!Number.isFinite(score)) return "Unavailable";
+  if (score < 20) return "Low";
+  if (score < 40) return "Moderate";
+  if (score < 60) return "Elevated";
+  if (score < 80) return "High";
+  return "Extreme";
 }
 
 function renderForecastLink() {

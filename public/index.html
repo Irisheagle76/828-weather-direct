@@ -5,7 +5,7 @@
   <title>828 Weather Direct </title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <link rel="stylesheet" href="/css/app-v2.css?v=20260507-pulsebeat" />
+  <link rel="stylesheet" href="/css/app-v2.css?v=20260507-droughtinfo" />
 </head>
 
 <body>
@@ -74,7 +74,7 @@
        SCRIPT
        ===================================== -->
   <script type="module">
-    import { renderNewLayout } from '/js/new-layout.js?v=20260507-pulsebeat';
+    import { renderNewLayout } from '/js/new-layout.js?v=20260507-droughtinfo';
 
     const app = document.getElementById('app');
 
@@ -150,8 +150,75 @@
         `;
       }
 
+      if (type === 'drought') {
+        body.innerHTML = buildDroughtInfoHtml(value);
+      }
+
       modal.classList.remove('hidden');
     };
+
+    function buildDroughtInfoHtml(value = null) {
+      return `
+        <div class="info-panel drought-info-panel">
+          <div class="info-hero">
+            <div class="info-kicker">828 Weather Direct Explainer</div>
+            <h2>Drought Stress & Fire Risk</h2>
+            <p>
+              These are local guidance indices built to make dry-weather risk easier to read at a glance.
+              They are not official warnings, but they help show whether the landscape is drying out and
+              whether today's weather could make fire easier to start or spread.
+            </p>
+            ${value != null ? `<div class="info-score-callout">Current Fire Risk Index: ${value}</div>` : ""}
+          </div>
+
+          <div class="info-grid">
+            <div class="info-card">
+              <h3>Drought Stress</h3>
+              <p>
+                This number leans on longer-term dryness: recent rainfall deficits, seasonal rainfall deficits,
+                and soil moisture percentile. A higher score means vegetation, leaf litter, and shallow soils
+                are under more stress and may recover more slowly without meaningful rain.
+              </p>
+            </div>
+
+            <div class="info-card">
+              <h3>Fire Risk</h3>
+              <p>
+                This number blends the dry-fuel background with today's fire weather: humidity, wind, heat,
+                and current dryness. It can rise quickly on breezy, dry afternoons even if the drought score
+                changes more slowly.
+              </p>
+            </div>
+          </div>
+
+          <h3>Drought Stress scale</h3>
+          <div class="info-scale">
+            <div class="info-band low"><b>0-19</b><span>Normal: recent moisture is generally keeping stress limited.</span></div>
+            <div class="info-band low"><b>20-39</b><span>Dry: soils and fuels are beginning to lean dry.</span></div>
+            <div class="info-band mod"><b>40-59</b><span>Moderate: dryness is noticeable and rain deficits matter.</span></div>
+            <div class="info-band high"><b>60-79</b><span>Severe: fuels and soils are meaningfully stressed.</span></div>
+            <div class="info-band extreme"><b>80-100</b><span>Extreme: deep dryness is established and recovery may take soaking rain.</span></div>
+          </div>
+
+          <h3>Fire Risk scale</h3>
+          <div class="info-scale">
+            <div class="info-band low"><b>0-19</b><span>Low: moisture or calm weather is limiting spread potential.</span></div>
+            <div class="info-band low"><b>20-39</b><span>Moderate: fire can start, but conditions are not especially aggressive.</span></div>
+            <div class="info-band mod"><b>40-59</b><span>Elevated: dry fuels, low humidity, or wind deserve attention.</span></div>
+            <div class="info-band high"><b>60-79</b><span>High: ignition and spread become more concerning, especially with wind.</span></div>
+            <div class="info-band extreme"><b>80-100</b><span>Extreme: very dry fuels and fire weather may align.</span></div>
+          </div>
+
+          <h3>How to read the two numbers together</h3>
+          <ul class="info-list">
+            <li>Drought Stress is the background condition. It changes more slowly because it tracks accumulated dryness.</li>
+            <li>Fire Risk is the today condition. It reacts to wind, humidity, heat, and how dry the fuels already are.</li>
+            <li>A high Drought Stress score means the landscape is primed. A high Fire Risk score means today's weather may activate that risk.</li>
+            <li>Rain can lower fire risk quickly, but drought stress usually needs repeated or soaking rainfall to improve.</li>
+          </ul>
+        </div>
+      `;
+    }
 
     window.closeInfo = function(e) {
       if (!e || e.target === e.currentTarget) {
