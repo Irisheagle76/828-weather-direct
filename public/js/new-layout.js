@@ -84,7 +84,16 @@ function normalizeHourly(hourly = []) {
       h.precipType ?? null,
 
     isRainingNow:
-      h.isRainingNow ?? false
+      h.isRainingNow ?? false,
+
+    cloudCover:
+      h.cloudCover ?? h.cloud_cover ?? h.cloudcover ?? null,
+
+    uvIndex:
+      h.uvIndex ?? h.uv_index ?? null,
+
+    weatherCode:
+      h.weatherCode ?? h.weather_code ?? null
   }));
 
   // 👇 LOG INSIDE FUNCTION
@@ -270,7 +279,7 @@ console.log("CURRENT DEBUG:", {
     // ------------------------------------------------------------
    
   renderFeelScore(human?.feelscore);
-    renderTimeline(hourly);
+    renderTimeline(hourly, data?.daily);
 renderTomorrow(human?.tomorrow);
 renderForecastLink();
 
@@ -350,7 +359,7 @@ function renderFeelScore(data) {
 // TIMELINE (CLEAN + FUTURE SAFE — FIXED)
 // ============================================================
 
-function renderTimeline(hourly) {
+function renderTimeline(hourly, daily = []) {
   const container = document.getElementById('timeline');
 
   if (!Array.isArray(hourly) || !hourly.length) {
@@ -431,26 +440,36 @@ if (i < 3) {
 });
 
   const best = Math.max(...scores);
+  const editorial = buildTimelineEditorial(next, scores, daily);
 
   // ------------------------------------------------------------
   // BUILD UI
   // ------------------------------------------------------------
   const html = next.map((h, i) => {
     const isBest = scores[i] === best ? "best-hour" : "";
+    const icon = getHourlyIcon(h);
 
     return `
       <div class="hour-block ${isBest}">
         <div class="hour-time">${formatHour(h.timestamp)}</div>
-        <div class="hour-temp">${Math.round(h.temperatureF)}°</div>
-        <div class="hour-score">${scores[i]}</div>
+        <div class="hour-icon" aria-hidden="true">${icon}</div>
+        <div class="hour-temp"><span aria-hidden="true">🌡️</span>${Math.round(h.temperatureF)}°</div>
+        <div class="hour-score"><span aria-hidden="true">◎</span>${scores[i]}</div>
       </div>
     `;
   }).join('');
 
   container.innerHTML = `
     <div class="timeline-card">
-     <div class="section-title feelscore-title">Feelscore next few hours</div>
+      <div class="timeline-header">
+        <div>
+          <div class="section-title feelscore-title">Feelscore next few hours</div>
+          <div class="timeline-kicker">Near-term comfort outlook</div>
+        </div>
+        <div class="timeline-best-pill">${best}</div>
+      </div>
       <div class="timeline-row">${html}</div>
+      ${editorial ? `<div class="timeline-editorial">${editorial}</div>` : ""}
     </div>
   `;
 }
@@ -482,6 +501,155 @@ function animateScoreOnce(selector, score) {
 // ------------------------------------------------------------
 function formatHour(ts) {
   return new Date(ts).toLocaleTimeString([], { hour: "numeric" });
+}
+
+function formatHourRange(startTs, endTs) {
+  return `${formatHour(startTs)}-${formatHour(endTs)}`;
+}
+
+function getHourlyIcon(hour = {}) {
+  const precipType = String(hour.precipType || "").toLowerCase();
+  const precipProbability = Number.isFinite(hour.precipProbability)
+    ? hour.precipProbability
+    : 0;
+  const precipAmount = Number.isFinite(hour.precipAmount)
+    ? hour.precipAmount
+    : 0;
+  const cloudCover = normalizeCloudCover(hour.cloudCover);
+  const code = Number.isFinite(hour.weatherCode) ? hour.weatherCode : null;
+
+  if (code >= 95 || /thunder|storm/.test(precipType)) return "⛈️";
+  if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86) || /snow|sleet|ice|freezing/.test(precipType)) return "❄️";
+  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82) || precipAmount >= 0.005 || precipProbability >= 0.45 || /rain|shower|drizzle|sprinkle/.test(precipType)) return "🌧️";
+  if (cloudCover >= 0.78) return "☁️";
+  if (cloudCover >= 0.38) return "⛅";
+  return "☀️";
+}
+
+function normalizeCloudCover(value) {
+  if (!Number.isFinite(value)) return 0.45;
+  return value > 1 ? value / 100 : value;
+}
+
+function hasPrecipSignal(hour = {}) {
+  const precipType = String(hour.precipType || "").toLowerCase();
+  const probability = Number.isFinite(hour.precipProbability)
+    ? hour.precipProbability
+    : 0;
+  const amount = Number.isFinite(hour.precipAmount)
+    ? hour.precipAmount
+    : 0;
+  const code = Number.isFinite(hour.weatherCode) ? hour.weatherCode : null;
+
+  return (
+    amount >= 0.005 ||
+    probability >= 0.25 ||
+    (code != null && code >= 51) ||
+    /rain|shower|drizzle|sprinkle|thunder|storm|snow|sleet|ice|freezing/.test(precipType)
+  );
+}
+
+function getPrecipLabel(hour = {}) {
+  const precipType = String(hour.precipType || "").toLowerCase();
+  const code = Number.isFinite(hour.weatherCode) ? hour.weatherCode : null;
+
+  if (code >= 95 || /thunder|storm/.test(precipType)) return "thunderstorms";
+  if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86) || /snow|sleet|ice|freezing/.test(precipType)) return "wintry precipitation";
+  if (/drizzle|sprinkle/.test(precipType)) return "light precipitation";
+  if ((code >= 80 && code <= 82) || /shower/.test(precipType)) return "showers";
+  return "rain";
+}
+
+function getDaylightBounds(timestamp, daily = []) {
+  const target = new Date(timestamp);
+  const targetKey = target.toDateString();
+  const match = Array.isArray(daily)
+    ? daily.find(day => {
+        const dayTs = day?.timestamp ?? day?.date ?? day?.time;
+        const date = Number.isFinite(dayTs)
+          ? new Date(dayTs)
+          : new Date(dayTs);
+        return !Number.isNaN(date.getTime()) && date.toDateString() === targetKey;
+      })
+    : null;
+
+  const sunrise = Number.isFinite(match?.sunrise) ? match.sunrise : null;
+  const sunset = Number.isFinite(match?.sunset) ? match.sunset : null;
+
+  if (sunrise && sunset) return { sunrise, sunset };
+
+  const fallbackRise = new Date(target);
+  fallbackRise.setHours(6, 30, 0, 0);
+
+  const fallbackSet = new Date(target);
+  fallbackSet.setHours(20, 0, 0, 0);
+
+  return {
+    sunrise: fallbackRise.getTime(),
+    sunset: fallbackSet.getTime()
+  };
+}
+
+function isWithinDaylight(hour, daily) {
+  const { sunrise, sunset } = getDaylightBounds(hour.timestamp, daily);
+  return hour.timestamp >= sunrise && hour.timestamp <= sunset;
+}
+
+function findBestOutdoorWindow(hours = [], scores = [], daily = []) {
+  const candidates = hours.map((hour, index) => ({
+    ...hour,
+    score: scores[index] ?? 0
+  })).filter(hour =>
+    isWithinDaylight(hour, daily) &&
+    hour.score >= 72 &&
+    !hasPrecipSignal(hour)
+  );
+
+  if (candidates.length < 2) return null;
+
+  let bestWindow = null;
+
+  for (let i = 0; i < candidates.length - 1; i++) {
+    for (const size of [3, 2]) {
+      const slice = candidates.slice(i, i + size);
+      if (slice.length !== size) continue;
+
+      const isConsecutive = slice.every((hour, idx) =>
+        idx === 0 || hour.timestamp - slice[idx - 1].timestamp <= 90 * 60 * 1000
+      );
+
+      if (!isConsecutive) continue;
+
+      const avgScore = slice.reduce((sum, hour) => sum + hour.score, 0) / slice.length;
+      if (!bestWindow || avgScore > bestWindow.avgScore) {
+        const bounds = getDaylightBounds(slice[0].timestamp, daily);
+        bestWindow = {
+          start: slice[0].timestamp,
+          end: Math.min(slice.at(-1).timestamp + 60 * 60 * 1000, bounds.sunset),
+          avgScore
+        };
+      }
+    }
+  }
+
+  return bestWindow;
+}
+
+function buildTimelineEditorial(hours = [], scores = [], daily = []) {
+  const parts = [];
+  const bestWindow = findBestOutdoorWindow(hours, scores, daily);
+  const precipHour = hours.find(hasPrecipSignal);
+
+  if (bestWindow) {
+    parts.push(`Best outdoor window: ${formatHourRange(bestWindow.start, bestWindow.end)}.`);
+  }
+
+  if (precipHour) {
+    const label = getPrecipLabel(precipHour);
+    parts.push(`${label.charAt(0).toUpperCase() + label.slice(1)} may be in play around ${formatHour(precipHour.timestamp)}.`);
+  }
+
+  return parts.join(" ");
 }
 
 // ------------------------------------------------------------

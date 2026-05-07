@@ -699,57 +699,175 @@ backdrop-filter: blur(6px);
 }
 
 /* ============================================================
-   TIMELINE V2
+   FEELSCORE TIMELINE MODULE
    ============================================================ */
 
-.timeline-row {
+.timeline-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  padding: 18px 18px 16px;
+  background:
+    linear-gradient(145deg, rgba(20, 31, 48, 0.96), rgba(9, 17, 33, 0.98)),
+    rgba(255,255,255,0.03);
+  border: 1px solid rgba(159, 176, 209, 0.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    0 16px 34px rgba(0,0,0,0.22);
+}
+
+.timeline-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(126, 211, 160, 0.7), rgba(110, 168, 255, 0.45), transparent);
+}
+
+.timeline-header {
+  position: relative;
   display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.timeline-card .feelscore-title {
+  margin-bottom: 0;
+}
+
+.timeline-kicker {
+  margin-top: 7px;
+  color: rgba(159, 176, 209, 0.78);
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.timeline-best-pill {
+  min-width: 48px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: #dfffe8;
+  font-size: 21px;
+  font-weight: 800;
+  background: rgba(125, 211, 160, 0.12);
+  border: 1px solid rgba(125, 211, 160, 0.28);
+  box-shadow: 0 0 22px rgba(125, 211, 160, 0.08);
+}
+
+.timeline-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(74px, 1fr));
   gap: 10px;
-  margin-top: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.timeline-row::-webkit-scrollbar {
+  display: none;
 }
 
 .hour-block {
-  flex: 1;
-  border-radius: 12px;
-  padding: 10px 6px;
-
+  min-height: 116px;
+  border-radius: 14px;
+  padding: 12px 8px 10px;
   text-align: center;
-
-  border: 1px solid rgba(255,255,255,0.04);
-
+  background: rgba(5, 12, 27, 0.52);
+  border: 1px solid rgba(159, 176, 209, 0.12);
   display: flex;
   flex-direction: column;
-  gap: 4px;
-
-  transition: transform 0.2s ease;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
 }
 
 .hour-block:hover {
   transform: translateY(-2px);
+  border-color: rgba(159, 176, 209, 0.24);
 }
 
-.hour-time {
-  font-size: 11px;
-  color: #9fb0d1;
-}
-
-.hour-icon {
-  font-size: 18px;
-}
-
-.hour-temp {
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.hour-score {
+.timeline-card .hour-time {
+  margin: 0;
+  color: rgba(159, 176, 209, 0.74);
   font-size: 12px;
-  font-weight: 500;
+  line-height: 1.1;
 }
 
-.best-hour {
-  border: 1px solid rgba(255,255,255,0.15);
-  box-shadow: 0 0 10px rgba(255,255,255,0.08);
+.timeline-card .hour-icon {
+  font-size: 21px;
+  line-height: 1;
+}
+
+.timeline-card .hour-temp,
+.timeline-card .hour-score {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  line-height: 1;
+}
+
+.timeline-card .hour-temp {
+  color: #f4f8ff;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.timeline-card .hour-temp span {
+  font-size: 13px;
+  opacity: 0.72;
+}
+
+.timeline-card .hour-score {
+  color: #bfe0ff;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.timeline-card .hour-score span {
+  color: #7dd3a0;
+  font-size: 11px;
+}
+
+.timeline-card .best-hour {
+  background: linear-gradient(180deg, rgba(125, 211, 160, 0.13), rgba(5, 12, 27, 0.58));
+  border-color: rgba(125, 211, 160, 0.36);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 0 18px rgba(125, 211, 160, 0.10);
+}
+
+.timeline-editorial {
+  margin-top: 14px;
+  padding: 11px 12px;
+  border-radius: 12px;
+  color: rgba(232, 240, 255, 0.88);
+  font-size: 13px;
+  line-height: 1.45;
+  background: rgba(110, 168, 255, 0.08);
+  border: 1px solid rgba(110, 168, 255, 0.16);
+}
+
+@media (max-width: 680px) {
+  .timeline-card {
+    padding: 16px 14px 14px;
+  }
+
+  .timeline-row {
+    grid-template-columns: repeat(6, minmax(78px, 1fr));
+  }
+
+  .hour-block {
+    min-height: 112px;
+  }
 }
 
 .df-row {

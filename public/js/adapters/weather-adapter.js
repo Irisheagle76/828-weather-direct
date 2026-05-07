@@ -157,7 +157,8 @@ function adaptHourly(hourly) {
             return cc > 1 ? cc / 100 : cc;
           })(),
 
-          uvIndex: hourly.uv_index?.[i] ?? null
+          uvIndex: hourly.uv_index?.[i] ?? null,
+          weatherCode: hourly.weather_code?.[i] ?? null
         })
       )
       .filter(Boolean)
@@ -179,19 +180,32 @@ function normalizeOpenMeteoTimestamp(t) {
 function adaptDaily(daily) {
   if (!daily) return [];
 
+  if (Array.isArray(daily)) {
+    return daily.map(d => ({
+      ...d,
+      timestamp: normalizeOpenMeteoTimestamp(d.timestamp ?? d.time ?? d.date),
+      sunrise: normalizeOpenMeteoTimestamp(d.sunrise),
+      sunset: normalizeOpenMeteoTimestamp(d.sunset)
+    }));
+  }
+
   if (daily?.time?.length) {
     return daily.time.map((t, i) => ({
       date: t,
+      timestamp: normalizeOpenMeteoTimestamp(t),
 
       tempMax: daily.temperature_2m_max?.[i] ?? null,
       tempMin: daily.temperature_2m_min?.[i] ?? null,
 
       precipProbabilityMax:
         Number.isFinite(daily.precipitation_probability_max?.[i])
-          ? (daily.precipitation_probability_max[i] > 1
-              ? daily.precipitation_probability_max[i] / 100
-              : daily.precipitation_probability_max[i])
-          : 0
+            ? (daily.precipitation_probability_max[i] > 1
+                ? daily.precipitation_probability_max[i] / 100
+                : daily.precipitation_probability_max[i])
+            : 0,
+
+      sunrise: normalizeOpenMeteoTimestamp(daily.sunrise?.[i]),
+      sunset: normalizeOpenMeteoTimestamp(daily.sunset?.[i])
     }));
   }
 
@@ -313,6 +327,11 @@ function normalizeHourObject(h) {
     uvIndex:
       h.uvIndex ??
       h.uv_index ??
+      null,
+
+    weatherCode:
+      h.weatherCode ??
+      h.weather_code ??
       null
   };
 }

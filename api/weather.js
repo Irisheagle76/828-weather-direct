@@ -57,8 +57,8 @@ async function handleForecast(req, res) {
   const url =
     `https://api.open-meteo.com/v1/forecast` +
     `?latitude=${lat}&longitude=${lon}` +
-    `&hourly=temperature_2m,dew_point_2m,relative_humidity_2m,precipitation,rain,precipitation_probability,cloudcover,wind_speed_10m,wind_gusts_10m,uv_index` +
-    `&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,cloudcover_mean` +
+    `&hourly=temperature_2m,dew_point_2m,relative_humidity_2m,precipitation,rain,precipitation_probability,cloudcover,wind_speed_10m,wind_gusts_10m,uv_index,weather_code` +
+    `&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,cloudcover_mean,sunrise,sunset` +
     `&forecast_days=5` +
     `&temperature_unit=fahrenheit` +
     `&wind_speed_unit=mph` +
@@ -113,7 +113,8 @@ async function handleForecast(req, res) {
         data.hourly.cloudcover?.[i]
       ),
 
-      uvIndex: data.hourly.uv_index?.[i] ?? null
+      uvIndex: data.hourly.uv_index?.[i] ?? null,
+      weatherCode: data.hourly.weather_code?.[i] ?? null
     };
   });
 
@@ -137,7 +138,10 @@ async function handleForecast(req, res) {
 
     cloudCover: normalizeProbability(
       data.daily.cloudcover_mean?.[i]
-    )
+    ),
+
+    sunrise: normalizeOpenMeteoTimestamp(data.daily.sunrise?.[i]),
+    sunset: normalizeOpenMeteoTimestamp(data.daily.sunset?.[i])
   }));
 
   // ----------------------------------------------------------
