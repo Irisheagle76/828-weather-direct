@@ -932,11 +932,6 @@ function renderDroughtFire(data) {
         ${narrative?.headline || ""}
       </div>
 
-      <div class="df-explain-strip">
-        <span>Drought Stress: landscape dryness.</span>
-        <span>Fire Risk: ignition and spread potential today.</span>
-      </div>
-
       <!-- 🔥 DRIVER (NEW INTELLIGENCE LAYER) -->
       ${
         fireDriver
