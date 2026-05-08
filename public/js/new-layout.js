@@ -296,7 +296,7 @@ console.log("CURRENT DEBUG:", {
     // CORE RENDER
     // ------------------------------------------------------------
    
-  renderFeelScore(human?.feelscore);
+  renderFeelScore(human?.feelscore, hourly);
     renderTimeline(hourly, data?.daily, current, tempest);
 renderTomorrow(human?.tomorrow);
 renderForecastLink();
@@ -328,14 +328,89 @@ function detectDominantFactor(s = {}) {
   return "comfortable";
 }
 
+function buildFeelscoreTempOutlook(hourly = []) {
+  if (!Array.isArray(hourly) || !hourly.length) return null;
+
+  const now = new Date();
+  const todayTargetHour = now.getHours() < 15 ? 15 : 21;
+  const target = new Date(now);
+  target.setHours(todayTargetHour, 0, 0, 0);
+
+  const primaryHour = findNearestHour(hourly, target.getTime(), 90);
+  const low = findNextLow(hourly, now);
+
+  if (!primaryHour && !low) return null;
+
+  return {
+    primary: primaryHour
+      ? {
+          label: todayTargetHour === 15 ? "3 PM Temp" : "9 PM Temp",
+          value: Math.round(primaryHour.temperatureF)
+        }
+      : null,
+    low
+  };
+}
+
+function findNearestHour(hourly = [], targetTs, toleranceMinutes = 90) {
+  const tolerance = toleranceMinutes * 60 * 1000;
+  const match = hourly
+    .filter(h => Number.isFinite(h?.timestamp) && Number.isFinite(h?.temperatureF))
+    .map(h => ({
+      ...h,
+      distance: Math.abs(h.timestamp - targetTs)
+    }))
+    .sort((a, b) => a.distance - b.distance)[0];
+
+  return match?.distance <= tolerance ? match : null;
+}
+
+function findNextLow(hourly = [], now = new Date()) {
+  const hour = now.getHours();
+  const windowStart = new Date(now);
+  const windowEnd = new Date(now);
+
+  if (hour < 9) {
+    windowEnd.setHours(9, 0, 0, 0);
+  } else {
+    windowStart.setHours(21, 0, 0, 0);
+    if (windowStart.getTime() <= now.getTime()) {
+      windowEnd.setDate(windowEnd.getDate() + 1);
+    }
+    windowEnd.setHours(9, 0, 0, 0);
+    if (windowEnd.getTime() <= windowStart.getTime()) {
+      windowEnd.setDate(windowEnd.getDate() + 1);
+    }
+  }
+
+  const lows = hourly.filter(h =>
+    Number.isFinite(h?.timestamp) &&
+    Number.isFinite(h?.temperatureF) &&
+    h.timestamp >= windowStart.getTime() &&
+    h.timestamp <= windowEnd.getTime()
+  );
+
+  if (!lows.length) return null;
+
+  const low = lows.reduce((coldest, h) =>
+    h.temperatureF < coldest.temperatureF ? h : coldest
+  );
+
+  return {
+    label: hour < 9 ? "Morning Low" : "Overnight Low",
+    value: Math.round(low.temperatureF)
+  };
+}
+
 // ============================================================
 // FEELSCORE
 // ============================================================
 
-function renderFeelScore(data) {
+function renderFeelScore(data, hourly = []) {
   if (!data) return;
 
   const { score, headline, subHeadline, narrative, bullets, emoji } = data;
+  const tempOutlook = buildFeelscoreTempOutlook(hourly);
 
   const color = getFeelScoreColor(score);
   const bgTint = getFeelScoreBackground(score);
@@ -367,6 +442,23 @@ function renderFeelScore(data) {
       <div class="fs-bullets">
         ${(bullets || []).map(b => `<div class="fs-bullet">• ${b}</div>`).join('')}
       </div>
+
+      ${tempOutlook ? `
+        <div class="fs-temp-outlook">
+          ${tempOutlook.primary ? `
+            <div class="fs-temp-main">
+              <div class="fs-temp-label">${tempOutlook.primary.label}</div>
+              <div class="fs-temp-value">${tempOutlook.primary.value}&deg;</div>
+            </div>
+          ` : ""}
+          ${tempOutlook.low ? `
+            <div class="fs-temp-low">
+              <div class="fs-temp-label">${tempOutlook.low.label}</div>
+              <div class="fs-temp-low-value">${tempOutlook.low.value}&deg;</div>
+            </div>
+          ` : ""}
+        </div>
+      ` : ""}
     </div>
   `;
 

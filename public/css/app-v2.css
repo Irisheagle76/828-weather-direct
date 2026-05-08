@@ -405,6 +405,59 @@ backdrop-filter: blur(6px);
   color: var(--muted);
 }
 
+.fs-temp-outlook {
+  position: absolute;
+  right: 18px;
+  bottom: 16px;
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(5, 12, 27, 0.20);
+  border: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(4px);
+}
+
+.fs-temp-main,
+.fs-temp-low {
+  min-width: 58px;
+}
+
+.fs-temp-label {
+  margin-bottom: 2px;
+  color: rgba(159, 176, 209, 0.82);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.fs-temp-value {
+  color: #f4f8ff;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 0.95;
+}
+
+.fs-temp-low-value {
+  color: rgba(191, 224, 255, 0.88);
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+@media (max-width: 420px) {
+  .fs-temp-outlook {
+    position: static;
+    width: fit-content;
+    margin-top: 10px;
+    margin-left: auto;
+  }
+}
+
 /* GLOW FIXED */
 .feelscore-card.hero::after {
   content: "";
