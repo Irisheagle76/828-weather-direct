@@ -2,7 +2,7 @@
 // AVL WEATHER — V3 LAYOUT (STABLE + UNIFIED)
 // ============================================================
 
-import { getWeatherForUI } from '/js/adapters/weather-adapter.js?v=20260505-tomorrowvoice';
+import { getWeatherForUI } from '/js/adapters/weather-adapter.js?v=20260508-popscale';
 import { calculateComfort } from '/js/intel/comfort.js';
 import { generateNarrative } from '/js/intel/synthesizer/index.js?v=20260505-tomorrowvoice';
 import { buildHumanActionIntelFS } from '/js/intel/human-action-feelscore.js?v=20260507-timeaware';

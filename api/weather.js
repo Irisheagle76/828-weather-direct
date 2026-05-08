@@ -103,13 +103,13 @@ async function handleForecast(req, res) {
       // inches of rain (or total precip if rain missing)
       precipitation: finalPrecip,
 
-      // 0–1 probability
-      precipProbability: normalizeProbability(
+      // Open-Meteo sends probability as 0-100 percent.
+      precipProbability: normalizeOpenMeteoPercent(
         data.hourly.precipitation_probability?.[i]
       ),
 
-      // 0–1 cloud cover
-      cloudCover: normalizeProbability(
+      // Open-Meteo sends cloud cover as 0-100 percent.
+      cloudCover: normalizeOpenMeteoPercent(
         data.hourly.cloudcover?.[i]
       ),
 
@@ -132,11 +132,11 @@ async function handleForecast(req, res) {
     tempMax: data.daily.temperature_2m_max?.[i] ?? null,
     tempMin: data.daily.temperature_2m_min?.[i] ?? null,
 
-    precipProbability: normalizeProbability(
+    precipProbability: normalizeOpenMeteoPercent(
       data.daily.precipitation_probability_max?.[i]
     ),
 
-    cloudCover: normalizeProbability(
+    cloudCover: normalizeOpenMeteoPercent(
       data.daily.cloudcover_mean?.[i]
     ),
 
@@ -180,9 +180,9 @@ async function handleForecast(req, res) {
 // HELPERS
 // ============================================================
 
-function normalizeProbability(val) {
+function normalizeOpenMeteoPercent(val) {
   if (!Number.isFinite(val)) return 0;
-  return val > 1 ? val / 100 : val;
+  return Math.max(0, Math.min(1, val / 100));
 }
 
 function normalizeOpenMeteoTimestamp(t) {

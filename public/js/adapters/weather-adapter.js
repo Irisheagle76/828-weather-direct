@@ -145,16 +145,14 @@ function adaptHourly(hourly) {
           // 0–1 (convert if 0–100)
           precipProbability:
             Number.isFinite(hourly.precipitation_probability?.[i])
-              ? (hourly.precipitation_probability[i] > 1
-                  ? hourly.precipitation_probability[i] / 100
-                  : hourly.precipitation_probability[i])
+              ? normalizeOpenMeteoPercent(hourly.precipitation_probability[i])
               : 0,
 
           // 0–1 (convert if 0–100)
           cloudCover: (() => {
             const cc = hourly.cloudcover?.[i];
             if (!Number.isFinite(cc)) return null;
-            return cc > 1 ? cc / 100 : cc;
+            return normalizeOpenMeteoPercent(cc);
           })(),
 
           uvIndex: hourly.uv_index?.[i] ?? null,
@@ -171,6 +169,10 @@ function adaptHourly(hourly) {
 function normalizeOpenMeteoTimestamp(t) {
   if (Number.isFinite(t)) return t < 1e12 ? t * 1000 : t;
   return new Date(t).getTime();
+}
+
+function normalizeOpenMeteoPercent(value) {
+  return Math.max(0, Math.min(1, value / 100));
 }
 
 // ============================================================
@@ -199,9 +201,7 @@ function adaptDaily(daily) {
 
       precipProbabilityMax:
         Number.isFinite(daily.precipitation_probability_max?.[i])
-            ? (daily.precipitation_probability_max[i] > 1
-                ? daily.precipitation_probability_max[i] / 100
-                : daily.precipitation_probability_max[i])
+            ? normalizeOpenMeteoPercent(daily.precipitation_probability_max[i])
             : 0,
 
       sunrise: normalizeOpenMeteoTimestamp(daily.sunrise?.[i]),
