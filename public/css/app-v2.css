@@ -86,15 +86,14 @@ body {
 }
 
 #metric-chips {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1.05fr 0.9fr 0.9fr 1.2fr 0.9fr;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  flex-wrap: nowrap;
-  justify-content: flex-start;
   margin-left: 0;
   min-width: 0;
-  overflow-x: auto;
+  overflow: visible;
   padding-bottom: 2px;
   scrollbar-width: none;
 }
@@ -111,14 +110,13 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 auto;
+  min-width: 0;
 
-  min-width: 112px;
-  min-height: 64px;
-  padding: 0 18px;
-  border-radius: 16px;
+  min-height: 50px;
+  padding: 0 10px;
+  border-radius: 14px;
 
-  font-size: 18px;
+  font-size: clamp(13px, 2vw, 16px);
   font-weight: 600;
   letter-spacing: 0;
 
@@ -136,17 +134,16 @@ body {
 
 /* primary signal (temperature) */
 .metric-chip.temp {
-  min-width: 108px;
   background: rgba(255,255,255,0.13);
-  font-size: 20px;
+  font-size: clamp(16px, 2.4vw, 18px);
   font-weight: 800;
-  padding: 0 18px;
+  padding: 0 12px;
 }
 
 /* optional label/value refinement */
 .metric-chip .label {
   opacity: 0.72;
-  margin-right: 6px;
+  margin-right: 5px;
   font-weight: 700;
 }
 
@@ -155,8 +152,8 @@ body {
   align-items: center;
   justify-content: center;
   width: 1.1em;
-  margin-right: 7px;
-  font-size: 1.05em;
+  margin-right: 5px;
+  font-size: 1em;
   line-height: 1;
   opacity: 0.9;
 }
@@ -172,31 +169,39 @@ body {
 
 .metric-chip .gust {
   opacity: 0.75;
-  margin-left: 6px;
+  margin-left: 4px;
   font-weight: 600;
-  font-size: 0.72em;
+  font-size: 0.74em;
 }
 
 .metric-chip .unit {
   opacity: 0.72;
   font-weight: 700;
-  margin-left: 4px;
+  margin-left: 3px;
 }
 
 .metric-chip.uv {
-  min-width: 96px;
   background: rgba(255, 210, 96, 0.14);
   border-color: rgba(255, 210, 96, 0.10);
 }
 
-@media (min-width: 680px) {
+@media (max-width: 679px) {
   #metric-chips {
-    overflow-x: visible;
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
   }
 
   .metric-chip {
-    flex: 1 1 0;
-    min-width: 0;
+    flex: 0 0 auto;
+    min-width: 112px;
+    min-height: 58px;
+    font-size: 16px;
+  }
+
+  .metric-chip.temp {
+    min-width: 108px;
+    font-size: 18px;
   }
 }
 /* ============================================================
@@ -432,7 +437,9 @@ body {
 }
 
 .fs-temp-outlook {
-  position: relative;
+  position: absolute;
+  right: 18px;
+  bottom: 16px;
   display: flex;
   align-items: flex-end;
   gap: 14px;
@@ -475,32 +482,18 @@ body {
 
 @media (min-width: 560px) {
   .feelscore-card.hero {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    column-gap: 22px;
-    align-items: start;
+    min-height: 320px;
+    padding-bottom: 32px;
   }
 
-  .fs-header,
-  .fs-hero-row,
-  .fs-headline,
-  .fs-subhead,
   .fs-bullets {
-    grid-column: 1;
-  }
-
-  .fs-temp-outlook {
-    grid-column: 2;
-    grid-row: 4 / span 2;
-    align-self: end;
-    justify-self: end;
-    width: 210px;
-    margin-top: 0;
+    max-width: calc(100% - 250px);
   }
 }
 
 @media (max-width: 559px) {
   .fs-temp-outlook {
+    position: static;
     width: fit-content;
     max-width: 100%;
     margin-top: 10px;
