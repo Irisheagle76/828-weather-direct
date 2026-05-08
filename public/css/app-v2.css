@@ -238,10 +238,11 @@ body {
     min-width: 0;
   }
 
-  .metric-chip.wind {
+.metric-chip.wind {
     grid-column: 1 / -1;
   }
 }
+
 /* ============================================================
    DROUGHT CARD
    ============================================================ */
@@ -3270,4 +3271,90 @@ body {
     padding: 4px 7px;
     font-size: 0.68rem;
   }
+}
+
+/* ============================================================
+   CURRENT OBS + FEELSCORE LAYOUT RESET
+   Last in file so it wins against the older component rules.
+   ============================================================ */
+
+.live-row {
+  margin-top: 16px;
+}
+
+#metric-chips {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+  overflow: visible;
+}
+
+.metric-chip,
+.metric-chip.temp,
+.metric-chip.humidity,
+.metric-chip.dew,
+.metric-chip.wind,
+.metric-chip.uv {
+  width: auto;
+  min-width: 0;
+  min-height: 52px;
+  padding: 0 10px;
+  border-radius: 14px;
+  font-size: 15px;
+}
+
+.metric-chip.temp {
+  font-size: 18px;
+}
+
+.metric-chip.wind {
+  padding-inline: 12px;
+}
+
+.metric-chip .label,
+.metric-chip .value,
+.metric-chip .unit,
+.metric-chip .gust {
+  min-width: 0;
+}
+
+.metric-chip .gust {
+  font-size: 0.72em;
+}
+
+@media (max-width: 980px) {
+  #metric-chips {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .metric-chip.wind {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 560px) {
+  #metric-chips {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .metric-chip.wind {
+    grid-column: 1 / -1;
+  }
+}
+
+.feelscore-card.hero {
+  min-height: 0 !important;
+  padding-bottom: 18px;
+}
+
+.fs-bullets {
+  max-width: none !important;
+}
+
+.fs-temp-outlook {
+  position: static !important;
+  width: fit-content;
+  max-width: 100%;
+  margin: 10px 0 0;
 }
