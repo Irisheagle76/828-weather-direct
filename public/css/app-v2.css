@@ -3587,61 +3587,82 @@ body {
 
 .feelscore-card.hero {
   min-height: 0 !important;
-  padding-bottom: 18px;
+  padding-bottom: 28px;
 }
 
 .fs-bullets {
   max-width: none !important;
 }
 
+.fs-footer-row {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) auto;
+  gap: 22px;
+  align-items: end;
+}
+
 .fs-temp-outlook {
   position: static !important;
   box-sizing: border-box;
-  width: fit-content;
+  display: grid;
+  grid-template-columns: auto auto;
+  width: auto;
+  min-width: 298px;
   max-width: 100%;
-  margin: 10px 0 0;
+  margin: 0;
   margin-left: auto;
-  gap: 8px;
-  padding: 7px 10px;
+  gap: 28px;
+  padding: 12px 16px 13px;
 }
 
 .fs-temp-main,
 .fs-temp-low {
-  text-align: right;
+  text-align: left;
   min-width: 0;
   overflow: hidden;
 }
 
+.fs-temp-low {
+  text-align: right;
+}
+
 .fs-temp-label {
-  font-size: 9px;
-  letter-spacing: 0.07em;
+  font-size: 13px;
+  letter-spacing: 0.12em;
 }
 
 @media (min-width: 560px) {
   .feelscore-card.hero {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 172px;
-    column-gap: 24px;
-    align-items: start;
+    display: block;
   }
 
   .fs-header,
   .fs-hero-row,
   .fs-headline,
   .fs-subhead {
-    grid-column: 1 / -1;
+    grid-column: auto;
   }
 
   .fs-bullets {
-    grid-column: 1;
+    grid-column: auto;
   }
 
   .fs-temp-outlook {
-    grid-column: 2;
+    grid-column: auto;
     justify-self: end;
-    align-self: start;
-    width: 150px;
-    margin-top: 8px;
-    margin-right: 30px;
+    align-self: end;
+    width: auto;
+    margin-top: 0;
+    margin-right: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .fs-footer-row {
+    grid-template-columns: 1fr;
+  }
+
+  .fs-temp-outlook {
+    min-width: min(100%, 298px);
   }
 }
