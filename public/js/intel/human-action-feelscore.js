@@ -3,7 +3,7 @@
 // ============================================================
 
 import { calculateComfort } from "./comfort.js";
-import { assembleWithVoice } from "./synthesizer/assembleWithVoice.js?v=20260507-timeaware";
+import { assembleWithVoice } from "./synthesizer/assembleWithVoice.js?v=20260508-humanvoice";
 import { buildFullExplanation } from "../intel/explanations/buildFullExplanation.js";
 
 // ============================================================
@@ -249,6 +249,7 @@ function buildIntel(snapshot, score, trend, windImpact, maxGust, label, shortTer
       temp: snapshot.temp,
       dewPoint: snapshot.dewPoint,
       wind: snapshot.wind,
+      windGust: snapshot.gust,
       precipProbability: snapshot.precipProbability,
       precipAmount: snapshot.precipAmount,
       precipTiming: snapshot.precipTiming
@@ -392,6 +393,93 @@ function buildFinalNarrative(ctx, label, periodContext = null) {
   };
 }
 
+function normalizeCopyKey(text = "") {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function pickDistinct(options = [], avoid = "") {
+  const avoidKey = normalizeCopyKey(avoid);
+  return options.find(option => normalizeCopyKey(option) !== avoidKey) || options[0] || "";
+}
+
+function describeComfortHeadline(ctx, label, avoid = "") {
+  const score = ctx?.score ?? 0;
+  const temp = ctx?.snapshot?.temp;
+  const dew = ctx?.snapshot?.dewPoint;
+  const wind = ctx?.wind?.avgWind ?? ctx?.wind?.maxWind ?? 0;
+  const isTomorrow = label === "tomorrow";
+
+  if (temp <= 48 && score >= 75) {
+    return pickDistinct(
+      isTomorrow
+        ? ["Cool start, nice finish", "A crisp start, then easier", "Chilly early, comfortable later"]
+        : ["A cool start, then easier", "Crisp early, comfortable later", "The cool air relaxes a bit"],
+      avoid
+    );
+  }
+
+  if (dew != null && dew < 52 && score >= 75) {
+    return pickDistinct(
+      isTomorrow
+        ? ["Dry air keeps it pleasant", "Low humidity does the heavy lifting", "A clean, easy feel outside"]
+        : ["Dry air keeps things pleasant", "Low humidity helps a lot", "A clean feel outside"],
+      avoid
+    );
+  }
+
+  if (wind >= 10) {
+    return pickDistinct(
+      isTomorrow
+        ? ["A little breeze in the mix", "Comfortable, with some breeze", "Easy overall, just breezy at times"]
+        : ["A light breeze in the mix", "Comfortable, with a breeze", "Easy overall, just a bit breezy"],
+      avoid
+    );
+  }
+
+  if (score >= 85) {
+    return pickDistinct(
+      isTomorrow
+        ? ["Another easy day outside", "A really usable day", "Comfort holds up well"]
+        : ["A good day to be outside", "Comfort holds up well", "A really usable stretch"],
+      avoid
+    );
+  }
+
+  return pickDistinct(
+    isTomorrow
+      ? ["Tomorrow stays manageable", "A decent setup for tomorrow", "Comfort looks steady tomorrow"]
+      : ["Comfort looks steady", "A manageable setup", "Not much fighting comfort"],
+    avoid
+  );
+}
+
+function diversifyNarratives(feelscore, tomorrow, todayCtx, tomorrowCtx) {
+  if (!feelscore || !tomorrow) return { feelscore, tomorrow };
+
+  let nextTomorrow = { ...tomorrow };
+
+  if (normalizeCopyKey(feelscore.headline) === normalizeCopyKey(nextTomorrow.headline)) {
+    nextTomorrow.headline = describeComfortHeadline(tomorrowCtx, "tomorrow", feelscore.headline);
+  }
+
+  if (normalizeCopyKey(feelscore.narrative) === normalizeCopyKey(nextTomorrow.narrative)) {
+    const detail = describeComfortHeadline(tomorrowCtx, "tomorrow", feelscore.headline).toLowerCase();
+    nextTomorrow.narrative = finalizeSentence(`Tomorrow keeps a similar feel, but the main story is ${detail}`);
+  }
+
+  const todayBulletKeys = new Set((feelscore.bullets || []).map(normalizeCopyKey));
+  const filteredBullets = (nextTomorrow.bullets || []).filter(b => !todayBulletKeys.has(normalizeCopyKey(b)));
+  if (filteredBullets.length) {
+    nextTomorrow.bullets = filteredBullets.slice(0, 3);
+  }
+
+  return { feelscore, tomorrow: nextTomorrow };
+}
+
 // ============================================================
 // ICON
 // ============================================================
@@ -436,11 +524,10 @@ export function buildHumanActionIntelFS(raw) {
 
   const todayCtx = buildPeriod(today, "today", currentPeriod);
   const tomorrowCtx = buildPeriod(tomorrow, "tomorrow");
+  const feelscore = buildFinalNarrative(todayCtx, "today", currentPeriod);
+  const tomorrowNarrative = buildFinalNarrative(tomorrowCtx, "tomorrow");
 
-  return {
-    feelscore: buildFinalNarrative(todayCtx, "today", currentPeriod),
-    tomorrow: buildFinalNarrative(tomorrowCtx, "tomorrow")
-  };
+  return diversifyNarratives(feelscore, tomorrowNarrative, todayCtx, tomorrowCtx);
 }
 
 // ============================================================

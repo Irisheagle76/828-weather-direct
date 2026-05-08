@@ -3,18 +3,19 @@ export const categories = {
   goldilocks: {
     headlines: [
       "About as good as it gets",
-      "One of those near-perfect days",
-      "Everything lines up just right",
-      "Hard to ask for better weather",
-      "A standout weather day"
+      "One of those really nice days",
+      "Everything lines up well",
+      "Hard to ask for much better",
+      "A standout stretch of weather",
+      "A good day to leave the windows cracked"
     ],
 
     narratives: [
       "Just about perfect from start to finish.",
       "Everything comes together for a really comfortable day.",
       "One of those days where nothing gets in the way.",
-      "A great setup overall with everything working in your favor.",
-      "The kind of setup where the weather mostly stays out of your way."
+      "A great setup overall, with the weather working in your favor.",
+      "The weather mostly stays out of your way."
     ]
   },
 
@@ -25,15 +26,16 @@ export const categories = {
       "Comfortable and steady",
       "A great day overall",
       "Weather that feels easy",
-      "A smooth feel most of the day"
+      "A smooth feel most of the day",
+      "Good weather for getting things done"
     ],
 
     narratives: [
       "A really comfortable day from start to finish.",
       "Things stay easy and comfortable through the day.",
       "Not much gets in the way of a nice day.",
-      "A simple, comfortable setup that just works.",
-      "Most of the day lands in a good place without much fuss."
+      "A simple setup that works.",
+      "Most of the day lands in a good place."
     ]
   },
 
@@ -44,12 +46,13 @@ export const categories = {
       "Mostly comfortable despite small changes",
       "A solid day overall",
       "Easy enough for most plans",
-      "Mostly comfortable despite minor shifts"
+      "Mostly comfortable despite minor shifts",
+      "A decent day with a few small wrinkles"
     ],
 
     narratives: [
-      "A comfortable day with just a few small changes.",
-      "Pretty nice overall with a little variation.",
+      "A comfortable day with a few small changes.",
+      "Pretty nice overall, with a little variation.",
       "A decent setup that stays comfortable most of the time.",
       "Comfort holds for most of the day with minor shifts.",
       "The day stays mostly agreeable, even with a few changes around the edges."
@@ -62,7 +65,8 @@ export const categories = {
       "Not quite as comfortable",
       "Some minor discomfort at times",
       "A bit uneven through the day",
-      "A few things tug at comfort"
+      "A few things tug at comfort",
+      "A little less smooth outside"
     ],
 
     narratives: [
@@ -70,7 +74,7 @@ export const categories = {
       "Comfort dips at times as things become uneven.",
       "Not bad overall, but not quite as smooth.",
       "Some small annoyances develop through the day.",
-      "It is workable weather, though not quite as easy as it could be."
+      "It is workable weather, just not quite as easy as it could be."
     ]
   },
 

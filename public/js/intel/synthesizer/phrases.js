@@ -12,22 +12,22 @@ export const phrases = {
       "a cold feel that sticks around",
       "chilly air holding through the day",
       "a noticeable chill from start to finish",
-      "cold air staying in the picture"
+      "cold air staying in place"
     ],
 
     cool: [
       "a cool start early",
       "cool air lingering through the morning",
-      "a slight chill staying in place",
-      "a cooler feel early before things settle"
+      "a slight chill early on",
+      "a cooler feel early before things settle down"
     ],
 
   neutral: [
   "temperatures staying comfortable",
-  "a comfortable temperature range",
+  "temperatures in a comfortable range",
   "temperatures holding in a pleasant range",
   "mild temperatures through the day",
-  "temperatures staying easy to work with"
+  "temperatures staying easy"
 ],
 
     warm: [
@@ -49,16 +49,16 @@ export const phrases = {
   moisture: {
     dry: [
       "dry air keeping things crisp",
-      "low humidity keeping things light",
+      "low humidity helping out",
       "a clean feel to the air",
       "the air feeling fresh and dry"
     ],
 
     neutral: [
-      "humidity staying comfortable",
+      "humidity staying easy",
       "humidity remains manageable",
       "air feels clean and fresh",
-      "humidity remaining comfortable",
+      "humidity staying in a good range",
       "moisture staying in check"
     ],
 
@@ -82,15 +82,15 @@ export const phrases = {
     calm: [
       "winds staying light",
       "very little wind to deal with",
-      "the air staying mostly still",
-      "wind staying out of the story"
+      "the air staying mostly calm",
+      "wind staying pretty quiet"
     ],
 
     breezy: [
       "a light breeze developing",
       "a gentle breeze at times",
       "some movement in the air",
-      "enough breeze to notice"
+      "just enough breeze to notice"
     ],
 
     windy: [
@@ -102,7 +102,7 @@ export const phrases = {
     gusty: [
       "gusts showing up at times",
       "some stronger gusts mixing in",
-      "winds getting a bit pushy at times"
+      "winds getting a little pushy at times"
     ]
   },
 

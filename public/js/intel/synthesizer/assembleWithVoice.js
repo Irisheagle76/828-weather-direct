@@ -1,6 +1,9 @@
-import { assemble } from "./assemble.js?v=20260507-timeaware";
+import { assemble } from "./assemble.js?v=20260508-humanvoice";
 import { cleanPhrase } from "./voice-filter.js";
 import { buildHumanVoice } from "../human-voice.js";
+
+const pick = (options = []) =>
+  options[Math.floor(Math.random() * options.length)] || "";
 
 export function assembleWithVoice(
   intel,
@@ -50,7 +53,11 @@ export function assembleWithVoice(
       },
 
       improving: (h) => {
-        if (/cool|chill/i.test(h)) return "The chill eases up";
+        if (/cool|chill/i.test(h)) {
+          return period === "tomorrow"
+            ? pick(["Cool early, easier later", "A crisp start, then comfortable", "Chilly early, nicer later"])
+            : pick(["The chill eases a bit", "Cool now, easier later", "A crisp start, then more comfortable"]);
+        }
         return `${h}, trending better`;
       },
 

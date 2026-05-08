@@ -5,24 +5,26 @@
 
 export const bulletPools = {
   temperature: [
-    "Comfortable temperatures",
+    "Temperatures feel good",
     "A mild afternoon",
     "A cool start early"
   ],
   moisture: [
     "Dry, crisp air",
-    "Comfortable humidity",
-    "Air stays light"
+    "Humidity stays easy",
+    "The air feels light",
+    "Low humidity helps"
   ],
   wind: [
-    "Light winds",
+    "Winds stay light",
     "A light breeze at times",
-    "Winds stay out of the way"
+    "Wind stays pretty quiet"
   ],
   light: [
     "A mix of sun and clouds",
     "Plenty of sunshine",
-    "Some clouds around"
+    "Some clouds around",
+    "Sun breaks through at times"
   ]
 };
 

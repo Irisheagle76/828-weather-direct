@@ -207,10 +207,14 @@ function pickLightPhrase(intel) {
 function softenTemporalIntro(frame, baseNarrative) {
   const base = (baseNarrative || "").trim();
   const lower = base.charAt(0).toLowerCase() + base.slice(1);
+  const completeLead = /^(everything|things|most of|not much|comfort|weather|hard to|about as|one of)\b/i.test(base);
   const articleLead = /^[Aa]n?\s/.test(base);
   const conditionsLead = /conditions$/i.test(base);
+  const direct = (prefix) => `${prefix}, ${lower}`;
   const looks = conditionsLead
     ? `has ${lower}`
+    : completeLead
+      ? lower
     : articleLead
       ? `looks like ${lower}`
       : `looks ${lower}`;
@@ -225,8 +229,8 @@ function softenTemporalIntro(frame, baseNarrative) {
       ? `is shaping up like ${lower}`
       : `is shaping up to be ${lower}`;
 
-  if (/^For today/i.test(frame)) return `Today ${looks}`;
-  if (/^Today/i.test(frame)) return `Today ${looks}`;
+  if (/^For today/i.test(frame)) return completeLead ? direct("Today") : `Today ${looks}`;
+  if (/^Today/i.test(frame)) return completeLead ? direct("Today") : `Today ${looks}`;
   if (/^Through today/i.test(frame)) return `Today ${stays}`;
   if (/^Later today/i.test(frame)) {
     if (conditionsLead) return `Later today, ${lower} continue`;
@@ -241,8 +245,8 @@ function softenTemporalIntro(frame, baseNarrative) {
     return articleLead ? `This evening, it looks like ${lower}` : `This evening, it turns ${lower}`;
   }
 
-  if (/^For tomorrow/i.test(frame)) return `Tomorrow ${looks}`;
-  if (/^Tomorrow/i.test(frame)) return `Tomorrow ${looks}`;
+  if (/^For tomorrow/i.test(frame)) return completeLead ? direct("Tomorrow") : `Tomorrow ${looks}`;
+  if (/^Tomorrow/i.test(frame)) return completeLead ? direct("Tomorrow") : `Tomorrow ${looks}`;
   if (/^Heading into tomorrow/i.test(frame)) return `Tomorrow ${shaping}`;
   if (/^Looking ahead to tomorrow/i.test(frame)) return `Tomorrow ${shaping}`;
 
@@ -251,6 +255,11 @@ function softenTemporalIntro(frame, baseNarrative) {
 
 function polishNarrative(text) {
   return text
+    .replace(/\bToday looks everything\b/gi, "Today, everything")
+    .replace(/\bTomorrow looks everything\b/gi, "Tomorrow, everything")
+    .replace(/\blooks things\b/gi, "things")
+    .replace(/\bnear-perfect days\b/gi, "really nice days")
+    .replace(/\bone of those near-perfect days\b/gi, "one of those really nice days")
     .replace(/\bfeaturing temperatures\b/gi, "with temperatures")
     .replace(/\bfeaturing a\b/gi, "with a")
     .replace(/\bfeaturing humidity\b/gi, "with humidity")
@@ -259,6 +268,9 @@ function polishNarrative(text) {
     .replace(/\btemperatures staying in a nice range\b/gi, "temperatures staying in a pleasant range")
     .replace(/\btemperatures holding in a nice range\b/gi, "temperatures holding in a pleasant range")
     .replace(/\bcomfortable and humidity\b/gi, "comfortable, with humidity")
+    .replace(/\btemperatures staying easy to work with\b/gi, "temperatures staying easy")
+    .replace(/\blow humidity keeping things light\b/gi, "low humidity helping out")
+    .replace(/\bwind staying out of the story\b/gi, "wind staying pretty quiet")
     .replace(/\bwith a few small changes, with\b/gi, "with a few small changes and")
     .replace(/\bwith a little movement, with\b/gi, "with a little movement and")
     .replace(/\s+,/g, ",")
