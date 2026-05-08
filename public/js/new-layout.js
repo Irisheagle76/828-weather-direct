@@ -127,6 +127,11 @@ function normalizeCurrent(c = {}) {
       c.relativeHumidity ??
       null,
 
+    uvIndex:
+      c.uvIndex ??
+      c.uv_index ??
+      null,
+
     // 🌧️ optional but helpful for consistency
     precipRate:
       c.precipRate ??
@@ -166,6 +171,19 @@ function smoothGust(current, hours = []) {
 function calculateGustiness(windSpeed, windGust) {
   if (!Number.isFinite(windSpeed) || !Number.isFinite(windGust)) return 0;
   return Math.max(0, windGust - windSpeed);
+}
+
+function getCurrentUvIndex(current = {}, hourly = []) {
+  const directUv = current?.uvIndex ?? current?.uv_index;
+  if (Number.isFinite(directUv)) return directUv;
+
+  const now = Date.now();
+  const closest = hourly
+    .filter(h => Number.isFinite(h?.timestamp) && Number.isFinite(h?.uvIndex))
+    .map(h => ({ uvIndex: h.uvIndex, distance: Math.abs(h.timestamp - now) }))
+    .sort((a, b) => a.distance - b.distance)[0];
+
+  return closest?.distance <= 90 * 60 * 1000 ? closest.uvIndex : null;
 }
 
 // ============================================================
@@ -262,7 +280,7 @@ console.log("CURRENT DEBUG:", {
 
       console.log("TEMPEST IN LAYOUT:", tempest);
 
-   if (current) renderHeaderMetrics(current, tempest);
+   if (current) renderHeaderMetrics(current, tempest, hourly);
 
     // ------------------------------------------------------------
     // HUMAN INTEL (FIXED)
@@ -748,7 +766,7 @@ function hideSplash() {
 // ------------------------------------------------------------
 // HEADER METRICS
 // ------------------------------------------------------------
-function renderHeaderMetrics(current, tempest = {}) {
+function renderHeaderMetrics(current, tempest = {}, hourly = []) {
   const container = document.getElementById("metric-chips");
   if (!container || !current) return;
 
@@ -796,6 +814,8 @@ const gustRaw =
     ? toMPH(tempest.wind_gust)
     : current.windGust ?? null;
 
+const uvRaw = getCurrentUvIndex(current, hourly);
+
   // ---------------------------
   // normalized values
   // ---------------------------
@@ -804,6 +824,7 @@ const gustRaw =
   const dew = round(dewRaw);
   const wind = round(windRaw);
   const gust = round(gustRaw);
+  const uv = Number.isFinite(uvRaw) ? Math.round(uvRaw) : null;
 
 // ---------------------------
 // wind display logic
@@ -819,7 +840,7 @@ const windHTML = showGust
     <span class="label">Wind</span>
     <span class="value">
       ${wind} mph
-      <span class="gust">→ ${gust}</span>
+      <span class="gust">G ${gust}</span>
     </span>
   `
   : `
@@ -852,6 +873,14 @@ const windHTML = showGust
     <div class="metric-chip">
       ${windHTML}
     </div>
+
+    ${uv != null ? `
+      <div class="metric-chip uv">
+        <span class="metric-icon" aria-hidden="true">☀️</span>
+        <span class="label">UV</span>
+        <span class="value">${uv}</span>
+      </div>
+    ` : ""}
   `;
 }
 // ------------------------------------------------------------
@@ -1057,7 +1086,7 @@ export async function initGlobalWeatherUI() {
 
     // 🔥 header metrics
     if (current) {
-      renderHeaderMetrics(current, tempest);
+      renderHeaderMetrics(current, tempest, hourly);
     }
 
     // 🔥 live time

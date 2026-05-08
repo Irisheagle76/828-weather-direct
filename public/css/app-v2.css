@@ -88,9 +88,13 @@ body {
 #metric-chips {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
+  flex: 1 1 0;
+  justify-content: flex-end;
   margin-left: auto;
+  min-width: 0;
+  row-gap: 6px;
 }
 
 /* ------------------------------------------------------------
@@ -102,29 +106,29 @@ body {
   align-items: center;
   justify-content: center;
 
-  padding: 8px 14px;
-  border-radius: 12px;
+  padding: 6px 10px;
+  border-radius: 10px;
 
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
 
   background: rgba(255,255,255,0.08);
   -webkit-backdrop-filter: blur(6px);
 backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
 
-  min-height: 36px;
+  min-height: 32px;
   white-space: nowrap; /* prevents awkward wraps */
 }
 
 /* primary signal (temperature) */
 .metric-chip.temp {
   background: rgba(255,255,255,0.14);
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
-  padding: 10px 16px;
-  min-height: 40px;
+  padding: 7px 12px;
+  min-height: 34px;
 }
 
 /* optional label/value refinement */
@@ -139,7 +143,7 @@ backdrop-filter: blur(6px);
   align-items: center;
   justify-content: center;
   width: 1.1em;
-  margin-right: 5px;
+  margin-right: 4px;
   font-size: 0.95em;
   line-height: 1;
   opacity: 0.9;
@@ -155,14 +159,19 @@ backdrop-filter: blur(6px);
 
 .metric-chip .gust {
   opacity: 0.75;
-  margin-left: 6px;
+  margin-left: 4px;
   font-weight: 600;
+  font-size: 0.92em;
 }
 
 .metric-chip .unit {
   opacity: 0.6;
   font-weight: 500;
   margin-left: 2px;
+}
+
+.metric-chip.uv {
+  background: rgba(255, 210, 96, 0.16);
 }
 /* ============================================================
    DROUGHT CARD
