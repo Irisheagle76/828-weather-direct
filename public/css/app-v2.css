@@ -3355,7 +3355,11 @@ body {
 }
 
 .metric-chip.humidity .label {
-  margin-right: 6px;
+  margin-right: 9px;
+}
+
+.metric-chip.dew .label {
+  margin-right: 9px;
 }
 
 .metric-chip.wind .unit {
@@ -3409,8 +3413,8 @@ body {
 @media (min-width: 560px) {
   .feelscore-card.hero {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 160px;
-    column-gap: 14px;
+    grid-template-columns: minmax(0, 1fr) 150px;
+    column-gap: 22px;
     align-items: start;
   }
 
@@ -3427,9 +3431,9 @@ body {
 
   .fs-temp-outlook {
     grid-column: 2;
-    justify-self: stretch;
+    justify-self: start;
     align-self: start;
-    width: 160px;
+    width: 150px;
     margin-top: 8px;
   }
 }
