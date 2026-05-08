@@ -7,6 +7,13 @@ export const temporal = {
     "Later today,"
   ],
 
+  tonight: [
+    "Tonight,",
+    "Through tonight,",
+    "For the rest of tonight,",
+    "This evening,"
+  ],
+
   tomorrow: [
     "Tomorrow,",
     "For tomorrow,",
@@ -20,6 +27,12 @@ export const temporal = {
     "Today, it’s about as good as it gets,"
   ],
 
+  goldilocksTonight: [
+    "Tonight, things line up nicely,",
+    "Tonight, the setup stays easy,",
+    "Through tonight, comfort holds up well,"
+  ],
+
   goldilocksTomorrow: [
     "Tomorrow, another really nice setup,",
     "Tomorrow, things come together again,",
@@ -31,6 +44,10 @@ export const temporal = {
 
     if (dayType === "today") {
       return pick(isGoldilocks ? this.goldilocksToday : this.today);
+    }
+
+    if (dayType === "tonight") {
+      return pick(isGoldilocks ? this.goldilocksTonight : this.tonight);
     }
 
     if (dayType === "tomorrow") {

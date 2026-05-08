@@ -3,7 +3,7 @@
 // ============================================================
 
 import { calculateComfort } from "./comfort.js";
-import { assembleWithVoice } from "./synthesizer/assembleWithVoice.js?v=20260507-humanvoice";
+import { assembleWithVoice } from "./synthesizer/assembleWithVoice.js?v=20260507-timeaware";
 import { buildFullExplanation } from "../intel/explanations/buildFullExplanation.js";
 
 // ============================================================
@@ -53,11 +53,40 @@ function splitDays(hourly, now) {
   const tomorrow = [];
 
   for (const h of hourly) {
-    if (h._ts >= startToday && h._ts < startTomorrow) today.push(h);
+    if (h._ts >= now && h._ts < startTomorrow) today.push(h);
     else if (h._ts >= startTomorrow && h._ts < startNext) tomorrow.push(h);
   }
 
   return { today, tomorrow };
+}
+
+function buildCurrentPeriodContext(now) {
+  const hour = new Date(now).getHours();
+
+  if (hour >= 17) {
+    return {
+      key: "tonight",
+      label: "tonight",
+      trendLead: "Later tonight",
+      fallbackLabel: "tonight"
+    };
+  }
+
+  if (hour >= 12) {
+    return {
+      key: "today",
+      label: "rest of today",
+      trendLead: "Through the rest of today",
+      fallbackLabel: "today"
+    };
+  }
+
+  return {
+    key: "today",
+    label: "today",
+    trendLead: "Later today",
+    fallbackLabel: "today"
+  };
 }
 
 // ============================================================
@@ -171,10 +200,11 @@ function computeShortTermTrend(hours = []) {
 // 🆕 TREND FLAVOR
 // ============================================================
 
-function applyTrendFlavor(text, shortTerm = {}) {
+function applyTrendFlavor(text, shortTerm = {}, periodContext = {}) {
   if (!text) return text;
 
   const { tempTrend = 0, dewTrend = 0, windTrend = 0 } = shortTerm;
+  const lead = periodContext.trendLead || "Later on";
 
   let additions = [];
 
@@ -191,8 +221,8 @@ function applyTrendFlavor(text, shortTerm = {}) {
 
   const trendSentence =
     additions.length === 1
-      ? `Later on, ${additions[0]}.`
-      : `Later on, ${additions.slice(0, -1).join(", ")} and ${additions.at(-1)}.`;
+      ? `${lead}, ${additions[0]}.`
+      : `${lead}, ${additions.slice(0, -1).join(", ")} and ${additions.at(-1)}.`;
 
   return `${text.replace(/\.$/, "")}. ${trendSentence}`;
 }
@@ -213,7 +243,7 @@ function detectDominantFactor(s = {}) {
   return "comfortable";
 }
 
-function buildIntel(snapshot, score, trend, windImpact, maxGust, label, shortTerm) {
+function buildIntel(snapshot, score, trend, windImpact, maxGust, label, shortTerm, periodContext) {
   return {
     signals: {
       temp: snapshot.temp,
@@ -224,7 +254,12 @@ function buildIntel(snapshot, score, trend, windImpact, maxGust, label, shortTer
       precipTiming: snapshot.precipTiming
     },
     pattern: { trend, avg: score },
-    context: { label },
+    context: {
+      label,
+      period: periodContext?.key ?? label,
+      speaksFor: periodContext?.label ?? label,
+      remainingDay: label !== "tomorrow"
+    },
     precipProbability: snapshot.precipProbability,
     precipAmount: snapshot.precipAmount,
     precipTiming: snapshot.precipTiming,
@@ -237,7 +272,7 @@ function buildIntel(snapshot, score, trend, windImpact, maxGust, label, shortTer
 // BUILD PERIOD
 // ============================================================
 
-function buildPeriod(hoursInput, label) {
+function buildPeriod(hoursInput, label, periodContext = null) {
   if (!hoursInput?.length) return null;
 
   const hours = hoursInput.map(h => ({ ...h }));
@@ -270,11 +305,13 @@ function buildPeriod(hoursInput, label) {
     windImpact,
     maxGust,
     label,
-    shortTerm
+    shortTerm,
+    periodContext
   );
 
   return {
     label,
+    periodContext,
     score,
     snapshot,
     trend,
@@ -316,12 +353,14 @@ function buildBulletSentence(bullets = []) {
   );
 }
 
-function buildFinalNarrative(ctx, label) {
-  if (!ctx) return fallback(label);
+function buildFinalNarrative(ctx, label, periodContext = null) {
+  if (!ctx) return fallback(periodContext?.fallbackLabel ?? label);
+
+  const narrativePeriod = periodContext?.key ?? label;
 
   const narrativeObj = assembleWithVoice(
     ctx.intel,
-    label,
+    narrativePeriod,
     mapScoreToCategory(ctx.score),
     ctx.score >= 85
   );
@@ -333,12 +372,13 @@ function buildFinalNarrative(ctx, label) {
     buildBulletSentence(bullets);
 
   // 🔥 APPLY TREND INTELLIGENCE
-  narrative = applyTrendFlavor(narrative, ctx.intel?.shortTerm);
+  narrative = applyTrendFlavor(narrative, ctx.intel?.shortTerm, periodContext);
 
   narrative = finalizeSentence(narrative);
 
   return {
-    label,
+    label: periodContext?.fallbackLabel ?? label,
+    speaksFor: periodContext?.label ?? label,
     score: ctx.score,
     headline: narrativeObj?.headline || "Conditions are steady",
     narrative,
@@ -392,12 +432,13 @@ export function buildHumanActionIntelFS(raw) {
   if (!hourly.length) return fallbackAll();
 
   const { today, tomorrow } = splitDays(hourly, now);
+  const currentPeriod = buildCurrentPeriodContext(now);
 
-  const todayCtx = buildPeriod(today, "today");
+  const todayCtx = buildPeriod(today, "today", currentPeriod);
   const tomorrowCtx = buildPeriod(tomorrow, "tomorrow");
 
   return {
-    feelscore: buildFinalNarrative(todayCtx, "today"),
+    feelscore: buildFinalNarrative(todayCtx, "today", currentPeriod),
     tomorrow: buildFinalNarrative(tomorrowCtx, "tomorrow")
   };
 }

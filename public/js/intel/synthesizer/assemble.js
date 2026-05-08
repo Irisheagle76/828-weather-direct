@@ -102,10 +102,11 @@ function buildPrecipVoice(intel, dayType) {
   if (signal === "none" || signal === "low") return null;
 
   const timing = intel?.precipTiming ?? intel?.signals?.precipTiming ?? null;
+  const isTonight = dayType === "tonight";
   const timingPhrase =
     dayType === "tomorrow"
       ? "tomorrow"
-      : timing?.starts || "later today";
+      : timing?.starts || (isTonight ? "tonight" : "later today");
 
   const headlineTiming =
     dayType === "tomorrow"
@@ -115,14 +116,23 @@ function buildPrecipVoice(intel, dayType) {
   const sentenceTiming =
     dayType === "tomorrow"
       ? "tomorrow"
-      : `starting ${timingPhrase}`;
+      : isTonight
+        ? (timingPhrase === "tonight" ? "as the night goes on" : timingPhrase)
+        : `starting ${timingPhrase}`;
 
-  const prefix = dayType === "tomorrow" ? "Tomorrow" : "Today";
+  const prefix =
+    dayType === "tomorrow"
+      ? "Tomorrow"
+      : isTonight
+        ? "Tonight"
+        : "Today";
 
   if (signal === "high") {
     return {
       headline: `Rain moves in ${headlineTiming}`,
-      narrative: `${prefix}, rain is likely to become one of the defining parts of the day ${sentenceTiming}, even if temperatures still feel mild.`,
+      narrative: isTonight
+        ? `${prefix}, rain is likely to shape the remaining hours ${sentenceTiming}, even if temperatures still feel mild.`
+        : `${prefix}, rain is likely to become one of the defining parts of the day ${sentenceTiming}, even if temperatures still feel mild.`,
       bullets: [
         `Rain likely ${timingPhrase}`,
         "Outdoor plans may need adjusting",
@@ -134,7 +144,7 @@ function buildPrecipVoice(intel, dayType) {
   if (signal === "moderate") {
     return {
       headline: "Rain chances return",
-      narrative: `${prefix}, it is not necessarily a washout, but showers are likely enough ${sentenceTiming} to shape how the day feels.`,
+      narrative: `${prefix}, it is not necessarily a washout, but showers are likely enough ${sentenceTiming} to shape how ${isTonight ? "tonight" : "the day"} feels.`,
       bullets: [
         `Showers possible ${timingPhrase}`,
         "Keep rain in the plan",
@@ -145,7 +155,7 @@ function buildPrecipVoice(intel, dayType) {
 
   return {
     headline: "A few showers possible",
-    narrative: `${prefix}, most of the day may still behave, but a few passing showers are possible ${sentenceTiming}.`,
+    narrative: `${prefix}, most of ${isTonight ? "the remaining hours" : "the day"} may still behave, but a few passing showers are possible ${sentenceTiming}.`,
     bullets: [
       `A few passing showers possible ${timingPhrase}`,
       "Most hours may still be usable",
@@ -221,6 +231,14 @@ function softenTemporalIntro(frame, baseNarrative) {
   if (/^Later today/i.test(frame)) {
     if (conditionsLead) return `Later today, ${lower} continue`;
     return articleLead ? `Later today, it looks like ${lower}` : `Later today, it turns ${lower}`;
+  }
+
+  if (/^Tonight/i.test(frame)) return `Tonight ${looks}`;
+  if (/^Through tonight/i.test(frame)) return `Tonight ${stays}`;
+  if (/^For the rest of tonight/i.test(frame)) return `For the rest of tonight, ${lower}`;
+  if (/^This evening/i.test(frame)) {
+    if (conditionsLead) return `This evening, ${lower} continue`;
+    return articleLead ? `This evening, it looks like ${lower}` : `This evening, it turns ${lower}`;
   }
 
   if (/^For tomorrow/i.test(frame)) return `Tomorrow ${looks}`;
@@ -300,7 +318,13 @@ const baseNarrative =
     ? scoreTone
     : categoryBase;
 
-  const intro = softenTemporalIntro(temporalFrame, baseNarrative);
+  const periodNarrative = dayType === "tonight"
+    ? baseNarrative
+        .replace(/\bday\b/gi, "night")
+        .replace(/\bbe outside\b/gi, "be out")
+    : baseNarrative;
+
+  const intro = softenTemporalIntro(temporalFrame, periodNarrative);
 
 // ------------------------------------------------------------
 // CORE SIGNALS
