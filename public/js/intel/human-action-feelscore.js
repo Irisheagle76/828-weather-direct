@@ -204,7 +204,7 @@ function applyTrendFlavor(text, shortTerm = {}, periodContext = {}) {
   if (!text) return text;
 
   const { tempTrend = 0, dewTrend = 0, windTrend = 0 } = shortTerm;
-  const lead = periodContext.trendLead || "Later on";
+  const lead = periodContext?.trendLead || "Later on";
 
   let additions = [];
 
