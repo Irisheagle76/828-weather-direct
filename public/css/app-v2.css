@@ -1552,7 +1552,35 @@ body {
   }
 
   .df-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .df-block {
+    padding: 9px;
+  }
+
+  .df-label {
+    font-size: 9px;
+    letter-spacing: 0.08em;
+  }
+
+  .df-main {
+    gap: 5px;
+    font-size: 19px;
+  }
+
+  .df-icon {
+    font-size: 20px;
+  }
+
+  .df-scale-label {
+    padding: 4px 7px;
+    font-size: 10px;
+  }
+
+  .df-sub {
+    font-size: 10px;
   }
 }
 
@@ -3659,10 +3687,33 @@ body {
 
 @media (max-width: 560px) {
   .fs-footer-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(104px, 0.85fr) minmax(158px, 1.15fr);
+    gap: 10px;
+    align-items: end;
   }
 
   .fs-temp-outlook {
-    min-width: min(100%, 298px);
+    width: 100%;
+    min-width: 0;
+    gap: 10px;
+    padding: 9px 11px 10px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .fs-temp-label {
+    font-size: 10px;
+    letter-spacing: 0.09em;
+  }
+
+  .fs-temp-value {
+    font-size: 36px;
+  }
+
+  .fs-temp-low-value {
+    font-size: 27px;
+  }
+
+  .fs-bullet {
+    font-size: 14px;
   }
 }
