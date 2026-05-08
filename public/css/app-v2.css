@@ -3451,6 +3451,7 @@ body {
   margin: 10px 0 0;
   margin-left: auto;
   gap: 10px;
+  padding: 7px 9px;
 }
 
 .fs-temp-main,
@@ -3462,8 +3463,8 @@ body {
 @media (min-width: 560px) {
   .feelscore-card.hero {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 150px;
-    column-gap: 22px;
+    grid-template-columns: minmax(0, 1fr) 136px;
+    column-gap: 24px;
     align-items: start;
   }
 
@@ -3482,7 +3483,8 @@ body {
     grid-column: 2;
     justify-self: start;
     align-self: start;
-    width: 150px;
+    width: 136px;
     margin-top: 8px;
+    margin-right: 18px;
   }
 }
