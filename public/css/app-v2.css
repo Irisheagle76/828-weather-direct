@@ -3378,11 +3378,60 @@ body {
 
 @media (max-width: 560px) {
   #metric-chips {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    padding-bottom: 4px;
+  }
+
+  .metric-chip,
+  .metric-chip.temp,
+  .metric-chip.humidity,
+  .metric-chip.dew,
+  .metric-chip.wind,
+  .metric-chip.uv {
+    flex: 0 0 auto;
+    min-height: 40px;
+    padding: 0 8px;
+    font-size: 12px;
+  }
+
+  .metric-chip.temp {
+    width: 76px;
+    font-size: 14px;
+  }
+
+  .metric-chip.humidity {
+    width: 88px;
+  }
+
+  .metric-chip.dew {
+    width: 82px;
   }
 
   .metric-chip.wind {
-    grid-column: 1 / -1;
+    width: 126px;
+    grid-column: auto;
+  }
+
+  .metric-chip.uv {
+    width: 72px;
+  }
+
+  .metric-chip .metric-icon {
+    font-size: 0.82em;
+    margin-right: 3px;
+  }
+
+  .metric-chip .label {
+    margin-right: 3px;
+  }
+
+  .metric-chip.humidity .label,
+  .metric-chip.dew .label {
+    margin-right: 5px;
   }
 }
 
