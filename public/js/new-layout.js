@@ -950,19 +950,19 @@ const windHTML = showGust
       <span class="value">${temp}°</span>
     </div>
 
-    <div class="metric-chip">
+    <div class="metric-chip humidity">
       <span class="metric-icon" aria-hidden="true">&#128167;</span>
       <span class="label">RH</span>
       <span class="value">${rh}%</span>
     </div>
 
-    <div class="metric-chip">
+    <div class="metric-chip dew">
       <span class="metric-icon" aria-hidden="true">&#128166;</span>
       <span class="label">DP</span>
       <span class="value">${dew}°</span>
     </div>
 
-    <div class="metric-chip">
+    <div class="metric-chip wind">
       ${windHTML}
     </div>
 
