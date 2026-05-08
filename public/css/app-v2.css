@@ -953,7 +953,7 @@ backdrop-filter: blur(6px);
 
 .timeline-card {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   border-radius: 18px;
   padding: 18px 18px 16px;
   background:
@@ -1011,11 +1011,12 @@ backdrop-filter: blur(6px);
 .timeline-row {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(6, minmax(74px, 1fr));
-  gap: 10px;
-  overflow-x: auto;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+  overflow: visible;
   padding-bottom: 2px;
   scrollbar-width: none;
+  min-width: 0;
 }
 
 .timeline-row::-webkit-scrollbar {
@@ -1023,9 +1024,10 @@ backdrop-filter: blur(6px);
 }
 
 .hour-block {
+  min-width: 0;
   min-height: 116px;
   border-radius: 14px;
-  padding: 12px 8px 10px;
+  padding: 12px 6px 10px;
   text-align: center;
   background: rgba(5, 12, 27, 0.52);
   border: 1px solid rgba(159, 176, 209, 0.12);
@@ -1048,12 +1050,13 @@ backdrop-filter: blur(6px);
 .timeline-card .hour-time {
   margin: 0;
   color: rgba(159, 176, 209, 0.74);
-  font-size: 12px;
+  font-size: clamp(10px, 1.65vw, 12px);
   line-height: 1.1;
+  white-space: nowrap;
 }
 
 .timeline-card .hour-icon {
-  font-size: 21px;
+  font-size: clamp(18px, 3vw, 21px);
   line-height: 1;
 }
 
@@ -1068,7 +1071,7 @@ backdrop-filter: blur(6px);
 
 .timeline-card .hour-temp {
   color: #f4f8ff;
-  font-size: 20px;
+  font-size: clamp(17px, 3vw, 20px);
   font-weight: 800;
 }
 
@@ -1079,7 +1082,7 @@ backdrop-filter: blur(6px);
 
 .timeline-card .hour-score {
   color: #bfe0ff;
-  font-size: 15px;
+  font-size: clamp(13px, 2.4vw, 15px);
   font-weight: 800;
 }
 
@@ -1107,15 +1110,23 @@ backdrop-filter: blur(6px);
 
 @media (max-width: 680px) {
   .timeline-card {
+    overflow: hidden;
     padding: 16px 14px 14px;
   }
 
   .timeline-row {
-    grid-template-columns: repeat(6, minmax(78px, 1fr));
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    padding-bottom: 2px;
   }
 
   .hour-block {
+    flex: 0 0 100px;
     min-height: 112px;
+    scroll-snap-align: start;
   }
 }
 
