@@ -5,7 +5,7 @@
   <title>828 Weather Direct – Preview</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <link rel="stylesheet" href="/css/app-v2.css?v=20260508-uvchip" />
+  <link rel="stylesheet" href="/css/app-v2.css?v=20260508-feelscore-info" />
 </head>
 
 <body>
@@ -85,7 +85,7 @@
        SCRIPT
        ===================================== -->
   <script type="module">
-    import { renderNewLayout } from '/js/new-layout.js?v=20260508-uvchip';
+    import { renderNewLayout } from '/js/new-layout.js?v=20260508-feelscore-info';
 
     const app = document.getElementById('app');
 
@@ -109,28 +109,7 @@
       const body = document.getElementById('info-body');
 
       if (type === 'feelscore') {
-        const currentLine = value != null
-          ? `<p style="margin-top:10px;"><b>You are here:</b> ${value}</p>`
-          : '';
-
-        body.innerHTML = `
-          <h2>FeelScore</h2>
-          <p>
-            Measures how the air actually feels using temperature,
-            humidity (dew point), and wind.
-          </p>
-
-          <h3>Scale (0–100)</h3>
-          <ul>
-            <li><b>90–100</b> → Ideal</li>
-            <li><b>70–89</b> → Comfortable</li>
-            <li><b>55–69</b> → Slight discomfort</li>
-            <li><b>40–54</b> → Uncomfortable</li>
-            <li><b>&lt;40</b> → Harsh</li>
-          </ul>
-
-          ${currentLine}
-        `;
+        body.innerHTML = buildFeelscoreInfoHtml(value);
       }
 
       if (type === 'drought') {
@@ -168,6 +147,64 @@
       modal.classList.remove('hidden');
     };
 
+    function buildFeelscoreInfoHtml(value = null) {
+      const label =
+        value >= 90 ? "Ideal" :
+        value >= 70 ? "Comfortable" :
+        value >= 55 ? "Slight discomfort" :
+        value >= 40 ? "Uncomfortable" :
+        value != null ? "Harsh" : null;
+
+      return `
+        <div class="info-panel feelscore-info-panel">
+          <div class="info-hero">
+            <div class="info-kicker">828 Weather Direct Explainer</div>
+            <h2>FeelScore</h2>
+            <p>
+              FeelScore turns the weather into one quick comfort read. It blends temperature,
+              humidity, dew point, and wind so the number reflects how the air actually feels,
+              not just what the thermometer says.
+            </p>
+            ${value != null ? `<div class="info-score-callout">Right now: ${value} ${label ? `- ${label}` : ""}</div>` : ""}
+          </div>
+
+          <div class="info-grid">
+            <div class="info-card">
+              <h3>What raises it</h3>
+              <p>
+                Mild temperatures, lower dew points, manageable humidity, and a gentle breeze
+                all push the score higher. These are the days that feel clean, easy, and usable.
+              </p>
+            </div>
+
+            <div class="info-card">
+              <h3>What lowers it</h3>
+              <p>
+                Heat, sticky humidity, sharp cold, strong wind, or a raw damp feel pull the
+                score down. The same temperature can score differently depending on the air.
+              </p>
+            </div>
+          </div>
+
+          <h3>Comfort scale</h3>
+          <div class="info-scale">
+            <div class="info-band ideal"><b>90-100</b><span>Ideal: easy air, comfortable temperatures, and very little weather friction.</span></div>
+            <div class="info-band comfort"><b>70-89</b><span>Comfortable: broadly pleasant, though one factor may be noticeable.</span></div>
+            <div class="info-band slight"><b>55-69</b><span>Slight discomfort: usable, but heat, chill, humidity, or wind starts to matter.</span></div>
+            <div class="info-band high"><b>40-54</b><span>Uncomfortable: conditions are working against comfort for many people.</span></div>
+            <div class="info-band extreme"><b>&lt;40</b><span>Harsh: cold, heat, humidity, wind, or wet weather may dominate the feel.</span></div>
+          </div>
+
+          <h3>How to use it</h3>
+          <ul class="info-list">
+            <li>Use the score as a quick read on comfort, then scan the bullets to see what is driving it.</li>
+            <li>Higher is not always hotter. A crisp, dry 58 can score better than a muggy 74.</li>
+            <li>Wind can help on warm days, but it can punish the score when the air is chilly or damp.</li>
+            <li>The score is local guidance, not a health warning. Heat, cold, and storms still deserve their own attention.</li>
+          </ul>
+        </div>
+      `;
+    }
     function buildDroughtInfoHtml(value = null) {
       return `
         <div class="info-panel drought-info-panel">

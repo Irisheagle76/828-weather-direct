@@ -420,8 +420,11 @@ function renderFeelScore(data, hourly = []) {
       background: linear-gradient(${bgTint}, ${bgTint}), #101b33;
     ">
       <div class="fs-header">
-        FEELSCORE
-        <span class="info-btn" onclick="openInfo('feelscore', ${score})">ⓘ</span>
+        <span>FEELSCORE</span>
+        <button class="fs-info-cta" type="button" onclick="openInfo('feelscore', ${score})">
+          <span>i</span>
+          <em>What is this?</em>
+        </button>
       </div>
 
       <div class="fs-hero-row">
@@ -439,27 +442,28 @@ function renderFeelScore(data, hourly = []) {
           : ""
       }
 
-      <div class="fs-bullets">
-        ${(bullets || []).map(b => `<div class="fs-bullet">• ${b}</div>`).join('')}
-      </div>
-
-      ${tempOutlook ? `
-        <div class="fs-temp-outlook">
-          ${tempOutlook.primary ? `
-            <div class="fs-temp-main">
-              <div class="fs-temp-label">${tempOutlook.primary.label}</div>
-              <div class="fs-temp-value">${tempOutlook.primary.value}&deg;</div>
-            </div>
-          ` : ""}
-          ${tempOutlook.low ? `
-            <div class="fs-temp-low">
-              <div class="fs-temp-label">${tempOutlook.low.label}</div>
-              <div class="fs-temp-low-value">${tempOutlook.low.value}&deg;</div>
-            </div>
-          ` : ""}
+      <div class="fs-footer-row">
+        <div class="fs-bullets">
+          ${(bullets || []).map(b => `<div class="fs-bullet">• ${b}</div>`).join('')}
         </div>
-      ` : ""}
-    </div>
+
+        ${tempOutlook ? `
+          <div class="fs-temp-outlook">
+            ${tempOutlook.primary ? `
+              <div class="fs-temp-main">
+                <div class="fs-temp-label">${tempOutlook.primary.label}</div>
+                <div class="fs-temp-value">${tempOutlook.primary.value}&deg;</div>
+              </div>
+            ` : ""}
+            ${tempOutlook.low ? `
+              <div class="fs-temp-low">
+                <div class="fs-temp-label">${tempOutlook.low.label}</div>
+                <div class="fs-temp-low-value">${tempOutlook.low.value}&deg;</div>
+              </div>
+            ` : ""}
+          </div>
+        ` : ""}
+      </div>
   `;
 
   animateScoreOnce('#feelscore .fs-score', score);
