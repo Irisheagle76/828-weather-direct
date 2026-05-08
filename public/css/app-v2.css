@@ -3284,7 +3284,7 @@ body {
 
 #metric-chips {
   display: grid;
-  grid-template-columns: 0.82fr 0.98fr 0.9fr 1.42fr 0.82fr;
+  grid-template-columns: 0.82fr 1.04fr 0.9fr 1.36fr 0.82fr;
   gap: 8px;
   width: 100%;
   overflow: visible;
@@ -3315,7 +3315,15 @@ body {
 }
 
 .metric-chip.humidity {
-  padding-inline: 10px;
+  padding-inline: 12px;
+}
+
+.metric-chip.wind .value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .metric-chip .label,
@@ -3344,6 +3352,14 @@ body {
 
 .metric-chip .unit {
   margin-left: 2px;
+}
+
+.metric-chip.humidity .label {
+  margin-right: 6px;
+}
+
+.metric-chip.wind .unit {
+  margin-left: 0;
 }
 
 @media (max-width: 980px) {
@@ -3381,17 +3397,19 @@ body {
   max-width: 100%;
   margin: 10px 0 0;
   margin-left: auto;
+  gap: 10px;
 }
 
 .fs-temp-main,
 .fs-temp-low {
   text-align: right;
+  min-width: 0;
 }
 
 @media (min-width: 560px) {
   .feelscore-card.hero {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 190px;
+    grid-template-columns: minmax(0, 1fr) 160px;
     column-gap: 14px;
     align-items: start;
   }
@@ -3411,7 +3429,7 @@ body {
     grid-column: 2;
     justify-self: stretch;
     align-self: start;
-    width: 190px;
+    width: 160px;
     margin-top: 8px;
   }
 }
