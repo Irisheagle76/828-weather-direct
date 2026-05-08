@@ -189,8 +189,9 @@ body {
   #metric-chips {
     display: flex;
     gap: 10px;
-    overflow-x: auto;
-    padding-right: 12px;
+    flex-wrap: wrap;
+    overflow: visible;
+    padding-right: 0;
   }
 
   .metric-chip {
@@ -213,11 +214,32 @@ body {
   }
 
   .metric-chip.wind {
-    width: 156px;
+    width: 190px;
   }
 
   .metric-chip.uv {
     width: 106px;
+  }
+}
+
+@media (max-width: 560px) {
+  #metric-chips {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .metric-chip,
+  .metric-chip.temp,
+  .metric-chip.humidity,
+  .metric-chip.dew,
+  .metric-chip.wind,
+  .metric-chip.uv {
+    width: auto;
+    min-width: 0;
+  }
+
+  .metric-chip.wind {
+    grid-column: 1 / -1;
   }
 }
 /* ============================================================
@@ -464,8 +486,8 @@ body {
   backdrop-filter: blur(4px);
   width: fit-content;
   max-width: 100%;
-  margin-top: 12px;
-  margin-left: auto;
+  margin-top: 8px;
+  margin-left: 0;
 }
 
 .fs-temp-main,
