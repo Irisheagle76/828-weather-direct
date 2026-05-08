@@ -3446,24 +3446,31 @@ body {
 
 .fs-temp-outlook {
   position: static !important;
+  box-sizing: border-box;
   width: fit-content;
   max-width: 100%;
   margin: 10px 0 0;
   margin-left: auto;
-  gap: 10px;
-  padding: 7px 9px;
+  gap: 8px;
+  padding: 7px 10px;
 }
 
 .fs-temp-main,
 .fs-temp-low {
   text-align: right;
   min-width: 0;
+  overflow: hidden;
+}
+
+.fs-temp-label {
+  font-size: 9px;
+  letter-spacing: 0.07em;
 }
 
 @media (min-width: 560px) {
   .feelscore-card.hero {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 136px;
+    grid-template-columns: minmax(0, 1fr) 172px;
     column-gap: 24px;
     align-items: start;
   }
@@ -3481,10 +3488,10 @@ body {
 
   .fs-temp-outlook {
     grid-column: 2;
-    justify-self: start;
+    justify-self: end;
     align-self: start;
-    width: 136px;
+    width: 150px;
     margin-top: 8px;
-    margin-right: 18px;
+    margin-right: 30px;
   }
 }
