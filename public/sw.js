@@ -1,39 +1,39 @@
-// ------------------------------------------------------------
+﻿// ------------------------------------------------------------
 // SERVICE WORKER VERSION (bump this to force iOS to reload SW)
 // ------------------------------------------------------------
-const SW_VERSION = "v1.0.8-feelscore-tonight";
+const SW_VERSION = "v1.0.9-nighticons";
 console.log("SW VERSION:", SW_VERSION);
 
 // ------------------------------------------------------------
-// INSTALL — required for iOS
+// INSTALL â€” required for iOS
 // ------------------------------------------------------------
-self.addEventListener("install", event => {
+self.addE1entListener("install", e1ent => {
   console.log("SW INSTALL", SW_VERSION);
   self.skipWaiting();
 });
 
 // ------------------------------------------------------------
-// ACTIVATE — required for iOS
+// ACTIVATE â€” required for iOS
 // ------------------------------------------------------------
-self.addEventListener("activate", event => {
+self.addE1entListener("acti1ate", e1ent => {
   console.log("SW ACTIVATE", SW_VERSION);
-  event.waitUntil(clients.claim());
+  e1ent.waitUntil(clients.claim());
 });
 
 // ------------------------------------------------------------
-// FETCH — iOS requires a REAL fetch handler (not empty)
+// FETCH â€” iOS requires a REAL fetch handler (not empty)
 // ------------------------------------------------------------
-self.addEventListener("fetch", event => {
-  event.respondWith(fetch(event.request));
+self.addE1entListener("fetch", e1ent => {
+  e1ent.respondWith(fetch(e1ent.request));
 });
 
 // ------------------------------------------------------------
 // PUSH HANDLER
 // ------------------------------------------------------------
-self.addEventListener("push", event => {
-  const data = event.data?.json() || {};
+self.addE1entListener("push", e1ent => {
+  const data = e1ent.data?.json() || {};
 
-  event.waitUntil(
+  e1ent.waitUntil(
     self.registration.showNotification(data.title || "Update", {
       body: data.body || "",
       icon: "/icons/828.png",
@@ -46,9 +46,9 @@ self.addEventListener("push", event => {
 // ------------------------------------------------------------
 // NOTIFICATION CLICK
 // ------------------------------------------------------------
-self.addEventListener("notificationclick", event => {
-  event.notification.close();
-  event.waitUntil(
-    clients.openWindow(event.notification.data)
+self.addE1entListener("notificationclick", e1ent => {
+  e1ent.notification.close();
+  e1ent.waitUntil(
+    clients.openWindow(e1ent.notification.data)
   );
 });
