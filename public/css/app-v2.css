@@ -3687,35 +3687,82 @@ body {
   }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 700px) {
   .fs-footer-row {
-    grid-template-columns: minmax(104px, 0.85fr) minmax(158px, 1.15fr);
-    gap: 10px;
-    align-items: end;
+    grid-template-columns: minmax(120px, 1fr) auto !important;
+    gap: 6px !important;
+    align-items: end !important;
   }
 
   .fs-temp-outlook {
-    width: 100%;
-    min-width: 0;
-    gap: 10px;
-    padding: 9px 11px 10px;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    display: flex !important;
+    flex-direction: column !important;
+    width: 122px !important;
+    min-width: 0 !important;
+    max-width: 122px !important;
+    gap: 4px !important;
+    padding: 7px 9px !important;
+    border-radius: 12px !important;
+    justify-self: end !important;
+    align-self: end !important;
+    grid-template-columns: none !important;
+  }
+
+  .fs-temp-main,
+  .fs-temp-low {
+    display: flex !important;
+    align-items: baseline !important;
+    justify-content: space-between !important;
+    gap: 5px !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+    text-align: left !important;
   }
 
   .fs-temp-label {
-    font-size: 10px;
-    letter-spacing: 0.09em;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    font-size: 7.5px !important;
+    letter-spacing: 0.035em !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
   }
 
   .fs-temp-value {
-    font-size: 36px;
+    flex: 0 0 auto !important;
+    font-size: 22px !important;
+    line-height: 0.92 !important;
   }
 
   .fs-temp-low-value {
-    font-size: 27px;
+    flex: 0 0 auto !important;
+    font-size: 19px !important;
+    line-height: 0.92 !important;
+    padding-bottom: 0 !important;
   }
 
   .fs-bullet {
     font-size: 14px;
+  }
+}
+
+@media (max-width: 380px) {
+  .fs-temp-outlook {
+    width: 112px !important;
+    max-width: 112px !important;
+    padding: 6px 8px !important;
+  }
+
+  .fs-temp-label {
+    font-size: 7px !important;
+    letter-spacing: 0.02em !important;
+  }
+
+  .fs-temp-value {
+    font-size: 20px !important;
+  }
+
+  .fs-temp-low-value {
+    font-size: 17px !important;
   }
 }
