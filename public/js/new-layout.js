@@ -673,12 +673,19 @@ function getHourlyIcon(hour = {}) {
     ? hour.precipAmount
     : 0;
   const cloudCover = normalizeCloudCover(hour.cloudCover);
+  const uvIndex = Number.isFinite(hour.uvIndex) ? hour.uvIndex : 0;
   const code = Number.isFinite(hour.weatherCode) ? hour.weatherCode : null;
   const isNight = isNightHour(hour.timestamp);
+  const hasMeaningfulPrecip =
+    precipAmount >= 0.005 ||
+    precipProbability >= 0.45 ||
+    /rain|shower|drizzle|sprinkle|thunder|storm|snow|sleet|ice|freezing/.test(precipType) ||
+    (code != null && code >= 51);
 
   if (code >= 95 || /thunder|storm/.test(precipType)) return "⛈️";
   if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86) || /snow|sleet|ice|freezing/.test(precipType)) return "❄️";
   if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82) || precipAmount >= 0.005 || precipProbability >= 0.45 || /rain|shower|drizzle|sprinkle/.test(precipType)) return "🌧️";
+  if (!isNight && !hasMeaningfulPrecip && uvIndex >= 0.3) return "☀️";
   if (cloudCover >= 0.78) return "☁️";
   if (cloudCover >= 0.38) return isNight ? "☁️" : "⛅";
   return isNight ? "🌙" : "☀️";
@@ -687,7 +694,7 @@ function getHourlyIcon(hour = {}) {
 function isNightHour(timestamp) {
   if (!Number.isFinite(timestamp)) return false;
   const hour = new Date(timestamp).getHours();
-  return hour < 6 || hour >= 20;
+  return hour < 6 || hour >= 21;
 }
 function normalizeCloudCover(value) {
   if (!Number.isFinite(value)) return 0.45;
