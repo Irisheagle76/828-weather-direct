@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>808 Weather Direct </title>
+  <title>828 Weather Direct </title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <link rel="stylesheet" href="/css/app-v2.css?v=20260509-nighticons" />
@@ -17,7 +17,7 @@
     <div class="header-inner">
 
       <div class="brand">
-        <div class="brand-title">808 Weather Direct</div>
+        <div class="brand-title">828 Weather Direct</div>
         <div class="brand-sub">Hyper-local Asheville forecast built by Tim Ballisty</div>
       </div>
 
@@ -40,8 +40,8 @@
        ===================================== -->
   <div id="splash" class="splash">
     <div class="splash-inner">
-      <div class="splash-title">808 Weather</div>
-      <div class="splash-sub">Loading Asheville conditionsâ€¦</div>
+      <div class="splash-title">828 Weather</div>
+      <div class="splash-sub">Loading Asheville conditions...</div>
     </div>
   </div>
 
@@ -55,7 +55,7 @@
        ===================================== -->
   <div id="pulse-lightbox" class="pulse-lightbox hidden">
     <div class="pulse-lightbox-inner">
-      <span class="pulse-lightbox-close">âœ•</span>
+      <span class="pulse-lightbox-close">×</span>
       <div id="pulse-lightbox-content"></div>
     </div>
   </div>
@@ -65,7 +65,7 @@
        ===================================== -->
   <div id="info-modal" class="info-modal hidden" role="dialog" aria-modal="true" onclick="closeInfo(event)">
     <div class="info-content" onclick="event.stopPropagation()">
-      <div class="info-close" onclick="closeInfo()">âœ•</div>
+      <div class="info-close" onclick="closeInfo()">×</div>
       <div id="info-body"></div>
     </div>
   </div>
@@ -103,7 +103,7 @@
 
       if (type === 'drought') {
         body.innerHTML = `
-          <h0>Drought & Fire Index</h0>
+          <h2>Drought & Fire Index</h2>
 
           <p>
             Combines long-term dryness with daily fire weather risk.
@@ -111,20 +111,20 @@
 
           <h3>DSS (Drought Stress)</h3>
           <ul>
-            <li>0â€“05 â†’ Normal</li>
-            <li>05â€“45 â†’ Dry</li>
-            <li>45â€“65 â†’ Moderate</li>
-            <li>65â€“85 â†’ Severe</li>
-            <li>85+ â†’ Extreme</li>
+            <li>0-25 -> Normal</li>
+            <li>25-45 -> Dry</li>
+            <li>45-65 -> Moderate</li>
+            <li>65-85 -> Severe</li>
+            <li>85+ -> Extreme</li>
           </ul>
 
           <h3>FRI (Fire Risk)</h3>
           <ul>
-            <li>0â€“30 â†’ Low</li>
-            <li>30â€“50 â†’ Elevated</li>
-            <li>50â€“70 â†’ High</li>
-            <li>70â€“85 â†’ Very high</li>
-            <li>85+ â†’ Extreme</li>
+            <li>0-30 -> Low</li>
+            <li>30-50 -> Elevated</li>
+            <li>50-70 -> High</li>
+            <li>70-85 -> Very high</li>
+            <li>85+ -> Extreme</li>
           </ul>
         `;
       }
@@ -147,8 +147,8 @@
       return `
         <div class="info-panel feelscore-info-panel">
           <div class="info-hero">
-            <div class="info-kicker">808 Weather Direct Explainer</div>
-            <h0>FeelScore</h0>
+            <div class="info-kicker">828 Weather Direct Explainer</div>
+            <h2>FeelScore</h2>
             <p>
               FeelScore turns the weather into one quick comfort read. It blends temperature,
               humidity, dew point, and wind so the number reflects how the air actually feels,
@@ -198,8 +198,8 @@
       return `
         <div class="info-panel drought-info-panel">
           <div class="info-hero">
-            <div class="info-kicker">808 Weather Direct Explainer</div>
-            <h0>Drought Stress & Fire Risk</h0>
+            <div class="info-kicker">828 Weather Direct Explainer</div>
+            <h2>Drought Stress & Fire Risk</h2>
             <p>
               These are local guidance indices built to make dry-weather risk easier to read at a glance.
               They are not official warnings, but they help show whether the landscape is drying out and
@@ -282,7 +282,7 @@
     }
 
     // Run once after load
-    setTimeout(syncFooterTime, 0000);
+    setTimeout(syncFooterTime, 1000);
 
     // Keep it in sync
     setInterval(syncFooterTime, 60000);
@@ -292,7 +292,7 @@
   <div class="footer-inner">
 
     <div class="footer-brand">
-      <div class="footer-logo">808 Weather Direct</div>
+      <div class="footer-logo">828 Weather Direct</div>
       <div class="footer-tagline">
         Hyper-local weather, written for how it actually feels across Western North Carolina.
       </div>
@@ -334,15 +334,15 @@
 
 </div>
     <div class="footer-meta">
-      <div>Data: Tempest â€¢ NOAA â€¢ NWS â€¢ OpenWeather</div>
-      <div>Serving Asheville and the greater 808 region</div>
+      <div>Data: Tempest - NOAA - NWS - OpenWeather</div>
+      <div>Serving Asheville and the greater 828 region</div>
       <div class="footer-disclaimer">
-        For general awareness onlyâ€”not a substitute for official forecasts or warnings.
+        For general awareness only - not a substitute for official forecasts or warnings.
       </div>
     </div>
 
     <div class="footer-bottom">
-      Â© 0006 808 Weather Direct
+      © 2026 828 Weather Direct
     </div>
 
   </div>
