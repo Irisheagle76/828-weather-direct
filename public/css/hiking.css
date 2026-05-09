@@ -137,6 +137,78 @@ li {
   margin-top: 12px;
 }
 
+.profile-intro {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.45;
+  margin-top: 8px;
+}
+
+.profile {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.profile-row {
+  align-items: center;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(170px, 230px) minmax(160px, 1fr) 54px;
+}
+
+.profile-place strong,
+.profile-place span {
+  display: block;
+}
+
+.profile-place strong {
+  color: #dce8ff;
+}
+
+.profile-place span {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+.profile-track {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  height: 16px;
+  position: relative;
+}
+
+.profile-track::before {
+  background: linear-gradient(90deg, #62d394, #6ea8ff);
+  border-radius: inherit;
+  content: "";
+  display: block;
+  height: 100%;
+  width: var(--pos);
+}
+
+.profile-track span {
+  background: #ffffff;
+  border: 3px solid var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(110,168,255,0.18);
+  height: 22px;
+  left: var(--pos);
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 22px;
+}
+
+.profile-temp {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+  text-align: right;
+}
+
 .trail-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
@@ -197,6 +269,10 @@ td {
   vertical-align: top;
 }
 
+.nowrap {
+  white-space: nowrap;
+}
+
 th {
   color: var(--muted);
   font-size: 11px;
@@ -231,5 +307,13 @@ a {
   .trail-grid,
   .diagnostic-grid {
     grid-template-columns: 1fr;
+  }
+
+  .profile-row {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-temp {
+    text-align: left;
   }
 }

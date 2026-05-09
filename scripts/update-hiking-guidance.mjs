@@ -32,6 +32,54 @@ function f(value, suffix = "") {
   return value == null ? "n/a" : `${Math.round(value)}${suffix}`;
 }
 
+function uvFromSolar(solarWm2) {
+  if (solarWm2 == null) return null;
+  return Math.max(0, Math.min(11, Math.round(solarWm2 / 115)));
+}
+
+function displayUv(station) {
+  const uv = station.uv ?? uvFromSolar(station.solarWm2);
+  return uv == null ? "n/a" : `UV ${uv}${station.uv == null ? " est." : ""}`;
+}
+
+function heatFeel(station) {
+  const wbgt = station.wbgtF;
+  const temp = station.temperatureF;
+  if (wbgt != null) {
+    if (wbgt >= 82) return { label: "Heat caution", detail: `trail heat ${f(wbgt, "°")}` };
+    if (wbgt >= 74) return { label: "Warm effort", detail: `trail heat ${f(wbgt, "°")}` };
+    if (wbgt >= 65) return { label: "Comfortable", detail: `trail heat ${f(wbgt, "°")}` };
+    return { label: "Easy", detail: `trail heat ${f(wbgt, "°")}` };
+  }
+  if (temp != null && temp <= 58) return { label: "Cool layer", detail: f(temp, "°") };
+  if (temp != null && temp >= 78) return { label: "Warm", detail: f(temp, "°") };
+  return { label: "Comfortable", detail: temp == null ? "" : f(temp, "°") };
+}
+
+function friendlyWind(station) {
+  if (station.windMph == null) return "n/a";
+  if (station.windMph === 0) return "Calm";
+  const direction = normalizeDirection(station.windDirection);
+  const base = `${direction ? `${direction} at ` : ""}${f(station.windMph)} mph`;
+  const gust = station.gustMph != null && station.gustMph > station.windMph ? `, gusting to ${f(station.gustMph)} mph` : "";
+  return `${base}${gust}`;
+}
+
+function normalizeDirection(direction) {
+  if (!direction || direction === "N/A") return "";
+  const text = String(direction).trim();
+  if (/^(var|vrb|variable)$/i.test(text)) return "Variable";
+  const degree = text.match(/^(-?\d+(?:\.\d+)?)deg$/i);
+  if (!degree) return text;
+  return degreesToCardinal(Number(degree[1]));
+}
+
+function degreesToCardinal(degrees) {
+  if (!Number.isFinite(degrees)) return "";
+  const dirs = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
+  return dirs[Math.round((((degrees % 360) + 360) % 360) / 22.5) % 16];
+}
+
 function localTime(iso) {
   if (!iso) return "unavailable";
   return new Intl.DateTimeFormat("en-US", {
@@ -238,7 +286,7 @@ function analyze(stations) {
     : null;
   const dewSpreads = usable.map((s) => s.temperatureF - s.dewPointF).filter((v) => Number.isFinite(v));
   const minDewSpread = dewSpreads.length ? Math.min(...dewSpreads) : null;
-  const maxUv = Math.max(...usable.map((s) => s.uv ?? 0));
+  const maxUv = Math.max(...usable.map((s) => s.uv ?? uvFromSolar(s.solarWm2) ?? 0));
   const maxSolar = Math.max(...usable.map((s) => s.solarWm2 ?? 0));
   const maxGust = Math.max(...usable.map((s) => s.gustMph ?? s.windMph ?? 0));
   const maxTemp = Math.max(...usable.map((s) => s.temperatureF ?? -Infinity));
@@ -281,12 +329,15 @@ function analyze(stations) {
 function renderHtml(payload) {
   const s = payload.stations;
   const g = payload.guidance;
+  const sortedStations = [...s].sort((a, b) => a.elevationFt - b.elevationFt);
+  const minElevation = Math.min(...sortedStations.map((x) => x.elevationFt));
+  const maxElevation = Math.max(...sortedStations.map((x) => x.elevationFt));
   const diagnostics = [
     ["Local spread", f(g.localTempSpread, "degF"), "Temperature range across the Asheville-area readings."],
     ["High split", f(g.highStationSpread, "degF"), "Difference between the two high Asheville readings."],
     ["Mitchell drop", f(g.mitchellDrop, "degF"), "Cooling from Asheville-area readings to Mount Mitchell."],
     ["Fog risk", g.fogRisk, "Based on the tightest temperature/dew point spread."],
-    ["Peak sun", `${f(g.maxUv)} UV / ${f(g.maxSolar)} W/m2`, "Highest UV and solar signal from reporting sites."],
+    ["Highest UV", f(g.maxUv), "Peak UV reading or estimate from the reporting sites."],
     ["Peak gust", f(g.maxGust, " mph"), "Highest gust among the reporting sites."]
   ];
   const trailCards = [
@@ -295,6 +346,18 @@ function renderHtml(payload) {
     ["Pack mindset", g.mitchellDrop >= 10 ? "Water and sun protection locally; add a layer for high peaks." : "Water, basic sun protection, and normal mountain layers."],
     ["Watch for", g.fogRisk === "Elevated" ? "Patchy fog, low cloud, wet leaves, and slick shaded spots." : "Quick comfort changes between shade and open sky."]
   ];
+  const elevationProfile = sortedStations.map((x) => {
+    const pct = maxElevation === minElevation ? 0 : ((x.elevationFt - minElevation) / (maxElevation - minElevation)) * 100;
+    const zone = x.elevationFt >= 6000 ? "WNC high peak" : x.elevationFt >= 3200 ? "High Asheville ridge" : x.elevationFt >= 2300 ? "Mid Asheville" : "Lower Asheville";
+    return `<div class="profile-row">
+      <div class="profile-place">
+        <strong>${esc(x.name)}</strong>
+        <span>${esc(zone)} · ${f(x.elevationFt, " ft")}</span>
+      </div>
+      <div class="profile-track" style="--pos:${pct}%"><span></span></div>
+      <div class="profile-temp">${f(x.temperatureF, "°")}</div>
+    </div>`;
+  }).join("");
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -332,6 +395,12 @@ function renderHtml(payload) {
     </section>
 
     <section class="panel">
+      <div class="section-title"><span>Where these readings are</span><h2>Elevation profile</h2></div>
+      <p class="profile-intro">This is a simple vertical picture of the reporting sites, from lower Asheville up to Mount Mitchell. It helps explain phrases like “high Asheville” and “high peaks.”</p>
+      <div class="profile">${elevationProfile}</div>
+    </section>
+
+    <section class="panel">
       <div class="section-title"><span>Important hiker data</span><h2>Elevation and comfort signals</h2></div>
       <div class="diagnostic-grid">${diagnostics.map(([a, b, c]) => `<div class="metric-card"><span>${esc(a)}</span><strong>${esc(b).replace(/degF/g, "°F")}</strong><p>${esc(c)}</p></div>`).join("")}</div>
     </section>
@@ -340,17 +409,17 @@ function renderHtml(payload) {
       <div class="section-title"><span>Station table</span><h2>Current readings by elevation</h2></div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Place</th><th>Elev.</th><th>Temp</th><th>Dew pt</th><th>RH</th><th>Wind</th><th>Sun</th><th>Comfort</th></tr></thead>
+          <thead><tr><th>Place</th><th>Elev.</th><th>Air</th><th>Dew pt</th><th>Humidity</th><th>Wind</th><th>UV</th><th>Heat feel</th></tr></thead>
           <tbody>
-            ${s.sort((a, b) => a.elevationFt - b.elevationFt).map((x) => `<tr>
+            ${sortedStations.map((x) => `<tr>
               <td><a href="${esc(x.url)}">${esc(x.name)}</a><br><span>${esc(x.role)} · ${esc(x.source)} · ${localTime(x.observedAt)}</span></td>
-              <td>${f(x.elevationFt, " ft")}</td>
+              <td class="nowrap">${f(x.elevationFt, " ft")}</td>
               <td>${f(x.temperatureF, "°")}</td>
               <td>${f(x.dewPointF, "°")}</td>
               <td>${f(x.humidityPct, "%")}</td>
-              <td>${f(x.windMph, " mph")}${x.gustMph != null ? ` / ${f(x.gustMph)} gust` : ""} ${esc(x.windDirection || "")}</td>
-              <td>${x.uv != null ? `UV ${f(x.uv)}` : ""}${x.solarWm2 != null ? ` · ${f(x.solarWm2)} W/m2` : ""}</td>
-              <td>${x.wbgtF != null ? `WBGT ${f(x.wbgtF, "°")}` : "Layer check"}</td>
+              <td>${esc(friendlyWind(x))}</td>
+              <td>${esc(displayUv(x))}</td>
+              <td><strong>${esc(heatFeel(x).label)}</strong><br><span>${esc(heatFeel(x).detail)}</span></td>
             </tr>`).join("")}
           </tbody>
         </table>
