@@ -1,7 +1,7 @@
 // ------------------------------------------------------------
 // SERVICE WORKER VERSION (bump this to force iOS to reload SW)
 // ------------------------------------------------------------
-const SW_VERSION = "v1.0.7-feelscore-info";
+const SW_VERSION = "v1.0.8-feelscore-tonight";
 console.log("SW VERSION:", SW_VERSION);
 
 // ------------------------------------------------------------

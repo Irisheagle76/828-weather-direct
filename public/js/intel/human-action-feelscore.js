@@ -37,7 +37,7 @@ function alignHourly(hourlyRaw = []) {
   return startIndex === -1 ? [] : sorted.slice(startIndex);
 }
 
-function splitDays(hourly, now) {
+function splitDays(hourly, now, periodContext = null) {
   const d = new Date(now);
 
   const startToday = new Date(d);
@@ -49,11 +49,19 @@ function splitDays(hourly, now) {
   const startNext = new Date(startTomorrow);
   startNext.setDate(startNext.getDate() + 1);
 
+  const overnightEnd = new Date(startTomorrow);
+  overnightEnd.setHours(8, 0, 0, 0);
+
+  const currentPeriodEnd =
+    periodContext?.key === "tonight"
+      ? overnightEnd
+      : startTomorrow;
+
   const today = [];
   const tomorrow = [];
 
   for (const h of hourly) {
-    if (h._ts >= now && h._ts < startTomorrow) today.push(h);
+    if (h._ts >= now && h._ts < currentPeriodEnd) today.push(h);
     else if (h._ts >= startTomorrow && h._ts < startNext) tomorrow.push(h);
   }
 
@@ -519,8 +527,8 @@ export function buildHumanActionIntelFS(raw) {
   const hourly = alignHourly(rawHourly);
   if (!hourly.length) return fallbackAll();
 
-  const { today, tomorrow } = splitDays(hourly, now);
   const currentPeriod = buildCurrentPeriodContext(now);
+  const { today, tomorrow } = splitDays(hourly, now, currentPeriod);
 
   const todayCtx = buildPeriod(today, "today", currentPeriod);
   const tomorrowCtx = buildPeriod(tomorrow, "tomorrow");
