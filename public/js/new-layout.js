@@ -1,5 +1,5 @@
 ﻿// ============================================================
-// AVL WEATHER â€” V3 LAYOUT (STABLE + UNIFIED)
+// AVL WEATHER — V3 LAYOUT (STABLE + UNIFIED)
 // ============================================================
 
 import { getWeatherForUI } from '/js/adapters/weather-adapter.js?v=20260508-popscale';
@@ -44,9 +44,9 @@ function getFireColor(fri) {
 }
 
 function getTrendMeta(trend) {
-  if (trend > 2) return { arrow: "â†‘", label: "Rising" };
-  if (trend < -2) return { arrow: "â†“", label: "Falling" };
-  return { arrow: "â†’", label: "Steady" };
+  if (trend > 2) return { arrow: "↑", label: "Rising" };
+  if (trend < -2) return { arrow: "↓", label: "Falling" };
+  return { arrow: "→", label: "Steady" };
 }
 
 // ============================================================
@@ -73,7 +73,7 @@ function normalizeHourly(hourly = []) {
     // DEW
     dewpointF: h.dewpointF ?? h.dewPoint ?? null,
 
-    // ðŸŒ§ï¸ CRITICAL â€” KEEP THESE
+    // 🌧️ CRITICAL — KEEP THESE
     precipAmount:
       h.precipAmount ?? h.precipitation ?? 0,
 
@@ -96,9 +96,9 @@ function normalizeHourly(hourly = []) {
       h.weatherCode ?? h.weather_code ?? null
   }));
 
-  // ðŸ‘‡ LOG INSIDE FUNCTION
-  console.log("ðŸŒ§ï¸ NORMALIZED SAMPLE:", normalized[0]);
-  console.log("ðŸŒ§ï¸ RAW SAMPLE:", hourly[0]);
+  // 👇 LOG INSIDE FUNCTION
+  console.log("🌧️ NORMALIZED SAMPLE:", normalized[0]);
+  console.log("🌧️ RAW SAMPLE:", hourly[0]);
 
   return normalized;
 }
@@ -132,7 +132,7 @@ function normalizeCurrent(c = {}) {
       c.uv_index ??
       null,
 
-    // ðŸŒ§ï¸ optional but helpful for consistency
+    // 🌧️ optional but helpful for consistency
     precipRate:
       c.precipRate ??
       c.precip_rate ??
@@ -254,7 +254,7 @@ export async function renderNewLayout(container) {
 
   const data = await weatherPromise;
 
-// ðŸ‘‡ ADD THESE TWO LINES
+// 👇 ADD THESE TWO LINES
 console.log("FULL API DATA:", data);
 
     // ------------------------------------------------------------
@@ -268,7 +268,7 @@ console.log("POST-NORMALIZE (LAYOUT):", hourly[0]);
       ? normalizeCurrent(data.current)
       : null;
 
-      // ðŸ” DEBUG HERE
+      // 🔍 DEBUG HERE
 console.log("CURRENT DEBUG:", {
   raw: current,
   rh1: current?.relativeHumidity,
@@ -444,7 +444,7 @@ function renderFeelScore(data, hourly = []) {
 
       <div class="fs-footer-row">
         <div class="fs-bullets">
-          ${(bullets || []).map(b => `<div class="fs-bullet">â€¢ ${b}</div>`).join('')}
+          ${(bullets || []).map(b => `<div class="fs-bullet">• ${b}</div>`).join('')}
         </div>
 
         ${tempOutlook ? `
@@ -470,7 +470,7 @@ function renderFeelScore(data, hourly = []) {
 }
 
 // ============================================================
-// TIMELINE (CLEAN + FUTURE SAFE â€” FIXED)
+// TIMELINE (CLEAN + FUTURE SAFE — FIXED)
 // ============================================================
 
 function renderTimeline(hourly, daily = [], current = null, tempest = null) {
@@ -517,7 +517,7 @@ const scores = displayHours.map((h, i) => {
   let adjusted = { ...h };
 
   // ------------------------------------------------------------
-  // ðŸ†• APPLY SAME LOGIC AS "NOW"
+  // 🆕 APPLY SAME LOGIC AS "NOW"
   // ------------------------------------------------------------
 if (i < 3) {
   adjusted.windSpeed = smoothWind(adjusted, hourly);
@@ -530,9 +530,9 @@ if (i < 3) {
 
   let raw = calculateComfort(adjusted)?.score;
 
-  // ðŸ”’ HARD GUARD
+  // 🔒 HARD GUARD
   if (!Number.isFinite(raw)) {
-    console.warn("âš ï¸ BAD COMFORT SCORE", adjusted);
+    console.warn("⚠️ BAD COMFORT SCORE", adjusted);
     raw = 5; // neutral baseline
   }
 
@@ -542,7 +542,7 @@ if (i < 3) {
 
   const scaled = Math.round(raw * 10);
 
-  // ðŸ”’ FINAL GUARD
+  // 🔒 FINAL GUARD
   return Number.isFinite(scaled)
     ? Math.min(scaled, 98)
     : 50;
@@ -570,8 +570,8 @@ if (i < 3) {
       <div class="hour-block ${isBest}">
         <div class="hour-time">${formatHour(h.timestamp)}</div>
         <div class="hour-icon" aria-hidden="true">${icon}</div>
-        <div class="hour-temp"><span aria-hidden="true">ðŸŒ¡ï¸</span>${Math.round(h.temperatureF)}Â°</div>
-        <div class="hour-score"><span aria-hidden="true">â—Ž</span>${scores[i]}</div>
+        <div class="hour-temp"><span aria-hidden="true">🌡️</span>${Math.round(h.temperatureF)}°</div>
+        <div class="hour-score"><span aria-hidden="true">◎</span>${scores[i]}</div>
       </div>
     `;
   }).join('');
@@ -957,7 +957,7 @@ const windHTML = showGust
   container.innerHTML = `
     <div class="metric-chip temp">
       <span class="metric-icon" aria-hidden="true">&#127777;&#65039;</span>
-      <span class="value">${temp}Â°</span>
+      <span class="value">${temp}°</span>
     </div>
 
     <div class="metric-chip humidity">
@@ -969,7 +969,7 @@ const windHTML = showGust
     <div class="metric-chip dew">
       <span class="metric-icon" aria-hidden="true">&#128166;</span>
       <span class="label">DP</span>
-      <span class="value">${dew}Â°</span>
+      <span class="value">${dew}°</span>
     </div>
 
     <div class="metric-chip wind">
@@ -978,7 +978,7 @@ const windHTML = showGust
 
     ${uv != null ? `
       <div class="metric-chip uv">
-        <span class="metric-icon" aria-hidden="true">â˜€ï¸</span>
+        <span class="metric-icon" aria-hidden="true">☀️</span>
         <span class="label">UV</span>
         <span class="value">${uv}</span>
       </div>
@@ -1017,7 +1017,7 @@ function renderDroughtFire(data) {
     return;
   }
 
-  console.log("ðŸ”¥ Drought payload:", data);
+  console.log("🔥 Drought payload:", data);
 
   const {
     DSS,
@@ -1070,7 +1070,7 @@ function renderDroughtFire(data) {
           <div class="df-label">DROUGHT STRESS</div>
 
           <div class="df-main" style="color:${dColor}">
-            <span class="df-icon">ðŸŒµ</span>
+            <span class="df-icon">🌵</span>
             <span class="df-value">${DSS ?? "--"}</span>
             <span class="df-trend">${dTrend.arrow}</span>
           </div>
@@ -1078,7 +1078,7 @@ function renderDroughtFire(data) {
 
           <div class="df-sub">
             ${dTrend.label}
-            ${droughtMonitor ? ` â€¢ USDM ${droughtMonitor}` : ""}
+            ${droughtMonitor ? ` • USDM ${droughtMonitor}` : ""}
           </div>
         </div>
 
@@ -1087,7 +1087,7 @@ function renderDroughtFire(data) {
           <div class="df-label">FIRE RISK</div>
 
           <div class="df-main" style="color:${fColor}">
-            <span class="df-icon">ðŸ”¥</span>
+            <span class="df-icon">🔥</span>
             <span class="df-value">${FRI ?? "--"}</span>
             <span class="df-trend">${fTrend.arrow}</span>
           </div>
@@ -1095,7 +1095,7 @@ function renderDroughtFire(data) {
 
           <div class="df-sub">
             ${fTrend.label}
-            ${droughtMonitor ? ` â€¢ ${droughtMonitor}` : ""}
+            ${droughtMonitor ? ` • ${droughtMonitor}` : ""}
           </div>
         </div>
 
@@ -1106,7 +1106,7 @@ function renderDroughtFire(data) {
         ${narrative?.headline || ""}
       </div>
 
-      <!-- ðŸ”¥ DRIVER (NEW INTELLIGENCE LAYER) -->
+      <!-- 🔥 DRIVER (NEW INTELLIGENCE LAYER) -->
       ${
         fireDriver
           ? `<div class="df-driver">${fireDriver}</div>`
@@ -1156,7 +1156,7 @@ function renderTomorrow(data) {
       ${
         bullets?.length
           ? `<div class="day-bullets">
-              ${bullets.map(b => `<div class="day-bullet">â€¢ ${b}</div>`).join("")}
+              ${bullets.map(b => `<div class="day-bullet">• ${b}</div>`).join("")}
             </div>`
           : ""
       }
@@ -1186,12 +1186,12 @@ export async function initGlobalWeatherUI() {
 
     const tempest = data?.tempest ?? null;
 
-    // ðŸ”¥ header metrics
+    // 🔥 header metrics
     if (current) {
       renderHeaderMetrics(current, tempest, hourly);
     }
 
-    // ðŸ”¥ live time
+    // 🔥 live time
     const live = document.getElementById("liveAge");
 
     if (live) {
@@ -1231,7 +1231,7 @@ function renderForecastLinkLegacy() {
   el.innerHTML = `
     <div class="card forecast-link-card">
       <a href="/forecast.html">
-        Next 4 Days â†’
+        Next 4 Days →
       </a>
     </div>
   `;
@@ -1270,16 +1270,16 @@ function renderForecastLink() {
 
         <span class="forecast-link-preview" aria-hidden="true">
           <span class="forecast-preview-grid">
-            <span class="forecast-preview-day"><b>Day 1</b><i>â˜€ï¸</i><em></em></span>
-            <span class="forecast-preview-day"><b>Day 2</b><i>â›…</i><em></em></span>
-            <span class="forecast-preview-day"><b>Day 3</b><i>ðŸŒ§ï¸</i><em></em></span>
-            <span class="forecast-preview-day"><b>Day 4</b><i>ðŸŒ¤ï¸</i><em></em></span>
+            <span class="forecast-preview-day"><b>Day 1</b><i>☀️</i><em></em></span>
+            <span class="forecast-preview-day"><b>Day 2</b><i>⛅</i><em></em></span>
+            <span class="forecast-preview-day"><b>Day 3</b><i>🌧️</i><em></em></span>
+            <span class="forecast-preview-day"><b>Day 4</b><i>🌤️</i><em></em></span>
           </span>
         </span>
 
         <span class="forecast-link-main">
           Open
-          <span class="forecast-link-arrow" aria-hidden="true">â†’</span>
+          <span class="forecast-link-arrow" aria-hidden="true">→</span>
         </span>
       </a>
     </div>
