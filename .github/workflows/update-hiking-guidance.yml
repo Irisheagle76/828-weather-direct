@@ -1,0 +1,38 @@
+name: Update Hiking Guidance
+
+on:
+  workflow_dispatch:
+  schedule:
+    # GitHub cron is UTC. These are approximately 6:30a, 10:30a, 2:30p, 6:30p Eastern during daylight time.
+    - cron: "30 10 * * *"
+    - cron: "30 14 * * *"
+    - cron: "30 18 * * *"
+    - cron: "30 22 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Refresh hiking guidance
+        run: node scripts/update-hiking-guidance.mjs
+
+      - name: Commit updated guidance
+        run: |
+          if git diff --quiet -- public/hiking.html public/data/hiking-guidance.json; then
+            echo "No hiking guidance changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/hiking.html public/data/hiking-guidance.json
+          git commit -m "Update hiking guidance"
+          git push
