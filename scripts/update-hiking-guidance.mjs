@@ -426,6 +426,37 @@ function renderHtml(payload) {
       </div>
     </section>
   </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="footer-logo">828 Weather Direct</div>
+        <div class="footer-tagline">
+          Hyper-local weather, written for how it actually feels across Western North Carolina.
+        </div>
+      </div>
+
+      <div class="footer-links">
+        <a href="/">Home</a>
+        <a href="/forecast.html">Forecast</a>
+        <a href="/hiking.html">Hiking Guidance</a>
+        <a href="https://www.linkedin.com/in/timballisty">About</a>
+        <a href="mailto:tballisty@gmail.com">Contact</a>
+      </div>
+
+      <div class="footer-meta">
+        <div>Data: Tempest • NC Climate Office • NCHighPeaks WeeWX</div>
+        <div>Serving Asheville and the greater 828 region</div>
+        <div class="footer-disclaimer">
+          For general awareness only—not a substitute for official forecasts, warnings, or trail advisories.
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        © 2026 828 Weather Direct
+      </div>
+    </div>
+  </footer>
 </body>
 </html>
 `;

@@ -289,6 +289,55 @@ a {
   text-decoration: none;
 }
 
+.site-footer {
+  margin: 18px auto 0;
+  max-width: 760px;
+  padding: 0 12px 24px;
+}
+
+.footer-inner {
+  background: rgba(255,255,255,0.035);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--muted);
+  display: grid;
+  gap: 14px;
+  padding: 16px 14px;
+}
+
+.footer-logo {
+  color: var(--accent);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.footer-tagline,
+.footer-meta,
+.footer-bottom {
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+}
+
+.footer-links a {
+  color: #d8e7ff;
+  font-size: 13px;
+}
+
+.footer-disclaimer {
+  margin-top: 4px;
+}
+
+.footer-bottom {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
 @media (max-width: 720px) {
   .hiking-header,
   .hero {
