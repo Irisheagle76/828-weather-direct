@@ -1,13 +1,12 @@
 name: Update Hiking Guidance
 
 on:
-  workflow_dispatch:
   schedule:
-    # GitHub cron is UTC. These are approximately 6:30a, 10:30a, 2:30p, 6:30p Eastern during daylight time.
-    - cron: "30 10 * * *"
-    - cron: "30 14 * * *"
-    - cron: "30 18 * * *"
-    - cron: "30 22 * * *"
+    - cron: "37 10 * * *"
+    - cron: "37 14 * * *"
+    - cron: "37 18 * * *"
+    - cron: "37 22 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: write
