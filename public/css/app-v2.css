@@ -3467,14 +3467,19 @@ body {
 
 .live-row {
   margin-top: 16px;
+  position: relative;
 }
 
 #metric-chips {
   display: grid;
   grid-template-columns: 0.82fr 1.04fr 0.9fr 1.36fr 0.82fr;
-  gap: 8px;
+  gap: 10px;
   width: 100%;
   overflow: visible;
+}
+
+.obs-scroll-cue {
+  display: none;
 }
 
 .metric-chip,
@@ -3485,31 +3490,31 @@ body {
 .metric-chip.uv {
   width: auto;
   min-width: 0;
-  min-height: 46px;
-  padding: 0 8px;
+  min-height: 58px;
+  padding: 0 12px;
   border-radius: 13px;
-  font-size: 13px;
-}
-
-.metric-chip.temp {
   font-size: 16px;
 }
 
+.metric-chip.temp {
+  font-size: 21px;
+}
+
 .metric-chip.wind {
-  padding-inline: 10px;
-  white-space: normal;
+  padding-inline: 14px;
+  white-space: nowrap;
   line-height: 1.1;
 }
 
 .metric-chip.humidity {
-  padding-inline: 12px;
+  padding-inline: 14px;
 }
 
 .metric-chip.wind .value {
   display: inline-flex;
   align-items: baseline;
   gap: 3px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: center;
 }
 
@@ -3521,20 +3526,24 @@ body {
 }
 
 .metric-chip .gust {
-  display: block;
-  width: 100%;
-  margin: 3px 0 0;
-  font-size: 0.70em;
+  display: inline;
+  width: auto;
+  margin: 0 0 0 3px;
+  font-size: 0.72em;
   line-height: 1;
 }
 
 .metric-chip .metric-icon {
-  font-size: 0.86em;
-  margin-right: 4px;
+  font-size: 1.12em;
+  margin-right: 6px;
+}
+
+.metric-chip.temp .metric-icon {
+  font-size: 0.95em;
 }
 
 .metric-chip .label {
-  margin-right: 4px;
+  margin-right: 5px;
 }
 
 .metric-chip .unit {
@@ -3564,13 +3573,32 @@ body {
 }
 
 @media (max-width: 560px) {
+  .live-row {
+    gap: 6px;
+  }
+
   #metric-chips {
     display: flex;
     flex-wrap: nowrap;
-    gap: 8px;
+    gap: 9px;
     overflow-x: auto;
     overscroll-behavior-x: contain;
-    padding-bottom: 4px;
+    padding: 0 20px 5px 0;
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 34px), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 34px), transparent);
+  }
+
+  .obs-scroll-cue {
+    display: block;
+    align-self: stretch;
+    margin-top: -1px;
+    padding-right: 8px;
+    color: rgba(203, 213, 245, 0.74);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-align: right;
+    text-transform: uppercase;
   }
 
   .metric-chip,
@@ -3580,45 +3608,45 @@ body {
   .metric-chip.wind,
   .metric-chip.uv {
     flex: 0 0 auto;
-    min-height: 40px;
-    padding: 0 8px;
-    font-size: 12px;
+    min-height: 52px;
+    padding: 0 11px;
+    font-size: 15px;
   }
 
   .metric-chip.temp {
-    width: 76px;
-    font-size: 14px;
+    width: 94px;
+    font-size: 19px;
   }
 
   .metric-chip.humidity {
-    width: 88px;
+    width: 110px;
   }
 
   .metric-chip.dew {
-    width: 82px;
+    width: 102px;
   }
 
   .metric-chip.wind {
-    width: 126px;
+    width: 156px;
     grid-column: auto;
   }
 
   .metric-chip.uv {
-    width: 72px;
+    width: 90px;
   }
 
   .metric-chip .metric-icon {
-    font-size: 0.82em;
-    margin-right: 3px;
+    font-size: 1.08em;
+    margin-right: 5px;
   }
 
   .metric-chip .label {
-    margin-right: 3px;
+    margin-right: 4px;
   }
 
   .metric-chip.humidity .label,
   .metric-chip.dew .label {
-    margin-right: 5px;
+    margin-right: 7px;
   }
 }
 

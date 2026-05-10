@@ -5,7 +5,7 @@
   <title>828 Weather Direct </title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <link rel="stylesheet" href="/css/app-v2.css?v=20260509-timelinetemps" />
+  <link rel="stylesheet" href="/css/app-v2.css?v=20260510-obscards" />
 </head>
 
 <body>
@@ -27,6 +27,8 @@
   <span class="live-dot"></span>
   <span class="live-age" id="liveAge">UPDATED JUST NOW</span>
 </div>
+
+  <div class="obs-scroll-cue" aria-hidden="true">Scroll sideways for more observations -></div>
 
   <div id="metric-chips"></div>
 
@@ -74,7 +76,7 @@
        SCRIPT
        ===================================== -->
   <script type="module">
-    import { renderNewLayout } from '/js/new-layout.js?v=20260509-sunicons';
+    import { renderNewLayout } from '/js/new-layout.js?v=20260510-obscards';
 
     const app = document.getElementById('app');
 
