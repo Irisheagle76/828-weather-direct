@@ -141,6 +141,10 @@ h1 {
   grid-template-columns: repeat(3, 1fr);
 }
 
+.field-grid.four {
+  grid-template-columns: repeat(4, 1fr);
+}
+
 .field {
   min-width: 0;
 }
@@ -425,6 +429,7 @@ pre {
 @media (max-width: 520px) {
   .field-grid,
   .field-grid.three,
+  .field-grid.four,
   .timeline-grid,
   .timeline-preview {
     grid-template-columns: 1fr;
@@ -453,10 +458,9 @@ pre {
         <div class="field">
           <label for="confidence">Confidence</label>
           <select id="confidence">
-            <option value="0.9">High</option>
-            <option value="0.75">Medium-high</option>
-            <option value="0.6">Medium</option>
-            <option value="0.45">Low</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
           </select>
         </div>
       </div>
@@ -468,12 +472,88 @@ pre {
     </div>
 
     <div class="group">
+      <div class="group-title">Tim's Forecast Board</div>
+      <label for="boardHeadline">Board Headline</label>
+      <input id="boardHeadline" placeholder="A warmer stretch with a few afternoon wrinkles" />
+
+      <label for="boardSummary">Board Summary</label>
+      <textarea id="boardSummary" placeholder="Write the top-level forecast read: what matters most, how confident you are, and what people should watch."></textarea>
+
+      <div class="field-grid four">
+        <div class="field">
+          <label for="rainRisk">Rain Risk</label>
+          <select id="rainRisk">
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="comfortTrend">Comfort Trend</label>
+          <select id="comfortTrend">
+            <option value="steady">Steady</option>
+            <option value="improving">Improving</option>
+            <option value="declining">Declining</option>
+            <option value="mixed">Mixed</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="bestOutdoorDay">Best Outdoor Day</label>
+          <input id="bestOutdoorDay" placeholder="Thursday" />
+        </div>
+        <div class="field">
+          <label for="forecastConfidence">Forecast Confidence</label>
+          <input id="forecastConfidence" type="number" min="0" max="100" placeholder="80" />
+        </div>
+      </div>
+
+      <div class="field-grid four">
+        <div class="field">
+          <label for="watchDay">Watch Day</label>
+          <input id="watchDay" placeholder="Friday" />
+        </div>
+        <div class="field">
+          <label for="mostComfortableDay">Most Comfortable</label>
+          <input id="mostComfortableDay" placeholder="Thursday" />
+        </div>
+        <div class="field">
+          <label for="mostUncertainDay">Most Uncertain</label>
+          <input id="mostUncertainDay" placeholder="Sunday" />
+        </div>
+      </div>
+    </div>
+
+    <div class="group">
       <div class="group-title">Core Forecast</div>
       <label for="headline">Headline</label>
       <input id="headline" placeholder="Warm with building afternoon clouds" />
 
       <label for="narrative">Narrative</label>
       <textarea id="narrative" placeholder="Write this like the meteorologist. What changes through the day, what matters locally, and what should people actually expect?"></textarea>
+    </div>
+
+    <div class="group">
+      <div class="group-title">Daily Editorial Signals</div>
+      <div class="field-grid three">
+        <div class="field">
+          <label for="icon">Icon</label>
+          <input id="icon" placeholder="☀️" />
+        </div>
+        <div class="field">
+          <label for="condition">Condition</label>
+          <input id="condition" placeholder="Mostly sunny" />
+        </div>
+        <div class="field">
+          <label for="feelScore">FeelScore</label>
+          <input id="feelScore" type="number" min="0" max="100" placeholder="82" />
+        </div>
+      </div>
+
+      <label for="mainIssue">Main Issue</label>
+      <input id="mainIssue" placeholder="Afternoon storm chance" />
+
+      <label for="bestWindow">Best Window</label>
+      <input id="bestWindow" placeholder="Morning through early afternoon" />
     </div>
 
     <div class="group">
@@ -637,8 +717,8 @@ pre {
 
     <div class="group">
       <div class="group-title">Local Flavor</div>
-      <label for="localInsight">Local Insight</label>
-      <input id="localInsight" placeholder="Higher terrain may hang onto clouds longer." />
+      <label for="localNote">Local Note</label>
+      <input id="localNote" placeholder="Higher terrain may hang onto clouds longer." />
 
       <label for="signals">Signals / Tags</label>
       <input id="signals" placeholder="building clouds, isolated storms, humid feel" />
@@ -724,6 +804,11 @@ const FIELD_IDS = [
   "narrative",
   "high",
   "low",
+  "icon",
+  "condition",
+  "feelScore",
+  "mainIssue",
+  "bestWindow",
   "windDir",
   "windSpeedMin",
   "windSpeedMax",
@@ -740,8 +825,20 @@ const FIELD_IDS = [
   "midday",
   "afternoon",
   "evening",
-  "localInsight",
+  "localNote",
   "signals"
+];
+
+const BOARD_FIELD_IDS = [
+  "boardHeadline",
+  "boardSummary",
+  "rainRisk",
+  "comfortTrend",
+  "bestOutdoorDay",
+  "watchDay",
+  "mostComfortableDay",
+  "mostUncertainDay",
+  "forecastConfidence"
 ];
 
 const DAY_COUNT = 4;
@@ -749,6 +846,7 @@ const STORAGE_KEY = "forecast-composer-v1";
 const el = id => document.getElementById(id);
 const state = {
   activeDate: "",
+  board: {},
   days: {}
 };
 
@@ -759,6 +857,7 @@ init();
 async function init() {
   await loadOptionalForecastEngine();
   await loadSavedState();
+  loadBoardFields();
   initDayStrip();
   bindEvents();
 
@@ -799,6 +898,16 @@ function initDayStrip() {
 }
 
 function bindEvents() {
+  BOARD_FIELD_IDS.forEach(id => {
+    const node = el(id);
+    const eventName = node.tagName === "SELECT" ? "change" : "input";
+    node.addEventListener(eventName, () => {
+      saveBoardFields();
+      updateJson();
+      persist();
+    });
+  });
+
   FIELD_IDS.forEach(id => {
     const node = el(id);
     const eventName = node.tagName === "SELECT" || node.type === "checkbox" ? "change" : "input";
@@ -825,6 +934,18 @@ function bindEvents() {
   el("copyDayBtn").addEventListener("click", () => copyText(JSON.stringify(getActiveDayForecast(), null, 2)));
   el("copyAllBtn").addEventListener("click", () => copyText(JSON.stringify(buildPublishedForecast(), null, 2)));
   el("copyVisibleBtn").addEventListener("click", () => copyText(el("jsonOutput").textContent));
+}
+
+function saveBoardFields() {
+  BOARD_FIELD_IDS.forEach(id => {
+    state.board[id] = el(id).value;
+  });
+}
+
+function loadBoardFields() {
+  BOARD_FIELD_IDS.forEach(id => {
+    el(id).value = state.board?.[id] ?? boardDefaults()[id] ?? "";
+  });
 }
 
 function selectDate(dateStr) {
@@ -878,11 +999,16 @@ function ensureDay(dateStr) {
 
   state.days[dateStr] = {
     date: dateStr,
-    confidence: "0.9",
+    confidence: "high",
     headline: "",
     narrative: "",
     high: "",
     low: "",
+    icon: "",
+    condition: "",
+    feelScore: "",
+    mainIssue: "",
+    bestWindow: "",
     windDir: "",
     windSpeedMin: "",
     windSpeedMax: "",
@@ -899,7 +1025,7 @@ function ensureDay(dateStr) {
     midday: "",
     afternoon: "",
     evening: "",
-    localInsight: "",
+    localNote: "",
     signals: ""
   };
 }
@@ -964,7 +1090,7 @@ function generateDraft() {
     parts.push("Northwest flow may keep the higher terrain cloudier and a touch cooler than the valleys.");
   }
 
-  if (day.localInsight.trim()) parts.push(day.localInsight.trim());
+  if (day.localNote.trim()) parts.push(day.localNote.trim());
 
   el("headline").value = headline;
   el("narrative").value = day.narrative.trim() || parts.join(" ");
@@ -979,11 +1105,16 @@ function clearActiveDay() {
   const dateStr = state.activeDate;
   state.days[dateStr] = {
     ...state.days[dateStr],
-    confidence: "0.9",
+    confidence: "high",
     headline: "",
     narrative: "",
     high: "",
     low: "",
+    icon: "",
+    condition: "",
+    feelScore: "",
+    mainIssue: "",
+    bestWindow: "",
     windDir: "",
     windSpeedMin: "",
     windSpeedMax: "",
@@ -1000,7 +1131,7 @@ function clearActiveDay() {
     midday: "",
     afternoon: "",
     evening: "",
-    localInsight: "",
+    localNote: "",
     signals: ""
   };
   loadDayIntoForm(state.days[dateStr]);
@@ -1026,6 +1157,7 @@ function getActiveDayForecast() {
 
 function buildPublishedForecast() {
   saveFormToActiveDay();
+  saveBoardFields();
 
   const days = {};
   getForecastDates().forEach(dateStr => {
@@ -1034,6 +1166,7 @@ function buildPublishedForecast() {
   });
 
   return {
+    ...normalizeBoardForPublish(),
     lastUpdated: new Date().toISOString(),
     source: "manual-composer",
     days,
@@ -1054,6 +1187,11 @@ function normalizeDayForPublish(day) {
     narrative: emptyToNull(day.narrative),
     high: toNumberOrNull(day.high),
     low: toNumberOrNull(day.low),
+    icon: emptyToNull(day.icon),
+    condition: emptyToNull(day.condition || day.sky),
+    feelScore: toNumberOrNull(day.feelScore),
+    mainIssue: emptyToNull(day.mainIssue),
+    bestWindow: emptyToNull(day.bestWindow),
     wind: {
       direction: emptyToNull(day.windDir),
       speedMin: toNumberOrNull(day.windSpeedMin),
@@ -1077,8 +1215,37 @@ function normalizeDayForPublish(day) {
       evening: emptyToNull(day.evening)
     },
     localInsight: emptyToNull(day.localInsight),
+    localNote: emptyToNull(day.localNote || day.localInsight),
     tags,
-    confidence: Number(day.confidence || 0.9)
+    confidence: normalizeConfidenceForPublish(day.confidence)
+  };
+}
+
+function normalizeBoardForPublish() {
+  return {
+    boardHeadline: emptyToNull(state.board.boardHeadline),
+    boardSummary: emptyToNull(state.board.boardSummary),
+    rainRisk: state.board.rainRisk || "low",
+    comfortTrend: state.board.comfortTrend || "steady",
+    bestOutdoorDay: emptyToNull(state.board.bestOutdoorDay),
+    watchDay: emptyToNull(state.board.watchDay),
+    mostComfortableDay: emptyToNull(state.board.mostComfortableDay),
+    mostUncertainDay: emptyToNull(state.board.mostUncertainDay),
+    forecastConfidence: clampNumber(toNumberOrNull(state.board.forecastConfidence), 0, 100)
+  };
+}
+
+function boardDefaults() {
+  return {
+    boardHeadline: "",
+    boardSummary: "",
+    rainRisk: "low",
+    comfortTrend: "steady",
+    bestOutdoorDay: "",
+    watchDay: "",
+    mostComfortableDay: "",
+    mostUncertainDay: "",
+    forecastConfidence: ""
   };
 }
 
@@ -1097,7 +1264,7 @@ function updatePreview() {
   el("previewMidday").textContent = day.midday.trim() || "--";
   el("previewAfternoon").textContent = day.afternoon.trim() || "--";
   el("previewEvening").textContent = day.evening.trim() || "--";
-  el("previewLocal").textContent = day.localInsight.trim() || "Local insight will appear here.";
+  el("previewLocal").textContent = day.localNote.trim() || "Local insight will appear here.";
   el("previewConfidence").textContent = `Confidence: ${confidenceLabel(day.confidence)}`;
 
   el("previewSignals").innerHTML = tags.length
@@ -1135,20 +1302,27 @@ async function loadSavedState() {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (saved?.days) {
       state.activeDate = saved.activeDate || "";
+      state.board = { ...boardDefaults(), ...(saved.board || {}) };
       state.days = saved.days;
     }
   } catch {
+    state.board = boardDefaults();
     state.days = {};
   }
 
+  state.board = { ...boardDefaults(), ...(state.board || {}) };
+
   const forecastDates = getForecastDates();
   forecastDates.forEach(dateStr => ensureDay(dateStr));
-  await hydrateBlankDaysFromLatestForecast(forecastDates);
+  await hydrateFromLatestForecast(forecastDates);
   forecastDates.forEach(dateStr => ensureDay(dateStr));
 }
 
-async function hydrateBlankDaysFromLatestForecast(forecastDates) {
+async function hydrateFromLatestForecast(forecastDates) {
   const latest = await loadLatestPublishedForecast();
+  if (!latest || typeof latest !== "object") return;
+
+  hydrateBoardFromLatest(latest);
   if (!latest?.days || typeof latest.days !== "object") return;
 
   let hydrated = false;
@@ -1163,6 +1337,29 @@ async function hydrateBlankDaysFromLatestForecast(forecastDates) {
   });
 
   if (hydrated) persist();
+}
+
+function hydrateBoardFromLatest(latest) {
+  const board = boardDefaults();
+  BOARD_FIELD_IDS.forEach(id => {
+    board[id] = latest[id] ?? "";
+  });
+
+  if (!hasBoardContent(state.board)) {
+    state.board = { ...boardDefaults(), ...board };
+  }
+}
+
+function hasBoardContent(board = {}) {
+  return [
+    board.boardHeadline,
+    board.boardSummary,
+    board.bestOutdoorDay,
+    board.watchDay,
+    board.mostComfortableDay,
+    board.mostUncertainDay,
+    board.forecastConfidence
+  ].some(value => String(value ?? "").trim());
 }
 
 async function loadLatestPublishedForecast() {
@@ -1189,11 +1386,16 @@ function composerDayFromPublished(dateStr, day = {}) {
 
   return {
     date: dateStr,
-    confidence: String(day.confidence ?? 0.9),
+    confidence: confidenceToComposerValue(day.confidence),
     headline: day.headline || "",
     narrative: day.narrative || "",
     high: valueToInput(day.high),
     low: valueToInput(day.low),
+    icon: day.icon || "",
+    condition: day.condition || day.sky || "",
+    feelScore: valueToInput(day.feelScore),
+    mainIssue: day.mainIssue || "",
+    bestWindow: day.bestWindow || "",
     windDir: wind.direction || "",
     windSpeedMin: valueToInput(wind.speedMin ?? wind.speed),
     windSpeedMax: valueToInput(wind.speedMax ?? wind.speed),
@@ -1210,7 +1412,7 @@ function composerDayFromPublished(dateStr, day = {}) {
     midday: timeline.midday || "",
     afternoon: timeline.afternoon || "",
     evening: timeline.evening || "",
-    localInsight: day.localInsight || "",
+    localNote: day.localNote || day.localInsight || "",
     signals: Array.isArray(day.tags) ? day.tags.join(", ") : ""
   };
 }
@@ -1221,11 +1423,16 @@ function hasComposerContent(day = {}) {
     day.narrative,
     day.high,
     day.low,
+    day.icon,
+    day.condition,
+    day.feelScore,
+    day.mainIssue,
+    day.bestWindow,
     day.morning,
     day.midday,
     day.afternoon,
     day.evening,
-    day.localInsight,
+    day.localNote,
     day.signals
   ].some(value => String(value ?? "").trim());
 }
@@ -1237,11 +1444,16 @@ function hasPublishedContent(day = {}) {
     day.narrative,
     day.high,
     day.low,
+    day.icon,
+    day.condition,
+    day.feelScore,
+    day.mainIssue,
+    day.bestWindow,
     timeline.morning,
     timeline.midday,
     timeline.afternoon,
     timeline.evening,
-    day.localInsight,
+    day.localNote || day.localInsight,
     ...(Array.isArray(day.tags) ? day.tags : [])
   ].some(value => String(value ?? "").trim());
 }
@@ -1376,10 +1588,29 @@ function pickIcon(sky, stormRisk) {
 }
 
 function confidenceLabel(value) {
+  if (value === "low" || value === "medium" || value === "high") return value;
   const n = Number(value || 0.9);
   if (n >= 0.85) return "high";
   if (n >= 0.7) return "medium-high";
   if (n >= 0.55) return "medium";
+  return "low";
+}
+
+function normalizeConfidenceForPublish(value) {
+  if (value === "low" || value === "medium" || value === "high") return value;
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "medium";
+  if (n >= 0.75) return "high";
+  if (n >= 0.5) return "medium";
+  return "low";
+}
+
+function confidenceToComposerValue(value) {
+  if (value === "low" || value === "medium" || value === "high") return value;
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "high";
+  if (n >= 0.75) return "high";
+  if (n >= 0.5) return "medium";
   return "low";
 }
 
@@ -1399,6 +1630,11 @@ function toNumberOrNull(value) {
   if (value === "" || value == null) return null;
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
+}
+
+function clampNumber(value, min, max) {
+  if (!Number.isFinite(value)) return null;
+  return Math.min(max, Math.max(min, value));
 }
 
 function capitalize(value) {

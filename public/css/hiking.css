@@ -87,13 +87,133 @@ body {
 .panel-read { border-left-color: var(--orange); }
 .panel-choice { border-left-color: var(--good); }
 .panel-profile { border-left-color: var(--accent); }
+.panel-compare { border-left-color: var(--orange); }
 .panel-data { border-left-color: var(--orange); }
 .panel-table { border-left-color: var(--good); }
 
-.hero {
+.hero,
+.hikerscore-hero {
   display: grid;
   gap: 14px;
   grid-template-columns: 1fr;
+}
+
+.hikerscore-hero {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 88% 12%, rgba(219,110,45,0.18), transparent 34%),
+    linear-gradient(180deg, rgba(18,26,43,0.98), rgba(13,22,38,0.98));
+}
+
+.hikerscore-main {
+  min-width: 0;
+}
+
+.score-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.score-badge {
+  width: 92px;
+  height: 92px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(110,168,255,0.34), transparent 58%),
+    rgba(110,168,255,0.12);
+  border: 1px solid rgba(110,168,255,0.28);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.score-badge strong {
+  color: #f4f8ff;
+  font-size: 38px;
+  line-height: 0.95;
+}
+
+.score-badge span {
+  color: var(--good);
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.score-copy {
+  min-width: 0;
+}
+
+.hero-status {
+  display: inline-flex;
+  max-width: 100%;
+  margin-bottom: 9px;
+}
+
+.stat-chip-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.stat-chip {
+  min-width: 0;
+  border-radius: 14px;
+  padding: 10px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.stat-chip span {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stat-chip strong {
+  display: block;
+  margin-top: 4px;
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.hiker-details {
+  margin-top: 12px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.045);
+  border: 1px solid rgba(255,255,255,0.07);
+  padding: 10px 12px;
+}
+
+.hiker-details summary {
+  color: #9fc5ff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.hiker-details p {
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.tldr-card {
+  min-width: 0;
+  border-radius: 16px;
+  padding: 13px;
+  background: rgba(5,12,27,0.34);
+  border: 1px solid rgba(255,255,255,0.07);
 }
 
 .kicker,
@@ -153,7 +273,8 @@ li {
 }
 
 .trail-grid,
-.diagnostic-grid {
+.diagnostic-grid,
+.comparison-grid {
   display: grid;
   gap: 10px;
   grid-template-columns: 1fr;
@@ -161,7 +282,8 @@ li {
 }
 
 .mini-card,
-.metric-card {
+.metric-card,
+.comparison-card {
   background: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.028));
   border: 1px solid rgba(110,168,255,0.13);
   border-top: 2px solid var(--orange);
@@ -170,23 +292,28 @@ li {
 }
 
 .mini-card:nth-child(even),
-.metric-card:nth-child(even) {
+.metric-card:nth-child(even),
+.comparison-card:nth-child(even) {
   border-top-color: var(--accent);
 }
 
 .mini-card strong,
 .mini-card span,
 .metric-card span,
-.metric-card strong {
+.metric-card strong,
+.comparison-card strong,
+.comparison-card span {
   display: block;
 }
 
-.mini-card strong {
+.mini-card strong,
+.comparison-card strong {
   color: var(--good);
   margin-bottom: 5px;
 }
 
 .mini-card span,
+.comparison-card span,
 .metric-card p,
 td span {
   color: var(--muted);
@@ -396,9 +523,12 @@ a {
 
 @media (min-width: 740px) {
   :root { --page-max: 760px; }
-  .hero { grid-template-columns: minmax(0, 1.45fr) minmax(230px, 0.85fr); }
+  .hero,
+  .hikerscore-hero { grid-template-columns: minmax(0, 1.45fr) minmax(230px, 0.85fr); }
   .trail-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .trail-grid-three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .diagnostic-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .comparison-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
 /* Mobile containment pass: keep wide data views inside their own scrollers. */
@@ -418,9 +548,11 @@ body {
 .hiking-wrap,
 .site-footer,
 .hero,
+.hikerscore-hero,
 .panel,
 .mini-card,
 .metric-card,
+.comparison-card,
 .profile-art,
 .table-wrap {
   min-width: 0;
@@ -429,9 +561,11 @@ body {
 
 .hiking-header > div:first-child,
 .hero > *,
+.hikerscore-hero > *,
 .panel > *,
 .trail-grid > *,
-.diagnostic-grid > * {
+.diagnostic-grid > *,
+.comparison-grid > * {
   min-width: 0;
 }
 
@@ -444,7 +578,8 @@ p,
 li,
 td,
 .mini-card,
-.metric-card {
+.metric-card,
+.comparison-card {
   overflow-wrap: anywhere;
 }
 
@@ -463,6 +598,7 @@ td,
 }
 
 .hero,
+.hikerscore-hero,
 .panel {
   overflow: hidden;
 }
@@ -502,8 +638,22 @@ td,
   }
 
   .hero,
+  .hikerscore-hero,
   .panel {
     padding: 14px 13px;
+  }
+
+  .score-row {
+    grid-template-columns: 1fr;
+  }
+
+  .score-badge {
+    width: 88px;
+    height: 88px;
+  }
+
+  .stat-chip-row {
+    grid-template-columns: 1fr;
   }
 
   h1 {

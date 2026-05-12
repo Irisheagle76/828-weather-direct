@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>4-Day Forecast • 828 Weather</title>
+  <title>Tim's Forecast Board • 828 Weather</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <link rel="stylesheet" href="/css/app-v2.css?v=20260512-brand-refresh" />
+  <link rel="stylesheet" href="/css/app-v2.css?v=20260512-forecast-board" />
 </head>
 
 <body>
@@ -31,7 +31,7 @@
        ===================================== -->
   <div id="splash" class="splash">
     <div class="splash-inner">
-      <div class="splash-title">4-Day Forecast</div>
+      <div class="splash-title">Tim's Forecast Board</div>
       <div class="splash-sub">Preparing the Asheville outlook...</div>
     </div>
   </div>
@@ -43,7 +43,7 @@
 
     <!-- PAGE HEADER -->
     <section class="section-header">
-      <h1>4-Day Forecast</h1>
+      <h1>Tim's Forecast Board</h1>
     </section>
 
     <!-- 🔥 NEW FORECAST STRUCTURE ROOT -->
@@ -107,7 +107,7 @@
        SCRIPT
        ===================================== -->
   <script type="module">
-    import { render4DayForecast } from '/js/modules/render4DayForecast.js?v=timeline-no-update-20260507';
+    import { render4DayForecast } from '/js/modules/render4DayForecast.js?v=forecast-board-20260512';
 
     const root = document.getElementById('forecast-root');
 

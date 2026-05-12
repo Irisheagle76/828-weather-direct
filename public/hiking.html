@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>828 Hiking Guidance</title>
-  <link rel="stylesheet" href="/css/hiking.css?v=20260512-mobile" />
+  <link rel="stylesheet" href="/css/hiking.css?v=20260512-hikerscore" />
 </head>
 <body>
   <header class="hiking-header">
@@ -16,22 +16,48 @@
   </header>
 
   <main class="hiking-wrap">
-    <section class="hero panel-read">
-      <div>
-        <div class="kicker">Hiker read</div>
-        <h1>Forest shade is the friendliest choice; open ridges and pavement will feel warmer.</h1>
-        <p>If you are heading out, Asheville-area trails look good, watch sun. The nearby readings sit within about 5°F of each other, so elevation alone may not change the feel very much. The two high Asheville readings are telling a similar ridge story, which means shade, slope, and open exposure still matter. Mount Mitchell is about 14°F cooler than the Asheville-area readings, so high-peak hikes deserve an extra layer and a separate comfort check. Fog is not the main signal right now. Open routes need sun awareness and steady water; forested trails should feel more forgiving.</p>
+    <section class="hikerscore-hero panel-read">
+      <div class="hikerscore-main">
+        <div class="kicker">HikerScore</div>
+        <div class="score-row">
+          <div class="score-badge">
+            <strong>82</strong>
+            <span>Good</span>
+          </div>
+          <div class="score-copy">
+            <div class="status-pill hero-status">Good, watch sun</div>
+            <h1>Forest shade is the friendliest choice; open ridges and pavement will feel warmer.</h1>
+          </div>
+        </div>
+
+        <div class="stat-chip-row" aria-label="Quick hiking stats">
+          <div class="stat-chip"><span>Asheville spread</span><strong>5°F</strong></div>
+          <div class="stat-chip"><span>Mitchell drop</span><strong>14°F</strong></div>
+          <div class="stat-chip"><span>Peak UV</span><strong>9</strong></div>
+        </div>
+
+        <details class="hiker-details">
+          <summary>Full hiker read</summary>
+          <p>If you are heading out, Asheville-area trails look good, watch sun. The nearby readings sit within about 5°F of each other, so elevation alone may not change the feel very much. The two high Asheville readings are telling a similar ridge story, which means shade, slope, and open exposure still matter. Mount Mitchell is about 14°F cooler than the Asheville-area readings, so high-peak hikes deserve an extra layer and a separate comfort check. Fog is not the main signal right now. Open routes need sun awareness and steady water; forested trails should feel more forgiving.</p>
+        </details>
+
         <div class="meta">Updated May 12, 12:38 PM · 6/6 readings live</div>
       </div>
-      <aside>
+
+      <aside class="tldr-card">
         <div class="kicker">TL;DR</div>
-        <ul><li>Good, watch sun: Forest shade is the friendliest choice; open ridges and pavement will feel warmer.</li><li>Asheville-area spread is about 5°F.</li><li>High Asheville readings broadly agree.</li><li>Mount Mitchell is about 14°F cooler than the Asheville-area readings.</li><li>Fog risk is not the lead concern.</li><li>Wind is light at the reporting sites.</li><li>Sun exposure matters on open routes.</li></ul>
+        <ul>
+          <li>Forested trails should feel most forgiving.</li>
+          <li>Open ridges and pavement will feel warmer.</li>
+          <li>High peaks still need a layer check.</li>
+          <li>Wind is light; sun exposure is the main watch item.</li>
+        </ul>
       </aside>
     </section>
 
     <section class="panel panel-choice">
       <div class="section-title"><span>Trail choice</span><h2>What this means on foot</h2></div>
-      <div class="trail-grid"><div class="mini-card"><strong>Best bet</strong><span>Forested trails, shaded slopes, and routes with easy water breaks.</span></div><div class="mini-card"><strong>Use care</strong><span>Open ridges, overlooks, pavement, and exposed rock.</span></div><div class="mini-card"><strong>Pack mindset</strong><span>Water and sun protection locally; add a layer for high peaks.</span></div><div class="mini-card"><strong>Watch for</strong><span>Quick comfort changes between shade and open sky.</span></div></div>
+      <div class="trail-grid trail-grid-three"><div class="mini-card"><strong>Best bet</strong><span>Forested trails, shaded slopes, and routes with easy water breaks.</span></div><div class="mini-card"><strong>Use care</strong><span>Open ridges, overlooks, pavement, and exposed rock.</span></div><div class="mini-card"><strong>Pack mindset</strong><span>Water and sun protection locally; add a layer for high peaks.</span></div></div>
     </section>
 
     <section class="panel panel-profile">
@@ -115,6 +141,16 @@
       <text class="profile-bottom-temp" x="955" y="505" text-anchor="middle">51°</text>
     </g>
         </svg>
+      </div>
+    </section>
+
+    <section class="panel panel-compare">
+      <div class="section-title"><span>Trail comparisons</span><h2>What changes by route type</h2></div>
+      <div class="comparison-grid">
+        <div class="comparison-card"><strong>Mountain vs Asheville</strong><span>Mount Mitchell is running about 14°F cooler, so high peaks still deserve a separate layer check.</span></div>
+        <div class="comparison-card"><strong>Ridge vs Valley</strong><span>High Asheville readings broadly agree, but ridge exposure can still change the feel fast.</span></div>
+        <div class="comparison-card"><strong>Sun exposure</strong><span>Shade is your friend today. Open overlooks, rock, and pavement will run warmer than the air temp suggests.</span></div>
+        <div class="comparison-card"><strong>Wind check</strong><span>Wind is light at the reporting sites, so comfort is mostly about sun, shade, and water breaks.</span></div>
       </div>
     </section>
 
