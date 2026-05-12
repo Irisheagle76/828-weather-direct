@@ -47,7 +47,7 @@ body {
 
 .app-header {
   background: linear-gradient(180deg, #122a5a, #0f2247);
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(110,168,255,0.18);
 }
 
 .header-inner {
@@ -61,16 +61,28 @@ body {
    ------------------------------------------------------------ */
 
 .brand-title {
-  font-size: 22px;            /* slightly tightened */
-  font-weight: 700;
   color: #6ea8ff;
-  letter-spacing: 0.25px;
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1.05;
+}
+
+.brand-title::after {
+  background: var(--orange);
+  border-radius: 999px;
+  content: "";
+  display: block;
+  height: 3px;
+  margin-top: 7px;
+  width: 44px;
 }
 
 .brand-sub {
   font-size: 13px;
   color: var(--muted);
-  margin-top: 3px;
+  line-height: 1.35;
+  margin-top: 7px;
 }
 
 /* ------------------------------------------------------------
@@ -2425,10 +2437,10 @@ body {
 ----------------------------------------- */
 
 .footer-logo {
-  font-weight: 600;
+  color: #6ea8ff;
   font-size: 14px;
-  color: #f8fafc;
-  letter-spacing: 0.3px;
+  font-weight: 800;
+  letter-spacing: 0;
 }
 
 .footer-tagline {
@@ -2629,14 +2641,14 @@ body {
 
   background: linear-gradient(
     to bottom,
-    rgba(20,35,70,0.95),
-    rgba(10,20,40,0.75)
+    rgba(18,42,90,0.96),
+    rgba(15,34,71,0.86)
   );
 
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid rgba(110,168,255,0.18);
 }
 
 /* =========================
