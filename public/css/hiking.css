@@ -216,8 +216,8 @@ td span {
 
 .profile-art svg {
   display: block;
-  min-width: 760px;
-  width: 100%;
+  min-width: 920px;
+  width: max(100%, 920px);
 }
 
 .profile-bg {
@@ -265,25 +265,25 @@ td span {
 
 .profile-axis-title {
   fill: #ffffff;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.08em;
 }
 
 .profile-tick-label {
   fill: #dce8ff;
-  font-size: 17px;
+  font-size: 15px;
 }
 
 .profile-label {
   fill: #ffffff;
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 850;
 }
 
 .profile-elev {
   fill: #9fc5ff;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .profile-dot {
@@ -298,12 +298,12 @@ td span {
 
 .profile-bottom-name {
   fill: #ffffff;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .profile-bottom-temp {
   fill: #8fbaff;
-  font-size: 19px;
+  font-size: 17px;
   font-weight: 850;
 }
 

@@ -344,7 +344,7 @@ function renderHtml(payload) {
     ["Pack mindset", g.mitchellDrop >= 10 ? "Water and sun protection locally; add a layer for high peaks." : "Water, basic sun protection, and normal mountain layers."],
     ["Watch for", g.fogRisk === "Elevated" ? "Patchy fog, low cloud, wet leaves, and slick shaded spots." : "Quick comfort changes between shade and open sky."]
   ];
-  const profileXs = [100, 250, 380, 560, 700, 880];
+  const profileXs = [145, 305, 455, 635, 790, 955];
   const profileStations = sortedStations.map((x, index) => {
     const y = Math.round(440 - ((x.elevationFt - 1000) / 6000) * 320);
     const words = x.name.split(" ");
@@ -353,9 +353,9 @@ function renderHtml(payload) {
     return { ...x, x: profileXs[index] ?? 900, y, nameLines, zone };
   });
   const ridgePath = profileStations.map((x, index) => `${index === 0 ? "M" : "L"} ${x.x} ${x.y}`).join(" ");
-  const areaPath = `${ridgePath} L 970 450 L 55 450 Z`;
+  const areaPath = `${ridgePath} L 1065 450 L 55 450 Z`;
   const elevationProfile = profileStations.map((x, index) => {
-    const labelY = Math.max(66, x.y - 70);
+    const labelY = Math.max(72, x.y - 74);
     const bottomName = x.name.replace(" Weather Tower", "").replace("Asheville ", "");
     return `<g class="profile-site">
       <line class="profile-stem" x1="${x.x}" y1="${x.y + 13}" x2="${x.x}" y2="450" />
@@ -409,7 +409,7 @@ function renderHtml(payload) {
       <div class="section-title"><span>Where these readings are</span><h2>Elevation profile</h2></div>
       <p class="profile-intro">A quick visual of the reporting sites, from lower Asheville up to Mount Mitchell. This helps explain what "high Asheville" and "high peaks" mean in the trail guidance.</p>
       <div class="profile-art" role="img" aria-label="Elevation profile of Asheville-area weather readings up to Mount Mitchell">
-        <svg viewBox="0 0 1000 520" preserveAspectRatio="xMidYMid meet">
+        <svg viewBox="0 0 1080 540" preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="profileFill" x1="0" x2="1" y1="1" y2="0">
               <stop offset="0%" stop-color="#5bd27c" />
@@ -417,8 +417,8 @@ function renderHtml(payload) {
               <stop offset="100%" stop-color="#357cff" />
             </linearGradient>
           </defs>
-          <rect class="profile-bg" x="0" y="0" width="1000" height="520" rx="22" />
-          <text class="profile-axis-title" x="64" y="202">ELEVATION (FT)</text>
+          <rect class="profile-bg" x="0" y="0" width="1080" height="540" rx="22" />
+          <text class="profile-axis-title" x="96" y="90">ELEVATION (FT)</text>
           <line class="profile-axis" x1="94" y1="220" x2="94" y2="450" />
           ${[7000,6000,5000,4000,3000,2000,1000].map((tick) => {
             const y = Math.round(450 - ((tick - 1000) / 6000) * 320);
@@ -426,7 +426,7 @@ function renderHtml(payload) {
           }).join("")}
           <path class="profile-area" d="${areaPath}" />
           <path class="profile-ridge" d="${ridgePath}" />
-          <path class="profile-forest" d="M55 450 C95 405 136 426 173 394 C206 368 233 412 278 376 C316 346 355 390 394 354 C435 318 479 378 518 328 C558 286 607 354 652 294 C696 232 736 324 780 242 C817 170 847 214 884 112 C918 158 944 160 970 176 L970 450 Z" />
+          <path class="profile-forest" d="M55 450 C110 405 158 428 205 392 C246 365 282 414 330 376 C372 344 420 390 468 354 C514 318 556 378 604 328 C650 286 704 354 750 294 C796 232 840 324 886 242 C922 170 948 214 984 112 C1020 158 1046 160 1065 176 L1065 450 Z" />
           ${elevationProfile}
         </svg>
       </div>
