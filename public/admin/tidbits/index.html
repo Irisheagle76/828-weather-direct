@@ -228,6 +228,113 @@
       transition: width 0.15s linear;
     }
 
+    .media-library {
+      margin-top: 0.75rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      background: rgba(15,21,37,0.55);
+      padding: 0.65rem;
+    }
+
+    .media-library-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.55rem;
+    }
+
+    .media-library-title {
+      font-size: 0.78rem;
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    .media-library-status {
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      margin-top: 0.1rem;
+    }
+
+    .media-library-refresh {
+      border: 0;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      color: #eaf1ff;
+      cursor: pointer;
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      white-space: nowrap;
+    }
+
+    .media-library-refresh:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    .media-library-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+      gap: 0.5rem;
+    }
+
+    .media-asset {
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.04);
+      color: inherit;
+      cursor: pointer;
+      overflow: hidden;
+      padding: 0;
+      text-align: left;
+    }
+
+    .media-asset:hover,
+    .media-asset:focus-visible {
+      border-color: rgba(143,183,255,0.8);
+      outline: none;
+    }
+
+    .media-asset.selected {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(143,183,255,0.2);
+    }
+
+    .media-asset-thumb {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      background: #020617;
+    }
+
+    .media-asset-thumb img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+
+    .media-asset-kind {
+      position: absolute;
+      right: 5px;
+      bottom: 5px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.72);
+      color: white;
+      font-size: 0.64rem;
+      line-height: 1;
+      padding: 3px 6px;
+      text-transform: uppercase;
+    }
+
+    .media-asset-name {
+      color: var(--text-muted);
+      font-size: 0.68rem;
+      overflow: hidden;
+      padding: 0.42rem 0.45rem;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     input[type="file"] {
       display: none;
     }
@@ -425,6 +532,9 @@
       .publish-row {
         align-items: flex-start;
       }
+      .media-library-header {
+        align-items: flex-start;
+      }
     }
   </style>
 </head>
@@ -480,6 +590,16 @@
         <div class="media-progress" id="media-progress" style="display:none;">
           <div class="media-progress-bar" id="media-progress-bar"></div>
         </div>
+        <div class="media-library">
+          <div class="media-library-header">
+            <div>
+              <div class="media-library-title">Recent Cloudinary media</div>
+              <div class="media-library-status" id="media-library-status">Loading newest from 828-weather-pulse...</div>
+            </div>
+            <button class="media-library-refresh" id="media-library-refresh" type="button">Refresh</button>
+          </div>
+          <div class="media-library-grid" id="media-library-grid"></div>
+        </div>
       </div>
 
       <div class="field publish-row">
@@ -517,6 +637,9 @@
   const mediaFilename = document.getElementById('media-filename');
   const mediaProgress = document.getElementById('media-progress');
   const mediaProgressBar = document.getElementById('media-progress-bar');
+  const mediaLibraryStatus = document.getElementById('media-library-status');
+  const mediaLibraryGrid = document.getElementById('media-library-grid');
+  const mediaLibraryRefresh = document.getElementById('media-library-refresh');
   const publishBtn = document.getElementById('publish');
   const statusEl = document.getElementById('status');
   const draftIndicator = document.getElementById('draft-indicator');
@@ -531,6 +654,7 @@
   let currentFile = null;
   let isUploading = false;
   let draftSaveTimer = null;
+  let recentAssets = [];
 
   // -----------------------------
   // Utility: selection + range
@@ -862,9 +986,106 @@
     mediaFilename.textContent = `${file.name} (${Math.round(file.size / 1024)} KB)`;
     currentMediaUrl = "";
     currentMediaType = file.type.startsWith('video/') ? 'video' : 'image';
+    renderMediaLibrary();
     updatePreview();
     scheduleDraftSave();
   }
+
+  function assetLabel(asset) {
+    return (asset.publicId || "Cloudinary media").split("/").pop();
+  }
+
+  function escapeHTML(value) {
+    return String(value).replace(/[&<>"']/g, (char) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    }[char]));
+  }
+
+  function selectCloudinaryAsset(asset) {
+    currentFile = null;
+    mediaInput.value = "";
+    currentMediaUrl = asset.mediaUrl;
+    currentMediaType = asset.mediaType;
+    mediaFilename.textContent = `${assetLabel(asset)} (Cloudinary ${asset.mediaType})`;
+    renderMediaLibrary();
+    updatePreview();
+    scheduleDraftSave();
+  }
+
+  function renderMediaLibrary() {
+    if (!recentAssets.length) {
+      mediaLibraryGrid.innerHTML = "";
+      return;
+    }
+
+    mediaLibraryGrid.innerHTML = recentAssets.map((asset, index) => {
+      const isSelected = currentMediaUrl === asset.mediaUrl;
+      const label = assetLabel(asset);
+      const safeLabel = escapeHTML(label);
+      const safeThumb = escapeHTML(asset.thumbnailUrl);
+      const safeType = escapeHTML(asset.mediaType);
+      return `
+        <button
+          class="media-asset${isSelected ? " selected" : ""}"
+          type="button"
+          data-asset-index="${index}"
+          aria-label="Use ${safeLabel}"
+        >
+          <div class="media-asset-thumb">
+            <img src="${safeThumb}" alt="" loading="lazy" />
+            <span class="media-asset-kind">${safeType}</span>
+          </div>
+          <div class="media-asset-name" title="${safeLabel}">${safeLabel}</div>
+        </button>
+      `;
+    }).join("");
+  }
+
+  async function loadRecentMedia() {
+    mediaLibraryRefresh.disabled = true;
+    mediaLibraryStatus.textContent = "Loading newest from 828-weather-pulse...";
+
+    try {
+      const res = await fetch("/api/tidbits/pulse-media");
+      const text = await res.text();
+      let data = {};
+
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        data = {};
+      }
+
+      if (!res.ok) {
+        throw new Error(data.error || "Unable to load media");
+      }
+
+      recentAssets = Array.isArray(data.assets) ? data.assets : [];
+      renderMediaLibrary();
+      mediaLibraryStatus.textContent = recentAssets.length
+        ? `${recentAssets.length} recent asset${recentAssets.length === 1 ? "" : "s"} available`
+        : "No recent assets found in 828-weather-pulse";
+    } catch {
+      recentAssets = [];
+      mediaLibraryStatus.textContent = "Could not load recent Cloudinary media";
+      mediaLibraryGrid.innerHTML = "";
+    }
+
+    mediaLibraryRefresh.disabled = false;
+  }
+
+  mediaLibraryGrid.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-asset-index]");
+    if (!btn) return;
+    const asset = recentAssets[Number(btn.dataset.assetIndex)];
+    if (asset) selectCloudinaryAsset(asset);
+  });
+
+  mediaLibraryRefresh.addEventListener("click", loadRecentMedia);
 
   function showProgress(show) {
     mediaProgress.style.display = show ? 'block' : 'none';
@@ -1029,9 +1250,11 @@ function updateTimestamp() {
       editor.innerHTML = draft.html || "";
       currentMediaType = draft.mediaType || null;
       currentMediaUrl = draft.mediaUrl || "";
+      currentFile = null;
       mediaFilename.textContent = draft.filename || "";
       draftIndicator.style.display = 'inline';
       draftRestoreBanner.style.display = 'none';
+      renderMediaLibrary();
       updatePreview();
     } catch (e) {
       // ignore
@@ -1080,6 +1303,8 @@ function updateTimestamp() {
         setStatus("Publishing…", "busy");
         updatePreview();
       } else {
+        mediaUrl = currentMediaUrl || null;
+        mediaType = currentMediaUrl ? currentMediaType : null;
         setStatus("Publishing…", "busy");
       }
 
@@ -1105,6 +1330,7 @@ function updateTimestamp() {
       currentMediaType = null;
       currentFile = null;
       mediaFilename.textContent = "";
+      renderMediaLibrary();
       updatePreview();
       clearDraft();
 
@@ -1127,6 +1353,7 @@ function updateTimestamp() {
     editor.innerHTML = "";
     updatePreview();
     checkForDraft();
+    loadRecentMedia();
   }
 
   init();

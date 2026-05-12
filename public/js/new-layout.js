@@ -195,7 +195,7 @@ async function loadPulse() {
   if (!container) return;
 
   try {
-    const res = await fetch('/api/tidbits/pulse-latest');
+    const res = await fetch('/api/tidbits/pulse-feed');
 
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}`);

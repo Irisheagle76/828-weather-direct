@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>828 Weather Pulse Archive</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/css/app-v2.css?v=20260509-tempcompact" />
+  <style>
+    .pulse-archive {
+      max-width: 660px;
+      margin: 0 auto;
+      padding: 14px 12px 48px;
+    }
+
+    .pulse-archive-header {
+      margin: 8px 0 14px;
+    }
+
+    .pulse-archive-back {
+      color: #9ecbff;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .pulse-archive-title {
+      margin: 10px 0 4px;
+      color: #f4f8ff;
+      font-size: 24px;
+      line-height: 1.1;
+    }
+
+    .pulse-archive-subtitle {
+      color: rgba(207, 226, 255, 0.72);
+      font-size: 13px;
+    }
+
+    .pulse-feed {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .pulse-feed-item {
+      scroll-margin-top: 14px;
+    }
+
+    .pulse-feed-meta {
+      color: rgba(207, 226, 255, 0.68);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .pulse-feed-media {
+      overflow: hidden;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      background: rgba(255,255,255,0.05);
+    }
+
+    .pulse-feed-media img,
+    .pulse-feed-media video {
+      width: 100%;
+      max-height: 440px;
+      display: block;
+      object-fit: cover;
+    }
+
+    .pulse-feed-text {
+      color: rgba(255,255,255,0.9);
+      font-size: 14px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <main class="pulse-archive">
+    <header class="pulse-archive-header">
+      <a class="pulse-archive-back" href="/">Back to 828 Weather Direct</a>
+      <h1 class="pulse-archive-title">828 Weather Pulse</h1>
+      <div class="pulse-archive-subtitle">Recent quick hits, newest first.</div>
+    </header>
+
+    <section class="pulse-feed" id="pulse-feed">
+      <div class="content-card">Loading Pulse updates...</div>
+    </section>
+  </main>
+
+  <script type="module">
+    const feed = document.getElementById("pulse-feed");
+
+    function cleanText(html) {
+      return (html || "")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function escapeHTML(value) {
+      return String(value).replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[char]));
+    }
+
+    function formatDate(timestamp) {
+      if (!timestamp) return "Recent";
+      return new Date(timestamp).toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+      });
+    }
+
+    function mediaHtml(item) {
+      const media = item.mediaUrl || item.image;
+      if (!media) return "";
+      const safeMedia = escapeHTML(media);
+      const isVideo = item.mediaType === "video" || media.endsWith(".mp4") || media.includes("/video/");
+
+      return `
+        <div class="pulse-feed-media">
+          ${
+            isVideo
+              ? `<video controls playsinline preload="metadata"><source src="${safeMedia}" type="video/mp4" /></video>`
+              : `<img src="${safeMedia}" alt="" loading="lazy" />`
+          }
+        </div>
+      `;
+    }
+
+    function render(items) {
+      if (!items.length) {
+        feed.innerHTML = '<div class="content-card">No Pulse updates have been published yet.</div>';
+        return;
+      }
+
+      feed.innerHTML = items.map((item) => `
+        <article class="content-card pulse-feed-item" id="pulse-${escapeHTML(item.timestamp || "")}">
+          <div class="pulse-feed-meta">${escapeHTML(formatDate(item.timestamp))}</div>
+          ${mediaHtml(item)}
+          <div class="pulse-feed-text">${escapeHTML(cleanText(item.text || item.body || item.content || ""))}</div>
+        </article>
+      `).join("");
+
+      if (window.location.hash) {
+        document.querySelector(window.location.hash)?.scrollIntoView();
+      }
+    }
+
+    try {
+      const response = await fetch("/api/tidbits/pulse-feed");
+      const data = await response.json();
+      render(Array.isArray(data.items) ? data.items : []);
+    } catch {
+      feed.innerHTML = '<div class="content-card">Unable to load Pulse updates right now.</div>';
+    }
+  </script>
+</body>
+</html>

@@ -2,6 +2,24 @@ import { kv } from "@vercel/kv";
 
 console.log("Pulse-write route loaded at", Date.now());
 
+const HISTORY_KEY = "pulse:history";
+const HISTORY_LIMIT = 30;
+
+async function savePulseHistory(pulse) {
+  const existing = await kv.get(HISTORY_KEY);
+  const history = Array.isArray(existing) ? existing : [];
+  const nextHistory = [
+    pulse,
+    ...history.filter((item) => {
+      if (!item) return false;
+      if (item.timestamp === pulse.timestamp) return false;
+      return item.text !== pulse.text || item.mediaUrl !== pulse.mediaUrl;
+    })
+  ].slice(0, HISTORY_LIMIT);
+
+  await kv.set(HISTORY_KEY, nextHistory);
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -27,6 +45,7 @@ export default async function handler(req, res) {
 
     // Save Pulse FIRST
     await kv.set("pulse:latest", pulse);
+    await savePulseHistory(pulse);
 
     return res.status(200).json({ success: true, pulse });
 

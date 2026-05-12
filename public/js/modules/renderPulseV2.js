@@ -30,6 +30,7 @@ export function renderPulseV2(container, pulse) {
   const time = formatTimeAgo(new Date(pulse.timestamp));
   const text = cleanText(pulse.text || pulse.body || "");
   const media = pulse.mediaUrl || pulse.image || null;
+  const recent = Array.isArray(pulse.recent) ? pulse.recent.slice(0, 4) : [];
 
   const isVideo =
     !!media &&
@@ -38,6 +39,9 @@ export function renderPulseV2(container, pulse) {
       media.endsWith(".mp4") ||
       media.includes("/video/")
     );
+
+  const safeMedia = media ? escapeAttr(media) : "";
+  const recentRail = createRecentRail(recent);
 
   // ------------------------------------------------------------
   // RENDER
@@ -61,11 +65,11 @@ export function renderPulseV2(container, pulse) {
             isVideo
               ? `
                 <video autoplay muted loop playsinline preload="metadata">
-                  <source src="${media}" type="video/mp4" />
+                  <source src="${safeMedia}" type="video/mp4" />
                 </video>
               `
               : `
-                <img src="${media}" alt="Pulse image" />
+                <img src="${safeMedia}" alt="Pulse image" />
               `
           }
         </div>
@@ -73,10 +77,12 @@ export function renderPulseV2(container, pulse) {
 
       <div class="pulse-body">
         <div class="pulse-text">
-          ${text}
+          ${escapeHTML(text)}
         </div>
         <div class="pulse-fade"></div>
       </div>
+
+      ${recentRail}
 
       <button class="pulse-toggle" aria-expanded="false">
         Read full update
@@ -116,11 +122,11 @@ export function renderPulseV2(container, pulse) {
       lightboxContent.innerHTML = isVideo
         ? `
           <video controls autoplay>
-            <source src="${media}" type="video/mp4" />
+            <source src="${safeMedia}" type="video/mp4" />
           </video>
         `
         : `
-          <img src="${media}" />
+          <img src="${safeMedia}" />
         `;
 
       lightbox.classList.remove("hidden");
@@ -154,6 +160,80 @@ function cleanText(html) {
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function createRecentRail(items) {
+  if (!items.length) return "";
+
+  const cards = items.map((item) => {
+    const media = item.mediaUrl || item.image || "/828-brand-card.png";
+    const isVideo = item.mediaType === "video" || media.endsWith(".mp4") || media.includes("/video/");
+    const thumbnail = createThumbnailUrl(media, isVideo);
+    const time = item.timestamp ? formatShortDate(new Date(item.timestamp)) : "Recent";
+    const text = cleanText(item.text || item.body || item.content || "");
+    const label = text ? text.slice(0, 64) : "Weather Pulse update";
+    const href = `/pulse.html${item.timestamp ? `#pulse-${item.timestamp}` : ""}`;
+
+    return `
+      <a class="pulse-rail-card" href="${escapeAttr(href)}" aria-label="Open ${escapeAttr(label)}">
+        <span class="pulse-rail-media">
+          <img src="${escapeAttr(thumbnail)}" alt="" loading="lazy" />
+          ${isVideo ? '<span class="pulse-rail-kind">Video</span>' : ""}
+        </span>
+        <span class="pulse-rail-time">${escapeHTML(time)}</span>
+      </a>
+    `;
+  }).join("");
+
+  return `
+    <div class="pulse-rail" aria-label="Recent Weather Pulse updates">
+      <div class="pulse-rail-head">
+        <span>Recent pulses</span>
+        <a href="/pulse.html">View all</a>
+      </div>
+      <div class="pulse-rail-track">
+        ${cards}
+      </div>
+    </div>
+  `;
+}
+
+function createThumbnailUrl(url, isVideo) {
+  if (!url || !url.includes("/upload/")) return url || "/828-brand-card.png";
+  return url.replace(
+    "/upload/",
+    isVideo
+      ? "/upload/so_0,c_fill,w_220,h_124,q_auto,f_jpg/"
+      : "/upload/c_fill,w_220,h_124,q_auto,f_auto/"
+  );
+}
+
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[char]));
+}
+
+function escapeAttr(value) {
+  return escapeHTML(value);
+}
+
+function formatShortDate(date) {
+  if (!Number.isFinite(date.getTime())) return "Recent";
+
+  const diff = (Date.now() - date.getTime()) / 1000;
+  if (diff < 3600) return `${Math.max(1, Math.floor(diff / 60))}m`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)}d`;
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric"
+  });
 }
 
 function formatTimeAgo(date) {
