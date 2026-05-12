@@ -1918,7 +1918,7 @@ body {
 
 .update-body {
   position: relative;
-  max-height: 64px;
+  max-height: 84px;
   overflow: hidden;
   transition: max-height 0.35s ease;
 }
@@ -2217,6 +2217,26 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.update-heading {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.update-heading .update-title-text {
+  flex: initial;
+}
+
+.update-tagline {
+  color: rgba(255, 214, 160, 0.72);
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0;
+  line-height: 1.2;
+  text-transform: none;
 }
 
 /* keep icon + NEW badge stable */

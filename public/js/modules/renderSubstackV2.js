@@ -40,7 +40,10 @@ export function renderSubstackV2(container, post) {
     <div class="content-card update-card">
 
       <div class="section-title update-title-row">
-        <span class="update-title-text">828 Weather Update</span>
+        <span class="update-heading">
+          <span class="update-title-text">828 Weather Update</span>
+          <span class="update-tagline">Deep dives. Weather insight. 828.</span>
+        </span>
 
         <span class="update-brand">
           <img
@@ -113,8 +116,8 @@ function buildExcerpt(text) {
     ? sentences.slice(0, 2).join(" ")
     : cleaned;
 
-  return teaser.length > 190
-    ? `${teaser.slice(0, 187).trim()}...`
+  return teaser.length > 275
+    ? `${teaser.slice(0, 272).trim()}...`
     : teaser;
 }
 
