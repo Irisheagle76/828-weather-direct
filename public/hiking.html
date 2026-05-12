@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>828 Hiking Guidance</title>
-  <link rel="stylesheet" href="/css/hiking.css?v=1778377799318" />
+  <link rel="stylesheet" href="/css/hiking.css?v=1778598311021" />
 </head>
 <body>
   <header class="hiking-header">
@@ -16,12 +16,12 @@
   </header>
 
   <main class="hiking-wrap">
-    <section class="hero">
+    <section class="hero panel-read">
       <div>
         <div class="kicker">Hiker read</div>
         <h1>Most nearby trails look friendly, with normal mountain checks.</h1>
         <p>If you are heading out, Asheville-area trails look good for most hikes. The nearby readings sit within about 3°F of each other, so elevation alone may not change the feel very much. The two high Asheville readings are telling a similar ridge story, which means shade, slope, and open exposure still matter. Mount Mitchell is about 17°F cooler than the Asheville-area readings, so high-peak hikes deserve an extra layer and a separate comfort check. Fog is not the main signal right now. Sun exposure is manageable, especially under canopy.</p>
-        <div class="meta">Updated May 9, 9:49 PM · 6/6 readings live</div>
+        <div class="meta">Updated May 12, 11:05 AM · 0/6 readings live</div>
       </div>
       <aside>
         <div class="kicker">TL;DR</div>
@@ -29,65 +29,101 @@
       </aside>
     </section>
 
-    <section class="panel">
+    <section class="panel panel-choice">
       <div class="section-title"><span>Trail choice</span><h2>What this means on foot</h2></div>
       <div class="trail-grid"><div class="mini-card"><strong>Best bet</strong><span>Most nearby trails should feel comfortable.</span></div><div class="mini-card"><strong>Use care</strong><span>Typical mountain exposure: changing clouds, damp pockets, and breezy gaps.</span></div><div class="mini-card"><strong>Pack mindset</strong><span>Water and sun protection locally; add a layer for high peaks.</span></div><div class="mini-card"><strong>Watch for</strong><span>Quick comfort changes between shade and open sky.</span></div></div>
     </section>
 
-    <section class="panel">
+    <section class="panel panel-profile">
       <div class="section-title"><span>Where these readings are</span><h2>Elevation profile</h2></div>
-      <p class="profile-intro">This is a simple vertical picture of the reporting sites, from lower Asheville up to Mount Mitchell. It helps explain phrases like “high Asheville” and “high peaks.”</p>
-      <div class="profile"><div class="profile-row">
-      <div class="profile-place">
-        <strong>Lower Asheville</strong>
-        <span>Lower Asheville · 2137 ft</span>
+      <p class="profile-intro">A quick visual of the reporting sites, from lower Asheville up to Mount Mitchell. This helps explain what "high Asheville" and "high peaks" mean in the trail guidance.</p>
+      <div class="profile-art" role="img" aria-label="Elevation profile of Asheville-area weather readings up to Mount Mitchell">
+        <svg viewBox="0 0 1000 520" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <linearGradient id="profileFill" x1="0" x2="1" y1="1" y2="0">
+              <stop offset="0%" stop-color="#5bd27c" />
+              <stop offset="52%" stop-color="#4eb4c8" />
+              <stop offset="100%" stop-color="#357cff" />
+            </linearGradient>
+          </defs>
+          <rect class="profile-bg" x="0" y="0" width="1000" height="520" rx="22" />
+          <text class="profile-axis-title" x="64" y="202">ELEVATION (FT)</text>
+          <line class="profile-axis" x1="94" y1="220" x2="94" y2="450" />
+          <g><line class="profile-tick" x1="88" y1="130" x2="94" y2="130" /><text class="profile-tick-label" x="78" y="136" text-anchor="end">7,000</text></g><g><line class="profile-tick" x1="88" y1="183" x2="94" y2="183" /><text class="profile-tick-label" x="78" y="189" text-anchor="end">6,000</text></g><g><line class="profile-tick" x1="88" y1="237" x2="94" y2="237" /><text class="profile-tick-label" x="78" y="243" text-anchor="end">5,000</text></g><g><line class="profile-tick" x1="88" y1="290" x2="94" y2="290" /><text class="profile-tick-label" x="78" y="296" text-anchor="end">4,000</text></g><g><line class="profile-tick" x1="88" y1="343" x2="94" y2="343" /><text class="profile-tick-label" x="78" y="349" text-anchor="end">3,000</text></g><g><line class="profile-tick" x1="88" y1="397" x2="94" y2="397" /><text class="profile-tick-label" x="78" y="403" text-anchor="end">2,000</text></g><g><line class="profile-tick" x1="88" y1="450" x2="94" y2="450" /><text class="profile-tick-label" x="78" y="456" text-anchor="end">1,000</text></g>
+          <path class="profile-area" d="M 100 379 L 250 370 L 380 367 L 560 314 L 700 314 L 880 137 L 970 450 L 55 450 Z" />
+          <path class="profile-ridge" d="M 100 379 L 250 370 L 380 367 L 560 314 L 700 314 L 880 137" />
+          <path class="profile-forest" d="M55 450 C95 405 136 426 173 394 C206 368 233 412 278 376 C316 346 355 390 394 354 C435 318 479 378 518 328 C558 286 607 354 652 294 C696 232 736 324 780 242 C817 170 847 214 884 112 C918 158 944 160 970 176 L970 450 Z" />
+          <g class="profile-site">
+      <line class="profile-stem" x1="100" y1="392" x2="100" y2="450" />
+      <circle class="profile-dot" cx="100" cy="379" r="10" />
+      <text class="profile-label" x="100" y="309" text-anchor="middle">
+        <tspan x="100" dy="0">Lower Asheville</tspan>
+      </text>
+      <text class="profile-elev" x="100" y="343" text-anchor="middle">2137 ft</text>
+      <circle class="profile-base-dot" cx="100" cy="450" r="4" />
+      <text class="profile-bottom-name" x="100" y="480" text-anchor="middle">Lower Asheville</text>
+      <text class="profile-bottom-temp" x="100" y="505" text-anchor="middle">61°</text>
+    </g><g class="profile-site">
+      <line class="profile-stem" x1="250" y1="383" x2="250" y2="450" />
+      <circle class="profile-dot" cx="250" cy="370" r="10" />
+      <text class="profile-label" x="250" y="300" text-anchor="middle">
+        <tspan x="250" dy="0">Mid Asheville</tspan>
+      </text>
+      <text class="profile-elev" x="250" y="334" text-anchor="middle">2316 ft</text>
+      <circle class="profile-base-dot" cx="250" cy="450" r="4" />
+      <text class="profile-bottom-name" x="250" y="480" text-anchor="middle">Mid Asheville</text>
+      <text class="profile-bottom-temp" x="250" y="505" text-anchor="middle">61°</text>
+    </g><g class="profile-site">
+      <line class="profile-stem" x1="380" y1="380" x2="380" y2="450" />
+      <circle class="profile-dot" cx="380" cy="367" r="10" />
+      <text class="profile-label" x="380" y="297" text-anchor="middle">
+        <tspan x="380" dy="0">UNCA</tspan><tspan x="380" dy="20">Weather Tower</tspan>
+      </text>
+      <text class="profile-elev" x="380" y="351" text-anchor="middle">2367 ft</text>
+      <circle class="profile-base-dot" cx="380" cy="450" r="4" />
+      <text class="profile-bottom-name" x="380" y="480" text-anchor="middle">UNCA</text>
+      <text class="profile-bottom-temp" x="380" y="505" text-anchor="middle">62°</text>
+    </g><g class="profile-site">
+      <line class="profile-stem" x1="560" y1="327" x2="560" y2="450" />
+      <circle class="profile-dot" cx="560" cy="314" r="10" />
+      <text class="profile-label" x="560" y="244" text-anchor="middle">
+        <tspan x="560" dy="0">High Asheville</tspan><tspan x="560" dy="20">East</tspan>
+      </text>
+      <text class="profile-elev" x="560" y="298" text-anchor="middle">3363 ft</text>
+      <circle class="profile-base-dot" cx="560" cy="450" r="4" />
+      <text class="profile-bottom-name" x="560" y="480" text-anchor="middle">High East</text>
+      <text class="profile-bottom-temp" x="560" y="505" text-anchor="middle">59°</text>
+    </g><g class="profile-site">
+      <line class="profile-stem" x1="700" y1="327" x2="700" y2="450" />
+      <circle class="profile-dot" cx="700" cy="314" r="10" />
+      <text class="profile-label" x="700" y="244" text-anchor="middle">
+        <tspan x="700" dy="0">High Asheville</tspan><tspan x="700" dy="20">North</tspan>
+      </text>
+      <text class="profile-elev" x="700" y="298" text-anchor="middle">3371 ft</text>
+      <circle class="profile-base-dot" cx="700" cy="450" r="4" />
+      <text class="profile-bottom-name" x="700" y="480" text-anchor="middle">High North</text>
+      <text class="profile-bottom-temp" x="700" y="505" text-anchor="middle">59°</text>
+    </g><g class="profile-site">
+      <line class="profile-stem" x1="880" y1="150" x2="880" y2="450" />
+      <circle class="profile-dot" cx="880" cy="137" r="10" />
+      <text class="profile-label" x="880" y="67" text-anchor="middle">
+        <tspan x="880" dy="0">Mount Mitchell</tspan>
+      </text>
+      <text class="profile-elev" x="880" y="101" text-anchor="middle">6684 ft</text>
+      <circle class="profile-base-dot" cx="880" cy="450" r="4" />
+      <text class="profile-bottom-name" x="880" y="480" text-anchor="middle">Mount Mitchell</text>
+      <text class="profile-bottom-temp" x="880" y="505" text-anchor="middle">44°</text>
+    </g>
+        </svg>
       </div>
-      <div class="profile-track" style="--pos:0%"><span></span></div>
-      <div class="profile-temp">61°</div>
-    </div><div class="profile-row">
-      <div class="profile-place">
-        <strong>Mid Asheville</strong>
-        <span>Mid Asheville · 2316 ft</span>
-      </div>
-      <div class="profile-track" style="--pos:3.9366615350780734%"><span></span></div>
-      <div class="profile-temp">61°</div>
-    </div><div class="profile-row">
-      <div class="profile-place">
-        <strong>UNCA Weather Tower</strong>
-        <span>Mid Asheville · 2367 ft</span>
-      </div>
-      <div class="profile-track" style="--pos:5.058280184737189%"><span></span></div>
-      <div class="profile-temp">62°</div>
-    </div><div class="profile-row">
-      <div class="profile-place">
-        <strong>High Asheville East</strong>
-        <span>High Asheville ridge · 3363 ft</span>
-      </div>
-      <div class="profile-track" style="--pos:26.962832636903457%"><span></span></div>
-      <div class="profile-temp">59°</div>
-    </div><div class="profile-row">
-      <div class="profile-place">
-        <strong>High Asheville North</strong>
-        <span>High Asheville ridge · 3371 ft</span>
-      </div>
-      <div class="profile-track" style="--pos:27.138772817242135%"><span></span></div>
-      <div class="profile-temp">59°</div>
-    </div><div class="profile-row">
-      <div class="profile-place">
-        <strong>Mount Mitchell</strong>
-        <span>WNC high peak · 6684 ft</span>
-      </div>
-      <div class="profile-track" style="--pos:100%"><span></span></div>
-      <div class="profile-temp">44°</div>
-    </div></div>
     </section>
 
-    <section class="panel">
+    <section class="panel panel-data">
       <div class="section-title"><span>Important hiker data</span><h2>Elevation and comfort signals</h2></div>
       <div class="diagnostic-grid"><div class="metric-card"><span>Local spread</span><strong>3°F</strong><p>Temperature range across the Asheville-area readings.</p></div><div class="metric-card"><span>High split</span><strong>0°F</strong><p>Difference between the two high Asheville readings.</p></div><div class="metric-card"><span>Mitchell drop</span><strong>17°F</strong><p>Cooling from Asheville-area readings to Mount Mitchell.</p></div><div class="metric-card"><span>Fog risk</span><strong>Patchy pockets</strong><p>Based on the tightest temperature/dew point spread.</p></div><div class="metric-card"><span>Highest UV</span><strong>0</strong><p>Peak UV reading or estimate from the reporting sites.</p></div><div class="metric-card"><span>Peak gust</span><strong>2 mph</strong><p>Highest gust among the reporting sites.</p></div></div>
     </section>
 
-    <section class="panel">
+    <section class="panel panel-table">
       <div class="section-title"><span>Station table</span><h2>Current readings by elevation</h2></div>
       <div class="table-wrap">
         <table>
@@ -180,7 +216,7 @@
       </div>
 
       <div class="footer-bottom">
-        © 2026 828 Weather Direct
+        &copy; 2026 828 Weather Direct
       </div>
     </div>
   </footer>

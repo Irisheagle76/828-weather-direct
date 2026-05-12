@@ -1,4 +1,4 @@
-import fs from "node:fs/promises";
+﻿import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -330,8 +330,6 @@ function renderHtml(payload) {
   const s = payload.stations;
   const g = payload.guidance;
   const sortedStations = [...s].sort((a, b) => a.elevationFt - b.elevationFt);
-  const minElevation = Math.min(...sortedStations.map((x) => x.elevationFt));
-  const maxElevation = Math.max(...sortedStations.map((x) => x.elevationFt));
   const diagnostics = [
     ["Local spread", f(g.localTempSpread, "degF"), "Temperature range across the Asheville-area readings."],
     ["High split", f(g.highStationSpread, "degF"), "Difference between the two high Asheville readings."],
@@ -346,17 +344,30 @@ function renderHtml(payload) {
     ["Pack mindset", g.mitchellDrop >= 10 ? "Water and sun protection locally; add a layer for high peaks." : "Water, basic sun protection, and normal mountain layers."],
     ["Watch for", g.fogRisk === "Elevated" ? "Patchy fog, low cloud, wet leaves, and slick shaded spots." : "Quick comfort changes between shade and open sky."]
   ];
-  const elevationProfile = sortedStations.map((x) => {
-    const pct = maxElevation === minElevation ? 0 : ((x.elevationFt - minElevation) / (maxElevation - minElevation)) * 100;
+  const profileXs = [100, 250, 380, 560, 700, 880];
+  const profileStations = sortedStations.map((x, index) => {
+    const y = Math.round(440 - ((x.elevationFt - 1000) / 6000) * 320);
+    const words = x.name.split(" ");
+    const nameLines = x.name === "UNCA Weather Tower" ? ["UNCA", "Weather Tower"] : words.length > 2 ? [words.slice(0, -1).join(" "), words.slice(-1)[0]] : [x.name];
     const zone = x.elevationFt >= 6000 ? "WNC high peak" : x.elevationFt >= 3200 ? "High Asheville ridge" : x.elevationFt >= 2300 ? "Mid Asheville" : "Lower Asheville";
-    return `<div class="profile-row">
-      <div class="profile-place">
-        <strong>${esc(x.name)}</strong>
-        <span>${esc(zone)} · ${f(x.elevationFt, " ft")}</span>
-      </div>
-      <div class="profile-track" style="--pos:${pct}%"><span></span></div>
-      <div class="profile-temp">${f(x.temperatureF, "°")}</div>
-    </div>`;
+    return { ...x, x: profileXs[index] ?? 900, y, nameLines, zone };
+  });
+  const ridgePath = profileStations.map((x, index) => `${index === 0 ? "M" : "L"} ${x.x} ${x.y}`).join(" ");
+  const areaPath = `${ridgePath} L 970 450 L 55 450 Z`;
+  const elevationProfile = profileStations.map((x, index) => {
+    const labelY = Math.max(66, x.y - 70);
+    const bottomName = x.name.replace(" Weather Tower", "").replace("Asheville ", "");
+    return `<g class="profile-site">
+      <line class="profile-stem" x1="${x.x}" y1="${x.y + 13}" x2="${x.x}" y2="450" />
+      <circle class="profile-dot" cx="${x.x}" cy="${x.y}" r="10" />
+      <text class="profile-label" x="${x.x}" y="${labelY}" text-anchor="middle">
+        ${x.nameLines.map((line, i) => `<tspan x="${x.x}" dy="${i === 0 ? 0 : 20}">${esc(line)}</tspan>`).join("")}
+      </text>
+      <text class="profile-elev" x="${x.x}" y="${labelY + (x.nameLines.length * 20) + 14}" text-anchor="middle">${f(x.elevationFt, " ft")}</text>
+      <circle class="profile-base-dot" cx="${x.x}" cy="450" r="4" />
+      <text class="profile-bottom-name" x="${x.x}" y="480" text-anchor="middle">${esc(bottomName)}</text>
+      <text class="profile-bottom-temp" x="${x.x}" y="505" text-anchor="middle">${f(x.temperatureF, "°")}</text>
+    </g>`;
   }).join("");
   return `<!DOCTYPE html>
 <html lang="en">
@@ -376,7 +387,7 @@ function renderHtml(payload) {
   </header>
 
   <main class="hiking-wrap">
-    <section class="hero">
+    <section class="hero panel-read">
       <div>
         <div class="kicker">Hiker read</div>
         <h1>${esc(g.bestWindow)}</h1>
@@ -389,23 +400,44 @@ function renderHtml(payload) {
       </aside>
     </section>
 
-    <section class="panel">
+    <section class="panel panel-choice">
       <div class="section-title"><span>Trail choice</span><h2>What this means on foot</h2></div>
       <div class="trail-grid">${trailCards.map(([a, b]) => `<div class="mini-card"><strong>${esc(a)}</strong><span>${esc(b)}</span></div>`).join("")}</div>
     </section>
 
-    <section class="panel">
+    <section class="panel panel-profile">
       <div class="section-title"><span>Where these readings are</span><h2>Elevation profile</h2></div>
-      <p class="profile-intro">This is a simple vertical picture of the reporting sites, from lower Asheville up to Mount Mitchell. It helps explain phrases like “high Asheville” and “high peaks.”</p>
-      <div class="profile">${elevationProfile}</div>
+      <p class="profile-intro">A quick visual of the reporting sites, from lower Asheville up to Mount Mitchell. This helps explain what "high Asheville" and "high peaks" mean in the trail guidance.</p>
+      <div class="profile-art" role="img" aria-label="Elevation profile of Asheville-area weather readings up to Mount Mitchell">
+        <svg viewBox="0 0 1000 520" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <linearGradient id="profileFill" x1="0" x2="1" y1="1" y2="0">
+              <stop offset="0%" stop-color="#5bd27c" />
+              <stop offset="52%" stop-color="#4eb4c8" />
+              <stop offset="100%" stop-color="#357cff" />
+            </linearGradient>
+          </defs>
+          <rect class="profile-bg" x="0" y="0" width="1000" height="520" rx="22" />
+          <text class="profile-axis-title" x="64" y="202">ELEVATION (FT)</text>
+          <line class="profile-axis" x1="94" y1="220" x2="94" y2="450" />
+          ${[7000,6000,5000,4000,3000,2000,1000].map((tick) => {
+            const y = Math.round(450 - ((tick - 1000) / 6000) * 320);
+            return `<g><line class="profile-tick" x1="88" y1="${y}" x2="94" y2="${y}" /><text class="profile-tick-label" x="78" y="${y + 6}" text-anchor="end">${tick.toLocaleString()}</text></g>`;
+          }).join("")}
+          <path class="profile-area" d="${areaPath}" />
+          <path class="profile-ridge" d="${ridgePath}" />
+          <path class="profile-forest" d="M55 450 C95 405 136 426 173 394 C206 368 233 412 278 376 C316 346 355 390 394 354 C435 318 479 378 518 328 C558 286 607 354 652 294 C696 232 736 324 780 242 C817 170 847 214 884 112 C918 158 944 160 970 176 L970 450 Z" />
+          ${elevationProfile}
+        </svg>
+      </div>
     </section>
 
-    <section class="panel">
+    <section class="panel panel-data">
       <div class="section-title"><span>Important hiker data</span><h2>Elevation and comfort signals</h2></div>
       <div class="diagnostic-grid">${diagnostics.map(([a, b, c]) => `<div class="metric-card"><span>${esc(a)}</span><strong>${esc(b).replace(/degF/g, "°F")}</strong><p>${esc(c)}</p></div>`).join("")}</div>
     </section>
 
-    <section class="panel">
+    <section class="panel panel-table">
       <div class="section-title"><span>Station table</span><h2>Current readings by elevation</h2></div>
       <div class="table-wrap">
         <table>
@@ -453,7 +485,7 @@ function renderHtml(payload) {
       </div>
 
       <div class="footer-bottom">
-        © 2026 828 Weather Direct
+        &copy; 2026 828 Weather Direct
       </div>
     </div>
   </footer>
@@ -479,3 +511,7 @@ await fs.mkdir(outDir, { recursive: true });
 await fs.writeFile(jsonPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
 await fs.writeFile(htmlPath, renderHtml(payload), "utf8");
 console.log(`Updated ${path.relative(root, jsonPath)} and ${path.relative(root, htmlPath)}`);
+
+
+
+

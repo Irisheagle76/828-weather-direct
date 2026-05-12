@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-10T01:49:59.312Z",
+  "generatedAt": "2026-05-12T15:05:11.011Z",
   "stations": [
     {
       "source": "Tempest",
@@ -11,7 +11,7 @@
       "url": "https://tempestwx.com/station/144737/grid",
       "lat": 35.60675829810566,
       "lon": -82.54793450070898,
-      "status": "live",
+      "status": "stale",
       "observedAt": "2026-05-10T01:49:54.000Z",
       "conditions": "Partly Cloudy",
       "temperatureF": 61,
@@ -27,7 +27,8 @@
       "wetBulbF": 55,
       "rainTodayIn": 0,
       "rainRateInHr": 0,
-      "pressureTrend": "rising"
+      "pressureTrend": "rising",
+      "error": "fetch failed"
     },
     {
       "source": "Tempest",
@@ -39,7 +40,7 @@
       "url": "https://tempestwx.com/station/127602/grid",
       "lat": 35.6154509046802,
       "lon": -82.50548363971464,
-      "status": "live",
+      "status": "stale",
       "observedAt": "2026-05-10T01:49:54.000Z",
       "conditions": "Partly Cloudy",
       "temperatureF": 61,
@@ -55,7 +56,8 @@
       "wetBulbF": 56,
       "rainTodayIn": 0,
       "rainRateInHr": 0,
-      "pressureTrend": "rising"
+      "pressureTrend": "rising",
+      "error": "fetch failed"
     },
     {
       "source": "Tempest",
@@ -67,7 +69,7 @@
       "url": "https://tempestwx.com/station/160562/grid",
       "lat": 35.624525314972594,
       "lon": -82.51184579162579,
-      "status": "live",
+      "status": "stale",
       "observedAt": "2026-05-10T01:49:54.000Z",
       "conditions": "Partly Cloudy",
       "temperatureF": 59,
@@ -83,7 +85,8 @@
       "wetBulbF": 52,
       "rainTodayIn": 0,
       "rainRateInHr": 0,
-      "pressureTrend": "rising"
+      "pressureTrend": "rising",
+      "error": "fetch failed"
     },
     {
       "source": "Tempest",
@@ -95,7 +98,7 @@
       "url": "https://tempestwx.com/station/157700/grid",
       "lat": 35.6422544091975,
       "lon": -82.49614863661522,
-      "status": "live",
+      "status": "stale",
       "observedAt": "2026-05-10T01:49:54.000Z",
       "conditions": "Partly Cloudy",
       "temperatureF": 59,
@@ -111,7 +114,8 @@
       "wetBulbF": 52,
       "rainTodayIn": 0,
       "rainRateInHr": 0,
-      "pressureTrend": "rising"
+      "pressureTrend": "rising",
+      "error": "fetch failed"
     },
     {
       "source": "NC Climate Office",
@@ -122,7 +126,7 @@
       "url": "https://api.climate.ncsu.edu/locations?id=UNCA",
       "lat": 35.62233,
       "lon": -82.56646,
-      "status": "live",
+      "status": "stale",
       "observedAt": "2026-05-10T01:44:00.000Z",
       "conditions": "Current conditions",
       "temperatureF": 61.8,
@@ -140,7 +144,8 @@
       "wetBulbF": 52.8,
       "rainTodayIn": 0,
       "rainRateInHr": 0,
-      "pressureTrend": null
+      "pressureTrend": null,
+      "error": "fetch failed"
     },
     {
       "source": "NCHighPeaks WeeWX",
@@ -149,7 +154,7 @@
       "role": "WNC high-peak reading",
       "elevationFt": 6684,
       "url": "https://nchighpeaks.org/davis/RSS/weewx_rss.xml",
-      "status": "live",
+      "status": "stale",
       "observedAt": "2026-05-10T01:35:00.000Z",
       "conditions": "Current conditions",
       "temperatureF": 43.6,
@@ -165,7 +170,8 @@
       "wetBulbF": null,
       "rainTodayIn": null,
       "rainRateInHr": 0,
-      "pressureTrend": null
+      "pressureTrend": null,
+      "error": "fetch failed"
     }
   ],
   "guidance": {
