@@ -101,7 +101,21 @@ function cleanText(html) {
 }
 
 function buildExcerpt(text) {
-  return text || "";
+  if (!text) return "";
+
+  const cleaned = text
+    .replace(/^Quick Highlights\s*/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const sentences = cleaned.match(/[^.!?]+[.!?]+/g) || [];
+  const teaser = sentences.length
+    ? sentences.slice(0, 2).join(" ")
+    : cleaned;
+
+  return teaser.length > 190
+    ? `${teaser.slice(0, 187).trim()}...`
+    : teaser;
 }
 
 function extractImage(html) {

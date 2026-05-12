@@ -8,9 +8,9 @@ import { generateNarrative } from '/js/intel/synthesizer/index.js?v=20260505-tom
 import { buildHumanActionIntelFS } from '/js/intel/human-action-feelscore.js?v=20260509-tonight';
 
 import { renderPulseV2 } from '/js/modules/renderPulseV2.js';
-import { renderSubstackV2 } from '/js/modules/renderSubstackV2.js?v=20260506-updatecollapse';
+import { renderSubstackV2 } from '/js/modules/renderSubstackV2.js?v=20260512-shortupdate';
 
-console.log("828 Weather layout version: 20260506-updatecollapse");
+console.log("828 Weather layout version: 20260512-shortupdate");
 
 // ============================================================
 // FETCH HELPERS

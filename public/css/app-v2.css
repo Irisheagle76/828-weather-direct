@@ -1918,7 +1918,7 @@ body {
 
 .update-body {
   position: relative;
-  max-height: 165px;
+  max-height: 64px;
   overflow: hidden;
   transition: max-height 0.35s ease;
 }
@@ -1950,7 +1950,7 @@ body {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 46px;
+  height: 24px;
   background: linear-gradient(
     to bottom,
     rgba(43,31,38,0),
