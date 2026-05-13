@@ -327,6 +327,7 @@ function renderForecastCard(day) {
       <p>${escapeHtml(shortNarrative(day.narrative))}</p>
 
       <div class="forecast-card-chips">
+        ${renderInfoChip("Wind", day.source === "manual" ? formatWind(day.wind) : null)}
         ${renderInfoChip("Main Issue", day.mainIssue)}
         ${renderInfoChip("Best Window", day.bestWindow)}
         ${renderInfoChip("Confidence", day.confidence ? formatCategory(day.confidence) : null)}
@@ -596,6 +597,26 @@ function formatTemp(value) {
 function formatScore(value) {
   const score = numberOrNull(value);
   return score == null ? "--" : String(Math.round(score));
+}
+
+function formatWind(wind) {
+  if (!wind) return "";
+  if (wind.calm) return "Calm";
+
+  const direction = wind.direction === "variable" ? "Variable" : wind.direction;
+  const speed = formatWindRange(wind.speedMin ?? wind.speed, wind.speedMax ?? wind.speed);
+  const gust = wind.gustNA ? "" : wind.gust != null ? `, gusts ${Math.round(wind.gust)} mph` : "";
+
+  return [direction, speed].filter(Boolean).join(" ") + gust;
+}
+
+function formatWindRange(min, max) {
+  const low = numberOrNull(min);
+  const high = numberOrNull(max);
+
+  if (low != null && high != null && low !== high) return `${Math.round(low)}-${Math.round(high)} mph`;
+  if (low != null || high != null) return `${Math.round(low ?? high)} mph`;
+  return "";
 }
 
 function formatPercent(value) {
