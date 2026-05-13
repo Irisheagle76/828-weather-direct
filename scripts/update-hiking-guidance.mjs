@@ -99,6 +99,26 @@ function esc(value) {
     .replace(/"/g, "&quot;");
 }
 
+function htmlValue(value) {
+  return esc(value).replace(/degF/g, "&deg;F").replace(/°F/g, "&deg;F").replace(/°/g, "&deg;");
+}
+
+function hikerScore(g) {
+  let score = 88;
+  if (g.maxUv >= 7) score -= 12;
+  else if (g.maxUv >= 5) score -= 6;
+  else if (g.maxUv >= 3) score -= 2;
+  if (g.maxGust >= 25) score -= 15;
+  else if (g.maxGust >= 15) score -= 6;
+  if (g.fogRisk === "Elevated") score -= 10;
+  else if (g.fogRisk === "Patchy pockets") score -= 4;
+  if (g.mitchellDrop >= 15) score -= 5;
+  else if (g.mitchellDrop >= 10) score -= 2;
+  if (g.localTempSpread >= 8) score -= 4;
+  else if (g.localTempSpread >= 5) score -= 2;
+  return Math.max(0, Math.min(100, Math.round(score)));
+}
+
 async function readPrevious() {
   try {
     return JSON.parse(await fs.readFile(jsonPath, "utf8"));
@@ -341,8 +361,21 @@ function renderHtml(payload) {
   const trailCards = [
     ["Best bet", g.maxUv >= 5 || g.maxSolar >= 500 ? "Forested trails, shaded slopes, and routes with easy water breaks." : "Most nearby trails should feel comfortable."],
     ["Use care", g.maxUv >= 5 || g.maxSolar >= 500 ? "Open ridges, overlooks, pavement, and exposed rock." : "Typical mountain exposure: changing clouds, damp pockets, and breezy gaps."],
-    ["Pack mindset", g.mitchellDrop >= 10 ? "Water and sun protection locally; add a layer for high peaks." : "Water, basic sun protection, and normal mountain layers."],
-    ["Watch for", g.fogRisk === "Elevated" ? "Patchy fog, low cloud, wet leaves, and slick shaded spots." : "Quick comfort changes between shade and open sky."]
+    ["Pack mindset", g.mitchellDrop >= 10 ? "Water and sun protection locally; add a layer for high peaks." : "Water, basic sun protection, and normal mountain layers."]
+  ];
+  const comparisonCards = [
+    ["Mountain vs Asheville", g.mitchellDrop == null ? "Mount Mitchell comparison is unavailable right now." : `Mount Mitchell is about ${f(g.mitchellDrop, "degF")} cooler than the Asheville-area readings.`],
+    ["Ridge vs Valley", g.highStationSpread != null && g.highStationSpread >= 4 ? "Nearby ridge readings show a microclimate split, so shade, slope, and exposure still matter." : "High Asheville readings broadly agree, but exposed ridges can still change the feel."],
+    ["Sun exposure", g.maxUv >= 5 || g.maxSolar >= 500 ? "Open overlooks, rock, and pavement need sun awareness and steady water." : "Sun exposure is manageable now, especially under canopy."],
+    ["Wind check", g.maxGust >= 20 ? "Wind matters on exposed terrain and higher gaps." : "Wind is light at the reporting sites, so comfort is mostly about sun, shade, and layers."]
+  ];
+  const score = hikerScore(g);
+  const scoreLabel = score >= 82 ? "Great" : score >= 70 ? "Good" : score >= 55 ? "Mixed" : "Use care";
+  const tldrBullets = [
+    g.bestWindow,
+    g.localTempSpread == null ? "Local temperature spread unavailable." : `Asheville-area spread is about ${f(g.localTempSpread, "degF")}.`,
+    g.mitchellDrop == null ? "Mount Mitchell comparison unavailable." : `Mount Mitchell is about ${f(g.mitchellDrop, "degF")} cooler than Asheville.`,
+    g.maxGust >= 20 ? "Wind matters on exposed terrain." : "Wind is light; sun exposure is the main watch item."
   ];
   const profileXs = [145, 305, 455, 635, 790, 955];
   const profileStations = sortedStations.map((x, index) => {
@@ -375,7 +408,7 @@ function renderHtml(payload) {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>828 Hiking Guidance</title>
-  <link rel="stylesheet" href="/css/hiking.css?v=${Date.now()}" />
+  <link rel="stylesheet" href="css/hiking.css?v=${Date.now()}" />
 </head>
 <body>
   <header class="hiking-header">
@@ -387,22 +420,43 @@ function renderHtml(payload) {
   </header>
 
   <main class="hiking-wrap">
-    <section class="hero panel-read">
-      <div>
-        <div class="kicker">Hiker read</div>
-        <h1>${esc(g.bestWindow)}</h1>
-        <p>${esc(g.hikerNarrative).replace(/degF/g, "°F")}</p>
-        <div class="meta">Updated ${localTime(payload.generatedAt)} · ${s.filter((x) => x.status === "live").length}/${s.length} readings live</div>
+    <section class="hikerscore-hero panel panel-read">
+      <div class="hikerscore-main">
+        <div class="kicker">HikerScore</div>
+        <div class="score-row">
+          <div class="score-badge">
+            <strong>${score}</strong>
+            <span>${esc(scoreLabel)}</span>
+          </div>
+          <div class="score-copy">
+            <div class="status-pill hero-status">Good, watch sun</div>
+            <h1>${esc(g.bestWindow)}</h1>
+          </div>
+        </div>
+
+        <div class="stat-chip-row" aria-label="Quick hiking stats">
+          <div class="stat-chip"><span>Asheville spread</span><strong>${htmlValue(f(g.localTempSpread, "degF"))}</strong></div>
+          <div class="stat-chip"><span>Mitchell drop</span><strong>${htmlValue(f(g.mitchellDrop, "degF"))}</strong></div>
+          <div class="stat-chip"><span>Peak UV</span><strong>${esc(f(g.maxUv))}</strong></div>
+        </div>
+
+        <details class="hiker-details">
+          <summary>Full hiker read</summary>
+          <p>${htmlValue(g.hikerNarrative)}</p>
+        </details>
+
+        <div class="meta">Updated ${localTime(payload.generatedAt)} &middot; ${s.filter((x) => x.status === "live").length}/${s.length} readings live</div>
       </div>
-      <aside>
+
+      <aside class="tldr-card">
         <div class="kicker">TL;DR</div>
-        <ul>${g.bullets.map((b) => `<li>${esc(b).replace(/degF/g, "°F")}</li>`).join("")}</ul>
+        <ul>${tldrBullets.map((b) => `<li>${htmlValue(b)}</li>`).join("")}</ul>
       </aside>
     </section>
 
     <section class="panel panel-choice">
       <div class="section-title"><span>Trail choice</span><h2>What this means on foot</h2></div>
-      <div class="trail-grid">${trailCards.map(([a, b]) => `<div class="mini-card"><strong>${esc(a)}</strong><span>${esc(b)}</span></div>`).join("")}</div>
+      <div class="trail-grid trail-grid-three">${trailCards.map(([a, b]) => `<div class="mini-card"><strong>${esc(a)}</strong><span>${esc(b)}</span></div>`).join("")}</div>
     </section>
 
     <section class="panel panel-profile">
@@ -432,9 +486,14 @@ function renderHtml(payload) {
       </div>
     </section>
 
+    <section class="panel panel-compare">
+      <div class="section-title"><span>Trail comparisons</span><h2>What changes by route type</h2></div>
+      <div class="comparison-grid">${comparisonCards.map(([a, b]) => `<div class="comparison-card"><strong>${esc(a)}</strong><span>${htmlValue(b)}</span></div>`).join("")}</div>
+    </section>
+
     <section class="panel panel-data">
       <div class="section-title"><span>Important hiker data</span><h2>Elevation and comfort signals</h2></div>
-      <div class="diagnostic-grid">${diagnostics.map(([a, b, c]) => `<div class="metric-card"><span>${esc(a)}</span><strong>${esc(b).replace(/degF/g, "°F")}</strong><p>${esc(c)}</p></div>`).join("")}</div>
+      <div class="diagnostic-grid">${diagnostics.map(([a, b, c]) => `<div class="metric-card"><span>${esc(a)}</span><strong>${htmlValue(b)}</strong><p>${esc(c)}</p></div>`).join("")}</div>
     </section>
 
     <section class="panel panel-table">
