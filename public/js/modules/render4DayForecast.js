@@ -31,7 +31,7 @@ export async function render4DayForecast(container) {
 
   container.innerHTML = `
     ${renderBoardHero(board)}
-    ${renderInsightStrip(board)}
+    ${renderWeekAheadSignals(forecastOverrides.weekAheadSignals)}
     <section class="forecast-board-grid" aria-label="Four day forecast">
       ${days.map(renderForecastCard).join("")}
     </section>
@@ -219,23 +219,87 @@ function renderBoardHero(board) {
   `;
 }
 
-function renderInsightStrip(board) {
-  const insights = [
-    ["Best Day", board.bestOutdoorDay],
-    ["Watch Day", board.watchDay],
-    ["Most Comfortable", board.mostComfortableDay],
-    ["Most Uncertain", board.mostUncertainDay]
-  ];
+function renderWeekAheadSignals(input) {
+  const signals = normalizeWeekAheadSignals(input);
+  if (!signals.cards.length) return "";
 
   return `
-    <section class="forecast-insight-strip">
-      ${insights.map(([label, value]) => `
-        <div class="forecast-insight">
+    <section class="week-ahead-signals" aria-label="Week ahead signals">
+      <div class="week-ahead-signals-head">
+        <div>
+          <span>Tim's weather signals</span>
+          <h2>Week Ahead Signals</h2>
+        </div>
+        <p>A curated look at the pattern, comfort, and watch points.</p>
+      </div>
+
+      ${renderGlobalSignals(signals.global)}
+
+      <div class="week-ahead-signal-grid card-count-${signals.cards.length}">
+        ${signals.cards.map(renderSignalCard).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function normalizeWeekAheadSignals(input) {
+  const cards = Array.isArray(input?.cards)
+    ? input.cards
+        .map(card => ({
+          label: String(card?.label || "").trim(),
+          value: String(card?.value || "").trim(),
+          detail: String(card?.detail || "").trim(),
+          type: normalizeSignalType(card?.type)
+        }))
+        .filter(card => card.label && card.value)
+        .slice(0, 4)
+    : [];
+
+  return {
+    global: input?.global && typeof input.global === "object" ? input.global : {},
+    cards: cards.length >= 2 ? cards : []
+  };
+}
+
+function normalizeSignalType(type) {
+  const value = String(type || "").trim().toLowerCase();
+  return ["comfort", "impact", "pattern", "uncertainty", "mountain", "custom"].includes(value)
+    ? value
+    : "custom";
+}
+
+function renderGlobalSignals(global = {}) {
+  const fields = [
+    ["Weather Pattern", global.weatherPattern],
+    ["Comfort Trend", global.comfortTrend],
+    ["Forecast Confidence", global.forecastConfidence],
+    ["Rainfall Trend", global.rainfallTrend],
+    ["Mountain Visibility", global.mountainVisibility],
+    ["Temperature Trend", global.temperatureTrend],
+    ["Wind Signal", global.windSignal]
+  ].filter(([, value]) => hasText(value));
+
+  if (!fields.length) return "";
+
+  return `
+    <div class="week-ahead-global-strip">
+      ${fields.map(([label, value]) => `
+        <div class="week-ahead-global-item">
           <span>${escapeHtml(label)}</span>
-          <strong>${escapeHtml(value || "TBD")}</strong>
+          <strong>${escapeHtml(value)}</strong>
         </div>
       `).join("")}
-    </section>
+    </div>
+  `;
+}
+
+function renderSignalCard(card) {
+  return `
+    <article class="week-ahead-signal-card signal-${escapeHtml(card.type)}">
+      <span>${escapeHtml(card.label)}</span>
+      <strong>${escapeHtml(card.value)}</strong>
+      ${card.detail ? `<p>${escapeHtml(card.detail)}</p>` : ""}
+    </article>
   `;
 }
 

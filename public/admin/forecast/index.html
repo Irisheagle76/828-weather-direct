@@ -365,6 +365,37 @@ select:focus {
   font-size: 12px;
 }
 
+.signal-editor {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.signal-card-editor {
+  display: grid;
+  gap: 10px;
+  border-radius: 13px;
+  padding: 12px;
+  background: rgba(5,10,20,0.22);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.signal-card-editor-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.signal-card-editor .custom-label-field[hidden] {
+  display: none;
+}
+
 .local-note,
 .confidence-note {
   border-radius: 12px;
@@ -506,21 +537,48 @@ pre {
           <input id="forecastConfidence" type="number" min="0" max="100" placeholder="80" />
         </div>
       </div>
+    </div>
 
-      <div class="field-grid four">
+    <div class="group">
+      <div class="group-title">Week Ahead Signals</div>
+      <div class="field-grid">
         <div class="field">
-          <label for="watchDay">Watch Day</label>
-          <input id="watchDay" placeholder="Friday" />
+          <label for="signalWeatherPattern">Weather Pattern</label>
+          <input id="signalWeatherPattern" placeholder="Warm to unsettled, cooler late week" />
         </div>
         <div class="field">
-          <label for="mostComfortableDay">Most Comfortable</label>
-          <input id="mostComfortableDay" placeholder="Thursday" />
-        </div>
-        <div class="field">
-          <label for="mostUncertainDay">Most Uncertain</label>
-          <input id="mostUncertainDay" placeholder="Sunday" />
+          <label for="signalComfortTrend">Comfort Trend</label>
+          <input id="signalComfortTrend" placeholder="Steady" />
         </div>
       </div>
+
+      <div class="field-grid three">
+        <div class="field">
+          <label for="signalForecastConfidence">Forecast Confidence</label>
+          <input id="signalForecastConfidence" placeholder="84%" />
+        </div>
+        <div class="field">
+          <label for="signalRainfallTrend">Rainfall Trend</label>
+          <input id="signalRainfallTrend" placeholder="Hit-or-miss storms" />
+        </div>
+        <div class="field">
+          <label for="signalMountainVisibility">Mountain Visibility</label>
+          <input id="signalMountainVisibility" placeholder="Best early week" />
+        </div>
+      </div>
+
+      <div class="field-grid">
+        <div class="field">
+          <label for="signalTemperatureTrend">Temperature Trend</label>
+          <input id="signalTemperatureTrend" placeholder="Above normal, easing late" />
+        </div>
+        <div class="field">
+          <label for="signalWindSignal">Wind Signal</label>
+          <input id="signalWindSignal" placeholder="Breezier behind the front" />
+        </div>
+      </div>
+
+      <div id="weekAheadSignalEditor" class="signal-editor"></div>
     </div>
 
     <div class="group">
@@ -835,11 +893,45 @@ const BOARD_FIELD_IDS = [
   "rainRisk",
   "comfortTrend",
   "bestOutdoorDay",
-  "watchDay",
-  "mostComfortableDay",
-  "mostUncertainDay",
   "forecastConfidence"
 ];
+
+const SIGNAL_GLOBAL_FIELD_IDS = [
+  "signalWeatherPattern",
+  "signalComfortTrend",
+  "signalForecastConfidence",
+  "signalRainfallTrend",
+  "signalMountainVisibility",
+  "signalTemperatureTrend",
+  "signalWindSignal"
+];
+
+const SIGNAL_GLOBAL_KEYS = {
+  signalWeatherPattern: "weatherPattern",
+  signalComfortTrend: "comfortTrend",
+  signalForecastConfidence: "forecastConfidence",
+  signalRainfallTrend: "rainfallTrend",
+  signalMountainVisibility: "mountainVisibility",
+  signalTemperatureTrend: "temperatureTrend",
+  signalWindSignal: "windSignal"
+};
+
+const SIGNAL_PRESET_LABELS = [
+  "PICK OF THE WEEK",
+  "NEXT WEATHER MAKER",
+  "MOST SPRINGLIKE",
+  "OUT OF SEASON",
+  "HIGHEST IMPACT WINDOW",
+  "MOST VOLATILE PERIOD",
+  "LOWEST CONFIDENCE DAY",
+  "PATTERN CHANGE",
+  "EYES ON <DAY>",
+  "MOUNTAIN WEATHER WATCH",
+  "CREATE MY OWN"
+];
+
+const SIGNAL_TYPES = ["auto", "comfort", "impact", "pattern", "uncertainty", "mountain", "custom"];
+const SIGNAL_CARD_COUNT = 4;
 
 const DAY_COUNT = 4;
 const STORAGE_KEY = "forecast-composer-v1";
@@ -847,6 +939,7 @@ const el = id => document.getElementById(id);
 const state = {
   activeDate: "",
   board: {},
+  weekAheadSignals: signalDefaults(),
   days: {}
 };
 
@@ -858,6 +951,8 @@ async function init() {
   await loadOptionalForecastEngine();
   await loadSavedState();
   loadBoardFields();
+  renderSignalEditor();
+  loadSignalFields();
   initDayStrip();
   bindEvents();
 
@@ -908,6 +1003,31 @@ function bindEvents() {
     });
   });
 
+  SIGNAL_GLOBAL_FIELD_IDS.forEach(id => {
+    const node = el(id);
+    node.addEventListener("input", () => {
+      saveSignalFields();
+      updateJson();
+      persist();
+    });
+  });
+
+  el("weekAheadSignalEditor").addEventListener("input", event => {
+    if (!event.target.matches("input")) return;
+    saveSignalFields();
+    updateSignalCustomVisibility();
+    updateJson();
+    persist();
+  });
+
+  el("weekAheadSignalEditor").addEventListener("change", event => {
+    if (!event.target.matches("select")) return;
+    saveSignalFields();
+    updateSignalCustomVisibility();
+    updateJson();
+    persist();
+  });
+
   FIELD_IDS.forEach(id => {
     const node = el(id);
     const eventName = node.tagName === "SELECT" || node.type === "checkbox" ? "change" : "input";
@@ -945,6 +1065,102 @@ function saveBoardFields() {
 function loadBoardFields() {
   BOARD_FIELD_IDS.forEach(id => {
     el(id).value = state.board?.[id] ?? boardDefaults()[id] ?? "";
+  });
+}
+
+function renderSignalEditor() {
+  const editor = el("weekAheadSignalEditor");
+  editor.innerHTML = Array.from({ length: SIGNAL_CARD_COUNT }, (_, index) => {
+    const number = index + 1;
+    return `
+      <div class="signal-card-editor" data-signal-index="${index}">
+        <div class="signal-card-editor-head">
+          <span>Signal ${number}</span>
+          <span>Use 2-4 cards</span>
+        </div>
+
+        <div class="field-grid">
+          <div class="field">
+            <label for="signalPreset${number}">Preset Label</label>
+            <select id="signalPreset${number}" data-signal-field="presetLabel">
+              ${SIGNAL_PRESET_LABELS.map(label => `<option value="${escapeHtml(label)}">${escapeHtml(label)}</option>`).join("")}
+            </select>
+          </div>
+          <div class="field custom-label-field" id="signalCustomLabelWrap${number}" hidden>
+            <label for="signalCustomLabel${number}">Custom Label</label>
+            <input id="signalCustomLabel${number}" data-signal-field="customLabel" placeholder="TIM'S CALL" />
+          </div>
+        </div>
+
+        <div class="field-grid">
+          <div class="field">
+            <label for="signalValue${number}">Value</label>
+            <input id="signalValue${number}" data-signal-field="value" placeholder="Wednesday" />
+          </div>
+          <div class="field">
+            <label for="signalType${number}">Type</label>
+            <select id="signalType${number}" data-signal-field="type">
+              ${SIGNAL_TYPES.map(type => `<option value="${type}">${type === "auto" ? "Auto" : capitalize(type)}</option>`).join("")}
+            </select>
+          </div>
+        </div>
+
+        <label for="signalDetail${number}">Detail</label>
+        <input id="signalDetail${number}" data-signal-field="detail" placeholder="Best mix of comfort, sky cover, and outdoor timing." />
+      </div>
+    `;
+  }).join("");
+}
+
+function saveSignalFields() {
+  const next = signalDefaults();
+
+  SIGNAL_GLOBAL_FIELD_IDS.forEach(id => {
+    next.global[SIGNAL_GLOBAL_KEYS[id]] = el(id).value;
+  });
+
+  next.cards = Array.from(document.querySelectorAll("[data-signal-index]")).map(card => {
+    const getField = field => card.querySelector(`[data-signal-field="${field}"]`)?.value || "";
+    return {
+      presetLabel: getField("presetLabel"),
+      customLabel: getField("customLabel"),
+      value: getField("value"),
+      detail: getField("detail"),
+      type: getField("type")
+    };
+  });
+
+  state.weekAheadSignals = next;
+}
+
+function loadSignalFields() {
+  const signals = { ...signalDefaults(), ...(state.weekAheadSignals || {}) };
+  signals.global = { ...signalDefaults().global, ...(signals.global || {}) };
+  signals.cards = normalizeSignalCardsForComposer(signals.cards);
+  state.weekAheadSignals = signals;
+
+  SIGNAL_GLOBAL_FIELD_IDS.forEach(id => {
+    el(id).value = signals.global[SIGNAL_GLOBAL_KEYS[id]] || "";
+  });
+
+  signals.cards.forEach((card, index) => {
+    const wrap = document.querySelector(`[data-signal-index="${index}"]`);
+    if (!wrap) return;
+    wrap.querySelector('[data-signal-field="presetLabel"]').value = card.presetLabel || "PICK OF THE WEEK";
+    wrap.querySelector('[data-signal-field="customLabel"]').value = card.customLabel || "";
+    wrap.querySelector('[data-signal-field="value"]').value = card.value || "";
+    wrap.querySelector('[data-signal-field="detail"]').value = card.detail || "";
+    wrap.querySelector('[data-signal-field="type"]').value = card.type || "auto";
+  });
+
+  updateSignalCustomVisibility();
+}
+
+function updateSignalCustomVisibility() {
+  document.querySelectorAll("[data-signal-index]").forEach((wrap, index) => {
+    const preset = wrap.querySelector('[data-signal-field="presetLabel"]')?.value;
+    const customWrap = el(`signalCustomLabelWrap${index + 1}`);
+    if (customWrap) customWrap.hidden = preset !== "CREATE MY OWN";
   });
 }
 
@@ -1158,6 +1374,7 @@ function getActiveDayForecast() {
 function buildPublishedForecast() {
   saveFormToActiveDay();
   saveBoardFields();
+  saveSignalFields();
 
   const days = {};
   getForecastDates().forEach(dateStr => {
@@ -1167,6 +1384,7 @@ function buildPublishedForecast() {
 
   return {
     ...normalizeBoardForPublish(),
+    weekAheadSignals: normalizeWeekAheadSignalsForPublish(),
     lastUpdated: new Date().toISOString(),
     source: "manual-composer",
     days,
@@ -1228,11 +1446,31 @@ function normalizeBoardForPublish() {
     rainRisk: state.board.rainRisk || "low",
     comfortTrend: state.board.comfortTrend || "steady",
     bestOutdoorDay: emptyToNull(state.board.bestOutdoorDay),
-    watchDay: emptyToNull(state.board.watchDay),
-    mostComfortableDay: emptyToNull(state.board.mostComfortableDay),
-    mostUncertainDay: emptyToNull(state.board.mostUncertainDay),
     forecastConfidence: clampNumber(toNumberOrNull(state.board.forecastConfidence), 0, 100)
   };
+}
+
+function normalizeWeekAheadSignalsForPublish() {
+  const global = {};
+  Object.entries(state.weekAheadSignals?.global || {}).forEach(([key, value]) => {
+    global[key] = emptyToString(value);
+  });
+
+  const cards = normalizeSignalCardsForComposer(state.weekAheadSignals?.cards)
+    .map(card => {
+      const label = card.presetLabel === "CREATE MY OWN" ? card.customLabel : card.presetLabel;
+      const type = card.type === "auto" ? typeForSignalLabel(label) : card.type;
+      return {
+        label: emptyToString(label),
+        value: emptyToString(card.value),
+        detail: emptyToString(card.detail),
+        type: normalizeSignalType(type)
+      };
+    })
+    .filter(card => card.label && card.value)
+    .slice(0, 4);
+
+  return { global, cards };
 }
 
 function boardDefaults() {
@@ -1242,10 +1480,28 @@ function boardDefaults() {
     rainRisk: "low",
     comfortTrend: "steady",
     bestOutdoorDay: "",
-    watchDay: "",
-    mostComfortableDay: "",
-    mostUncertainDay: "",
     forecastConfidence: ""
+  };
+}
+
+function signalDefaults() {
+  return {
+    global: {
+      weatherPattern: "",
+      comfortTrend: "",
+      forecastConfidence: "",
+      rainfallTrend: "",
+      mountainVisibility: "",
+      temperatureTrend: "",
+      windSignal: ""
+    },
+    cards: Array.from({ length: SIGNAL_CARD_COUNT }, (_, index) => ({
+      presetLabel: SIGNAL_PRESET_LABELS[index] || "PICK OF THE WEEK",
+      customLabel: "",
+      value: "",
+      detail: "",
+      type: "auto"
+    }))
   };
 }
 
@@ -1303,14 +1559,28 @@ async function loadSavedState() {
     if (saved?.days) {
       state.activeDate = saved.activeDate || "";
       state.board = { ...boardDefaults(), ...(saved.board || {}) };
+      state.weekAheadSignals = {
+        ...signalDefaults(),
+        ...(saved.weekAheadSignals || {})
+      };
       state.days = saved.days;
     }
   } catch {
     state.board = boardDefaults();
+    state.weekAheadSignals = signalDefaults();
     state.days = {};
   }
 
   state.board = { ...boardDefaults(), ...(state.board || {}) };
+  state.weekAheadSignals = {
+    ...signalDefaults(),
+    ...(state.weekAheadSignals || {}),
+    global: {
+      ...signalDefaults().global,
+      ...(state.weekAheadSignals?.global || {})
+    },
+    cards: normalizeSignalCardsForComposer(state.weekAheadSignals?.cards)
+  };
 
   const forecastDates = getForecastDates();
   forecastDates.forEach(dateStr => ensureDay(dateStr));
@@ -1323,6 +1593,7 @@ async function hydrateFromLatestForecast(forecastDates) {
   if (!latest || typeof latest !== "object") return;
 
   hydrateBoardFromLatest(latest);
+  hydrateSignalsFromLatest(latest);
   if (!latest?.days || typeof latest.days !== "object") return;
 
   let hydrated = false;
@@ -1350,16 +1621,28 @@ function hydrateBoardFromLatest(latest) {
   }
 }
 
+function hydrateSignalsFromLatest(latest) {
+  if (!latest.weekAheadSignals || hasSignalsContent(state.weekAheadSignals)) return;
+  state.weekAheadSignals = signalsFromPublished(latest.weekAheadSignals);
+}
+
 function hasBoardContent(board = {}) {
   return [
     board.boardHeadline,
     board.boardSummary,
     board.bestOutdoorDay,
-    board.watchDay,
-    board.mostComfortableDay,
-    board.mostUncertainDay,
     board.forecastConfidence
   ].some(value => String(value ?? "").trim());
+}
+
+function hasSignalsContent(signals = {}) {
+  const globalValues = Object.values(signals.global || {});
+  const cardValues = (signals.cards || []).flatMap(card => [
+    card.customLabel,
+    card.value,
+    card.detail
+  ]);
+  return [...globalValues, ...cardValues].some(value => String(value ?? "").trim());
 }
 
 async function loadLatestPublishedForecast() {
@@ -1456,6 +1739,57 @@ function hasPublishedContent(day = {}) {
     day.localNote || day.localInsight,
     ...(Array.isArray(day.tags) ? day.tags : [])
   ].some(value => String(value ?? "").trim());
+}
+
+function normalizeSignalCardsForComposer(cards = []) {
+  const defaults = signalDefaults().cards;
+  const normalized = Array.from({ length: SIGNAL_CARD_COUNT }, (_, index) => {
+    const card = cards[index] || {};
+    const publishedLabel = card.label || "";
+    const presetLabel = SIGNAL_PRESET_LABELS.includes(card.presetLabel)
+      ? card.presetLabel
+      : SIGNAL_PRESET_LABELS.includes(publishedLabel)
+        ? publishedLabel
+        : publishedLabel
+          ? "CREATE MY OWN"
+          : defaults[index].presetLabel;
+
+    return {
+      presetLabel,
+      customLabel: card.customLabel || (presetLabel === "CREATE MY OWN" ? publishedLabel : ""),
+      value: card.value || "",
+      detail: card.detail || "",
+      type: SIGNAL_TYPES.includes(card.type) ? card.type : "auto"
+    };
+  });
+
+  return normalized;
+}
+
+function signalsFromPublished(weekAheadSignals = {}) {
+  const next = signalDefaults();
+  next.global = {
+    ...next.global,
+    ...(weekAheadSignals.global || {})
+  };
+  next.cards = normalizeSignalCardsForComposer(weekAheadSignals.cards);
+  return next;
+}
+
+function typeForSignalLabel(label) {
+  const value = String(label || "").toUpperCase();
+  if (value.includes("PICK") || value.includes("SPRINGLIKE")) return "comfort";
+  if (value.includes("IMPACT") || value.includes("WEATHER MAKER") || value.includes("OUT OF SEASON")) return "impact";
+  if (value.includes("PATTERN")) return "pattern";
+  if (value.includes("VOLATILE") || value.includes("CONFIDENCE") || value.includes("EYES ON")) return "uncertainty";
+  if (value.includes("MOUNTAIN")) return "mountain";
+  return "custom";
+}
+
+function normalizeSignalType(type) {
+  return ["comfort", "impact", "pattern", "uncertainty", "mountain", "custom"].includes(type)
+    ? type
+    : "custom";
 }
 
 function valueToInput(value) {
@@ -1624,6 +1958,10 @@ function parseTags(value) {
 function emptyToNull(value) {
   const trimmed = String(value ?? "").trim();
   return trimmed ? trimmed : null;
+}
+
+function emptyToString(value) {
+  return String(value ?? "").trim();
 }
 
 function toNumberOrNull(value) {
