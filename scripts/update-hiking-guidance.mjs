@@ -497,23 +497,28 @@ function renderHtml(payload) {
     </section>
 
     <section class="panel panel-table">
-      <div class="section-title"><span>Station table</span><h2>Current readings by elevation</h2></div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Place</th><th>Elev.</th><th>Air</th><th>Dew pt</th><th>Humidity</th><th>Wind</th><th>UV</th><th>Heat feel</th></tr></thead>
-          <tbody>
-            ${sortedStations.map((x) => `<tr>
-              <td><a href="${esc(x.url)}">${esc(x.name)}</a><br><span>${esc(x.role)} · ${esc(x.source)} · ${localTime(x.observedAt)}</span></td>
-              <td class="nowrap">${f(x.elevationFt, " ft")}</td>
-              <td>${f(x.temperatureF, "°")}</td>
-              <td>${f(x.dewPointF, "°")}</td>
-              <td>${f(x.humidityPct, "%")}</td>
-              <td>${esc(friendlyWind(x))}</td>
-              <td>${esc(displayUv(x))}</td>
-              <td><strong>${esc(heatFeel(x).label)}</strong><br><span>${esc(heatFeel(x).detail)}</span></td>
-            </tr>`).join("")}
-          </tbody>
-        </table>
+      <div class="section-title"><span>Station check</span><h2>Current readings by elevation</h2></div>
+      <div class="station-grid">
+        ${sortedStations.map((x) => {
+          const feel = heatFeel(x);
+          return `<a class="station-card" href="${esc(x.url)}">
+          <div class="station-card-top">
+            <div>
+              <strong>${esc(x.name)}</strong>
+              <span>${esc(x.role)} &middot; ${esc(x.source)} &middot; ${localTime(x.observedAt)}</span>
+            </div>
+            <div class="station-temp">${htmlValue(f(x.temperatureF, "°"))}</div>
+          </div>
+          <div class="station-feel"><span>${esc(feel.label)}</span><strong>${htmlValue(feel.detail)}</strong></div>
+          <div class="station-metrics">
+            <span><b>Elev</b>${f(x.elevationFt, " ft")}</span>
+            <span><b>Dew</b>${htmlValue(f(x.dewPointF, "°"))}</span>
+            <span><b>Humid</b>${f(x.humidityPct, "%")}</span>
+            <span><b>Wind</b>${esc(friendlyWind(x))}</span>
+            <span><b>UV</b>${esc(displayUv(x))}</span>
+          </div>
+        </a>`;
+        }).join("")}
       </div>
     </section>
   </main>

@@ -143,68 +143,110 @@
     </section>
 
     <section class="panel panel-table">
-      <div class="section-title"><span>Station table</span><h2>Current readings by elevation</h2></div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Place</th><th>Elev.</th><th>Air</th><th>Dew pt</th><th>Humidity</th><th>Wind</th><th>UV</th><th>Heat feel</th></tr></thead>
-          <tbody>
-            <tr>
-              <td><a href="https://tempestwx.com/station/144737/grid">Lower Asheville</a><br><span>lower trailhead feel · Tempest · May 13, 8:29 AM</span></td>
-              <td class="nowrap">2137 ft</td>
-              <td>54°</td>
-              <td>44°</td>
-              <td>71%</td>
-              <td>Calm</td>
-              <td>UV 2</td>
-              <td><strong>Easy</strong><br><span>trail heat 53°</span></td>
-            </tr><tr>
-              <td><a href="https://tempestwx.com/station/127602/grid">Mid Asheville</a><br><span>north/east Asheville transition · Tempest · May 13, 8:29 AM</span></td>
-              <td class="nowrap">2316 ft</td>
-              <td>53°</td>
-              <td>44°</td>
-              <td>72%</td>
-              <td>ENE at 3 mph, gusting to 4 mph</td>
-              <td>UV 2</td>
-              <td><strong>Easy</strong><br><span>trail heat 51°</span></td>
-            </tr><tr>
-              <td><a href="https://api.climate.ncsu.edu/locations?id=UNCA">UNCA Weather Tower</a><br><span>instrumented comfort reference · NC Climate Office · May 13, 8:24 AM</span></td>
-              <td class="nowrap">2367 ft</td>
-              <td>49°</td>
-              <td>42°</td>
-              <td>78%</td>
-              <td>SE at 0 mph, gusting to 2 mph</td>
-              <td>UV 0 est.</td>
-              <td><strong>Easy</strong><br><span>trail heat 50°</span></td>
-            </tr><tr>
-              <td><a href="https://tempestwx.com/station/160562/grid">High Asheville East</a><br><span>nearby ridge reading · Tempest · May 13, 8:29 AM</span></td>
-              <td class="nowrap">3363 ft</td>
-              <td>56°</td>
-              <td>45°</td>
-              <td>66%</td>
-              <td>Calm</td>
-              <td>UV 2</td>
-              <td><strong>Easy</strong><br><span>trail heat 55°</span></td>
-            </tr><tr>
-              <td><a href="https://tempestwx.com/station/157700/grid">High Asheville North</a><br><span>nearby ridge cross-check · Tempest · May 13, 8:29 AM</span></td>
-              <td class="nowrap">3371 ft</td>
-              <td>52°</td>
-              <td>43°</td>
-              <td>70%</td>
-              <td>Calm</td>
-              <td>UV 0</td>
-              <td><strong>Easy</strong><br><span>trail heat 49°</span></td>
-            </tr><tr>
-              <td><a href="https://nchighpeaks.org/davis/RSS/weewx_rss.xml">Mount Mitchell</a><br><span>WNC high-peak reading · NCHighPeaks WeeWX · May 13, 8:25 AM</span></td>
-              <td class="nowrap">6684 ft</td>
-              <td>41°</td>
-              <td>21°</td>
-              <td>44%</td>
-              <td>Calm</td>
-              <td>n/a</td>
-              <td><strong>Cool layer</strong><br><span>41°</span></td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="section-title"><span>Station check</span><h2>Current readings by elevation</h2></div>
+      <div class="station-grid">
+        <a class="station-card" href="https://tempestwx.com/station/144737/grid">
+          <div class="station-card-top">
+            <div>
+              <strong>Lower Asheville</strong>
+              <span>lower trailhead feel &middot; Tempest &middot; May 13, 8:29 AM</span>
+            </div>
+            <div class="station-temp">54&deg;</div>
+          </div>
+          <div class="station-feel"><span>Easy</span><strong>trail heat 53&deg;</strong></div>
+          <div class="station-metrics">
+            <span><b>Elev</b>2137 ft</span>
+            <span><b>Dew</b>44&deg;</span>
+            <span><b>Humid</b>71%</span>
+            <span><b>Wind</b>Calm</span>
+            <span><b>UV</b>UV 2</span>
+          </div>
+        </a>
+        <a class="station-card" href="https://tempestwx.com/station/127602/grid">
+          <div class="station-card-top">
+            <div>
+              <strong>Mid Asheville</strong>
+              <span>north/east Asheville transition &middot; Tempest &middot; May 13, 8:29 AM</span>
+            </div>
+            <div class="station-temp">53&deg;</div>
+          </div>
+          <div class="station-feel"><span>Easy</span><strong>trail heat 51&deg;</strong></div>
+          <div class="station-metrics">
+            <span><b>Elev</b>2316 ft</span>
+            <span><b>Dew</b>44&deg;</span>
+            <span><b>Humid</b>72%</span>
+            <span><b>Wind</b>ENE at 3 mph, gusting to 4 mph</span>
+            <span><b>UV</b>UV 2</span>
+          </div>
+        </a>
+        <a class="station-card" href="https://api.climate.ncsu.edu/locations?id=UNCA">
+          <div class="station-card-top">
+            <div>
+              <strong>UNCA Weather Tower</strong>
+              <span>instrumented comfort reference &middot; NC Climate Office &middot; May 13, 8:24 AM</span>
+            </div>
+            <div class="station-temp">49&deg;</div>
+          </div>
+          <div class="station-feel"><span>Cool layer</span><strong>49&deg;</strong></div>
+          <div class="station-metrics">
+            <span><b>Elev</b>2367 ft</span>
+            <span><b>Dew</b>42&deg;</span>
+            <span><b>Humid</b>78%</span>
+            <span><b>Wind</b>Calm</span>
+            <span><b>UV</b>UV 0 est.</span>
+          </div>
+        </a>
+        <a class="station-card" href="https://tempestwx.com/station/160562/grid">
+          <div class="station-card-top">
+            <div>
+              <strong>High Asheville East</strong>
+              <span>nearby ridge reading &middot; Tempest &middot; May 13, 8:29 AM</span>
+            </div>
+            <div class="station-temp">56&deg;</div>
+          </div>
+          <div class="station-feel"><span>Easy</span><strong>trail heat 55&deg;</strong></div>
+          <div class="station-metrics">
+            <span><b>Elev</b>3363 ft</span>
+            <span><b>Dew</b>45&deg;</span>
+            <span><b>Humid</b>66%</span>
+            <span><b>Wind</b>Calm</span>
+            <span><b>UV</b>UV 2</span>
+          </div>
+        </a>
+        <a class="station-card" href="https://tempestwx.com/station/157700/grid">
+          <div class="station-card-top">
+            <div>
+              <strong>High Asheville North</strong>
+              <span>nearby ridge cross-check &middot; Tempest &middot; May 13, 8:29 AM</span>
+            </div>
+            <div class="station-temp">52&deg;</div>
+          </div>
+          <div class="station-feel"><span>Easy</span><strong>trail heat 49&deg;</strong></div>
+          <div class="station-metrics">
+            <span><b>Elev</b>3371 ft</span>
+            <span><b>Dew</b>43&deg;</span>
+            <span><b>Humid</b>70%</span>
+            <span><b>Wind</b>Calm</span>
+            <span><b>UV</b>UV 0</span>
+          </div>
+        </a>
+        <a class="station-card" href="https://nchighpeaks.org/davis/RSS/weewx_rss.xml">
+          <div class="station-card-top">
+            <div>
+              <strong>Mount Mitchell</strong>
+              <span>WNC high-peak reading &middot; NCHighPeaks WeeWX &middot; May 13, 8:25 AM</span>
+            </div>
+            <div class="station-temp">41&deg;</div>
+          </div>
+          <div class="station-feel"><span>Cool layer</span><strong>41&deg;</strong></div>
+          <div class="station-metrics">
+            <span><b>Elev</b>6684 ft</span>
+            <span><b>Dew</b>21&deg;</span>
+            <span><b>Humid</b>44%</span>
+            <span><b>Wind</b>Calm</span>
+            <span><b>UV</b>n/a</span>
+          </div>
+        </a>
       </div>
     </section>
   </main>

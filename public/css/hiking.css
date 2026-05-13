@@ -326,6 +326,125 @@ td span {
   margin: 5px 0;
 }
 
+.station-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr;
+  margin-top: 12px;
+}
+
+.station-card {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 13px;
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(110,168,255,0.10), rgba(255,255,255,0.035));
+  border: 1px solid rgba(110,168,255,0.16);
+  border-top: 2px solid var(--good);
+  color: inherit;
+  text-decoration: none;
+}
+
+.station-card:nth-child(3n + 2) {
+  border-top-color: var(--accent);
+}
+
+.station-card:nth-child(3n) {
+  border-top-color: var(--orange);
+}
+
+.station-card-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+}
+
+.station-card-top strong,
+.station-card-top span,
+.station-feel span,
+.station-feel strong,
+.station-metrics span,
+.station-metrics b {
+  display: block;
+}
+
+.station-card-top strong {
+  color: #f4f8ff;
+  font-size: 16px;
+}
+
+.station-card-top span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+  margin-top: 3px;
+}
+
+.station-temp {
+  min-width: 58px;
+  border-radius: 13px;
+  padding: 9px 10px;
+  background: rgba(98,211,148,0.10);
+  border: 1px solid rgba(98,211,148,0.22);
+  color: #f7fbff;
+  font-size: 25px;
+  font-weight: 850;
+  line-height: 1;
+  text-align: center;
+}
+
+.station-feel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 12px;
+  background: rgba(5,12,27,0.30);
+  border: 1px solid rgba(255,255,255,0.07);
+}
+
+.station-feel span {
+  color: var(--good);
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.station-feel strong {
+  color: #dce6f7;
+  font-size: 13px;
+  text-align: right;
+}
+
+.station-metrics {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.station-metrics span {
+  min-width: 0;
+  padding: 8px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.045);
+  color: #dce6f7;
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.station-metrics b {
+  color: #8fbaff;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  margin-bottom: 3px;
+  text-transform: uppercase;
+}
+
 .profile-intro {
   color: #b8c8e7;
   font-size: 14px;
@@ -529,6 +648,7 @@ a {
   .trail-grid-three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .diagnostic-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .comparison-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .station-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* Mobile containment pass: keep wide data views inside their own scrollers. */
@@ -553,6 +673,7 @@ body {
 .mini-card,
 .metric-card,
 .comparison-card,
+.station-card,
 .profile-art,
 .table-wrap {
   min-width: 0;
@@ -565,7 +686,8 @@ body {
 .panel > *,
 .trail-grid > *,
 .diagnostic-grid > *,
-.comparison-grid > * {
+.comparison-grid > *,
+.station-grid > * {
   min-width: 0;
 }
 
@@ -579,7 +701,8 @@ li,
 td,
 .mini-card,
 .metric-card,
-.comparison-card {
+.comparison-card,
+.station-card {
   overflow-wrap: anywhere;
 }
 
