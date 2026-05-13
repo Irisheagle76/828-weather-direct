@@ -489,6 +489,7 @@ pre {
         <div class="field">
           <label for="confidence">Confidence</label>
           <select id="confidence">
+            <option value="">Do not show</option>
             <option value="high">High</option>
             <option value="medium">Medium</option>
             <option value="low">Low</option>
@@ -1215,7 +1216,7 @@ function ensureDay(dateStr) {
 
   state.days[dateStr] = {
     date: dateStr,
-    confidence: "high",
+    confidence: "",
     headline: "",
     narrative: "",
     high: "",
@@ -1321,7 +1322,7 @@ function clearActiveDay() {
   const dateStr = state.activeDate;
   state.days[dateStr] = {
     ...state.days[dateStr],
-    confidence: "high",
+    confidence: "",
     headline: "",
     narrative: "",
     high: "",
@@ -1406,7 +1407,7 @@ function normalizeDayForPublish(day) {
     high: toNumberOrNull(day.high),
     low: toNumberOrNull(day.low),
     icon: emptyToNull(day.icon),
-    condition: emptyToNull(day.condition || day.sky),
+    condition: emptyToNull(day.condition),
     feelScore: toNumberOrNull(day.feelScore),
     mainIssue: emptyToNull(day.mainIssue),
     bestWindow: emptyToNull(day.bestWindow),
@@ -1521,7 +1522,9 @@ function updatePreview() {
   el("previewAfternoon").textContent = day.afternoon.trim() || "--";
   el("previewEvening").textContent = day.evening.trim() || "--";
   el("previewLocal").textContent = day.localNote.trim() || "Local insight will appear here.";
-  el("previewConfidence").textContent = `Confidence: ${confidenceLabel(day.confidence)}`;
+  el("previewConfidence").textContent = day.confidence
+    ? `Confidence: ${confidenceLabel(day.confidence)}`
+    : "Confidence: not shown";
 
   el("previewSignals").innerHTML = tags.length
     ? tags.map(tag => `<span class="signal">${escapeHtml(tag)}</span>`).join("")
@@ -1675,7 +1678,7 @@ function composerDayFromPublished(dateStr, day = {}) {
     high: valueToInput(day.high),
     low: valueToInput(day.low),
     icon: day.icon || "",
-    condition: day.condition || day.sky || "",
+    condition: day.condition || "",
     feelScore: valueToInput(day.feelScore),
     mainIssue: day.mainIssue || "",
     bestWindow: day.bestWindow || "",
@@ -1931,18 +1934,20 @@ function confidenceLabel(value) {
 }
 
 function normalizeConfidenceForPublish(value) {
+  if (!value) return null;
   if (value === "low" || value === "medium" || value === "high") return value;
   const n = Number(value);
-  if (!Number.isFinite(n)) return "medium";
+  if (!Number.isFinite(n)) return null;
   if (n >= 0.75) return "high";
   if (n >= 0.5) return "medium";
   return "low";
 }
 
 function confidenceToComposerValue(value) {
+  if (!value) return "";
   if (value === "low" || value === "medium" || value === "high") return value;
   const n = Number(value);
-  if (!Number.isFinite(n)) return "high";
+  if (!Number.isFinite(n)) return "";
   if (n >= 0.75) return "high";
   if (n >= 0.5) return "medium";
   return "low";

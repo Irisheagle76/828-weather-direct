@@ -118,7 +118,7 @@ function buildManualDay(day, index, manual) {
   const fallback = buildFallbackDay(day, index);
   const timeline = normalizeTimeline(manual.timeline);
   const tags = Array.isArray(manual.tags) ? manual.tags.filter(Boolean) : [];
-  const condition = manual.condition || formatCategory(manual.sky) || fallback.condition;
+  const condition = manual.condition ? formatCategory(manual.condition) : formatCategory(manual.sky) || fallback.condition;
   const icon = manual.icon || pickManualIcon(manual) || fallback.icon;
   const feelScore = numberOrNull(manual.feelScore) ?? fallback.feelScore;
 
@@ -134,9 +134,9 @@ function buildManualDay(day, index, manual) {
     narrative: manual.narrative || fallback.narrative,
     timeline,
     tags,
-    mainIssue: manual.mainIssue || inferMainIssue(manual, fallback),
-    bestWindow: manual.bestWindow || inferBestWindow(timeline, fallback),
-    confidence: normalizeConfidence(manual.confidence),
+    mainIssue: manual.mainIssue || null,
+    bestWindow: manual.bestWindow || null,
+    confidence: manual.confidence ? normalizeConfidence(manual.confidence) : null,
     localNote: manual.localNote || manual.localInsight || null,
     wind: normalizeManualWind(manual.wind),
     rainWindow: manual.rainWindow || null,
@@ -171,9 +171,9 @@ function buildFallbackDay(day, index) {
     narrative: fallbackNarrativePublic(rain, timeline),
     timeline,
     tags: [],
-    mainIssue: rain.type === "none" ? "Comfort and sky cover" : "Rain timing",
-    bestWindow: bestWindowFromTimeline(timeline),
-    confidence: "medium",
+    mainIssue: null,
+    bestWindow: null,
+    confidence: null,
     localNote: null,
     wind: summarizeWind(hours),
     rainWindow: null,
@@ -313,7 +313,7 @@ function renderForecastCard(day) {
         </div>
         <div class="forecast-condition">
           <span>${escapeHtml(day.icon)}</span>
-          <strong>${escapeHtml(day.condition || "Forecast")}</strong>
+          <strong>${escapeHtml(formatCategory(day.condition) || "Forecast")}</strong>
         </div>
       </div>
 
@@ -329,7 +329,7 @@ function renderForecastCard(day) {
       <div class="forecast-card-chips">
         ${renderInfoChip("Main Issue", day.mainIssue)}
         ${renderInfoChip("Best Window", day.bestWindow)}
-        ${renderInfoChip("Confidence", formatCategory(day.confidence))}
+        ${renderInfoChip("Confidence", day.confidence ? formatCategory(day.confidence) : null)}
       </div>
 
       ${renderTags(day.tags)}
@@ -510,23 +510,6 @@ function conditionFromIcon(icon, rain) {
   if (icon.includes("☁")) return "Mostly cloudy";
   if (icon.includes("⛅")) return "Partly cloudy";
   return "Mostly sunny";
-}
-
-function inferMainIssue(manual, fallback) {
-  if (manual.stormRisk && manual.stormRisk !== "none") return `${formatCategory(manual.stormRisk)} storm risk`;
-  if (manual.rainWindow?.start) return "Rain timing";
-  return fallback.mainIssue || "Comfort and sky cover";
-}
-
-function inferBestWindow(timeline, fallback) {
-  return bestWindowFromTimeline(timeline) || fallback.bestWindow;
-}
-
-function bestWindowFromTimeline(timeline = {}) {
-  if (hasTimelineText(timeline.morning)) return "Morning";
-  if (hasTimelineText(timeline.midday)) return "Midday";
-  if (hasTimelineText(timeline.afternoon)) return "Afternoon";
-  return "Check timing";
 }
 
 function normalizeConfidence(value) {
