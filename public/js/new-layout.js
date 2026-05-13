@@ -242,6 +242,7 @@ export async function renderNewLayout(container) {
       <div id="timeline" class="fade-in"></div>
       <div id="tomorrow" class="fade-in"></div>
       <div id="forecast-link" class="fade-in"></div>
+      <div id="hiking-guide-link" class="fade-in"></div>
       <div id="droughtfire" class="fade-in"></div>
       <div id="pulse" class="fade-in"></div>
       <div id="update" class="fade-in"></div>
@@ -300,6 +301,7 @@ console.log("CURRENT DEBUG:", {
     renderTimeline(hourly, data?.daily, current, tempest);
 renderTomorrow(human?.tomorrow);
 renderForecastLink();
+renderHikingGuideLink();
 
     runStaggerAnimation();
     hideSplash();
@@ -1287,6 +1289,40 @@ function renderForecastLink() {
         <span class="forecast-link-main">
           Open
           <span class="forecast-link-arrow" aria-hidden="true">→</span>
+        </span>
+      </a>
+    </div>
+  `;
+}
+
+function renderHikingGuideLink() {
+  const el = document.getElementById('hiking-guide-link');
+  if (!el) return;
+
+  el.innerHTML = `
+    <div class="hiking-guide-card">
+      <a class="hiking-guide-link" href="/hiking.html" aria-label="Open the 828 Hiking Guide">
+        <span class="hiking-guide-copy">
+          <span class="hiking-guide-kicker">Trail Companion</span>
+          <span class="hiking-guide-title">828 Hiking Guide</span>
+          <span class="hiking-guide-sub">Elevation-aware trail guidance, local readings, and comfort signals for Asheville days outside</span>
+        </span>
+
+        <span class="hiking-guide-preview" aria-hidden="true">
+          <span class="hiking-ridge">
+            <span class="hiking-peak hiking-peak-low"></span>
+            <span class="hiking-peak hiking-peak-mid"></span>
+            <span class="hiking-peak hiking-peak-high"></span>
+          </span>
+          <span class="hiking-guide-score">
+            <b>828</b>
+            <i>Guide</i>
+          </span>
+        </span>
+
+        <span class="hiking-guide-main">
+          Open
+          <span class="hiking-guide-arrow" aria-hidden="true">→</span>
         </span>
       </a>
     </div>

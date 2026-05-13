@@ -2391,6 +2391,224 @@ body {
     font-size: 0;
   }
 }
+
+/* ============================================================
+   HIKING GUIDE LINK
+   ============================================================ */
+
+.hiking-guide-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius);
+  border: 1px solid rgba(98, 211, 148, 0.24);
+  background:
+    radial-gradient(circle at 82% 18%, rgba(98,211,148,0.18), transparent 34%),
+    linear-gradient(135deg, rgba(18,56,42,0.72), rgba(16,27,51,0.95) 46%, rgba(219,110,45,0.13)),
+    #101b33;
+  box-shadow: 0 14px 32px rgba(0,0,0,0.22);
+}
+
+.hiking-guide-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent),
+    radial-gradient(circle at 18% 100%, rgba(110,168,255,0.14), transparent 42%);
+  pointer-events: none;
+}
+
+.hiking-guide-card::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: calc(var(--radius) - 1px);
+  box-shadow: inset 0 0 34px rgba(255,255,255,0.035);
+  pointer-events: none;
+}
+
+.hiking-guide-link {
+  position: relative;
+  z-index: 1;
+  min-height: 106px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.hiking-guide-copy {
+  min-width: 0;
+  max-width: 390px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hiking-guide-kicker {
+  color: #9ee6bd;
+  font-size: 12px;
+  line-height: 1.15;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.hiking-guide-title {
+  color: #fff;
+  font-size: 19px;
+  font-weight: 850;
+  line-height: 1.15;
+}
+
+.hiking-guide-sub {
+  max-width: 360px;
+  color: rgba(232,238,252,0.74);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.hiking-guide-preview {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  right: 86px;
+  width: 172px;
+  height: 74px;
+  transform: translateY(-50%);
+  opacity: 0.76;
+  pointer-events: none;
+}
+
+.hiking-ridge {
+  position: absolute;
+  inset: auto 0 0;
+  height: 58px;
+  display: flex;
+  align-items: end;
+  gap: 7px;
+}
+
+.hiking-peak {
+  flex: 1;
+  display: block;
+  border-radius: 10px 10px 4px 4px;
+  background: linear-gradient(180deg, rgba(110,168,255,0.48), rgba(98,211,148,0.35));
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.hiking-peak-low { height: 34px; }
+.hiking-peak-mid { height: 46px; }
+.hiking-peak-high { height: 64px; }
+
+.hiking-guide-score {
+  position: absolute;
+  top: 2px;
+  right: 12px;
+  width: 64px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  border-radius: 14px;
+  background: rgba(5,12,27,0.56);
+  border: 1px solid rgba(98,211,148,0.24);
+}
+
+.hiking-guide-score b,
+.hiking-guide-score i {
+  display: block;
+  font-style: normal;
+  line-height: 1;
+}
+
+.hiking-guide-score b {
+  color: #fff;
+  font-size: 22px;
+  font-weight: 850;
+}
+
+.hiking-guide-score i {
+  margin-top: 4px;
+  color: #9ee6bd;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.hiking-guide-main {
+  position: relative;
+  z-index: 2;
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.hiking-guide-arrow {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(98,211,148,0.14);
+  border: 1px solid rgba(98,211,148,0.24);
+  color: #c9f7d9;
+  font-size: 24px;
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease;
+}
+
+.hiking-guide-link:hover .hiking-guide-arrow,
+.hiking-guide-link:focus-visible .hiking-guide-arrow {
+  transform: translateX(3px);
+  background: rgba(98,211,148,0.22);
+}
+
+.hiking-guide-link:focus-visible {
+  outline: 2px solid rgba(158,230,189,0.78);
+  outline-offset: -4px;
+}
+
+@media (max-width: 820px) {
+  .hiking-guide-preview {
+    right: 72px;
+    width: 142px;
+    opacity: 0.54;
+  }
+
+  .hiking-guide-copy {
+    max-width: calc(100% - 110px);
+  }
+}
+
+@media (max-width: 680px) {
+  .hiking-guide-link {
+    min-height: 0;
+    gap: 12px;
+  }
+
+  .hiking-guide-preview {
+    display: none;
+  }
+
+  .hiking-guide-title {
+    font-size: 18px;
+  }
+
+  .hiking-guide-main {
+    font-size: 0;
+  }
+}
 /* ============================================================
    TITLES (PULSE + UPDATE)
    ============================================================ */
