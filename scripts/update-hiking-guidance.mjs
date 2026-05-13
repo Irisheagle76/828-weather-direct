@@ -91,6 +91,10 @@ function localTime(iso) {
   }).format(new Date(iso));
 }
 
+function asOfTime(iso) {
+  return localTime(iso).replace(/\s([AP])M$/, (_, meridiem) => `${meridiem.toLowerCase()}m ET`);
+}
+
 function esc(value) {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -497,7 +501,7 @@ function renderHtml(payload) {
     </section>
 
     <section class="panel panel-table">
-      <div class="section-title"><span>Station check</span><h2>Current readings by elevation</h2></div>
+      <div class="section-title section-title-row"><span>Station check</span><h2>Current readings by elevation</h2><em>As of ${asOfTime(payload.generatedAt)}</em></div>
       <div class="station-grid">
         ${sortedStations.map((x) => {
           const feel = heatFeel(x);
@@ -505,13 +509,13 @@ function renderHtml(payload) {
           <div class="station-card-top">
             <div>
               <strong>${esc(x.name)}</strong>
-              <span>${esc(x.role)} &middot; ${esc(x.source)} &middot; ${localTime(x.observedAt)}</span>
+              <span class="station-elevation">${f(x.elevationFt, " ft")}</span>
             </div>
             <div class="station-temp">${htmlValue(f(x.temperatureF, "°"))}</div>
           </div>
           <div class="station-feel"><span>${esc(feel.label)}</span><strong>${htmlValue(feel.detail)}</strong></div>
           <div class="station-metrics">
-            <span><b>Elev</b>${f(x.elevationFt, " ft")}</span>
+            <span><b>Source</b>${esc(x.source)}</span>
             <span><b>Dew</b>${htmlValue(f(x.dewPointF, "°"))}</span>
             <span><b>Humid</b>${f(x.humidityPct, "%")}</span>
             <span><b>Wind</b>${esc(friendlyWind(x))}</span>

@@ -225,6 +225,19 @@ body {
   text-transform: uppercase;
 }
 
+.section-title-row {
+  display: grid;
+  gap: 3px;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.section-title-row em {
+  color: #ffd9c4;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 800;
+}
+
 h1,
 h2,
 p {
@@ -381,6 +394,20 @@ td span {
   font-size: 12px;
   line-height: 1.35;
   margin-top: 3px;
+}
+
+.station-card-top .station-elevation {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 7px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: rgba(110,168,255,0.13);
+  border: 1px solid rgba(110,168,255,0.24);
+  color: #9fc5ff;
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 0.04em;
 }
 
 .station-temp {
@@ -644,6 +671,9 @@ a {
   :root { --page-max: 760px; }
   .hero,
   .hikerscore-hero { grid-template-columns: minmax(0, 1.45fr) minmax(230px, 0.85fr); }
+  .section-title-row { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
+  .section-title-row span { grid-column: 1 / -1; }
+  .section-title-row em { justify-self: end; }
   .trail-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .trail-grid-three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .diagnostic-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
