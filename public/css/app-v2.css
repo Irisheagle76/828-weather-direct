@@ -224,14 +224,13 @@ body {
 }
 
 .week-ahead-global-strip {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   gap: 7px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .week-ahead-global-item {
   min-width: 0;
-  flex: 1 1 180px;
   border-radius: 12px;
   padding: 8px 10px;
   background: rgba(5,10,20,0.24);
@@ -519,6 +518,7 @@ body {
 @media (max-width: 900px) {
   .forecast-board-grid,
   .week-ahead-signal-grid,
+  .week-ahead-global-strip,
   .week-ahead-signal-grid.card-count-3 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -546,13 +546,10 @@ body {
   }
 
   .week-ahead-signal-grid,
+  .week-ahead-global-strip,
   .week-ahead-signal-grid.card-count-2,
   .week-ahead-signal-grid.card-count-3 {
     grid-template-columns: 1fr;
-  }
-
-  .week-ahead-global-item {
-    flex-basis: 100%;
   }
 }
 

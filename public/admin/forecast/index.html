@@ -918,7 +918,7 @@ const SIGNAL_PRESET_LABELS = [
 ];
 
 const SIGNAL_TYPES = ["auto", "comfort", "impact", "pattern", "uncertainty", "mountain", "custom"];
-const SIGNAL_CARD_COUNT = 4;
+const SIGNAL_CARD_COUNT = 2;
 
 const DAY_COUNT = 4;
 const STORAGE_KEY = "forecast-composer-v1";
@@ -1063,7 +1063,7 @@ function renderSignalEditor() {
       <div class="signal-card-editor" data-signal-index="${index}">
         <div class="signal-card-editor-head">
           <span>Signal ${number}</span>
-          <span>Use 2-4 cards</span>
+          <span>Use 2 cards</span>
         </div>
 
         <div class="field-grid">
@@ -1455,7 +1455,7 @@ function normalizeWeekAheadSignalsForPublish() {
       };
     })
     .filter(card => card.label && card.value)
-    .slice(0, 4);
+    .slice(0, 2);
 
   return { global, cards };
 }

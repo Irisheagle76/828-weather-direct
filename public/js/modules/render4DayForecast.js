@@ -258,7 +258,7 @@ function normalizeWeekAheadSignals(input) {
           type: normalizeSignalType(card?.type)
         }))
         .filter(card => card.label && card.value)
-        .slice(0, 4)
+        .slice(0, 2)
     : [];
 
   return {
@@ -277,11 +277,11 @@ function normalizeSignalType(type) {
 function renderGlobalSignals(global = {}) {
   const fields = [
     { label: "Weather Pattern", value: global.weatherPattern, type: "pattern" },
-    { label: "Rainfall Trend", value: global.rainfallTrend, type: "rain" },
-    { label: "Mountain Visibility", value: global.mountainVisibility, type: "mountain" },
     { label: "Temperature Trend", value: global.temperatureTrend, type: "temperature" },
-    { label: "Wind Signal", value: global.windSignal, type: "wind" }
-  ].filter(field => hasText(field.value));
+    { label: "Wind Signal", value: global.windSignal, type: "wind" },
+    { label: "Rainfall Trend", value: global.rainfallTrend, type: "rain" },
+    { label: "Mountain Visibility", value: global.mountainVisibility, type: "mountain" }
+  ].filter(field => hasText(field.value)).slice(0, 3);
 
   if (!fields.length) return "";
 
