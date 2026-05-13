@@ -41,8 +41,10 @@ export function assembleWithVoice(
   }
 
   if (!trend && intel?.pattern) {
-    if (intel.pattern.trend > 5) trend = "improving";
-    else if (intel.pattern.trend < -5) trend = "worsening";
+    const scoreTrend = Number(intel.pattern.trend);
+    if (scoreTrend > 5) trend = "improving";
+    else if (scoreTrend < -10) trend = "worsening";
+    else if (scoreTrend < -5) trend = "subtle-dip";
   }
 
   if (headline && trend) {
@@ -73,9 +75,14 @@ export function assembleWithVoice(
 
       drying: (h) => `${h}, with drier air moving in`,
 
+      "subtle-dip": (h) => {
+        if (/ideal|perfect/i.test(h)) return "Still ideal, with only a subtle dip";
+        return `${h}, with only a subtle dip`;
+      },
+
       worsening: (h) => {
         if (/ideal|perfect/i.test(h)) return "Still nice, but easing back";
-        return `${h}, then a little less comfortable`;
+        return `${h}, then noticeably less comfortable`;
       }
     };
 

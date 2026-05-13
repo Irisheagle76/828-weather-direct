@@ -168,10 +168,16 @@ function refineHeadline(summary, trend, isFuture = false) {
       : "Conditions improve later";
   }
 
-  if (trend < -5) {
+  if (trend < -10) {
     return isFuture
       ? "Less comfortable as the day goes on"
       : "Conditions decline slightly";
+  }
+
+  if (trend < -5) {
+    return isFuture
+      ? "FeelScore dips, but subtly"
+      : "Small comfort dip, barely noticeable";
   }
 
   return summary;
@@ -181,7 +187,8 @@ function buildTrendBullets(trend, dewPoint) {
   const bullets = [];
 
   if (trend > 5) bullets.push("Improves as the day goes on");
-  if (trend < -5) bullets.push("Slight drop in comfort later");
+  if (trend < -10) bullets.push("Comfort drops later");
+  else if (trend < -5) bullets.push("Small FeelScore dip later");
 
   if (dewPoint != null && dewPoint < 55) {
     bullets.push("Dry air keeps things comfortable");
