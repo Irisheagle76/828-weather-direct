@@ -238,6 +238,31 @@ body {
   border: 1px solid rgba(255,255,255,0.06);
 }
 
+.week-ahead-global-item.global-pattern {
+  background: rgba(110,168,255,0.13);
+  border-color: rgba(110,168,255,0.25);
+}
+
+.week-ahead-global-item.global-temperature {
+  background: rgba(219,110,45,0.16);
+  border-color: rgba(219,110,45,0.30);
+}
+
+.week-ahead-global-item.global-wind {
+  background: rgba(56,189,248,0.13);
+  border-color: rgba(56,189,248,0.26);
+}
+
+.week-ahead-global-item.global-rain {
+  background: rgba(98,211,148,0.10);
+  border-color: rgba(98,211,148,0.20);
+}
+
+.week-ahead-global-item.global-mountain {
+  background: rgba(167,139,250,0.11);
+  border-color: rgba(167,139,250,0.22);
+}
+
 .week-ahead-global-item span {
   display: block;
   color: rgba(159,176,209,0.9);
@@ -253,6 +278,15 @@ body {
   color: rgba(244,248,255,0.92);
   font-size: 12px;
   line-height: 1.28;
+}
+
+.week-ahead-global-item.global-pattern span,
+.week-ahead-global-item.global-wind span {
+  color: #cfeaff;
+}
+
+.week-ahead-global-item.global-temperature span {
+  color: #ffd6bd;
 }
 
 .week-ahead-signal-grid {

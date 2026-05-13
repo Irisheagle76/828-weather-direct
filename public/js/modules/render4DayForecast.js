@@ -276,21 +276,21 @@ function normalizeSignalType(type) {
 
 function renderGlobalSignals(global = {}) {
   const fields = [
-    ["Weather Pattern", global.weatherPattern],
-    ["Rainfall Trend", global.rainfallTrend],
-    ["Mountain Visibility", global.mountainVisibility],
-    ["Temperature Trend", global.temperatureTrend],
-    ["Wind Signal", global.windSignal]
-  ].filter(([, value]) => hasText(value));
+    { label: "Weather Pattern", value: global.weatherPattern, type: "pattern" },
+    { label: "Rainfall Trend", value: global.rainfallTrend, type: "rain" },
+    { label: "Mountain Visibility", value: global.mountainVisibility, type: "mountain" },
+    { label: "Temperature Trend", value: global.temperatureTrend, type: "temperature" },
+    { label: "Wind Signal", value: global.windSignal, type: "wind" }
+  ].filter(field => hasText(field.value));
 
   if (!fields.length) return "";
 
   return `
     <div class="week-ahead-global-strip">
-      ${fields.map(([label, value]) => `
-        <div class="week-ahead-global-item">
-          <span>${escapeHtml(label)}</span>
-          <strong>${escapeHtml(value)}</strong>
+      ${fields.map(field => `
+        <div class="week-ahead-global-item global-${escapeHtml(field.type)}">
+          <span>${escapeHtml(field.label)}</span>
+          <strong>${escapeHtml(field.value)}</strong>
         </div>
       `).join("")}
     </div>

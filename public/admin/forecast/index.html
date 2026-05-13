@@ -510,6 +510,10 @@ pre {
 
       <label for="boardSummary">Board Summary</label>
       <textarea id="boardSummary" placeholder="Write the top-level forecast read: what matters most, how confident you are, and what people should watch."></textarea>
+    </div>
+
+    <div class="group">
+      <div class="group-title">Week Ahead Signals</div>
 
       <div class="field-grid four">
         <div class="field">
@@ -538,26 +542,19 @@ pre {
           <input id="forecastConfidence" type="number" min="0" max="100" placeholder="80" />
         </div>
       </div>
-    </div>
 
-    <div class="group">
-      <div class="group-title">Week Ahead Signals</div>
       <div class="field-grid">
         <div class="field">
           <label for="signalWeatherPattern">Weather Pattern</label>
           <input id="signalWeatherPattern" placeholder="Warm to unsettled, cooler late week" />
         </div>
         <div class="field">
-          <label for="signalComfortTrend">Comfort Trend</label>
-          <input id="signalComfortTrend" placeholder="Steady" />
+          <label for="signalTemperatureTrend">Temperature Trend</label>
+          <input id="signalTemperatureTrend" placeholder="Above normal, easing late" />
         </div>
       </div>
 
       <div class="field-grid three">
-        <div class="field">
-          <label for="signalForecastConfidence">Forecast Confidence</label>
-          <input id="signalForecastConfidence" placeholder="84%" />
-        </div>
         <div class="field">
           <label for="signalRainfallTrend">Rainfall Trend</label>
           <input id="signalRainfallTrend" placeholder="Hit-or-miss storms" />
@@ -565,13 +562,6 @@ pre {
         <div class="field">
           <label for="signalMountainVisibility">Mountain Visibility</label>
           <input id="signalMountainVisibility" placeholder="Best early week" />
-        </div>
-      </div>
-
-      <div class="field-grid">
-        <div class="field">
-          <label for="signalTemperatureTrend">Temperature Trend</label>
-          <input id="signalTemperatureTrend" placeholder="Above normal, easing late" />
         </div>
         <div class="field">
           <label for="signalWindSignal">Wind Signal</label>
@@ -899,8 +889,6 @@ const BOARD_FIELD_IDS = [
 
 const SIGNAL_GLOBAL_FIELD_IDS = [
   "signalWeatherPattern",
-  "signalComfortTrend",
-  "signalForecastConfidence",
   "signalRainfallTrend",
   "signalMountainVisibility",
   "signalTemperatureTrend",
@@ -909,8 +897,6 @@ const SIGNAL_GLOBAL_FIELD_IDS = [
 
 const SIGNAL_GLOBAL_KEYS = {
   signalWeatherPattern: "weatherPattern",
-  signalComfortTrend: "comfortTrend",
-  signalForecastConfidence: "forecastConfidence",
   signalRainfallTrend: "rainfallTrend",
   signalMountainVisibility: "mountainVisibility",
   signalTemperatureTrend: "temperatureTrend",
@@ -1489,8 +1475,6 @@ function signalDefaults() {
   return {
     global: {
       weatherPattern: "",
-      comfortTrend: "",
-      forecastConfidence: "",
       rainfallTrend: "",
       mountainVisibility: "",
       temperatureTrend: "",
