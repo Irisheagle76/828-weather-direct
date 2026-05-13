@@ -120,6 +120,14 @@ body {
   margin-top: 18px;
 }
 
+.week-ahead-summary-chips {
+  margin-top: 0;
+}
+
+.week-ahead-summary-chips .forecast-board-chip {
+  flex: 1 1 170px;
+}
+
 .forecast-board-chip,
 .forecast-info-chip {
   display: inline-flex;

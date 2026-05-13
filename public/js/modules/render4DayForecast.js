@@ -31,7 +31,7 @@ export async function render4DayForecast(container) {
 
   container.innerHTML = `
     ${renderBoardHero(board)}
-    ${renderWeekAheadSignals(forecastOverrides.weekAheadSignals)}
+    ${renderWeekAheadSignals(forecastOverrides.weekAheadSignals, board)}
     <section class="forecast-board-grid" aria-label="Four day forecast">
       ${days.map(renderForecastCard).join("")}
     </section>
@@ -209,17 +209,11 @@ function renderBoardHero(board) {
       <div class="forecast-board-kicker">Tim's Forecast Board</div>
       <h2>${escapeHtml(board.boardHeadline)}</h2>
       <p>${escapeHtml(board.boardSummary)}</p>
-      <div class="forecast-board-chips">
-        ${renderBoardChip("Rain Risk", formatCategory(board.rainRisk), `risk-${board.rainRisk}`)}
-        ${renderBoardChip("Comfort Trend", formatCategory(board.comfortTrend), `trend-${board.comfortTrend}`)}
-        ${renderBoardChip("Best Outdoor Day", board.bestOutdoorDay || "TBD", "best")}
-        ${renderBoardChip("Forecast Confidence", formatPercent(board.forecastConfidence), "confidence")}
-      </div>
     </section>
   `;
 }
 
-function renderWeekAheadSignals(input) {
+function renderWeekAheadSignals(input, board = {}) {
   const signals = normalizeWeekAheadSignals(input);
   if (!signals.cards.length) return "";
 
@@ -233,12 +227,24 @@ function renderWeekAheadSignals(input) {
         <p>A curated look at the pattern, comfort, and watch points.</p>
       </div>
 
+      ${renderSignalSummaryChips(board)}
       ${renderGlobalSignals(signals.global)}
 
       <div class="week-ahead-signal-grid card-count-${signals.cards.length}">
         ${signals.cards.map(renderSignalCard).join("")}
       </div>
     </section>
+  `;
+}
+
+function renderSignalSummaryChips(board = {}) {
+  return `
+    <div class="forecast-board-chips week-ahead-summary-chips">
+      ${renderBoardChip("Rain Risk", formatCategory(board.rainRisk), `risk-${board.rainRisk}`)}
+      ${renderBoardChip("Comfort Trend", formatCategory(board.comfortTrend), `trend-${board.comfortTrend}`)}
+      ${renderBoardChip("Best Outdoor Day", board.bestOutdoorDay || "TBD", "best")}
+      ${renderBoardChip("Forecast Confidence", formatPercent(board.forecastConfidence), "confidence")}
+    </div>
   `;
 }
 
@@ -271,8 +277,6 @@ function normalizeSignalType(type) {
 function renderGlobalSignals(global = {}) {
   const fields = [
     ["Weather Pattern", global.weatherPattern],
-    ["Comfort Trend", global.comfortTrend],
-    ["Forecast Confidence", global.forecastConfidence],
     ["Rainfall Trend", global.rainfallTrend],
     ["Mountain Visibility", global.mountainVisibility],
     ["Temperature Trend", global.temperatureTrend],
