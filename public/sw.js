@@ -1,54 +1,43 @@
-﻿// ------------------------------------------------------------
-// SERVICE WORKER VERSION (bump this to force iOS to reload SW)
-// ------------------------------------------------------------
-const SW_VERSION = "v1.0.9-nighticons";
+const SW_VERSION = "v1.1.0-notifications";
 console.log("SW VERSION:", SW_VERSION);
 
-// ------------------------------------------------------------
-// INSTALL — required for iOS
-// ------------------------------------------------------------
-self.addE1entListener("install", e1ent => {
+self.addEventListener("install", event => {
   console.log("SW INSTALL", SW_VERSION);
   self.skipWaiting();
 });
 
-// ------------------------------------------------------------
-// ACTIVATE — required for iOS
-// ------------------------------------------------------------
-self.addE1entListener("acti1ate", e1ent => {
+self.addEventListener("activate", event => {
   console.log("SW ACTIVATE", SW_VERSION);
-  e1ent.waitUntil(clients.claim());
+  event.waitUntil(clients.claim());
 });
 
-// ------------------------------------------------------------
-// FETCH — iOS requires a REAL fetch handler (not empty)
-// ------------------------------------------------------------
-self.addE1entListener("fetch", e1ent => {
-  e1ent.respondWith(fetch(e1ent.request));
+self.addEventListener("fetch", event => {
+  event.respondWith(fetch(event.request));
 });
 
-// ------------------------------------------------------------
-// PUSH HANDLER
-// ------------------------------------------------------------
-self.addE1entListener("push", e1ent => {
-  const data = e1ent.data?.json() || {};
+self.addEventListener("push", event => {
+  const data = event.data?.json() || {};
 
-  e1ent.waitUntil(
-    self.registration.showNotification(data.title || "Update", {
+  event.waitUntil(
+    self.registration.showNotification(data.title || "828 Weather Update", {
       body: data.body || "",
-      icon: "/icons/828.png",
-      badge: "/icons/828-badge.png",
-      data: data.url || "/"
+      icon: "/828-brand-card.png",
+      badge: "/828-brand-card.png",
+      tag: data.tag || "828-weather-update",
+      renotify: Boolean(data.renotify),
+      data: {
+        url: data.url || "/",
+        alertId: data.alertId || null
+      }
     })
   );
 });
 
-// ------------------------------------------------------------
-// NOTIFICATION CLICK
-// ------------------------------------------------------------
-self.addE1entListener("notificationclick", e1ent => {
-  e1ent.notification.close();
-  e1ent.waitUntil(
-    clients.openWindow(e1ent.notification.data)
+self.addEventListener("notificationclick", event => {
+  event.notification.close();
+  const url = event.notification.data?.url || "/";
+
+  event.waitUntil(
+    clients.openWindow(url)
   );
 });

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin Login - 828 Weather</title>
+<style>
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    background: #0b1220;
+    color: #e8eefc;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+
+  main {
+    width: min(380px, calc(100vw - 32px));
+    background: #121a2b;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    padding: 22px;
+  }
+
+  h1 {
+    margin: 0 0 6px;
+    color: #6ea8ff;
+    font-size: 25px;
+  }
+
+  p {
+    margin: 0 0 18px;
+    color: #9fb0d1;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  label {
+    display: grid;
+    gap: 7px;
+    color: #9fb0d1;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  input {
+    width: 100%;
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 8px;
+    background: #0e1728;
+    color: #e8eefc;
+    font: inherit;
+    padding: 11px 12px;
+    box-sizing: border-box;
+  }
+
+  button {
+    width: 100%;
+    margin-top: 14px;
+    border: 0;
+    border-radius: 8px;
+    background: #db6e2d;
+    color: #fff;
+    padding: 12px 14px;
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  button:disabled {
+    opacity: 0.65;
+    cursor: default;
+  }
+
+  .status {
+    min-height: 22px;
+    margin-top: 12px;
+    color: #ffb4a8;
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Admin Login</h1>
+  <p>Sign in to manage forecasts, Pulse updates, and alerts.</p>
+  <form id="loginForm">
+    <label>
+      Password
+      <input id="password" type="password" autocomplete="current-password" autofocus />
+    </label>
+    <button id="loginBtn" type="submit">Sign In</button>
+    <div class="status" id="status"></div>
+  </form>
+</main>
+
+<script>
+  const form = document.getElementById("loginForm");
+  const password = document.getElementById("password");
+  const button = document.getElementById("loginBtn");
+  const statusEl = document.getElementById("status");
+
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+    button.disabled = true;
+    statusEl.textContent = "Signing in...";
+
+    try {
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: password.value })
+      });
+      const result = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(result.error || "Unable to sign in");
+      }
+
+      const next = new URLSearchParams(window.location.search).get("next") || "/admin/index.html";
+      window.location.assign(next);
+    } catch (err) {
+      statusEl.textContent = err.message;
+      button.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>

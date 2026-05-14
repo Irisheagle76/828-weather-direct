@@ -22,6 +22,97 @@ body {
   font-family: system-ui, -apple-system, sans-serif;
 }
 
+.header-top-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.notification-toggle {
+  flex: 0 0 auto;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.11);
+  color: #f4f8ff;
+  border-radius: 999px;
+  padding: 7px 10px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.notification-toggle:hover:not(:disabled) {
+  background: rgba(255,255,255,0.16);
+}
+
+.notification-toggle:disabled {
+  opacity: 0.72;
+  cursor: default;
+}
+
+.site-alert {
+  display: grid;
+  gap: 5px;
+  padding: 12px 14px;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 8px;
+  background: #253b66;
+  border: 1px solid rgba(255,255,255,0.15);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.22);
+}
+
+.site-alert + .site-alert {
+  margin-top: 8px;
+}
+
+.site-alert-notable {
+  background: #6f4f18;
+}
+
+.site-alert-urgent {
+  background: #7a2530;
+}
+
+.site-alert-meta {
+  color: rgba(255,255,255,0.76);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.site-alert strong {
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+.site-alert span,
+.site-alert em {
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.site-alert em {
+  color: rgba(255,255,255,0.82);
+  font-style: normal;
+}
+
+@media (max-width: 520px) {
+  .header-top-row {
+    align-items: flex-start;
+  }
+
+  .notification-toggle {
+    max-width: 116px;
+    white-space: normal;
+    line-height: 1.15;
+    text-align: center;
+  }
+}
+
 /* ============================================================
    GLOBAL STACK
    ============================================================ */

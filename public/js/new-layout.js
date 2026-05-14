@@ -9,6 +9,7 @@ import { buildHumanActionIntelFS } from '/js/intel/human-action-feelscore.js?v=2
 
 import { renderPulseV2 } from '/js/modules/renderPulseV2.js';
 import { renderSubstackV2 } from '/js/modules/renderSubstackV2.js?v=20260512-update-tagline';
+import { loadAndRenderAlerts } from '/js/modules/renderAlerts.js';
 
 console.log("828 Weather layout version: 20260512-update-tagline");
 
@@ -238,6 +239,7 @@ async function loadSubstack() {
 export async function renderNewLayout(container) {
   container.innerHTML = `
     <div class="top-stack">
+      <div id="active-alerts" class="fade-in"></div>
       <div id="feelscore" class="fade-in"></div>
       <div id="timeline" class="fade-in"></div>
       <div id="tomorrow" class="fade-in"></div>
@@ -310,6 +312,7 @@ renderHikingGuideLink();
     // LOWER-PAGE CONTENT (LOAD AFTER CORE REVEAL)
     // ------------------------------------------------------------
     droughtPromise.then(renderDroughtFire).catch(() => renderDroughtFire(null));
+    loadAndRenderAlerts(document.getElementById("active-alerts"));
     loadPulse();
     loadSubstack();
 

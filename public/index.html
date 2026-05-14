@@ -16,9 +16,12 @@
   <div class="app-header">
     <div class="header-inner">
 
-      <div class="brand">
-        <div class="brand-title">828 Weather Direct</div>
-        <div class="brand-sub">Hyper-local Asheville forecast built by Tim Ballisty</div>
+      <div class="header-top-row">
+        <div class="brand">
+          <div class="brand-title">828 Weather Direct</div>
+          <div class="brand-sub">Hyper-local Asheville forecast built by Tim Ballisty</div>
+        </div>
+        <button class="notification-toggle" id="enableNotificationsBtn" type="button">Enable Notifications</button>
       </div>
 
    <div class="live-row" id="wx-metrics">
@@ -77,6 +80,7 @@
        ===================================== -->
   <script type="module">
     import { renderNewLayout } from '/js/new-layout.js?v=20260513-hiking-guide-home';
+    import { subscribeUserToPush } from '/js/notifications/subscribeClient.js';
 
     const app = document.getElementById('app');
 
@@ -288,6 +292,37 @@
 
     // Keep it in sync
     setInterval(syncFooterTime, 60000);
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(err => {
+        console.error("Service worker registration failed:", err);
+      });
+    }
+
+    const notifyBtn = document.getElementById("enableNotificationsBtn");
+    if (notifyBtn) {
+      if (!("Notification" in window)) {
+        notifyBtn.hidden = true;
+      } else if (Notification.permission === "granted") {
+        notifyBtn.textContent = "Notifications On";
+        notifyBtn.disabled = true;
+      }
+
+      notifyBtn.addEventListener("click", async () => {
+        notifyBtn.disabled = true;
+        notifyBtn.textContent = "Enabling...";
+        const result = await subscribeUserToPush();
+
+        if (result.ok) {
+          notifyBtn.textContent = "Notifications On";
+          notifyBtn.disabled = true;
+        } else {
+          notifyBtn.textContent = "Enable Notifications";
+          notifyBtn.disabled = false;
+          alert(result.message || "Unable to enable notifications right now.");
+        }
+      });
+    }
 
   </script>
 <footer class="site-footer">
