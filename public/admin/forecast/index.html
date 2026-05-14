@@ -1633,7 +1633,7 @@ function hasSignalsContent(signals = {}) {
 }
 
 async function loadLatestPublishedForecast() {
-  const urls = ["/api/forecast/latest", "/forecast-overrides.json"];
+  const urls = ["/api/router?route=forecast/latest", "/forecast-overrides.json"];
 
   for (const url of urls) {
     try {
@@ -1807,7 +1807,7 @@ async function publishForecast() {
   setStatus("Publishing approved forecast...");
 
   try {
-    const response = await fetch("/api/forecast/publish", {
+    const response = await fetch("/api/router?route=forecast/publish", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

@@ -2,7 +2,7 @@ export async function loadAndRenderAlerts(container) {
   if (!container) return;
 
   try {
-    const res = await fetch("/api/alerts/latest", { cache: "no-store" });
+    const res = await fetch("/api/router?route=alerts/latest", { cache: "no-store" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     renderAlerts(container, data.alerts || []);

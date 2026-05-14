@@ -1050,7 +1050,7 @@
     mediaLibraryStatus.textContent = "Loading newest from 828-weather-pulse...";
 
     try {
-      const res = await fetch("/api/tidbits/pulse-media");
+      const res = await fetch("/api/router?route=tidbits/pulse-media");
       const text = await res.text();
       let data = {};
 
@@ -1308,7 +1308,7 @@ function updateTimestamp() {
         setStatus("Publishing…", "busy");
       }
 
-      const res = await fetch("/api/tidbits/pulse-write", {
+      const res = await fetch("/api/router?route=tidbits/pulse-write", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

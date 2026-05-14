@@ -20,7 +20,7 @@ const routes = {
 };
 
 export default async function handler(req, res) {
-  const route = getRoutePath(req);
+  const route = String(req.query?.route || "").replace(/^\/+|\/+$/g, "");
   const loadRoute = routes[route];
 
   if (!loadRoute) {
@@ -29,19 +29,4 @@ export default async function handler(req, res) {
 
   const { default: routeHandler } = await loadRoute();
   return routeHandler(req, res);
-}
-
-function getRoutePath(req) {
-  const queryPath = req.query?.path;
-
-  if (Array.isArray(queryPath)) {
-    return queryPath.join("/");
-  }
-
-  if (typeof queryPath === "string") {
-    return queryPath;
-  }
-
-  const pathname = new URL(req.url, "http://localhost").pathname;
-  return pathname.replace(/^\/api\/?/, "").replace(/\/$/, "");
 }

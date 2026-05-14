@@ -154,7 +154,7 @@
     }
 
     try {
-      const response = await fetch("/api/tidbits/pulse-feed");
+      const response = await fetch("/api/router?route=tidbits/pulse-feed");
       const data = await response.json();
       render(Array.isArray(data.items) ? data.items : []);
     } catch {

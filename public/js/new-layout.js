@@ -19,7 +19,7 @@ console.log("828 Weather layout version: 20260512-update-tagline");
 
 async function fetchDroughtFire() {
   try {
-    const res = await fetch('/api/drought-fire');
+    const res = await fetch('/api/router?route=drought-fire');
     if (!res.ok) return null;
     return await res.json();
   } catch {
@@ -196,7 +196,7 @@ async function loadPulse() {
   if (!container) return;
 
   try {
-    const res = await fetch('/api/tidbits/pulse-feed');
+    const res = await fetch('/api/router?route=tidbits/pulse-feed');
 
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}`);
@@ -222,7 +222,7 @@ async function loadSubstack() {
   if (!container) return;
 
   try {
-    const res = await fetch('/api/substack-articles');
+    const res = await fetch('/api/router?route=substack-articles');
     const post = await res.json();
 
     renderSubstackV2(container, post);
@@ -267,9 +267,7 @@ console.log("FULL API DATA:", data);
       ? normalizeHourly(data.hourly)
       : [];
 console.log("POST-NORMALIZE (LAYOUT):", hourly[0]);
-    const current = data?.current
-      ? normalizeCurrent(data.current)
-      : null;
+    const current = resolveHeaderCurrent(data, hourly);
 
       // 🔍 DEBUG HERE
 console.log("CURRENT DEBUG:", {
@@ -897,7 +895,7 @@ function renderHeaderMetrics(current, tempest = {}, hourly = []) {
 const tempRaw =
   typeof tempest?.air_temperature === "number"
     ? toF(tempest.air_temperature)
-    : current.temperatureF;
+    : current.temperatureF ?? current.temp ?? current.temperature ?? current.air_temperature;
 
 // ---------------------------
 // humidity
@@ -913,7 +911,7 @@ const rhRaw =
 const dewRaw =
   typeof tempest?.dew_point === "number"
     ? toF(tempest.dew_point)
-    : current.dewpointF ?? null;
+    : current.dewpointF ?? current.dewPoint ?? current.dew_point ?? null;
 
 // ---------------------------
 // wind + gusts
@@ -921,12 +919,12 @@ const dewRaw =
 const windRaw =
   typeof tempest?.wind_avg === "number"
     ? toMPH(tempest.wind_avg)
-    : current.windSpeed;
+    : current.windSpeed ?? current.wind ?? current.wind_avg;
 
 const gustRaw =
   typeof tempest?.wind_gust === "number"
     ? toMPH(tempest.wind_gust)
-    : current.windGust ?? null;
+    : current.windGust ?? current.wind_gust ?? null;
 
 const uvRaw = getCurrentUvIndex(current, hourly);
 
@@ -996,6 +994,17 @@ const windHTML = showGust
       </div>
     ` : ""}
   `;
+}
+
+function resolveHeaderCurrent(data = {}, hourly = []) {
+  const source =
+    data?.current ||
+    data?.tempest ||
+    hourly.find(h => Number.isFinite(h?.timestamp) && h.timestamp >= Date.now()) ||
+    hourly[0] ||
+    null;
+
+  return source ? normalizeCurrent(source) : null;
 }
 // ------------------------------------------------------------
 // SCORE MAPPING
@@ -1192,9 +1201,7 @@ export async function initGlobalWeatherUI() {
       ? normalizeHourly(data.hourly)
       : [];
 
-    const current = data?.current
-      ? normalizeCurrent(data.current)
-      : null;
+    const current = resolveHeaderCurrent(data, hourly);
 
     const tempest = data?.tempest ?? null;
 

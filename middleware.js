@@ -1,22 +1,24 @@
 const ADMIN_COOKIE = "828_admin_session";
 const PROTECTED_API_PREFIXES = [
-  "/api/alerts/publish",
-  "/api/alerts/clear",
-  "/api/forecast/publish",
-  "/api/tidbits/pulse-write",
-  "/api/tidbits/pulse-media"
+  "alerts/publish",
+  "alerts/clear",
+  "forecast/publish",
+  "tidbits/pulse-write",
+  "tidbits/pulse-media"
 ];
 
 export function middleware(req) {
   const url = new URL(req.url);
   const pathname = url.pathname;
 
-  if (pathname === "/admin/login.html" || pathname === "/api/admin/login") {
+  const apiRoute = getApiRoute(url);
+
+  if (pathname === "/admin/login.html" || apiRoute === "admin/login") {
     return;
   }
 
   const isAdminPage = pathname === "/admin" || pathname.startsWith("/admin/");
-  const isProtectedApi = PROTECTED_API_PREFIXES.some(prefix => pathname.startsWith(prefix));
+  const isProtectedApi = PROTECTED_API_PREFIXES.includes(apiRoute);
 
   if (!isAdminPage && !isProtectedApi) {
     return;
@@ -33,6 +35,18 @@ export function middleware(req) {
   const loginUrl = new URL("/admin/login.html", url.origin);
   loginUrl.searchParams.set("next", pathname + url.search);
   return Response.redirect(loginUrl, 302);
+}
+
+function getApiRoute(url) {
+  if (url.pathname === "/api/router") {
+    return String(url.searchParams.get("route") || "").replace(/^\/+|\/+$/g, "");
+  }
+
+  if (url.pathname.startsWith("/api/")) {
+    return url.pathname.replace(/^\/api\/+/, "").replace(/\/+$/g, "");
+  }
+
+  return "";
 }
 
 function hasAdminSession(req) {

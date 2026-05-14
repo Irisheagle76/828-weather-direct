@@ -40,7 +40,7 @@ export async function render4DayForecast(container) {
 
 async function loadForecastOverrides() {
   try {
-    const res = await fetch("/api/forecast/latest", { cache: "no-store" });
+    const res = await fetch("/api/router?route=forecast/latest", { cache: "no-store" });
     if (!res.ok) throw new Error(`latest forecast ${res.status}`);
     const forecast = await res.json();
     if (forecast?.days && Object.keys(forecast.days).length) return forecast;

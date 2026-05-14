@@ -384,7 +384,7 @@
     setStatus(payload.sendPush ? "Publishing and sending push..." : "Publishing site alert...");
 
     try {
-      const res = await fetch("/api/alerts/publish", {
+      const res = await fetch("/api/router?route=alerts/publish", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -405,7 +405,7 @@
     clearBtn.disabled = true;
     setStatus("Clearing active alerts...");
     try {
-      const res = await fetch("/api/alerts/clear", {
+      const res = await fetch("/api/router?route=alerts/clear", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({})
@@ -423,7 +423,7 @@
 
   async function loadActiveAlerts() {
     try {
-      const res = await fetch("/api/alerts/latest", { cache: "no-store" });
+      const res = await fetch("/api/router?route=alerts/latest", { cache: "no-store" });
       const data = await res.json();
       const alerts = Array.isArray(data.alerts) ? data.alerts : [];
       activeList.innerHTML = alerts.length

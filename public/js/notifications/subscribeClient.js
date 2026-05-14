@@ -20,7 +20,7 @@ export async function subscribeUserToPush() {
       return { ok: false, message: "Notifications are not supported in this browser." };
     }
 
-    const keyRes = await fetch("/api/notifications/public-key", { cache: "no-store" });
+    const keyRes = await fetch("/api/router?route=notifications/public-key", { cache: "no-store" });
     const keyData = await keyRes.json().catch(() => ({}));
     const publicKey = keyData.publicKey || window.VAPID_PUBLIC_KEY;
 
@@ -74,7 +74,7 @@ export async function subscribeUserToPush() {
 }
 
 async function saveSubscription(sub) {
-  const response = await fetch("/api/notifications/subscribe", {
+  const response = await fetch("/api/router?route=notifications/subscribe", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(sub)

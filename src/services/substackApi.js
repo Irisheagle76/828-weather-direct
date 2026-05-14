@@ -1,5 +1,5 @@
 const NOTES_ENDPOINT = '/api/substack-notes';
-const ARTICLES_ENDPOINT = '/api/substack-articles';
+const ARTICLES_ENDPOINT = '/api/router?route=substack-articles';
 
 export async function fetchSubstackLatestArticle() {
   const res = await fetch(ARTICLES_ENDPOINT);

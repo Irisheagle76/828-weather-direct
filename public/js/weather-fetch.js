@@ -27,7 +27,7 @@ export async function fetchAllIntel({ lat, lon }) {
   let tempestData = null;
 
   try {
-    const res = await fetch(`/api/tempest/device`);
+    const res = await fetch(`/api/router?route=tempest/device`);
 
     if (res?.ok) {
       tempestData = await res.json();
@@ -102,7 +102,7 @@ async function getWeatherUnified(lat, lon) {
     return buildFallback();
   }
 
-  const url = `/api/weather?type=hourly&lat=${lat}&lon=${lon}`;
+  const url = `/api/router?route=weather&type=hourly&lat=${lat}&lon=${lon}`;
   console.log("🌐 Fetch:", url);
 
   // ------------------------------------------------------------

@@ -1078,7 +1078,7 @@ async function hydrateBlankDaysFromLatestForecast(forecastDates) {
 }
 
 async function loadLatestPublishedForecast() {
-  const urls = ["/api/forecast/latest", "/forecast-overrides.json"];
+  const urls = ["/api/router?route=forecast/latest", "/forecast-overrides.json"];
 
   for (const url of urls) {
     try {

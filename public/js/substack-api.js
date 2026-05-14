@@ -6,7 +6,7 @@
 
 export async function fetchSubstackLatestArticle() {
   try {
-    const res = await fetch("/api/substack-articles");
+    const res = await fetch("/api/router?route=substack-articles");
     if (!res.ok) return null;
     return await res.json();
   } catch (err) {

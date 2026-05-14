@@ -11,7 +11,7 @@ export default function WeatherPulseModule() {
 
     async function loadPulse() {
       try {
-        const res = await fetch('/api/tidbits/pulse-latest');
+        const res = await fetch('/api/router?route=tidbits/pulse-latest');
         const data = await res.json();
 
         if (isMounted) {
