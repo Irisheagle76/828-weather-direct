@@ -400,7 +400,7 @@ function findNextLow(hourly = [], now = new Date()) {
   );
 
   return {
-    label: hour < 9 ? "Morning Low" : "Overnight Low",
+    label: hour < 9 ? "Through 9 AM" : "Tonight's Low",
     value: Math.round(low.temperatureF)
   };
 }
