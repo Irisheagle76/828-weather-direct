@@ -1,0 +1,20 @@
+{
+  "functions": {
+    "api/admin/page.js": {
+      "includeFiles": "public/admin/**"
+    }
+  },
+  "routes": [
+    {
+      "src": "/admin/?",
+      "dest": "/api/admin/page?path=index.html"
+    },
+    {
+      "src": "/admin/(.*)",
+      "dest": "/api/admin/page?path=$1"
+    },
+    {
+      "handle": "filesystem"
+    }
+  ]
+}
