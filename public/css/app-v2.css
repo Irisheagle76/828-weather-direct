@@ -4787,3 +4787,95 @@ body {
     font-size: 17px !important;
   }
 }
+
+/* ============================================================
+   SHARED CONTAINED FOOTER
+   Matches the hiking guide footer card.
+   ============================================================ */
+
+.site-footer {
+  box-sizing: border-box;
+  width: min(calc(100% - 18px), 760px);
+  max-width: 100%;
+  margin: 48px auto 0;
+  padding: 0 0 24px;
+  color: var(--muted);
+  font-size: 13px;
+  background: none;
+}
+
+.site-footer::before {
+  content: none;
+}
+
+.footer-inner {
+  box-sizing: border-box;
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  padding: 16px 14px;
+  display: grid;
+  gap: 14px;
+  align-items: start;
+  text-align: left;
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 14px;
+  color: var(--muted);
+}
+
+.footer-logo {
+  color: #6ea8ff;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.footer-tagline,
+.footer-meta,
+.footer-bottom {
+  font-size: 13px;
+  line-height: 1.45;
+  opacity: 1;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  font-size: 13px;
+}
+
+.footer-links a {
+  color: #d8e7ff;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.footer-links a:hover {
+  color: #ffffff;
+}
+
+.footer-disclaimer {
+  margin-top: 4px;
+  font-size: 13px;
+  opacity: 1;
+}
+
+.footer-bottom {
+  margin-top: 0;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.10);
+}
+
+.footer-social {
+  display: none;
+}
+
+@media (max-width: 520px) {
+  .site-footer {
+    width: calc(100% - 20px);
+    margin-top: 28px;
+  }
+}
