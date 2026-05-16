@@ -4857,6 +4857,29 @@ body {
   color: #ffffff;
 }
 
+.footer-links .footer-support-link {
+  align-items: center;
+  display: inline-flex;
+  gap: 5px;
+  padding: 2px 8px;
+  border: 1px solid rgba(255, 209, 102, 0.22);
+  border-radius: 999px;
+  color: #ffe3a6;
+  background: rgba(255, 209, 102, 0.07);
+}
+
+.footer-links .footer-support-link:hover,
+.footer-links .footer-support-link:focus-visible {
+  color: #fff4d6;
+  background: rgba(255, 209, 102, 0.12);
+  border-color: rgba(255, 209, 102, 0.36);
+}
+
+.footer-links .footer-support-link:focus-visible {
+  outline: 2px solid rgba(110, 168, 255, 0.62);
+  outline-offset: 3px;
+}
+
 .footer-disclaimer {
   margin-top: 4px;
   font-size: 13px;
