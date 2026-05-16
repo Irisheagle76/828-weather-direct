@@ -243,7 +243,7 @@
             <option value="snow-ice">Snow / ice</option>
             <option value="fog">Fog</option>
             <option value="wind">Wind</option>
-            <option value="heat-cold">Heat / cold</option>
+            <option value="temperature">Temperature</option>
             <option value="fire-weather">Fire weather</option>
             <option value="air-quality">Air quality</option>
             <option value="site-notice">Site notice</option>
@@ -301,7 +301,7 @@
 
       <label class="check-row">
         <input id="sendPush" type="checkbox" checked />
-        Send push notification to subscribers
+        <span id="subscriberLabel">Send push notification to subscribers</span>
       </label>
 
       <div class="actions">
@@ -340,6 +340,7 @@
   const activeList = document.getElementById("activeList");
   const publishBtn = document.getElementById("publishBtn");
   const clearBtn = document.getElementById("clearBtn");
+  const subscriberLabel = document.getElementById("subscriberLabel");
 
   function setDefaultExpiry() {
     const d = new Date(Date.now() + 6 * 60 * 60 * 1000);
@@ -391,7 +392,16 @@
       });
       const result = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(result.error || "Publish failed");
-      setStatus(result.pushed ? "Published and push sent." : "Published to site.");
+      if (!result.pushed) {
+        setStatus("Published to homepage.");
+      } else if (result.pushResult?.skipped) {
+        setStatus("Published to homepage. Push skipped: VAPID keys are not configured.");
+      } else if (result.pushResult?.sent > 0) {
+        const failed = result.pushResult.failed ? ` ${result.pushResult.failed} failed.` : "";
+        setStatus(`Published to homepage. Push sent to ${result.pushResult.sent} subscriber${result.pushResult.sent === 1 ? "" : "s"}.${failed}`);
+      } else {
+        setStatus("Published to homepage. No push subscribers were found.");
+      }
       await loadActiveAlerts();
     } catch (err) {
       console.error(err);
@@ -440,6 +450,19 @@
     }
   }
 
+  async function loadNotificationStatus() {
+    try {
+      const res = await fetch("/api/router?route=notifications/status", { cache: "no-store" });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (Number.isFinite(data.subscriberCount)) {
+        subscriberLabel.textContent = `Send push notification to ${data.subscriberCount} subscriber${data.subscriberCount === 1 ? "" : "s"}`;
+      }
+    } catch {
+      // Keep the default label when status is unavailable.
+    }
+  }
+
   function setStatus(message) {
     statusEl.textContent = message || "";
   }
@@ -468,6 +491,7 @@
   setDefaultExpiry();
   updatePreview();
   loadActiveAlerts();
+  loadNotificationStatus();
 </script>
 </body>
 </html>

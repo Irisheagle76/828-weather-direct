@@ -35,6 +35,8 @@ function isExpired(alert) {
 }
 
 function formatType(type = "") {
+  if (type === "heat-cold" || type === "temperature") return "Temperature";
+
   return String(type)
     .replace(/-/g, " ")
     .replace(/\b\w/g, char => char.toUpperCase());

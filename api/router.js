@@ -8,6 +8,7 @@ const routes = {
   "forecast/latest": () => import("../lib/api-routes/forecast/latest.js"),
   "forecast/publish": () => import("../lib/api-routes/forecast/publish.js"),
   "notifications/public-key": () => import("../lib/api-routes/notifications/public-key.js"),
+  "notifications/status": () => import("../lib/api-routes/notifications/status.js"),
   "notifications/subscribe": () => import("../lib/api-routes/notifications/subscribe.js"),
   "substack-articles": () => import("../lib/api-routes/substack-articles.js"),
   "substack-og": () => import("../lib/api-routes/substack-og.js"),

@@ -305,7 +305,13 @@
         notifyBtn.hidden = true;
       } else if (Notification.permission === "granted") {
         notifyBtn.textContent = "Notifications On";
-        notifyBtn.disabled = true;
+        subscribeUserToPush().then(result => {
+          if (result.ok) {
+            notifyBtn.textContent = "Notifications On";
+          } else {
+            notifyBtn.textContent = "Sync Notifications";
+          }
+        });
       }
 
       notifyBtn.addEventListener("click", async () => {
