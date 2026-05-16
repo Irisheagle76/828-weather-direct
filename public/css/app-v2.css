@@ -3059,6 +3059,7 @@ body {
 }
 
 .update-toggle {
+  display: inline-block;
   margin-top: 10px;
   background: rgba(219,110,45,0.18);
   color: #ffd6a0;
@@ -3066,6 +3067,7 @@ body {
   border-radius: 12px;
   padding: 8px 14px;
   font-weight: 600;
+  text-decoration: none;
   cursor: pointer;
   transition: background 0.2s ease;
 }

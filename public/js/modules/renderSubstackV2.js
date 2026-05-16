@@ -16,6 +16,7 @@ export function renderSubstackV2(container, post) {
   }
 
   const title = post.title || "Weather Update";
+  const articleUrl = post.link || post.url || "";
 
   const rawHtml =
     post.content ||
@@ -77,23 +78,14 @@ export function renderSubstackV2(container, post) {
         <div class="update-fade"></div>
       </div>
 
-      <button class="update-toggle" aria-expanded="false">
+      ${articleUrl ? `
+      <a class="update-toggle" href="${escapeAttr(articleUrl)}" target="_blank" rel="noopener noreferrer">
         Read full update
-      </button>
+      </a>
+      ` : ""}
 
     </div>
   `;
-
-  const card = container.querySelector(".update-card");
-  const btn = container.querySelector(".update-toggle");
-
-  if (card && btn) {
-    btn.onclick = () => {
-      const expanded = card.classList.toggle("expanded");
-      btn.textContent = expanded ? "Show less" : "Read full update";
-      btn.setAttribute("aria-expanded", expanded ? "true" : "false");
-    };
-  }
 }
 
 function cleanText(html) {
@@ -126,6 +118,14 @@ function extractImage(html) {
 
   const match = html.match(/<img[^>]+src="([^">]+)"/i);
   return match ? match[1] : null;
+}
+
+function escapeAttr(value = "") {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 function formatDate(dateStr) {
