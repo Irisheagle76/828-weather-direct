@@ -1019,7 +1019,7 @@ function mapScoreToCategory(score) {
 
 function mapScoreToLabel(score) {
   if (score >= 90) return "Ideal";
-  if (score >= 75) return "Comfortable";
+  if (score >= 70) return "Comfortable";
   if (score >= 60) return "Slightly Uncomfortable";
   if (score >= 45) return "Uncomfortable";
   return "Harsh";
