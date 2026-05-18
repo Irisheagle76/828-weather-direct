@@ -22,7 +22,7 @@ export async function subscribeUserToPush() {
 
     const keyRes = await fetch("/api/router?route=notifications/public-key", { cache: "no-store" });
     const keyData = await keyRes.json().catch(() => ({}));
-    const publicKey = keyData.publicKey || window.VAPID_PUBLIC_KEY;
+    const publicKey = String(keyData.publicKey || window.VAPID_PUBLIC_KEY || "").trim();
 
     if (!publicKey) {
       return { ok: false, message: "Notifications are not configured yet." };

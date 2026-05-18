@@ -154,6 +154,13 @@
     font-size: 14px;
   }
 
+  .push-diagnostics {
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
   .preview {
     display: grid;
     gap: 6px;
@@ -309,6 +316,7 @@
         <button id="clearBtn" class="secondary" type="button">Clear Active Alerts</button>
         <span class="status" id="status"></span>
       </div>
+      <div class="push-diagnostics" id="pushDiagnostics"></div>
     </section>
 
     <aside class="panel">
@@ -341,6 +349,7 @@
   const publishBtn = document.getElementById("publishBtn");
   const clearBtn = document.getElementById("clearBtn");
   const subscriberLabel = document.getElementById("subscriberLabel");
+  const pushDiagnostics = document.getElementById("pushDiagnostics");
 
   function setDefaultExpiry() {
     const d = new Date(Date.now() + 6 * 60 * 60 * 1000);
@@ -457,6 +466,17 @@
       const data = await res.json();
       if (Number.isFinite(data.subscriberCount)) {
         subscriberLabel.textContent = `Send push notification to ${data.subscriberCount} subscriber${data.subscriberCount === 1 ? "" : "s"}`;
+      }
+
+      if (data.pushConfig) {
+        const config = data.pushConfig;
+        const keyState = config.vapidReady
+          ? "VAPID ready"
+          : "VAPID not ready";
+        const whitespace = config.publicKeyHasWhitespace || config.privateKeyHasWhitespace
+          ? " Whitespace was detected in one or both VAPID env vars."
+          : "";
+        pushDiagnostics.textContent = `${keyState}. Public key: ${config.hasPublicKey ? "present" : "missing"}. Private key: ${config.hasPrivateKey ? "present" : "missing"}.${whitespace}`;
       }
     } catch {
       // Keep the default label when status is unavailable.

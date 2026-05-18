@@ -9,7 +9,7 @@ import { buildHumanActionIntelFS } from '/js/intel/human-action-feelscore.js?v=2
 
 import { renderPulseV2 } from '/js/modules/renderPulseV2.js';
 import { renderSubstackV2 } from '/js/modules/renderSubstackV2.js?v=20260512-update-tagline';
-import { loadAndRenderAlerts } from '/js/modules/renderAlerts.js';
+import { loadAndRenderAlerts } from '/js/modules/renderAlerts.js?v=20260518-alerts';
 
 console.log("828 Weather layout version: 20260512-update-tagline");
 
