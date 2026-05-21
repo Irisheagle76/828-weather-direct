@@ -68,6 +68,105 @@ body {
   padding: 9px 12px;
 }
 
+.panel-lightning {
+  border-left-color: #ff8c1a;
+  box-shadow: 0 0 0 1px rgba(255,184,90,0.08), 0 18px 52px rgba(124,38,0,0.34);
+}
+
+.lightning-banner {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  padding: 16px 15px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 190, 70, 0.46);
+  background:
+    radial-gradient(circle at 15% 18%, rgba(255, 236, 168, 0.22), transparent 34%),
+    radial-gradient(circle at 88% 10%, rgba(255, 160, 0, 0.22), transparent 30%),
+    linear-gradient(180deg, rgba(86, 18, 18, 0.98), rgba(46, 11, 12, 0.98));
+  box-shadow: 0 16px 40px rgba(123, 18, 18, 0.42);
+}
+
+.lightning-banner::before {
+  content: "";
+  position: absolute;
+  inset: -30%;
+  background: radial-gradient(circle, rgba(255,255,255,0.16), transparent 42%);
+  opacity: 0.65;
+  animation: lightningPulse 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.lightning-mark {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: rgba(255, 214, 117, 0.16);
+  border: 1px solid rgba(255, 214, 117, 0.40);
+  color: #ffe7a8;
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.lightning-copy {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.lightning-kicker {
+  color: #ffdf8d;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.lightning-copy h2 {
+  color: #fff8e8;
+  font-size: 20px;
+  margin-top: 4px;
+}
+
+.lightning-copy p {
+  color: #fff0cf;
+  font-size: 14px;
+  line-height: 1.55;
+  margin-top: 8px;
+}
+
+.lightning-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  color: #ffe7a8;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.lightning-meta span {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+
+@keyframes lightningPulse {
+  0%, 100% { opacity: 0.55; transform: scale(0.98); }
+  50% { opacity: 0.9; transform: scale(1.02); }
+}
+
 .hiking-wrap {
   display: grid;
   gap: 13px;
@@ -807,6 +906,15 @@ td,
 
   .stat-chip-row {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .lightning-banner {
+    grid-template-columns: 1fr;
+  }
+
+  .lightning-mark {
+    width: 48px;
+    height: 48px;
   }
 
   h1 {
