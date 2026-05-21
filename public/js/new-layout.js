@@ -2,7 +2,7 @@
 // AVL WEATHER — V3 LAYOUT (STABLE + UNIFIED)
 // ============================================================
 
-import { getWeatherForUI } from '/js/adapters/weather-adapter.js?v=20260508-popscale';
+import { getWeatherForUI } from '/js/adapters/weather-adapter.js?v=20260521-hourly-sky';
 import { calculateComfort } from '/js/intel/comfort.js';
 import { generateNarrative } from '/js/intel/synthesizer/index.js?v=20260505-tomorrowvoice';
 import { buildHumanActionIntelFS } from '/js/intel/human-action-feelscore.js?v=20260513-feelscore-dip-threshold';
@@ -11,7 +11,7 @@ import { renderPulseV2 } from '/js/modules/renderPulseV2.js';
 import { renderSubstackV2 } from '/js/modules/renderSubstackV2.js?v=20260512-update-tagline';
 import { loadAndRenderAlerts } from '/js/modules/renderAlerts.js?v=20260518-alerts';
 
-console.log("828 Weather layout version: 20260512-update-tagline");
+console.log("828 Weather layout version: 20260521-hourly-sky");
 
 // ============================================================
 // FETCH HELPERS
@@ -669,28 +669,27 @@ function formatHourRange(startTs, endTs) {
 
 function getHourlyIcon(hour = {}) {
   const precipType = String(hour.precipType || "").toLowerCase();
-  const precipProbability = Number.isFinite(hour.precipProbability)
-    ? hour.precipProbability
-    : 0;
-  const precipAmount = Number.isFinite(hour.precipAmount)
-    ? hour.precipAmount
-    : 0;
+  const precipProbability = normalizeProbability(hour.precipProbability);
+  const precipAmount = toFiniteNumber(hour.precipAmount, 0);
   const cloudCover = normalizeCloudCover(hour.cloudCover);
-  const uvIndex = Number.isFinite(hour.uvIndex) ? hour.uvIndex : 0;
-  const code = Number.isFinite(hour.weatherCode) ? hour.weatherCode : null;
+  const uvIndex = toFiniteNumber(hour.uvIndex, 0);
+  const code = toFiniteNumber(hour.weatherCode, null);
   const isNight = isNightHour(hour.timestamp);
   const hasMeaningfulPrecip =
     precipAmount >= 0.005 ||
-    precipProbability >= 0.45 ||
+    precipProbability >= 0.25 ||
     /rain|shower|drizzle|sprinkle|thunder|storm|snow|sleet|ice|freezing/.test(precipType) ||
     (code != null && code >= 51);
 
   if (code >= 95 || /thunder|storm/.test(precipType)) return "⛈️";
   if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86) || /snow|sleet|ice|freezing/.test(precipType)) return "❄️";
-  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82) || precipAmount >= 0.005 || precipProbability >= 0.45 || /rain|shower|drizzle|sprinkle/.test(precipType)) return "🌧️";
-  if (!isNight && !hasMeaningfulPrecip && uvIndex >= 0.3) return "☀️";
+  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82) || hasMeaningfulPrecip) return "🌧️";
+  if (code === 45 || code === 48) return "🌫️";
+  if (code === 3) return "☁️";
+  if (code === 2) return isNight ? "☁️" : "⛅";
   if (cloudCover >= 0.78) return "☁️";
   if (cloudCover >= 0.38) return isNight ? "☁️" : "⛅";
+  if (!isNight && uvIndex >= 0.3) return "☀️";
   return isNight ? "🌙" : "☀️";
 }
 
@@ -700,19 +699,16 @@ function isNightHour(timestamp) {
   return hour < 6 || hour >= 21;
 }
 function normalizeCloudCover(value) {
-  if (!Number.isFinite(value)) return 0.45;
-  return value > 1 ? value / 100 : value;
+  const numeric = toFiniteNumber(value, null);
+  if (numeric == null) return 0.45;
+  return numeric > 1 ? numeric / 100 : numeric;
 }
 
 function hasPrecipSignal(hour = {}) {
   const precipType = String(hour.precipType || "").toLowerCase();
-  const probability = Number.isFinite(hour.precipProbability)
-    ? hour.precipProbability
-    : 0;
-  const amount = Number.isFinite(hour.precipAmount)
-    ? hour.precipAmount
-    : 0;
-  const code = Number.isFinite(hour.weatherCode) ? hour.weatherCode : null;
+  const probability = normalizeProbability(hour.precipProbability);
+  const amount = toFiniteNumber(hour.precipAmount, 0);
+  const code = toFiniteNumber(hour.weatherCode, null);
 
   return (
     amount >= 0.005 ||
@@ -724,13 +720,23 @@ function hasPrecipSignal(hour = {}) {
 
 function getPrecipLabel(hour = {}) {
   const precipType = String(hour.precipType || "").toLowerCase();
-  const code = Number.isFinite(hour.weatherCode) ? hour.weatherCode : null;
+  const code = toFiniteNumber(hour.weatherCode, null);
 
   if (code >= 95 || /thunder|storm/.test(precipType)) return "thunderstorms";
   if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86) || /snow|sleet|ice|freezing/.test(precipType)) return "wintry precipitation";
   if (/drizzle|sprinkle/.test(precipType)) return "light precipitation";
   if ((code >= 80 && code <= 82) || /shower/.test(precipType)) return "showers";
   return "rain";
+}
+
+function toFiniteNumber(value, fallback = 0) {
+  const numeric = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(numeric) ? numeric : fallback;
+}
+
+function normalizeProbability(value) {
+  const numeric = toFiniteNumber(value, 0);
+  return numeric > 1 ? numeric / 100 : numeric;
 }
 
 function getDaylightBounds(timestamp, daily = []) {
