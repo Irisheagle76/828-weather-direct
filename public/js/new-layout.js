@@ -2,7 +2,7 @@
 // AVL WEATHER — V3 LAYOUT (STABLE + UNIFIED)
 // ============================================================
 
-import { getWeatherForUI } from '/js/adapters/weather-adapter.js?v=20260521-hourly-sky';
+import { getWeatherForUI } from '/js/adapters/weather-adapter.js?v=20260526-pressure-scroll';
 import { calculateComfort } from '/js/intel/comfort.js';
 import { generateNarrative } from '/js/intel/synthesizer/index.js?v=20260505-tomorrowvoice';
 import { buildHumanActionIntelFS } from '/js/intel/human-action-feelscore.js?v=20260513-feelscore-dip-threshold';
@@ -131,6 +131,12 @@ function normalizeCurrent(c = {}) {
     uvIndex:
       c.uvIndex ??
       c.uv_index ??
+      null,
+
+    pressure:
+      c.pressure ??
+      c.air_pressure ??
+      c.sea_level_pressure ??
       null,
 
     // 🌧️ optional but helpful for consistency
@@ -893,7 +899,9 @@ function renderHeaderMetrics(current, tempest = {}, hourly = []) {
   // ---------------------------
   const toF = (c) => (c * 9) / 5 + 32;
   const toMPH = (ms) => ms * 2.237;
+  const toInHg = (hpa) => hpa * 0.0295299830714;
   const round = (v) => (Number.isFinite(v) ? Math.round(v) : "--");
+  const pressureFmt = (v) => (Number.isFinite(v) ? v.toFixed(2) : "--");
 
 // ---------------------------
 // temperature
@@ -934,6 +942,22 @@ const gustRaw =
 
 const uvRaw = getCurrentUvIndex(current, hourly);
 
+// ---------------------------
+// air pressure
+// ---------------------------
+const pressureSource =
+  tempest?.pressure ??
+  current.pressure ??
+  current.air_pressure ??
+  current.sea_level_pressure ??
+  null;
+
+const pressureRaw = Number.isFinite(pressureSource)
+  ? pressureSource > 100
+    ? toInHg(pressureSource)
+    : pressureSource
+  : null;
+
   // ---------------------------
   // normalized values
   // ---------------------------
@@ -943,6 +967,7 @@ const uvRaw = getCurrentUvIndex(current, hourly);
   const wind = round(windRaw);
   const gust = round(gustRaw);
   const uv = Number.isFinite(uvRaw) ? Math.round(uvRaw) : null;
+  const pressure = pressureFmt(pressureRaw);
 
 // ---------------------------
 // wind display logic
@@ -992,6 +1017,12 @@ const windHTML = showGust
       ${windHTML}
     </div>
 
+    <div class="metric-chip pressure">
+      <span class="metric-icon" aria-hidden="true">&#127777;&#65039;</span>
+      <span class="label">Pressure</span>
+      <span class="value">${pressure}<span class="unit"> inHg</span></span>
+    </div>
+
     ${uv != null ? `
       <div class="metric-chip uv">
         <span class="metric-icon" aria-hidden="true">☀️</span>
@@ -1000,6 +1031,26 @@ const windHTML = showGust
       </div>
     ` : ""}
   `;
+
+  enableMetricWheelScroll(container);
+}
+
+function enableMetricWheelScroll(container) {
+  if (!container || container.dataset.wheelScrollBound === "true") return;
+
+  container.dataset.wheelScrollBound = "true";
+  container.addEventListener("wheel", (event) => {
+    if (container.scrollWidth <= container.clientWidth) return;
+
+    const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY)
+      ? event.deltaX
+      : event.deltaY;
+
+    if (!delta) return;
+
+    event.preventDefault();
+    container.scrollLeft += delta;
+  }, { passive: false });
 }
 
 function resolveHeaderCurrent(data = {}, hourly = []) {

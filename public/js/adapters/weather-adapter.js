@@ -70,6 +70,12 @@ function adaptCurrent(c) {
       c.wind_gust ??
       null,
 
+    pressure:
+      c.pressure ??
+      c.air_pressure ??
+      c.sea_level_pressure ??
+      null,
+
     precipAmount: effectivePrecip,
     precipProbability:
       Number.isFinite(c.precipProbability)

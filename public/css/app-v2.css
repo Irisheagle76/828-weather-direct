@@ -4467,6 +4467,7 @@ body {
 .metric-chip.humidity,
 .metric-chip.dew,
 .metric-chip.wind,
+.metric-chip.pressure,
 .metric-chip.uv {
   width: auto;
   flex: 0 0 auto;
@@ -4500,6 +4501,11 @@ body {
 
 .metric-chip.uv {
   width: 94px;
+}
+
+.metric-chip.pressure {
+  width: 156px;
+  padding-inline: 14px;
 }
 
 .metric-chip.wind .value {
@@ -4594,6 +4600,7 @@ body {
   .metric-chip.humidity,
   .metric-chip.dew,
   .metric-chip.wind,
+  .metric-chip.pressure,
   .metric-chip.uv {
     flex: 0 0 auto;
     min-height: 52px;
@@ -4617,6 +4624,10 @@ body {
   .metric-chip.wind {
     width: 156px;
     grid-column: auto;
+  }
+
+  .metric-chip.pressure {
+    width: 138px;
   }
 
   .metric-chip.uv {
