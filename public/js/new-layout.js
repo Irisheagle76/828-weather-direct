@@ -2,7 +2,7 @@
 // AVL WEATHER — V3 LAYOUT (STABLE + UNIFIED)
 // ============================================================
 
-import { getWeatherForUI } from '/js/adapters/weather-adapter.js?v=20260526-pressure-scroll';
+import { getWeatherForUI } from '/js/adapters/weather-adapter.js?v=20260526-observation-arrows';
 import { calculateComfort } from '/js/intel/comfort.js';
 import { generateNarrative } from '/js/intel/synthesizer/index.js?v=20260505-tomorrowvoice';
 import { buildHumanActionIntelFS } from '/js/intel/human-action-feelscore.js?v=20260513-feelscore-dip-threshold';
@@ -1032,13 +1032,28 @@ const windHTML = showGust
     ` : ""}
   `;
 
-  enableMetricWheelScroll(container);
+  enableMetricScroller(container);
 }
 
-function enableMetricWheelScroll(container) {
-  if (!container || container.dataset.wheelScrollBound === "true") return;
+function enableMetricScroller(container) {
+  if (!container || container.dataset.scrollerBound === "true") return;
 
-  container.dataset.wheelScrollBound = "true";
+  container.dataset.scrollerBound = "true";
+
+  const scrollByStep = (direction) => {
+    container.scrollBy({
+      left: direction * Math.max(180, container.clientWidth * 0.62),
+      behavior: "smooth"
+    });
+  };
+
+  document.querySelectorAll("[data-metric-scroll]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const direction = Number(button.dataset.metricScroll) || 1;
+      scrollByStep(direction);
+    });
+  });
+
   container.addEventListener("wheel", (event) => {
     if (container.scrollWidth <= container.clientWidth) return;
 
@@ -1051,6 +1066,40 @@ function enableMetricWheelScroll(container) {
     event.preventDefault();
     container.scrollLeft += delta;
   }, { passive: false });
+
+  container.addEventListener("keydown", (event) => {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    scrollByStep(event.key === "ArrowRight" ? 1 : -1);
+  });
+
+  let isDragging = false;
+  let startX = 0;
+  let startLeft = 0;
+
+  container.addEventListener("pointerdown", (event) => {
+    if (container.scrollWidth <= container.clientWidth) return;
+    isDragging = true;
+    startX = event.clientX;
+    startLeft = container.scrollLeft;
+    container.classList.add("is-dragging");
+    container.setPointerCapture?.(event.pointerId);
+  });
+
+  container.addEventListener("pointermove", (event) => {
+    if (!isDragging) return;
+    event.preventDefault();
+    container.scrollLeft = startLeft - (event.clientX - startX);
+  });
+
+  const stopDragging = () => {
+    isDragging = false;
+    container.classList.remove("is-dragging");
+  };
+
+  container.addEventListener("pointerup", stopDragging);
+  container.addEventListener("pointercancel", stopDragging);
+  container.addEventListener("pointerleave", stopDragging);
 }
 
 function resolveHeaderCurrent(data = {}, hourly = []) {

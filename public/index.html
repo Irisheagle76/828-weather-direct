@@ -5,7 +5,7 @@
   <title>828 Weather Direct </title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <link rel="stylesheet" href="/css/app-v2.css?v=20260526-pressure-scroll" />
+  <link rel="stylesheet" href="/css/app-v2.css?v=20260526-observation-arrows" />
 </head>
 
 <body>
@@ -33,7 +33,11 @@
 
   <div class="obs-scroll-cue" aria-hidden="true">Scroll sideways for more observations -></div>
 
-  <div id="metric-chips"></div>
+  <div class="metric-scroll-wrap">
+    <button class="metric-scroll-btn metric-scroll-left" type="button" aria-label="Scroll observations left" data-metric-scroll="-1">&lsaquo;</button>
+    <div id="metric-chips" tabindex="0" aria-label="Current weather observations"></div>
+    <button class="metric-scroll-btn metric-scroll-right" type="button" aria-label="Scroll observations right" data-metric-scroll="1">&rsaquo;</button>
+  </div>
 
 </div>
 
@@ -79,7 +83,7 @@
        SCRIPT
        ===================================== -->
   <script type="module">
-    import { renderNewLayout } from '/js/new-layout.js?v=20260526-pressure-scroll';
+    import { renderNewLayout } from '/js/new-layout.js?v=20260526-observation-arrows';
     import { subscribeUserToPush } from '/js/notifications/subscribeClient.js?v=20260518-vapid-trim';
 
     const app = document.getElementById('app');
