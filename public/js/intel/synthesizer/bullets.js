@@ -15,6 +15,11 @@ export const bulletPools = {
     "The air feels light",
     "Low humidity helps"
   ],
+  humid: [
+    "Humidity is noticeable",
+    "The air feels a bit heavier",
+    "Moisture creeps up"
+  ],
   wind: [
     "Winds stay light",
     "A light breeze at times",
@@ -41,9 +46,27 @@ function pick(arr) {
 // BULLET BUILDER (PRIORITIZED + CLEAN)
 // ------------------------------------------------------------
 export function buildBullets(intel = {}) {
+  const dewPoint = intel?.signals?.dewPoint ?? intel?.dewPoint ?? intel?.dewpointF ?? null;
+  const wind = intel?.signals?.wind ?? intel?.windSpeed ?? intel?.wind ?? null;
+  const cloud = intel?.signals?.cloudCover ?? intel?.cloudCover ?? intel?.clouds ?? null;
+
+  const moistureBullet = Number.isFinite(dewPoint) && dewPoint >= 60
+    ? pick(bulletPools.humid)
+    : pick(bulletPools.moisture);
+
+  const windBullet = Number.isFinite(wind) && wind >= 10
+    ? "Breeze becomes noticeable"
+    : pick(bulletPools.wind);
+
+  const lightBullet = Number.isFinite(cloud) && cloud > 75
+    ? "Clouds are more common"
+    : Number.isFinite(cloud) && cloud >= 35
+      ? "A mix of sun and clouds"
+      : pick(bulletPools.light);
+
   return [
-    pick(bulletPools.moisture),
-    pick(bulletPools.wind),
-    pick(bulletPools.light)
+    moistureBullet,
+    windBullet,
+    lightBullet
   ].filter(Boolean);
 }

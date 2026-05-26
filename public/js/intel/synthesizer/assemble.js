@@ -2,10 +2,10 @@
 // NARRATIVE ASSEMBLER — v11 (FULL CLEAN, NO LOSS)
 // ============================================================
 
-import { categories } from "./categories.js";
+import { categories } from "./categories.js?v=20260526-natural-narrative";
 import { temporal } from "./temporal.js";
-import { phrases } from "./phrases.js";
-import { buildBullets } from "./bullets.js";
+import { phrases } from "./phrases.js?v=20260526-natural-narrative";
+import { buildBullets } from "./bullets.js?v=20260526-natural-narrative";
 
 // ------------------------------------------------------------
 // HELPERS
@@ -204,6 +204,85 @@ function pickLightPhrase(intel) {
   return random(phrases.light.filtered);
 }
 
+function describeComfortSetup(category, isGoldilocks, dayType) {
+  const subject =
+    dayType === "tomorrow"
+      ? "Tomorrow"
+      : dayType === "tonight"
+        ? "Tonight"
+        : "Today";
+
+  if (isGoldilocks || category === "veryComfortable") {
+    return `${subject} should be easy to enjoy outside`;
+  }
+
+  if (category === "comfortable") {
+    return `${subject} should work well for most plans`;
+  }
+
+  if (category === "slightlyUncomfortable") {
+    return `${subject} is still workable, but a few rough edges show up`;
+  }
+
+  if (category === "uncomfortable") {
+    return `${subject} looks less comfortable for longer stretches outside`;
+  }
+
+  if (category === "harsh") {
+    return `${subject} brings a tougher setup, so outdoor plans may need more care`;
+  }
+
+  return `${subject} looks manageable overall`;
+}
+
+function describeTemperature(intel) {
+  const t = getTemp(intel);
+
+  if (t <= 35) return "cold air hangs on";
+  if (t <= 50) return "it starts cool";
+  if (t <= 75) return "temperatures stay mild";
+  if (t <= 88) return "it turns warmer by afternoon";
+  return "heat builds through the afternoon";
+}
+
+function describeMoisture(intel) {
+  const dp = getDewpoint(intel);
+
+  if (dp < 50) return "the air stays dry";
+  if (dp < 60) return "humidity stays manageable";
+  if (dp < 67) return "humidity is a little more noticeable";
+  return "the air feels muggy";
+}
+
+function describeWind(intel) {
+  const gust = getGust(intel);
+  const wind = getWind(intel);
+
+  if (gust >= 30) return "gusts show up at times";
+  if (wind >= 15) return "winds become noticeable";
+  if (wind >= 7) return "a light breeze develops";
+  return "winds stay light";
+}
+
+function describeSky(intel) {
+  const cloud = getCloud(intel);
+
+  if (cloud > 80) return "clouds dominate the sky";
+  if (cloud < 30) return "sunshine does most of the work";
+  return "sun mixes with passing clouds";
+}
+
+function joinClauses(clauses = []) {
+  if (clauses.length === 1) return clauses[0];
+  if (clauses.length === 2) return `${clauses[0]}, and ${clauses[1]}`;
+  return `${clauses.slice(0, -1).join(", ")}, and ${clauses.at(-1)}`;
+}
+
+function sentenceCase(text = "") {
+  const trimmed = text.trim();
+  return trimmed ? trimmed.charAt(0).toUpperCase() + trimmed.slice(1) : "";
+}
+
 function softenTemporalIntro(frame, baseNarrative) {
   const base = (baseNarrative || "").trim();
   const lower = base.charAt(0).toLowerCase() + base.slice(1);
@@ -311,6 +390,19 @@ function buildNarrative(intel, dayType, category, isGoldilocks) {
   }
 
   const temporalFrame = temporal.choose(dayType, isGoldilocks);
+  const setup = describeComfortSetup(category, isGoldilocks, dayType);
+  const details = [
+    describeTemperature(safeIntel),
+    describeWind(safeIntel),
+    describeMoisture(safeIntel),
+    describeSky(safeIntel)
+  ].filter(Boolean);
+
+  return {
+    narrative: polishNarrative(`${setup}. ${sentenceCase(joinClauses(details))}.`),
+    temporal: temporalFrame
+  };
+
   const base = getCategoryTemplate(category, isGoldilocks);
 
   const score = safeIntel?.score ?? 75;

@@ -314,7 +314,7 @@ function applyTrendFlavor(text, shortTerm = {}, periodContext = {}) {
   if (tempTrend >= 2) additions.push("temperatures climb a bit");
   if (tempTrend <= -2) additions.push("temperatures ease a little");
 
-  if (dewTrend >= 2) additions.push("humidity ticks up");
+  if (dewTrend >= 2 && !/humidity|muggy|moisture/i.test(text)) additions.push("humidity edges up");
   if (dewTrend <= -2) additions.push("the air dries out");
 
   if (windTrend >= 3) additions.push("the breeze picks up");

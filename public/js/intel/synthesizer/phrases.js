@@ -65,7 +65,7 @@ export const phrases = {
     humid: [
       "humidity starting to creep in",
       "a slightly heavier feel at times",
-      "some moisture noticeable in the air"
+      "humidity feeling a little more noticeable"
     ],
 
     muggy: [

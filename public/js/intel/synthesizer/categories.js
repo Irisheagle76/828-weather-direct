@@ -46,7 +46,7 @@ export const categories = {
       "Mostly comfortable despite small changes",
       "A solid day overall",
       "Easy enough for most plans",
-      "Mostly comfortable despite minor shifts",
+      "Mostly comfortable overall",
       "A decent day with a few small wrinkles"
     ],
 
