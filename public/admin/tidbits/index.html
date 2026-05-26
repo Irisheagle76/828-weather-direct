@@ -1099,14 +1099,25 @@
   }
 
   async function uploadPulseMedia(file) {
+    const signatureRes = await fetch("/api/router?route=tidbits/pulse-upload-signature", {
+      method: "POST"
+    });
+
+    if (!signatureRes.ok) {
+      const text = await signatureRes.text();
+      throw new Error(`Could not prepare upload: ${signatureRes.status} - ${text}`);
+    }
+
+    const uploadConfig = await signatureRes.json();
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("upload_preset", "pulse_upload");
+    formData.append("api_key", uploadConfig.apiKey);
+    formData.append("timestamp", uploadConfig.timestamp);
+    formData.append("signature", uploadConfig.signature);
+    formData.append("folder", uploadConfig.folder);
 
     const isVideo = file.type.startsWith("video/");
-    const endpoint = isVideo
-      ? "https://api.cloudinary.com/v1_1/dz45rrije/video/upload"
-      : "https://api.cloudinary.com/v1_1/dz45rrije/image/upload";
+    const endpoint = `https://api.cloudinary.com/v1_1/${uploadConfig.cloudName}/auto/upload`;
 
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
@@ -1135,7 +1146,14 @@
             reject(err);
           }
         } else {
-          reject(new Error(`Upload failed: ${xhr.status}`));
+          let message = `Upload failed: ${xhr.status}`;
+          try {
+            const data = JSON.parse(xhr.responseText);
+            if (data?.error?.message) message = data.error.message;
+          } catch (err) {
+            // Keep the status-only message if Cloudinary does not return JSON.
+          }
+          reject(new Error(message));
         }
       };
 
@@ -1340,7 +1358,7 @@ function updateTimestamp() {
 
     } catch (err) {
       console.error(err);
-      setStatus("Error publishing Pulse", "error");
+      setStatus(err.message || "Error publishing Pulse", "error");
     }
 
     publishBtn.disabled = false;
