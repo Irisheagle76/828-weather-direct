@@ -204,13 +204,17 @@ function pickLightPhrase(intel) {
   return random(phrases.light.filtered);
 }
 
-function describeComfortSetup(category, isGoldilocks, dayType) {
-  const subject =
-    dayType === "tomorrow"
-      ? "Tomorrow"
-      : dayType === "tonight"
-        ? "Tonight"
-        : "Today";
+function describePeriodSubject(intel, dayType) {
+  const speaksFor = intel?.context?.speaksFor;
+
+  if (/rest of today/i.test(speaksFor || "")) return "The rest of today";
+  if (/tonight/i.test(speaksFor || "") || dayType === "tonight") return "Tonight";
+  if (dayType === "tomorrow") return "Tomorrow";
+  return "Today";
+}
+
+function describeComfortSetup(intel, category, isGoldilocks, dayType) {
+  const subject = describePeriodSubject(intel, dayType);
 
   if (isGoldilocks || category === "veryComfortable") {
     return `${subject} should be easy to enjoy outside`;
@@ -390,7 +394,7 @@ function buildNarrative(intel, dayType, category, isGoldilocks) {
   }
 
   const temporalFrame = temporal.choose(dayType, isGoldilocks);
-  const setup = describeComfortSetup(category, isGoldilocks, dayType);
+  const setup = describeComfortSetup(safeIntel, category, isGoldilocks, dayType);
   const details = [
     describeTemperature(safeIntel),
     describeWind(safeIntel),
