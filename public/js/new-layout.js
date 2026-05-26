@@ -2,10 +2,10 @@
 // AVL WEATHER — V3 LAYOUT (STABLE + UNIFIED)
 // ============================================================
 
-import { getWeatherForUI } from '/js/adapters/weather-adapter.js?v=20260526-feelscore-rescue';
+import { getWeatherForUI } from '/js/adapters/weather-adapter.js?v=20260526-mb-hourly-backup';
 import { calculateComfort } from '/js/intel/comfort.js';
 import { generateNarrative } from '/js/intel/synthesizer/index.js?v=20260505-tomorrowvoice';
-import { buildHumanActionIntelFS } from '/js/intel/human-action-feelscore.js?v=20260526-feelscore-rescue';
+import { buildHumanActionIntelFS } from '/js/intel/human-action-feelscore.js?v=20260526-mb-hourly-backup';
 
 import { renderPulseV2 } from '/js/modules/renderPulseV2.js';
 import { renderSubstackV2 } from '/js/modules/renderSubstackV2.js?v=20260512-update-tagline';
@@ -145,6 +145,74 @@ function normalizeCurrent(c = {}) {
       c.precip_rate ??
       0
   };
+}
+
+function currentToFallbackHour(current = null, tempest = null) {
+  const source = current || tempest;
+  if (!source) return null;
+
+  const toF = value => Number.isFinite(value) ? (value * 9) / 5 + 32 : null;
+  const toMPH = value => Number.isFinite(value) ? value * 2.237 : null;
+  const timestamp = source.timestamp ?? Date.now();
+  const temperatureF =
+    source.temperatureF ??
+    source.temp ??
+    source.temperature ??
+    toF(source.air_temperature);
+
+  if (!Number.isFinite(temperatureF)) return null;
+
+  const precipAmount =
+    source.precipAmount ??
+    source.precipitation ??
+    source.rain ??
+    0;
+
+  return {
+    timestamp,
+    temperatureF,
+    dewpointF:
+      source.dewpointF ??
+      source.dewPoint ??
+      toF(source.dew_point),
+    relativeHumidity:
+      source.relativeHumidity ??
+      source.relative_humidity ??
+      source.rh ??
+      source.humidity ??
+      null,
+    windSpeed:
+      source.windSpeed ??
+      source.wind ??
+      toMPH(source.wind_avg) ??
+      0,
+    windGust:
+      source.windGust ??
+      toMPH(source.wind_gust) ??
+      null,
+    precipAmount,
+    precipProbability:
+      source.precipProbability ??
+      source.precipitation_probability ??
+      0,
+    isRainingNow:
+      source.isRainingNow ??
+      (((source.precipRate ?? 0) > 0) || precipAmount >= 0.005),
+    cloudCover: source.cloudCover ?? source.cloud_cover ?? null,
+    uvIndex: source.uvIndex ?? source.uv_index ?? source.uv ?? null
+  };
+}
+
+function buildHourlyFallbackFromCurrent(current = null, tempest = null) {
+  const base = currentToFallbackHour(current, tempest);
+  if (!base) return [];
+
+  const start = Date.now();
+  return [0, 1, 2].map(i => ({
+    ...base,
+    timestamp: start + i * 60 * 60 * 1000,
+    isObservationFallback: true
+  }));
 }
 
 // ------------------------------------------------------------
@@ -292,9 +360,13 @@ console.log("CURRENT DEBUG:", {
     // ------------------------------------------------------------
     // HUMAN INTEL (FIXED)
     // ------------------------------------------------------------
+    const hourlyForComfort = hourly.length
+      ? hourly
+      : buildHourlyFallbackFromCurrent(current, tempest);
+
     const human = buildHumanActionIntelFS({
       ...data,
-      hourly,
+      hourly: hourlyForComfort,
       current,
       tempest
     });
@@ -303,8 +375,8 @@ console.log("CURRENT DEBUG:", {
     // CORE RENDER
     // ------------------------------------------------------------
    
-  renderFeelScore(human?.feelscore, hourly);
-    renderTimeline(hourly, data?.daily, current, tempest);
+  renderFeelScore(human?.feelscore, hourlyForComfort);
+    renderTimeline(hourlyForComfort, data?.daily, current, tempest);
 renderTomorrow(human?.tomorrow);
 renderForecastLink();
 renderHikingGuideLink();
@@ -486,6 +558,10 @@ function renderTimeline(hourly, daily = [], current = null, tempest = null) {
   const container = document.getElementById('timeline');
 
   if (!Array.isArray(hourly) || !hourly.length) {
+    hourly = buildHourlyFallbackFromCurrent(current, tempest);
+  }
+
+  if (!hourly.length) {
     container.innerHTML = '';
     return;
   }
@@ -595,6 +671,9 @@ if (i < 3) {
         <div class="timeline-best-pill">${best}</div>
       </div>
       <div class="timeline-row">${html}</div>
+      ${displayHours.some(h => h.isObservationFallback) ? `
+        <div class="timeline-editorial">Hourly forecast data is temporarily unavailable, so this strip is using current observations as a short-term backup.</div>
+      ` : ""}
       ${editorial ? `<div class="timeline-editorial">${editorial}</div>` : ""}
     </div>
   `;
@@ -899,9 +978,9 @@ function renderHeaderMetrics(current, tempest = {}, hourly = []) {
   // ---------------------------
   const toF = (c) => (c * 9) / 5 + 32;
   const toMPH = (ms) => ms * 2.237;
-  const toInHg = (hpa) => hpa * 0.0295299830714;
+  const toMillibars = (value) => value < 100 ? value * 33.8639 : value;
   const round = (v) => (Number.isFinite(v) ? Math.round(v) : "--");
-  const pressureFmt = (v) => (Number.isFinite(v) ? v.toFixed(2) : "--");
+  const pressureFmt = (v) => (Number.isFinite(v) ? Math.round(v) : "--");
 
 // ---------------------------
 // temperature
@@ -953,9 +1032,7 @@ const pressureSource =
   null;
 
 const pressureRaw = Number.isFinite(pressureSource)
-  ? pressureSource > 100
-    ? toInHg(pressureSource)
-    : pressureSource
+  ? toMillibars(pressureSource)
   : null;
 
   // ---------------------------
@@ -1020,7 +1097,7 @@ const windHTML = showGust
     <div class="metric-chip pressure">
       <span class="metric-icon" aria-hidden="true">&#127777;&#65039;</span>
       <span class="label">Pressure</span>
-      <span class="value">${pressure}<span class="unit"> inHg</span></span>
+      <span class="value">${pressure}<span class="unit"> mb</span></span>
     </div>
 
     ${uv != null ? `

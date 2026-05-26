@@ -72,7 +72,7 @@ function buildCurrentFallbackHour(raw = {}) {
     0;
 
   return {
-    timestamp: getTs(source) ?? Date.now(),
+    timestamp: Math.max(getTs(source) ?? 0, Date.now() + 1000),
     temperatureF,
     dewpointF,
     relativeHumidity:
@@ -90,6 +90,29 @@ function buildCurrentFallbackHour(raw = {}) {
     isRainingNow:
       source.isRainingNow ??
       (((source.precipRate ?? 0) > 0) || precipAmount >= 0.005)
+  };
+}
+
+function buildObservationFallbackNarrative(ctx, label) {
+  if (!ctx) return fallback(label);
+
+  return {
+    label,
+    speaksFor: label,
+    score: ctx.score,
+    headline: label === "tomorrow"
+      ? "Hourly forecast temporarily unavailable"
+      : "Current observations backup",
+    narrative: label === "tomorrow"
+      ? "Using current observations as a comfort backup until the hourly forecast returns."
+      : "Using current observations until the hourly forecast returns.",
+    bullets: ["Current observations are available", "Hourly forecast data is temporarily unavailable"],
+    emoji: resolveComfortIcon({
+      score: ctx.score,
+      temp: ctx.snapshot?.temp,
+      dewPoint: ctx.snapshot?.dewPoint,
+      wind: ctx.wind
+    })
   };
 }
 
@@ -611,7 +634,9 @@ export function buildHumanActionIntelFS(raw) {
   const todayCtx = buildPeriod(today, "today", currentPeriod);
   const tomorrowCtx = buildPeriod(tomorrow, "tomorrow");
   const feelscore = buildFinalNarrative(todayCtx, "today", currentPeriod);
-  const tomorrowNarrative = buildFinalNarrative(tomorrowCtx, "tomorrow");
+  const tomorrowNarrative = tomorrowCtx
+    ? buildFinalNarrative(tomorrowCtx, "tomorrow")
+    : buildObservationFallbackNarrative(todayCtx, "tomorrow");
 
   return diversifyNarratives(feelscore, tomorrowNarrative, todayCtx, tomorrowCtx);
 }
