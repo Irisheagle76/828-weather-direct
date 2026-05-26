@@ -1099,25 +1099,24 @@
   }
 
   async function uploadPulseMedia(file) {
-    const signatureRes = await fetch("/api/router?route=tidbits/pulse-upload-signature", {
-      method: "POST"
-    });
-
-    if (!signatureRes.ok) {
-      const text = await signatureRes.text();
-      throw new Error(`Could not prepare upload: ${signatureRes.status} - ${text}`);
-    }
-
-    const uploadConfig = await signatureRes.json();
+    const isVideo = file.type.startsWith("video/");
+    const uploadConfig = await getSignedUploadConfig();
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("api_key", uploadConfig.apiKey);
-    formData.append("timestamp", uploadConfig.timestamp);
-    formData.append("signature", uploadConfig.signature);
-    formData.append("folder", uploadConfig.folder);
 
-    const isVideo = file.type.startsWith("video/");
-    const endpoint = `https://api.cloudinary.com/v1_1/${uploadConfig.cloudName}/auto/upload`;
+    if (uploadConfig) {
+      formData.append("api_key", uploadConfig.apiKey);
+      formData.append("timestamp", uploadConfig.timestamp);
+      formData.append("signature", uploadConfig.signature);
+      formData.append("folder", uploadConfig.folder);
+    } else {
+      formData.append("upload_preset", "pulse_upload");
+    }
+
+    const cloudName = uploadConfig?.cloudName || "dz45rrije";
+    const endpoint = uploadConfig
+      ? `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`
+      : `https://api.cloudinary.com/v1_1/${cloudName}/${isVideo ? "video" : "image"}/upload`;
 
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
@@ -1161,6 +1160,23 @@
 
       xhr.send(formData);
     });
+  }
+
+  async function getSignedUploadConfig() {
+    try {
+      const res = await fetch("/api/router?route=tidbits/pulse-upload-signature", {
+        method: "POST"
+      });
+
+      if (res.ok) return await res.json();
+
+      const text = await res.text();
+      console.warn("Signed upload unavailable, using preset fallback:", text);
+      return null;
+    } catch (err) {
+      console.warn("Signed upload unavailable, using preset fallback:", err);
+      return null;
+    }
   }
 
   // -----------------------------
