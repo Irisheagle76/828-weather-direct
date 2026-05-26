@@ -97,6 +97,15 @@ function getPrecipSignal(intel) {
   return "none";
 }
 
+function formatTomorrowPrecipTiming(timing) {
+  const starts = timing?.starts;
+
+  if (/overnight|morning/i.test(starts || "")) return "early tomorrow";
+  if (/afternoon/i.test(starts || "")) return "tomorrow afternoon";
+  if (/evening|tonight/i.test(starts || "")) return "tomorrow evening";
+  return "tomorrow";
+}
+
 function buildPrecipVoice(intel, dayType) {
   const signal = getPrecipSignal(intel);
   if (signal === "none" || signal === "low") return null;
@@ -105,7 +114,7 @@ function buildPrecipVoice(intel, dayType) {
   const isTonight = dayType === "tonight";
   const timingPhrase =
     dayType === "tomorrow"
-      ? "tomorrow"
+      ? formatTomorrowPrecipTiming(timing)
       : timing?.starts || (isTonight ? "tonight" : "later today");
 
   const headlineTiming =
@@ -115,7 +124,7 @@ function buildPrecipVoice(intel, dayType) {
 
   const sentenceTiming =
     dayType === "tomorrow"
-      ? "tomorrow"
+      ? timingPhrase
       : isTonight
         ? (timingPhrase === "tonight" ? "as the night goes on" : timingPhrase)
         : `starting ${timingPhrase}`;
@@ -131,8 +140,8 @@ function buildPrecipVoice(intel, dayType) {
     return {
       headline: `Rain moves in ${headlineTiming}`,
       narrative: isTonight
-        ? `${prefix}, rain is likely to shape the remaining hours ${sentenceTiming}, even if temperatures still feel mild.`
-        : `${prefix}, rain is likely to become one of the defining parts of the day ${sentenceTiming}, even if temperatures still feel mild.`,
+        ? `${prefix} has rain in the picture ${sentenceTiming}. Temperatures stay mild, but wet hours will shape how it feels.`
+        : `${prefix} has rain in the picture ${sentenceTiming}. Temperatures stay mild, but wet hours will shape the day.`,
       bullets: [
         `Rain likely ${timingPhrase}`,
         "Outdoor plans may need adjusting",
@@ -144,7 +153,7 @@ function buildPrecipVoice(intel, dayType) {
   if (signal === "moderate") {
     return {
       headline: "Rain chances return",
-      narrative: `${prefix}, it is not necessarily a washout, but showers are likely enough ${sentenceTiming} to shape how ${isTonight ? "tonight" : "the day"} feels.`,
+      narrative: `${prefix} does not look like a washout, but showers are possible ${sentenceTiming}. Keep rain in the plan, especially for longer stretches outside.`,
       bullets: [
         `Showers possible ${timingPhrase}`,
         "Keep rain in the plan",

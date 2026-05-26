@@ -157,7 +157,7 @@ function splitDays(hourly, now, periodContext = null) {
 
   for (const h of hourly) {
     if (h._ts >= now && h._ts < currentPeriodEnd) today.push(h);
-    else if (h._ts >= startTomorrow && h._ts < startNext) tomorrow.push(h);
+    if (h._ts >= startTomorrow && h._ts < startNext) tomorrow.push(h);
   }
 
   return { today, tomorrow };
