@@ -21,6 +21,78 @@ function getTs(h) {
   return ts < 1e12 ? ts * 1000 : ts;
 }
 
+function cToF(value) {
+  return Number.isFinite(value) ? (value * 9) / 5 + 32 : null;
+}
+
+function msToMph(value) {
+  return Number.isFinite(value) ? value * 2.237 : null;
+}
+
+function buildCurrentFallbackHour(raw = {}) {
+  const source =
+    raw?.current ||
+    raw?.tempest ||
+    raw?.current_conditions ||
+    null;
+
+  if (!source) return null;
+
+  const temperatureF =
+    source.temperatureF ??
+    source.temp ??
+    source.temperature ??
+    cToF(source.air_temperature);
+
+  if (!Number.isFinite(temperatureF)) return null;
+
+  const dewpointF =
+    source.dewpointF ??
+    source.dewPoint ??
+    source.dew_point_f ??
+    cToF(source.dew_point);
+
+  const windSpeed =
+    source.windSpeed ??
+    source.wind ??
+    source.wind_speed ??
+    msToMph(source.wind_avg) ??
+    0;
+
+  const windGust =
+    source.windGust ??
+    source.wind_gust_mph ??
+    msToMph(source.wind_gust) ??
+    null;
+
+  const precipAmount =
+    source.precipAmount ??
+    source.precipitation ??
+    source.rain ??
+    0;
+
+  return {
+    timestamp: getTs(source) ?? Date.now(),
+    temperatureF,
+    dewpointF,
+    relativeHumidity:
+      source.relativeHumidity ??
+      source.relative_humidity ??
+      source.humidity ??
+      null,
+    windSpeed,
+    windGust,
+    precipAmount,
+    precipProbability:
+      source.precipProbability ??
+      source.precipitation_probability ??
+      0,
+    isRainingNow:
+      source.isRainingNow ??
+      (((source.precipRate ?? 0) > 0) || precipAmount >= 0.005)
+  };
+}
+
 // ============================================================
 // ALIGN + SPLIT
 // ============================================================
@@ -519,7 +591,13 @@ function resolveComfortIcon({ score, temp, dewPoint, wind = {} }) {
 // ============================================================
 
 export function buildHumanActionIntelFS(raw) {
-  const rawHourly = raw?.hourly ?? [];
+  const currentFallbackHour = buildCurrentFallbackHour(raw);
+  const rawHourly = raw?.hourly?.length
+    ? raw.hourly
+    : currentFallbackHour
+      ? [currentFallbackHour]
+      : [];
+
   if (!rawHourly.length) return fallbackAll();
 
   const now = Date.now();

@@ -28,6 +28,9 @@ export async function getWeatherForUI({ lat, lon }) {
 function adaptCurrent(c) {
   if (!c) return null;
 
+  const cToF = value => Number.isFinite(value) ? (value * 9) / 5 + 32 : null;
+  const msToMph = value => Number.isFinite(value) ? value * 2.237 : null;
+
   // precipitation already in inches from weather.js
   const precipAmount = Number.isFinite(c.precipitation)
     ? c.precipitation
@@ -44,12 +47,12 @@ function adaptCurrent(c) {
       c.temperatureF ??
       c.temp ??
       c.temperature ??
-      c.air_temperature ??
+      cToF(c.air_temperature) ??
       null,
 
     dewpointF:
       c.dewpointF ??
-      c.dew_point ??
+      cToF(c.dew_point) ??
       null,
 
     relativeHumidity:
@@ -62,12 +65,12 @@ function adaptCurrent(c) {
       c.windSpeed ??
       c.wind_speed ??
       c.wind ??
-      c.wind_avg ??
+      msToMph(c.wind_avg) ??
       0,
 
     windGust:
       c.windGust ??
-      c.wind_gust ??
+      msToMph(c.wind_gust) ??
       null,
 
     pressure:
