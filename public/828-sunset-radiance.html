@@ -223,7 +223,7 @@
       position: relative;
       z-index: 2;
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       margin-top: 56px;
       border-top: 1px solid rgba(255, 253, 248, 0.22);
     }
@@ -1011,10 +1011,6 @@
             <b id="heroSunset">--</b>
             <span>Next local sunset timing from the forecast feed</span>
           </div>
-          <div class="stat">
-            <b id="heroRefresh">5 sec</b>
-            <span>Sky frame refresh cadence while the page is open</span>
-          </div>
         </div>
       </div>
     </header>
@@ -1033,10 +1029,6 @@
       <section class="section">
         <div class="section-heading">
           <h2>Sky Snapshot</h2>
-          <p>
-            This uses the same camera frame and sky-intel stream behind the sky preview,
-            then layers in the evening forecast to judge color potential.
-          </p>
         </div>
 
         <div class="radiance-layout">
@@ -1235,7 +1227,6 @@
       heroScore: document.querySelector("#heroScore"),
       heroSky: document.querySelector("#heroSky"),
       heroSunset: document.querySelector("#heroSunset"),
-      heroRefresh: document.querySelector("#heroRefresh"),
       liveStatus: document.querySelector("#liveStatus"),
       cloudStatus: document.querySelector("#cloudStatus"),
       humidityStatus: document.querySelector("#humidityStatus"),
@@ -1573,7 +1564,6 @@
       els.indexDetail.textContent = radiance.detail;
       els.indexMeter.style.width = `${isClosed ? 0 : clamp(radiance.score)}%`;
       els.heroSunset.textContent = daily?.sunset ? formatTime(daily.sunset) : "--";
-      els.heroRefresh.textContent = `${Math.round(SKY_REFRESH_MS / 1000)} sec`;
 
       els.cloudStatus.textContent = `Clouds ${pct(sunsetHour?.cloudCover ?? state.skyIntel?.cloud)}`;
       els.humidityStatus.textContent = `Humidity ${pct(sunsetHour?.relativeHumidity)}`;
