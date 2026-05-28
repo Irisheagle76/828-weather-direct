@@ -1,0 +1,1754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>828 Sunset Radiance</title>
+  <style>
+    :root {
+      --ink: #142033;
+      --muted: #617085;
+      --line: #dce5ed;
+      --paper: #f6f2eb;
+      --white: #fffdf8;
+      --blue: #0f4cc4;
+      --blue-dark: #09255f;
+      --blue-soft: #dbe8ff;
+      --orange: #f57d23;
+      --gold: #f7c873;
+      --sunset: #e89b4f;
+      --shadow: 0 24px 60px rgba(11, 30, 67, 0.18);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body.radiance-closed .index-top {
+      background:
+        radial-gradient(circle at 82% 0%, rgba(247, 200, 115, 0.26), transparent 28%),
+        linear-gradient(135deg, #0a1838, #17315f);
+    }
+
+    body.radiance-closed .meter-fill {
+      background: linear-gradient(90deg, rgba(219, 232, 255, 0.28), rgba(247, 200, 115, 0.38));
+    }
+
+    body.radiance-closed .sky-frame img {
+      filter: saturate(0.82) brightness(0.82);
+    }
+
+    body.radiance-closed .sky-chip {
+      background: rgba(20, 32, 51, 0.86);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .site-shell {
+      min-height: 100vh;
+    }
+
+    .hero {
+      position: relative;
+      min-height: 88vh;
+      display: flex;
+      align-items: stretch;
+      color: var(--white);
+      background:
+        linear-gradient(120deg, rgba(8, 28, 71, 0.94), rgba(15, 76, 196, 0.64) 46%, rgba(245, 125, 35, 0.48)),
+        url("js/sky-cam/frame.jpg") center / cover no-repeat;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(8, 19, 42, 0.92) 0%, rgba(8, 19, 42, 0.56) 46%, rgba(8, 19, 42, 0.16) 100%),
+        linear-gradient(0deg, rgba(8, 19, 42, 0.88) 0%, rgba(8, 19, 42, 0.08) 45%);
+    }
+
+    .nav {
+      position: absolute;
+      z-index: 3;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 22px clamp(18px, 4vw, 56px);
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .brand strong {
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+
+    .brand span {
+      color: rgba(255, 253, 248, 0.72);
+      font-size: 12px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      color: rgba(255, 253, 248, 0.84);
+      font-size: 14px;
+    }
+
+    .weather-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      padding: 0 14px;
+      border: 1px solid rgba(255, 253, 248, 0.35);
+      border-radius: 6px;
+      background: rgba(255, 253, 248, 0.1);
+      backdrop-filter: blur(12px);
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 2;
+      width: min(1160px, calc(100% - 36px));
+      margin: 0 auto;
+      padding: 132px 0 42px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      align-content: end;
+    }
+
+    .hero-copy {
+      width: min(760px, 100%);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 18px;
+      color: rgba(255, 253, 248, 0.78);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 34px;
+      height: 2px;
+      background: var(--orange);
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 780px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(50px, 9vw, 108px);
+      line-height: 0.94;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .hero-copy p {
+      max-width: 610px;
+      margin: 22px 0 0;
+      color: rgba(255, 253, 248, 0.84);
+      font-size: clamp(17px, 2vw, 21px);
+      line-height: 1.55;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      padding: 0 18px;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .button.primary {
+      color: #112347;
+      background: var(--white);
+    }
+
+    .button.secondary {
+      color: var(--white);
+      border-color: rgba(255, 253, 248, 0.36);
+      background: rgba(255, 253, 248, 0.08);
+    }
+
+    .hero-strip {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-top: 56px;
+      border-top: 1px solid rgba(255, 253, 248, 0.22);
+    }
+
+    .stat {
+      min-width: 0;
+      padding: 18px 18px 4px 0;
+    }
+
+    .stat b {
+      display: block;
+      color: var(--white);
+      font-size: 22px;
+    }
+
+    .stat span {
+      display: block;
+      margin-top: 4px;
+      color: rgba(255, 253, 248, 0.68);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    main {
+      position: relative;
+      z-index: 4;
+    }
+
+    .section {
+      width: min(1160px, calc(100% - 36px));
+      margin: 0 auto;
+      padding: 72px 0;
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 26px;
+    }
+
+    .section-heading h2 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(32px, 5vw, 56px);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .section-heading p {
+      max-width: 500px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.55;
+    }
+
+    .status-bar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 1px solid var(--line);
+      background: rgba(246, 242, 235, 0.93);
+      backdrop-filter: blur(14px);
+    }
+
+    .status-inner {
+      width: min(1160px, calc(100% - 36px));
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 12px 0;
+      scrollbar-width: none;
+    }
+
+    .status-inner::-webkit-scrollbar {
+      display: none;
+    }
+
+    .status-pill {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      min-height: 36px;
+      padding: 0 13px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--white);
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .status-pill.live {
+      color: var(--white);
+      border-color: var(--orange);
+      background: var(--orange);
+    }
+
+    .status-pill.closed {
+      color: var(--white);
+      border-color: var(--ink);
+      background: var(--ink);
+    }
+
+    .radiance-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+      gap: 26px;
+      align-items: start;
+    }
+
+    .sky-panel {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--white);
+      box-shadow: 0 12px 36px rgba(11, 30, 67, 0.1);
+    }
+
+    .sky-frame {
+      position: relative;
+      min-height: 340px;
+      background: #102650;
+    }
+
+    .sky-frame img {
+      display: block;
+      width: 100%;
+      min-height: 340px;
+      object-fit: cover;
+    }
+
+    .sky-frame::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(0deg, rgba(7, 20, 48, 0.58), rgba(7, 20, 48, 0.02) 52%);
+      pointer-events: none;
+    }
+
+    .sky-caption {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 18px;
+      z-index: 2;
+      color: var(--white);
+    }
+
+    .sky-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: rgba(245, 125, 35, 0.9);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .sky-caption h2 {
+      margin: 12px 0 6px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(28px, 4vw, 46px);
+      line-height: 1;
+      letter-spacing: 0;
+      color: var(--white);
+    }
+
+    .sky-caption p {
+      max-width: 620px;
+      margin: 0;
+      color: rgba(255, 253, 248, 0.78);
+      line-height: 1.5;
+    }
+
+    .sky-meta {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1px;
+      background: var(--line);
+    }
+
+    .sky-meta div {
+      min-height: 86px;
+      padding: 16px;
+      background: var(--white);
+    }
+
+    .sky-meta b {
+      display: block;
+      font-size: 22px;
+      color: var(--blue);
+    }
+
+    .sky-meta span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .index-panel {
+      position: sticky;
+      top: 74px;
+      overflow: hidden;
+      border-radius: 8px;
+      background: var(--blue-dark);
+      color: var(--white);
+      box-shadow: var(--shadow);
+    }
+
+    .index-top {
+      padding: 24px;
+      background:
+        radial-gradient(circle at 80% 0%, rgba(245, 125, 35, 0.56), transparent 30%),
+        linear-gradient(135deg, #09255f, #0f4cc4);
+    }
+
+    .index-label {
+      color: rgba(255, 253, 248, 0.7);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .index-score {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-top: 10px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(72px, 10vw, 112px);
+      line-height: 0.86;
+      letter-spacing: 0;
+    }
+
+    .index-score span {
+      color: rgba(255, 253, 248, 0.66);
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    body.radiance-closed .index-score {
+      font-size: clamp(42px, 7vw, 70px);
+      line-height: 0.95;
+    }
+
+    body.radiance-closed .index-score span {
+      display: none;
+    }
+
+    .index-title {
+      margin-top: 18px;
+      color: var(--gold);
+      font-size: 25px;
+      font-weight: 850;
+      line-height: 1.15;
+    }
+
+    .index-detail {
+      margin: 10px 0 0;
+      color: rgba(255, 253, 248, 0.76);
+      line-height: 1.55;
+    }
+
+    .meter {
+      height: 12px;
+      margin-top: 20px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255, 253, 248, 0.16);
+    }
+
+    .meter-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #7db7ff, #f7c873, #f57d23);
+      transition: width 0.6s ease;
+    }
+
+    .index-body {
+      padding: 20px;
+    }
+
+    .factor-list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .factor {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      border-radius: 6px;
+      background: rgba(255, 253, 248, 0.09);
+    }
+
+    .factor b {
+      display: block;
+      font-size: 14px;
+    }
+
+    .factor span {
+      display: block;
+      margin-top: 2px;
+      color: rgba(255, 253, 248, 0.62);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .factor strong {
+      color: var(--gold);
+      font-size: 18px;
+    }
+
+    .forecast-band {
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: #eaf1fb;
+    }
+
+    .window-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .window-card {
+      min-height: 180px;
+      padding: 18px;
+      border: 1px solid rgba(15, 76, 196, 0.14);
+      border-radius: 8px;
+      background: var(--white);
+    }
+
+    .window-card .kicker {
+      color: var(--orange);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .window-card h3 {
+      margin: 22px 0 8px;
+      color: var(--ink);
+      font-size: 21px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    .window-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: 0.85fr 1.15fr;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .daylight-card {
+      margin-bottom: 34px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background:
+        linear-gradient(180deg, rgba(219, 232, 255, 0.82), rgba(255, 253, 248, 0.96)),
+        var(--white);
+      box-shadow: 0 12px 36px rgba(11, 30, 67, 0.1);
+    }
+
+    .daylight-top {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 22px 24px 10px;
+    }
+
+    .daylight-top h3 {
+      margin: 0;
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .daylight-top p {
+      max-width: 420px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .sun-graphic {
+      position: relative;
+      min-height: 220px;
+      margin: 4px 24px 0;
+      border-bottom: 1px solid rgba(15, 76, 196, 0.18);
+    }
+
+    .sun-arc {
+      position: absolute;
+      left: 8%;
+      right: 8%;
+      bottom: 28px;
+      height: 150px;
+      border-top: 4px solid rgba(245, 125, 35, 0.55);
+      border-radius: 999px 999px 0 0;
+    }
+
+    .sun-arc::before {
+      content: "";
+      position: absolute;
+      inset: 14px 8% auto;
+      height: 96px;
+      border-top: 1px solid rgba(15, 76, 196, 0.2);
+      border-radius: inherit;
+    }
+
+    .horizon {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 28px;
+      height: 2px;
+      background: linear-gradient(90deg, rgba(15, 76, 196, 0), rgba(15, 76, 196, 0.28), rgba(15, 76, 196, 0));
+    }
+
+    .sun-dot {
+      position: absolute;
+      left: var(--sun-x, 50%);
+      bottom: var(--sun-y, 28px);
+      width: 28px;
+      height: 28px;
+      transform: translate(-50%, 50%);
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #fff6bf, var(--gold) 42%, var(--orange) 74%);
+      box-shadow: 0 0 24px rgba(245, 125, 35, 0.72);
+    }
+
+    .glow-window {
+      position: absolute;
+      left: var(--glow-start, 70%);
+      width: var(--glow-width, 16%);
+      bottom: 22px;
+      height: 18px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(247, 200, 115, 0.18), rgba(245, 125, 35, 0.5));
+    }
+
+    .sun-label {
+      position: absolute;
+      bottom: 0;
+      min-width: 118px;
+    }
+
+    .sun-label.sunrise {
+      left: 0;
+    }
+
+    .sun-label.sunset {
+      right: 0;
+      text-align: right;
+    }
+
+    .sun-label b {
+      display: block;
+      color: var(--blue);
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .sun-label span {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .daylight-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1px;
+      margin-top: 22px;
+      background: var(--line);
+    }
+
+    .daylight-stat {
+      min-height: 92px;
+      padding: 16px 18px;
+      background: rgba(255, 253, 248, 0.78);
+    }
+
+    .daylight-stat b {
+      display: block;
+      color: var(--ink);
+      font-size: 21px;
+    }
+
+    .daylight-stat span {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .time-buttons {
+      display: grid;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .time-button {
+      width: 100%;
+      min-height: 48px;
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--white);
+      color: var(--muted);
+      text-align: left;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .time-button.active {
+      color: var(--white);
+      border-color: var(--ink);
+      background: var(--ink);
+    }
+
+    .timeline-card {
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--white);
+      box-shadow: 0 12px 36px rgba(11, 30, 67, 0.1);
+    }
+
+    .timeline-card h3 {
+      margin: 0 0 18px;
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 34px;
+      letter-spacing: 0;
+    }
+
+    .timeline-card ol {
+      display: grid;
+      gap: 14px;
+      margin: 0;
+      padding-left: 24px;
+    }
+
+    .timeline-card li {
+      color: var(--muted);
+      line-height: 1.5;
+      padding-left: 4px;
+    }
+
+    .timeline-card strong {
+      color: var(--ink);
+    }
+
+    .site-footer {
+      background: #081a3c;
+      color: rgba(255, 253, 248, 0.78);
+      padding: 42px 0 30px;
+    }
+
+    .footer-inner {
+      width: min(1160px, calc(100% - 36px));
+      margin: 0 auto;
+      display: grid;
+      gap: 20px;
+      font-size: 14px;
+    }
+
+    .footer-brand {
+      display: grid;
+      gap: 6px;
+    }
+
+    .footer-logo {
+      color: var(--white);
+      font-size: 22px;
+      font-weight: 850;
+    }
+
+    .footer-tagline {
+      max-width: 640px;
+      color: rgba(255, 253, 248, 0.68);
+      line-height: 1.5;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      padding-top: 4px;
+    }
+
+    .footer-links a {
+      color: rgba(255, 253, 248, 0.84);
+      font-weight: 750;
+    }
+
+    .footer-links a:hover {
+      color: var(--gold);
+    }
+
+    .footer-meta {
+      display: grid;
+      gap: 5px;
+      color: rgba(255, 253, 248, 0.58);
+      line-height: 1.45;
+    }
+
+    .footer-bottom {
+      padding-top: 8px;
+      color: rgba(255, 253, 248, 0.52);
+      font-size: 13px;
+    }
+
+    @media (max-width: 900px) {
+      .nav-links {
+        display: none;
+      }
+
+      .hero-strip,
+      .radiance-layout,
+      .window-grid,
+      .timeline {
+        grid-template-columns: 1fr;
+      }
+
+      .index-panel {
+        position: relative;
+        top: auto;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .hero {
+        min-height: 86vh;
+      }
+
+      .hero-inner {
+        width: min(100% - 28px, 1160px);
+        padding-top: 108px;
+      }
+
+      .section,
+      .status-inner,
+      .footer-inner {
+        width: min(100% - 28px, 1160px);
+      }
+
+      .section {
+        padding: 52px 0;
+      }
+
+      .section-heading {
+        display: block;
+      }
+
+      .section-heading p {
+        margin-top: 12px;
+      }
+
+      .sky-meta {
+        grid-template-columns: 1fr;
+      }
+
+      .daylight-top {
+        display: block;
+      }
+
+      .daylight-top p {
+        margin-top: 10px;
+      }
+
+      .sun-graphic {
+        min-height: 190px;
+        margin-inline: 16px;
+      }
+
+      .sun-arc {
+        left: 4%;
+        right: 4%;
+        height: 124px;
+      }
+
+      .sun-label b {
+        font-size: 20px;
+      }
+
+      .daylight-stats {
+        grid-template-columns: 1fr;
+      }
+
+      .sky-frame,
+      .sky-frame img {
+        min-height: 300px;
+      }
+
+      .footer-inner {
+        display: grid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="site-shell">
+    <header class="hero">
+      <nav class="nav" aria-label="Main navigation">
+        <a class="brand" href="828-sunset-radiance.html">
+          <strong>828 Sunset Radiance</strong>
+          <span>Asheville sky color guide</span>
+        </a>
+        <div class="nav-links">
+          <a href="#snapshot">Sky snapshot</a>
+          <a href="#signals">Signals</a>
+          <a href="#timing">Timing</a>
+          <a class="weather-link" href="index.html">Check weather</a>
+        </div>
+      </nav>
+
+      <div class="hero-inner">
+        <div class="hero-copy">
+          <div class="eyebrow">828 Weather Update</div>
+          <h1>828 Sunset Radiance</h1>
+          <p>
+            A near-live read on Asheville's western sky, blending the sky camera,
+            cloud texture, moisture, and evening timing into one sunset index.
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="#snapshot">See the sky</a>
+            <a class="button secondary" href="#timing">Plan sunset</a>
+          </div>
+        </div>
+
+        <div class="hero-strip" aria-label="Sunset highlights">
+          <div class="stat">
+            <b id="heroScore">--</b>
+            <span>Overall Sunset Radiance Index for the Asheville sky</span>
+          </div>
+          <div class="stat">
+            <b id="heroSky">Loading</b>
+            <span>Near-live sky condition from the western camera view</span>
+          </div>
+          <div class="stat">
+            <b id="heroSunset">--</b>
+            <span>Next local sunset timing from the forecast feed</span>
+          </div>
+          <div class="stat">
+            <b id="heroRefresh">5 sec</b>
+            <span>Sky frame refresh cadence while the page is open</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <div class="status-bar" id="snapshot">
+        <div class="status-inner" aria-label="Sunset status">
+          <div class="status-pill live" id="liveStatus">Live sky loading</div>
+          <div class="status-pill" id="cloudStatus">Clouds --</div>
+          <div class="status-pill" id="humidityStatus">Humidity --</div>
+          <div class="status-pill" id="precipStatus">Rain chance --</div>
+          <div class="status-pill" id="windowStatus">Radiance window --</div>
+        </div>
+      </div>
+
+      <section class="section">
+        <div class="section-heading">
+          <h2>Sky Snapshot</h2>
+          <p>
+            This uses the same camera frame and sky-intel stream behind the sky preview,
+            then layers in the evening forecast to judge color potential.
+          </p>
+        </div>
+
+        <div class="radiance-layout">
+          <article class="sky-panel">
+            <div class="sky-frame">
+              <img id="skyImage" src="js/sky-cam/frame.jpg" alt="Near-live western sky camera view" />
+              <div class="sky-caption">
+                <div class="sky-chip" id="skyChip">Loading</div>
+                <h2 id="skyHeadline">Reading the western sky.</h2>
+                <p id="skyDetail">The camera snapshot will update automatically.</p>
+              </div>
+            </div>
+            <div class="sky-meta" aria-label="Camera metrics">
+              <div>
+                <b id="cloudMetric">--</b>
+                <span>Camera cloud cover</span>
+              </div>
+              <div>
+                <b id="lightMetric">--</b>
+                <span>Sunlight signal</span>
+              </div>
+              <div>
+                <b id="confidenceMetric">--</b>
+                <span>Sky confidence</span>
+              </div>
+              <div>
+                <b id="captureMetric">--</b>
+                <span>Camera capture</span>
+              </div>
+            </div>
+          </article>
+
+          <aside class="index-panel" aria-live="polite">
+            <div class="index-top">
+              <div class="index-label">Overall sunset index</div>
+              <div class="index-score"><b id="indexScore">--</b><span>/100</span></div>
+              <div class="index-title" id="indexTitle">Building the radiance read.</div>
+              <p class="index-detail" id="indexDetail">
+                Waiting for the camera and forecast signals to settle into a usable read.
+              </p>
+              <div class="meter" aria-hidden="true">
+                <div class="meter-fill" id="indexMeter"></div>
+              </div>
+            </div>
+            <div class="index-body">
+              <ul class="factor-list" id="factorList"></ul>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="forecast-band" id="signals">
+        <div class="section">
+          <div class="section-heading">
+            <h2>Radiance Signals</h2>
+            <p>
+              Great color usually needs enough cloud texture to catch low-angle light,
+              enough clearing to reveal it, and limited rain or fog near sunset.
+            </p>
+          </div>
+
+          <div class="window-grid">
+            <article class="window-card">
+              <div class="kicker">Cloud texture</div>
+              <h3 id="textureTitle">Loading sky texture</h3>
+              <p id="textureCopy">Cloud cover near sunset is the biggest ingredient in the index.</p>
+            </article>
+            <article class="window-card">
+              <div class="kicker">Moisture</div>
+              <h3 id="moistureTitle">Checking humidity</h3>
+              <p id="moistureCopy">A little haze can help color, but fog or rain can flatten the view.</p>
+            </article>
+            <article class="window-card">
+              <div class="kicker">Clearing</div>
+              <h3 id="clearingTitle">Watching for breaks</h3>
+              <p id="clearingCopy">Blue sky, sunlight, and improving trends lift the score.</p>
+            </article>
+            <article class="window-card">
+              <div class="kicker">Window</div>
+              <h3 id="windowTitle">Finding sunset</h3>
+              <p id="windowCopy">The best color window usually opens shortly before the listed sunset.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="timing">
+        <article class="daylight-card" aria-live="polite">
+          <div class="daylight-top">
+            <h3>Asheville Light Curve</h3>
+            <p id="daylightSummary">Loading sunrise and sunset timing for Asheville, North Carolina.</p>
+          </div>
+          <div class="sun-graphic" id="sunGraphic">
+            <div class="sun-arc" aria-hidden="true"></div>
+            <div class="glow-window" id="glowWindow" aria-hidden="true"></div>
+            <div class="horizon" aria-hidden="true"></div>
+            <div class="sun-dot" id="sunDot" aria-hidden="true"></div>
+            <div class="sun-label sunrise">
+              <b id="sunriseTime">--</b>
+              <span>Sunrise</span>
+            </div>
+            <div class="sun-label sunset">
+              <b id="sunsetTime">--</b>
+              <span>Sunset</span>
+            </div>
+          </div>
+          <div class="daylight-stats">
+            <div class="daylight-stat">
+              <b id="daylightLength">--</b>
+              <span>Daylight</span>
+            </div>
+            <div class="daylight-stat">
+              <b id="goldenWindow">--</b>
+              <span>Best color window</span>
+            </div>
+            <div class="daylight-stat">
+              <b id="solarPosition">--</b>
+              <span>Solar position</span>
+            </div>
+          </div>
+        </article>
+
+        <div class="timeline">
+          <div>
+            <div class="section-heading">
+              <h2>Plan The Glow</h2>
+            </div>
+            <p>
+              Use the score as a quick go/no-go, then let the sky snapshot decide how
+              early to head outside or whether to aim for a higher overlook.
+            </p>
+            <div class="time-buttons">
+              <button class="time-button active" data-plan="now">Right now</button>
+              <button class="time-button" data-plan="golden">Golden hour</button>
+              <button class="time-button" data-plan="after">After sunset</button>
+            </div>
+          </div>
+
+          <article class="timeline-card" id="timelineCard" aria-live="polite"></article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <div class="footer-logo">828 Weather Direct</div>
+          <div class="footer-tagline">
+            Hyper-local weather, sky context, and outdoor timing for Asheville and the greater 828 region.
+          </div>
+        </div>
+
+        <div class="footer-links">
+          <a href="/">Home</a>
+          <a href="/forecast.html">Forecast</a>
+          <a href="/hiking.html">Hiking Guidance</a>
+          <a href="/828-sunset-radiance.html">Sunset Radiance</a>
+          <a href="https://www.linkedin.com/in/timballisty">About</a>
+          <a href="mailto:tballisty@gmail.com">Contact</a>
+          <a href="https://ko-fi.com/irisheagle" target="_blank" rel="noopener noreferrer">Support</a>
+        </div>
+
+        <div class="footer-meta">
+          <div>Sky image: YouTube live thumbnail snapshot analyzed by 828 Weather Direct.</div>
+          <div>Data: Tempest, NOAA/NWS, Open-Meteo, and local sky-camera signals where available.</div>
+          <div>For general awareness only - not a substitute for official forecasts, warnings, or trail advisories.</div>
+        </div>
+
+        <div class="footer-bottom">&copy; 2026 828 Weather Direct</div>
+      </div>
+    </footer>
+  </div>
+
+  <script type="module">
+    import { computeSkyIntel } from "./js/intel/sky-intel.js";
+    import { generateSkyNarrative } from "./js/intel/sky-narrative.js";
+
+    const ASHEVILLE = {
+      lat: 35.5951,
+      lon: -82.5515,
+      label: "Asheville, North Carolina",
+      timeZone: "America/New_York"
+    };
+    const SKY_REFRESH_MS = 5000;
+
+    const state = {
+      skyData: null,
+      skyIntel: null,
+      narrative: null,
+      weather: null,
+      previousCamera: null,
+      selectedPlan: "now"
+    };
+
+    const els = {
+      heroScore: document.querySelector("#heroScore"),
+      heroSky: document.querySelector("#heroSky"),
+      heroSunset: document.querySelector("#heroSunset"),
+      heroRefresh: document.querySelector("#heroRefresh"),
+      liveStatus: document.querySelector("#liveStatus"),
+      cloudStatus: document.querySelector("#cloudStatus"),
+      humidityStatus: document.querySelector("#humidityStatus"),
+      precipStatus: document.querySelector("#precipStatus"),
+      windowStatus: document.querySelector("#windowStatus"),
+      skyImage: document.querySelector("#skyImage"),
+      skyChip: document.querySelector("#skyChip"),
+      skyHeadline: document.querySelector("#skyHeadline"),
+      skyDetail: document.querySelector("#skyDetail"),
+      cloudMetric: document.querySelector("#cloudMetric"),
+      lightMetric: document.querySelector("#lightMetric"),
+      confidenceMetric: document.querySelector("#confidenceMetric"),
+      captureMetric: document.querySelector("#captureMetric"),
+      hero: document.querySelector(".hero"),
+      indexScore: document.querySelector("#indexScore"),
+      indexTitle: document.querySelector("#indexTitle"),
+      indexDetail: document.querySelector("#indexDetail"),
+      indexMeter: document.querySelector("#indexMeter"),
+      factorList: document.querySelector("#factorList"),
+      textureTitle: document.querySelector("#textureTitle"),
+      textureCopy: document.querySelector("#textureCopy"),
+      moistureTitle: document.querySelector("#moistureTitle"),
+      moistureCopy: document.querySelector("#moistureCopy"),
+      clearingTitle: document.querySelector("#clearingTitle"),
+      clearingCopy: document.querySelector("#clearingCopy"),
+      windowTitle: document.querySelector("#windowTitle"),
+      windowCopy: document.querySelector("#windowCopy"),
+      sunGraphic: document.querySelector("#sunGraphic"),
+      sunDot: document.querySelector("#sunDot"),
+      glowWindow: document.querySelector("#glowWindow"),
+      daylightSummary: document.querySelector("#daylightSummary"),
+      sunriseTime: document.querySelector("#sunriseTime"),
+      sunsetTime: document.querySelector("#sunsetTime"),
+      daylightLength: document.querySelector("#daylightLength"),
+      goldenWindow: document.querySelector("#goldenWindow"),
+      solarPosition: document.querySelector("#solarPosition"),
+      timelineCard: document.querySelector("#timelineCard")
+    };
+
+    function clamp(value, min = 0, max = 100) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function pct(value) {
+      if (!Number.isFinite(value)) return "--";
+      const normalized = value <= 1 ? value * 100 : value;
+      return `${Math.round(normalized)}%`;
+    }
+
+    function labelize(value) {
+      if (!value) return "Unknown";
+      return value.replaceAll("_", " ").replace(/\b\w/g, (char) => char.toUpperCase());
+    }
+
+    function formatTime(ts) {
+      if (!Number.isFinite(ts)) return "--";
+      return new Date(ts).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", timeZone: ASHEVILLE.timeZone });
+    }
+
+    function parseTimestamp(value) {
+      if (typeof value !== "string" || !value) return null;
+      const normalized = /(?:Z|[+-]\d{2}:?\d{2})$/.test(value) ? value : `${value}Z`;
+      const ts = new Date(normalized).getTime();
+      return Number.isFinite(ts) ? ts : null;
+    }
+
+    function formatCaptureTime(value) {
+      const ts = parseTimestamp(value);
+      if (!Number.isFinite(ts)) return "--";
+      return new Date(ts).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit", timeZone: ASHEVILLE.timeZone });
+    }
+
+    function skyFrameUrl(version) {
+      return `js/sky-cam/frame.jpg?t=${encodeURIComponent(version || Date.now())}`;
+    }
+
+    function setSkyFrame(version) {
+      const frameUrl = skyFrameUrl(version);
+      els.skyImage.src = frameUrl;
+      els.hero.style.backgroundImage = `
+        linear-gradient(120deg, rgba(8, 28, 71, 0.94), rgba(15, 76, 196, 0.64) 46%, rgba(245, 125, 35, 0.48)),
+        url("${frameUrl}")
+      `;
+    }
+
+    function formatDuration(ms) {
+      if (!Number.isFinite(ms) || ms <= 0) return "--";
+      const totalMinutes = Math.round(ms / 60000);
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+      return `${hours}h ${minutes}m`;
+    }
+
+    function dayOfYear(date) {
+      const start = new Date(date.getFullYear(), 0, 0);
+      return Math.floor((date - start) / 86400000);
+    }
+
+    function normalizeDegrees(value) {
+      return ((value % 360) + 360) % 360;
+    }
+
+    function calculateSolarTime(date, latitude, longitude, isSunrise) {
+      const zenith = 90.833;
+      const n = dayOfYear(date);
+      const lngHour = longitude / 15;
+      const t = n + (((isSunrise ? 6 : 18) - lngHour) / 24);
+      const m = (0.9856 * t) - 3.289;
+      const l = normalizeDegrees(m + (1.916 * Math.sin(m * Math.PI / 180)) + (0.02 * Math.sin(2 * m * Math.PI / 180)) + 282.634);
+      let ra = Math.atan(0.91764 * Math.tan(l * Math.PI / 180)) * 180 / Math.PI;
+      ra = normalizeDegrees(ra);
+      ra += Math.floor(l / 90) * 90 - Math.floor(ra / 90) * 90;
+      ra /= 15;
+
+      const sinDec = 0.39782 * Math.sin(l * Math.PI / 180);
+      const cosDec = Math.cos(Math.asin(sinDec));
+      const cosH = (Math.cos(zenith * Math.PI / 180) - (sinDec * Math.sin(latitude * Math.PI / 180))) / (cosDec * Math.cos(latitude * Math.PI / 180));
+      if (cosH > 1 || cosH < -1) return null;
+
+      let h = Math.acos(cosH) * 180 / Math.PI;
+      h = (isSunrise ? 360 - h : h) / 15;
+
+      const localMeanTime = h + ra - (0.06571 * t) - 6.622;
+      const universalTime = ((localMeanTime - lngHour) % 24 + 24) % 24;
+      return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) + universalTime * 60 * 60 * 1000;
+    }
+
+    function getFallbackDaylight() {
+      const now = new Date();
+      const sunrise = calculateSolarTime(now, ASHEVILLE.lat, ASHEVILLE.lon, true);
+      let sunset = calculateSolarTime(now, ASHEVILLE.lat, ASHEVILLE.lon, false);
+      if (Number.isFinite(sunrise) && Number.isFinite(sunset) && sunset <= sunrise) {
+        sunset += 24 * 60 * 60 * 1000;
+      }
+
+      return {
+        timestamp: new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime(),
+        sunrise,
+        sunset,
+        source: "calculated"
+      };
+    }
+
+    function getTodayDaily(weather) {
+      if (!weather?.daily?.length) return getFallbackDaylight();
+      const now = Date.now();
+      const forecastDay = weather.daily.find((day) => Number.isFinite(day.sunset) && day.sunset > now - 60 * 60 * 1000) || weather.daily[0];
+      return {
+        ...forecastDay,
+        sunrise: Number.isFinite(forecastDay?.sunrise) ? forecastDay.sunrise : getFallbackDaylight().sunrise,
+        sunset: Number.isFinite(forecastDay?.sunset) ? forecastDay.sunset : getFallbackDaylight().sunset,
+        source: "forecast"
+      };
+    }
+
+    function getSunsetHour(weather) {
+      const daily = getTodayDaily(weather);
+      if (!daily || !weather?.hourly?.length) return null;
+      return weather.hourly.reduce((closest, hour) => {
+        if (!Number.isFinite(hour.timestamp)) return closest;
+        if (!closest) return hour;
+        return Math.abs(hour.timestamp - daily.sunset) < Math.abs(closest.timestamp - daily.sunset) ? hour : closest;
+      }, null);
+    }
+
+    function getRadiancePhase(daily) {
+      const now = Date.now();
+      const sunrise = daily?.sunrise;
+      const sunset = daily?.sunset;
+      const twilightEnd = Number.isFinite(sunset) ? sunset + 75 * 60000 : null;
+      const glowStart = Number.isFinite(sunset) ? sunset - 45 * 60000 : null;
+      const glowEnd = Number.isFinite(sunset) ? sunset + 15 * 60000 : null;
+
+      if (!Number.isFinite(sunrise) || !Number.isFinite(sunset)) {
+        return { state: "pending", label: "Window pending" };
+      }
+
+      if (Number.isFinite(twilightEnd) && now > twilightEnd) {
+        return { state: "closed", label: "Closed after twilight" };
+      }
+
+      if (now >= glowStart && now <= glowEnd) {
+        return { state: "peak", label: "Peak color window" };
+      }
+
+      if (now > glowEnd && now <= twilightEnd) {
+        return { state: "afterglow", label: "Afterglow watch" };
+      }
+
+      if (now < sunrise) {
+        return { state: "waiting", label: "Waiting for daylight" };
+      }
+
+      return { state: "active", label: "Monitoring sunset" };
+    }
+
+    function scoreCloudTexture(cameraCloud, forecastCloud) {
+      const cloud = Number.isFinite(forecastCloud) ? forecastCloud * 100 : cameraCloud;
+      if (!Number.isFinite(cloud)) return { score: 58, label: "Limited cloud data", detail: "Using the camera read more heavily until forecast cloud cover is available." };
+      let score;
+      if (cloud >= 25 && cloud <= 60) score = 92;
+      else if (cloud > 60 && cloud <= 75) score = 78;
+      else if (cloud >= 12 && cloud < 25) score = 68;
+      else if (cloud > 75 && cloud <= 88) score = 48;
+      else if (cloud < 12) score = 42;
+      else score = 26;
+      return {
+        score,
+        label: `${Math.round(cloud)}% cloud cover`,
+        detail: cloud >= 25 && cloud <= 60
+          ? "A strong color setup: enough texture to catch light without fully blocking the horizon."
+          : cloud > 75
+            ? "Clouds may be too dominant unless the western edge opens up."
+            : "The sky may be clean, but color needs cloud texture to really spread."
+      };
+    }
+
+    function scoreMoisture(hour, camera) {
+      const humidity = hour?.relativeHumidity;
+      const precip = hour?.precipProbability;
+      const fog = camera?.metrics?.visibilityScore === 0;
+      let score = 78;
+      if (Number.isFinite(humidity)) {
+        const humidityPct = humidity <= 1 ? humidity * 100 : humidity;
+        if (humidityPct >= 35 && humidityPct <= 68) score = 88;
+        else if (humidityPct > 82) score = 46;
+        else if (humidityPct < 25) score = 58;
+        else score = 70;
+      }
+      if (Number.isFinite(precip)) score -= precip * 34;
+      if (fog) score -= 38;
+      return {
+        score: clamp(score),
+        label: Number.isFinite(humidity) ? `${pct(humidity)} humidity` : "Humidity pending",
+        detail: fog
+          ? "Fog is the main limiter right now."
+          : Number.isFinite(precip) && precip > 0.35
+            ? "Rain chances are high enough to mute or interrupt color."
+            : "Moisture does not look like the primary blocker."
+      };
+    }
+
+    function scoreClearing(skyIntel, camera) {
+      const m = camera?.metrics || {};
+      let score = 56;
+      if (skyIntel?.atmosphericState === "mostly_clear") score = 74;
+      if (skyIntel?.atmosphericState === "partly_cloudy") score = 86;
+      if (skyIntel?.atmosphericState === "mostly_cloudy") score = 58;
+      if (skyIntel?.atmosphericState === "overcast") score = 30;
+      if (skyIntel?.atmosphericState === "fog") score = 18;
+      if (m.sunlightDetected) score += m.sunlightLevel === "strong" ? 10 : 5;
+      if (Number.isFinite(m.skyBlueSignal) && m.skyBlueSignal > 1.05) score += 8;
+      return {
+        score: clamp(score),
+        label: labelize(skyIntel?.atmosphericState),
+        detail: m.sunlightDetected
+          ? "Sunlight is still getting into the cloud deck, which helps the evening color case."
+          : "The sky needs more breaks or filtered light to lift the radiance score."
+      };
+    }
+
+    function scoreTiming(weather) {
+      const daily = getTodayDaily(weather);
+      if (!daily?.sunset) {
+        return { score: 60, label: "Sunset time pending", detail: "The page will refine timing once the weather feed responds." };
+      }
+      const minutes = (daily.sunset - Date.now()) / 60000;
+      let score = 72;
+      if (minutes > 0 && minutes <= 120) score = 94;
+      else if (minutes > 120 && minutes <= 240) score = 82;
+      else if (minutes < -45) score = 36;
+      else if (minutes < 0) score = 64;
+      return {
+        score,
+        label: formatTime(daily.sunset),
+        detail: minutes > 0
+          ? `Best color usually builds from about ${formatTime(daily.sunset - 35 * 60000)} through ${formatTime(daily.sunset + 15 * 60000)}.`
+          : "Today's sunset has passed, so the score is leaning on afterglow and current sky texture."
+      };
+    }
+
+    function buildRadiance() {
+      const cameraCloud = state.skyIntel?.cloud;
+      const sunsetHour = getSunsetHour(state.weather);
+      const daily = getTodayDaily(state.weather);
+      const phase = getRadiancePhase(daily);
+      const texture = scoreCloudTexture(cameraCloud, sunsetHour?.cloudCover);
+      const moisture = scoreMoisture(sunsetHour, state.skyData);
+      const clearing = scoreClearing(state.skyIntel, state.skyData);
+      const timing = scoreTiming(state.weather);
+
+      const score = Math.round(
+        texture.score * 0.36 +
+        clearing.score * 0.28 +
+        moisture.score * 0.22 +
+        timing.score * 0.14
+      );
+
+      return {
+        phase,
+        score,
+        title: phase.state === "closed" ? "Tonight's radiance window has closed"
+          : score >= 88 ? "High radiance potential"
+          : score >= 74 ? "Strong sunset chance"
+          : score >= 60 ? "Worth watching"
+          : score >= 45 ? "Mixed sunset setup"
+          : "Low color potential",
+        detail: phase.state === "closed"
+          ? "The useful sunset and twilight period has passed for Asheville. The sky snapshot remains here for context, and tomorrow's window will come back into focus after the next daylight cycle begins."
+          : score >= 74
+          ? "The sky has enough working ingredients to justify keeping an eye on the western horizon."
+          : score >= 45
+            ? "There are useful ingredients, but one or two limits may keep color localized or brief."
+            : "The current setup is likely to stay muted unless the western sky opens quickly.",
+        factors: [
+          { name: "Cloud texture", ...texture },
+          { name: "Clearing signal", ...clearing },
+          { name: "Moisture drag", ...moisture },
+          { name: "Sunset window", ...timing }
+        ]
+      };
+    }
+
+    function renderRadiance() {
+      const radiance = buildRadiance();
+      const sunsetHour = getSunsetHour(state.weather);
+      const daily = getTodayDaily(state.weather);
+      const camera = state.skyData?.metrics || {};
+      const isClosed = radiance.phase?.state === "closed";
+      document.body.classList.toggle("radiance-closed", isClosed);
+
+      els.heroScore.textContent = isClosed ? "Closed" : Number.isFinite(radiance.score) ? `${radiance.score}` : "--";
+      els.indexScore.textContent = isClosed ? "Closed" : Number.isFinite(radiance.score) ? radiance.score : "--";
+      els.indexTitle.textContent = radiance.title;
+      els.indexDetail.textContent = radiance.detail;
+      els.indexMeter.style.width = `${isClosed ? 0 : clamp(radiance.score)}%`;
+      els.heroSunset.textContent = daily?.sunset ? formatTime(daily.sunset) : "--";
+      els.heroRefresh.textContent = `${Math.round(SKY_REFRESH_MS / 1000)} sec`;
+
+      els.cloudStatus.textContent = `Clouds ${pct(sunsetHour?.cloudCover ?? state.skyIntel?.cloud)}`;
+      els.humidityStatus.textContent = `Humidity ${pct(sunsetHour?.relativeHumidity)}`;
+      els.precipStatus.textContent = `Rain chance ${pct(sunsetHour?.precipProbability)}`;
+      els.windowStatus.textContent = radiance.phase?.label || "Radiance window --";
+      els.windowStatus.classList.toggle("closed", isClosed);
+
+      els.factorList.innerHTML = radiance.factors.map((factor) => `
+        <li class="factor">
+          <div>
+            <b>${factor.name}</b>
+            <span>${factor.detail}</span>
+          </div>
+          <strong>${isClosed ? "Done" : Math.round(factor.score)}</strong>
+        </li>
+      `).join("");
+
+      els.textureTitle.textContent = radiance.factors[0].label;
+      els.textureCopy.textContent = radiance.factors[0].detail;
+      els.moistureTitle.textContent = radiance.factors[2].label;
+      els.moistureCopy.textContent = radiance.factors[2].detail;
+      els.clearingTitle.textContent = radiance.factors[1].label;
+      els.clearingCopy.textContent = radiance.factors[1].detail;
+      els.windowTitle.textContent = isClosed ? "Window closed" : daily?.sunset ? `Sunset ${formatTime(daily.sunset)}` : "Sunset pending";
+      els.windowCopy.textContent = isClosed ? "The evening radiance window has passed. Check back tomorrow as the next sunset setup develops." : radiance.factors[3].detail;
+
+      els.cloudMetric.textContent = pct(state.skyIntel?.cloud);
+      els.lightMetric.textContent = camera.sunlightDetected ? labelize(camera.sunlightLevel) : "Low";
+      els.confidenceMetric.textContent = pct(state.skyIntel?.confidence);
+
+      renderTimeline();
+      renderDaylightGraphic();
+    }
+
+    function renderDaylightGraphic() {
+      const daily = getTodayDaily(state.weather);
+      const sunrise = daily?.sunrise;
+      const sunset = daily?.sunset;
+      const now = Date.now();
+
+      els.sunriseTime.textContent = formatTime(sunrise);
+      els.sunsetTime.textContent = formatTime(sunset);
+      els.daylightLength.textContent = Number.isFinite(sunrise) && Number.isFinite(sunset) ? formatDuration(sunset - sunrise) : "--";
+      els.goldenWindow.textContent = Number.isFinite(sunset) ? `${formatTime(sunset - 45 * 60000)}-${formatTime(sunset + 15 * 60000)}` : "--";
+
+      if (!Number.isFinite(sunrise) || !Number.isFinite(sunset)) {
+        els.daylightSummary.textContent = "Sunrise and sunset timing will appear when daylight data is available.";
+        els.solarPosition.textContent = "--";
+        return;
+      }
+
+      const progress = clamp((now - sunrise) / (sunset - sunrise), 0, 1);
+      const x = 8 + progress * 84;
+      const y = 28 + Math.sin(progress * Math.PI) * 150;
+      els.sunDot.style.setProperty("--sun-x", `${x}%`);
+      els.sunDot.style.setProperty("--sun-y", `${y}px`);
+
+      const glowStart = clamp(((sunset - 45 * 60000 - sunrise) / (sunset - sunrise)) * 84 + 8, 8, 92);
+      const glowEnd = clamp(((sunset + 15 * 60000 - sunrise) / (sunset - sunrise)) * 84 + 8, 8, 96);
+      els.glowWindow.style.setProperty("--glow-start", `${glowStart}%`);
+      els.glowWindow.style.setProperty("--glow-width", `${Math.max(5, glowEnd - glowStart)}%`);
+
+      if (now < sunrise) {
+        els.solarPosition.textContent = "Before sunrise";
+        els.daylightSummary.textContent = `For ${ASHEVILLE.label}, sunrise is ${formatTime(sunrise)} and sunset follows at ${formatTime(sunset)}.`;
+      } else if (now > sunset) {
+        els.solarPosition.textContent = "After sunset";
+        els.daylightSummary.textContent = `For ${ASHEVILLE.label}, sunset was ${formatTime(sunset)}. The afterglow window usually fades within 15 to 25 minutes.`;
+      } else {
+        const remaining = formatDuration(sunset - now);
+        els.solarPosition.textContent = `${Math.round(progress * 100)}% of daylight`;
+        els.daylightSummary.textContent = `For ${ASHEVILLE.label}, sunrise was ${formatTime(sunrise)}. Sunset is ${formatTime(sunset)}, with about ${remaining} of daylight left.`;
+      }
+    }
+
+    function renderSky() {
+      const narrative = state.narrative;
+      const skyIntel = state.skyIntel;
+      const skyLabel = labelize(skyIntel?.atmosphericState);
+
+      els.skyChip.textContent = skyLabel;
+      els.heroSky.textContent = skyLabel;
+      els.skyHeadline.textContent = narrative?.headline || "Reading the western sky.";
+      els.skyDetail.textContent = narrative?.detail || "The camera snapshot will update automatically.";
+      const captureVersion = parseTimestamp(state.skyData?.timestamp) || Date.now();
+      els.liveStatus.textContent = `Camera captured ${formatCaptureTime(state.skyData?.timestamp)}`;
+      els.captureMetric.textContent = formatCaptureTime(state.skyData?.timestamp);
+      setSkyFrame(captureVersion);
+      renderRadiance();
+    }
+
+    async function loadSky() {
+      try {
+        const res = await fetch(`js/sky-cam/output.json?t=${Date.now()}`);
+        const data = await res.json();
+        const skyIntel = computeSkyIntel({
+          camera: data,
+          previous: state.skyIntel
+        });
+        state.skyData = data;
+        state.skyIntel = skyIntel;
+        state.narrative = generateSkyNarrative(data, skyIntel);
+        state.previousCamera = data;
+        renderSky();
+      } catch (error) {
+        console.warn("Sky camera feed unavailable", error);
+        els.skyHeadline.textContent = "Sky camera unavailable.";
+        els.skyDetail.textContent = "The page will keep trying to reconnect to the near-live snapshot.";
+        els.liveStatus.textContent = "Sky feed unavailable";
+      }
+    }
+
+    async function loadWeather() {
+      try {
+        const res = await fetch(`/api/weather?type=hourly&lat=${ASHEVILLE.lat}&lon=${ASHEVILLE.lon}`);
+        if (!res.ok) throw new Error("Weather feed failed");
+        state.weather = await res.json();
+        renderRadiance();
+      } catch {
+        renderRadiance();
+      }
+    }
+
+    function renderTimeline() {
+      const daily = getTodayDaily(state.weather);
+      const sunset = daily?.sunset;
+      const phase = getRadiancePhase(daily);
+      const plans = {
+        now: {
+          title: phase.state === "closed" ? "Tonight is done" : "Right now",
+          steps: [
+            ["Check", phase.state === "closed" ? "The useful twilight window has passed for Asheville." : "Use the camera view first. If the west is brightening or breaking open, the index can rise quickly."],
+            ["Watch", phase.state === "closed" ? `The latest sky state is ${els.skyChip.textContent.toLowerCase()}, but the radiance index is inactive until the next sunset cycle.` : `Current score is ${els.indexScore.textContent}/100, with sky state reading ${els.skyChip.textContent.toLowerCase()}.`],
+            ["Move", phase.state === "closed" ? "Use the main forecast page for overnight and tomorrow planning." : sunset ? `If you are heading out, aim to be settled by ${formatTime(sunset - 30 * 60000)}.` : "Once sunset timing loads, this card will show the best arrival target."]
+          ]
+        },
+        golden: {
+          title: "Golden hour",
+          steps: [
+            ["Arrive", sunset ? `Be in position around ${formatTime(sunset - 45 * 60000)} for the first warm light.` : "Plan to arrive 45 minutes before sunset."],
+            ["Look west", "Color needs a low western opening or a thinner cloud edge, even when overhead clouds look promising."],
+            ["Adjust", "If fog or rain is taking over, choose a lower-effort view close to home instead of chasing elevation."]
+          ]
+        },
+        after: {
+          title: "After sunset",
+          steps: [
+            ["Stay", sunset ? `Give the sky until about ${formatTime(sunset + 15 * 60000)} if the horizon is still glowing.` : "Afterglow can continue for 10 to 20 minutes when cloud bases stay lit."],
+            ["Scan", "Pink and orange often peak after the sun is gone, especially with broken mid-level clouds."],
+            ["Call it", "If the cloud deck turns flat gray and the western edge closes, the best color window is probably done."]
+          ]
+        }
+      };
+
+      const plan = plans[state.selectedPlan];
+      els.timelineCard.innerHTML = `
+        <h3>${plan.title}</h3>
+        <ol>
+          ${plan.steps.map(([label, text]) => `<li><strong>${label}:</strong> ${text}</li>`).join("")}
+        </ol>
+      `;
+    }
+
+    document.querySelectorAll(".time-button").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll(".time-button").forEach((item) => item.classList.remove("active"));
+        button.classList.add("active");
+        state.selectedPlan = button.dataset.plan;
+        renderTimeline();
+      });
+    });
+
+    await Promise.all([loadSky(), loadWeather()]);
+    setInterval(loadSky, SKY_REFRESH_MS);
+    setInterval(loadWeather, 10 * 60 * 1000);
+  </script>
+</body>
+</html>
