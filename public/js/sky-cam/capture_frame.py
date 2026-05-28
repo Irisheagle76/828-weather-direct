@@ -1,5 +1,7 @@
-import subprocess
 import os
+import subprocess
+import sys
+
 
 BASE_DIR = os.path.dirname(__file__)
 OUTPUT_PATH = os.path.join(BASE_DIR, "frame.jpg")
@@ -9,7 +11,7 @@ YOUTUBE_URL = "https://www.youtube.com/watch?v=UxUU3Fc1vBw"
 
 def get_stream_url():
     result = subprocess.run(
-        ["python", "-m", "yt_dlp", "-g", YOUTUBE_URL],
+        [sys.executable, "-m", "yt_dlp", "-g", YOUTUBE_URL],
         capture_output=True,
         text=True
     )
@@ -21,22 +23,22 @@ def get_stream_url():
 
 
 def capture_frame():
-    print("🎥 Getting stream URL...")
+    print("Getting stream URL...")
     stream_url = get_stream_url()
 
-    print("📸 Capturing frame...")
+    print("Capturing frame...")
 
     subprocess.run([
-        "ffmpeg",                 # ✅ THIS WAS MISSING
+        "ffmpeg",
         "-y",
         "-i", stream_url,
         "-frames:v", "1",
         "-update", "1",
         "-q:v", "2",
         OUTPUT_PATH
-    ])
+    ], check=True)
 
-    print("✅ Frame saved:", OUTPUT_PATH)
+    print("Frame saved:", OUTPUT_PATH)
 
 
 if __name__ == "__main__":

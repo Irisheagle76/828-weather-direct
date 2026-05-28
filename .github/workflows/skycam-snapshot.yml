@@ -1,0 +1,50 @@
+name: Sky Cam Snapshot
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: skycam-snapshot
+  cancel-in-progress: true
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install yt-dlp numpy opencv-python-headless
+
+      - name: Capture sky cam snapshot
+        run: python public/run_skycam.py --once
+
+      - name: Commit updated sky cam files
+        run: |
+          if git diff --quiet -- public/js/sky-cam/frame.jpg public/js/sky-cam/output.json; then
+            echo "No sky cam changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/js/sky-cam/frame.jpg public/js/sky-cam/output.json
+          git commit -m "Update sky cam snapshot"
+          git push
