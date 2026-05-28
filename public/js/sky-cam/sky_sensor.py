@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 # -------- CONFIG --------
 BASE_DIR = os.path.dirname(__file__)
@@ -216,7 +216,7 @@ def main():
         trend = compute_trend(metrics, previous)
 
         output = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "metrics": metrics,
             "trend": trend
         }
