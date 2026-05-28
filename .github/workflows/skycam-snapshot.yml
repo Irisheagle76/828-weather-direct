@@ -11,8 +11,6 @@ permissions:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   SKYCAM_ALLOW_STALE_ON_ERROR: 1
-  SKYCAM_CAPTURE_ATTEMPTS: 3
-  YOUTUBE_COOKIES_B64: ${{ secrets.YOUTUBE_COOKIES_B64 }}
 
 concurrency:
   group: skycam-snapshot
@@ -30,23 +28,10 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg
-
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install yt-dlp numpy opencv-python-headless
-
-      - name: Restore YouTube cookies
-        if: ${{ env.YOUTUBE_COOKIES_B64 != '' }}
-        shell: bash
-        run: |
-          printf '%s' "$YOUTUBE_COOKIES_B64" | base64 --decode > "$RUNNER_TEMP/youtube-cookies.txt"
-          chmod 600 "$RUNNER_TEMP/youtube-cookies.txt"
-          echo "SKYCAM_YOUTUBE_COOKIES=$RUNNER_TEMP/youtube-cookies.txt" >> "$GITHUB_ENV"
+          python -m pip install numpy opencv-python-headless
 
       - name: Capture sky cam snapshot
         shell: bash
