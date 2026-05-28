@@ -8,6 +8,10 @@ on:
 permissions:
   contents: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  SKYCAM_CAPTURE_ATTEMPTS: 3
+
 concurrency:
   group: skycam-snapshot
   cancel-in-progress: true
