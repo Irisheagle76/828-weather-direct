@@ -3,7 +3,7 @@ import json
 import subprocess
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 BASE_DIR = os.path.dirname(__file__)
@@ -33,7 +33,7 @@ def write_stale_status(error):
 
     output = {
         **previous,
-        "lastAttemptedCapture": datetime.now().isoformat(),
+        "lastAttemptedCapture": datetime.now(timezone.utc).isoformat(),
         "captureStatus": "stale",
         "captureError": str(error),
     }
