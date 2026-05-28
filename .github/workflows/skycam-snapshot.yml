@@ -10,6 +10,7 @@ permissions:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  SKYCAM_ALLOW_STALE_ON_ERROR: 1
   SKYCAM_CAPTURE_ATTEMPTS: 3
 
 concurrency:
@@ -39,7 +40,21 @@ jobs:
           python -m pip install yt-dlp numpy opencv-python-headless
 
       - name: Capture sky cam snapshot
-        run: python public/run_skycam.py --once
+        shell: bash
+        run: |
+          set +e
+          python public/run_skycam.py --once 2>&1 | tee skycam-capture.log
+          status=${PIPESTATUS[0]}
+
+          {
+            echo "## Sky cam capture log"
+            echo
+            echo '```text'
+            tail -n 120 skycam-capture.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          exit "$status"
 
       - name: Commit updated sky cam files
         run: |

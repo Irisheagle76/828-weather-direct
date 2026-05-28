@@ -1,20 +1,45 @@
 import os
+import json
 import subprocess
 import sys
 import time
+from datetime import datetime
 
 
 BASE_DIR = os.path.dirname(__file__)
 
 CAPTURE = os.path.join(BASE_DIR, "js/sky-cam/capture_frame.py")
 SENSOR = os.path.join(BASE_DIR, "js/sky-cam/sky_sensor.py")
+OUTPUT_JSON = os.path.join(BASE_DIR, "js/sky-cam/output.json")
 
 INTERVAL = int(os.environ.get("SKYCAM_INTERVAL_SECONDS", "300"))
+ALLOW_STALE_ON_ERROR = os.environ.get("SKYCAM_ALLOW_STALE_ON_ERROR") == "1"
 
 
 def run_cycle():
     subprocess.run([sys.executable, CAPTURE], check=True)
     subprocess.run([sys.executable, SENSOR], check=True)
+
+
+def write_stale_status(error):
+    previous = {}
+
+    if os.path.exists(OUTPUT_JSON):
+        try:
+            with open(OUTPUT_JSON, "r") as f:
+                previous = json.load(f)
+        except Exception:
+            previous = {}
+
+    output = {
+        **previous,
+        "lastAttemptedCapture": datetime.now().isoformat(),
+        "captureStatus": "stale",
+        "captureError": str(error),
+    }
+
+    with open(OUTPUT_JSON, "w") as f:
+        json.dump(output, f, indent=2)
 
 
 def run_service():
@@ -40,8 +65,14 @@ def main():
     try:
         if run_once:
             print("Sky cam one-shot capture running...")
-            run_cycle()
-            print("Sky cam one-shot capture complete.")
+            try:
+                run_cycle()
+                print("Sky cam one-shot capture complete.")
+            except Exception as e:
+                if not ALLOW_STALE_ON_ERROR:
+                    raise
+                print("Sky cam capture failed; preserving last good frame.")
+                write_stale_status(e)
             return
     except Exception as e:
         print("Error:", e)
