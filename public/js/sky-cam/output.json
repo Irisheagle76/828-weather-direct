@@ -16,5 +16,8 @@
     "cloudTrend": "increasing",
     "brightnessTrend": "decreasing",
     "overallTrend": "deteriorating"
-  }
+  },
+  "lastAttemptedCapture": "2026-05-28T21:33:03.737743",
+  "captureStatus": "stale",
+  "captureError": "Command '['/opt/hostedtoolcache/Python/3.12.13/x64/bin/python', '/home/runner/work/828-weather-direct/828-weather-direct/public/js/sky-cam/capture_frame.py']' returned non-zero exit status 1."
 }
