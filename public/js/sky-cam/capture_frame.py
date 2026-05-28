@@ -9,20 +9,26 @@ OUTPUT_PATH = os.path.join(BASE_DIR, "frame.jpg")
 
 YOUTUBE_URL = "https://www.youtube.com/watch?v=UxUU3Fc1vBw"
 MAX_ATTEMPTS = int(os.environ.get("SKYCAM_CAPTURE_ATTEMPTS", "3"))
+YOUTUBE_COOKIES = os.environ.get("SKYCAM_YOUTUBE_COOKIES")
 
 
 def get_stream_url():
+    command = [
+        sys.executable,
+        "-m",
+        "yt_dlp",
+        "--no-warnings",
+        "--extractor-args",
+        "youtube:player_client=default,ios",
+        "-g",
+        YOUTUBE_URL
+    ]
+
+    if YOUTUBE_COOKIES and os.path.exists(YOUTUBE_COOKIES):
+        command[3:3] = ["--cookies", YOUTUBE_COOKIES]
+
     result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "yt_dlp",
-            "--no-warnings",
-            "--extractor-args",
-            "youtube:player_client=default,ios",
-            "-g",
-            YOUTUBE_URL
-        ],
+        command,
         capture_output=True,
         text=True
     )

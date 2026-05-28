@@ -39,6 +39,14 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install yt-dlp numpy opencv-python-headless
 
+      - name: Restore YouTube cookies
+        if: ${{ secrets.YOUTUBE_COOKIES_B64 != '' }}
+        shell: bash
+        run: |
+          echo "${{ secrets.YOUTUBE_COOKIES_B64 }}" | base64 --decode > "$RUNNER_TEMP/youtube-cookies.txt"
+          chmod 600 "$RUNNER_TEMP/youtube-cookies.txt"
+          echo "SKYCAM_YOUTUBE_COOKIES=$RUNNER_TEMP/youtube-cookies.txt" >> "$GITHUB_ENV"
+
       - name: Capture sky cam snapshot
         shell: bash
         run: |
