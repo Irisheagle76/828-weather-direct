@@ -10,44 +10,66 @@ OUTPUT_PATH = os.path.join(BASE_DIR, "frame.jpg")
 YOUTUBE_URL = "https://www.youtube.com/watch?v=UxUU3Fc1vBw"
 MAX_ATTEMPTS = int(os.environ.get("SKYCAM_CAPTURE_ATTEMPTS", "3"))
 YOUTUBE_COOKIES = os.environ.get("SKYCAM_YOUTUBE_COOKIES")
+YOUTUBE_CLIENT_STRATEGIES = [
+    None,
+    "youtube:player_client=web",
+    "youtube:player_client=web_safari",
+    "youtube:player_client=ios",
+    "youtube:player_client=android",
+    "youtube:player_client=tv_embedded",
+    "youtube:player_client=default,ios",
+]
 
 
-def get_stream_url():
+def build_command(strategy):
     command = [
         sys.executable,
         "-m",
         "yt_dlp",
         "--no-warnings",
-        "--extractor-args",
-        "youtube:player_client=default,ios",
         "-g",
         YOUTUBE_URL
     ]
 
+    if strategy:
+        command[4:4] = ["--extractor-args", strategy]
+
     if YOUTUBE_COOKIES and os.path.exists(YOUTUBE_COOKIES):
         command[3:3] = ["--cookies", YOUTUBE_COOKIES]
 
-    result = subprocess.run(
-        command,
-        capture_output=True,
-        text=True
-    )
+    return command
 
-    if result.returncode != 0:
-        print("yt-dlp failed while resolving the YouTube livestream.")
-        if result.stdout.strip():
-            print("yt-dlp stdout:")
-            print(result.stdout.strip())
-        if result.stderr.strip():
-            print("yt-dlp stderr:")
-            print(result.stderr.strip())
-        raise Exception("Failed to get stream URL")
 
-    urls = [line.strip() for line in result.stdout.splitlines() if line.strip()]
-    if not urls:
-        raise Exception("yt-dlp did not return a stream URL")
+def get_stream_url():
+    failures = []
 
-    return urls[0]
+    for strategy in YOUTUBE_CLIENT_STRATEGIES:
+        label = strategy or "yt-dlp default client"
+        print(f"Resolving stream with {label}...")
+        command = build_command(strategy)
+
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True
+        )
+
+        if result.returncode == 0:
+            urls = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+            if urls:
+                return urls[0]
+
+            failures.append(f"{label}: yt-dlp returned no stream URLs")
+            continue
+
+        message = result.stderr.strip() or result.stdout.strip() or "unknown yt-dlp failure"
+        failures.append(f"{label}: {message}")
+
+    print("yt-dlp failed while resolving the YouTube livestream.")
+    for failure in failures:
+        print(failure)
+
+    raise Exception("Failed to get stream URL")
 
 
 def capture_frame():
