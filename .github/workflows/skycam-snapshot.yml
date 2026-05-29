@@ -2,7 +2,7 @@ name: Sky Cam Snapshot
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -14,7 +14,7 @@ env:
 
 concurrency:
   group: skycam-snapshot
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   refresh:
