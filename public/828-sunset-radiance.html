@@ -1392,6 +1392,15 @@
       }, null);
     }
 
+    function pickNumber(source, keys) {
+      if (!source) return null;
+      for (const key of keys) {
+        const value = source[key];
+        if (Number.isFinite(value)) return value;
+      }
+      return null;
+    }
+
     function getRadiancePhase(daily) {
       const now = Date.now();
       const sunrise = daily?.sunrise;
@@ -1445,8 +1454,8 @@
     }
 
     function scoreMoisture(hour, camera) {
-      const humidity = hour?.relativeHumidity;
-      const precip = hour?.precipProbability;
+      const humidity = pickNumber(hour, ["relativeHumidity", "relative_humidity", "humidity"]);
+      const precip = pickNumber(hour, ["precipProbability", "precipitation_probability", "probabilityOfPrecipitation"]);
       const fog = camera?.metrics?.visibilityScore === 0;
       let score = 78;
       if (Number.isFinite(humidity)) {
@@ -1565,9 +1574,12 @@
       els.indexMeter.style.width = `${isClosed ? 0 : clamp(radiance.score)}%`;
       els.heroSunset.textContent = daily?.sunset ? formatTime(daily.sunset) : "--";
 
-      els.cloudStatus.textContent = `Clouds ${pct(sunsetHour?.cloudCover ?? state.skyIntel?.cloud)}`;
-      els.humidityStatus.textContent = `Humidity ${pct(sunsetHour?.relativeHumidity)}`;
-      els.precipStatus.textContent = `Rain chance ${pct(sunsetHour?.precipProbability)}`;
+      const sunsetCloud = pickNumber(sunsetHour, ["cloudCover", "cloud_cover", "cloudcover"]);
+      const sunsetHumidity = pickNumber(sunsetHour, ["relativeHumidity", "relative_humidity", "humidity"]);
+      const sunsetPrecip = pickNumber(sunsetHour, ["precipProbability", "precipitation_probability", "probabilityOfPrecipitation"]);
+      els.cloudStatus.textContent = `Clouds ${pct(sunsetCloud ?? state.skyIntel?.cloud)}`;
+      els.humidityStatus.textContent = `Humidity ${pct(sunsetHumidity)}`;
+      els.precipStatus.textContent = `Rain chance ${pct(sunsetPrecip)}`;
       els.windowStatus.textContent = radiance.phase?.label || "Radiance window --";
       els.windowStatus.classList.toggle("closed", isClosed);
 
@@ -1678,7 +1690,13 @@
 
     async function loadWeather() {
       try {
-        const res = await fetch(`/api/weather?type=hourly&lat=${ASHEVILLE.lat}&lon=${ASHEVILLE.lon}`);
+        const params = new URLSearchParams({
+          route: "weather",
+          type: "hourly",
+          lat: String(ASHEVILLE.lat),
+          lon: String(ASHEVILLE.lon)
+        });
+        const res = await fetch(`/api/router?${params.toString()}`);
         if (!res.ok) throw new Error("Weather feed failed");
         state.weather = await res.json();
         renderRadiance();
