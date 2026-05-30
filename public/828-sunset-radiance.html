@@ -435,6 +435,43 @@
       text-transform: uppercase;
     }
 
+    .sky-help {
+      margin-top: 10px;
+    }
+
+    .sky-help summary {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--blue);
+      background: #eef5ff;
+      font-size: 12px;
+      font-weight: 850;
+      list-style: none;
+      cursor: pointer;
+    }
+
+    .sky-help summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .sky-help p {
+      margin: 10px 0 0;
+      padding: 10px 11px;
+      border: 1px solid rgba(15, 76, 196, 0.16);
+      border-radius: 8px;
+      color: var(--muted);
+      background: #f4f8ff;
+      font-size: 12px;
+      font-weight: 650;
+      line-height: 1.45;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
     .index-panel {
       position: sticky;
       top: 74px;
@@ -1052,7 +1089,14 @@
               </div>
               <div>
                 <b id="confidenceMetric">--</b>
-                <span>Sky confidence</span>
+                <span>Sky read confidence</span>
+                <details class="sky-help">
+                  <summary>What is this?</summary>
+                  <p>
+                    How confident the camera analysis is in its current sky read, based on cloud cover,
+                    contrast, sunlight, blue-sky signal, fog, and night conditions.
+                  </p>
+                </details>
               </div>
               <div>
                 <b id="captureMetric">--</b>
