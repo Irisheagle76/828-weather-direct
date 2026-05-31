@@ -78,6 +78,9 @@ function normalizeHourly(hourly = []) {
     precipAmount:
       h.precipAmount ?? h.precipitation ?? 0,
 
+    snowfall:
+      h.snowfall ?? 0,
+
     precipProbability:
       h.precipProbability ?? h.precipitation_probability ?? null,
 
@@ -315,6 +318,7 @@ export async function renderNewLayout(container) {
     <div class="top-stack">
       <div id="active-alerts" class="fade-in"></div>
       <div id="feelscore" class="fade-in"></div>
+      <div id="active-weather" class="fade-in"></div>
       <div id="timeline" class="fade-in"></div>
       <div id="tomorrow" class="fade-in"></div>
       <div id="forecast-link" class="fade-in"></div>
@@ -376,6 +380,7 @@ console.log("CURRENT DEBUG:", {
     // ------------------------------------------------------------
    
   renderFeelScore(human?.feelscore, hourlyForComfort);
+    renderActiveWeather(current, hourlyForComfort);
     renderTimeline(hourlyForComfort, data?.daily, current, tempest);
 renderTomorrow(human?.tomorrow);
 renderForecastLink();
@@ -548,6 +553,169 @@ function renderFeelScore(data, hourly = []) {
   `;
 
   animateScoreOnce('#feelscore .fs-score', score);
+}
+
+// ============================================================
+// ACTIVE WEATHER NOW
+// ============================================================
+
+function renderActiveWeather(current = null, hourly = []) {
+  const container = document.getElementById("active-weather");
+  if (!container) return;
+
+  const active = buildActiveWeatherNow(current, hourly);
+  if (!active) {
+    container.innerHTML = "";
+    return;
+  }
+
+  const rate = Number.isFinite(active.rateInHr)
+    ? `<span>${active.rateInHr.toFixed(2)} in/hr</span>`
+    : "";
+
+  container.innerHTML = `
+    <div class="active-weather-card ${active.tone}">
+      <div class="active-weather-icon" aria-hidden="true">${active.icon}</div>
+      <div class="active-weather-copy">
+        <div class="active-weather-label">${active.label}</div>
+        <div class="active-weather-headline">${active.headline}</div>
+        <div class="active-weather-detail">${active.detail}</div>
+      </div>
+      ${rate ? `<div class="active-weather-rate">${rate}</div>` : ""}
+    </div>
+  `;
+}
+
+function buildActiveWeatherNow(current = null, hourly = []) {
+  const nearest = getNearestHour(hourly);
+  const rateInHr = getCurrentPrecipRateInHr(current);
+  const localRain = rateInHr > 0.001 || current?.isRainingNow === true;
+  const forecastPrecipNow = hasPrecipSignal(nearest || {});
+  const forecastSnowNow = hasSnowSignal(nearest || {});
+  const thunder = hasThunderSignal(current || {}, nearest || {}, rateInHr);
+
+  if (thunder) {
+    return {
+      tone: "storm",
+      icon: "⛈️",
+      label: "Active weather",
+      headline: "Thunderstorm signal nearby",
+      detail: localRain
+        ? "Tempest is measuring rain locally, with lightning or storm-rate rain in the current signal."
+        : "Lightning or thunderstorm conditions are showing in the near-term weather signal.",
+      rateInHr: localRain ? rateInHr : null
+    };
+  }
+
+  if (localRain) {
+    const intensity = getRainIntensity(rateInHr);
+    const wintry = forecastSnowNow || isNearFreezing(current, nearest || {});
+    return {
+      tone: wintry ? "winter" : "rain",
+      icon: wintry ? "🌨️" : "🌧️",
+      label: "Falling now",
+      headline: wintry ? "Precipitation is reaching the station" : `${intensity} rain at the station`,
+      detail: wintry
+        ? "Tempest confirms precipitation is falling; the forecast profile is cold enough that type may be mixed or wintry."
+        : "This is based on the local Tempest precip sensor, not the airport observation.",
+      rateInHr
+    };
+  }
+
+  if (forecastSnowNow) {
+    return {
+      tone: "winter",
+      icon: "❄️",
+      label: "Possible now",
+      headline: "Wintry precipitation may be nearby",
+      detail: "Tempest cannot directly identify falling snow, so this uses the current forecast code and temperature profile.",
+      rateInHr: null
+    };
+  }
+
+  if (forecastPrecipNow && nearest?.precipProbability >= 0.65) {
+    return {
+      tone: "nearby",
+      icon: "🌧️",
+      label: "Nearby signal",
+      headline: `${capitalize(getPrecipLabel(nearest || {}))} may be close by`,
+      detail: "The forecast has a strong current precipitation signal, but the local Tempest sensor is not measuring rain right now.",
+      rateInHr: null
+    };
+  }
+
+  return null;
+}
+
+function getNearestHour(hourly = []) {
+  const now = Date.now();
+  const nearest = hourly
+    .filter(h => h && Number.isFinite(h.timestamp))
+    .map(h => ({ ...h, distance: Math.abs(h.timestamp - now) }))
+    .sort((a, b) => a.distance - b.distance)[0];
+
+  return nearest?.distance <= 90 * 60 * 1000 ? nearest : null;
+}
+
+function getCurrentPrecipRateInHr(current = null) {
+  const raw = current?.precipRate ?? current?.precip_rate;
+  if (!Number.isFinite(raw) || raw <= 0) return 0;
+
+  // WeatherFlow/Tempest REST observations are metric; convert mm/hr to in/hr.
+  return raw / 25.4;
+}
+
+function hasSnowSignal(hour = {}) {
+  const code = Number.isFinite(hour?.weatherCode) ? hour.weatherCode : null;
+  const snowfall = Number.isFinite(hour?.snowfall) ? hour.snowfall : 0;
+  const precipType = String(hour?.precipType || "").toLowerCase();
+
+  return (
+    snowfall > 0 ||
+    (code >= 71 && code <= 77) ||
+    (code >= 85 && code <= 86) ||
+    /snow|sleet|ice|freezing/.test(precipType)
+  );
+}
+
+function hasThunderSignal(current = {}, hour = {}, rateInHr = 0) {
+  const code = Number.isFinite(hour?.weatherCode) ? hour.weatherCode : null;
+  const strikeCount =
+    current?.lightningStrikeCount ??
+    current?.lightning_strike_count ??
+    0;
+
+  return strikeCount > 0 || code >= 95 || rateInHr >= 0.75;
+}
+
+function isNearFreezing(current = {}, hour = {}) {
+  const temp =
+    getCurrentTempF(current) ??
+    hour?.temperatureF ??
+    null;
+
+  return Number.isFinite(temp) && temp <= 35;
+}
+
+function getCurrentTempF(current = {}) {
+  if (Number.isFinite(current?.temperatureF)) return current.temperatureF;
+  if (Number.isFinite(current?.air_temperature)) {
+    return (current.air_temperature * 9) / 5 + 32;
+  }
+  if (Number.isFinite(current?.temp)) {
+    return current.temp > 45 ? current.temp : (current.temp * 9) / 5 + 32;
+  }
+  return null;
+}
+
+function getRainIntensity(rateInHr = 0) {
+  if (rateInHr >= 0.3) return "Heavy";
+  if (rateInHr >= 0.1) return "Steady";
+  return "Light";
+}
+
+function capitalize(text = "") {
+  return text ? text.charAt(0).toUpperCase() + text.slice(1) : text;
 }
 
 // ============================================================
