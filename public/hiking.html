@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>828 Hiking Guidance</title>
-  <link rel="stylesheet" href="css/hiking.css?v=1780414787540" />
+  <link rel="stylesheet" href="css/hiking.css?v=1780427005165" />
 </head>
 <body>
   <header class="hiking-header">
@@ -12,48 +12,58 @@
       <div class="brand-title">828 Hiking Guidance</div>
       <div class="brand-sub">Elevation-aware trail weather for Asheville and the WNC high peaks</div>
     </div>
-    <div class="status-pill">Good for most hikes</div>
+    <div class="status-pill">Lightning nearby, avoid exposed terrain</div>
   </header>
 
   <main class="hiking-wrap">
     
-    <section class="hikerscore-hero panel panel-read ">
+    <section class="lightning-banner" role="alert" aria-live="assertive">
+      <div class="lightning-mark" aria-hidden="true">⚡</div>
+      <div class="lightning-copy">
+        <div class="lightning-kicker">Lightning alert</div>
+        <h2>Tempest lightning may be in the vicinity of your hike</h2>
+        <p>Tempest lightning may be in the vicinity of the hike. High Asheville North is the closest lightning signal. Stay alert and avoid exposed ridges, balds, summits, and open slopes until the signal clears.</p>
+        <div class="lightning-meta">1 strike in the last hour · 2 strikes in the last 3 hours · last strike 8 - 11 mi · last detected Jun 2, 3:02 PM</div>
+      </div>
+    </section>
+  
+    <section class="hikerscore-hero panel panel-read panel-lightning">
       <div class="hikerscore-main">
         <div class="kicker">HikerScore</div>
         <div class="score-row">
           <div class="score-badge">
-            <strong>65</strong>
-            <span>Mixed</span>
+            <strong>25</strong>
+            <span>Alert</span>
           </div>
           <div class="score-copy">
-            <div class="status-pill hero-status">Good, watch sun</div>
-            <h1>Good overall, but expect damp pockets, wet leaves, or low cloud early.</h1>
+            <div class="status-pill hero-status">Lightning alert</div>
+            <h1>Stay off exposed ridges, balds, summits, and open slopes until the lightning signal clears.</h1>
           </div>
         </div>
 
         <div class="stat-chip-row" aria-label="Quick hiking stats">
-          <div class="stat-chip"><span>Asheville spread</span><strong>5&deg;F</strong></div>
-          <div class="stat-chip"><span>Mitchell drop</span><strong>15&deg;F</strong></div>
-          <div class="stat-chip"><span>Peak UV</span><strong>5</strong></div>
+          <div class="stat-chip"><span>Asheville spread</span><strong>4&deg;F</strong></div>
+          <div class="stat-chip"><span>Mitchell drop</span><strong>21&deg;F</strong></div>
+          <div class="stat-chip"><span>Peak UV</span><strong>10</strong></div>
         </div>
 
         <details class="hiker-details">
           <summary>Full hiker read</summary>
-          <p>If you are heading out, Asheville-area trails look good for most hikes. The nearby readings sit within about 5&deg;F of each other, so elevation alone may not change the feel very much. The two high Asheville readings are telling a similar ridge story, which means shade, slope, and open exposure still matter. Mount Mitchell is about 15&deg;F cooler than the Asheville-area readings, so high-peak hikes deserve an extra layer and a separate comfort check. Moisture is close enough for fog, low cloud, or wet leaves in sheltered spots. Open routes need sun awareness and steady water; forested trails should feel more forgiving.</p>
+          <p>Tempest lightning may be in the vicinity of your hike. High Asheville North reported 1 strike in the last hour · 2 strikes in the last 3 hours · last strike 8 - 11 mi · last detected Jun 2, 3:02 PM. Stay alert and avoid exposed ridges, balds, summits, and open slopes until the signal clears.</p>
         </details>
 
-        <div class="meta">Updated Jun 2, 11:39 AM &middot; 6/6 readings live</div>
+        <div class="meta">Updated Jun 2, 3:03 PM &middot; 6/6 readings live</div>
       </div>
 
       <aside class="tldr-card">
         <div class="kicker">TL;DR</div>
-        <ul><li>Good overall, but expect damp pockets, wet leaves, or low cloud early.</li><li>Asheville-area spread is about 5&deg;F.</li><li>Mount Mitchell is about 15&deg;F cooler than Asheville.</li><li>Wind is light; sun exposure is the main watch item.</li></ul>
+        <ul><li>Tempest lightning is nearby. Avoid exposed terrain until the signal clears.</li><li>Asheville-area spread is about 4&deg;F.</li><li>Mount Mitchell is about 21&deg;F cooler than Asheville.</li><li>Wind is light; sun exposure is the main watch item.</li></ul>
       </aside>
     </section>
 
     <section class="panel panel-choice">
       <div class="section-title"><span>Trail choice</span><h2>What this means on foot</h2></div>
-      <div class="trail-grid trail-grid-three"><div class="mini-card"><strong>Best bet</strong><span>Forested trails, shaded slopes, and routes with easy water breaks.</span></div><div class="mini-card"><strong>Use care</strong><span>Open ridges, overlooks, pavement, and exposed rock.</span></div><div class="mini-card"><strong>Pack mindset</strong><span>Water and sun protection locally; add a layer for high peaks.</span></div></div>
+      <div class="trail-grid trail-grid-three"><div class="mini-card"><strong>Best bet</strong><span>Sheltered low-elevation routes only if you must go; exposed terrain is a no-go until the lightning clears.</span></div><div class="mini-card"><strong>Use care</strong><span>Open ridges, balds, summits, overlooks, and pavement are the places to avoid.</span></div><div class="mini-card"><strong>Pack mindset</strong><span>Water and sun protection locally; add a layer for high peaks.</span></div></div>
     </section>
 
     <section class="panel panel-profile">
@@ -84,7 +94,7 @@
       <text class="profile-elev" x="145" y="348" text-anchor="middle">1981 ft</text>
       <circle class="profile-base-dot" cx="145" cy="450" r="4" />
       <text class="profile-bottom-name" x="145" y="480" text-anchor="middle">Grove Arcade</text>
-      <text class="profile-bottom-temp" x="145" y="505" text-anchor="middle">62°</text>
+      <text class="profile-bottom-temp" x="145" y="505" text-anchor="middle">63°</text>
     </g><g class="profile-site">
       <line class="profile-stem" x1="305" y1="392" x2="305" y2="450" />
       <circle class="profile-dot" cx="305" cy="379" r="10" />
@@ -94,7 +104,7 @@
       <text class="profile-elev" x="305" y="339" text-anchor="middle">2137 ft</text>
       <circle class="profile-base-dot" cx="305" cy="450" r="4" />
       <text class="profile-bottom-name" x="305" y="480" text-anchor="middle">Lower Asheville</text>
-      <text class="profile-bottom-temp" x="305" y="505" text-anchor="middle">62°</text>
+      <text class="profile-bottom-temp" x="305" y="505" text-anchor="middle">65°</text>
     </g><g class="profile-site">
       <line class="profile-stem" x1="455" y1="383" x2="455" y2="450" />
       <circle class="profile-dot" cx="455" cy="370" r="10" />
@@ -104,7 +114,7 @@
       <text class="profile-elev" x="455" y="330" text-anchor="middle">2316 ft</text>
       <circle class="profile-base-dot" cx="455" cy="450" r="4" />
       <text class="profile-bottom-name" x="455" y="480" text-anchor="middle">Mid Asheville</text>
-      <text class="profile-bottom-temp" x="455" y="505" text-anchor="middle">60°</text>
+      <text class="profile-bottom-temp" x="455" y="505" text-anchor="middle">64°</text>
     </g><g class="profile-site">
       <line class="profile-stem" x1="635" y1="327" x2="635" y2="450" />
       <circle class="profile-dot" cx="635" cy="314" r="10" />
@@ -114,7 +124,7 @@
       <text class="profile-elev" x="635" y="294" text-anchor="middle">3363 ft</text>
       <circle class="profile-base-dot" cx="635" cy="450" r="4" />
       <text class="profile-bottom-name" x="635" y="480" text-anchor="middle">High East</text>
-      <text class="profile-bottom-temp" x="635" y="505" text-anchor="middle">57°</text>
+      <text class="profile-bottom-temp" x="635" y="505" text-anchor="middle">61°</text>
     </g><g class="profile-site">
       <line class="profile-stem" x1="790" y1="327" x2="790" y2="450" />
       <circle class="profile-dot" cx="790" cy="314" r="10" />
@@ -124,7 +134,7 @@
       <text class="profile-elev" x="790" y="294" text-anchor="middle">3371 ft</text>
       <circle class="profile-base-dot" cx="790" cy="450" r="4" />
       <text class="profile-bottom-name" x="790" y="480" text-anchor="middle">High North</text>
-      <text class="profile-bottom-temp" x="790" y="505" text-anchor="middle">57°</text>
+      <text class="profile-bottom-temp" x="790" y="505" text-anchor="middle">63°</text>
     </g><g class="profile-site">
       <line class="profile-stem" x1="955" y1="150" x2="955" y2="450" />
       <circle class="profile-dot" cx="955" cy="137" r="10" />
@@ -134,7 +144,7 @@
       <text class="profile-elev" x="955" y="106" text-anchor="middle">6684 ft</text>
       <circle class="profile-base-dot" cx="955" cy="450" r="4" />
       <text class="profile-bottom-name" x="955" y="480" text-anchor="middle">Mount Mitchell</text>
-      <text class="profile-bottom-temp" x="955" y="505" text-anchor="middle">44°</text>
+      <text class="profile-bottom-temp" x="955" y="505" text-anchor="middle">42°</text>
     </g>
         </svg>
       </div>
@@ -142,16 +152,16 @@
 
     <section class="panel panel-compare">
       <div class="section-title"><span>Trail comparisons</span><h2>What changes by route type</h2></div>
-      <div class="comparison-grid"><div class="comparison-card"><strong>Mountain vs Asheville</strong><span>Mount Mitchell is about 15&deg;F cooler than the Asheville-area readings.</span></div><div class="comparison-card"><strong>Ridge vs Valley</strong><span>High Asheville readings broadly agree, but exposed ridges can still change the feel.</span></div><div class="comparison-card"><strong>Sun exposure</strong><span>Open overlooks, rock, and pavement need sun awareness and steady water.</span></div><div class="comparison-card"><strong>Wind check</strong><span>Wind is light at the reporting sites, so comfort is mostly about sun, shade, and layers.</span></div></div>
+      <div class="comparison-grid"><div class="comparison-card"><strong>Mountain vs Asheville</strong><span>Mount Mitchell is about 21&deg;F cooler than the Asheville-area readings.</span></div><div class="comparison-card"><strong>Ridge vs Valley</strong><span>High Asheville readings broadly agree, but exposed ridges can still change the feel.</span></div><div class="comparison-card"><strong>Sun exposure</strong><span>Open overlooks, rock, and pavement need sun awareness and steady water.</span></div><div class="comparison-card"><strong>Wind check</strong><span>Wind is light at the reporting sites, so comfort is mostly about sun, shade, and layers.</span></div></div>
     </section>
 
     <section class="panel panel-data">
       <div class="section-title"><span>Important hiker data</span><h2>Elevation and comfort signals</h2></div>
-      <div class="diagnostic-grid"><div class="metric-card"><span>Local spread</span><strong>5&deg;F</strong><p>Temperature range across the Asheville-area readings.</p></div><div class="metric-card"><span>High split</span><strong>0&deg;F</strong><p>Difference between the two high Asheville readings.</p></div><div class="metric-card"><span>Mitchell drop</span><strong>15&deg;F</strong><p>Cooling from Asheville-area readings to Mount Mitchell.</p></div><div class="metric-card"><span>Fog risk</span><strong>Elevated</strong><p>Based on the tightest temperature/dew point spread.</p></div><div class="metric-card"><span>Highest UV</span><strong>5</strong><p>Peak UV reading or estimate from the reporting sites.</p></div><div class="metric-card"><span>Peak gust</span><strong>12 mph</strong><p>Highest gust among the reporting sites.</p></div></div>
+      <div class="diagnostic-grid"><div class="metric-card"><span>Local spread</span><strong>4&deg;F</strong><p>Temperature range across the Asheville-area readings.</p></div><div class="metric-card"><span>High split</span><strong>2&deg;F</strong><p>Difference between the two high Asheville readings.</p></div><div class="metric-card"><span>Mitchell drop</span><strong>21&deg;F</strong><p>Cooling from Asheville-area readings to Mount Mitchell.</p></div><div class="metric-card"><span>Fog risk</span><strong>Elevated</strong><p>Based on the tightest temperature/dew point spread.</p></div><div class="metric-card"><span>Highest UV</span><strong>10</strong><p>Peak UV reading or estimate from the reporting sites.</p></div><div class="metric-card"><span>Peak gust</span><strong>19 mph</strong><p>Highest gust among the reporting sites.</p></div></div>
     </section>
 
     <section class="panel panel-table">
-      <div class="section-title section-title-row"><span>Station check</span><h2>Current readings by elevation</h2><em>As of Jun 2, 11:39am ET</em></div>
+      <div class="section-title section-title-row"><span>Station check</span><h2>Current readings by elevation</h2><em>As of Jun 2, 3:03pm ET</em></div>
       <div class="station-grid">
         <a class="station-card" href="https://www.ncei.noaa.gov/access/asheville-weather/details">
           <div class="station-card-top">
@@ -159,15 +169,15 @@
               <strong>Grove Arcade</strong>
               <span class="station-elevation">1981 ft</span>
             </div>
-            <div class="station-temp">62&deg;</div>
+            <div class="station-temp">63&deg;</div>
           </div>
-          <div class="station-feel"><span>Comfortable</span><strong>62&deg;</strong></div>
+          <div class="station-feel"><span>Comfortable</span><strong>63&deg;</strong></div>
           <div class="station-metrics">
             <span><b>Source</b>NOAA NCEI</span>
-            <span><b>Dew</b>51&deg;</span>
-            <span><b>Humid</b>68%</span>
-            <span><b>Wind</b>ESE at 7 mph, gusting to 12 mph</span>
-            <span><b>UV</b>UV 2.6</span>
+            <span><b>Dew</b>52&deg;</span>
+            <span><b>Humid</b>66%</span>
+            <span><b>Wind</b>SE at 6 mph, gusting to 19 mph</span>
+            <span><b>UV</b>UV 6.6</span>
           </div>
         </a><a class="station-card" href="https://tempestwx.com/station/144737/grid">
           <div class="station-card-top">
@@ -175,15 +185,15 @@
               <strong>Lower Asheville</strong>
               <span class="station-elevation">2137 ft</span>
             </div>
-            <div class="station-temp">62&deg;</div>
+            <div class="station-temp">65&deg;</div>
           </div>
-          <div class="station-feel"><span>Easy</span><strong>trail heat 60&deg;</strong></div>
+          <div class="station-feel"><span>Comfortable</span><strong>trail heat 66&deg;</strong></div>
           <div class="station-metrics">
             <span><b>Source</b>Tempest</span>
-            <span><b>Dew</b>53&deg;</span>
-            <span><b>Humid</b>72%</span>
-            <span><b>Wind</b>NE at 4 mph, gusting to 7 mph</span>
-            <span><b>UV</b>UV 3</span>
+            <span><b>Dew</b>54&deg;</span>
+            <span><b>Humid</b>67%</span>
+            <span><b>Wind</b>W at 3 mph, gusting to 6 mph</span>
+            <span><b>UV</b>UV 9</span>
           </div>
         </a><a class="station-card" href="https://tempestwx.com/station/127602/grid">
           <div class="station-card-top">
@@ -191,15 +201,15 @@
               <strong>Mid Asheville</strong>
               <span class="station-elevation">2316 ft</span>
             </div>
-            <div class="station-temp">60&deg;</div>
+            <div class="station-temp">64&deg;</div>
           </div>
-          <div class="station-feel"><span>Easy</span><strong>trail heat 60&deg;</strong></div>
+          <div class="station-feel"><span>Comfortable</span><strong>trail heat 67&deg;</strong></div>
           <div class="station-metrics">
             <span><b>Source</b>Tempest</span>
-            <span><b>Dew</b>54&deg;</span>
-            <span><b>Humid</b>81%</span>
-            <span><b>Wind</b>ENE at 4 mph, gusting to 5 mph</span>
-            <span><b>UV</b>UV 4</span>
+            <span><b>Dew</b>55&deg;</span>
+            <span><b>Humid</b>72%</span>
+            <span><b>Wind</b>NE at 2 mph, gusting to 4 mph</span>
+            <span><b>UV</b>UV 8</span>
           </div>
         </a><a class="station-card" href="https://tempestwx.com/station/160562/grid">
           <div class="station-card-top">
@@ -207,15 +217,15 @@
               <strong>High Asheville East</strong>
               <span class="station-elevation">3363 ft</span>
             </div>
-            <div class="station-temp">57&deg;</div>
+            <div class="station-temp">61&deg;</div>
           </div>
-          <div class="station-feel"><span>Easy</span><strong>trail heat 57&deg;</strong></div>
+          <div class="station-feel"><span>Easy</span><strong>trail heat 62&deg;</strong></div>
           <div class="station-metrics">
             <span><b>Source</b>Tempest</span>
             <span><b>Dew</b>53&deg;</span>
-            <span><b>Humid</b>86%</span>
-            <span><b>Wind</b>ESE at 6 mph, gusting to 9 mph</span>
-            <span><b>UV</b>UV 5</span>
+            <span><b>Humid</b>76%</span>
+            <span><b>Wind</b>ESE at 5 mph, gusting to 7 mph</span>
+            <span><b>UV</b>UV 10</span>
           </div>
         </a><a class="station-card" href="https://tempestwx.com/station/157700/grid">
           <div class="station-card-top">
@@ -223,14 +233,14 @@
               <strong>High Asheville North</strong>
               <span class="station-elevation">3371 ft</span>
             </div>
-            <div class="station-temp">57&deg;</div>
+            <div class="station-temp">63&deg;</div>
           </div>
-          <div class="station-feel"><span>Easy</span><strong>trail heat 56&deg;</strong></div>
+          <div class="station-feel"><span>Easy</span><strong>trail heat 61&deg;</strong></div>
           <div class="station-metrics">
             <span><b>Source</b>Tempest</span>
-            <span><b>Dew</b>52&deg;</span>
-            <span><b>Humid</b>83%</span>
-            <span><b>Wind</b>ENE at 4 mph, gusting to 5 mph</span>
+            <span><b>Dew</b>56&deg;</span>
+            <span><b>Humid</b>77%</span>
+            <span><b>Wind</b>NE at 2 mph, gusting to 4 mph</span>
             <span><b>UV</b>UV 2</span>
           </div>
         </a><a class="station-card" href="https://nchighpeaks.org/davis/RSS/weewx_rss.xml">
@@ -239,13 +249,13 @@
               <strong>Mount Mitchell</strong>
               <span class="station-elevation">6684 ft</span>
             </div>
-            <div class="station-temp">44&deg;</div>
+            <div class="station-temp">42&deg;</div>
           </div>
-          <div class="station-feel"><span>Cool layer</span><strong>44&deg;</strong></div>
+          <div class="station-feel"><span>Cool layer</span><strong>42&deg;</strong></div>
           <div class="station-metrics">
             <span><b>Source</b>NCHighPeaks WeeWX</span>
-            <span><b>Dew</b>26&deg;</span>
-            <span><b>Humid</b>48%</span>
+            <span><b>Dew</b>41&deg;</span>
+            <span><b>Humid</b>97%</span>
             <span><b>Wind</b>Calm</span>
             <span><b>UV</b>n/a</span>
           </div>
