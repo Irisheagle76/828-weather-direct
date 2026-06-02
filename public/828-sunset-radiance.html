@@ -1436,6 +1436,7 @@
     const SKY_REFRESH_MS = 5000;
     const SKY_STALE_MS = 20 * 60 * 1000;
     const LIVE_THUMBNAIL_URL = "https://i.ytimg.com/vi/UxUU3Fc1vBw/maxresdefault_live.jpg";
+    const SKYCAM_RAW_BASE = "https://raw.githubusercontent.com/Irisheagle76/828-weather-direct/main/public/js/sky-cam";
     const UNCA_CAMERA_URL = "https://wlos.com/resources/ftptransfer/wlos/maps/Cam%20UNCA%20EcoNet.png";
     const SATELLITE_LOOP_URL = "https://cdn.star.nesdis.noaa.gov/WFO/gsp/GEOCOLOR/GOES19-GSP-GEOCOLOR-600x600.gif";
 
@@ -1532,8 +1533,18 @@
       return new Date(ts).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit", timeZone: ASHEVILLE.timeZone });
     }
 
+    function isProductionHost() {
+      return location.hostname === "avlweather.com" || location.hostname.endsWith(".vercel.app");
+    }
+
+    function skyDataUrl() {
+      const base = isProductionHost() ? `${SKYCAM_RAW_BASE}/output.json` : "js/sky-cam/output.json";
+      return `${base}?t=${encodeURIComponent(Date.now())}`;
+    }
+
     function skyFrameUrl(version) {
-      return `js/sky-cam/frame.jpg?t=${encodeURIComponent(version || Date.now())}`;
+      const base = isProductionHost() ? `${SKYCAM_RAW_BASE}/frame.jpg` : "js/sky-cam/frame.jpg";
+      return `${base}?t=${encodeURIComponent(version || Date.now())}`;
     }
 
     function liveThumbnailUrl() {
@@ -2143,7 +2154,8 @@
 
     async function loadSky() {
       try {
-        const res = await fetch(`js/sky-cam/output.json?t=${Date.now()}`);
+        const res = await fetch(skyDataUrl());
+        if (!res.ok) throw new Error("Sky camera feed failed");
         const data = await res.json();
         const skyIntel = computeSkyIntel({
           camera: data,
