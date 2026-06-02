@@ -1221,7 +1221,7 @@
             <div class="sky-meta" aria-label="Camera metrics">
               <div>
                 <b id="cloudMetric">--</b>
-                <span>Camera cloud cover</span>
+                <span id="cloudMetricLabel">Camera cloud cover</span>
               </div>
               <div>
                 <b id="lightMetric">--</b>
@@ -1240,7 +1240,7 @@
               </div>
               <div>
                 <b id="captureMetric">--</b>
-                <span>Camera capture</span>
+                <span id="captureMetricLabel">Camera capture</span>
               </div>
             </div>
           </article>
@@ -1468,9 +1468,11 @@
       skyHeadline: document.querySelector("#skyHeadline"),
       skyDetail: document.querySelector("#skyDetail"),
       cloudMetric: document.querySelector("#cloudMetric"),
+      cloudMetricLabel: document.querySelector("#cloudMetricLabel"),
       lightMetric: document.querySelector("#lightMetric"),
       confidenceMetric: document.querySelector("#confidenceMetric"),
       captureMetric: document.querySelector("#captureMetric"),
+      captureMetricLabel: document.querySelector("#captureMetricLabel"),
       hero: document.querySelector(".hero"),
       indexScore: document.querySelector("#indexScore"),
       indexTitle: document.querySelector("#indexTitle"),
@@ -1546,6 +1548,12 @@
       const ts = parseTimestamp(value);
       if (!Number.isFinite(ts)) return true;
       return Date.now() - ts > SKY_STALE_MS;
+    }
+
+    function isCurrentDaylight() {
+      const daily = getTodayDaily(state.weather);
+      const now = Date.now();
+      return Number.isFinite(daily?.sunrise) && Number.isFinite(daily?.sunset) && now >= daily.sunrise && now < daily.sunset;
     }
 
     function setSkyFrame(version, useLiveThumbnail = false) {
@@ -1635,6 +1643,21 @@
         if (!closest) return hour;
         return Math.abs(hour.timestamp - daily.sunset) < Math.abs(closest.timestamp - daily.sunset) ? hour : closest;
       }, null);
+    }
+
+    function getCurrentHour(weather) {
+      if (!weather?.hourly?.length) return null;
+      const now = Date.now();
+      return weather.hourly.reduce((closest, hour) => {
+        if (!Number.isFinite(hour.timestamp)) return closest;
+        if (!closest) return hour;
+        return Math.abs(hour.timestamp - now) < Math.abs(closest.timestamp - now) ? hour : closest;
+      }, null);
+    }
+
+    function normalizePercentValue(value) {
+      if (!Number.isFinite(value)) return null;
+      return value <= 1 ? value * 100 : value;
     }
 
     function pickNumber(source, keys) {
@@ -1807,6 +1830,8 @@
     function renderRadiance() {
       const radiance = buildRadiance();
       const sunsetHour = getSunsetHour(state.weather);
+      const currentHour = getCurrentHour(state.weather);
+      const statusHour = currentHour || sunsetHour;
       const daily = getTodayDaily(state.weather);
       const camera = state.skyData?.metrics || {};
       const isClosed = radiance.phase?.state === "closed";
@@ -1819,12 +1844,12 @@
       els.indexMeter.style.width = `${isClosed ? 0 : clamp(radiance.score)}%`;
       els.heroSunset.textContent = daily?.sunset ? formatTime(daily.sunset) : "--";
 
-      const sunsetCloud = pickNumber(sunsetHour, ["cloudCover", "cloud_cover", "cloudcover"]);
-      const sunsetHumidity = pickNumber(sunsetHour, ["relativeHumidity", "relative_humidity", "humidity"]);
-      const sunsetPrecip = pickNumber(sunsetHour, ["precipProbability", "precipitation_probability", "probabilityOfPrecipitation"]);
-      els.cloudStatus.textContent = `Clouds ${pct(sunsetCloud ?? state.skyIntel?.cloud)}`;
-      els.humidityStatus.textContent = `Humidity ${pct(sunsetHumidity)}`;
-      els.precipStatus.textContent = `Rain chance ${pct(sunsetPrecip)}`;
+      const statusCloud = pickNumber(statusHour, ["cloudCover", "cloud_cover", "cloudcover"]);
+      const statusHumidity = pickNumber(statusHour, ["relativeHumidity", "relative_humidity", "humidity"]);
+      const statusPrecip = pickNumber(statusHour, ["precipProbability", "precipitation_probability", "probabilityOfPrecipitation"]);
+      els.cloudStatus.textContent = `Clouds ${pct(statusCloud ?? state.skyIntel?.cloud)}`;
+      els.humidityStatus.textContent = `Humidity ${pct(statusHumidity)}`;
+      els.precipStatus.textContent = `Rain chance ${pct(statusPrecip)}`;
       els.windowStatus.textContent = radiance.phase?.label || "Radiance window --";
       els.windowStatus.classList.toggle("closed", isClosed);
 
@@ -1847,7 +1872,9 @@
       els.windowTitle.textContent = isClosed ? "Window closed" : daily?.sunset ? `Sunset ${formatTime(daily.sunset)}` : "Sunset pending";
       els.windowCopy.textContent = isClosed ? "The evening radiance window has passed. Check back tomorrow as the next sunset setup develops." : radiance.factors[3].detail;
 
-      els.cloudMetric.textContent = pct(state.skyIntel?.cloud);
+      const cameraCloudAvailable = Number.isFinite(state.skyIntel?.cloud);
+      els.cloudMetric.textContent = pct(cameraCloudAvailable ? state.skyIntel.cloud : statusCloud);
+      els.cloudMetricLabel.textContent = cameraCloudAvailable ? "Camera cloud cover" : "Forecast cloud cover";
       els.lightMetric.textContent = camera.sunlightDetected ? labelize(camera.sunlightLevel) : "Low";
       els.confidenceMetric.textContent = pct(state.skyIntel?.confidence);
 
@@ -1932,23 +1959,185 @@
       });
     }
 
+    function getWeatherCodeFamily(code) {
+      if (!Number.isFinite(code)) return "unknown";
+      if ([45, 48].includes(code)) return "fog";
+      if (code >= 51 && code <= 67) return "drizzle";
+      if (code >= 71 && code <= 77) return "snow";
+      if (code >= 80 && code <= 82) return "showers";
+      if (code >= 95) return "storm";
+      if (code >= 1 && code <= 3) return "clouds";
+      return "quiet";
+    }
+
+    function describeCloudLayer({ cloudPct, humidityPct, rainPct, codeFamily, nearSunrise }) {
+      if (codeFamily === "fog" || (nearSunrise && Number.isFinite(humidityPct) && humidityPct >= 92 && cloudPct >= 70)) {
+        return {
+          headline: "Low clouds and mountain fog are part of the view.",
+          detail: "This looks more like a low stratus or fog signal than a clean high-cloud sunrise setup, so street-level brightness may stay muted until the deck lifts."
+        };
+      }
+
+      if (["drizzle", "showers", "storm"].includes(codeFamily) || (Number.isFinite(rainPct) && rainPct >= 35 && cloudPct >= 70)) {
+        return {
+          headline: "A damp cloud deck is controlling the sky.",
+          detail: "Rain-bearing clouds can flatten the light quickly, but brighter edges or thinning clouds near the mountains would still be worth watching."
+        };
+      }
+
+      if (cloudPct >= 88) {
+        return {
+          headline: "Clouds are dominant, but filtered daylight is still getting through.",
+          detail: "The sky reads more overcast than open, with limited shadow potential at street level unless a brighter break develops."
+        };
+      }
+
+      if (cloudPct >= 68) {
+        return {
+          headline: "Clouds are in control, but the sky is not completely shut down.",
+          detail: "There is enough filtered light for a brighter feel, though direct sun and crisp shadows may come and go."
+        };
+      }
+
+      if (cloudPct >= 42) {
+        return {
+          headline: "Broken clouds are giving Asheville a mixed sky.",
+          detail: "This is the useful middle ground: cloud texture is present, but there are still brighter windows where sun can punch through."
+        };
+      }
+
+      if (cloudPct >= 18) {
+        return {
+          headline: "Scattered clouds are leaving plenty of sky open.",
+          detail: "Thin or separated cloud layers can keep the view bright, with better chances for visible sun breaks and street-level shadows."
+        };
+      }
+
+      return {
+        headline: "The sky looks fairly open over Asheville.",
+        detail: "Cloud texture is limited right now, so the view may feel bright but less dramatic unless high clouds spread back in."
+      };
+    }
+
+    function buildLiveViewNarrative() {
+      const currentHour = getCurrentHour(state.weather);
+      const cloud = pickNumber(currentHour, ["cloudCover", "cloud_cover", "cloudcover"]);
+      const humidity = pickNumber(currentHour, ["relativeHumidity", "relative_humidity", "humidity"]);
+      const precip = pickNumber(currentHour, ["precipProbability", "precipitation_probability", "probabilityOfPrecipitation"]);
+      const weatherCode = pickNumber(currentHour, ["weatherCode", "weather_code"]);
+      const cloudPct = normalizePercentValue(cloud);
+      const humidityPct = normalizePercentValue(humidity);
+      const rainPct = normalizePercentValue(precip);
+      const daylight = getTodayDaily(state.weather);
+      const now = Date.now();
+      const nearSunrise = Number.isFinite(daylight?.sunrise) && now >= daylight.sunrise && now <= daylight.sunrise + 3 * 60 * 60 * 1000;
+
+      if (Number.isFinite(cloudPct)) {
+        const layer = describeCloudLayer({
+          cloudPct,
+          humidityPct,
+          rainPct,
+          codeFamily: getWeatherCodeFamily(weatherCode),
+          nearSunrise
+        });
+        const crossCheck = Number.isFinite(humidityPct)
+          ? ` Current forecast context: ${Math.round(cloudPct)}% clouds, ${Math.round(humidityPct)}% humidity${Number.isFinite(rainPct) ? `, ${Math.round(rainPct)}% rain chance` : ""}.`
+          : ` Current forecast context: ${Math.round(cloudPct)}% clouds${Number.isFinite(rainPct) ? `, ${Math.round(rainPct)}% rain chance` : ""}.`;
+        return {
+          headline: layer.headline,
+          detail: `${layer.detail}${crossCheck}`
+        };
+      }
+
+      return {
+        headline: "Layered clouds are showing over Asheville with daylight returning to the view.",
+        detail: "The live thumbnail is carrying the current visual read while the automated camera analysis catches up. Use the backup camera, radar, and satellite loop below to cross-check cloud depth."
+      };
+    }
+
     function renderSky() {
       const narrative = state.narrative;
       const skyIntel = state.skyIntel;
-      const skyLabel = labelize(skyIntel?.atmosphericState);
+      const captureVersion = parseTimestamp(state.skyData?.timestamp) || Date.now();
+      const skyStale = isSkyDataStale(state.skyData?.timestamp);
+      const staleNightAnalysis = skyStale && state.skyData?.metrics?.mode === "night" && isCurrentDaylight();
+      const liveNarrative = staleNightAnalysis ? buildLiveViewNarrative() : null;
+      const skyLabel = staleNightAnalysis ? "Live Sky" : labelize(skyIntel?.atmosphericState);
 
       els.skyChip.textContent = skyLabel;
       els.heroSky.textContent = skyLabel;
-      els.skyHeadline.textContent = narrative?.headline || "Reading the western sky.";
-      els.skyDetail.textContent = narrative?.detail || "The camera snapshot will update automatically.";
-      const captureVersion = parseTimestamp(state.skyData?.timestamp) || Date.now();
-      const skyStale = isSkyDataStale(state.skyData?.timestamp);
+      els.skyHeadline.textContent = staleNightAnalysis
+        ? liveNarrative.headline
+        : narrative?.headline || "Reading the western sky.";
+      els.skyDetail.textContent = staleNightAnalysis
+        ? liveNarrative.detail
+        : narrative?.detail || "The camera snapshot will update automatically.";
       els.liveStatus.textContent = skyStale
-        ? `Live thumbnail showing; analysis last ran ${formatCaptureTime(state.skyData?.timestamp)}`
+        ? "Live sky image active"
         : `Camera captured ${formatCaptureTime(state.skyData?.timestamp)}`;
-      els.captureMetric.textContent = formatCaptureTime(state.skyData?.timestamp);
+      els.captureMetric.textContent = skyStale ? "Current" : formatCaptureTime(state.skyData?.timestamp);
+      els.captureMetricLabel.textContent = skyStale ? "Live thumbnail" : "Camera capture";
       setSkyFrame(captureVersion, skyStale);
       renderRadiance();
+    }
+
+    function normalizeOpenMeteoPercent(value) {
+      if (!Number.isFinite(value)) return null;
+      return clamp(value / 100, 0, 1);
+    }
+
+    function normalizeOpenMeteoTimestamp(value) {
+      if (Number.isFinite(value)) return value < 1e12 ? value * 1000 : value;
+      const ts = new Date(value).getTime();
+      return Number.isFinite(ts) ? ts : null;
+    }
+
+    async function fetchWeatherFallback() {
+      const params = new URLSearchParams({
+        latitude: String(ASHEVILLE.lat),
+        longitude: String(ASHEVILLE.lon),
+        hourly: "temperature_2m,dew_point_2m,relative_humidity_2m,precipitation,rain,snowfall,precipitation_probability,cloud_cover,wind_speed_10m,wind_gusts_10m,uv_index,weather_code",
+        daily: "temperature_2m_max,temperature_2m_min,precipitation_probability_max,cloud_cover_mean,sunrise,sunset",
+        forecast_days: "5",
+        temperature_unit: "fahrenheit",
+        wind_speed_unit: "mph",
+        precipitation_unit: "inch",
+        timezone: "auto",
+        timeformat: "unixtime"
+      });
+      const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`);
+      if (!res.ok) throw new Error("Open-Meteo fallback failed");
+      const data = await res.json();
+      const hourly = (data.hourly?.time || []).map((time, index) => ({
+        timestamp: normalizeOpenMeteoTimestamp(time),
+        temperatureF: data.hourly.temperature_2m?.[index] ?? null,
+        dewpointF: data.hourly.dew_point_2m?.[index] ?? null,
+        relativeHumidity: data.hourly.relative_humidity_2m?.[index] ?? null,
+        precipitation: data.hourly.rain?.[index] ?? data.hourly.precipitation?.[index] ?? 0,
+        snowfall: data.hourly.snowfall?.[index] ?? 0,
+        precipProbability: normalizeOpenMeteoPercent(data.hourly.precipitation_probability?.[index]),
+        cloudCover: normalizeOpenMeteoPercent(data.hourly.cloud_cover?.[index]),
+        windSpeed: data.hourly.wind_speed_10m?.[index] ?? 0,
+        windGust: data.hourly.wind_gusts_10m?.[index] ?? null,
+        uvIndex: data.hourly.uv_index?.[index] ?? null,
+        weatherCode: data.hourly.weather_code?.[index] ?? null
+      }));
+      const daily = (data.daily?.time || []).map((time, index) => ({
+        timestamp: normalizeOpenMeteoTimestamp(time),
+        tempMax: data.daily.temperature_2m_max?.[index] ?? null,
+        tempMin: data.daily.temperature_2m_min?.[index] ?? null,
+        precipProbability: normalizeOpenMeteoPercent(data.daily.precipitation_probability_max?.[index]),
+        cloudCover: normalizeOpenMeteoPercent(data.daily.cloud_cover_mean?.[index]),
+        sunrise: normalizeOpenMeteoTimestamp(data.daily.sunrise?.[index]),
+        sunset: normalizeOpenMeteoTimestamp(data.daily.sunset?.[index])
+      }));
+
+      return {
+        hourly,
+        daily,
+        current: null,
+        _source: "open-meteo-direct"
+      };
     }
 
     async function loadSky() {
@@ -1983,9 +2172,16 @@
         const res = await fetch(`/api/router?${params.toString()}`);
         if (!res.ok) throw new Error("Weather feed failed");
         state.weather = await res.json();
+        if (state.skyData) renderSky();
         renderRadiance();
       } catch {
-        renderRadiance();
+        try {
+          state.weather = await fetchWeatherFallback();
+          if (state.skyData) renderSky();
+          renderRadiance();
+        } catch {
+          renderRadiance();
+        }
       }
     }
 
