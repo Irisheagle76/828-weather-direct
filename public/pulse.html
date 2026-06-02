@@ -72,6 +72,27 @@
       line-height: 1.55;
       white-space: pre-wrap;
     }
+
+    .pulse-feed-text p {
+      margin: 0 0 0.75em;
+    }
+
+    .pulse-feed-text p:last-child {
+      margin-bottom: 0;
+    }
+
+    .pulse-feed-text ul,
+    .pulse-feed-text ol {
+      margin: 0.45em 0 0.75em 1.25em;
+      padding: 0;
+    }
+
+    .pulse-feed-text a {
+      color: #9ecbff;
+      font-weight: 700;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
   </style>
 </head>
 <body>
@@ -90,13 +111,6 @@
   <script type="module">
     const feed = document.getElementById("pulse-feed");
 
-    function cleanText(html) {
-      return (html || "")
-        .replace(/<[^>]+>/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-    }
-
     function escapeHTML(value) {
       return String(value).replace(/[&<>"']/g, (char) => ({
         "&": "&amp;",
@@ -105,6 +119,57 @@
         '"': "&quot;",
         "'": "&#39;"
       }[char]));
+    }
+
+    function sanitizePulseHtml(html) {
+      const template = document.createElement("template");
+      template.innerHTML = html || "";
+
+      const allowedTags = new Set(["A", "B", "BR", "CODE", "EM", "I", "LI", "OL", "P", "STRONG", "U", "UL"]);
+      const allowedProtocols = new Set(["http:", "https:", "mailto:", "tel:"]);
+
+      function cleanNode(node) {
+        for (const child of Array.from(node.childNodes)) {
+          if (child.nodeType === Node.TEXT_NODE) continue;
+
+          if (child.nodeType !== Node.ELEMENT_NODE || !allowedTags.has(child.tagName)) {
+            cleanNode(child);
+            child.replaceWith(...Array.from(child.childNodes));
+            continue;
+          }
+
+          const rawHref = child.tagName === "A" ? child.getAttribute("href") || "" : "";
+
+          for (const attr of Array.from(child.attributes)) {
+            child.removeAttribute(attr.name);
+          }
+
+          if (child.tagName === "A") {
+            let href = "";
+
+            try {
+              const url = new URL(rawHref, window.location.origin);
+              if (allowedProtocols.has(url.protocol)) href = url.href;
+            } catch {
+              href = "";
+            }
+
+            if (href) {
+              child.setAttribute("href", href);
+              child.setAttribute("target", "_blank");
+              child.setAttribute("rel", "noopener noreferrer");
+            } else {
+              child.replaceWith(...Array.from(child.childNodes));
+              continue;
+            }
+          }
+
+          cleanNode(child);
+        }
+      }
+
+      cleanNode(template.content);
+      return template.innerHTML.trim();
     }
 
     function formatDate(timestamp) {
@@ -144,7 +209,7 @@
         <article class="content-card pulse-feed-item" id="pulse-${escapeHTML(item.timestamp || "")}">
           <div class="pulse-feed-meta">${escapeHTML(formatDate(item.timestamp))}</div>
           ${mediaHtml(item)}
-          <div class="pulse-feed-text">${escapeHTML(cleanText(item.text || item.body || item.content || ""))}</div>
+          <div class="pulse-feed-text">${sanitizePulseHtml(item.text || item.body || item.content || "")}</div>
         </article>
       `).join("");
 

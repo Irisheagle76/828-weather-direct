@@ -5,10 +5,10 @@
   <title>Tim's Forecast Board &bull; 828 Weather</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <link rel="stylesheet" href="/css/app-v2.css?v=20260514-footer-card" />
+  <link rel="stylesheet" href="/css/app-v2.css?v=20260601-homepage-palette" />
 </head>
 
-<body>
+<body class="forecast-refresh">
 
   <!-- =====================================
        HEADER (SHARED)
@@ -16,11 +16,19 @@
   <header class="app-header">
     <div class="header-inner">
 
-      <div class="brand">
-        <div class="brand-title">828 Weather Direct</div>
-        <div class="brand-sub">
-          Hyper-local Asheville forecast built by Tim Ballisty
-        </div>
+      <div class="forecast-header-row">
+        <a class="brand" href="/" aria-label="828 Weather Direct home">
+          <div class="brand-title">828 Weather Direct</div>
+          <div class="brand-sub">
+            Hyper-local Asheville forecast built by Tim Ballisty
+          </div>
+        </a>
+
+        <nav class="forecast-nav" aria-label="Primary navigation">
+          <a href="/">Home</a>
+          <a class="active" href="/forecast.html" aria-current="page">Forecast</a>
+          <a href="/hiking.html">Hiking</a>
+        </nav>
       </div>
 
     </div>
@@ -40,6 +48,16 @@
        MAIN CONTENT
        ===================================== -->
   <main class="page-container forecast-page">
+    <section class="forecast-page-intro" aria-label="Forecast page introduction">
+      <div>
+        <div class="forecast-page-kicker">Asheville outlook</div>
+        <h1>Tim's Forecast Board</h1>
+        <p>
+          A practical four-day read on comfort, rain timing, and the local signals that matter around the 828.
+        </p>
+      </div>
+      <a class="forecast-admin-link" href="/admin/forecast/">Update board</a>
+    </section>
 
     <!-- NEW FORECAST STRUCTURE ROOT -->
     <section id="forecast-root">
@@ -101,7 +119,7 @@
        SCRIPT
        ===================================== -->
   <script type="module">
-    import { render4DayForecast } from '/js/modules/render4DayForecast.js?v=signals-trimmed-20260513';
+    import { render4DayForecast } from '/js/modules/render4DayForecast.js?v=signals-flexible-20260601';
 
     const root = document.getElementById('forecast-root');
 
@@ -111,7 +129,7 @@
       } catch (e) {
         console.error('Forecast load failed:', e);
         if (root) {
-          root.innerHTML = '<div class="card forecast-summary">The 4-day forecast is unavailable right now. Please check back shortly.</div>';
+          root.innerHTML = '<div class="card forecast-summary forecast-error">The 4-day forecast is unavailable right now. Please check back shortly.</div>';
         }
       } finally {
         setTimeout(hideSplash, 900);

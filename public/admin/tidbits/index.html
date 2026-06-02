@@ -562,10 +562,10 @@
           <button type="button" data-action="italic"><span class="icon">I</span></button>
           <button type="button" data-action="underline"><span class="icon">U</span></button>
           <button type="button" data-action="code"><span class="icon">{ }</span></button>
-          <button type="button" data-action="ul"><span class="icon">•</span> List</button>
+          <button type="button" data-action="ul"><span class="icon">&bull;</span> List</button>
           <button type="button" data-action="ol"><span class="icon">1.</span> List</button>
-          <button type="button" data-action="link"><span class="icon">🔗</span>Link</button>
-          <button type="button" data-action="clear"><span class="icon">✕</span>Clear</button>
+          <button type="button" data-action="link"><span class="icon">Link</span></button>
+          <button type="button" data-action="clear"><span class="icon">X</span>Clear</button>
         </div>
 
         <div id="editor" contenteditable="true"></div>
@@ -576,7 +576,7 @@
         <div class="media-zone" id="media-zone">
           <div class="media-zone-left">
             <div class="media-zone-title">Drop image or video here</div>
-            <div class="media-zone-sub">Tap to browse · JPG, PNG, MP4</div>
+            <div class="media-zone-sub">Tap to browse &middot; JPG, PNG, MP4</div>
             <div class="media-zone-badge">
               <span>Uses 828 fallback if empty</span>
             </div>
@@ -655,6 +655,7 @@
   let isUploading = false;
   let draftSaveTimer = null;
   let recentAssets = [];
+  let savedEditorRange = null;
 
   // -----------------------------
   // Utility: selection + range
@@ -663,6 +664,19 @@
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0) return null;
     return sel.getRangeAt(0);
+  }
+
+  function saveEditorRange() {
+    if (!isSelectionInsideEditor()) return;
+    const range = getCurrentRange();
+    if (range) savedEditorRange = range.cloneRange();
+  }
+
+  function restoreEditorRange() {
+    if (!savedEditorRange) return;
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(savedEditorRange);
   }
 
   function isSelectionInsideEditor() {
@@ -867,12 +881,17 @@
   // -----------------------------
   // Toolbar events
   // -----------------------------
+  toolbar.addEventListener('mousedown', (e) => {
+    if (e.target.closest('button[data-action]')) e.preventDefault();
+  });
+
   toolbar.addEventListener('click', (e) => {
     const btn = e.target.closest('button[data-action]');
     if (!btn) return;
     const action = btn.dataset.action;
 
     editor.focus();
+    restoreEditorRange();
 
     switch (action) {
       case 'bold':
@@ -935,9 +954,14 @@
   // -----------------------------
   editor.addEventListener('input', () => {
     normalizeEditor();
+    saveEditorRange();
     updatePreview();
     scheduleDraftSave();
   });
+
+  editor.addEventListener('keyup', saveEditorRange);
+  editor.addEventListener('mouseup', saveEditorRange);
+  document.addEventListener('selectionchange', saveEditorRange);
 
   function normalizeEditor() {
     if (editor.innerHTML.trim() === '') {
@@ -1317,7 +1341,7 @@ function updateTimestamp() {
     if (!html) return;
 
     publishBtn.disabled = true;
-    setStatus("Preparing…", "busy");
+    setStatus("Preparing...", "busy");
 
     try {
       let mediaUrl = null;
@@ -1326,7 +1350,7 @@ function updateTimestamp() {
       if (currentFile) {
         isUploading = true;
         showProgress(true);
-        setStatus("Uploading media…", "busy");
+        setStatus("Uploading media...", "busy");
         const uploaded = await uploadPulseMedia(currentFile);
         mediaUrl = uploaded.mediaUrl;
         mediaType = uploaded.mediaType;
@@ -1334,12 +1358,12 @@ function updateTimestamp() {
         currentMediaType = mediaType;
         isUploading = false;
         showProgress(false);
-        setStatus("Publishing…", "busy");
+        setStatus("Publishing...", "busy");
         updatePreview();
       } else {
         mediaUrl = currentMediaUrl || null;
         mediaType = currentMediaUrl ? currentMediaType : null;
-        setStatus("Publishing…", "busy");
+        setStatus("Publishing...", "busy");
       }
 
       const res = await fetch("/api/router?route=tidbits/pulse-write", {
@@ -1358,7 +1382,7 @@ function updateTimestamp() {
         throw new Error(`API error: ${res.status} - ${text}`);
       }
 
-      setStatus("Published ✔", "success");
+      setStatus("Published", "success");
       editor.innerHTML = "";
       currentMediaUrl = "";
       currentMediaType = null;

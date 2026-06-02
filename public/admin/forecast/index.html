@@ -446,6 +446,218 @@ pre {
   font-size: 12px;
 }
 
+/* ============================================================
+   Homepage-preview aligned composer refresh
+   ============================================================ */
+
+:root {
+  --bg: #f6f2eb;
+  --panel: #fffdf8;
+  --panel-soft: #f8fafc;
+  --panel-border: #dce5ed;
+  --text: #142033;
+  --muted: #617085;
+  --blue: #0f4cc4;
+  --blue-dark: #0b214d;
+  --blue-soft: #dbe8ff;
+  --green: #4fa66a;
+  --green-soft: #eff8f0;
+  --orange: #f57d23;
+  --orange-soft: #fff1e7;
+  --danger: #d9472f;
+  --radius: 14px;
+  --shadow: 0 18px 44px rgba(11, 30, 67, 0.12);
+}
+
+body {
+  background:
+    radial-gradient(circle at 16% 0%, rgba(15, 76, 196, 0.08), transparent 30%),
+    radial-gradient(circle at 88% 6%, rgba(245, 125, 35, 0.09), transparent 28%),
+    var(--bg);
+  color: var(--text);
+  color-scheme: light;
+}
+
+.composer-shell {
+  width: min(1240px, 100%);
+  grid-template-columns: minmax(340px, 560px) minmax(360px, 1fr);
+  gap: 22px;
+}
+
+.panel-header {
+  padding: 2px 0 4px;
+}
+
+h1 {
+  color: var(--text);
+  font-size: 24px;
+  font-weight: 950;
+  letter-spacing: 0;
+}
+
+.hint {
+  color: var(--muted);
+  font-weight: 650;
+}
+
+.day-pill,
+.group,
+.json-card {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--shadow);
+}
+
+.day-pill {
+  color: var(--text);
+  border-radius: 999px;
+}
+
+.day-pill span,
+label,
+.group-title,
+.json-title,
+.signal-card-editor-head {
+  color: #6b7890;
+}
+
+.day-pill.active {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: var(--panel);
+}
+
+.day-pill.active span {
+  color: rgba(255, 253, 248, 0.78);
+}
+
+.group {
+  background: var(--panel);
+}
+
+.group-title {
+  color: var(--orange);
+  font-weight: 950;
+  letter-spacing: 0.1em;
+}
+
+input,
+textarea,
+select,
+.field label[style] {
+  background: var(--panel-soft) !important;
+  border-color: var(--panel-border) !important;
+  color: var(--text) !important;
+}
+
+select option {
+  color: var(--text);
+  background: var(--panel);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(97, 112, 133, 0.72);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: rgba(15, 76, 196, 0.55) !important;
+  box-shadow: 0 0 0 3px rgba(15, 76, 196, 0.12);
+}
+
+.btn {
+  color: var(--blue);
+  background: var(--blue-soft);
+  border-color: rgba(15, 76, 196, 0.12);
+  border-radius: 999px;
+}
+
+.btn.primary {
+  color: var(--panel);
+  background: var(--blue);
+  border-color: var(--blue);
+}
+
+.btn.warn {
+  color: #8b3d12;
+  background: var(--orange-soft);
+  border-color: rgba(245, 125, 35, 0.26);
+}
+
+.system-box {
+  color: #31415c;
+  background: var(--blue-soft);
+  border-color: rgba(15, 76, 196, 0.16);
+}
+
+.system-box strong {
+  color: var(--blue-dark);
+}
+
+.forecast-card {
+  color: var(--panel);
+  background:
+    radial-gradient(circle at 88% 0%, rgba(247, 200, 115, 0.24), transparent 30%),
+    linear-gradient(135deg, #101b33, #0d2e72);
+  border-color: rgba(15, 76, 196, 0.18);
+  box-shadow: var(--shadow);
+}
+
+.forecast-card .day {
+  color: #ffb47f;
+  font-weight: 950;
+}
+
+.forecast-card .temp-label,
+.forecast-card .wind {
+  color: rgba(255, 253, 248, 0.66);
+}
+
+.forecast-card .low,
+.forecast-card .takeaway {
+  color: rgba(255, 253, 248, 0.82);
+}
+
+.headline-preview {
+  color: var(--panel);
+  font-size: clamp(1.9rem, 3.4vw, 2.9rem);
+  font-weight: 950;
+}
+
+.time-block,
+.local-note,
+.confidence-note,
+.signal-card-editor {
+  background: rgba(255, 253, 248, 0.1);
+  border-color: rgba(255, 253, 248, 0.16);
+}
+
+.signal-card-editor {
+  background: #f8fafc;
+  border-color: var(--panel-border);
+}
+
+.signal {
+  color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.json-card {
+  color: var(--text);
+}
+
+pre {
+  background: #101b33;
+  color: #dbe8ff;
+}
+
+.copy-status {
+  color: var(--green);
+  font-weight: 800;
+}
+
 @media (max-width: 860px) {
   .composer-shell {
     grid-template-columns: 1fr;
@@ -918,7 +1130,7 @@ const SIGNAL_PRESET_LABELS = [
 ];
 
 const SIGNAL_TYPES = ["auto", "comfort", "impact", "pattern", "uncertainty", "mountain", "custom"];
-const SIGNAL_CARD_COUNT = 2;
+const SIGNAL_CARD_COUNT = 4;
 
 const DAY_COUNT = 4;
 const STORAGE_KEY = "forecast-composer-v1";
@@ -1051,7 +1263,7 @@ function saveBoardFields() {
 
 function loadBoardFields() {
   BOARD_FIELD_IDS.forEach(id => {
-    el(id).value = state.board?.[id] ?? boardDefaults()[id] ?? "";
+    el(id).value = state.board?.[id] || boardDefaults()[id] || "";
   });
 }
 
@@ -1063,7 +1275,7 @@ function renderSignalEditor() {
       <div class="signal-card-editor" data-signal-index="${index}">
         <div class="signal-card-editor-head">
           <span>Signal ${number}</span>
-          <span>Use 2 cards</span>
+          <span>Optional feature signal</span>
         </div>
 
         <div class="field-grid">
@@ -1200,7 +1412,11 @@ function ensureDay(dateStr) {
     return;
   }
 
-  state.days[dateStr] = {
+  state.days[dateStr] = emptyComposerDay(dateStr);
+}
+
+function emptyComposerDay(dateStr) {
+  return {
     date: dateStr,
     confidence: "",
     headline: "",
@@ -1445,7 +1661,7 @@ function normalizeWeekAheadSignalsForPublish() {
 
   const cards = normalizeSignalCardsForComposer(state.weekAheadSignals?.cards)
     .map(card => {
-      const label = card.presetLabel === "CREATE MY OWN" ? card.customLabel : card.presetLabel;
+      const label = normalizeSignalCardLabel(card);
       const type = card.type === "auto" ? typeForSignalLabel(label) : card.type;
       return {
         label: emptyToString(label),
@@ -1454,10 +1670,17 @@ function normalizeWeekAheadSignalsForPublish() {
         type: normalizeSignalType(type)
       };
     })
-    .filter(card => card.label && card.value)
-    .slice(0, 2);
+    .filter(card => card.label && card.value);
 
   return { global, cards };
+}
+
+function normalizeSignalCardLabel(card = {}) {
+  const presetLabel = emptyToString(card.presetLabel);
+  const customLabel = emptyToString(card.customLabel);
+
+  if (presetLabel === "CREATE MY OWN") return customLabel;
+  return emptyToString(card.label || presetLabel || customLabel);
 }
 
 function boardDefaults() {
@@ -1537,10 +1760,16 @@ function updateJson() {
 }
 
 function persist() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    ...state,
+    forecastDates: getForecastDates(),
+    savedAt: new Date().toISOString()
+  }));
 }
 
 async function loadSavedState() {
+  let savedDays = {};
+
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (saved?.days) {
@@ -1551,6 +1780,7 @@ async function loadSavedState() {
         ...(saved.weekAheadSignals || {})
       };
       state.days = saved.days;
+      savedDays = saved.days;
     }
   } catch {
     state.board = boardDefaults();
@@ -1571,8 +1801,31 @@ async function loadSavedState() {
 
   const forecastDates = getForecastDates();
   forecastDates.forEach(dateStr => ensureDay(dateStr));
+  hydrateFromSavedDays(forecastDates, savedDays);
   await hydrateFromLatestForecast(forecastDates);
   forecastDates.forEach(dateStr => ensureDay(dateStr));
+}
+
+function hydrateFromSavedDays(forecastDates, savedDays = {}) {
+  if (!savedDays || typeof savedDays !== "object") return;
+
+  let hydrated = false;
+
+  forecastDates.forEach(dateStr => {
+    if (hasComposerContent(state.days[dateStr])) return;
+
+    const savedDay = findComposerDayByDate(savedDays, dateStr);
+    if (!savedDay || !hasComposerContent(savedDay)) return;
+
+    state.days[dateStr] = {
+      ...emptyComposerDay(dateStr),
+      ...savedDay,
+      date: dateStr
+    };
+    hydrated = true;
+  });
+
+  if (hydrated) persist();
 }
 
 async function hydrateFromLatestForecast(forecastDates) {
@@ -1586,7 +1839,7 @@ async function hydrateFromLatestForecast(forecastDates) {
   let hydrated = false;
 
   forecastDates.forEach(dateStr => {
-    const publishedDay = latest.days[dateStr];
+    const publishedDay = findPublishedDayByDate(latest.days, dateStr);
     if (!publishedDay || !hasPublishedContent(publishedDay)) return;
     if (hasComposerContent(state.days[dateStr])) return;
 
@@ -1595,6 +1848,18 @@ async function hydrateFromLatestForecast(forecastDates) {
   });
 
   if (hydrated) persist();
+}
+
+function findComposerDayByDate(days = {}, dateStr) {
+  if (days[dateStr]) return days[dateStr];
+
+  return Object.values(days).find(day => day?.date === dateStr) || null;
+}
+
+function findPublishedDayByDate(days = {}, dateStr) {
+  if (days[dateStr]) return days[dateStr];
+
+  return Object.values(days).find(day => day?.date === dateStr) || null;
 }
 
 function hydrateBoardFromLatest(latest) {
@@ -1688,27 +1953,21 @@ function composerDayFromPublished(dateStr, day = {}) {
 }
 
 function hasComposerContent(day = {}) {
-  return [
-    day.headline,
-    day.narrative,
-    day.high,
-    day.low,
-    day.icon,
-    day.condition,
-    day.feelScore,
-    day.mainIssue,
-    day.bestWindow,
-    day.morning,
-    day.midday,
-    day.afternoon,
-    day.evening,
-    day.localNote,
-    day.signals
-  ].some(value => String(value ?? "").trim());
+  return FIELD_IDS.some(id => {
+    const value = day[id];
+
+    if (id === "stormRisk") return value && value !== "none";
+    if (id === "windCalm" || id === "windGustNA") return Boolean(value);
+
+    return String(value ?? "").trim();
+  });
 }
 
 function hasPublishedContent(day = {}) {
   const timeline = day.timeline || {};
+  const rainWindow = day.rainWindow || {};
+  const wind = day.wind || {};
+
   return [
     day.headline,
     day.narrative,
@@ -1719,6 +1978,19 @@ function hasPublishedContent(day = {}) {
     day.feelScore,
     day.mainIssue,
     day.bestWindow,
+    wind.direction,
+    wind.speedMin,
+    wind.speedMax,
+    wind.speed,
+    wind.gust,
+    wind.calm,
+    wind.gustNA,
+    day.sky,
+    day.evolution,
+    day.humidity,
+    day.stormRisk && day.stormRisk !== "none" ? day.stormRisk : "",
+    rainWindow.start,
+    rainWindow.end,
     timeline.morning,
     timeline.midday,
     timeline.afternoon,

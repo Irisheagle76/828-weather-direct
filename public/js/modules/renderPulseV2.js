@@ -28,7 +28,8 @@ export function renderPulseV2(container, pulse) {
   // DATA
   // ------------------------------------------------------------
   const time = formatTimeAgo(new Date(pulse.timestamp));
-  const text = cleanText(pulse.text || pulse.body || "");
+  const html = sanitizePulseHtml(pulse.text || pulse.body || "");
+  const text = htmlToText(html);
   const media = pulse.mediaUrl || pulse.image || null;
   const recent = Array.isArray(pulse.recent) ? pulse.recent.slice(0, 4) : [];
 
@@ -77,7 +78,7 @@ export function renderPulseV2(container, pulse) {
 
       <div class="pulse-body">
         <div class="pulse-text">
-          ${escapeHTML(text)}
+          ${html}
         </div>
         <div class="pulse-fade"></div>
       </div>
@@ -155,13 +156,6 @@ export function renderPulseV2(container, pulse) {
 // HELPERS
 // ============================================================
 
-function cleanText(html) {
-  return (html || "")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
 function createRecentRail(items) {
   if (!items.length) return "";
 
@@ -170,7 +164,7 @@ function createRecentRail(items) {
     const isVideo = item.mediaType === "video" || media.endsWith(".mp4") || media.includes("/video/");
     const thumbnail = createThumbnailUrl(media, isVideo);
     const time = item.timestamp ? formatShortDate(new Date(item.timestamp)) : "Recent";
-    const text = cleanText(item.text || item.body || item.content || "");
+    const text = htmlToText(sanitizePulseHtml(item.text || item.body || item.content || ""));
     const label = text ? text.slice(0, 64) : "Weather Pulse update";
     const href = `/pulse.html${item.timestamp ? `#pulse-${item.timestamp}` : ""}`;
 
@@ -206,6 +200,63 @@ function createThumbnailUrl(url, isVideo) {
       ? "/upload/so_0,c_fill,w_220,h_124,q_auto,f_jpg/"
       : "/upload/c_fill,w_220,h_124,q_auto,f_auto/"
   );
+}
+
+function sanitizePulseHtml(html) {
+  const template = document.createElement("template");
+  template.innerHTML = html || "";
+
+  const allowedTags = new Set(["A", "B", "BR", "CODE", "EM", "I", "LI", "OL", "P", "STRONG", "U", "UL"]);
+  const allowedProtocols = new Set(["http:", "https:", "mailto:", "tel:"]);
+
+  function cleanNode(node) {
+    for (const child of Array.from(node.childNodes)) {
+      if (child.nodeType === Node.TEXT_NODE) continue;
+
+      if (child.nodeType !== Node.ELEMENT_NODE || !allowedTags.has(child.tagName)) {
+        cleanNode(child);
+        child.replaceWith(...Array.from(child.childNodes));
+        continue;
+      }
+
+      const rawHref = child.tagName === "A" ? child.getAttribute("href") || "" : "";
+
+      for (const attr of Array.from(child.attributes)) {
+        child.removeAttribute(attr.name);
+      }
+
+      if (child.tagName === "A") {
+        let href = "";
+
+        try {
+          const url = new URL(rawHref, window.location.origin);
+          if (allowedProtocols.has(url.protocol)) href = url.href;
+        } catch {
+          href = "";
+        }
+
+        if (href) {
+          child.setAttribute("href", href);
+          child.setAttribute("target", "_blank");
+          child.setAttribute("rel", "noopener noreferrer");
+        } else {
+          child.replaceWith(...Array.from(child.childNodes));
+          continue;
+        }
+      }
+
+      cleanNode(child);
+    }
+  }
+
+  cleanNode(template.content);
+  return template.innerHTML.trim();
+}
+
+function htmlToText(html) {
+  const div = document.createElement("div");
+  div.innerHTML = html || "";
+  return (div.textContent || "").replace(/\s+/g, " ").trim();
 }
 
 function escapeHTML(value) {

@@ -472,6 +472,142 @@
       text-transform: none;
     }
 
+    .sky-context-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+      gap: 18px;
+      margin-top: 22px;
+    }
+
+    .context-card {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--white);
+      box-shadow: 0 12px 36px rgba(11, 30, 67, 0.08);
+    }
+
+    .context-media {
+      position: relative;
+      display: block;
+      width: 100%;
+      min-height: 230px;
+      padding: 0;
+      border: 0;
+      color: inherit;
+      background: #102650;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .context-media img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: 230px;
+      max-height: 360px;
+      object-fit: cover;
+    }
+
+    .context-media.satellite img {
+      object-fit: contain;
+      background: #081426;
+    }
+
+    .context-media::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(0deg, rgba(7, 20, 48, 0.55), rgba(7, 20, 48, 0.02) 60%);
+      pointer-events: none;
+    }
+
+    .context-label {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 14px;
+      z-index: 2;
+      color: var(--white);
+    }
+
+    .context-label span {
+      display: inline-flex;
+      align-items: center;
+      min-height: 27px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: rgba(245, 125, 35, 0.92);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .context-label strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 20px;
+      line-height: 1.1;
+    }
+
+    .context-copy {
+      padding: 14px 16px 16px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .lightbox {
+      width: min(980px, calc(100% - 28px));
+      padding: 0;
+      border: 0;
+      border-radius: 10px;
+      background: var(--ink);
+      color: var(--white);
+      box-shadow: 0 28px 80px rgba(7, 20, 48, 0.45);
+    }
+
+    .lightbox::backdrop {
+      background: rgba(7, 20, 48, 0.74);
+    }
+
+    .lightbox-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255, 253, 248, 0.14);
+    }
+
+    .lightbox-head strong {
+      font-size: 15px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .lightbox-close {
+      display: inline-grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border: 0;
+      border-radius: 50%;
+      color: var(--ink);
+      background: var(--white);
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .lightbox img {
+      display: block;
+      width: 100%;
+      max-height: 78vh;
+      object-fit: contain;
+      background: #081426;
+    }
+
     .index-panel {
       position: sticky;
       top: 74px;
@@ -967,6 +1103,10 @@
         grid-template-columns: 1fr;
       }
 
+      .sky-context-grid {
+        grid-template-columns: 1fr;
+      }
+
       .daylight-top {
         display: block;
       }
@@ -1122,7 +1262,43 @@
             </div>
           </aside>
         </div>
+
+        <div class="sky-context-grid" aria-label="Backup sky and satellite context">
+          <article class="context-card">
+            <button class="context-media" type="button" data-lightbox-src="https://wlos.com/resources/ftptransfer/wlos/maps/Cam%20UNCA%20EcoNet.png" data-lightbox-title="UNCA EcoNet Backup Camera">
+              <img id="uncaCameraImage" src="https://wlos.com/resources/ftptransfer/wlos/maps/Cam%20UNCA%20EcoNet.png" alt="UNC Asheville EcoNet weather station camera view" loading="lazy" />
+              <span class="context-label">
+                <span>Backup camera</span>
+                <strong>UNC Asheville EcoNet weather station</strong>
+              </span>
+            </button>
+            <div class="context-copy">
+              Secondary sky reference when the main Asheville overlook camera is stale, delayed, or visually blocked.
+            </div>
+          </article>
+
+          <article class="context-card">
+            <button class="context-media satellite" type="button" data-lightbox-src="https://cdn.star.nesdis.noaa.gov/GOES19/ABI/SECTOR/se/GEOCOLOR/GOES19-SE-GEOCOLOR-600x600.gif" data-lightbox-title="GOES-East Southeast Satellite Loop">
+              <img id="satelliteLoopImage" src="https://cdn.star.nesdis.noaa.gov/GOES19/ABI/SECTOR/se/GEOCOLOR/GOES19-SE-GEOCOLOR-600x600.gif" alt="GOES-East Southeast satellite animation showing cloud motion" loading="lazy" />
+              <span class="context-label">
+                <span>Satellite loop</span>
+                <strong>Regional cloud motion into the Asheville sky</strong>
+              </span>
+            </button>
+            <div class="context-copy">
+              Click to enlarge the latest NOAA GOES-East Southeast GeoColor loop for upstream cloud breaks and clearing trends.
+            </div>
+          </article>
+        </div>
       </section>
+
+      <dialog class="lightbox" id="mediaLightbox" aria-label="Expanded sky media">
+        <div class="lightbox-head">
+          <strong id="lightboxTitle">Sky media</strong>
+          <button class="lightbox-close" type="button" id="lightboxClose" aria-label="Close expanded media">&times;</button>
+        </div>
+        <img id="lightboxImage" src="" alt="" />
+      </dialog>
 
       <section class="forecast-band" id="signals">
         <div class="section">
@@ -1236,7 +1412,8 @@
         </div>
 
         <div class="footer-meta">
-          <div>Sky image: YouTube live thumbnail snapshot analyzed by 828 Weather Direct.</div>
+          <div>Sky image: YouTube live thumbnail snapshot analyzed by 828 Weather Direct, with UNCA EcoNet as a backup view.</div>
+          <div>Satellite loop: NOAA/NESDIS GOES-East Southeast GeoColor imagery.</div>
           <div>Data: Tempest, NOAA/NWS, Open-Meteo, and local sky-camera signals where available.</div>
           <div>For general awareness only - not a substitute for official forecasts, warnings, or trail advisories.</div>
         </div>
@@ -1257,6 +1434,10 @@
       timeZone: "America/New_York"
     };
     const SKY_REFRESH_MS = 5000;
+    const SKY_STALE_MS = 20 * 60 * 1000;
+    const LIVE_THUMBNAIL_URL = "https://i.ytimg.com/vi/UxUU3Fc1vBw/maxresdefault_live.jpg";
+    const UNCA_CAMERA_URL = "https://wlos.com/resources/ftptransfer/wlos/maps/Cam%20UNCA%20EcoNet.png";
+    const SATELLITE_LOOP_URL = "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/SECTOR/se/GEOCOLOR/GOES19-SE-GEOCOLOR-600x600.gif";
 
     const state = {
       skyData: null,
@@ -1277,6 +1458,12 @@
       precipStatus: document.querySelector("#precipStatus"),
       windowStatus: document.querySelector("#windowStatus"),
       skyImage: document.querySelector("#skyImage"),
+      uncaCameraImage: document.querySelector("#uncaCameraImage"),
+      satelliteLoopImage: document.querySelector("#satelliteLoopImage"),
+      mediaLightbox: document.querySelector("#mediaLightbox"),
+      lightboxImage: document.querySelector("#lightboxImage"),
+      lightboxTitle: document.querySelector("#lightboxTitle"),
+      lightboxClose: document.querySelector("#lightboxClose"),
       skyChip: document.querySelector("#skyChip"),
       skyHeadline: document.querySelector("#skyHeadline"),
       skyDetail: document.querySelector("#skyDetail"),
@@ -1347,8 +1534,22 @@
       return `js/sky-cam/frame.jpg?t=${encodeURIComponent(version || Date.now())}`;
     }
 
-    function setSkyFrame(version) {
-      const frameUrl = skyFrameUrl(version);
+    function liveThumbnailUrl() {
+      return `${LIVE_THUMBNAIL_URL}?t=${encodeURIComponent(Date.now())}`;
+    }
+
+    function cacheBustedUrl(url) {
+      return `${url}${url.includes("?") ? "&" : "?"}t=${encodeURIComponent(Date.now())}`;
+    }
+
+    function isSkyDataStale(value) {
+      const ts = parseTimestamp(value);
+      if (!Number.isFinite(ts)) return true;
+      return Date.now() - ts > SKY_STALE_MS;
+    }
+
+    function setSkyFrame(version, useLiveThumbnail = false) {
+      const frameUrl = useLiveThumbnail ? liveThumbnailUrl() : skyFrameUrl(version);
       els.skyImage.src = frameUrl;
       els.hero.style.backgroundImage = `
         linear-gradient(120deg, rgba(8, 28, 71, 0.94), rgba(15, 76, 196, 0.64) 46%, rgba(245, 125, 35, 0.48)),
@@ -1695,6 +1896,42 @@
       }
     }
 
+    function refreshContextMedia() {
+      if (els.uncaCameraImage) {
+        els.uncaCameraImage.src = cacheBustedUrl(UNCA_CAMERA_URL);
+      }
+      if (els.satelliteLoopImage) {
+        els.satelliteLoopImage.src = cacheBustedUrl(SATELLITE_LOOP_URL);
+      }
+    }
+
+    function setupLightbox() {
+      if (!els.mediaLightbox || !els.lightboxImage) return;
+
+      document.querySelectorAll("[data-lightbox-src]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const src = button.dataset.lightboxSrc;
+          const title = button.dataset.lightboxTitle || "Sky media";
+          els.lightboxTitle.textContent = title;
+          els.lightboxImage.src = cacheBustedUrl(src);
+          els.lightboxImage.alt = title;
+          if (typeof els.mediaLightbox.showModal === "function") {
+            els.mediaLightbox.showModal();
+          }
+        });
+      });
+
+      els.lightboxClose?.addEventListener("click", () => {
+        els.mediaLightbox.close();
+      });
+
+      els.mediaLightbox.addEventListener("click", (event) => {
+        if (event.target === els.mediaLightbox) {
+          els.mediaLightbox.close();
+        }
+      });
+    }
+
     function renderSky() {
       const narrative = state.narrative;
       const skyIntel = state.skyIntel;
@@ -1705,9 +1942,12 @@
       els.skyHeadline.textContent = narrative?.headline || "Reading the western sky.";
       els.skyDetail.textContent = narrative?.detail || "The camera snapshot will update automatically.";
       const captureVersion = parseTimestamp(state.skyData?.timestamp) || Date.now();
-      els.liveStatus.textContent = `Camera captured ${formatCaptureTime(state.skyData?.timestamp)}`;
+      const skyStale = isSkyDataStale(state.skyData?.timestamp);
+      els.liveStatus.textContent = skyStale
+        ? `Live thumbnail showing; analysis last ran ${formatCaptureTime(state.skyData?.timestamp)}`
+        : `Camera captured ${formatCaptureTime(state.skyData?.timestamp)}`;
       els.captureMetric.textContent = formatCaptureTime(state.skyData?.timestamp);
-      setSkyFrame(captureVersion);
+      setSkyFrame(captureVersion, skyStale);
       renderRadiance();
     }
 
@@ -1798,8 +2038,11 @@
       });
     });
 
+    setupLightbox();
+    refreshContextMedia();
     await Promise.all([loadSky(), loadWeather()]);
     setInterval(loadSky, SKY_REFRESH_MS);
+    setInterval(refreshContextMedia, 5 * 60 * 1000);
     setInterval(loadWeather, 10 * 60 * 1000);
   </script>
 </body>

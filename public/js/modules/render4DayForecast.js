@@ -215,24 +215,30 @@ function renderBoardHero(board) {
 
 function renderWeekAheadSignals(input, board = {}) {
   const signals = normalizeWeekAheadSignals(input);
-  if (!signals.cards.length) return "";
+  const globalMarkup = renderGlobalSignals(signals.global);
+  const hasExtraSignals = Boolean(globalMarkup || signals.cards.length);
+  const sectionClass = hasExtraSignals
+    ? "week-ahead-signals"
+    : "week-ahead-signals signals-summary-only";
 
   return `
-    <section class="week-ahead-signals" aria-label="Week ahead signals">
+    <section class="${sectionClass}" aria-label="Week ahead signals">
       <div class="week-ahead-signals-head">
         <div>
           <span>Tim's weather signals</span>
           <h2>Week Ahead Signals</h2>
         </div>
-        <p>A curated look at the pattern, comfort, and watch points.</p>
+        <p>A curated look at the pattern, comfort, timing, and watch points.</p>
       </div>
 
       ${renderSignalSummaryChips(board)}
-      ${renderGlobalSignals(signals.global)}
+      ${globalMarkup}
 
-      <div class="week-ahead-signal-grid card-count-${signals.cards.length}">
-        ${signals.cards.map(renderSignalCard).join("")}
-      </div>
+      ${signals.cards.length ? `
+        <div class="week-ahead-signal-grid card-count-${signals.cards.length}">
+          ${signals.cards.map(renderSignalCard).join("")}
+        </div>
+      ` : ""}
     </section>
   `;
 }
@@ -251,19 +257,30 @@ function renderSignalSummaryChips(board = {}) {
 function normalizeWeekAheadSignals(input) {
   const cards = Array.isArray(input?.cards)
     ? input.cards
-        .map(card => ({
-          label: String(card?.label || "").trim(),
-          value: String(card?.value || "").trim(),
-          detail: String(card?.detail || "").trim(),
-          type: normalizeSignalType(card?.type)
-        }))
+        .map(normalizeSignalCard)
         .filter(card => card.label && card.value)
-        .slice(0, 2)
     : [];
 
   return {
     global: input?.global && typeof input.global === "object" ? input.global : {},
-    cards: cards.length >= 2 ? cards : []
+    cards
+  };
+}
+
+function normalizeSignalCard(card = {}) {
+  const presetLabel = String(card?.presetLabel || "").trim();
+  const customLabel = String(card?.customLabel || "").trim();
+  const label = String(
+    card?.label ||
+    (presetLabel === "CREATE MY OWN" ? customLabel : presetLabel) ||
+    customLabel
+  ).trim();
+
+  return {
+    label,
+    value: String(card?.value || "").trim(),
+    detail: String(card?.detail || "").trim(),
+    type: normalizeSignalType(card?.type === "auto" ? typeForSignalLabel(label) : card?.type)
   };
 }
 
@@ -274,6 +291,16 @@ function normalizeSignalType(type) {
     : "custom";
 }
 
+function typeForSignalLabel(label) {
+  const value = String(label || "").toUpperCase();
+  if (value.includes("PICK") || value.includes("SPRINGLIKE")) return "comfort";
+  if (value.includes("IMPACT") || value.includes("WEATHER MAKER") || value.includes("OUT OF SEASON")) return "impact";
+  if (value.includes("PATTERN")) return "pattern";
+  if (value.includes("VOLATILE") || value.includes("CONFIDENCE") || value.includes("EYES ON")) return "uncertainty";
+  if (value.includes("MOUNTAIN")) return "mountain";
+  return "custom";
+}
+
 function renderGlobalSignals(global = {}) {
   const fields = [
     { label: "Weather Pattern", value: global.weatherPattern, type: "pattern" },
@@ -281,7 +308,7 @@ function renderGlobalSignals(global = {}) {
     { label: "Wind Signal", value: global.windSignal, type: "wind" },
     { label: "Rainfall Trend", value: global.rainfallTrend, type: "rain" },
     { label: "Mountain Visibility", value: global.mountainVisibility, type: "mountain" }
-  ].filter(field => hasText(field.value)).slice(0, 3);
+  ].filter(field => hasText(field.value));
 
   if (!fields.length) return "";
 

@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>828 Weather Direct - Sky Snapshot Home Preview</title>
+  <style>
+    :root {
+      --ink: #142033;
+      --muted: #617085;
+      --line: #dce5ed;
+      --paper: #f6f2eb;
+      --white: #fffdf8;
+      --blue: #0f4cc4;
+      --blue-dark: #09255f;
+      --blue-soft: #dbe8ff;
+      --orange: #f57d23;
+      --gold: #f7c873;
+      --green: #4fa66a;
+      --shadow: 0 24px 60px rgba(11, 30, 67, 0.16);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .preview-shell {
+      min-height: 100vh;
+    }
+
+    .preview-banner {
+      background: #081a3c;
+      color: rgba(255, 253, 248, 0.74);
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .preview-banner-inner,
+    .nav,
+    .page,
+    .footer-inner {
+      width: min(1180px, calc(100% - 36px));
+      margin: 0 auto;
+    }
+
+    .preview-banner-inner {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 0;
+    }
+
+    .nav-wrap {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 253, 248, 0.92);
+      backdrop-filter: blur(16px);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 22px;
+      min-height: 78px;
+    }
+
+    .brand {
+      display: grid;
+      gap: 2px;
+    }
+
+    .brand strong {
+      color: var(--ink);
+      font-size: 23px;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .brand span {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .nav-links a {
+      padding: 8px 0;
+    }
+
+    .nav-links .button {
+      min-height: 38px;
+      padding: 0 13px;
+      border-radius: 6px;
+      color: var(--white);
+      background: var(--blue);
+    }
+
+    .page {
+      display: grid;
+      gap: 34px;
+      padding: 28px 0 64px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(420px, 1.1fr);
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .now-copy {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 560px;
+      padding: clamp(24px, 4vw, 42px);
+      border-radius: 8px;
+      color: var(--white);
+      background:
+        radial-gradient(circle at 100% 0%, rgba(245, 125, 35, 0.48), transparent 34%),
+        linear-gradient(135deg, #081a3c, #0f4cc4 76%);
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      color: rgba(255, 253, 248, 0.72);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 32px;
+      height: 2px;
+      background: var(--orange);
+    }
+
+    h1 {
+      margin: 16px 0 0;
+      max-width: 650px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(44px, 7vw, 78px);
+      line-height: 0.98;
+      letter-spacing: 0;
+    }
+
+    .now-copy p {
+      max-width: 560px;
+      margin: 20px 0 0;
+      color: rgba(255, 253, 248, 0.8);
+      font-size: 18px;
+      line-height: 1.58;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      padding: 0 17px;
+      border: 1px solid rgba(255, 253, 248, 0.34);
+      border-radius: 6px;
+      color: var(--white);
+      font-weight: 900;
+    }
+
+    .action.primary {
+      color: #112347;
+      border-color: var(--white);
+      background: var(--white);
+    }
+
+    .sky-card {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--white);
+      box-shadow: var(--shadow);
+    }
+
+    .sky-frame {
+      position: relative;
+      min-height: 420px;
+      background: #102650;
+    }
+
+    .sky-frame img {
+      display: block;
+      width: 100%;
+      min-height: 420px;
+      object-fit: cover;
+    }
+
+    .sky-frame::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(0deg, rgba(7, 20, 48, 0.66), rgba(7, 20, 48, 0.04) 54%);
+      pointer-events: none;
+    }
+
+    .sky-caption {
+      position: absolute;
+      left: 22px;
+      right: 22px;
+      bottom: 22px;
+      z-index: 2;
+      color: var(--white);
+    }
+
+    .sky-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 0 11px;
+      border-radius: 999px;
+      background: rgba(245, 125, 35, 0.94);
+      font-size: 12px;
+      font-weight: 950;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .sky-caption h2 {
+      max-width: 720px;
+      margin: 13px 0 7px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(30px, 4vw, 54px);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .sky-caption p {
+      max-width: 650px;
+      margin: 0;
+      color: rgba(255, 253, 248, 0.82);
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .sky-meta {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1px;
+      background: var(--line);
+    }
+
+    .sky-meta div {
+      min-height: 92px;
+      padding: 17px;
+      background: var(--white);
+    }
+
+    .sky-meta b {
+      display: block;
+      color: var(--blue);
+      font-size: 24px;
+      line-height: 1.05;
+    }
+
+    .sky-meta span {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .story-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--line);
+    }
+
+    .story-tile {
+      min-height: 150px;
+      padding: 18px;
+      background: var(--white);
+    }
+
+    .story-tile .kicker,
+    .section-kicker {
+      color: var(--orange);
+      font-size: 12px;
+      font-weight: 950;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .story-tile h3 {
+      margin: 22px 0 8px;
+      color: var(--ink);
+      font-size: 21px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    .story-tile p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 20px;
+      margin-top: 8px;
+    }
+
+    .section-head h2 {
+      margin: 6px 0 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(34px, 5vw, 58px);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .section-head p {
+      max-width: 520px;
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .tool-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 18px;
+    }
+
+    .tool-card {
+      min-height: 230px;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--white);
+      box-shadow: 0 12px 36px rgba(11, 30, 67, 0.08);
+    }
+
+    .tool-card.featured {
+      color: var(--white);
+      background:
+        linear-gradient(135deg, rgba(8, 26, 60, 0.9), rgba(15, 76, 196, 0.72)),
+        url("js/sky-cam/frame.jpg") center / cover no-repeat;
+    }
+
+    .tool-card h3 {
+      margin: 16px 0 10px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .tool-card p {
+      max-width: 620px;
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .tool-card.featured p,
+    .tool-card.featured .section-kicker {
+      color: rgba(255, 253, 248, 0.78);
+    }
+
+    .tool-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      margin-top: 22px;
+      padding: 0 14px;
+      border-radius: 6px;
+      color: var(--white);
+      background: var(--orange);
+      font-weight: 900;
+    }
+
+    .quiet-link {
+      color: var(--blue);
+      background: var(--blue-soft);
+    }
+
+    .mock-home-note {
+      padding: 18px 20px;
+      border: 1px dashed rgba(15, 76, 196, 0.32);
+      border-radius: 8px;
+      color: var(--muted);
+      background: rgba(219, 232, 255, 0.38);
+      line-height: 1.5;
+    }
+
+    .site-footer {
+      background: #081a3c;
+      color: rgba(255, 253, 248, 0.74);
+      padding: 38px 0 30px;
+    }
+
+    .footer-inner {
+      display: grid;
+      gap: 14px;
+    }
+
+    .footer-logo {
+      color: var(--white);
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      font-weight: 800;
+    }
+
+    @media (max-width: 980px) {
+      .hero-grid,
+      .tool-grid,
+      .story-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .now-copy {
+        min-height: auto;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .preview-banner-inner,
+      .nav {
+        display: grid;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .page {
+        width: min(100% - 28px, 1180px);
+      }
+
+      .sky-meta {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .sky-frame,
+      .sky-frame img {
+        min-height: 360px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="preview-shell">
+    <div class="preview-banner">
+      <div class="preview-banner-inner">
+        <span>Homepage concept preview</span>
+        <span>Not live homepage content</span>
+      </div>
+    </div>
+
+    <div class="nav-wrap">
+      <nav class="nav" aria-label="Preview navigation">
+        <a class="brand" href="home-sky-preview.html">
+          <strong>828 Weather Direct</strong>
+          <span>Hyper-local Asheville weather, sky context, and outdoor timing</span>
+        </a>
+        <div class="nav-links">
+          <a href="index.html">Current Home</a>
+          <a href="hiking.html">Hiking Guidance</a>
+          <a class="button" href="828-sunset-radiance.html">Sunset Radiance</a>
+        </div>
+      </nav>
+    </div>
+
+    <main class="page">
+      <section class="hero-grid" aria-label="Homepage sky snapshot concept">
+        <div class="now-copy">
+          <div class="eyebrow">Asheville right now</div>
+          <h1>The live sky becomes the weather story.</h1>
+          <p>
+            This concept brings the 828 Sunset Radiance snapshot onto the home page as a visual
+            current-conditions lead, pairing the camera read with the forecast tools already on the site.
+          </p>
+          <div class="hero-actions">
+            <a class="action primary" href="#sky-now">View sky concept</a>
+            <a class="action" href="828-sunset-radiance.html">Open full Radiance page</a>
+          </div>
+        </div>
+
+        <article class="sky-card" id="sky-now">
+          <div class="sky-frame">
+            <img id="skyImage" src="js/sky-cam/frame.jpg" alt="Near-live Asheville sky camera view" />
+            <div class="sky-caption">
+              <div class="sky-chip" id="skyChip">Loading</div>
+              <h2 id="skyHeadline">Reading the Asheville sky.</h2>
+              <p id="skyDetail">The latest sky snapshot will appear here.</p>
+            </div>
+          </div>
+          <div class="sky-meta" aria-label="Sky snapshot metrics">
+            <div>
+              <b id="cloudMetric">--</b>
+              <span>Camera cloud cover</span>
+            </div>
+            <div>
+              <b id="lightMetric">--</b>
+              <span>Sunlight signal</span>
+            </div>
+            <div>
+              <b id="confidenceMetric">--</b>
+              <span>Sky read confidence</span>
+            </div>
+            <div>
+              <b id="captureMetric">--</b>
+              <span>Camera capture</span>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="story-strip" aria-label="Connected homepage story">
+        <article class="story-tile">
+          <div class="kicker">Now</div>
+          <h3 id="nowTileTitle">Sky snapshot</h3>
+          <p id="nowTileCopy">A camera-based read of what Asheville looks like right now.</p>
+        </article>
+        <article class="story-tile">
+          <div class="kicker">Next</div>
+          <h3>Forecast pulse</h3>
+          <p>Keep the current weather engine nearby for what changes next.</p>
+        </article>
+        <article class="story-tile">
+          <div class="kicker">Outdoors</div>
+          <h3>Hiking Guidance</h3>
+          <p>Connect comfort, elevation, sun, and wind to trail decisions.</p>
+        </article>
+        <article class="story-tile">
+          <div class="kicker">Evening</div>
+          <h3>Sunset Radiance</h3>
+          <p>Use the same sky intelligence to judge sunset color potential.</p>
+        </article>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <div>
+            <div class="section-kicker">Showcase the tools</div>
+            <h2>Make the home page feel like a weather desk.</h2>
+          </div>
+          <p>
+            This preview treats the sky snapshot as the visual lead, then gives the deeper
+            products clear paths without making the page feel like a link directory.
+          </p>
+        </div>
+      </section>
+
+      <section class="tool-grid" aria-label="Featured weather tools">
+        <article class="tool-card featured">
+          <div class="section-kicker">Featured tool</div>
+          <h3>Tonight's Sunset Radiance</h3>
+          <p>
+            The full page can remain the deeper destination: sunset timing, radiance score,
+            cloud texture, clearing signal, moisture drag, and afterglow planning.
+          </p>
+          <a class="tool-link" href="828-sunset-radiance.html">Open Sunset Radiance</a>
+        </article>
+
+        <article class="tool-card">
+          <div class="section-kicker">Daily outdoor read</div>
+          <h3>Hiking Guidance</h3>
+          <p>
+            A companion card can keep the home page connected to trail conditions without
+            competing with the sky snapshot. The home page becomes a hub for the next choice.
+          </p>
+          <a class="tool-link quiet-link" href="hiking.html">View Hiking Guidance</a>
+        </article>
+      </section>
+
+      <div class="mock-home-note">
+        Preview intent: this is not a replacement homepage. It is a concept page showing how
+        the live sky snapshot could sit above or near the current conditions area while still
+        promoting the full Sunset Radiance and Hiking Guidance pages.
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-logo">828 Weather Direct</div>
+        <div>Hyper-local weather, sky context, and outdoor timing for Asheville and the greater 828 region.</div>
+        <div class="footer-links">
+          <a href="index.html">Current Home</a>
+          <a href="hiking.html">Hiking Guidance</a>
+          <a href="828-sunset-radiance.html">Sunset Radiance</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script type="module">
+    import { computeSkyIntel } from "./js/intel/sky-intel.js";
+    import { generateSkyNarrative } from "./js/intel/sky-narrative.js";
+
+    const ASHEVILLE_TIME_ZONE = "America/New_York";
+
+    const els = {
+      skyImage: document.querySelector("#skyImage"),
+      skyChip: document.querySelector("#skyChip"),
+      skyHeadline: document.querySelector("#skyHeadline"),
+      skyDetail: document.querySelector("#skyDetail"),
+      cloudMetric: document.querySelector("#cloudMetric"),
+      lightMetric: document.querySelector("#lightMetric"),
+      confidenceMetric: document.querySelector("#confidenceMetric"),
+      captureMetric: document.querySelector("#captureMetric"),
+      nowTileTitle: document.querySelector("#nowTileTitle"),
+      nowTileCopy: document.querySelector("#nowTileCopy")
+    };
+
+    function clamp(value, min = 0, max = 1) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function pct(value) {
+      if (!Number.isFinite(value)) return "--";
+      return `${Math.round(clamp(value <= 1 ? value : value / 100) * 100)}%`;
+    }
+
+    function labelize(value) {
+      if (!value) return "--";
+      return String(value)
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+    }
+
+    function parseTimestamp(value) {
+      if (typeof value !== "string" || !value) return null;
+      const normalized = /(?:Z|[+-]\d{2}:?\d{2})$/.test(value) ? value : `${value}Z`;
+      const ts = new Date(normalized).getTime();
+      return Number.isFinite(ts) ? ts : null;
+    }
+
+    function formatCaptureTime(value) {
+      const ts = parseTimestamp(value);
+      if (!Number.isFinite(ts)) return "--";
+      return new Date(ts).toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit",
+        second: "2-digit",
+        timeZone: ASHEVILLE_TIME_ZONE
+      });
+    }
+
+    function skyFrameUrl(version) {
+      return `js/sky-cam/frame.jpg?t=${encodeURIComponent(version || Date.now())}`;
+    }
+
+    async function loadSky() {
+      try {
+        const res = await fetch(`js/sky-cam/output.json?t=${Date.now()}`);
+        if (!res.ok) throw new Error("Sky data unavailable");
+        const data = await res.json();
+        const skyIntel = computeSkyIntel({ camera: data });
+        const narrative = generateSkyNarrative(data, skyIntel);
+        const metrics = data?.metrics || {};
+        const frameVersion = parseTimestamp(data?.timestamp) || Date.now();
+
+        els.skyImage.src = skyFrameUrl(frameVersion);
+        els.skyChip.textContent = labelize(skyIntel?.atmosphericState);
+        els.skyHeadline.textContent = narrative?.headline || "Reading the Asheville sky.";
+        els.skyDetail.textContent = narrative?.detail || "The latest sky snapshot is updating.";
+        els.cloudMetric.textContent = pct(skyIntel?.cloud);
+        els.lightMetric.textContent = metrics.sunlightDetected ? labelize(metrics.sunlightLevel) : "Low";
+        els.confidenceMetric.textContent = pct(skyIntel?.confidence);
+        els.captureMetric.textContent = formatCaptureTime(data?.timestamp);
+        els.nowTileTitle.textContent = labelize(skyIntel?.atmosphericState);
+        els.nowTileCopy.textContent = narrative?.detail || "A camera-based read of the current Asheville sky.";
+      } catch (error) {
+        console.warn("Sky snapshot preview unavailable", error);
+        els.skyChip.textContent = "Sky feed unavailable";
+        els.skyHeadline.textContent = "Sky snapshot unavailable.";
+        els.skyDetail.textContent = "The preview will keep the card layout in place while the feed reconnects.";
+      }
+    }
+
+    await loadSky();
+    setInterval(loadSky, 5 * 60 * 1000);
+  </script>
+</body>
+</html>

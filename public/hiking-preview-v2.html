@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>828 Hiking Guidance Preview</title>
+  <style>
+    :root {
+      --ink: #142033;
+      --muted: #617085;
+      --line: #dce5ed;
+      --paper: #f6f2eb;
+      --white: #fffdf8;
+      --blue: #0f4cc4;
+      --blue-dark: #09255f;
+      --blue-soft: #dbe8ff;
+      --orange: #f57d23;
+      --gold: #f7c873;
+      --trail: #63c979;
+      --trail-dark: #247756;
+      --trail-soft: #e2f5e8;
+      --panel-dark: #101b33;
+      --panel-deep: #081a3c;
+      --shadow: 0 18px 44px rgba(11, 30, 67, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(180deg, #fffaf2 0%, var(--paper) 360px, #eef4ff 100%);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .concept-ribbon {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 9px max(18px, calc((100vw - 1120px) / 2));
+      color: rgba(255, 253, 248, 0.82);
+      background: linear-gradient(90deg, var(--panel-deep), var(--blue-dark));
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .concept-ribbon a {
+      color: var(--white);
+      border-bottom: 1px solid rgba(255, 253, 248, 0.45);
+    }
+
+    .site-header {
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 253, 248, 0.94);
+      box-shadow: 0 10px 28px rgba(11, 30, 67, 0.07);
+    }
+
+    .header-inner,
+    .page,
+    .footer-inner {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 22px 0;
+    }
+
+    .brand-title {
+      color: var(--ink);
+      font-size: 1.55rem;
+      font-weight: 950;
+      letter-spacing: 0;
+    }
+
+    .brand-sub {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 850;
+    }
+
+    .nav-links a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 38px;
+      padding: 0 12px;
+      border-radius: 999px;
+      background: var(--trail-soft);
+      border: 1px solid rgba(36, 119, 86, 0.14);
+    }
+
+    .page {
+      display: grid;
+      gap: 22px;
+      padding: 24px 0 64px;
+    }
+
+    .hiker-hero {
+      overflow: hidden;
+      border-radius: 24px;
+      color: var(--white);
+      background:
+        radial-gradient(circle at 88% 0%, rgba(245, 125, 35, 0.34), transparent 30%),
+        radial-gradient(circle at 28% 100%, rgba(99, 201, 121, 0.22), transparent 34%),
+        linear-gradient(135deg, var(--panel-deep), var(--blue) 78%);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-inner {
+      display: grid;
+      grid-template-columns: minmax(0, 0.74fr) minmax(320px, 0.46fr);
+      gap: 26px;
+      align-items: end;
+      padding: clamp(24px, 4vw, 38px);
+    }
+
+    .hiker-mark {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 46px;
+      padding: 0 18px 0 15px;
+      border: 1px solid rgba(99, 201, 121, 0.42);
+      border-radius: 999px;
+      color: var(--white);
+      background: linear-gradient(90deg, rgba(99, 201, 121, 0.22), rgba(255, 253, 248, 0.06));
+      box-shadow: inset 0 0 0 1px rgba(255, 253, 248, 0.08), 0 12px 30px rgba(0, 0, 0, 0.12);
+      font-size: clamp(1.02rem, 2.2vw, 1.45rem);
+      font-weight: 950;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .hiker-mark::before {
+      content: "";
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: var(--trail);
+      box-shadow: 0 0 0 7px rgba(99, 201, 121, 0.15);
+    }
+
+    .hiker-mark::after {
+      content: "";
+      position: absolute;
+      left: 15px;
+      right: 18px;
+      bottom: -5px;
+      height: 3px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--trail), var(--orange));
+    }
+
+    .score-row {
+      display: flex;
+      align-items: baseline;
+      gap: 18px;
+      margin-top: 22px;
+    }
+
+    .score-number {
+      color: var(--trail);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(5rem, 13vw, 9rem);
+      line-height: 0.8;
+    }
+
+    .score-word {
+      color: var(--trail);
+      font-size: clamp(1.45rem, 4vw, 2.6rem);
+      font-weight: 950;
+    }
+
+    .hero-headline {
+      max-width: 760px;
+      margin: 18px 0 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(2.1rem, 5.4vw, 4.4rem);
+      line-height: 0.98;
+      letter-spacing: 0;
+    }
+
+    .hero-narrative {
+      max-width: 760px;
+      margin: 16px 0 0;
+      color: rgba(255, 253, 248, 0.78);
+      font-size: 1.04rem;
+      line-height: 1.55;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 0 14px;
+      border-radius: 999px;
+      color: var(--white);
+      background: var(--orange);
+      font-weight: 900;
+    }
+
+    .button.secondary {
+      color: var(--blue);
+      background: var(--blue-soft);
+      box-shadow: inset 0 0 0 1px rgba(15, 76, 196, 0.12);
+    }
+
+    .hero-side {
+      display: grid;
+      gap: 12px;
+    }
+
+    .side-card {
+      padding: 15px;
+      border: 1px solid rgba(255, 253, 248, 0.2);
+      border-radius: 16px;
+      background: rgba(255, 253, 248, 0.1);
+      border-left: 4px solid rgba(99, 201, 121, 0.7);
+    }
+
+    .side-card b {
+      display: block;
+      color: var(--gold);
+      font-size: 1.45rem;
+    }
+
+    .side-card span {
+      display: block;
+      margin-top: 4px;
+      color: rgba(255, 253, 248, 0.72);
+      line-height: 1.38;
+    }
+
+    .module-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .module-card,
+    .profile-card,
+    .insight-section,
+    .station-section {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--white);
+      box-shadow: var(--shadow);
+    }
+
+    .module-card {
+      min-height: 190px;
+      padding: 20px;
+      border-top: 4px solid var(--orange);
+      background:
+        linear-gradient(180deg, rgba(226, 245, 232, 0.55), transparent 42%),
+        var(--white);
+    }
+
+    .module-card:nth-child(2) {
+      border-top-color: var(--trail);
+    }
+
+    .module-card:nth-child(3) {
+      border-top-color: var(--blue);
+    }
+
+    .kicker {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--orange);
+      font-size: 0.76rem;
+      font-weight: 950;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .kicker::before {
+      content: "";
+      width: 30px;
+      height: 2px;
+      border-radius: 999px;
+      background: var(--orange);
+    }
+
+    .module-card h2,
+    .profile-card h2,
+    .insight-section h2,
+    .station-section h2 {
+      margin: 14px 0 8px;
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.8rem, 4vw, 2.7rem);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .module-card p,
+    .profile-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .profile-card {
+      overflow: hidden;
+      color: rgba(255, 253, 248, 0.86);
+      background:
+        radial-gradient(circle at 86% 18%, rgba(245, 125, 35, 0.18), transparent 34%),
+        radial-gradient(circle at 14% 92%, rgba(99, 201, 121, 0.16), transparent 30%),
+        linear-gradient(135deg, var(--panel-deep), var(--panel-dark) 58%, #143f8f);
+      border-color: rgba(123, 165, 255, 0.32);
+    }
+
+    .profile-top {
+      padding: 24px 24px 10px;
+    }
+
+    .profile-card .kicker {
+      color: #8ab8ff;
+    }
+
+    .profile-card .kicker::before {
+      background: #8ab8ff;
+    }
+
+    .profile-card h2,
+    .profile-card p {
+      color: var(--white);
+    }
+
+    .profile-card p {
+      max-width: 880px;
+      color: rgba(255, 253, 248, 0.78);
+      font-size: 1.02rem;
+    }
+
+    .profile-art {
+      margin: 14px 24px 24px;
+      overflow-x: auto;
+      border: 1px solid rgba(138, 184, 255, 0.28);
+      border-radius: 22px;
+      background: #081426;
+    }
+
+    .profile-art svg {
+      display: block;
+      width: 100%;
+      min-width: 980px;
+      height: auto;
+    }
+
+    .profile-bg {
+      fill: #081426;
+    }
+
+    .profile-axis,
+    .profile-stem {
+      stroke: rgba(255, 253, 248, 0.58);
+      stroke-width: 2;
+    }
+
+    .profile-tick {
+      stroke: rgba(255, 253, 248, 0.48);
+      stroke-width: 2;
+    }
+
+    .profile-axis-title,
+    .profile-name,
+    .profile-bottom-name {
+      fill: var(--white);
+      font-weight: 950;
+      letter-spacing: 0.04em;
+    }
+
+    .profile-axis-title {
+      font-size: 17px;
+    }
+
+    .profile-tick-label,
+    .profile-elev {
+      fill: #cddcff;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .profile-name {
+      font-size: 18px;
+    }
+
+    .profile-elev {
+      fill: #9ec1ff;
+    }
+
+    .profile-area {
+      fill: url(#profileFill);
+      opacity: 0.78;
+    }
+
+    .profile-forest {
+      fill: rgba(36, 119, 86, 0.76);
+    }
+
+    .profile-ridge {
+      fill: none;
+      stroke: rgba(255, 253, 248, 0.9);
+      stroke-width: 5;
+      stroke-linecap: round;
+    }
+
+    .profile-dot {
+      fill: var(--white);
+      stroke: #75a9ff;
+      stroke-width: 7;
+    }
+
+    .profile-base-dot {
+      fill: var(--white);
+    }
+
+    .profile-bottom-name {
+      font-size: 15px;
+      letter-spacing: 0;
+    }
+
+    .profile-bottom-temp {
+      fill: #9ec1ff;
+      font-size: 20px;
+      font-weight: 950;
+    }
+
+    .insight-section {
+      padding: 24px;
+      color: rgba(255, 253, 248, 0.82);
+      background:
+        radial-gradient(circle at 94% 0%, rgba(245, 125, 35, 0.13), transparent 30%),
+        radial-gradient(circle at 6% 100%, rgba(99, 201, 121, 0.11), transparent 26%),
+        linear-gradient(135deg, var(--panel-dark), #13223d);
+      border-color: rgba(138, 184, 255, 0.24);
+    }
+
+    .insight-section h2 {
+      color: var(--white);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: clamp(1.35rem, 2.8vw, 2rem);
+      line-height: 1.1;
+    }
+
+    .insight-section .kicker {
+      color: #8ab8ff;
+    }
+
+    .insight-section .kicker::before {
+      background: var(--orange);
+    }
+
+    .comparison-grid,
+    .data-grid {
+      display: grid;
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .comparison-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .data-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .comparison-card,
+    .data-card {
+      min-height: 148px;
+      padding: 18px;
+      border: 1px solid rgba(138, 184, 255, 0.22);
+      border-top: 3px solid var(--orange);
+      border-radius: 16px;
+      background: rgba(255, 253, 248, 0.045);
+    }
+
+    .comparison-card:nth-child(even),
+    .data-card:nth-child(even) {
+      border-top-color: #75a9ff;
+    }
+
+    .comparison-card strong,
+    .data-card span {
+      display: block;
+      color: var(--trail);
+      font-size: 1.15rem;
+      font-weight: 950;
+      line-height: 1.22;
+    }
+
+    .comparison-card p,
+    .data-card p {
+      margin: 10px 0 0;
+      color: rgba(220, 231, 249, 0.78);
+      line-height: 1.45;
+    }
+
+    .data-card strong {
+      display: block;
+      margin-top: 8px;
+      color: var(--white);
+      font-size: clamp(1.9rem, 4vw, 2.6rem);
+      line-height: 1;
+    }
+
+    .station-section {
+      padding: 24px;
+      background:
+        linear-gradient(180deg, rgba(219, 232, 255, 0.42), transparent 38%),
+        var(--white);
+    }
+
+    .station-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .station-updated {
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
+
+    .station-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .station-card {
+      display: grid;
+      gap: 12px;
+      min-height: 170px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-top: 3px solid var(--trail);
+      border-radius: 16px;
+      background: rgba(255, 253, 248, 0.84);
+    }
+
+    .station-card:nth-child(even) {
+      border-top-color: var(--blue);
+    }
+
+    .station-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .station-top strong {
+      color: var(--ink);
+      font-size: 1.02rem;
+    }
+
+    .station-top span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 850;
+    }
+
+    .station-temp {
+      color: var(--blue);
+      font-size: 1.8rem;
+      font-weight: 950;
+    }
+
+    .station-metrics {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .metric {
+      padding: 8px;
+      border-radius: 10px;
+      color: var(--muted);
+      background: #f6f9ff;
+      font-size: 0.8rem;
+      font-weight: 800;
+    }
+
+    .site-footer {
+      background: linear-gradient(135deg, var(--panel-deep), var(--blue-dark));
+      color: rgba(255, 253, 248, 0.74);
+      padding: 38px 0 30px;
+    }
+
+    .footer-inner {
+      display: grid;
+      gap: 14px;
+    }
+
+    .footer-logo {
+      color: var(--white);
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      font-weight: 800;
+    }
+
+    @media (max-width: 900px) {
+      .concept-ribbon,
+      .header-inner,
+      .station-head {
+        display: grid;
+      }
+
+      .hero-inner,
+      .module-grid,
+      .comparison-grid,
+      .data-grid,
+      .station-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .nav-links {
+        flex-wrap: wrap;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .header-inner,
+      .page,
+      .footer-inner {
+        width: min(100% - 24px, 1120px);
+      }
+
+      .score-row {
+        display: grid;
+        gap: 6px;
+      }
+
+      .elev-row {
+        grid-template-columns: 1fr;
+        gap: 5px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="concept-ribbon">
+    <span>Hiking preview: aligned with the brighter 828 Weather Direct home concept</span>
+    <a href="home-sky-preview-v2.html">Back to home preview</a>
+  </div>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="hiking-preview-v2.html">
+        <div class="brand-title">828 Hiking Guidance</div>
+        <div class="brand-sub">Elevation-aware trail weather for Asheville and the WNC high peaks</div>
+      </a>
+      <nav class="nav-links" aria-label="Preview navigation">
+        <a href="home-sky-preview-v2.html">Home Preview</a>
+        <a href="hiking.html">Current Hiking Page</a>
+        <a href="828-sunset-radiance.html">Sunset Radiance</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="hiker-hero" aria-label="Hiking guidance overview">
+      <div class="hero-inner">
+        <div>
+          <div class="hiker-mark">HikerScore</div>
+          <div class="score-row">
+            <div class="score-number" id="hikerScore">--</div>
+            <div class="score-word" id="hikerLabel">Loading</div>
+          </div>
+          <h1 class="hero-headline" id="hikerHeadline">Reading current trail guidance.</h1>
+          <p class="hero-narrative" id="hikerNarrative">The latest elevation-aware hiking read will appear here.</p>
+          <div class="hero-actions">
+            <a class="button" href="#trail-choice">Trail choice</a>
+            <a class="button secondary" href="#station-check">Station readings</a>
+          </div>
+        </div>
+        <aside class="hero-side" aria-label="Quick hiking signals">
+          <div class="side-card">
+            <b id="localSpread">--</b>
+            <span>Asheville-area temperature spread</span>
+          </div>
+          <div class="side-card">
+            <b id="mitchellDrop">--</b>
+            <span>Cooling from Asheville to Mount Mitchell</span>
+          </div>
+          <div class="side-card">
+            <b id="fogRisk">--</b>
+            <span>Fog, low cloud, or damp-pocket signal</span>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="module-grid" id="trail-choice" aria-label="Trail choice guidance">
+      <article class="module-card">
+        <div class="kicker">Best bet</div>
+        <h2>Nearby trails</h2>
+        <p id="bestBet">Most nearby trails should feel comfortable.</p>
+      </article>
+      <article class="module-card">
+        <div class="kicker">Use care</div>
+        <h2>Ridges and gaps</h2>
+        <p id="useCare">Changing clouds, damp pockets, and breezy gaps can shift the feel.</p>
+      </article>
+      <article class="module-card">
+        <div class="kicker">Pack mindset</div>
+        <h2>Layer smart</h2>
+        <p id="packMindset">Water, basic sun protection, and normal mountain layers.</p>
+      </article>
+    </section>
+
+    <section class="profile-card" aria-label="Elevation profile">
+      <div class="profile-top">
+        <div>
+          <div class="kicker">Where these readings are</div>
+          <h2>Elevation profile</h2>
+          <p>
+            A quick visual of the reporting sites, from lower Asheville up to Mount Mitchell.
+            This helps explain why downtown Asheville, nearby ridges, and high-peak hikes may not feel the same.
+          </p>
+        </div>
+      </div>
+      <div class="profile-art" id="elevationProfile" role="img" aria-label="Elevation profile of Asheville-area weather readings up to Mount Mitchell"></div>
+    </section>
+
+    <section class="insight-section" aria-label="Trail comparisons">
+      <div class="kicker">Trail comparisons</div>
+      <h2>What changes by route type</h2>
+      <div class="comparison-grid" id="comparisonGrid"></div>
+    </section>
+
+    <section class="insight-section" aria-label="Important hiker data">
+      <div class="kicker">Important hiker data</div>
+      <h2>Elevation and comfort signals</h2>
+      <div class="data-grid" id="hikerDataGrid"></div>
+    </section>
+
+    <section class="station-section" id="station-check">
+      <div class="station-head">
+        <div>
+          <div class="kicker">Station check</div>
+          <h2>Current readings by elevation</h2>
+        </div>
+        <div class="station-updated" id="updatedAt">Loading latest hiking data</div>
+      </div>
+      <div class="station-grid" id="stationGrid"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-logo">828 Weather Direct</div>
+      <div>Hyper-local weather, sky context, and outdoor timing for Asheville and the greater 828 region.</div>
+      <div class="footer-links">
+        <a href="home-sky-preview-v2.html">Home Preview</a>
+        <a href="hiking.html">Current Hiking Page</a>
+        <a href="828-sunset-radiance.html">Sunset Radiance</a>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module">
+    const els = {
+      hikerScore: document.querySelector("#hikerScore"),
+      hikerLabel: document.querySelector("#hikerLabel"),
+      hikerHeadline: document.querySelector("#hikerHeadline"),
+      hikerNarrative: document.querySelector("#hikerNarrative"),
+      localSpread: document.querySelector("#localSpread"),
+      mitchellDrop: document.querySelector("#mitchellDrop"),
+      fogRisk: document.querySelector("#fogRisk"),
+      bestBet: document.querySelector("#bestBet"),
+      useCare: document.querySelector("#useCare"),
+      packMindset: document.querySelector("#packMindset"),
+      elevationProfile: document.querySelector("#elevationProfile"),
+      comparisonGrid: document.querySelector("#comparisonGrid"),
+      hikerDataGrid: document.querySelector("#hikerDataGrid"),
+      stationGrid: document.querySelector("#stationGrid"),
+      updatedAt: document.querySelector("#updatedAt")
+    };
+
+    function round(value) {
+      return Number.isFinite(value) ? Math.round(value) : "--";
+    }
+
+    function temp(value) {
+      return Number.isFinite(value) ? `${Math.round(value)}\u00b0` : "--";
+    }
+
+    function cleanText(value) {
+      return String(value || "").replace(/degF/g, "\u00b0F");
+    }
+
+    function scoreFromGuidance(guidance = {}) {
+      const uv = Number(guidance.maxUv ?? 0);
+      const fogPenalty = guidance.fogRisk === "Elevated" ? 8 : 0;
+      const gustPenalty = Number(guidance.maxGust ?? 0) >= 20 ? 8 : Number(guidance.maxGust ?? 0) >= 14 ? 4 : 0;
+      const spreadPenalty = Number(guidance.localTempSpread ?? 0) > 12 ? 5 : 0;
+      const uvPenalty = uv >= 6 ? 8 : uv >= 3 ? 3 : 0;
+      return Math.max(45, Math.min(96, Math.round(82 - fogPenalty - gustPenalty - spreadPenalty - uvPenalty)));
+    }
+
+    function labelFromScore(score) {
+      if (score >= 86) return "Great";
+      if (score >= 70) return "Good";
+      if (score >= 56) return "Mixed";
+      return "Use care";
+    }
+
+    function formatUpdate(value) {
+      const ts = new Date(value).getTime();
+      if (!Number.isFinite(ts)) return "Latest hiking data";
+      return `Updated ${new Date(ts).toLocaleString([], {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        timeZone: "America/New_York"
+      })}`;
+    }
+
+    function shortName(name = "") {
+      return String(name)
+        .replace("High Asheville East", "High East")
+        .replace("High Asheville North", "High North");
+    }
+
+    function profileNameLines(name = "") {
+      const label = String(name || "");
+      if (label === "High Asheville East") return ["High Asheville", "East"];
+      if (label === "High Asheville North") return ["High Asheville", "North"];
+      if (label === "Mount Mitchell") return ["Mount", "Mitchell"];
+      return [label];
+    }
+
+    function renderElevationProfile(stations = []) {
+      const ordered = stations
+        .slice()
+        .sort((a, b) => (a.elevationFt || 0) - (b.elevationFt || 0));
+      const xSlots = [145, 305, 455, 635, 790, 955];
+      const bottom = 460;
+      const top = 102;
+      const minElev = 1000;
+      const maxElev = 7000;
+      const yForElevation = (elevation) => {
+        const pct = Math.max(0, Math.min(1, ((elevation || minElev) - minElev) / (maxElev - minElev)));
+        return Math.round(bottom - pct * (bottom - top));
+      };
+
+      const points = ordered.map((station, index) => ({
+        station,
+        x: xSlots[index] || (145 + index * 150),
+        y: yForElevation(station.elevationFt)
+      }));
+      const ridge = points.map((point) => `${point.x} ${point.y}`).join(" L ");
+      const area = `M ${ridge} L 1065 ${bottom} L 55 ${bottom} Z`;
+      const ticks = [7000, 6000, 5000, 4000, 3000, 2000, 1000]
+        .map((value) => {
+          const y = yForElevation(value);
+          return `<g><line class="profile-tick" x1="88" y1="${y}" x2="94" y2="${y}" /><text class="profile-tick-label" x="78" y="${y + 6}" text-anchor="end">${value.toLocaleString()}</text></g>`;
+        })
+        .join("");
+      const sites = points.map(({ station, x, y }) => {
+        const isPeak = station.name === "Mount Mitchell";
+        const labelY = isPeak ? Math.max(18, y - 148) : Math.max(72, y - 86);
+        const labelLines = profileNameLines(station.name)
+          .map((line, index) => `<tspan x="${x}" dy="${index === 0 ? 0 : 24}">${line}</tspan>`)
+          .join("");
+        const elevationY = labelY + (profileNameLines(station.name).length > 1 ? 58 : 30);
+        return `
+          <g class="profile-site">
+            <line class="profile-stem" x1="${x}" y1="${y + 13}" x2="${x}" y2="${bottom}" />
+            <circle class="profile-dot" cx="${x}" cy="${y}" r="12" />
+            <text class="profile-name" x="${x}" y="${labelY}" text-anchor="middle">${labelLines}</text>
+            <text class="profile-elev" x="${x}" y="${elevationY}" text-anchor="middle">${station.elevationFt || "--"} ft</text>
+            <circle class="profile-base-dot" cx="${x}" cy="${bottom}" r="5" />
+            <text class="profile-bottom-name" x="${x}" y="${bottom + 38}" text-anchor="middle">${shortName(station.name)}</text>
+            <text class="profile-bottom-temp" x="${x}" y="${bottom + 66}" text-anchor="middle">${temp(station.temperatureF)}</text>
+          </g>
+        `;
+      }).join("");
+
+      els.elevationProfile.innerHTML = `
+        <svg viewBox="0 0 1080 560" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <linearGradient id="profileFill" x1="0" x2="1" y1="1" y2="0">
+              <stop offset="0%" stop-color="#5bd27c" />
+              <stop offset="52%" stop-color="#4eb4c8" />
+              <stop offset="100%" stop-color="#357cff" />
+            </linearGradient>
+          </defs>
+          <rect class="profile-bg" x="0" y="0" width="1080" height="560" rx="22" />
+          <text class="profile-axis-title" x="96" y="82">ELEVATION (FT)</text>
+          <line class="profile-axis" x1="94" y1="${yForElevation(5000)}" x2="94" y2="${bottom}" />
+          ${ticks}
+          <path class="profile-area" d="${area}" />
+          <path class="profile-forest" d="M55 ${bottom} C110 415 158 436 205 398 C246 370 282 420 330 382 C372 350 420 396 468 360 C514 324 556 384 604 334 C650 292 704 360 750 300 C796 238 840 330 886 248 C922 176 948 220 984 118 C1020 164 1046 166 1065 182 L1065 ${bottom} Z" />
+          <path class="profile-ridge" d="M ${ridge}" />
+          ${sites}
+        </svg>
+      `;
+    }
+
+    function renderStations(stations = []) {
+      els.stationGrid.innerHTML = stations
+        .slice()
+        .sort((a, b) => (a.elevationFt || 0) - (b.elevationFt || 0))
+        .map((station) => `
+          <a class="station-card" href="${station.url || "#"}">
+            <div class="station-top">
+              <div>
+                <strong>${station.name}</strong>
+                <span>${station.elevationFt || "--"} ft &middot; ${station.source || "Station"}</span>
+              </div>
+              <div class="station-temp">${temp(station.temperatureF)}</div>
+            </div>
+            <div class="station-metrics">
+              <div class="metric">Dew ${temp(station.dewPointF)}</div>
+              <div class="metric">RH ${round(station.humidityPct)}%</div>
+              <div class="metric">Wind ${round(station.windMph)} mph</div>
+              <div class="metric">Gust ${Number.isFinite(station.gustMph) ? `${round(station.gustMph)} mph` : "n/a"}</div>
+            </div>
+          </a>
+        `)
+        .join("");
+    }
+
+    function formatDegrees(value) {
+      return Number.isFinite(Number(value)) ? `${round(Number(value))}\u00b0F` : "--";
+    }
+
+    function formatMph(value) {
+      return Number.isFinite(Number(value)) ? `${round(Number(value))} mph` : "--";
+    }
+
+    function renderInsightSections(guidance = {}) {
+      const comparisons = [
+        {
+          title: "Mountain vs Asheville",
+          body: `Mount Mitchell is about ${formatDegrees(guidance.mitchellDrop)} cooler than the Asheville-area readings.`
+        },
+        {
+          title: "Ridge vs Valley",
+          body: Number(guidance.highStationSpread) <= 2
+            ? "High Asheville readings broadly agree, but exposed ridges can still change the feel."
+            : `The two high Asheville readings differ by about ${formatDegrees(guidance.highStationSpread)}, so ridge exposure matters.`
+        },
+        {
+          title: "Sun exposure",
+          body: Number(guidance.maxUv) >= 6
+            ? "Sun exposure is a bigger part of the hiking comfort story today."
+            : "Sun exposure is manageable now, especially under canopy."
+        },
+        {
+          title: "Wind check",
+          body: Number(guidance.maxGust) >= 20
+            ? `Peak gusts near ${formatMph(guidance.maxGust)} mean exposed ridges deserve a wind check.`
+            : "Wind is light at the reporting sites, so comfort is mostly about sun, shade, and layers."
+        }
+      ];
+
+      const dataCards = [
+        {
+          label: "Local spread",
+          value: formatDegrees(guidance.localTempSpread),
+          body: "Temperature range across the Asheville-area readings."
+        },
+        {
+          label: "High split",
+          value: formatDegrees(guidance.highStationSpread),
+          body: "Difference between the two high Asheville readings."
+        },
+        {
+          label: "Mitchell drop",
+          value: formatDegrees(guidance.mitchellDrop),
+          body: "Cooling from Asheville-area readings to Mount Mitchell."
+        },
+        {
+          label: "Fog risk",
+          value: guidance.fogRisk || "--",
+          body: "Based on the tightest temperature/dew point spread."
+        },
+        {
+          label: "Highest UV",
+          value: Number.isFinite(Number(guidance.maxUv)) ? round(Number(guidance.maxUv)) : "--",
+          body: "Peak UV reading or estimate from the reporting sites."
+        },
+        {
+          label: "Peak gust",
+          value: formatMph(guidance.maxGust),
+          body: "Highest gust among the reporting sites."
+        }
+      ];
+
+      els.comparisonGrid.innerHTML = comparisons.map((item) => `
+        <article class="comparison-card">
+          <strong>${item.title}</strong>
+          <p>${cleanText(item.body)}</p>
+        </article>
+      `).join("");
+
+      els.hikerDataGrid.innerHTML = dataCards.map((item) => `
+        <article class="data-card">
+          <span>${item.label}</span>
+          <strong>${cleanText(String(item.value))}</strong>
+          <p>${cleanText(item.body)}</p>
+        </article>
+      `).join("");
+    }
+
+    function render(data) {
+      const guidance = data?.guidance || {};
+      const stations = data?.stations || [];
+      const score = scoreFromGuidance(guidance);
+
+      els.hikerScore.textContent = score;
+      els.hikerLabel.textContent = labelFromScore(score);
+      els.hikerHeadline.textContent = cleanText(guidance.bestWindow || "Trail conditions are updating.");
+      els.hikerNarrative.textContent = cleanText(guidance.hikerNarrative || "The latest elevation-aware hiking read will appear here.");
+      els.localSpread.textContent = `${round(guidance.localTempSpread)}\u00b0`;
+      els.mitchellDrop.textContent = `${round(guidance.mitchellDrop)}\u00b0`;
+      els.fogRisk.textContent = guidance.fogRisk || "--";
+      els.bestBet.textContent = cleanText(guidance.overall || "Most nearby trails should feel comfortable.");
+      els.useCare.textContent = guidance.fogRisk === "Elevated"
+        ? "Watch for damp leaves, sheltered low cloud, and slick shaded stretches."
+        : "Typical mountain exposure: changing clouds, damp pockets, and breezy gaps.";
+      els.packMindset.textContent = Number(guidance.mitchellDrop) >= 10
+        ? "Bring a layer for high peaks and keep water handy for lower trails."
+        : "Water, basic sun protection, and normal mountain layers.";
+      els.updatedAt.textContent = formatUpdate(data?.generatedAt);
+
+      renderElevationProfile(stations);
+      renderInsightSections(guidance);
+      renderStations(stations);
+    }
+
+    async function loadHiking() {
+      try {
+        const res = await fetch(`data/hiking-guidance.json?t=${Date.now()}`);
+        if (!res.ok) throw new Error("Hiking data unavailable");
+        render(await res.json());
+      } catch (error) {
+        console.warn("Hiking preview unavailable", error);
+      }
+    }
+
+    await loadHiking();
+  </script>
+</body>
+</html>
