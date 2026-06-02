@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-06-02T01:37:29.863097+00:00",
+  "timestamp": "2026-06-02T06:18:24.442244+00:00",
   "metrics": {
     "cloudCoverWest": null,
-    "brightness": 0.18,
-    "contrast": 0.06,
+    "brightness": 0.17,
+    "contrast": 0.04,
     "visibilityScore": null,
     "sunlightDetected": false,
     "sunlightStrength": 0.23,
@@ -14,7 +14,7 @@
   },
   "trend": {
     "cloudTrend": "unknown",
-    "brightnessTrend": "decreasing",
+    "brightnessTrend": "steady",
     "overallTrend": "steady"
   }
 }
