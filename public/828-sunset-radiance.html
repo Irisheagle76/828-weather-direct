@@ -514,6 +514,20 @@
       background: #081426;
     }
 
+    .context-media.unca-camera {
+      aspect-ratio: 1280 / 602;
+      min-height: 230px;
+      overflow: hidden;
+    }
+
+    .context-media.unca-camera img {
+      height: auto;
+      min-height: 0;
+      max-height: none;
+      margin-top: calc(-118 / 1280 * 100%);
+      object-fit: initial;
+    }
+
     .context-media::after {
       content: "";
       position: absolute;
@@ -606,6 +620,22 @@
       max-height: 78vh;
       object-fit: contain;
       background: #081426;
+    }
+
+    .lightbox-media {
+      overflow: hidden;
+      background: #081426;
+    }
+
+    .lightbox-media.cropped-unca {
+      aspect-ratio: 1280 / 602;
+    }
+
+    .lightbox-media.cropped-unca img {
+      height: auto;
+      max-height: none;
+      margin-top: calc(-118 / 1280 * 100%);
+      object-fit: initial;
     }
 
     .index-panel {
@@ -1265,7 +1295,7 @@
 
         <div class="sky-context-grid" aria-label="Backup sky and satellite context">
           <article class="context-card">
-            <button class="context-media" type="button" data-lightbox-src="https://wlos.com/resources/ftptransfer/wlos/maps/Cam%20UNCA%20EcoNet.png" data-lightbox-title="UNCA EcoNet Backup Camera">
+            <button class="context-media unca-camera" type="button" data-lightbox-src="https://wlos.com/resources/ftptransfer/wlos/maps/Cam%20UNCA%20EcoNet.png" data-lightbox-title="UNCA EcoNet Backup Camera" data-lightbox-crop="unca">
               <img id="uncaCameraImage" src="https://wlos.com/resources/ftptransfer/wlos/maps/Cam%20UNCA%20EcoNet.png" alt="UNC Asheville EcoNet weather station camera view" loading="lazy" />
               <span class="context-label">
                 <span>Backup camera</span>
@@ -1297,7 +1327,9 @@
           <strong id="lightboxTitle">Sky media</strong>
           <button class="lightbox-close" type="button" id="lightboxClose" aria-label="Close expanded media">&times;</button>
         </div>
-        <img id="lightboxImage" src="" alt="" />
+        <div class="lightbox-media" id="lightboxMedia">
+          <img id="lightboxImage" src="" alt="" />
+        </div>
       </dialog>
 
       <section class="forecast-band" id="signals">
@@ -1462,6 +1494,7 @@
       uncaCameraImage: document.querySelector("#uncaCameraImage"),
       satelliteLoopImage: document.querySelector("#satelliteLoopImage"),
       mediaLightbox: document.querySelector("#mediaLightbox"),
+      lightboxMedia: document.querySelector("#lightboxMedia"),
       lightboxImage: document.querySelector("#lightboxImage"),
       lightboxTitle: document.querySelector("#lightboxTitle"),
       lightboxClose: document.querySelector("#lightboxClose"),
@@ -1951,7 +1984,9 @@
         button.addEventListener("click", () => {
           const src = button.dataset.lightboxSrc;
           const title = button.dataset.lightboxTitle || "Sky media";
+          const crop = button.dataset.lightboxCrop;
           els.lightboxTitle.textContent = title;
+          els.lightboxMedia?.classList.toggle("cropped-unca", crop === "unca");
           els.lightboxImage.src = cacheBustedUrl(src);
           els.lightboxImage.alt = title;
           if (typeof els.mediaLightbox.showModal === "function") {
