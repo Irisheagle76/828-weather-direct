@@ -1278,8 +1278,8 @@
           </article>
 
           <article class="context-card">
-            <button class="context-media satellite" type="button" data-lightbox-src="https://cdn.star.nesdis.noaa.gov/GOES19/ABI/SECTOR/se/GEOCOLOR/GOES19-SE-GEOCOLOR-600x600.gif" data-lightbox-title="GOES-East Southeast Satellite Loop">
-              <img id="satelliteLoopImage" src="https://cdn.star.nesdis.noaa.gov/GOES19/ABI/SECTOR/se/GEOCOLOR/GOES19-SE-GEOCOLOR-600x600.gif" alt="GOES-East Southeast satellite animation showing cloud motion" loading="lazy" />
+            <button class="context-media satellite" type="button" data-lightbox-src="https://cdn.star.nesdis.noaa.gov/WFO/gsp/GEOCOLOR/GOES19-GSP-GEOCOLOR-600x600.gif" data-lightbox-title="GOES-East Greenville-Spartanburg Satellite Loop">
+              <img id="satelliteLoopImage" src="https://cdn.star.nesdis.noaa.gov/WFO/gsp/GEOCOLOR/GOES19-GSP-GEOCOLOR-600x600.gif" alt="GOES-East Greenville-Spartanburg satellite animation focused on western North Carolina cloud motion" loading="lazy" />
               <span class="context-label">
                 <span>Satellite loop</span>
                 <strong>Regional cloud motion into the Asheville sky</strong>
@@ -1437,7 +1437,7 @@
     const SKY_STALE_MS = 20 * 60 * 1000;
     const LIVE_THUMBNAIL_URL = "https://i.ytimg.com/vi/UxUU3Fc1vBw/maxresdefault_live.jpg";
     const UNCA_CAMERA_URL = "https://wlos.com/resources/ftptransfer/wlos/maps/Cam%20UNCA%20EcoNet.png";
-    const SATELLITE_LOOP_URL = "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/SECTOR/se/GEOCOLOR/GOES19-SE-GEOCOLOR-600x600.gif";
+    const SATELLITE_LOOP_URL = "https://cdn.star.nesdis.noaa.gov/WFO/gsp/GEOCOLOR/GOES19-GSP-GEOCOLOR-600x600.gif";
 
     const state = {
       skyData: null,
@@ -1847,7 +1847,9 @@
       const statusCloud = pickNumber(statusHour, ["cloudCover", "cloud_cover", "cloudcover"]);
       const statusHumidity = pickNumber(statusHour, ["relativeHumidity", "relative_humidity", "humidity"]);
       const statusPrecip = pickNumber(statusHour, ["precipProbability", "precipitation_probability", "probabilityOfPrecipitation"]);
-      els.cloudStatus.textContent = `Clouds ${pct(statusCloud ?? state.skyIntel?.cloud)}`;
+      const cameraCloudAvailable = Number.isFinite(state.skyIntel?.cloud);
+      const displayCloud = cameraCloudAvailable ? state.skyIntel.cloud : statusCloud;
+      els.cloudStatus.textContent = `Clouds ${pct(displayCloud)}`;
       els.humidityStatus.textContent = `Humidity ${pct(statusHumidity)}`;
       els.precipStatus.textContent = `Rain chance ${pct(statusPrecip)}`;
       els.windowStatus.textContent = radiance.phase?.label || "Radiance window --";
@@ -1872,8 +1874,7 @@
       els.windowTitle.textContent = isClosed ? "Window closed" : daily?.sunset ? `Sunset ${formatTime(daily.sunset)}` : "Sunset pending";
       els.windowCopy.textContent = isClosed ? "The evening radiance window has passed. Check back tomorrow as the next sunset setup develops." : radiance.factors[3].detail;
 
-      const cameraCloudAvailable = Number.isFinite(state.skyIntel?.cloud);
-      els.cloudMetric.textContent = pct(cameraCloudAvailable ? state.skyIntel.cloud : statusCloud);
+      els.cloudMetric.textContent = pct(displayCloud);
       els.cloudMetricLabel.textContent = cameraCloudAvailable ? "Camera cloud cover" : "Forecast cloud cover";
       els.lightMetric.textContent = camera.sunlightDetected ? labelize(camera.sunlightLevel) : "Low";
       els.confidenceMetric.textContent = pct(state.skyIntel?.confidence);
