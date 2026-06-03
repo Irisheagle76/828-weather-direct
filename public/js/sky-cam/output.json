@@ -1,14 +1,14 @@
 {
-  "timestamp": "2026-06-03T15:59:26.104835+00:00",
+  "timestamp": "2026-06-03T19:47:59.388851+00:00",
   "metrics": {
-    "cloudCoverWest": 90,
-    "brightness": 0.53,
-    "contrast": 0.08,
-    "visibilityScore": 2,
+    "cloudCoverWest": 82,
+    "brightness": 0.59,
+    "contrast": 0.11,
+    "visibilityScore": 3,
     "sunlightDetected": true,
-    "sunlightStrength": 0.3,
+    "sunlightStrength": 0.23,
     "sunlightLevel": "strong",
-    "skyBlueSignal": 1.5,
+    "skyBlueSignal": 1.19,
     "precipVisible": false,
     "mode": "day"
   },
