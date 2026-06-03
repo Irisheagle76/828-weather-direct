@@ -9,7 +9,7 @@ BASE_DIR = os.path.dirname(__file__)
 IMAGE_PATH = os.path.join(BASE_DIR, "frame.jpg")
 OUTPUT_PATH = os.path.join(BASE_DIR, "output.json")
 
-CROP_TOP_RATIO = 0.5  # top = sky
+CROP_TOP_RATIO = 0.48  # top = sky, staying above most horizon/building clutter
 # ------------------------
 
 
@@ -33,6 +33,7 @@ def load_and_crop(image_path):
 def compute_metrics(sky_img, full_img):
 
     gray = cv2.cvtColor(sky_img, cv2.COLOR_BGR2GRAY)
+    hsv = cv2.cvtColor(sky_img, cv2.COLOR_BGR2HSV)
 
     brightness = np.mean(gray) / 255.0
     contrast = np.std(gray) / 255.0
@@ -40,25 +41,44 @@ def compute_metrics(sky_img, full_img):
     is_night = brightness < 0.35
 
     # --------------------------------------------------------
-    # ☁️ CLOUD DETECTION (adaptive)
+    # ☁️ CLOUD DETECTION (color-aware)
     # --------------------------------------------------------
-    blur = cv2.GaussianBlur(gray, (5, 5), 0)
+    b, g, r = cv2.split(sky_img)
+    b_float = b.astype(np.float32)
+    g_float = g.astype(np.float32)
+    r_float = r.astype(np.float32)
 
-    thresh = cv2.adaptiveThreshold(
-        blur,
-        255,
-        cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-        cv2.THRESH_BINARY,
-        11,
-        2
+    # Blue sky is open sky, not cloud. The previous adaptive threshold often
+    # turned smooth blue sky white and counted it as cloud cover.
+    blue_sky_mask = (
+        (b_float > r_float * 1.04) &
+        (b_float > g_float * 0.98) &
+        (hsv[:, :, 1] > 22) &
+        (hsv[:, :, 2] > 65)
     )
 
-    cloud_pixels = np.sum(thresh == 255)
-    cloud_cover = int((cloud_pixels / thresh.size) * 100)
+    bright_low_saturation_mask = (
+        (hsv[:, :, 1] < 75) &
+        (hsv[:, :, 2] > 125) &
+        (r_float > b_float * 0.82) &
+        (g_float > b_float * 0.82)
+    )
 
-    # Reduce false high cloud in bright sunny scenes
-    if brightness > 0.6 and contrast > 0.1:
-        cloud_cover = int(cloud_cover * 0.75)
+    warm_gray_cloud_mask = (
+        (r_float > b_float * 0.94) &
+        (g_float > b_float * 0.88) &
+        (gray > 120) &
+        (hsv[:, :, 1] < 95)
+    )
+
+    cloud_mask = (bright_low_saturation_mask | warm_gray_cloud_mask) & ~blue_sky_mask
+    valid_sky_mask = blue_sky_mask | cloud_mask
+
+    valid_sky_pixels = np.sum(valid_sky_mask)
+    if valid_sky_pixels > (valid_sky_mask.size * 0.25):
+        cloud_cover = int(round((np.sum(cloud_mask) / valid_sky_pixels) * 100))
+    else:
+        cloud_cover = 0
 
     # --------------------------------------------------------
     # 🌄 VISIBILITY (ridge detection)
@@ -83,9 +103,10 @@ def compute_metrics(sky_img, full_img):
     # --------------------------------------------------------
     # 🌈 SKY COLOR (BLUE SIGNAL)
     # --------------------------------------------------------
-    b, g, r = cv2.split(sky_img)
-
-    blue_ratio = np.mean(b) / (np.mean(r) + 1e-5)
+    if np.any(blue_sky_mask):
+        blue_ratio = np.mean(b_float[blue_sky_mask]) / (np.mean(r_float[blue_sky_mask]) + 1e-5)
+    else:
+        blue_ratio = np.mean(b) / (np.mean(r) + 1e-5)
     sky_blue_signal = round(float(blue_ratio), 2)
 
     # --------------------------------------------------------
