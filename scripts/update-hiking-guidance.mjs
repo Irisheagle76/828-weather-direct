@@ -7,6 +7,7 @@ const outDir = path.join(root, "public", "data");
 const jsonPath = path.join(outDir, "hiking-guidance.json");
 const htmlPath = path.join(root, "public", "hiking.html");
 const weatherFlowKey = "6bff2f89-84ab-463c-886e-fc0f443da4cf";
+const lightningSignalMaxAgeMs = 3 * 60 * 60 * 1000;
 
 const tempestStations = [
   { id: "144737", name: "Lower Asheville", role: "lower trailhead feel", elevationFt: 2137, url: "https://tempestwx.com/station/144737/grid", lat: 35.60675829810566, lon: -82.54793450070898 },
@@ -43,10 +44,16 @@ function displayUv(station) {
 }
 
 function hasLightningSignal(station, thresholdMiles = 10) {
+  const lastStrikeAt = station.lightningLastEpoch ? new Date(station.lightningLastEpoch).getTime() : null;
+  const hasRecentLastStrike = Number.isFinite(lastStrikeAt) && (Date.now() - lastStrikeAt) <= lightningSignalMaxAgeMs;
   return Boolean(
     (station.lightningStrikes1h ?? 0) > 0 ||
     (station.lightningStrikes3h ?? 0) > 0 ||
-    (station.lightningLastDistanceMiles != null && station.lightningLastDistanceMiles <= thresholdMiles)
+    (
+      hasRecentLastStrike &&
+      station.lightningLastDistanceMiles != null &&
+      station.lightningLastDistanceMiles <= thresholdMiles
+    )
   );
 }
 
