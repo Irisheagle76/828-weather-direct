@@ -1,0 +1,285 @@
+const els = {
+      hikerScore: document.querySelector("#hikerScore"),
+      hikerLabel: document.querySelector("#hikerLabel"),
+      hikerHeadline: document.querySelector("#hikerHeadline"),
+      hikerNarrative: document.querySelector("#hikerNarrative"),
+      localSpread: document.querySelector("#localSpread"),
+      mitchellDrop: document.querySelector("#mitchellDrop"),
+      fogRisk: document.querySelector("#fogRisk"),
+      bestBet: document.querySelector("#bestBet"),
+      useCare: document.querySelector("#useCare"),
+      packMindset: document.querySelector("#packMindset"),
+      elevationProfile: document.querySelector("#elevationProfile"),
+      comparisonGrid: document.querySelector("#comparisonGrid"),
+      hikerDataGrid: document.querySelector("#hikerDataGrid"),
+      stationGrid: document.querySelector("#stationGrid"),
+      updatedAt: document.querySelector("#updatedAt")
+    };
+
+    function round(value) {
+      return Number.isFinite(value) ? Math.round(value) : "--";
+    }
+
+    function temp(value) {
+      return Number.isFinite(value) ? `${Math.round(value)}\u00b0` : "--";
+    }
+
+    function cleanText(value) {
+      return String(value || "").replace(/degF/g, "\u00b0F");
+    }
+
+    function scoreFromGuidance(guidance = {}) {
+      const uv = Number(guidance.maxUv ?? 0);
+      const fogPenalty = guidance.fogRisk === "Elevated" ? 8 : 0;
+      const gustPenalty = Number(guidance.maxGust ?? 0) >= 20 ? 8 : Number(guidance.maxGust ?? 0) >= 14 ? 4 : 0;
+      const spreadPenalty = Number(guidance.localTempSpread ?? 0) > 12 ? 5 : 0;
+      const uvPenalty = uv >= 6 ? 8 : uv >= 3 ? 3 : 0;
+      return Math.max(45, Math.min(96, Math.round(82 - fogPenalty - gustPenalty - spreadPenalty - uvPenalty)));
+    }
+
+    function labelFromScore(score) {
+      if (score >= 86) return "Great";
+      if (score >= 70) return "Good";
+      if (score >= 56) return "Mixed";
+      return "Use care";
+    }
+
+    function formatUpdate(value) {
+      const ts = new Date(value).getTime();
+      if (!Number.isFinite(ts)) return "Latest hiking data";
+      return `Updated ${new Date(ts).toLocaleString([], {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        timeZone: "America/New_York"
+      })}`;
+    }
+
+    function shortName(name = "") {
+      return String(name)
+        .replace("High Asheville East", "High East")
+        .replace("High Asheville North", "High North");
+    }
+
+    function profileNameLines(name = "") {
+      const label = String(name || "");
+      if (label === "High Asheville East") return ["High Asheville", "East"];
+      if (label === "High Asheville North") return ["High Asheville", "North"];
+      if (label === "Mount Mitchell") return ["Mount", "Mitchell"];
+      return [label];
+    }
+
+    function renderElevationProfile(stations = []) {
+      const ordered = stations
+        .slice()
+        .sort((a, b) => (a.elevationFt || 0) - (b.elevationFt || 0));
+      const xSlots = [145, 305, 455, 635, 790, 955];
+      const bottom = 460;
+      const top = 102;
+      const minElev = 1000;
+      const maxElev = 7000;
+      const yForElevation = (elevation) => {
+        const pct = Math.max(0, Math.min(1, ((elevation || minElev) - minElev) / (maxElev - minElev)));
+        return Math.round(bottom - pct * (bottom - top));
+      };
+
+      const points = ordered.map((station, index) => ({
+        station,
+        x: xSlots[index] || (145 + index * 150),
+        y: yForElevation(station.elevationFt)
+      }));
+      const ridge = points.map((point) => `${point.x} ${point.y}`).join(" L ");
+      const area = `M ${ridge} L 1065 ${bottom} L 55 ${bottom} Z`;
+      const ticks = [7000, 6000, 5000, 4000, 3000, 2000, 1000]
+        .map((value) => {
+          const y = yForElevation(value);
+          return `<g><line class="profile-tick" x1="88" y1="${y}" x2="94" y2="${y}" /><text class="profile-tick-label" x="78" y="${y + 6}" text-anchor="end">${value.toLocaleString()}</text></g>`;
+        })
+        .join("");
+      const sites = points.map(({ station, x, y }) => {
+        const isPeak = station.name === "Mount Mitchell";
+        const labelY = isPeak ? Math.max(18, y - 148) : Math.max(72, y - 86);
+        const labelLines = profileNameLines(station.name)
+          .map((line, index) => `<tspan x="${x}" dy="${index === 0 ? 0 : 24}">${line}</tspan>`)
+          .join("");
+        const elevationY = labelY + (profileNameLines(station.name).length > 1 ? 58 : 30);
+        return `
+          <g class="profile-site">
+            <line class="profile-stem" x1="${x}" y1="${y + 13}" x2="${x}" y2="${bottom}" />
+            <circle class="profile-dot" cx="${x}" cy="${y}" r="12" />
+            <text class="profile-name" x="${x}" y="${labelY}" text-anchor="middle">${labelLines}</text>
+            <text class="profile-elev" x="${x}" y="${elevationY}" text-anchor="middle">${station.elevationFt || "--"} ft</text>
+            <circle class="profile-base-dot" cx="${x}" cy="${bottom}" r="5" />
+            <text class="profile-bottom-name" x="${x}" y="${bottom + 38}" text-anchor="middle">${shortName(station.name)}</text>
+            <text class="profile-bottom-temp" x="${x}" y="${bottom + 66}" text-anchor="middle">${temp(station.temperatureF)}</text>
+          </g>
+        `;
+      }).join("");
+
+      els.elevationProfile.innerHTML = `
+        <svg viewBox="0 0 1080 560" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <linearGradient id="profileFill" x1="0" x2="1" y1="1" y2="0">
+              <stop offset="0%" stop-color="#5bd27c" />
+              <stop offset="52%" stop-color="#4eb4c8" />
+              <stop offset="100%" stop-color="#357cff" />
+            </linearGradient>
+          </defs>
+          <rect class="profile-bg" x="0" y="0" width="1080" height="560" rx="22" />
+          <text class="profile-axis-title" x="96" y="82">ELEVATION (FT)</text>
+          <line class="profile-axis" x1="94" y1="${yForElevation(5000)}" x2="94" y2="${bottom}" />
+          ${ticks}
+          <path class="profile-area" d="${area}" />
+          <path class="profile-forest" d="M55 ${bottom} C110 415 158 436 205 398 C246 370 282 420 330 382 C372 350 420 396 468 360 C514 324 556 384 604 334 C650 292 704 360 750 300 C796 238 840 330 886 248 C922 176 948 220 984 118 C1020 164 1046 166 1065 182 L1065 ${bottom} Z" />
+          <path class="profile-ridge" d="M ${ridge}" />
+          ${sites}
+        </svg>
+      `;
+    }
+
+    function renderStations(stations = []) {
+      els.stationGrid.innerHTML = stations
+        .slice()
+        .sort((a, b) => (a.elevationFt || 0) - (b.elevationFt || 0))
+        .map((station) => `
+          <a class="station-card" href="${station.url || "#"}">
+            <div class="station-top">
+              <div>
+                <strong>${station.name}</strong>
+                <span>${station.elevationFt || "--"} ft &middot; ${station.source || "Station"}</span>
+              </div>
+              <div class="station-temp">${temp(station.temperatureF)}</div>
+            </div>
+            <div class="station-metrics">
+              <div class="metric">Dew ${temp(station.dewPointF)}</div>
+              <div class="metric">RH ${round(station.humidityPct)}%</div>
+              <div class="metric">Wind ${round(station.windMph)} mph</div>
+              <div class="metric">Gust ${Number.isFinite(station.gustMph) ? `${round(station.gustMph)} mph` : "n/a"}</div>
+            </div>
+          </a>
+        `)
+        .join("");
+    }
+
+    function formatDegrees(value) {
+      return Number.isFinite(Number(value)) ? `${round(Number(value))}\u00b0F` : "--";
+    }
+
+    function formatMph(value) {
+      return Number.isFinite(Number(value)) ? `${round(Number(value))} mph` : "--";
+    }
+
+    function renderInsightSections(guidance = {}) {
+      const comparisons = [
+        {
+          title: "Mountain vs Asheville",
+          body: `Mount Mitchell is about ${formatDegrees(guidance.mitchellDrop)} cooler than the Asheville-area readings.`
+        },
+        {
+          title: "Ridge vs Valley",
+          body: Number(guidance.highStationSpread) <= 2
+            ? "High Asheville readings broadly agree, but exposed ridges can still change the feel."
+            : `The two high Asheville readings differ by about ${formatDegrees(guidance.highStationSpread)}, so ridge exposure matters.`
+        },
+        {
+          title: "Sun exposure",
+          body: Number(guidance.maxUv) >= 6
+            ? "Sun exposure is a bigger part of the hiking comfort story today."
+            : "Sun exposure is manageable now, especially under canopy."
+        },
+        {
+          title: "Wind check",
+          body: Number(guidance.maxGust) >= 20
+            ? `Peak gusts near ${formatMph(guidance.maxGust)} mean exposed ridges deserve a wind check.`
+            : "Wind is light at the reporting sites, so comfort is mostly about sun, shade, and layers."
+        }
+      ];
+
+      const dataCards = [
+        {
+          label: "Local spread",
+          value: formatDegrees(guidance.localTempSpread),
+          body: "Temperature range across the Asheville-area readings."
+        },
+        {
+          label: "High split",
+          value: formatDegrees(guidance.highStationSpread),
+          body: "Difference between the two high Asheville readings."
+        },
+        {
+          label: "Mitchell drop",
+          value: formatDegrees(guidance.mitchellDrop),
+          body: "Cooling from Asheville-area readings to Mount Mitchell."
+        },
+        {
+          label: "Fog risk",
+          value: guidance.fogRisk || "--",
+          body: "Based on the tightest temperature/dew point spread."
+        },
+        {
+          label: "Highest UV",
+          value: Number.isFinite(Number(guidance.maxUv)) ? round(Number(guidance.maxUv)) : "--",
+          body: "Peak UV reading or estimate from the reporting sites."
+        },
+        {
+          label: "Peak gust",
+          value: formatMph(guidance.maxGust),
+          body: "Highest gust among the reporting sites."
+        }
+      ];
+
+      els.comparisonGrid.innerHTML = comparisons.map((item) => `
+        <article class="comparison-card">
+          <strong>${item.title}</strong>
+          <p>${cleanText(item.body)}</p>
+        </article>
+      `).join("");
+
+      els.hikerDataGrid.innerHTML = dataCards.map((item) => `
+        <article class="data-card">
+          <span>${item.label}</span>
+          <strong>${cleanText(String(item.value))}</strong>
+          <p>${cleanText(item.body)}</p>
+        </article>
+      `).join("");
+    }
+
+    function render(data) {
+      const guidance = data?.guidance || {};
+      const stations = data?.stations || [];
+      const score = scoreFromGuidance(guidance);
+
+      els.hikerScore.textContent = score;
+      els.hikerLabel.textContent = labelFromScore(score);
+      els.hikerHeadline.textContent = cleanText(guidance.bestWindow || "Trail conditions are updating.");
+      els.hikerNarrative.textContent = cleanText(guidance.hikerNarrative || "The latest elevation-aware hiking read will appear here.");
+      els.localSpread.textContent = `${round(guidance.localTempSpread)}\u00b0`;
+      els.mitchellDrop.textContent = `${round(guidance.mitchellDrop)}\u00b0`;
+      els.fogRisk.textContent = guidance.fogRisk || "--";
+      els.bestBet.textContent = cleanText(guidance.overall || "Most nearby trails should feel comfortable.");
+      els.useCare.textContent = guidance.fogRisk === "Elevated"
+        ? "Watch for damp leaves, sheltered low cloud, and slick shaded stretches."
+        : "Typical mountain exposure: changing clouds, damp pockets, and breezy gaps.";
+      els.packMindset.textContent = Number(guidance.mitchellDrop) >= 10
+        ? "Bring a layer for high peaks and keep water handy for lower trails."
+        : "Water, basic sun protection, and normal mountain layers.";
+      els.updatedAt.textContent = formatUpdate(data?.generatedAt);
+
+      renderElevationProfile(stations);
+      renderInsightSections(guidance);
+      renderStations(stations);
+    }
+
+    async function loadHiking() {
+      try {
+        const res = await fetch(`data/hiking-guidance.json?t=${Date.now()}`);
+        if (!res.ok) throw new Error("Hiking data unavailable");
+        render(await res.json());
+      } catch (error) {
+        console.warn("Hiking guidance unavailable", error);
+      }
+    }
+
+    await loadHiking();
+  

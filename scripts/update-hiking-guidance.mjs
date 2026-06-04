@@ -673,8 +673,7 @@ const payload = {
 
 await fs.mkdir(outDir, { recursive: true });
 await fs.writeFile(jsonPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
-await fs.writeFile(htmlPath, renderHtml(payload), "utf8");
-console.log(`Updated ${path.relative(root, jsonPath)} and ${path.relative(root, htmlPath)}`);
+console.log(`Updated ${path.relative(root, jsonPath)}; live hiking page reads this data client-side.`);
 
 
 
