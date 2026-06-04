@@ -274,29 +274,66 @@
       line-height: 1.55;
     }
 
-    .fs-side {
+    .fs-support {
       display: grid;
-      gap: 10px;
+      gap: 14px;
     }
 
-    .fs-note {
-      padding: 14px;
+    .fs-bullets,
+    .fs-temp-markers {
+      padding: 16px;
       border: 1px solid rgba(255, 253, 248, 0.18);
       border-radius: 14px;
       background: rgba(255, 253, 248, 0.09);
     }
 
-    .fs-note b {
-      display: block;
-      color: var(--gold);
-      font-size: 1.2rem;
+    .fs-bullets ul {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding-left: 1.1rem;
+      color: rgba(255, 253, 248, 0.82);
+      font-size: 1rem;
+      line-height: 1.35;
     }
 
-    .fs-note span {
-      display: block;
-      margin-top: 4px;
+    .fs-bullets li::marker {
+      color: #7bd389;
+    }
+
+    .fs-temp-markers {
+      display: grid;
+      gap: 10px;
+    }
+
+    .fs-temp-marker {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: baseline;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 253, 248, 0.13);
+    }
+
+    .fs-temp-marker:last-child {
+      padding-bottom: 0;
+      border-bottom: 0;
+    }
+
+    .fs-temp-marker span {
       color: rgba(255, 253, 248, 0.72);
-      line-height: 1.4;
+      font-size: 0.8rem;
+      font-weight: 950;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .fs-temp-marker b {
+      display: block;
+      color: var(--gold);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(2.1rem, 5vw, 3.1rem);
+      line-height: 0.88;
     }
 
     .sky-home-module {
@@ -473,6 +510,61 @@
       text-transform: uppercase;
     }
 
+    .radiance-home-promo {
+      display: none;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: center;
+      padding: 18px;
+      border-top: 1px solid rgba(255, 200, 115, 0.38);
+      background:
+        radial-gradient(circle at 88% 0%, rgba(245, 125, 35, 0.24), transparent 32%),
+        linear-gradient(90deg, #081a3c, #0f4cc4);
+      color: var(--white);
+    }
+
+    .sky-home-module.radiance-active .radiance-home-promo {
+      display: grid;
+    }
+
+    .radiance-home-promo h3 {
+      margin: 0;
+      color: var(--white);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.8rem, 4vw, 2.7rem);
+      line-height: 0.98;
+      letter-spacing: 0;
+    }
+
+    .radiance-home-promo p {
+      max-width: 660px;
+      margin: 8px 0 0;
+      color: rgba(255, 253, 248, 0.76);
+      line-height: 1.45;
+    }
+
+    .radiance-score-pill {
+      display: grid;
+      place-items: center;
+      min-width: 88px;
+      min-height: 88px;
+      border-radius: 50%;
+      color: var(--blue);
+      background: linear-gradient(135deg, var(--gold), #fff3c2);
+      box-shadow: 0 16px 34px rgba(0, 0, 0, 0.18);
+      font-size: 2rem;
+      font-weight: 950;
+      line-height: 1;
+    }
+
+    .radiance-score-pill span {
+      display: block;
+      color: rgba(8, 26, 60, 0.68);
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
     .radar-home-card {
       display: grid;
       grid-template-columns: minmax(220px, 0.52fr) minmax(0, 1fr);
@@ -481,6 +573,10 @@
       padding: 18px;
       border-top: 1px solid var(--line);
       background: linear-gradient(90deg, rgba(219, 232, 255, 0.62), rgba(255, 253, 248, 0.92));
+    }
+
+    .radar-home-card.is-hidden {
+      display: none;
     }
 
     .radar-thumb {
@@ -564,6 +660,67 @@
       color: var(--blue);
       background: var(--blue-soft);
       font-weight: 950;
+    }
+
+    .site-footer {
+      margin-top: 28px;
+      background: #081a3c;
+      color: rgba(255, 253, 248, 0.78);
+      padding: 42px 0 30px;
+    }
+
+    .footer-inner {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      display: grid;
+      gap: 20px;
+      font-size: 14px;
+    }
+
+    .footer-brand {
+      display: grid;
+      gap: 6px;
+    }
+
+    .footer-logo {
+      color: var(--white);
+      font-size: 22px;
+      font-weight: 950;
+    }
+
+    .footer-tagline {
+      max-width: 640px;
+      color: rgba(255, 253, 248, 0.68);
+      line-height: 1.5;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      padding-top: 4px;
+    }
+
+    .footer-links a {
+      color: rgba(255, 253, 248, 0.84);
+      font-weight: 850;
+    }
+
+    .footer-links a:hover {
+      color: var(--gold);
+    }
+
+    .footer-meta {
+      display: grid;
+      gap: 5px;
+      color: rgba(255, 253, 248, 0.58);
+      line-height: 1.45;
+    }
+
+    .footer-bottom {
+      padding-top: 8px;
+      color: rgba(255, 253, 248, 0.52);
+      font-size: 13px;
     }
 
     .radar-modal .preview-modal-panel {
@@ -1322,6 +1479,7 @@
       .feelscore-inner,
       .sky-home-grid,
       .sky-home-metrics,
+      .radiance-home-promo,
       .radar-home-card,
       .content-grid,
       .fold-tool-row,
@@ -1361,6 +1519,10 @@
       .modal-info-grid,
       .comfort-band {
         grid-template-columns: 1fr;
+      }
+
+      .radiance-score-pill {
+        width: fit-content;
       }
     }
   </style>
@@ -1415,20 +1577,33 @@
               The sky module below simply adds the visual read.
             </div>
           </div>
-          <aside class="fs-side" aria-label="FeelScore supporting notes">
-            <div class="fs-note">
-              <b>Now</b>
-              <span>Comfort is still the main homepage promise.</span>
+          <aside class="fs-support" aria-label="FeelScore supporting notes">
+            <div class="fs-bullets">
+              <ul>
+                <li>Low humidity helps</li>
+                <li>Winds stay light</li>
+                <li>A mix of sun and clouds</li>
+              </ul>
             </div>
-            <div class="fs-note">
-              <b>Next</b>
-              <span>Use the next six hours to decide timing.</span>
+            <div class="fs-temp-markers" aria-label="Important temperature markers">
+              <div class="fs-temp-marker">
+                <span>Morning low</span>
+                <b>51&deg;</b>
+              </div>
+              <div class="fs-temp-marker">
+                <span>Mid-afternoon</span>
+                <b>77&deg;</b>
+              </div>
+              <div class="fs-temp-marker">
+                <span>9 PM</span>
+                <b>66&deg;</b>
+              </div>
             </div>
           </aside>
         </div>
       </section>
 
-      <section class="sky-home-module" aria-label="Current Asheville sky conditions">
+      <section class="sky-home-module" id="skyHomeModule" aria-label="Current Asheville sky conditions">
         <div class="sky-home-grid">
           <div class="sky-home-copy">
             <div class="kicker">Current Sky</div>
@@ -1467,11 +1642,24 @@
             <span>Sky read confidence</span>
           </div>
           <div class="sky-home-metric">
-            <strong>Now</strong>
-            <span>Visual weather layer</span>
+            <strong id="skyHomeFeature">Now</strong>
+            <span id="skyHomeFeatureLabel">Visual weather layer</span>
           </div>
         </div>
-        <div class="radar-home-card">
+        <div class="radiance-home-promo" id="radianceHomePromo" aria-label="Conditional Sunset Radiance promo">
+          <div>
+            <div class="kicker">Sunset Radiance</div>
+            <h3>Evening color becomes worth a closer look.</h3>
+            <p>
+              After 3 PM, the homepage can elevate Sunset Radiance when clouds, sunlight, and timing
+              give the evening sky a real chance to perform.
+            </p>
+          </div>
+          <a class="radiance-score-pill" href="828-sunset-radiance.html" aria-label="Open Sunset Radiance forecast">
+            <div>74<span>Index</span></div>
+          </a>
+        </div>
+        <div class="radar-home-card is-hidden" id="radarHomeCard">
           <button class="radar-thumb" id="radarThumbButton" type="button" aria-haspopup="dialog">
             <img id="radarThumbImage" src="https://radar.weather.gov/ridge/standard/KGSP_loop.gif" alt="KGSP radar loop preview" loading="lazy" />
             <span class="radar-thumb-label">Tap to enlarge</span>
@@ -1625,6 +1813,35 @@
     </div>
   </main>
 
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="footer-logo">828 Weather Direct</div>
+        <div class="footer-tagline">
+          Hyper-local weather, sky context, and outdoor timing for Asheville and the greater 828 region.
+        </div>
+      </div>
+
+      <div class="footer-links">
+        <a href="/">Home</a>
+        <a href="/forecast.html">Forecast</a>
+        <a href="/hiking.html">Hiking Guidance</a>
+        <a href="/828-sunset-radiance.html">Sunset Radiance</a>
+        <a href="https://www.linkedin.com/in/timballisty">About</a>
+        <a href="mailto:tballisty@gmail.com">Contact</a>
+        <a href="https://ko-fi.com/irisheagle" target="_blank" rel="noopener noreferrer">Support</a>
+      </div>
+
+      <div class="footer-meta">
+        <div>Data: Tempest, NOAA/NWS, Open-Meteo, and local sky-camera signals where available.</div>
+        <div>Serving Asheville and the greater 828 region.</div>
+        <div>For general awareness only - not a substitute for official forecasts, warnings, or trail advisories.</div>
+      </div>
+
+      <div class="footer-bottom">&copy; 2026 828 Weather Direct</div>
+    </div>
+  </footer>
+
   <div class="preview-modal" id="feelScoreModal" role="dialog" aria-modal="true" aria-labelledby="feelScoreModalTitle">
     <div class="preview-modal-panel">
       <div class="preview-modal-hero">
@@ -1731,6 +1948,37 @@
     const SKY_STALE_MS = 20 * 60 * 1000;
     const LIVE_THUMBNAIL_URL = "https://i.ytimg.com/vi/UxUU3Fc1vBw/maxresdefault_live.jpg";
     const RADAR_LOOP_URL = "https://radar.weather.gov/ridge/standard/KGSP_loop.gif";
+    const params = new URLSearchParams(window.location.search);
+    const PREVIEW_RADIANCE_ACTIVE = params.get("radiance") === "on";
+    const PREVIEW_RADAR_ACTIVE = params.get("radar") === "on";
+    const PREVIEW_RADAR_OFF = params.get("radar") === "off";
+    const RAIN_CHANCE_PREVIEW = 14;
+    const PRECIP_SIGNAL_ACTIVE = RAIN_CHANCE_PREVIEW >= 25;
+
+    function localHour() {
+      const parts = new Intl.DateTimeFormat("en-US", {
+        hour: "numeric",
+        hour12: false,
+        timeZone: "America/New_York"
+      }).formatToParts(new Date());
+      return Number(parts.find((part) => part.type === "hour")?.value);
+    }
+
+    function applyConditionalHomepageFeatures() {
+      const skyHomeModule = document.querySelector("#skyHomeModule");
+      const radarHomeCard = document.querySelector("#radarHomeCard");
+      const skyHomeFeature = document.querySelector("#skyHomeFeature");
+      const skyHomeFeatureLabel = document.querySelector("#skyHomeFeatureLabel");
+      const radianceActive = PREVIEW_RADIANCE_ACTIVE || localHour() >= 15;
+      const radarActive = !PREVIEW_RADAR_OFF && (PREVIEW_RADAR_ACTIVE || PRECIP_SIGNAL_ACTIVE);
+
+      skyHomeModule?.classList.toggle("radiance-active", radianceActive);
+      if (skyHomeFeature && skyHomeFeatureLabel) {
+        skyHomeFeature.textContent = radianceActive ? "74" : "Now";
+        skyHomeFeatureLabel.textContent = radianceActive ? "Sunset Radiance watch" : "Visual weather layer";
+      }
+      radarHomeCard?.classList.toggle("is-hidden", !radarActive);
+    }
 
     function isSkyDataStale(value) {
       const ts = parseTimestamp(value);
@@ -1775,6 +2023,7 @@
       }
     }
 
+    applyConditionalHomepageFeatures();
     await hydrateSkyModule();
     setInterval(hydrateSkyModule, 5 * 60 * 1000);
 

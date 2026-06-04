@@ -1543,6 +1543,10 @@
       return `${Math.round(normalized)}%`;
     }
 
+    function statusPct(value, fallback = "Pending") {
+      return Number.isFinite(value) ? pct(value) : fallback;
+    }
+
     function labelize(value) {
       if (!value) return "Unknown";
       return value.replaceAll("_", " ").replace(/\b\w/g, (char) => char.toUpperCase());
@@ -1879,6 +1883,8 @@
       const daily = getTodayDaily(state.weather);
       const camera = state.skyData?.metrics || {};
       const isClosed = radiance.phase?.state === "closed";
+      const skyStale = isSkyDataStale(state.skyData?.timestamp);
+      const staleNightAnalysis = skyStale && state.skyData?.metrics?.mode === "night" && isCurrentDaylight();
       document.body.classList.toggle("radiance-closed", isClosed);
 
       els.heroScore.textContent = isClosed ? "Closed" : Number.isFinite(radiance.score) ? `${radiance.score}` : "--";
@@ -1893,9 +1899,9 @@
       const statusPrecip = pickNumber(statusHour, ["precipProbability", "precipitation_probability", "probabilityOfPrecipitation"]);
       const cameraCloudAvailable = Number.isFinite(state.skyIntel?.cloud);
       const displayCloud = cameraCloudAvailable ? state.skyIntel.cloud : statusCloud;
-      els.cloudStatus.textContent = `Clouds ${pct(displayCloud)}`;
-      els.humidityStatus.textContent = `Humidity ${pct(statusHumidity)}`;
-      els.precipStatus.textContent = `Rain chance ${pct(statusPrecip)}`;
+      els.cloudStatus.textContent = `Clouds ${statusPct(displayCloud, "Pending")}`;
+      els.humidityStatus.textContent = `Humidity ${statusPct(statusHumidity, "Pending")}`;
+      els.precipStatus.textContent = `Rain chance ${statusPct(statusPrecip, "Pending")}`;
       els.windowStatus.textContent = radiance.phase?.label || "Radiance window --";
       els.windowStatus.classList.toggle("closed", isClosed);
 
@@ -1920,7 +1926,9 @@
 
       els.cloudMetric.textContent = pct(displayCloud);
       els.cloudMetricLabel.textContent = cameraCloudAvailable ? "Camera cloud cover" : "Forecast cloud cover";
-      els.lightMetric.textContent = camera.sunlightDetected ? labelize(camera.sunlightLevel) : "Low";
+      els.lightMetric.textContent = staleNightAnalysis
+        ? "Bright"
+        : camera.sunlightDetected ? labelize(camera.sunlightLevel) : "Low";
       els.confidenceMetric.textContent = pct(state.skyIntel?.confidence);
 
       renderTimeline();
@@ -2078,6 +2086,16 @@
       const daylight = getTodayDaily(state.weather);
       const now = Date.now();
       const nearSunrise = Number.isFinite(daylight?.sunrise) && now >= daylight.sunrise && now <= daylight.sunrise + 3 * 60 * 60 * 1000;
+      const metrics = state.skyData?.metrics || {};
+      const blueSkySignal = Number.isFinite(metrics.skyBlueSignal) && metrics.skyBlueSignal >= 1.12;
+      const strongSunSignal = metrics.sunlightDetected && metrics.sunlightLevel === "strong";
+
+      if (strongSunSignal && blueSkySignal) {
+        return {
+          headline: "Blue sky and strong morning sunshine are showing over Asheville.",
+          detail: "Daylight has returned with plenty of open blue showing in the live view. A few clouds may still be around the horizon, but sunshine is the dominant visual signal right now."
+        };
+      }
 
       if (Number.isFinite(cloudPct)) {
         const layer = describeCloudLayer({
@@ -2096,8 +2114,15 @@
         };
       }
 
+      if (nearSunrise || isCurrentDaylight()) {
+        return {
+          headline: "Blue sky and plentiful morning sunshine are showing over Asheville.",
+          detail: "The live thumbnail is carrying the current visual read while the automated camera analysis catches up. From the view, sunshine is more apparent than cloud cover right now, with the backup camera and satellite loop available as cross-checks."
+        };
+      }
+
       return {
-        headline: "Layered clouds are showing over Asheville with daylight returning to the view.",
+        headline: "The live Asheville sky view is updating.",
         detail: "The live thumbnail is carrying the current visual read while the automated camera analysis catches up. Use the backup camera, radar, and satellite loop below to cross-check cloud depth."
       };
     }
@@ -2187,6 +2212,37 @@
       };
     }
 
+    async function fetchNwsHourlyFallback() {
+      const pointRes = await fetch(`https://api.weather.gov/points/${ASHEVILLE.lat},${ASHEVILLE.lon}`);
+      if (!pointRes.ok) throw new Error("NWS point lookup failed");
+      const pointData = await pointRes.json();
+      const hourlyUrl = pointData?.properties?.forecastHourly;
+      if (!hourlyUrl) throw new Error("NWS hourly forecast URL missing");
+
+      const hourlyRes = await fetch(hourlyUrl);
+      if (!hourlyRes.ok) throw new Error("NWS hourly forecast failed");
+      const hourlyData = await hourlyRes.json();
+      const hourly = (hourlyData?.properties?.periods || []).map((period) => ({
+        timestamp: normalizeOpenMeteoTimestamp(period.startTime),
+        temperatureF: period.temperature ?? null,
+        relativeHumidity: period.relativeHumidity?.value ?? null,
+        precipProbability: period.probabilityOfPrecipitation?.value ?? null,
+        cloudCover: null,
+        windSpeed: Number.parseFloat(period.windSpeed) || null,
+        windGust: null,
+        uvIndex: null,
+        weatherCode: null,
+        shortForecast: period.shortForecast || null
+      }));
+
+      return {
+        hourly,
+        daily: [],
+        current: null,
+        _source: "nws-hourly"
+      };
+    }
+
     async function loadSky() {
       try {
         const res = await fetch(skyDataUrl());
@@ -2228,7 +2284,13 @@
           if (state.skyData) renderSky();
           renderRadiance();
         } catch {
-          renderRadiance();
+          try {
+            state.weather = await fetchNwsHourlyFallback();
+            if (state.skyData) renderSky();
+            renderRadiance();
+          } catch {
+            renderRadiance();
+          }
         }
       }
     }
