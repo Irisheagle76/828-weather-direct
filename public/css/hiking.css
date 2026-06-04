@@ -601,25 +601,65 @@
     .site-footer {
       background: linear-gradient(135deg, var(--panel-deep), var(--blue-dark));
       color: rgba(255, 253, 248, 0.74);
-      padding: 38px 0 30px;
+      padding: 42px 0 30px;
     }
 
     .footer-inner {
       display: grid;
-      gap: 14px;
+      gap: 20px;
+      font-size: 14px;
+    }
+
+    .footer-brand {
+      display: grid;
+      gap: 6px;
     }
 
     .footer-logo {
       color: var(--white);
       font-size: 22px;
-      font-weight: 900;
+      font-weight: 950;
+    }
+
+    .footer-tagline {
+      max-width: 640px;
+      color: rgba(255, 253, 248, 0.68);
+      line-height: 1.5;
     }
 
     .footer-links {
       display: flex;
       flex-wrap: wrap;
       gap: 14px;
-      font-weight: 800;
+      padding-top: 4px;
+    }
+
+    .footer-links a {
+      color: rgba(255, 253, 248, 0.84);
+      font-weight: 850;
+    }
+
+    .footer-links a:hover {
+      color: var(--gold);
+    }
+
+    .footer-support-link {
+      align-items: center;
+      display: inline-flex;
+      gap: 6px;
+    }
+
+    .footer-meta {
+      display: grid;
+      gap: 5px;
+      color: rgba(255, 253, 248, 0.58);
+      line-height: 1.45;
+    }
+
+    .footer-bottom {
+      padding-top: 8px;
+      color: rgba(255, 253, 248, 0.52);
+      font-size: 13px;
     }
 
     @media (max-width: 900px) {
