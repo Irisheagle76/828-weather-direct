@@ -1433,6 +1433,7 @@
     }
 
     .fire-info-panel {
+      display: none;
       margin-top: 14px;
       padding: 16px;
       border: 1px solid rgba(255, 253, 248, 0.18);
@@ -1440,6 +1441,10 @@
       background: rgba(8, 26, 60, 0.2);
       color: rgba(255, 253, 248, 0.8);
       line-height: 1.45;
+    }
+
+    .fire-info-panel.open {
+      display: block;
     }
 
     .fire-info-panel b {
@@ -2320,6 +2325,9 @@
               <div class="kicker">Drought & Fire Threat</div>
               <h2 id="fireHeadline">High fire risk needs a closer read.</h2>
             </div>
+            <button class="fire-info-toggle" id="fireInfoToggle" type="button" aria-expanded="false" aria-controls="fireInfoPanel">
+              <span>i</span> More Info
+            </button>
           </div>
           <div class="tool-snapshot">
             <span class="tool-index"><strong id="droughtStressValue">92</strong> Drought stress</span>
@@ -3399,6 +3407,8 @@
     const pulseMediaModal = document.querySelector("#pulseMediaModal");
     const pulseMediaModalClose = document.querySelector("#pulseMediaModalClose");
     const pulseMediaModalBody = document.querySelector("#pulseMediaModalBody");
+    const fireInfoToggle = document.querySelector("#fireInfoToggle");
+    const fireInfoPanel = document.querySelector("#fireInfoPanel");
     function closeFeelScoreModal() {
       feelScoreModal?.classList.remove("open");
     }
@@ -3438,6 +3448,10 @@
     radarModalClose?.addEventListener("click", closeRadarModal);
     radarModal?.addEventListener("click", (event) => {
       if (event.target === radarModal) closeRadarModal();
+    });
+    fireInfoToggle?.addEventListener("click", () => {
+      const isOpen = fireInfoPanel?.classList.toggle("open");
+      fireInfoToggle.setAttribute("aria-expanded", String(Boolean(isOpen)));
     });
     pulseMediaSlot?.addEventListener("click", openPulseMediaModal);
     pulseMediaModalClose?.addEventListener("click", closePulseMediaModal);
