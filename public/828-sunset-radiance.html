@@ -1335,8 +1335,8 @@
       <section class="forecast-band" id="signals">
         <div class="section">
           <div class="section-heading">
-            <h2>Radiance Signals</h2>
-            <p>
+            <h2 id="signalsTitle">Radiance Signals</h2>
+            <p id="signalsIntro">
               Great color usually needs enough cloud texture to catch low-angle light,
               enough clearing to reveal it, and limited rain or fog near sunset.
             </p>
@@ -1513,6 +1513,8 @@
       indexDetail: document.querySelector("#indexDetail"),
       indexMeter: document.querySelector("#indexMeter"),
       factorList: document.querySelector("#factorList"),
+      signalsTitle: document.querySelector("#signalsTitle"),
+      signalsIntro: document.querySelector("#signalsIntro"),
       textureTitle: document.querySelector("#textureTitle"),
       textureCopy: document.querySelector("#textureCopy"),
       moistureTitle: document.querySelector("#moistureTitle"),
@@ -1745,11 +1747,23 @@
         return { state: "waiting", label: "Waiting for daylight" };
       }
 
+      const decisionStart = new Date(sunset);
+      decisionStart.setHours(15, 0, 0, 0);
+      if (now < decisionStart.getTime()) {
+        return {
+          state: "setup",
+          label: "Early setup only",
+          decisionStart: decisionStart.getTime()
+        };
+      }
+
       return { state: "active", label: "Monitoring sunset" };
     }
 
-    function scoreCloudTexture(cameraCloud, forecastCloud) {
+    function scoreCloudTexture(cameraCloud, forecastCloud, phase) {
       const cloud = Number.isFinite(forecastCloud) ? forecastCloud * 100 : cameraCloud;
+      const hasForecastCloud = Number.isFinite(forecastCloud);
+      const earlySetup = phase?.state === "setup" || phase?.state === "waiting";
       if (!Number.isFinite(cloud)) return { score: 58, label: "Limited cloud data", detail: "Using the camera read more heavily until forecast cloud cover is available." };
       let score;
       if (cloud >= 25 && cloud <= 60) score = 92;
@@ -1760,8 +1774,16 @@
       else score = 26;
       return {
         score,
-        label: `${Math.round(cloud)}% cloud cover`,
-        detail: cloud >= 25 && cloud <= 60
+        label: earlySetup && hasForecastCloud
+          ? `Early forecast: ${Math.round(cloud)}% near sunset`
+          : hasForecastCloud
+            ? `${Math.round(cloud)}% clouds near sunset`
+            : `Current camera: ${Math.round(cloud)}% clouds`,
+        detail: earlySetup
+          ? hasForecastCloud
+            ? "This is a long-range sunset ingredient, not a final read. Morning cloud cover can change a lot before low-angle light arrives."
+            : "This is the current sky read only. It is useful for the now story, but it is too early to treat it as a sunset forecast."
+          : cloud >= 25 && cloud <= 60
           ? "A strong color setup: enough texture to catch light without fully blocking the horizon."
           : cloud > 75
             ? "Clouds may be too dominant unless the western edge opens up."
@@ -1769,10 +1791,11 @@
       };
     }
 
-    function scoreMoisture(hour, camera) {
+    function scoreMoisture(hour, camera, phase) {
       const humidity = pickNumber(hour, ["relativeHumidity", "relative_humidity", "humidity"]);
       const precip = pickNumber(hour, ["precipProbability", "precipitation_probability", "probabilityOfPrecipitation"]);
       const fog = camera?.metrics?.visibilityScore === 0;
+      const earlySetup = phase?.state === "setup" || phase?.state === "waiting";
       let score = 78;
       if (Number.isFinite(humidity)) {
         const humidityPct = humidity <= 1 ? humidity * 100 : humidity;
@@ -1785,8 +1808,12 @@
       if (fog) score -= 38;
       return {
         score: clamp(score),
-        label: Number.isFinite(humidity) ? `${pct(humidity)} humidity` : "Humidity pending",
-        detail: fog
+        label: Number.isFinite(humidity)
+          ? `${earlySetup ? "Forecast " : ""}${pct(humidity)} humidity${earlySetup ? " near sunset" : ""}`
+          : "Humidity pending",
+        detail: earlySetup
+          ? "This is still a forecast ingredient. The better question later today will be whether fog, haze, or rain is present near the actual window."
+          : fog
           ? "Fog is the main limiter right now."
           : Number.isFinite(precip) && precip > 0.35
             ? "Rain chances are high enough to mute or interrupt color."
@@ -1794,8 +1821,9 @@
       };
     }
 
-    function scoreClearing(skyIntel, camera) {
+    function scoreClearing(skyIntel, camera, phase) {
       const m = camera?.metrics || {};
+      const earlySetup = phase?.state === "setup" || phase?.state === "waiting";
       let score = 56;
       if (skyIntel?.atmosphericState === "mostly_clear") score = 74;
       if (skyIntel?.atmosphericState === "partly_cloudy") score = 86;
@@ -1806,8 +1834,10 @@
       if (Number.isFinite(m.skyBlueSignal) && m.skyBlueSignal > 1.05) score += 8;
       return {
         score: clamp(score),
-        label: labelize(skyIntel?.atmosphericState),
-        detail: m.sunlightDetected
+        label: earlySetup ? `Current sky: ${labelize(skyIntel?.atmosphericState)}` : labelize(skyIntel?.atmosphericState),
+        detail: earlySetup
+          ? "This describes what Asheville looks like now. It is useful context, but the real clearing signal matters most after mid-afternoon."
+          : m.sunlightDetected
           ? "Sunlight is still getting into the cloud deck, which helps the evening color case."
           : "The sky needs more breaks or filtered light to lift the radiance score."
       };
@@ -1838,9 +1868,10 @@
       const sunsetHour = getSunsetHour(state.weather);
       const daily = getTodayDaily(state.weather);
       const phase = getRadiancePhase(daily);
-      const texture = scoreCloudTexture(cameraCloud, sunsetHour?.cloudCover);
-      const moisture = scoreMoisture(sunsetHour, state.skyData);
-      const clearing = scoreClearing(state.skyIntel, state.skyData);
+      const earlySetup = phase.state === "setup" || phase.state === "waiting";
+      const texture = scoreCloudTexture(cameraCloud, sunsetHour?.cloudCover, phase);
+      const moisture = scoreMoisture(sunsetHour, state.skyData, phase);
+      const clearing = scoreClearing(state.skyIntel, state.skyData, phase);
       const timing = scoreTiming(state.weather);
 
       const score = Math.round(
@@ -1854,6 +1885,7 @@
         phase,
         score,
         title: phase.state === "closed" ? "Tonight's radiance window has closed"
+          : earlySetup ? "Early sunset setup"
           : score >= 88 ? "High radiance potential"
           : score >= 74 ? "Strong sunset chance"
           : score >= 60 ? "Worth watching"
@@ -1861,6 +1893,8 @@
           : "Low color potential",
         detail: phase.state === "closed"
           ? "The useful sunset and twilight period has passed for Asheville. The sky snapshot remains here for context, and tomorrow's window will come back into focus after the next daylight cycle begins."
+          : earlySetup
+          ? "This is still a long-lead setup read. Morning sky conditions are informative, but the true sunset signal starts to matter much more after about 3 PM."
           : score >= 74
           ? "The sky has enough working ingredients to justify keeping an eye on the western horizon."
           : score >= 45
@@ -1883,6 +1917,7 @@
       const daily = getTodayDaily(state.weather);
       const camera = state.skyData?.metrics || {};
       const isClosed = radiance.phase?.state === "closed";
+      const isEarlySetup = radiance.phase?.state === "setup" || radiance.phase?.state === "waiting";
       const skyStale = isSkyDataStale(state.skyData?.timestamp);
       const staleNightAnalysis = skyStale && state.skyData?.metrics?.mode === "night" && isCurrentDaylight();
       document.body.classList.toggle("radiance-closed", isClosed);
@@ -1894,16 +1929,30 @@
       els.indexMeter.style.width = `${isClosed ? 0 : clamp(radiance.score)}%`;
       els.heroSunset.textContent = daily?.sunset ? formatTime(daily.sunset) : "--";
 
+      const forecastStatusHour = isEarlySetup ? sunsetHour || statusHour : statusHour;
       const statusCloud = pickNumber(statusHour, ["cloudCover", "cloud_cover", "cloudcover"]);
-      const statusHumidity = pickNumber(statusHour, ["relativeHumidity", "relative_humidity", "humidity"]);
-      const statusPrecip = pickNumber(statusHour, ["precipProbability", "precipitation_probability", "probabilityOfPrecipitation"]);
+      const statusHumidity = pickNumber(forecastStatusHour, ["relativeHumidity", "relative_humidity", "humidity"]);
+      const statusPrecip = pickNumber(forecastStatusHour, ["precipProbability", "precipitation_probability", "probabilityOfPrecipitation"]);
       const cameraCloudAvailable = Number.isFinite(state.skyIntel?.cloud);
       const displayCloud = cameraCloudAvailable ? state.skyIntel.cloud : statusCloud;
-      els.cloudStatus.textContent = `Clouds ${statusPct(displayCloud, "Pending")}`;
-      els.humidityStatus.textContent = `Humidity ${statusPct(statusHumidity, "Pending")}`;
-      els.precipStatus.textContent = `Rain chance ${statusPct(statusPrecip, "Pending")}`;
+      els.cloudStatus.textContent = isEarlySetup
+        ? `Now clouds ${statusPct(displayCloud, "Pending")}`
+        : `Clouds ${statusPct(displayCloud, "Pending")}`;
+      els.humidityStatus.textContent = isEarlySetup
+        ? `Sunset humidity ${statusPct(statusHumidity, "Pending")}`
+        : `Humidity ${statusPct(statusHumidity, "Pending")}`;
+      els.precipStatus.textContent = isEarlySetup
+        ? `Sunset rain ${statusPct(statusPrecip, "Pending")}`
+        : `Rain chance ${statusPct(statusPrecip, "Pending")}`;
       els.windowStatus.textContent = radiance.phase?.label || "Radiance window --";
       els.windowStatus.classList.toggle("closed", isClosed);
+
+      if (els.signalsTitle && els.signalsIntro) {
+        els.signalsTitle.textContent = isEarlySetup ? "Early Sunset Setup" : "Radiance Signals";
+        els.signalsIntro.textContent = isEarlySetup
+          ? "Morning and midday sky data are useful context, but they are not the final sunset read. This section separates the current sky from forecast ingredients near the evening window."
+          : "Great color usually needs enough cloud texture to catch low-angle light, enough clearing to reveal it, and limited rain or fog near sunset.";
+      }
 
       els.factorList.innerHTML = radiance.factors.map((factor) => `
         <li class="factor">
