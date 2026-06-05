@@ -33,9 +33,227 @@
       overflow-x: hidden;
     }
 
+    body.splash-active {
+      overflow: hidden;
+    }
+
     a {
       color: inherit;
       text-decoration: none;
+    }
+
+    .home-splash {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      color: var(--white);
+      background:
+        linear-gradient(145deg, rgba(8, 23, 57, 0.96), rgba(9, 37, 95, 0.94) 54%, rgba(245, 125, 35, 0.86));
+      transition: opacity 0.55s ease, visibility 0.55s ease;
+    }
+
+    .home-splash.is-hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .home-splash-card {
+      width: min(920px, 100%);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(260px, 0.72fr);
+      gap: clamp(20px, 4vw, 38px);
+      align-items: center;
+      padding: clamp(22px, 4vw, 42px);
+      border: 1px solid rgba(255, 253, 248, 0.18);
+      border-radius: 22px;
+      background: rgba(12, 27, 54, 0.68);
+      box-shadow: 0 28px 80px rgba(3, 12, 29, 0.42);
+      backdrop-filter: blur(18px);
+    }
+
+    .home-splash-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: #ffdca3;
+      font-size: 0.84rem;
+      font-weight: 950;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .home-splash-kicker::before {
+      content: "";
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--orange);
+      box-shadow: 0 0 0 7px rgba(245, 125, 35, 0.18);
+      animation: splashPulse 1.5s ease-in-out infinite;
+    }
+
+    .home-splash-title {
+      margin: 14px 0 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(3.2rem, 10vw, 6.6rem);
+      line-height: 0.86;
+      letter-spacing: 0;
+    }
+
+    .home-splash-title span {
+      display: block;
+      color: #ffb15f;
+    }
+
+    .home-splash-copy {
+      max-width: 590px;
+      margin: 18px 0 0;
+      color: rgba(255, 253, 248, 0.8);
+      font-size: clamp(1rem, 2.2vw, 1.28rem);
+      line-height: 1.5;
+    }
+
+    .home-splash-signals {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .home-splash-signal {
+      display: inline-flex;
+      align-items: center;
+      min-height: 38px;
+      padding: 0 13px;
+      border: 1px solid rgba(255, 253, 248, 0.2);
+      border-radius: 999px;
+      color: rgba(255, 253, 248, 0.9);
+      background: rgba(255, 253, 248, 0.09);
+      font-weight: 900;
+    }
+
+    .home-splash-signal.primary {
+      color: #0f2446;
+      background: #ffdca3;
+      border-color: transparent;
+    }
+
+    .home-splash-media {
+      position: relative;
+      overflow: hidden;
+      min-height: 290px;
+      border-radius: 18px;
+      background: #0b1629;
+      box-shadow: inset 0 0 0 1px rgba(255, 253, 248, 0.18);
+    }
+
+    .home-splash-media img {
+      width: 100%;
+      height: 100%;
+      min-height: 290px;
+      object-fit: cover;
+      opacity: 0.82;
+      filter: saturate(1.1) contrast(1.05);
+      transform: scale(1.03);
+    }
+
+    .home-splash-media::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(10, 24, 51, 0.08), rgba(10, 24, 51, 0.64));
+    }
+
+    .home-splash-media-label {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 18px;
+      z-index: 1;
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .home-splash-media-label strong {
+      display: block;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.5rem, 4vw, 2.25rem);
+      line-height: 0.95;
+    }
+
+    .home-splash-media-label span {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 0 12px;
+      border-radius: 999px;
+      color: var(--white);
+      background: var(--orange);
+      font-size: 0.78rem;
+      font-weight: 950;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    @keyframes splashPulse {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 7px rgba(245, 125, 35, 0.18);
+      }
+      50% {
+        transform: scale(1.16);
+        box-shadow: 0 0 0 11px rgba(245, 125, 35, 0.08);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .home-splash,
+      .home-splash-kicker::before {
+        animation: none;
+        transition: none;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .home-splash {
+        padding: 14px;
+      }
+
+      .home-splash-card {
+        grid-template-columns: 1fr;
+        gap: 18px;
+        padding: 22px;
+        border-radius: 18px;
+      }
+
+      .home-splash-media {
+        min-height: 210px;
+        order: -1;
+      }
+
+      .home-splash-media img {
+        min-height: 210px;
+      }
+
+      .home-splash-title {
+        font-size: clamp(3rem, 17vw, 4.8rem);
+      }
+
+      .home-splash-copy {
+        font-size: 1rem;
+      }
+
+      .home-splash-media-label {
+        align-items: start;
+        flex-direction: column;
+      }
     }
 
     
@@ -2068,7 +2286,31 @@
     }
   </style>
 </head>
-<body>
+<body class="splash-active">
+  <div class="home-splash" id="homeSplash" role="status" aria-live="polite" aria-label="Loading 828 Weather Direct">
+    <div class="home-splash-card">
+      <div>
+        <div class="home-splash-kicker">Live Asheville Weather Desk</div>
+        <h1 class="home-splash-title">828 Weather <span>Direct</span></h1>
+        <p class="home-splash-copy">
+          FeelScore, current sky, Pulse, hiking guidance, and local risk signals are coming into focus.
+        </p>
+        <div class="home-splash-signals" aria-label="Homepage tools loading">
+          <span class="home-splash-signal primary">FeelScore first</span>
+          <span class="home-splash-signal">Current sky</span>
+          <span class="home-splash-signal">828 Pulse</span>
+        </div>
+      </div>
+      <figure class="home-splash-media" aria-label="Asheville sky preview">
+        <img src="js/sky-cam/frame.jpg" alt="" />
+        <figcaption class="home-splash-media-label">
+          <strong>Asheville, right now.</strong>
+          <span>Loading</span>
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+
   <header class="mock-header">
     <div class="mock-header-inner">
       <div class="mock-brand-row">
@@ -2567,6 +2809,19 @@
         .replace(/_/g, " ")
         .replace(/\b\w/g, (char) => char.toUpperCase());
     }
+
+    function hideHomeSplash(delay = 900) {
+      const splash = document.querySelector("#homeSplash");
+      if (!splash) return;
+      window.setTimeout(() => {
+        splash.classList.add("is-hidden");
+        document.body.classList.remove("splash-active");
+        window.setTimeout(() => splash.remove(), 650);
+      }, delay);
+    }
+
+    window.addEventListener("load", () => hideHomeSplash(1300), { once: true });
+    window.setTimeout(() => hideHomeSplash(0), 4200);
 
     function parseTimestamp(value) {
       if (typeof value !== "string" || !value) return null;
@@ -3556,6 +3811,7 @@
     hydrateObservationChips();
     hydrateLiveComfortModules();
     await hydrateSkyModule();
+    hideHomeSplash(450);
     setInterval(hydrateObservationChips, 5 * 60 * 1000);
     setInterval(hydrateSkyModule, 5 * 60 * 1000);
 
