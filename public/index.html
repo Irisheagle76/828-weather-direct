@@ -2066,14 +2066,14 @@
       </div>
 
       <div class="obs-row" aria-label="Current weather observations">
-        <div class="obs-chip live">Updated just now</div>
-        <div class="obs-chip">Asheville 70°</div>
-        <div class="obs-chip">Dew point 64°</div>
-        <div class="obs-chip">Humidity 84%</div>
-        <div class="obs-chip">Wind 4 mph</div>
-        <div class="obs-chip">Pressure 30.05"</div>
-        <div class="obs-chip">Rain chance 14%</div>
-        <div class="obs-chip">Clouds 94%</div>
+        <div class="obs-chip live" id="obsUpdated">Updating obs</div>
+        <div class="obs-chip" id="obsTemp">Asheville --°</div>
+        <div class="obs-chip" id="obsDewpoint">Dew point --°</div>
+        <div class="obs-chip" id="obsHumidity">Humidity --</div>
+        <div class="obs-chip" id="obsWind">Wind -- mph</div>
+        <div class="obs-chip" id="obsPressure">Pressure --"</div>
+        <div class="obs-chip" id="obsRainChance">Rain chance --</div>
+        <div class="obs-chip" id="obsClouds">Clouds --</div>
       </div>
     </div>
   </header>
@@ -2572,6 +2572,23 @@
       });
     }
 
+    function formatLocalTime(ts = Date.now()) {
+      return new Date(ts).toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit",
+        timeZone: "America/New_York"
+      });
+    }
+
+    function formatObsAge(value) {
+      const ts = Number(value);
+      if (!Number.isFinite(ts)) return `Updated ${formatLocalTime()}`;
+      const ageMinutes = Math.max(0, Math.round((Date.now() - ts) / 60000));
+      if (ageMinutes < 2) return "Updated just now";
+      if (ageMinutes < 60) return `Updated ${ageMinutes} min ago`;
+      return `Updated ${formatLocalTime(ts)}`;
+    }
+
     const SKY_STALE_MS = 20 * 60 * 1000;
     const LIVE_THUMBNAIL_URL = "https://i.ytimg.com/vi/UxUU3Fc1vBw/maxresdefault_live.jpg";
     const RADAR_LOOP_URL = "https://radar.weather.gov/ridge/standard/KGSP_loop.gif";
@@ -2698,6 +2715,101 @@
       const liveRes = await fetch(`https://avlweather.com${path}`);
       if (!liveRes.ok) throw new Error(`Live API route failed: ${liveRes.status}`);
       return liveRes.json();
+    }
+
+    function toF(value) {
+      const n = Number(value);
+      return Number.isFinite(n) ? (n * 9) / 5 + 32 : null;
+    }
+
+    function toMph(value) {
+      const n = Number(value);
+      return Number.isFinite(n) ? n * 2.237 : null;
+    }
+
+    function hpaToInHg(value) {
+      const n = Number(value);
+      return Number.isFinite(n) ? n * 0.02953 : null;
+    }
+
+    function setText(selector, value) {
+      const el = document.querySelector(selector);
+      if (el) el.textContent = value;
+    }
+
+    function normalizeObsFromWeather(weather = {}) {
+      const current = weather.current || weather.current_conditions || {};
+      const firstHour = Array.isArray(weather.hourly) ? weather.hourly[0] || {} : {};
+      return {
+        tempF: current.temperatureF ?? current.tempF ?? firstHour.temperatureF ?? toF(current.air_temperature),
+        dewF: current.dewpointF ?? current.dewPoint ?? firstHour.dewpointF ?? toF(current.dew_point),
+        humidity: current.relativeHumidity ?? current.relative_humidity ?? current.humidity ?? firstHour.relativeHumidity,
+        windMph: current.windSpeed ?? current.wind ?? firstHour.windSpeed ?? toMph(current.wind_avg),
+        pressure: hpaToInHg(current.sea_level_pressure ?? current.pressure ?? current.pressure_msl ?? current.barometric_pressure),
+        rainChance: firstHour.precipProbability ?? current.precipProbability,
+        clouds: firstHour.cloudCover ?? current.cloudCover,
+        timestamp: current.timestamp ?? firstHour.timestamp ?? Date.now()
+      };
+    }
+
+    async function fetchOpenMeteoObsFallback() {
+      const url = [
+        "https://api.open-meteo.com/v1/forecast?latitude=35.5951&longitude=-82.5515",
+        "current=temperature_2m,relative_humidity_2m,dew_point_2m,precipitation,pressure_msl,cloud_cover,wind_speed_10m",
+        "hourly=precipitation_probability,cloud_cover",
+        "temperature_unit=fahrenheit",
+        "wind_speed_unit=mph",
+        "precipitation_unit=inch",
+        "timezone=America%2FNew_York",
+        "forecast_days=1"
+      ].join("&");
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Open-Meteo obs failed: ${res.status}`);
+      const data = await res.json();
+      const current = data.current || {};
+      return {
+        tempF: current.temperature_2m,
+        dewF: current.dew_point_2m,
+        humidity: current.relative_humidity_2m,
+        windMph: current.wind_speed_10m,
+        pressure: hpaToInHg(current.pressure_msl),
+        rainChance: data.hourly?.precipitation_probability?.[0],
+        clouds: current.cloud_cover ?? data.hourly?.cloud_cover?.[0],
+        timestamp: current.time ? new Date(current.time).getTime() : Date.now()
+      };
+    }
+
+    function renderObservationChips(obs = {}) {
+      const temp = Number(obs.tempF);
+      const dew = Number(obs.dewF);
+      const humidity = Number(obs.humidity);
+      const wind = Number(obs.windMph);
+      const pressure = Number(obs.pressure);
+      const rain = Number(obs.rainChance);
+      const clouds = Number(obs.clouds);
+
+      setText("#obsUpdated", formatObsAge(obs.timestamp));
+      setText("#obsTemp", `Asheville ${Number.isFinite(temp) ? `${Math.round(temp)}°` : "--°"}`);
+      setText("#obsDewpoint", `Dew point ${Number.isFinite(dew) ? `${Math.round(dew)}°` : "--°"}`);
+      setText("#obsHumidity", `Humidity ${Number.isFinite(humidity) ? `${Math.round(humidity)}%` : "--"}`);
+      setText("#obsWind", `Wind ${Number.isFinite(wind) ? `${Math.round(wind)} mph` : "-- mph"}`);
+      setText("#obsPressure", `Pressure ${Number.isFinite(pressure) ? `${pressure.toFixed(2)}"` : '--"'}`);
+      setText("#obsRainChance", `Rain chance ${Number.isFinite(rain) ? pct(rain) : "--"}`);
+      setText("#obsClouds", `Clouds ${Number.isFinite(clouds) ? pct(clouds) : "--"}`);
+    }
+
+    async function hydrateObservationChips() {
+      try {
+        const weather = await fetchRouteJson("weather&type=hourly&lat=35.5951&lon=-82.5515");
+        renderObservationChips(normalizeObsFromWeather(weather));
+      } catch (error) {
+        try {
+          renderObservationChips(await fetchOpenMeteoObsFallback());
+        } catch (fallbackError) {
+          console.warn("Observation chips unavailable", error, fallbackError);
+          setText("#obsUpdated", `Obs pending ${formatLocalTime()}`);
+        }
+      }
     }
 
     function decodeHtml(value = "") {
@@ -3369,7 +3481,7 @@
         document.querySelector("#skyHomeImage").src = skyImageUrl(frameVersion, skyStale);
         document.querySelector("#skyHomeLabel").textContent = labelize(skyIntel?.atmosphericState);
         document.querySelector("#skyHomeCapture").textContent = skyStale
-          ? `Live view; analysis ${formatCaptureTime(data?.timestamp)}`
+          ? `Live image refreshed ${formatLocalTime()}`
           : `Camera capture ${formatCaptureTime(data?.timestamp)}`;
         document.querySelector("#skyHomeHeadline").textContent = narrative?.headline || "Reading the Asheville sky.";
         document.querySelector("#skyHomeDetail").textContent = narrative?.detail || "The camera snapshot adds visual context to the forecast.";
@@ -3385,8 +3497,10 @@
     hydrateSubstackCard();
     hydrateDroughtFireCard();
     hydratePulsePreview();
+    hydrateObservationChips();
     hydrateLiveComfortModules();
     await hydrateSkyModule();
+    setInterval(hydrateObservationChips, 5 * 60 * 1000);
     setInterval(hydrateSkyModule, 5 * 60 * 1000);
 
     const radarThumbImage = document.querySelector("#radarThumbImage");
