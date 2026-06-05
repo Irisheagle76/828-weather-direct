@@ -30,6 +30,7 @@
       color: var(--ink);
       background: var(--paper);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow-x: hidden;
     }
 
     a {
@@ -125,6 +126,14 @@
     .preview-stack {
       display: grid;
       gap: 22px;
+    }
+
+    .feelscore-inner > *,
+    .sky-home-grid > *,
+    .content-grid > *,
+    .pulse-layout > *,
+    .fold-tool-row > * {
+      min-width: 0;
     }
 
     .feelscore-mock {
@@ -962,7 +971,8 @@
       background: #102650;
     }
 
-    .pulse-media-preview img {
+    .pulse-media-preview img,
+    .pulse-media-preview video {
       display: block;
       width: 100%;
       height: 100%;
@@ -1012,6 +1022,9 @@
     }
 
     .fold-tool-card.update {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 16px;
       color: var(--white);
       background:
         radial-gradient(circle at 90% 0%, rgba(245, 125, 35, 0.4), transparent 32%),
@@ -1074,6 +1087,77 @@
       font-size: clamp(2rem, 4.6vw, 3.25rem);
     }
 
+    .fold-tool-card.hiking {
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 92% 0%, rgba(79, 166, 106, 0.16), transparent 34%),
+        linear-gradient(135deg, #fffdf8, #f4fbf5);
+    }
+
+    .hiking-mini-profile {
+      position: relative;
+      min-height: 96px;
+      margin: 16px 0;
+      overflow: hidden;
+      border: 1px solid rgba(79, 166, 106, 0.22);
+      border-radius: 14px;
+      background:
+        linear-gradient(180deg, rgba(15, 76, 196, 0.12), transparent 45%),
+        #eef8ef;
+    }
+
+    .hiking-mini-profile::before,
+    .hiking-mini-profile::after {
+      content: "";
+      position: absolute;
+      left: -4%;
+      right: -4%;
+      bottom: 0;
+      height: 74%;
+      clip-path: polygon(0 100%, 16% 66%, 32% 78%, 50% 44%, 66% 58%, 82% 22%, 100% 48%, 100% 100%);
+    }
+
+    .hiking-mini-profile::before {
+      background: rgba(35, 112, 79, 0.88);
+    }
+
+    .hiking-mini-profile::after {
+      height: 62%;
+      background: rgba(78, 194, 143, 0.78);
+      transform: translateY(10px);
+    }
+
+    .hiking-mini-line {
+      position: absolute;
+      left: 10%;
+      right: 10%;
+      bottom: 31%;
+      z-index: 2;
+      height: 4px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--orange), var(--blue));
+      transform: rotate(-7deg);
+      transform-origin: left center;
+      box-shadow: 0 7px 16px rgba(8, 26, 60, 0.16);
+    }
+
+    .hiking-mini-label {
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      z-index: 3;
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      color: var(--white);
+      background: var(--green);
+      font-size: 0.76rem;
+      font-weight: 950;
+    }
+
     .fold-tool-card p {
       margin: 0;
       color: var(--muted);
@@ -1085,6 +1169,63 @@
     .fold-tool-card.fire p,
     .fold-tool-card.fire .kicker {
       color: rgba(255, 253, 248, 0.78);
+    }
+
+    .substack-thumb-card {
+      position: relative;
+      display: block;
+      min-height: 166px;
+      overflow: hidden;
+      border-radius: 14px;
+      background: #102650;
+      border: 1px solid rgba(255, 253, 248, 0.16);
+    }
+
+    .substack-thumb-card img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: 166px;
+      object-fit: cover;
+      transition: transform 220ms ease;
+    }
+
+    .substack-thumb-card:hover img {
+      transform: scale(1.035);
+    }
+
+    .substack-thumb-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(0deg, rgba(8, 24, 56, 0.62), rgba(8, 24, 56, 0.04) 58%);
+      pointer-events: none;
+    }
+
+    .substack-thumb-label {
+      position: absolute;
+      left: 12px;
+      bottom: 12px;
+      z-index: 2;
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 0 11px;
+      border-radius: 999px;
+      color: var(--white);
+      background: rgba(245, 125, 35, 0.96);
+      font-size: 0.76rem;
+      font-weight: 950;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .substack-meta {
+      margin-top: 10px;
+      color: rgba(255, 253, 248, 0.74);
+      font-size: 0.88rem;
+      font-weight: 850;
+      letter-spacing: 0.02em;
     }
 
     .fold-tool-actions {
@@ -1487,7 +1628,7 @@
     @media (max-width: 560px) {
       .preview-page,
       .mock-header-inner {
-        width: min(100% - 24px, 1120px);
+        width: min(100% - 20px, 1120px);
       }
 
       .obs-row {
@@ -1507,6 +1648,205 @@
 
       .radiance-score-pill {
         width: fit-content;
+      }
+
+      .feelscore-inner {
+        gap: 16px;
+        padding: 18px;
+      }
+
+      .fs-topline {
+        display: grid;
+        grid-template-columns: 1fr;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .fs-info-button {
+        flex: 0 0 auto;
+        width: fit-content;
+        max-width: 100%;
+        min-height: 34px;
+        padding: 0 10px;
+        font-size: 0.82rem;
+      }
+
+      .fs-row {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .fs-score {
+        font-size: clamp(4.3rem, 20vw, 5.4rem);
+      }
+
+      .fs-word {
+        font-size: 1.2rem;
+      }
+
+      .fs-headline {
+        font-size: clamp(1.72rem, 8vw, 2.05rem);
+        overflow-wrap: anywhere;
+      }
+
+      .fs-subhead {
+        font-size: 0.9rem;
+        line-height: 1.46;
+      }
+
+      .fs-bullets,
+      .fs-temp-markers {
+        padding: 13px;
+      }
+
+      .fs-bullets ul {
+        font-size: 0.92rem;
+      }
+
+      .fs-temp-marker b {
+        font-size: clamp(2rem, 11vw, 2.45rem);
+      }
+
+      .fs-temp-marker {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+
+      .module-title {
+        align-items: flex-start;
+      }
+
+      .tomorrow-score {
+        min-width: 54px;
+        min-height: 42px;
+        font-size: 1.15rem;
+      }
+
+      .tomorrow-card h3 {
+        font-size: 1.58rem;
+      }
+
+      .sky-home-copy,
+      .next-six,
+      .tomorrow-card,
+      .pulse-card-lite,
+      .fold-tool-card {
+        padding: 18px;
+      }
+
+      .sky-home-headline,
+      .module-title h2,
+      .pulse-card-lite h2,
+      .fold-tool-card h2 {
+        font-size: clamp(1.65rem, 8vw, 2.08rem);
+        line-height: 1.02;
+      }
+
+      .sky-home-photo,
+      .sky-home-photo img {
+        min-height: 210px;
+      }
+
+      .radiance-home-promo {
+        grid-template-columns: 1fr;
+      }
+
+      .radiance-home-promo h3 {
+        font-size: clamp(1.7rem, 8vw, 2.2rem);
+      }
+
+      .hour-card {
+        min-height: 108px;
+      }
+
+      .pulse-media-preview,
+      .pulse-media-preview img,
+      .pulse-media-preview video {
+        min-height: 190px;
+      }
+
+      .substack-thumb-card,
+      .substack-thumb-card img {
+        min-height: 148px;
+      }
+
+      .fire-card-head {
+        display: grid;
+      }
+
+      .fire-info-toggle {
+        width: fit-content;
+      }
+
+      .sky-home-badge {
+        right: 12px;
+      }
+
+      .sky-home-pill {
+        max-width: 100%;
+        white-space: normal;
+        line-height: 1.2;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .preview-page,
+      .mock-header-inner {
+        width: min(100% - 16px, 1120px);
+      }
+
+      .preview-stack {
+        gap: 14px;
+      }
+
+      .mock-header {
+        padding: 12px 0;
+      }
+
+      .mock-brand-title {
+        font-size: 1.45rem;
+      }
+
+      .feelscore-inner,
+      .sky-home-copy,
+      .next-six,
+      .tomorrow-card,
+      .pulse-card-lite,
+      .fold-tool-card {
+        padding: 16px;
+      }
+
+      .fs-score {
+        font-size: clamp(3.9rem, 19vw, 4.8rem);
+      }
+
+      .fs-headline,
+      .sky-home-headline,
+      .module-title h2,
+      .pulse-card-lite h2,
+      .fold-tool-card h2 {
+        font-size: clamp(1.52rem, 7.6vw, 1.92rem);
+      }
+
+      .sky-home-photo,
+      .sky-home-photo img,
+      .pulse-media-preview,
+      .pulse-media-preview img,
+      .pulse-media-preview video {
+        min-height: 172px;
+      }
+
+      .substack-thumb-card,
+      .substack-thumb-card img {
+        min-height: 132px;
+      }
+
+      .hiking-mini-profile {
+        min-height: 86px;
+      }
+
+      .fire-driver-grid {
+        gap: 10px;
       }
     }
   </style>
@@ -1547,18 +1887,18 @@
               </button>
             </div>
             <div class="fs-row">
-              <div class="fs-score">82</div>
-              <div class="fs-word">Great</div>
+              <div class="fs-score" id="liveFeelScoreValue">82</div>
+              <div class="fs-word" id="liveFeelScoreLabel">Great</div>
             </div>
-            <div class="fs-headline">The air still feels friendly, even with clouds taking over.</div>
-            <div class="fs-subhead">
+            <div class="fs-headline" id="liveFeelScoreHeadline">The air still feels friendly, even with clouds taking over.</div>
+            <div class="fs-subhead" id="liveFeelScoreSubhead">
               FeelScore remains the lead: comfort, humidity, wind, and temperature tell people how usable the day feels.
               The sky module below simply adds the visual read.
             </div>
           </div>
           <aside class="fs-support" aria-label="FeelScore supporting notes">
             <div class="fs-bullets">
-              <ul>
+              <ul id="liveFeelScoreBullets">
                 <li>Low humidity helps</li>
                 <li>Winds stay light</li>
                 <li>A mix of sun and clouds</li>
@@ -1566,16 +1906,16 @@
             </div>
             <div class="fs-temp-markers" aria-label="Important temperature markers">
               <div class="fs-temp-marker">
-                <span>Morning low</span>
-                <b>51&deg;</b>
+                <span id="liveTempMarkerOneLabel">Morning low</span>
+                <b id="liveTempMarkerOne">51&deg;</b>
               </div>
               <div class="fs-temp-marker">
-                <span>Mid-afternoon</span>
-                <b>77&deg;</b>
+                <span id="liveTempMarkerTwoLabel">Mid-afternoon</span>
+                <b id="liveTempMarkerTwo">77&deg;</b>
               </div>
               <div class="fs-temp-marker">
-                <span>9 PM</span>
-                <b>66&deg;</b>
+                <span id="liveTempMarkerThreeLabel">9 PM</span>
+                <b id="liveTempMarkerThree">66&deg;</b>
               </div>
             </div>
           </aside>
@@ -1659,11 +1999,11 @@
           <div class="module-title">
             <div>
               <div class="kicker">Near-term comfort outlook</div>
-              <h2>Feelscore next few hours</h2>
+              <h2>FeelScore next few hours</h2>
             </div>
-            <div class="best-pill">86</div>
+            <div class="best-pill" id="nextSixBestScore">86</div>
           </div>
-          <div class="hour-row">
+          <div class="hour-row" id="nextSixHourRow">
             <div class="hour-card best"><b>11 AM</b><span class="icon">☁</span><div class="hour-values"><span class="hour-temp-value temp-mild">70°</span><span class="hour-fs-value"><em>FS</em> 86</span></div></div>
             <div class="hour-card"><b>12 PM</b><span class="icon">☁</span><div class="hour-values"><span class="hour-temp-value temp-mild">72°</span><span class="hour-fs-value"><em>FS</em> 84</span></div></div>
             <div class="hour-card"><b>1 PM</b><span class="icon">☁</span><div class="hour-values"><span class="hour-temp-value temp-warm">73°</span><span class="hour-fs-value"><em>FS</em> 82</span></div></div>
@@ -1671,7 +2011,7 @@
             <div class="hour-card"><b>3 PM</b><span class="icon">☁</span><div class="hour-values"><span class="hour-temp-value temp-hot">75°</span><span class="hour-fs-value"><em>FS</em> 78</span></div></div>
             <div class="hour-card"><b>4 PM</b><span class="icon">⛅</span><div class="hour-values"><span class="hour-temp-value temp-hot">75°</span><span class="hour-fs-value"><em>FS</em> 80</span></div></div>
           </div>
-          <p class="editorial">
+          <p class="editorial" id="nextSixEditorial">
             The Next 6 remains the practical timing strip. The Current Sky card above gives it a visual proof point:
             overcast, bright, dim, clearing, foggy, or stormy.
           </p>
@@ -1680,14 +2020,14 @@
         <aside class="tomorrow-card">
           <div class="module-title">
             <div class="kicker">Tomorrow</div>
-            <div class="tomorrow-score">79</div>
+            <div class="tomorrow-score" id="tomorrowScore">79</div>
           </div>
-          <h3>Usable, with clouds and humidity still part of the feel.</h3>
-          <p>
+          <h3 id="tomorrowHeadline">Usable, with clouds and humidity still part of the feel.</h3>
+          <p id="tomorrowNarrative">
             Tomorrow keeps the forward-looking anchor. The homepage flow becomes: comfort now,
             sky now, timing next, then tomorrow.
           </p>
-          <ul>
+          <ul id="tomorrowBullets">
             <li>Clouds may linger early.</li>
             <li>Breaks of sun decide how warm it feels.</li>
             <li>Rain risk stays worth watching.</li>
@@ -1699,8 +2039,8 @@
         <div class="pulse-layout">
           <div>
             <div class="pulse-head"><span class="pulse-dot"></span>828 Weather Pulse</div>
-            <h2>Pulse remains the human voice of the page.</h2>
-            <p>
+            <h2 id="pulsePreviewTitle">Pulse remains the human voice of the page.</h2>
+            <p id="pulsePreviewText">
               The Pulse module can reference the same sky signal when it matters: “The camera view backs up the forecast:
               clouds are in control, but there is enough filtered light to keep things from feeling gloomy.” This keeps
               Pulse editorial, while the sky card stays observational.
@@ -1710,29 +2050,46 @@
               <a href="828-sunset-radiance.html">Open Sunset Radiance</a>
             </div>
           </div>
-          <figure class="pulse-media-preview">
+          <figure class="pulse-media-preview" id="pulseMediaSlot">
             <img src="js/sky-cam/frame.jpg" alt="828 Weather Pulse preview image" />
-            <figcaption class="pulse-media-label">Pulse image</figcaption>
+            <figcaption class="pulse-media-label" id="pulseMediaLabel">Pulse image</figcaption>
           </figure>
         </div>
       </section>
 
       <section class="fold-tool-row" aria-label="Homepage tool row">
-        <article class="fold-tool-card update">
-          <div class="kicker">828 Weather Update</div>
-          <h2>The forecast voice stays visible.</h2>
-          <p>
-            The authored update bridges the numbers, the sky, and what people should watch next.
-            It can remain a prominent editorial companion to FeelScore, Current Sky, and Pulse.
-          </p>
-          <div class="fold-tool-actions">
-            <a href="forecast.html">Open Forecast</a>
+        <article class="fold-tool-card update substack-feature" id="latestSubstackCard">
+          <a class="substack-thumb-card" id="substackThumbLink" href="https://timothyballisty.substack.com/p/the-story-of-ashevilles-wild-spring" target="_blank" rel="noopener noreferrer" aria-label="Open latest 828 Weather Update on Substack">
+            <img
+              id="substackThumb"
+              src="https://substackcdn.com/image/fetch/$s_!sdM6!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F1e5a0b90-571a-4e56-9d23-4cfc6d61d3e9_1694x929.png"
+              alt="Latest 828 Weather Update thumbnail"
+              loading="lazy"
+            />
+            <span class="substack-thumb-label">Latest Substack</span>
+          </a>
+          <div>
+            <div class="kicker">828 Weather Update</div>
+            <h2 id="substackTitle">The Story of Asheville's Wild Spring</h2>
+            <p id="substackExcerpt">
+              Drought concerns, early-season heat, record rainfall, and a fluctuating local climate.
+              That was spring 2026 in Asheville.
+            </p>
+            <div class="substack-meta" id="substackMeta">Published June 4, 2026</div>
+            <div class="fold-tool-actions">
+              <a id="substackLink" href="https://timothyballisty.substack.com/p/the-story-of-ashevilles-wild-spring" target="_blank" rel="noopener noreferrer">Read latest update</a>
+              <a href="forecast.html">Open Forecast</a>
+            </div>
           </div>
         </article>
 
-        <article class="fold-tool-card">
+        <article class="fold-tool-card hiking">
           <div class="kicker">Hiking Guidance</div>
           <h2>Trails look usable today.</h2>
+          <div class="hiking-mini-profile" aria-hidden="true">
+            <span class="hiking-mini-line"></span>
+            <span class="hiking-mini-label">Elevation read</span>
+          </div>
           <div class="tool-snapshot">
             <span class="tool-index"><strong>82</strong> HikerScore</span>
             <span class="tool-index"><strong>15°</strong> Mitchell drop</span>
@@ -1750,32 +2107,29 @@
           <div class="fire-card-head">
             <div>
               <div class="kicker">Drought & Fire Threat</div>
-              <h2>Dryness is part of the daily risk picture.</h2>
+              <h2 id="fireHeadline">High fire risk needs a closer read.</h2>
             </div>
             <button class="fire-info-toggle" id="fireInfoToggle" type="button" aria-expanded="false" aria-controls="fireInfoPanel">
               <span>i</span> More Info
             </button>
           </div>
           <div class="tool-snapshot">
-            <span class="tool-index"><strong>36</strong> Drought stress</span>
-            <span class="tool-index"><strong>22</strong> Fire threat</span>
+            <span class="tool-index"><strong id="droughtStressValue">92</strong> Drought stress</span>
+            <span class="tool-index"><strong id="fireThreatValue">65</strong> Fire threat</span>
           </div>
-          <p>
-            Recent moisture is keeping fire threat limited right now, but the card can flag
-            low humidity, gusts, or longer-term rainfall deficits when they matter.
-          </p>
+          <p id="fireSummary">Very dry fuels are the main driver, even when wind and humidity are not extreme.</p>
           <div class="fire-driver-grid" aria-label="Drought and fire threat drivers">
             <div class="fire-driver">
               <b>Fuel dryness</b>
-              <span>Not the dominant concern right now.</span>
+              <span id="fireFuelDriver">Soils and fuels are running very dry.</span>
             </div>
             <div class="fire-driver">
               <b>Humidity</b>
-              <span>Moist air keeps spread potential lower.</span>
+              <span id="fireHumidityDriver">Humidity can limit spread when it stays elevated.</span>
             </div>
             <div class="fire-driver">
               <b>Wind</b>
-              <span>Breezy dry afternoons remain the watch item.</span>
+              <span id="fireWindDriver">Wind decides whether dry fuels become an active spread concern.</span>
             </div>
           </div>
           <div class="fire-info-panel" id="fireInfoPanel">
@@ -1886,6 +2240,8 @@
   </div>
 
   <script type="module">
+    import { calculateComfort } from "./js/intel/comfort.js";
+    import { buildHumanActionIntelFS } from "./js/intel/human-action-feelscore.js?v=20260526-rain-window";
     import { computeSkyIntel } from "./js/intel/sky-intel.js";
     import { generateSkyNarrative } from "./js/intel/sky-narrative.js";
     import { subscribeUserToPush } from "./js/notifications/subscribeClient.js?v=20260518-vapid-trim";
@@ -1933,6 +2289,28 @@
     const PREVIEW_RADAR_OFF = params.get("radar") === "off";
     const RAIN_CHANCE_PREVIEW = 14;
     const PRECIP_SIGNAL_ACTIVE = RAIN_CHANCE_PREVIEW >= 25;
+    const LATEST_SUBSTACK_FALLBACK = {
+      title: "The Story of Asheville's Wild Spring",
+      link: "https://timothyballisty.substack.com/p/the-story-of-ashevilles-wild-spring",
+      pubDate: "2026-06-04T18:36:35.000Z",
+      description:
+        "Drought concerns, early-season heat, record rainfall, and a fluctuating local climate. That was spring 2026 in Asheville.",
+      ogImage:
+        "https://substackcdn.com/image/fetch/$s_!sdM6!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F1e5a0b90-571a-4e56-9d23-4cfc6d61d3e9_1694x929.png"
+    };
+    const DROUGHT_FIRE_FALLBACK = {
+      DSS: 92,
+      FRI: 65,
+      fireDriver: "Elevated due to very dry fuels",
+      narrative: { headline: "High fire risk today" }
+    };
+    const PULSE_FALLBACK = {
+      title: "Weather Pulse",
+      text: "A beautiful, stunning day over Asheville and all of western North Carolina. Enjoy!!",
+      mediaUrl: "https://res.cloudinary.com/dz45rrije/video/upload/v1780603868/zo3zjlcb0klnrcvmwgw0.mp4",
+      mediaType: "video",
+      timestamp: 1780603869803
+    };
 
     function localHour() {
       const parts = new Intl.DateTimeFormat("en-US", {
@@ -1976,6 +2354,577 @@
       return `${url}${url.includes("?") ? "&" : "?"}t=${encodeURIComponent(Date.now())}`;
     }
 
+    async function fetchRouteJson(route) {
+      const path = `/api/router?route=${route}&t=${Date.now()}`;
+      const localRes = await fetch(path);
+      if (localRes.ok) return localRes.json();
+
+      const isLocalPreview = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+      if (!isLocalPreview) {
+        throw new Error(`API route failed: ${localRes.status}`);
+      }
+
+      const liveRes = await fetch(`https://avlweather.com${path}`);
+      if (!liveRes.ok) throw new Error(`Live API route failed: ${liveRes.status}`);
+      return liveRes.json();
+    }
+
+    function decodeHtml(value = "") {
+      const textarea = document.createElement("textarea");
+      textarea.innerHTML = value;
+      return textarea.value;
+    }
+
+    function cleanSubstackText(value = "") {
+      return decodeHtml(String(value))
+        .replace(/<[^>]*>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function shortSubstackExcerpt(value = "") {
+      const clean = cleanSubstackText(value);
+      if (clean.length <= 170) return clean;
+      return `${clean.slice(0, 167).replace(/\s+\S*$/, "")}...`;
+    }
+
+    function formatSubstackDate(value) {
+      const date = new Date(value);
+      if (!Number.isFinite(date.getTime())) return "Latest from Tim Ballisty";
+      return `Published ${date.toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+        timeZone: "America/New_York"
+      })}`;
+    }
+
+    function renderSubstackCard(post = LATEST_SUBSTACK_FALLBACK) {
+      const title = cleanSubstackText(post.title || LATEST_SUBSTACK_FALLBACK.title);
+      const link = post.link || LATEST_SUBSTACK_FALLBACK.link;
+      const excerpt = shortSubstackExcerpt(post.description || post.contentSnippet || LATEST_SUBSTACK_FALLBACK.description);
+      const image = post.ogImage || post.image || post.enclosure?.url || LATEST_SUBSTACK_FALLBACK.ogImage;
+
+      document.querySelector("#substackTitle").textContent = title;
+      document.querySelector("#substackExcerpt").textContent = excerpt;
+      document.querySelector("#substackMeta").textContent = formatSubstackDate(post.pubDate || post.isoDate || LATEST_SUBSTACK_FALLBACK.pubDate);
+      document.querySelector("#substackLink").href = link;
+      document.querySelector("#substackThumbLink").href = link;
+      document.querySelector("#substackThumb").src = image;
+    }
+
+    async function hydrateSubstackCard() {
+      renderSubstackCard();
+
+      try {
+        const post = await fetchRouteJson("substack-articles");
+        if (post?.title && post?.link) {
+          renderSubstackCard(post);
+        }
+      } catch (error) {
+        console.warn("Substack module using local fallback", error);
+      }
+    }
+
+    function fireHeadlineFor(dss, fri, apiHeadline = "") {
+      if (fri >= 80) return apiHeadline || "Extreme fire danger is part of today's weather story.";
+      if (fri >= 60) return apiHeadline || "High fire risk needs a closer read.";
+      if (dss >= 80) return "Extreme drought stress is shaping the daily risk.";
+      if (dss >= 70) return apiHeadline || "Severe drought stress is still in place.";
+      if (fri >= 40) return "Fire threat is elevated enough to watch.";
+      return "Dryness remains part of the daily risk picture.";
+    }
+
+    function fireSummaryFor(data) {
+      const dss = Number(data?.DSS);
+      const fri = Number(data?.FRI);
+      const driver = data?.fireDriver;
+      if (driver) return driver;
+      if (dss >= 80 && fri >= 60) return "Very dry fuels are the main driver, even when wind and humidity are not extreme.";
+      if (dss >= 70) return "Background dryness is high, so humidity and wind decide how active the risk becomes.";
+      if (fri >= 40) return "Daily weather is adding enough spread potential to keep an eye on fire conditions.";
+      return "Recent moisture and daily weather are keeping fire spread potential more limited.";
+    }
+
+    function renderDroughtFireCard(data) {
+      const dss = Number(data?.DSS);
+      const fri = Number(data?.FRI);
+      if (!Number.isFinite(dss) || !Number.isFinite(fri)) return;
+
+      document.querySelector("#droughtStressValue").textContent = Math.round(dss);
+      document.querySelector("#fireThreatValue").textContent = Math.round(fri);
+      document.querySelector("#fireHeadline").textContent = fireHeadlineFor(dss, fri, data?.narrative?.headline);
+      document.querySelector("#fireSummary").textContent = fireSummaryFor(data);
+      document.querySelector("#fireFuelDriver").textContent =
+        dss >= 80 ? "Very dry fuels are carrying the background risk." :
+        dss >= 60 ? "Dry fuels are a meaningful part of the risk." :
+        "Fuel dryness is not the dominant concern right now.";
+      document.querySelector("#fireHumidityDriver").textContent =
+        fri >= 70 ? "Low humidity would make spread easier if wind increases." :
+        "Humidity is a limiting factor unless the air dries out later.";
+      document.querySelector("#fireWindDriver").textContent =
+        fri >= 70 ? "Wind could turn dry fuels into a more active spread concern." :
+        "Wind is the swing factor to monitor through the afternoon.";
+    }
+
+    async function hydrateDroughtFireCard() {
+      renderDroughtFireCard(DROUGHT_FIRE_FALLBACK);
+
+      try {
+        renderDroughtFireCard(await fetchRouteJson("drought-fire"));
+      } catch (error) {
+        console.warn("Drought/fire module using local fallback", error);
+      }
+    }
+
+    function htmlToPlainText(value = "") {
+      const wrapper = document.createElement("div");
+      wrapper.innerHTML = value;
+      return (wrapper.textContent || wrapper.innerText || "")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function escapeAttr(value = "") {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    function pulseExcerpt(value = "") {
+      const text = htmlToPlainText(value);
+      if (!text) return "";
+      if (text.length <= 190) return text;
+      return `${text.slice(0, 187).replace(/\s+\S*$/, "")}...`;
+    }
+
+    function pulseMediaMarkup(url, mediaType) {
+      if (!url) {
+        return `<img src="js/sky-cam/frame.jpg" alt="828 Weather Pulse preview image" />`;
+      }
+
+      const safeUrl = escapeAttr(url);
+      const isVideo =
+        mediaType === "video" ||
+        url.endsWith(".mp4") ||
+        url.includes("/video/");
+
+      if (isVideo) {
+        return `
+          <video autoplay muted loop playsinline preload="metadata" aria-label="Latest Weather Pulse video">
+            <source src="${safeUrl}" type="video/mp4" />
+          </video>
+        `;
+      }
+
+      return `<img src="${safeUrl}" alt="Latest Weather Pulse image" />`;
+    }
+
+    function renderPulsePreview(pulse) {
+      if (!pulse || pulse.fallback) return;
+
+      const text = pulseExcerpt(pulse.text || pulse.body || pulse.content || "");
+      const mediaUrl = pulse.mediaUrl || pulse.image || "";
+      const mediaType = pulse.mediaType || "";
+      const isVideo = mediaType === "video" || mediaUrl.endsWith(".mp4") || mediaUrl.includes("/video/");
+
+      document.querySelector("#pulsePreviewTitle").textContent = "Latest Weather Pulse is live.";
+      if (text) {
+        document.querySelector("#pulsePreviewText").textContent = text;
+      }
+      document.querySelector("#pulseMediaSlot").innerHTML = `
+        ${pulseMediaMarkup(mediaUrl, mediaType)}
+        <figcaption class="pulse-media-label" id="pulseMediaLabel">${isVideo ? "Latest video" : "Latest pulse"}</figcaption>
+      `;
+    }
+
+    async function hydratePulsePreview() {
+      renderPulsePreview(PULSE_FALLBACK);
+
+      try {
+        renderPulsePreview(await fetchRouteJson("tidbits/pulse-feed"));
+      } catch (error) {
+        console.warn("Pulse preview using local fallback", error);
+      }
+    }
+
+    function normalizeWeatherHour(hour = {}) {
+      const ts = hour.timestamp ?? hour.time ?? hour.ts;
+      const timestamp = Number.isFinite(ts) ? (ts < 1e12 ? ts * 1000 : ts) : new Date(ts).getTime();
+      if (!Number.isFinite(timestamp)) return null;
+
+      return {
+        ...hour,
+        timestamp,
+        temperatureF: hour.temperatureF ?? hour.temp ?? hour.temperature ?? null,
+        dewpointF: hour.dewpointF ?? hour.dewPoint ?? null,
+        relativeHumidity: hour.relativeHumidity ?? hour.relative_humidity ?? hour.rh ?? null,
+        windSpeed: hour.windSpeed ?? hour.wind ?? hour.wind_speed ?? 0,
+        windGust: hour.windGust ?? hour.wind_gust ?? null,
+        precipAmount: hour.precipAmount ?? hour.precipitation ?? 0,
+        precipProbability: hour.precipProbability ?? hour.precipitation_probability ?? 0,
+        cloudCover: hour.cloudCover ?? hour.cloud_cover ?? hour.cloudcover ?? null,
+        weatherCode: hour.weatherCode ?? hour.weather_code ?? null
+      };
+    }
+
+    function cToF(value) {
+      const n = Number(value);
+      return Number.isFinite(n) ? (n * 9) / 5 + 32 : null;
+    }
+
+    function msToMph(value) {
+      const n = Number(value);
+      return Number.isFinite(n) ? n * 2.237 : null;
+    }
+
+    function normalizeCurrentConditions(current = {}) {
+      if (!current) return null;
+      const temperatureF =
+        current.temperatureF ??
+        current.tempF ??
+        current.temp ??
+        current.temperature ??
+        cToF(current.air_temperature);
+      if (!Number.isFinite(temperatureF)) return null;
+
+      return normalizeWeatherHour({
+        timestamp: current.timestamp ?? Date.now(),
+        temperatureF,
+        dewpointF:
+          current.dewpointF ??
+          current.dewPoint ??
+          current.dew_point_f ??
+          cToF(current.dew_point),
+        relativeHumidity:
+          current.relativeHumidity ??
+          current.relative_humidity ??
+          current.humidity,
+        windSpeed:
+          current.windSpeed ??
+          current.wind ??
+          current.wind_speed ??
+          msToMph(current.wind_avg) ??
+          0,
+        windGust:
+          current.windGust ??
+          current.wind_gust_mph ??
+          msToMph(current.wind_gust),
+        precipAmount:
+          current.precipAmount ??
+          current.precipitation ??
+          current.precipRate ??
+          0,
+        precipProbability:
+          current.precipProbability ??
+          current.precipitation_probability ??
+          0,
+        cloudCover: current.cloudCover ?? current.cloud_cover,
+        weatherCode: current.weatherCode ?? current.weather_code
+      });
+    }
+
+    function comfortScore100(hour = {}) {
+      const raw = calculateComfort(hour)?.score;
+      if (!Number.isFinite(raw)) return null;
+      return Math.round(raw <= 10 ? raw * 10 : raw);
+    }
+
+    function scoreLabel(score) {
+      if (score >= 90) return "Ideal";
+      if (score >= 80) return "Great";
+      if (score >= 70) return "Comfortable";
+      if (score >= 60) return "Usable";
+      if (score >= 45) return "Uncomfortable";
+      return "Harsh";
+    }
+
+    function tempClass(temp) {
+      if (!Number.isFinite(temp)) return "temp-mild";
+      if (temp < 55) return "temp-cool";
+      if (temp < 72) return "temp-mild";
+      if (temp < 80) return "temp-warm";
+      if (temp < 88) return "temp-hot";
+      return "temp-very-hot";
+    }
+
+    function weatherIcon(hour = {}) {
+      const code = Number(hour.weatherCode);
+      const precip = Number(hour.precipAmount) || 0;
+      const pop = Number(hour.precipProbability) || 0;
+      const cloud = Number(hour.cloudCover);
+      if (precip > 0.02 || pop >= 0.45 || [51, 53, 55, 61, 63, 65, 80, 81, 82, 95, 96, 99].includes(code)) return "Rain";
+      if ([71, 73, 75, 77, 85, 86].includes(code)) return "Snow";
+      if ([45, 48].includes(code)) return "Fog";
+      if (Number.isFinite(cloud)) {
+        if (cloud >= 0.75) return "Cloudy";
+        if (cloud >= 0.35) return "Partly";
+      }
+      return "Clear";
+    }
+
+    function iconGlyph(label) {
+      return {
+        Rain: "🌧",
+        Snow: "❄",
+        Fog: "≋",
+        Cloudy: "☁",
+        Partly: "⛅",
+        Clear: "☀"
+      }[label] || "☁";
+    }
+
+    function formatHour(ts) {
+      return new Date(ts).toLocaleTimeString("en-US", {
+        hour: "numeric",
+        hour12: true,
+        timeZone: "America/New_York"
+      }).replace(" ", "");
+    }
+
+    function sameLocalDay(ts, offset = 0) {
+      const target = new Date();
+      target.setDate(target.getDate() + offset);
+      const d = new Date(ts);
+      return d.toLocaleDateString("en-US", { timeZone: "America/New_York" }) ===
+        target.toLocaleDateString("en-US", { timeZone: "America/New_York" });
+    }
+
+    function renderTempMarker(labelEl, valueEl, label, hour) {
+      if (!labelEl || !valueEl || !hour || !Number.isFinite(hour.temperatureF)) return;
+      labelEl.textContent = label;
+      valueEl.textContent = `${Math.round(hour.temperatureF)}°`;
+    }
+
+    function nearestHour(hourly = [], localHour, dayOffset = 0, maxDistanceHours = 2) {
+      return hourly
+        .filter((hour) => sameLocalDay(hour.timestamp, dayOffset) && Number.isFinite(hour.temperatureF))
+        .map((hour) => {
+          const d = new Date(hour.timestamp);
+          const hourNumber = Number(new Intl.DateTimeFormat("en-US", {
+            hour: "numeric",
+            hour12: false,
+            timeZone: "America/New_York"
+          }).format(d));
+          return { ...hour, distance: Math.abs(hourNumber - localHour) };
+        })
+        .filter((hour) => hour.distance <= maxDistanceHours)
+        .sort((a, b) => a.distance - b.distance)[0];
+    }
+
+    function todayDaily(daily = []) {
+      return daily.find((day) => {
+        const ts = day.timestamp ?? day.time ?? day.date;
+        return Number.isFinite(ts) ? sameLocalDay(ts, 0) : sameLocalDay(new Date(ts).getTime(), 0);
+      }) || daily[0] || null;
+    }
+
+    function tempHourFromValue(value) {
+      return Number.isFinite(value) ? { temperatureF: value } : null;
+    }
+
+    function formatPercent(value) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return "--";
+      return `${Math.round(n > 1 ? n : n * 100)}%`;
+    }
+
+    function localHourNumber(ts) {
+      return Number(new Intl.DateTimeFormat("en-US", {
+        hour: "numeric",
+        hour12: false,
+        timeZone: "America/New_York"
+      }).format(new Date(ts)));
+    }
+
+    function renderLiveFeelScore(feelscore, hourly = [], daily = [], currentHour = null) {
+      if (!feelscore) return;
+
+      const liveHour = currentHour || hourly.find((hour) => hour.timestamp >= Date.now() - 45 * 60 * 1000) || hourly[0] || null;
+      const liveScore = comfortScore100(liveHour);
+      const score = Number.isFinite(liveScore) ? liveScore : Math.round(Number(feelscore.score));
+      if (Number.isFinite(score)) {
+        document.querySelector("#liveFeelScoreValue").textContent = score;
+        document.querySelector("#liveFeelScoreLabel").textContent = scoreLabel(score);
+        document.querySelector(".modal-score-pill").textContent = `Right now: ${score} - ${scoreLabel(score)}`;
+      }
+
+      document.querySelector("#liveFeelScoreHeadline").textContent =
+        feelscore.headline || "Reading the current comfort signal.";
+      document.querySelector("#liveFeelScoreSubhead").textContent =
+        feelscore.subHeadline || feelscore.narrative || "Temperature, humidity, dew point, and wind are shaping how usable the air feels.";
+
+      const bullets = Array.isArray(feelscore.bullets) ? feelscore.bullets.slice(0, 3) : [];
+      if (bullets.length) {
+        document.querySelector("#liveFeelScoreBullets").innerHTML = bullets
+          .map((bullet) => `<li>${cleanSubstackText(bullet)}</li>`)
+          .join("");
+      }
+
+      const day = todayDaily(daily);
+      renderTempMarker(
+        document.querySelector("#liveTempMarkerOneLabel"),
+        document.querySelector("#liveTempMarkerOne"),
+        "Morning low",
+        nearestHour(hourly, 7, 0, 2) || tempHourFromValue(day?.tempMin)
+      );
+      renderTempMarker(
+        document.querySelector("#liveTempMarkerTwoLabel"),
+        document.querySelector("#liveTempMarkerTwo"),
+        "Mid-afternoon",
+        nearestHour(hourly, 15, 0, 2) || tempHourFromValue(day?.tempMax)
+      );
+      renderTempMarker(
+        document.querySelector("#liveTempMarkerThreeLabel"),
+        document.querySelector("#liveTempMarkerThree"),
+        "9 PM",
+        nearestHour(hourly, 21, 0, 2)
+      );
+    }
+
+    function renderNextSix(hourly = []) {
+      const future = hourly
+        .filter((hour) => hour.timestamp >= Date.now() - 30 * 60 * 1000 && Number.isFinite(hour.temperatureF))
+        .slice(0, 6);
+      if (!future.length) return;
+
+      const scored = future.map((hour) => ({
+        hour,
+        score: comfortScore100(hour)
+      }));
+      const validScores = scored.map((item) => item.score).filter(Number.isFinite);
+      const best = validScores.length ? Math.max(...validScores) : null;
+      const firstHour = formatHour(future[0].timestamp);
+      const lastHour = formatHour(future[future.length - 1].timestamp);
+
+      if (Number.isFinite(best)) {
+        document.querySelector("#nextSixBestScore").textContent = best;
+      }
+
+      document.querySelector("#nextSixHourRow").innerHTML = scored.map(({ hour, score }) => {
+        const icon = weatherIcon(hour);
+        const temp = Math.round(hour.temperatureF);
+        const isBest = Number.isFinite(score) && score === best;
+        return `
+          <div class="hour-card ${isBest ? "best" : ""}">
+            <b>${formatHour(hour.timestamp)}</b>
+            <span class="icon" title="${icon}">${iconGlyph(icon)}</span>
+            <div class="hour-values">
+              <span class="hour-temp-value ${tempClass(temp)}">${temp}°</span>
+              <span class="hour-fs-value"><em>FS</em> ${Number.isFinite(score) ? score : "--"}</span>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      document.querySelector("#nextSixEditorial").textContent =
+        `The next few hours now run from ${firstHour} through ${lastHour}, using the live hourly forecast and FeelScore math.`;
+    }
+
+    function summarizeTomorrow(hourly = [], daily = [], fallback = {}) {
+      const tomorrowHours = hourly.filter((hour) => sameLocalDay(hour.timestamp, 1));
+      const day = daily.find((item) => {
+        const ts = item.timestamp ?? item.time ?? item.date;
+        return Number.isFinite(ts) ? sameLocalDay(ts, 1) : sameLocalDay(new Date(ts).getTime(), 1);
+      }) || daily[1] || null;
+
+      const temps = tomorrowHours.map((hour) => Number(hour.temperatureF)).filter(Number.isFinite);
+      const scores = tomorrowHours.map(comfortScore100).filter(Number.isFinite);
+      const dewpoints = tomorrowHours.map((hour) => Number(hour.dewpointF)).filter(Number.isFinite);
+      const winds = tomorrowHours.map((hour) => Number(hour.windSpeed)).filter(Number.isFinite);
+      const cloudValues = tomorrowHours.map((hour) => Number(hour.cloudCover)).filter(Number.isFinite);
+      const rainValues = tomorrowHours.map((hour) => Number(hour.precipProbability)).filter(Number.isFinite);
+
+      const low = Number.isFinite(Number(day?.tempMin)) ? Number(day.tempMin) : Math.min(...temps);
+      const high = Number.isFinite(Number(day?.tempMax)) ? Number(day.tempMax) : Math.max(...temps);
+      const score = scores.length ? Math.round(scores.reduce((sum, value) => sum + value, 0) / scores.length) : Math.round(Number(fallback.score));
+      const maxDew = dewpoints.length ? Math.max(...dewpoints) : null;
+      const maxWind = winds.length ? Math.max(...winds) : null;
+      const cloudAvg = cloudValues.length ? cloudValues.reduce((sum, value) => sum + value, 0) / cloudValues.length : Number(day?.cloudCover);
+      const rainChance = rainValues.length ? Math.max(...rainValues) : Number(day?.precipProbability);
+      const cloudPhrase = Number.isFinite(cloudAvg)
+        ? cloudAvg >= 0.7 ? "clouds look fairly dominant" : cloudAvg >= 0.35 ? "clouds mix in at times" : "sun should have room to work"
+        : "sky cover is still being resolved";
+      const humidityPhrase = Number.isFinite(maxDew)
+        ? maxDew >= 67 ? "muggy air is part of the feel" : maxDew >= 60 ? "humidity is noticeable but not overwhelming" : "humidity stays manageable"
+        : "humidity is being pulled from the hourly forecast";
+      const rainPhrase = Number.isFinite(rainChance)
+        ? rainChance >= 0.4 ? "rain chances are worth planning around" : rainChance >= 0.2 ? "a low-end rain chance stays in the picture" : "rain chances stay low"
+        : "rain chances are still updating";
+
+      let headline = `Tomorrow looks ${scoreLabel(score).toLowerCase()} for comfort.`;
+      if (Number.isFinite(rainChance) && rainChance >= 0.4) {
+        headline = "Rain chances may shape tomorrow's comfort.";
+      } else if (Number.isFinite(maxDew) && maxDew >= 67) {
+        headline = "Humidity is the main comfort watch tomorrow.";
+      } else if (Number.isFinite(high) && high >= 86) {
+        headline = "Warmth builds into tomorrow's comfort read.";
+      }
+
+      const tempSentence = Number.isFinite(low) && Number.isFinite(high)
+        ? `Expect a morning low near ${Math.round(low)}° and an afternoon high near ${Math.round(high)}°.`
+        : "Tomorrow's temperature range is still updating.";
+      const detailSentence = `${humidityPhrase}, ${rainPhrase}, and ${cloudPhrase}.`;
+
+      return {
+        score,
+        headline,
+        narrative: `${tempSentence} ${detailSentence.charAt(0).toUpperCase()}${detailSentence.slice(1)}`,
+        bullets: [
+          Number.isFinite(high) ? `Afternoon high near ${Math.round(high)}°` : null,
+          Number.isFinite(low) ? `Morning low near ${Math.round(low)}°` : null,
+          Number.isFinite(rainChance) ? `Rain chance ${formatPercent(rainChance)}` : null,
+          Number.isFinite(maxWind) ? `Peak wind near ${Math.round(maxWind)} mph` : null
+        ].filter(Boolean).slice(0, 3)
+      };
+    }
+
+    function renderTomorrowLive(tomorrow, hourly = [], daily = []) {
+      const summary = summarizeTomorrow(hourly, daily, tomorrow);
+      if (!summary) return;
+      const score = Math.round(Number(summary.score));
+      if (Number.isFinite(score)) {
+        document.querySelector("#tomorrowScore").textContent = score;
+      }
+      document.querySelector("#tomorrowHeadline").textContent = summary.headline;
+      document.querySelector("#tomorrowNarrative").textContent = summary.narrative;
+
+      const bullets = Array.isArray(summary.bullets) ? summary.bullets.slice(0, 3) : [];
+      if (bullets.length) {
+        document.querySelector("#tomorrowBullets").innerHTML = bullets
+          .map((bullet) => `<li>${cleanSubstackText(bullet)}</li>`)
+          .join("");
+      }
+    }
+
+    async function hydrateLiveComfortModules() {
+      try {
+        const weather = await fetchRouteJson("weather&type=hourly&lat=35.5951&lon=-82.5515");
+        const hourly = (Array.isArray(weather?.hourly) ? weather.hourly : [])
+          .map(normalizeWeatherHour)
+          .filter(Boolean)
+          .sort((a, b) => a.timestamp - b.timestamp);
+        const daily = Array.isArray(weather?.daily) ? weather.daily : [];
+        const current = weather?.current || weather?.current_conditions || null;
+        const currentHour = normalizeCurrentConditions(current);
+
+        const human = buildHumanActionIntelFS({
+          ...weather,
+          hourly,
+          current,
+          tempest: weather?.current_conditions || null
+        });
+
+        renderLiveFeelScore(human?.feelscore, hourly, daily, currentHour);
+        renderNextSix(hourly);
+        renderTomorrowLive(human?.tomorrow, hourly, daily);
+      } catch (error) {
+        console.warn("Live comfort modules using homepage fallbacks", error);
+      }
+    }
+
     async function hydrateSkyModule() {
       try {
         const res = await fetch(`js/sky-cam/output.json?t=${Date.now()}`);
@@ -2003,6 +2952,10 @@
     }
 
     applyConditionalHomepageFeatures();
+    hydrateSubstackCard();
+    hydrateDroughtFireCard();
+    hydratePulsePreview();
+    hydrateLiveComfortModules();
     await hydrateSkyModule();
     setInterval(hydrateSkyModule, 5 * 60 * 1000);
 
