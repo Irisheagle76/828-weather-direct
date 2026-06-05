@@ -2865,18 +2865,23 @@
         .replace(/\b\w/g, (char) => char.toUpperCase());
     }
 
-    function hideHomeSplash(delay = 900) {
+    const HOME_SPLASH_MIN_MS = 2700;
+    const homeSplashStartedAt = Date.now();
+
+    function hideHomeSplash(delay = 0) {
       const splash = document.querySelector("#homeSplash");
       if (!splash) return;
+      const elapsed = Date.now() - homeSplashStartedAt;
+      const remaining = Math.max(0, HOME_SPLASH_MIN_MS - elapsed);
       window.setTimeout(() => {
         splash.classList.add("is-hidden");
         document.body.classList.remove("splash-active");
         window.setTimeout(() => splash.remove(), 650);
-      }, delay);
+      }, Math.max(delay, remaining));
     }
 
-    window.addEventListener("load", () => hideHomeSplash(1300), { once: true });
-    window.setTimeout(() => hideHomeSplash(0), 4200);
+    window.addEventListener("load", () => hideHomeSplash(0), { once: true });
+    window.setTimeout(() => hideHomeSplash(0), 5200);
 
     function parseTimestamp(value) {
       if (typeof value !== "string" || !value) return null;
@@ -3867,7 +3872,7 @@
     hydrateObservationChips();
     hydrateLiveComfortModules();
     await hydrateSkyModule();
-    hideHomeSplash(450);
+    hideHomeSplash(0);
     setInterval(hydrateObservationChips, 5 * 60 * 1000);
     setInterval(hydrateSkyModule, 5 * 60 * 1000);
 
