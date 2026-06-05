@@ -97,6 +97,30 @@
       </div>
     </section>
 
+    <section class="summit-index-section" id="summit-view-index" aria-label="828 Summit View Index">
+      <div class="summit-index-head">
+        <div>
+          <div class="kicker">Sky-viewing guidance</div>
+          <h2>Summit View Index</h2>
+          <p>
+            Sky-viewing guidance for Mount Pisgah and Mount Mitchell &mdash; built for overlooks,
+            sunrise, sunset, stars, and undercast hunting.
+          </p>
+        </div>
+        <div class="summit-index-updated" id="summitIndexUpdated">Loading summit sky read</div>
+      </div>
+      <div class="summit-index-grid" id="summitIndexGrid">
+        <article class="summit-index-fallback">
+          <h3>Summit View Index unavailable right now.</h3>
+          <p>The Clear Dark Sky source charts are still available while the index loads.</p>
+          <div class="summit-fallback-actions">
+            <a href="https://www.cleardarksky.com/c/MtMtchllNCcsk.gif" target="_blank" rel="noopener noreferrer">Mount Mitchell sky chart</a>
+            <a href="https://www.cleardarksky.com/c/MtPisgah1NCcsk.gif" target="_blank" rel="noopener noreferrer">Mount Pisgah sky chart</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
     <section class="module-grid" id="trail-choice" aria-label="Trail choice guidance">
       <article class="module-card">
         <div class="kicker">Best bet</div>
@@ -191,5 +215,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js" defer></script>
   <script type="module" src="js/hiking-page.js?v=20260605-mountain-now"></script>
+  <script type="module" src="js/sky-index.js?v=20260605-summit-index"></script>
 </body>
 </html>
