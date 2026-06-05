@@ -732,6 +732,16 @@
       background: #081a3c;
     }
 
+    .pulse-modal-body video,
+    .pulse-modal-body img {
+      display: block;
+      width: 100%;
+      max-height: 70vh;
+      border-radius: 16px;
+      background: #081a3c;
+      object-fit: contain;
+    }
+
     .content-grid {
       grid-template-columns: 1.12fr 0.88fr;
       gap: 18px;
@@ -958,17 +968,29 @@
 
     .pulse-layout {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(280px, 0.48fr);
+      grid-template-columns: minmax(0, 0.95fr) minmax(360px, 0.62fr);
       gap: 22px;
       align-items: stretch;
     }
 
     .pulse-media-preview {
       position: relative;
-      min-height: 230px;
+      min-height: 320px;
       overflow: hidden;
       border-radius: 14px;
       background: #102650;
+    }
+
+    .pulse-media-button {
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: inherit;
+      padding: 0;
+      border: 0;
+      color: inherit;
+      background: transparent;
+      cursor: pointer;
     }
 
     .pulse-media-preview img,
@@ -976,7 +998,7 @@
       display: block;
       width: 100%;
       height: 100%;
-      min-height: 230px;
+      min-height: 320px;
       object-fit: cover;
     }
 
@@ -1000,6 +1022,24 @@
       border-radius: 999px;
       color: var(--white);
       background: rgba(245, 125, 35, 0.94);
+      font-size: 0.74rem;
+      font-weight: 950;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .pulse-media-enlarge {
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      z-index: 2;
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      color: var(--white);
+      background: rgba(8, 26, 60, 0.74);
       font-size: 0.74rem;
       font-weight: 950;
       letter-spacing: 0.06em;
@@ -1090,6 +1130,8 @@
     .fold-tool-card.hiking {
       position: relative;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
       background:
         radial-gradient(circle at 92% 0%, rgba(79, 166, 106, 0.16), transparent 34%),
         linear-gradient(135deg, #fffdf8, #f4fbf5);
@@ -1156,6 +1198,36 @@
       background: var(--green);
       font-size: 0.76rem;
       font-weight: 950;
+    }
+
+    .hiking-callouts {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: auto;
+      padding-top: 16px;
+    }
+
+    .hiking-callout {
+      min-height: 72px;
+      padding: 10px;
+      border: 1px solid rgba(79, 166, 106, 0.2);
+      border-radius: 12px;
+      background: rgba(255, 253, 248, 0.72);
+    }
+
+    .hiking-callout b {
+      display: block;
+      color: var(--green);
+      font-size: 0.88rem;
+    }
+
+    .hiking-callout span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.32;
     }
 
     .fold-tool-card p {
@@ -1314,7 +1386,7 @@
     .fire-info-panel {
       display: none;
       margin-top: 14px;
-      padding: 13px;
+      padding: 16px;
       border: 1px solid rgba(255, 253, 248, 0.18);
       border-radius: 14px;
       background: rgba(8, 26, 60, 0.2);
@@ -1328,6 +1400,82 @@
 
     .fire-info-panel b {
       color: var(--white);
+    }
+
+    .fire-info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin: 12px 0;
+    }
+
+    .fire-info-card,
+    .fire-scale-card {
+      padding: 12px;
+      border: 1px solid rgba(255, 253, 248, 0.14);
+      border-radius: 12px;
+      background: rgba(255, 253, 248, 0.08);
+    }
+
+    .fire-info-card h3,
+    .fire-scale-card h3 {
+      margin: 0 0 7px;
+      color: var(--gold);
+      font-size: 1rem;
+    }
+
+    .fire-info-card p,
+    .fire-scale-card p {
+      margin: 0;
+      color: rgba(255, 253, 248, 0.76);
+      font-size: 0.9rem;
+      line-height: 1.42;
+    }
+
+    .fire-scale-list {
+      display: grid;
+      gap: 6px;
+      margin: 8px 0 0;
+    }
+
+    .fire-scale-row {
+      display: grid;
+      grid-template-columns: 62px 1fr;
+      gap: 8px;
+      align-items: start;
+      color: rgba(255, 253, 248, 0.76);
+      font-size: 0.86rem;
+    }
+
+    .fire-scale-row b {
+      color: var(--white);
+    }
+
+    .fire-read-list {
+      display: grid;
+      gap: 7px;
+      margin: 12px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .fire-read-list li {
+      position: relative;
+      padding-left: 17px;
+      color: rgba(255, 253, 248, 0.76);
+      font-size: 0.9rem;
+      line-height: 1.42;
+    }
+
+    .fire-read-list li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.55em;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--gold);
     }
 
     .fold-tool-actions a {
@@ -1620,6 +1768,11 @@
         grid-template-columns: 1fr;
       }
 
+      .fire-info-grid,
+      .hiking-callouts {
+        grid-template-columns: 1fr;
+      }
+
       .hour-row {
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
@@ -1762,7 +1915,7 @@
       .pulse-media-preview,
       .pulse-media-preview img,
       .pulse-media-preview video {
-        min-height: 190px;
+        min-height: 250px;
       }
 
       .substack-thumb-card,
@@ -1833,7 +1986,7 @@
       .pulse-media-preview,
       .pulse-media-preview img,
       .pulse-media-preview video {
-        min-height: 172px;
+        min-height: 220px;
       }
 
       .substack-thumb-card,
@@ -2051,7 +2204,10 @@
             </div>
           </div>
           <figure class="pulse-media-preview" id="pulseMediaSlot">
-            <img src="js/sky-cam/frame.jpg" alt="828 Weather Pulse preview image" />
+            <button class="pulse-media-button" id="pulseMediaButton" type="button" aria-haspopup="dialog">
+              <img src="js/sky-cam/frame.jpg" alt="828 Weather Pulse preview image" />
+              <span class="pulse-media-enlarge">Tap to enlarge</span>
+            </button>
             <figcaption class="pulse-media-label" id="pulseMediaLabel">Pulse image</figcaption>
           </figure>
         </div>
@@ -2085,7 +2241,7 @@
 
         <article class="fold-tool-card hiking">
           <div class="kicker">Hiking Guidance</div>
-          <h2>Trails look usable today.</h2>
+          <h2>Comfort has a trail window today.</h2>
           <div class="hiking-mini-profile" aria-hidden="true">
             <span class="hiking-mini-line"></span>
             <span class="hiking-mini-label">Elevation read</span>
@@ -2095,9 +2251,19 @@
             <span class="tool-index"><strong>15°</strong> Mitchell drop</span>
           </div>
           <p>
-            Cloud cover helps comfort, but higher peaks still need a separate wind and layer check.
-            This gives readers a quick reason to open the full trail guidance.
+            Lower and mid-elevation trails have a usable feel, while Mount Mitchell and exposed ridges
+            still deserve a separate wind, cloud, and layer check.
           </p>
+          <div class="hiking-callouts" aria-label="Hiking guidance preview details">
+            <div class="hiking-callout">
+              <b>Best bet</b>
+              <span>Lower to mid-elevation trails where cloud cover helps comfort.</span>
+            </div>
+            <div class="hiking-callout">
+              <b>Use care</b>
+              <span>Higher peaks can feel cooler and more exposed than Asheville.</span>
+            </div>
+          </div>
           <div class="fold-tool-actions">
             <a href="hiking.html">Open Hiking Guidance</a>
           </div>
@@ -2133,9 +2299,49 @@
             </div>
           </div>
           <div class="fire-info-panel" id="fireInfoPanel">
-            <b>How to read this:</b> Drought Stress is the background dryness signal from rainfall deficits
-            and soil/fuel stress. Fire Threat is the daily spread potential, shaped by humidity, wind,
-            temperature, and whether fuels are drying out.
+            <b>How to read this:</b> these are local guidance indices. They are not official warnings, but
+            they help show whether the landscape is drying out and whether today's weather could make fire
+            easier to start or spread.
+            <div class="fire-info-grid">
+              <div class="fire-info-card">
+                <h3>Drought Stress</h3>
+                <p>
+                  The background dryness signal. It leans on rainfall deficits, soil moisture, vegetation stress,
+                  and how slowly fuels may recover without meaningful rain.
+                </p>
+              </div>
+              <div class="fire-info-card">
+                <h3>Fire Threat</h3>
+                <p>
+                  The today signal. It blends dry fuels with humidity, wind, temperature, and whether conditions
+                  favor ignition or spread during the day.
+                </p>
+              </div>
+              <div class="fire-scale-card">
+                <h3>Drought Stress scale</h3>
+                <div class="fire-scale-list">
+                  <div class="fire-scale-row"><b>0-39</b><span>Dryness is limited or just beginning.</span></div>
+                  <div class="fire-scale-row"><b>40-59</b><span>Moderate stress: rainfall deficits matter.</span></div>
+                  <div class="fire-scale-row"><b>60-79</b><span>Severe stress: soils and fuels are meaningfully dry.</span></div>
+                  <div class="fire-scale-row"><b>80-100</b><span>Extreme stress: recovery likely needs soaking rain.</span></div>
+                </div>
+              </div>
+              <div class="fire-scale-card">
+                <h3>Fire Threat scale</h3>
+                <div class="fire-scale-list">
+                  <div class="fire-scale-row"><b>0-39</b><span>Moisture or calm weather limits spread potential.</span></div>
+                  <div class="fire-scale-row"><b>40-59</b><span>Elevated: dry fuels, low humidity, or wind deserve attention.</span></div>
+                  <div class="fire-scale-row"><b>60-79</b><span>High: ignition and spread become more concerning.</span></div>
+                  <div class="fire-scale-row"><b>80-100</b><span>Extreme: very dry fuels and fire weather may align.</span></div>
+                </div>
+              </div>
+            </div>
+            <ul class="fire-read-list">
+              <li>Drought Stress changes more slowly because it tracks accumulated dryness.</li>
+              <li>Fire Threat can rise quickly on breezy, dry afternoons.</li>
+              <li>High drought plus high fire threat means the landscape is primed and the day may activate that risk.</li>
+              <li>Rain can lower fire threat quickly, but drought stress usually needs repeated or soaking rainfall.</li>
+            </ul>
           </div>
           <div class="fold-tool-actions">
             <a href="#droughtfire">View Drought & Fire</a>
@@ -2239,6 +2445,20 @@
     </div>
   </div>
 
+  <div class="preview-modal pulse-modal" id="pulseMediaModal" role="dialog" aria-modal="true" aria-labelledby="pulseMediaModalTitle">
+    <div class="preview-modal-panel">
+      <div class="preview-modal-hero">
+        <button class="preview-modal-close" id="pulseMediaModalClose" type="button" aria-label="Close Weather Pulse media">&times;</button>
+        <div class="preview-modal-kicker">828 Weather Pulse</div>
+        <h2 id="pulseMediaModalTitle">Latest Pulse Media</h2>
+        <p>Open the latest Pulse video or image at a larger size without leaving the homepage.</p>
+      </div>
+      <div class="preview-modal-body pulse-modal-body" id="pulseMediaModalBody">
+        <img class="radar-modal-image" src="js/sky-cam/frame.jpg" alt="Expanded Weather Pulse media" />
+      </div>
+    </div>
+  </div>
+
   <script type="module">
     import { calculateComfort } from "./js/intel/comfort.js";
     import { buildHumanActionIntelFS } from "./js/intel/human-action-feelscore.js?v=20260526-rain-window";
@@ -2289,6 +2509,7 @@
     const PREVIEW_RADAR_OFF = params.get("radar") === "off";
     const RAIN_CHANCE_PREVIEW = 14;
     const PRECIP_SIGNAL_ACTIVE = RAIN_CHANCE_PREVIEW >= 25;
+    const SUBSTACK_CLOUDINARY_IMAGE_OVERRIDE = "";
     const LATEST_SUBSTACK_FALLBACK = {
       title: "The Story of Asheville's Wild Spring",
       link: "https://timothyballisty.substack.com/p/the-story-of-ashevilles-wild-spring",
@@ -2311,14 +2532,32 @@
       mediaType: "video",
       timestamp: 1780603869803
     };
+    let currentPulseMedia = {
+      url: PULSE_FALLBACK.mediaUrl,
+      mediaType: PULSE_FALLBACK.mediaType
+    };
 
-    function localHour() {
+    function localTimeParts() {
       const parts = new Intl.DateTimeFormat("en-US", {
         hour: "numeric",
+        minute: "numeric",
         hour12: false,
         timeZone: "America/New_York"
       }).formatToParts(new Date());
-      return Number(parts.find((part) => part.type === "hour")?.value);
+      return {
+        hour: Number(parts.find((part) => part.type === "hour")?.value),
+        minute: Number(parts.find((part) => part.type === "minute")?.value)
+      };
+    }
+
+    function localHour() {
+      return localTimeParts().hour;
+    }
+
+    function isSunsetRadianceWindow() {
+      const { hour, minute } = localTimeParts();
+      const minutes = hour * 60 + minute;
+      return minutes >= 15 * 60 && minutes <= 21 * 60 + 15;
     }
 
     function applyConditionalHomepageFeatures() {
@@ -2326,7 +2565,7 @@
       const radarHomeCard = document.querySelector("#radarHomeCard");
       const skyHomeFeature = document.querySelector("#skyHomeFeature");
       const skyHomeFeatureLabel = document.querySelector("#skyHomeFeatureLabel");
-      const radianceActive = PREVIEW_RADIANCE_ACTIVE || localHour() >= 15;
+      const radianceActive = (PREVIEW_RADIANCE_ACTIVE || localHour() >= 15) && isSunsetRadianceWindow();
       const radarActive = !PREVIEW_RADAR_OFF && (PREVIEW_RADAR_ACTIVE || PRECIP_SIGNAL_ACTIVE);
 
       skyHomeModule?.classList.toggle("radiance-active", radianceActive);
@@ -2403,7 +2642,12 @@
       const title = cleanSubstackText(post.title || LATEST_SUBSTACK_FALLBACK.title);
       const link = post.link || LATEST_SUBSTACK_FALLBACK.link;
       const excerpt = shortSubstackExcerpt(post.description || post.contentSnippet || LATEST_SUBSTACK_FALLBACK.description);
-      const image = post.ogImage || post.image || post.enclosure?.url || LATEST_SUBSTACK_FALLBACK.ogImage;
+      const image =
+        SUBSTACK_CLOUDINARY_IMAGE_OVERRIDE ||
+        post.enclosure?.url ||
+        post.image ||
+        (post.ogImage && !post.fallback ? post.ogImage : null) ||
+        LATEST_SUBSTACK_FALLBACK.ogImage;
 
       document.querySelector("#substackTitle").textContent = title;
       document.querySelector("#substackExcerpt").textContent = excerpt;
@@ -2502,7 +2746,12 @@
 
     function pulseMediaMarkup(url, mediaType) {
       if (!url) {
-        return `<img src="js/sky-cam/frame.jpg" alt="828 Weather Pulse preview image" />`;
+        return `
+          <button class="pulse-media-button" type="button" aria-haspopup="dialog">
+            <img src="js/sky-cam/frame.jpg" alt="828 Weather Pulse preview image" />
+            <span class="pulse-media-enlarge">Tap to enlarge</span>
+          </button>
+        `;
       }
 
       const safeUrl = escapeAttr(url);
@@ -2513,13 +2762,21 @@
 
       if (isVideo) {
         return `
-          <video autoplay muted loop playsinline preload="metadata" aria-label="Latest Weather Pulse video">
-            <source src="${safeUrl}" type="video/mp4" />
-          </video>
+          <button class="pulse-media-button" type="button" aria-haspopup="dialog">
+            <video autoplay muted loop playsinline preload="metadata" aria-label="Latest Weather Pulse video">
+              <source src="${safeUrl}" type="video/mp4" />
+            </video>
+            <span class="pulse-media-enlarge">Tap to play</span>
+          </button>
         `;
       }
 
-      return `<img src="${safeUrl}" alt="Latest Weather Pulse image" />`;
+      return `
+        <button class="pulse-media-button" type="button" aria-haspopup="dialog">
+          <img src="${safeUrl}" alt="Latest Weather Pulse image" />
+          <span class="pulse-media-enlarge">Tap to enlarge</span>
+        </button>
+      `;
     }
 
     function renderPulsePreview(pulse) {
@@ -2529,6 +2786,10 @@
       const mediaUrl = pulse.mediaUrl || pulse.image || "";
       const mediaType = pulse.mediaType || "";
       const isVideo = mediaType === "video" || mediaUrl.endsWith(".mp4") || mediaUrl.includes("/video/");
+      currentPulseMedia = {
+        url: mediaUrl || "js/sky-cam/frame.jpg",
+        mediaType: isVideo ? "video" : "image"
+      };
 
       document.querySelector("#pulsePreviewTitle").textContent = "Latest Weather Pulse is live.";
       if (text) {
@@ -2655,14 +2916,17 @@
       const precip = Number(hour.precipAmount) || 0;
       const pop = Number(hour.precipProbability) || 0;
       const cloud = Number(hour.cloudCover);
+      const cloudPct = Number.isFinite(cloud) ? (cloud > 1 ? cloud / 100 : cloud) : null;
+      const hourNumber = Number.isFinite(hour.timestamp) ? localHourNumber(hour.timestamp) : localHour();
+      const night = hourNumber < 7 || hourNumber >= 20;
       if (precip > 0.02 || pop >= 0.45 || [51, 53, 55, 61, 63, 65, 80, 81, 82, 95, 96, 99].includes(code)) return "Rain";
       if ([71, 73, 75, 77, 85, 86].includes(code)) return "Snow";
       if ([45, 48].includes(code)) return "Fog";
-      if (Number.isFinite(cloud)) {
-        if (cloud >= 0.75) return "Cloudy";
-        if (cloud >= 0.35) return "Partly";
+      if (Number.isFinite(cloudPct)) {
+        if (cloudPct >= 0.75) return "Cloudy";
+        if (cloudPct >= 0.35) return night ? "PartlyNight" : "Partly";
       }
-      return "Clear";
+      return night ? "Moon" : "Clear";
     }
 
     function iconGlyph(label) {
@@ -2672,6 +2936,8 @@
         Fog: "≋",
         Cloudy: "☁",
         Partly: "⛅",
+        PartlyNight: "☾",
+        Moon: "☾",
         Clear: "☀"
       }[label] || "☁";
     }
@@ -2980,11 +3246,34 @@
     const radarModal = document.querySelector("#radarModal");
     const radarThumbButton = document.querySelector("#radarThumbButton");
     const radarModalClose = document.querySelector("#radarModalClose");
+    const pulseMediaSlot = document.querySelector("#pulseMediaSlot");
+    const pulseMediaModal = document.querySelector("#pulseMediaModal");
+    const pulseMediaModalClose = document.querySelector("#pulseMediaModalClose");
+    const pulseMediaModalBody = document.querySelector("#pulseMediaModalBody");
     function closeFeelScoreModal() {
       feelScoreModal?.classList.remove("open");
     }
     function closeRadarModal() {
       radarModal?.classList.remove("open");
+    }
+    function closePulseMediaModal() {
+      pulseMediaModal?.classList.remove("open");
+      if (pulseMediaModalBody) {
+        pulseMediaModalBody.innerHTML = "";
+      }
+    }
+    function openPulseMediaModal() {
+      if (!pulseMediaModal || !pulseMediaModalBody) return;
+      const safeUrl = escapeAttr(currentPulseMedia.url || "js/sky-cam/frame.jpg");
+      const isVideo = currentPulseMedia.mediaType === "video" || safeUrl.endsWith(".mp4") || safeUrl.includes("/video/");
+      pulseMediaModalBody.innerHTML = isVideo
+        ? `
+          <video controls autoplay playsinline aria-label="Expanded Weather Pulse video">
+            <source src="${safeUrl}" type="video/mp4" />
+          </video>
+        `
+        : `<img src="${safeUrl}" alt="Expanded Weather Pulse media" />`;
+      pulseMediaModal.classList.add("open");
     }
     feelScoreInfoButton?.addEventListener("click", () => {
       feelScoreModal?.classList.add("open");
@@ -3001,10 +3290,16 @@
     radarModal?.addEventListener("click", (event) => {
       if (event.target === radarModal) closeRadarModal();
     });
+    pulseMediaSlot?.addEventListener("click", openPulseMediaModal);
+    pulseMediaModalClose?.addEventListener("click", closePulseMediaModal);
+    pulseMediaModal?.addEventListener("click", (event) => {
+      if (event.target === pulseMediaModal) closePulseMediaModal();
+    });
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape") {
         closeFeelScoreModal();
         closeRadarModal();
+        closePulseMediaModal();
       }
     });
 
