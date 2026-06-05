@@ -2736,11 +2736,11 @@
         <div>
           <h3>Comfort scale</h3>
           <div class="comfort-scale">
-            <div class="comfort-band" style="--band-color:#7bd389"><b>90-100</b><span>Ideal: easy air, comfortable temperatures, and very little weather friction.</span></div>
-            <div class="comfort-band" style="--band-color:#5aa7ff"><b>70-89</b><span>Comfortable: broadly pleasant, though one factor may be noticeable.</span></div>
-            <div class="comfort-band" style="--band-color:#ffd166"><b>55-69</b><span>Slight discomfort: usable, but heat, chill, humidity, or wind starts to matter.</span></div>
-            <div class="comfort-band" style="--band-color:#ff944d"><b>40-54</b><span>Uncomfortable: conditions are working against comfort for many people.</span></div>
-            <div class="comfort-band" style="--band-color:#ff6b6b"><b>&lt;40</b><span>Harsh: cold, heat, humidity, wind, or wet weather may dominate the feel.</span></div>
+            <div class="comfort-band" style="--band-color:#7bd389"><b>90-100</b><span><strong>Ideal:</strong> Goldilocks weather! Easy air, comfortable temperatures, and very little weather friction.</span></div>
+            <div class="comfort-band" style="--band-color:#5aa7ff"><b>70-89</b><span><strong>Pleasant:</strong> Most people will feel comfortable outdoors. One condition, such as warmth, coolness, humidity, or wind, may be noticeable but not disruptive.</span></div>
+            <div class="comfort-band" style="--band-color:#ffd166"><b>55-69</b><span><strong>Noticeable Weather:</strong> Conditions are still generally manageable, but the weather begins to influence how being outside feels. Extra warmth, chill, humidity, or wind may affect comfort.</span></div>
+            <div class="comfort-band" style="--band-color:#ff944d"><b>40-54</b><span><strong>Challenging:</strong> Comfort starts to require adjustment. Many people will notice persistent heat, cold, humidity, wind, or dampness while outdoors.</span></div>
+            <div class="comfort-band" style="--band-color:#ff6b6b"><b>&lt;40</b><span><strong>Harsh:</strong> Weather conditions dominate the experience. Heat, cold, humidity, wind, or precipitation may significantly reduce outdoor comfort.</span></div>
           </div>
         </div>
 
@@ -3443,9 +3443,9 @@
     function scoreLabel(score) {
       if (score >= 90) return "Ideal";
       if (score >= 80) return "Great";
-      if (score >= 70) return "Comfortable";
-      if (score >= 60) return "Usable";
-      if (score >= 45) return "Uncomfortable";
+      if (score >= 70) return "Pleasant";
+      if (score >= 55) return "Noticeable";
+      if (score >= 40) return "Challenging";
       return "Harsh";
     }
 
