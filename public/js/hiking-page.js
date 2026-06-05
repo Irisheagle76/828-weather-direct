@@ -16,11 +16,11 @@ const els = {
       updatedAt: document.querySelector("#updatedAt"),
       mountainViewsUpdated: document.querySelector("#mountainViewsUpdated"),
       mitchellCamImage: document.querySelector("#mitchellCamImage"),
-      pisgahInnVideo: document.querySelector("#pisgahInnVideo")
+      pisgahInnImage: document.querySelector("#pisgahInnImage")
     };
 
     const MITCHELL_CAM_URL = "https://nchighpeaks.org/cam11/up/image.jpg";
-    const PISGAH_STREAM_URL = "https://streamer5.brownrice.com/pisgahinn1/pisgahinn1.stream/main_playlist.m3u8";
+    const PISGAH_CAM_URL = "https://streamer5.brownrice.com/cam-images/pisgahinn1.jpg";
 
     function round(value) {
       return Number.isFinite(value) ? Math.round(value) : "--";
@@ -74,22 +74,11 @@ const els = {
       if (els.mitchellCamImage) {
         els.mitchellCamImage.src = `${MITCHELL_CAM_URL}?t=${Date.now()}`;
       }
+      if (els.pisgahInnImage) {
+        els.pisgahInnImage.src = `${PISGAH_CAM_URL}?t=${Date.now()}`;
+      }
       if (els.mountainViewsUpdated) {
         els.mountainViewsUpdated.textContent = formatCameraRefresh();
-      }
-    }
-
-    async function initPisgahStream() {
-      const video = els.pisgahInnVideo;
-      if (!video) return;
-      if (video.canPlayType("application/vnd.apple.mpegurl")) {
-        video.src = PISGAH_STREAM_URL;
-        return;
-      }
-      if (window.Hls?.isSupported()) {
-        const hls = new window.Hls({ lowLatencyMode: false });
-        hls.loadSource(PISGAH_STREAM_URL);
-        hls.attachMedia(video);
       }
     }
 
@@ -320,6 +309,5 @@ const els = {
 
     await loadHiking();
     refreshMountainViews();
-    initPisgahStream();
     window.setInterval(refreshMountainViews, 3 * 60 * 1000);
   
