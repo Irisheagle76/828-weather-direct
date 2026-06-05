@@ -13,8 +13,14 @@ const els = {
       comparisonGrid: document.querySelector("#comparisonGrid"),
       hikerDataGrid: document.querySelector("#hikerDataGrid"),
       stationGrid: document.querySelector("#stationGrid"),
-      updatedAt: document.querySelector("#updatedAt")
+      updatedAt: document.querySelector("#updatedAt"),
+      mountainViewsUpdated: document.querySelector("#mountainViewsUpdated"),
+      mitchellCamImage: document.querySelector("#mitchellCamImage"),
+      pisgahInnVideo: document.querySelector("#pisgahInnVideo")
     };
+
+    const MITCHELL_CAM_URL = "https://nchighpeaks.org/cam11/up/image.jpg";
+    const PISGAH_STREAM_URL = "https://streamer5.brownrice.com/pisgahinn1/pisgahinn1.stream/main_playlist.m3u8";
 
     function round(value) {
       return Number.isFinite(value) ? Math.round(value) : "--";
@@ -54,6 +60,37 @@ const els = {
         minute: "2-digit",
         timeZone: "America/New_York"
       })}`;
+    }
+
+    function formatCameraRefresh() {
+      return `Views refreshed ${new Date().toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit",
+        timeZone: "America/New_York"
+      })}`;
+    }
+
+    function refreshMountainViews() {
+      if (els.mitchellCamImage) {
+        els.mitchellCamImage.src = `${MITCHELL_CAM_URL}?t=${Date.now()}`;
+      }
+      if (els.mountainViewsUpdated) {
+        els.mountainViewsUpdated.textContent = formatCameraRefresh();
+      }
+    }
+
+    async function initPisgahStream() {
+      const video = els.pisgahInnVideo;
+      if (!video) return;
+      if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        video.src = PISGAH_STREAM_URL;
+        return;
+      }
+      if (window.Hls?.isSupported()) {
+        const hls = new window.Hls({ lowLatencyMode: false });
+        hls.loadSource(PISGAH_STREAM_URL);
+        hls.attachMedia(video);
+      }
     }
 
     function shortName(name = "") {
@@ -282,4 +319,7 @@ const els = {
     }
 
     await loadHiking();
+    refreshMountainViews();
+    initPisgahStream();
+    window.setInterval(refreshMountainViews, 3 * 60 * 1000);
   

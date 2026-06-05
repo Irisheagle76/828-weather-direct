@@ -32,6 +32,7 @@
           <p class="hero-narrative" id="hikerNarrative">The latest elevation-aware hiking read will appear here.</p>
           <div class="hero-actions">
             <a class="button" href="#trail-choice">Trail choice</a>
+            <a class="button secondary" href="#mountain-views">Live mountain views</a>
             <a class="button secondary" href="#station-check">Station readings</a>
           </div>
         </div>
@@ -48,7 +49,51 @@
             <b id="fogRisk">--</b>
             <span>Fog, low cloud, or damp-pocket signal</span>
           </div>
+          <div class="side-card">
+            <b>Live views</b>
+            <span>Mitchell summit and Pisgah Inn cameras add a current visual check.</span>
+          </div>
         </aside>
+      </div>
+    </section>
+
+    <section class="mountain-now-section" id="mountain-views" aria-label="Live mountain camera references">
+      <div class="mountain-now-head">
+        <div>
+          <div class="kicker">Mountain views now</div>
+          <h2>Visual checks above Asheville</h2>
+          <p>
+            These cameras add a real-time look at cloud deck, visibility, and mountain exposure.
+            Pisgah Inn is a visual reference only; there is no dedicated weather observation tied to that camera.
+          </p>
+        </div>
+        <div class="mountain-now-pill" id="mountainViewsUpdated">Live views loading</div>
+      </div>
+      <div class="mountain-camera-grid">
+        <article class="mountain-camera-card">
+          <a class="mountain-camera-media" href="https://nchighpeaks.org/cam11/cam11view.php" target="_blank" rel="noopener noreferrer">
+            <img id="mitchellCamImage" src="https://nchighpeaks.org/cam11/up/image.jpg" alt="Live camera view looking northeast from the summit of Mount Mitchell" />
+            <span>Mount Mitchell summit</span>
+          </a>
+          <div class="mountain-camera-copy">
+            <div class="kicker">6,684 ft &bull; Northeast view</div>
+            <h3>Mount Mitchell summit camera</h3>
+            <p>Use this for high-peak cloud cover, fog, rime-like visibility issues, and how exposed the summit view looks right now.</p>
+          </div>
+        </article>
+
+        <article class="mountain-camera-card">
+          <div class="mountain-camera-media video">
+            <video id="pisgahInnVideo" muted playsinline controls preload="metadata" poster="" aria-label="Pisgah Inn live camera stream"></video>
+            <span>Pisgah Inn live stream</span>
+          </div>
+          <div class="mountain-camera-copy">
+            <div class="kicker">5,000 ft &bull; 17.5 mi southwest of Asheville</div>
+            <h3>Pisgah Inn visual reference</h3>
+            <p>This helps compare ridge-level clouds and visibility southwest of town. Camera-only reference; no local observation is available.</p>
+            <a class="text-link" href="https://streamer5.brownrice.com/pisgahinn1/pisgahinn1.stream/main_playlist.m3u8" target="_blank" rel="noopener noreferrer">Open stream</a>
+          </div>
+        </article>
       </div>
     </section>
 
@@ -144,6 +189,7 @@
     </div>
   </footer>
 
-  <script type="module" src="js/hiking-page.js?v=20260603-style-refresh"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js" defer></script>
+  <script type="module" src="js/hiking-page.js?v=20260605-mountain-now"></script>
 </body>
 </html>

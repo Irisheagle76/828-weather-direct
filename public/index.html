@@ -1432,6 +1432,48 @@
       font-weight: 950;
     }
 
+    .hiking-now-strip {
+      display: grid;
+      grid-template-columns: 118px minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      margin: 12px 0 16px;
+      padding: 10px;
+      border: 1px solid rgba(79, 166, 106, 0.2);
+      border-radius: 14px;
+      background: rgba(255, 253, 248, 0.7);
+    }
+
+    .hiking-now-image {
+      position: relative;
+      overflow: hidden;
+      aspect-ratio: 16 / 10;
+      border-radius: 10px;
+      background: #0b1f3f;
+    }
+
+    .hiking-now-image img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+
+    .hiking-now-copy b {
+      display: block;
+      color: var(--ink);
+      font-size: 0.96rem;
+      line-height: 1.12;
+    }
+
+    .hiking-now-copy span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.28;
+    }
+
     .hiking-callouts {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2280,6 +2322,10 @@
         min-height: 86px;
       }
 
+      .hiking-now-strip {
+        grid-template-columns: 1fr;
+      }
+
       .fire-driver-grid {
         gap: 10px;
       }
@@ -2547,17 +2593,26 @@
 
         <article class="fold-tool-card hiking">
           <div class="kicker">Hiking Guidance</div>
-          <h2>Comfort has a trail window today.</h2>
+          <h2>Trail guidance has live mountain context.</h2>
           <div class="hiking-mini-profile" aria-hidden="true">
             <span class="hiking-mini-line"></span>
             <span class="hiking-mini-label">Elevation read</span>
+          </div>
+          <div class="hiking-now-strip" aria-label="Live mountain view preview">
+            <a class="hiking-now-image" href="hiking.html#mountain-views">
+              <img id="homeMitchellCamImage" src="https://nchighpeaks.org/cam11/up/image.jpg" alt="Live Mount Mitchell summit camera preview" loading="lazy" />
+            </a>
+            <div class="hiking-now-copy">
+              <b>Mountain views now</b>
+              <span>Mitchell summit cam plus Pisgah Inn at 5,000 ft help check cloud deck and visibility.</span>
+            </div>
           </div>
           <div class="tool-snapshot">
             <span class="tool-index"><strong>82</strong> HikerScore</span>
             <span class="tool-index"><strong>15°</strong> Mitchell drop</span>
           </div>
           <p>
-            Lower and mid-elevation trails have a usable feel, while Mount Mitchell and exposed ridges
+            Lower and mid-elevation trails look manageable, while Mount Mitchell and exposed ridges
             still deserve a separate wind, cloud, and layer check.
           </p>
           <div class="hiking-callouts" aria-label="Hiking guidance preview details">
@@ -2861,6 +2916,7 @@
     const SKY_STALE_MS = 20 * 60 * 1000;
     const LIVE_THUMBNAIL_URL = "https://i.ytimg.com/vi/UxUU3Fc1vBw/maxresdefault_live.jpg";
     const RADAR_LOOP_URL = "https://radar.weather.gov/ridge/standard/KGSP_loop.gif";
+    const MITCHELL_CAM_URL = "https://nchighpeaks.org/cam11/up/image.jpg";
     const params = new URLSearchParams(window.location.search);
     const PREVIEW_RADIANCE_ACTIVE = params.get("radiance") === "on";
     const PREVIEW_RADAR_ACTIVE = params.get("radar") === "on";
@@ -3822,6 +3878,13 @@
     }
     refreshRadarImage();
     setInterval(refreshRadarImage, 5 * 60 * 1000);
+
+    const homeMitchellCamImage = document.querySelector("#homeMitchellCamImage");
+    function refreshHomeMitchellCam() {
+      if (homeMitchellCamImage) homeMitchellCamImage.src = cacheBustedUrl(MITCHELL_CAM_URL);
+    }
+    refreshHomeMitchellCam();
+    setInterval(refreshHomeMitchellCam, 3 * 60 * 1000);
 
     const feelScoreModal = document.querySelector("#feelScoreModal");
     const feelScoreInfoButton = document.querySelector("#feelScoreInfoButton");
