@@ -2892,6 +2892,11 @@
 
     function labelize(value) {
       if (!value) return "--";
+      const labels = {
+        mostly_cloudy_filtered: "Mostly Cloudy",
+        filtered_sunshine: "Filtered Sun"
+      };
+      if (labels[value]) return labels[value];
       return String(value)
         .replace(/_/g, " ")
         .replace(/\b\w/g, (char) => char.toUpperCase());

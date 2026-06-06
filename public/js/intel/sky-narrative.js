@@ -111,6 +111,32 @@ export function generateSkyNarrative(data, skyIntel = null) {
   }
 
   // --------------------------------------------------
+  // 🌥️ MOSTLY CLOUDY WITH FILTERED SUN
+  // --------------------------------------------------
+  if (state === "mostly_cloudy_filtered") {
+    return {
+      headline: "Mostly cloudy skies with filtered sunshine.",
+      detail:
+        "Visible satellite and soft shadow contrast point to high clouds muting the sun, even though filtered brightness is still reaching the ground.",
+      confidence: "high",
+      type: "cloud"
+    };
+  }
+
+  // --------------------------------------------------
+  // 🌥️ FILTERED SUNSHINE
+  // --------------------------------------------------
+  if (state === "filtered_sunshine") {
+    return {
+      headline: "Filtered sunshine is making it through the clouds.",
+      detail:
+        "The sky is bright, but high-cloud clues and soft pavement shadows point to a veiled sun rather than a wide-open sunny sky.",
+      confidence: "high",
+      type: "cloud"
+    };
+  }
+
+  // --------------------------------------------------
   // 🌤️ PARTLY CLOUDY (BALANCED — NO HYPE)
   // --------------------------------------------------
   if (state === "partly_cloudy") {

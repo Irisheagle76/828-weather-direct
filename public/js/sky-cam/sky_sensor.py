@@ -2,12 +2,15 @@ import cv2
 import numpy as np
 import json
 import os
+import tempfile
+import urllib.request
 from datetime import datetime, timezone
 
 # -------- CONFIG --------
 BASE_DIR = os.path.dirname(__file__)
 IMAGE_PATH = os.path.join(BASE_DIR, "frame.jpg")
 OUTPUT_PATH = os.path.join(BASE_DIR, "output.json")
+SATELLITE_LOOP_URL = "https://cdn.star.nesdis.noaa.gov/WFO/gsp/GEOCOLOR/GOES19-GSP-GEOCOLOR-600x600.gif"
 
 CROP_TOP_RATIO = 0.48  # top = sky, staying above most horizon/building clutter
 # ------------------------
@@ -119,6 +122,7 @@ def compute_metrics(sky_img, full_img):
 
     ground_brightness = np.mean(ground) / 255.0
     ground_contrast = np.std(ground) / 255.0
+    soft_shadow_signal = contrast < 0.09 or (ground_contrast < 0.18 and contrast < 0.12)
 
     # more stable blend (less flicker)
     sunlight_strength = (ground_brightness * 0.6) + (ground_contrast * 0.4)
@@ -145,6 +149,14 @@ def compute_metrics(sky_img, full_img):
     else:
         mode = "day"
 
+    filtered_sunshine_signal = (
+        mode == "day" and
+        sunlight_detected and
+        soft_shadow_signal and
+        cloud_cover is not None and
+        cloud_cover >= 20
+    )
+
     # --------------------------------------------------------
     # OUTPUT
     # --------------------------------------------------------
@@ -157,12 +169,83 @@ def compute_metrics(sky_img, full_img):
     "sunlightDetected": bool(sunlight_detected),
     "sunlightStrength": float(round(sunlight_strength, 2)),
     "sunlightLevel": str(sunlight_level),
+    "groundBrightness": float(round(ground_brightness, 2)),
+    "groundContrast": float(round(ground_contrast, 2)),
+    "softShadowSignal": bool(soft_shadow_signal),
+    "filteredSunshineSignal": bool(filtered_sunshine_signal),
 
     "skyBlueSignal": float(sky_blue_signal) if sky_blue_signal is not None else None,
 
     "precipVisible": False,
     "mode": str(mode)
 }
+
+
+def analyze_satellite_high_clouds():
+    tmp_path = None
+    try:
+        with urllib.request.urlopen(SATELLITE_LOOP_URL, timeout=15) as response:
+            gif_bytes = response.read()
+
+        fd, tmp_path = tempfile.mkstemp(suffix=".gif")
+        os.close(fd)
+        with open(tmp_path, "wb") as f:
+            f.write(gif_bytes)
+
+        cap = cv2.VideoCapture(tmp_path)
+        frames = []
+        while len(frames) < 10:
+            ok, frame = cap.read()
+            if not ok:
+                break
+            frames.append(frame)
+        cap.release()
+
+        if not frames:
+            return {
+                "satelliteHighCloudSignal": False,
+                "satelliteCloudMotionSignal": False,
+                "satelliteCloudFraction": None,
+                "satelliteMotion": None
+            }
+
+        masks = []
+        for frame in frames[-6:]:
+            h, w, _ = frame.shape
+            # Western NC / Asheville-area approximation within the GSP satellite loop.
+            roi = frame[int(h * 0.28):int(h * 0.62), int(w * 0.12):int(w * 0.54)]
+            hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+            gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+            sat = hsv[:, :, 1]
+
+            high_cloud_mask = (gray > 135) & (sat < 95)
+            masks.append(high_cloud_mask.astype(np.uint8))
+
+        cloud_fraction = float(np.mean(masks[-1]))
+        if len(masks) > 1:
+            motion = float(np.mean([
+                np.mean(cv2.absdiff(masks[i], masks[i - 1]))
+                for i in range(1, len(masks))
+            ]))
+        else:
+            motion = 0.0
+
+        return {
+            "satelliteHighCloudSignal": bool(cloud_fraction >= 0.18),
+            "satelliteCloudMotionSignal": bool(cloud_fraction >= 0.12 and motion >= 0.015),
+            "satelliteCloudFraction": float(round(cloud_fraction, 2)),
+            "satelliteMotion": float(round(motion, 2))
+        }
+    except Exception:
+        return {
+            "satelliteHighCloudSignal": False,
+            "satelliteCloudMotionSignal": False,
+            "satelliteCloudFraction": None,
+            "satelliteMotion": None
+        }
+    finally:
+        if tmp_path and os.path.exists(tmp_path):
+            os.remove(tmp_path)
 
 # ------------------------------------------------------------
 # 📈 TREND
@@ -232,6 +315,7 @@ def main():
         sky_img, full_img = load_and_crop(IMAGE_PATH)
 
         metrics = compute_metrics(sky_img, full_img)
+        metrics.update(analyze_satellite_high_clouds())
 
         previous = load_previous()
         trend = compute_trend(metrics, previous)
