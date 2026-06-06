@@ -1829,6 +1829,34 @@
       animation: pulseTextBreathe 3.2s ease-in-out infinite;
     }
 
+    .pulse-published-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.25;
+    }
+
+    .pulse-published-meta span {
+      color: var(--orange);
+      font-size: 0.72rem;
+      font-weight: 950;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .pulse-published-meta strong {
+      color: var(--ink);
+      font-weight: 950;
+    }
+
+    .pulse-published-meta em {
+      font-style: normal;
+    }
+
     .pulse-dot {
       width: 11px;
       height: 11px;
@@ -2544,6 +2572,10 @@
         <div class="pulse-layout">
           <div>
             <div class="pulse-head"><span class="pulse-dot"></span>828 Weather Pulse</div>
+            <time class="pulse-published-meta" id="pulsePublishedMeta">
+              <span>Published</span>
+              <strong>Checking latest Pulse...</strong>
+            </time>
             <h2 id="pulsePreviewTitle">Pulse remains the human voice of the page.</h2>
             <p id="pulsePreviewText">
               The Pulse module can reference the same sky signal when it matters: “The camera view backs up the forecast:
@@ -3172,6 +3204,50 @@
       })}`;
     }
 
+    function formatPulsePublished(value) {
+      if (!value) return null;
+      const date = new Date(value);
+      if (!Number.isFinite(date.getTime())) return null;
+
+      const diff = (Date.now() - date.getTime()) / 1000;
+      const days = Math.floor(diff / 86400);
+      const relative =
+        diff < 60 ? "Just now" :
+        diff < 3600 ? `${Math.floor(diff / 60)} min ago` :
+        diff < 86400 ? `${Math.floor(diff / 3600)} hr ago` :
+        `${days} day${days === 1 ? "" : "s"} ago`;
+
+      const exact = date.toLocaleString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        timeZone: "America/New_York"
+      });
+
+      return { date, relative, exact };
+    }
+
+    function renderPulsePublished(value) {
+      const el = document.querySelector("#pulsePublishedMeta");
+      if (!el) return;
+
+      const stamp = formatPulsePublished(value);
+      if (!stamp) {
+        el.innerHTML = `<span>Published</span><strong>Timestamp unavailable</strong>`;
+        el.removeAttribute("datetime");
+        return;
+      }
+
+      el.dateTime = stamp.date.toISOString();
+      el.innerHTML = `
+        <span>Published</span>
+        <strong>${stamp.relative}</strong>
+        <em>${stamp.exact}</em>
+      `;
+    }
+
     function renderSubstackCard(post = LATEST_SUBSTACK_FALLBACK) {
       const title = cleanSubstackText(post.title || LATEST_SUBSTACK_FALLBACK.title);
       const link = post.link || LATEST_SUBSTACK_FALLBACK.link;
@@ -3398,6 +3474,7 @@
       };
 
       document.querySelector("#pulsePreviewTitle").textContent = "Latest Weather Pulse is live.";
+      renderPulsePublished(pulse.timestamp);
       if (text) {
         document.querySelector("#pulsePreviewText").textContent = text;
       }
