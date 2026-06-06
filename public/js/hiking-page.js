@@ -16,11 +16,13 @@ const els = {
       updatedAt: document.querySelector("#updatedAt"),
       mountainViewsUpdated: document.querySelector("#mountainViewsUpdated"),
       mitchellCamImage: document.querySelector("#mitchellCamImage"),
-      pisgahInnImage: document.querySelector("#pisgahInnImage")
+      pisgahInnImage: document.querySelector("#pisgahInnImage"),
+      grasslandCamImage: document.querySelector("#grasslandCamImage")
     };
 
     const MITCHELL_CAM_URL = "https://nchighpeaks.org/cam11/up/image.jpg";
     const PISGAH_CAM_URL = "https://streamer5.brownrice.com/cam-images/pisgahinn1.jpg";
+    const GRASSLAND_CAM_URL = "https://cameraftpapi.drivehq.com/api/Camera/GetCameraThumbnail.ashx?parentID=361818469&shareID=17333090";
 
     function round(value) {
       return Number.isFinite(value) ? Math.round(value) : "--";
@@ -76,6 +78,9 @@ const els = {
       }
       if (els.pisgahInnImage) {
         els.pisgahInnImage.src = `${PISGAH_CAM_URL}?t=${Date.now()}`;
+      }
+      if (els.grasslandCamImage) {
+        els.grasslandCamImage.src = `${GRASSLAND_CAM_URL}&t=${Date.now()}`;
       }
       if (els.mountainViewsUpdated) {
         els.mountainViewsUpdated.textContent = formatCameraRefresh();

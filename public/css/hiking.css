@@ -293,7 +293,7 @@
 
     .mountain-camera-grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 16px;
       padding: 18px 22px 22px;
     }
@@ -433,7 +433,7 @@
 
     .summit-index-grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 16px;
       padding: 18px 24px 24px;
     }
@@ -451,6 +451,10 @@
 
     .summit-site-card:nth-child(2) {
       border-top-color: var(--trail);
+    }
+
+    .summit-site-card:nth-child(3) {
+      border-top-color: #8ab8ff;
     }
 
     .summit-site-top {

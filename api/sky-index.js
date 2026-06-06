@@ -33,6 +33,21 @@ const SITES = [
       wind: 175
     },
     columns: { start: 180, endPad: 80, step: 22 }
+  },
+  {
+    id: "grassland",
+    name: "Grassland Mountain Observatory",
+    elevationFt: 4130,
+    chartUrl: "https://www.cleardarksky.com/c/GssMtnObNCcsk.gif",
+    rows: {
+      cloud: 85,
+      transparency: 100,
+      darkness: 145,
+      humidity: 115,
+      smoke: 130,
+      wind: 175
+    },
+    columns: { start: 180, endPad: 80, step: 22 }
   }
 ];
 
