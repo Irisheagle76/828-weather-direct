@@ -31,6 +31,7 @@ export async function render4DayForecast(container) {
 
   container.innerHTML = `
     ${renderBoardHero(board)}
+    ${renderForecastStory(days)}
     ${renderWeekAheadSignals(forecastOverrides.weekAheadSignals, board)}
     <section class="forecast-board-grid" aria-label="Four day forecast">
       ${days.map(renderForecastCard).join("")}
@@ -241,6 +242,166 @@ function renderWeekAheadSignals(input, board = {}) {
       ` : ""}
     </section>
   `;
+}
+
+function renderForecastStory(days = []) {
+  const scoredDays = days
+    .filter(day => Number.isFinite(day.feelScore))
+    .map(day => ({
+      ...day,
+      score: clamp(Math.round(day.feelScore), 0, 100)
+    }));
+
+  if (scoredDays.length < 2) return "";
+
+  const scores = scoredDays.map(day => day.score);
+  const first = scoredDays[0];
+  const last = scoredDays[scoredDays.length - 1];
+  const best = scoredDays.reduce((winner, day) => day.score > winner.score ? day : winner, scoredDays[0]);
+  const roughest = scoredDays.reduce((winner, day) => day.score < winner.score ? day : winner, scoredDays[0]);
+  const avg = Math.round(average(scores));
+  const spread = best.score - roughest.score;
+  const delta = last.score - first.score;
+  const trendWord = delta >= 8 ? "improving" : delta <= -8 ? "slipping" : "holding steady";
+  const story = buildFeelScoreStory(trendWord, delta, avg, best, roughest, spread);
+
+  return `
+    <section class="forecast-story" aria-label="4-day FeelScore story">
+      <div class="forecast-story-copy">
+        <div class="forecast-story-kicker">4-Day FeelScore</div>
+        <h2>${escapeHtml(story.headline)}</h2>
+        <p>${escapeHtml(story.detail)}</p>
+
+        <div class="forecast-story-stats" aria-label="FeelScore highlights">
+          <div class="story-stat">
+            <strong>${avg}</strong>
+            <span>Average</span>
+          </div>
+          <div class="story-stat best">
+            <strong>${best.score}</strong>
+            <span>Peak score</span>
+          </div>
+          <div class="story-stat watch">
+            <strong>${spread}</strong>
+            <span>Point spread</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="forecast-story-visual">
+        ${renderFeelScoreGraph(scoredDays)}
+      </div>
+
+      <div class="forecast-signal-carousel" aria-label="FeelScore day signals">
+        ${scoredDays.map(renderStorySignalCard).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function buildFeelScoreStory(trendWord, delta, avg, best, roughest, spread) {
+  const direction =
+    delta >= 8 ? `climbs ${Math.abs(delta)} points` :
+    delta <= -8 ? `drops ${Math.abs(delta)} points` :
+    "stays in a tight range";
+
+  const headline = `Comfort is ${trendWord} through the stretch.`;
+  const detail = spread <= 4
+    ? `The 4-day FeelScore ${direction}, averaging ${avg}. The signal is more about consistency than big swings, with only ${spread} points separating the days.`
+    : `The 4-day FeelScore ${direction}, averaging ${avg}. ${formatCompactDay(best.date, best.index)} looks easiest at ${best.score}, while ${formatCompactDay(roughest.date, roughest.index)} carries the most friction at ${roughest.score}.`;
+
+  return { headline, detail };
+}
+
+function renderFeelScoreGraph(days) {
+  const width = 520;
+  const height = 230;
+  const padX = 34;
+  const padTop = 26;
+  const padBottom = 44;
+  const chartHeight = height - padTop - padBottom;
+  const usableWidth = width - (padX * 2);
+  const points = days.map((day, index) => {
+    const x = padX + (usableWidth * (index / Math.max(1, days.length - 1)));
+    const y = padTop + ((100 - day.score) / 100) * chartHeight;
+    return { day, x, y };
+  });
+  const pointString = points.map(point => `${point.x},${point.y}`).join(" ");
+  const areaString = [
+    `${points[0].x},${height - padBottom}`,
+    pointString,
+    `${points[points.length - 1].x},${height - padBottom}`
+  ].join(" ");
+
+  return `
+    <svg class="feelscore-graph" viewBox="0 0 ${width} ${height}" role="img" aria-label="FeelScore trend for the next 4 days">
+      <defs>
+        <linearGradient id="feelScoreLine" x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0%" stop-color="#0f4cc4" />
+          <stop offset="48%" stop-color="#63c979" />
+          <stop offset="100%" stop-color="#f57d23" />
+        </linearGradient>
+        <linearGradient id="feelScoreArea" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stop-color="#63c979" stop-opacity="0.34" />
+          <stop offset="100%" stop-color="#dbe8ff" stop-opacity="0.04" />
+        </linearGradient>
+      </defs>
+
+      <g class="graph-grid" aria-hidden="true">
+        <line x1="${padX}" x2="${width - padX}" y1="${padTop + chartHeight * 0.2}" y2="${padTop + chartHeight * 0.2}" />
+        <line x1="${padX}" x2="${width - padX}" y1="${padTop + chartHeight * 0.5}" y2="${padTop + chartHeight * 0.5}" />
+        <line x1="${padX}" x2="${width - padX}" y1="${padTop + chartHeight * 0.8}" y2="${padTop + chartHeight * 0.8}" />
+      </g>
+
+      <polygon class="graph-area" points="${areaString}" />
+      <polyline class="graph-line" points="${pointString}" />
+
+      ${points.map((point, index) => `
+        <g class="graph-point" style="--point-delay:${index * 120}ms">
+          <circle cx="${point.x}" cy="${point.y}" r="6" />
+          <text class="graph-score" x="${point.x}" y="${point.y - 13}" text-anchor="middle">${point.day.score}</text>
+          <text class="graph-day" x="${point.x}" y="${height - 16}" text-anchor="middle">${escapeHtml(formatCompactDay(point.day.date, point.day.index))}</text>
+        </g>
+      `).join("")}
+
+      <circle class="graph-runner" r="5">
+        <animateMotion dur="7s" repeatCount="indefinite" path="M${pointString.replaceAll(" ", " L")}" />
+      </circle>
+    </svg>
+  `;
+}
+
+function renderStorySignalCard(day) {
+  return `
+    <article class="forecast-signal-card ${toneClassFor(day)}">
+      <div class="signal-card-top">
+        <span>${escapeHtml(formatCompactDay(day.date, day.index))}</span>
+        <strong>${escapeHtml(formatFeelScoreLabel(day.score))}</strong>
+      </div>
+      <div class="signal-card-score">${day.score}</div>
+      <p>${escapeHtml(buildStorySignalText(day))}</p>
+    </article>
+  `;
+}
+
+function buildStorySignalText(day) {
+  const parts = [];
+
+  if (day.mainIssue) parts.push(day.mainIssue);
+  else if (day.bestWindow) parts.push(`best window ${day.bestWindow}`);
+  else if (day.rainWindow?.start) {
+    parts.push(`rain window ${day.rainWindow.start}${day.rainWindow.end ? `-${day.rainWindow.end}` : ""}`);
+  } else if (day.tags?.length) {
+    parts.push(day.tags[0]);
+  } else if (day.condition) {
+    parts.push(day.condition);
+  }
+
+  if (day.wind) parts.push(`wind ${formatWind(day.wind)}`);
+  if (day.humidity) parts.push(`${formatCategory(day.humidity)} humidity`);
+
+  if (!parts.length) return day.headline || "quiet weather signal";
+  return parts.slice(0, 2).join(" with ");
 }
 
 function renderSignalSummaryChips(board = {}) {
@@ -616,6 +777,19 @@ function formatDay(date, index) {
   return date.toLocaleDateString([], { weekday: "long" });
 }
 
+function formatCompactDay(date, index) {
+  if (index === 0) return "Tomorrow";
+  return date.toLocaleDateString([], { weekday: "short" });
+}
+
+function formatFeelScoreLabel(score) {
+  if (score >= 85) return "Easy";
+  if (score >= 70) return "Good";
+  if (score >= 55) return "Mixed";
+  if (score >= 40) return "Tough";
+  return "Harsh";
+}
+
 function formatCardDate(date) {
   return date.toLocaleDateString([], { month: "short", day: "numeric" });
 }
@@ -686,6 +860,10 @@ function numberOrNull(value) {
   if (value === "" || value == null) return null;
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
 }
 
 function average(values) {

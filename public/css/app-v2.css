@@ -5189,6 +5189,691 @@ body {
 }
 
 /* ============================================================
+   4-DAY FORECAST - FEELSCORE STORY MODULE
+   ============================================================ */
+
+.forecast-story {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(300px, 1fr);
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 92% 4%, rgba(123,211,137,0.22), transparent 34%),
+    radial-gradient(circle at 8% 92%, rgba(247,200,115,0.13), transparent 32%),
+    linear-gradient(145deg, rgba(12,24,44,0.9), rgba(7,12,24,0.82));
+  box-shadow:
+    0 18px 48px rgba(0,0,0,0.3),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.forecast-story::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(110deg, transparent 0%, rgba(255,255,255,0.055) 42%, transparent 64%);
+  transform: translateX(-120%);
+  animation: storySheen 8s ease-in-out infinite;
+}
+
+.forecast-story > * {
+  position: relative;
+  z-index: 1;
+}
+
+.forecast-story-copy {
+  display: grid;
+  align-content: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.forecast-story-kicker {
+  color: #9ff3aa;
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.forecast-story h2 {
+  margin: 0;
+  color: #f7fbff;
+  font-size: clamp(1.45rem, 3vw, 2.25rem);
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.forecast-story p {
+  margin: 0;
+  color: rgba(232,238,252,0.76);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.forecast-story-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.story-stat {
+  min-width: 0;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 10px;
+  background: rgba(255,255,255,0.055);
+}
+
+.story-stat strong,
+.story-stat span {
+  display: block;
+  min-width: 0;
+}
+
+.story-stat strong {
+  color: #fff;
+  font-size: 1.15rem;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+
+.story-stat.best strong {
+  color: #9ff3aa;
+}
+
+.story-stat.watch strong {
+  color: #f7c873;
+}
+
+.story-stat span {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.forecast-story-visual {
+  min-width: 0;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  background: rgba(2,8,18,0.28);
+}
+
+.feelscore-graph {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 210px;
+  overflow: visible;
+}
+
+.graph-grid line {
+  stroke: rgba(232,238,252,0.09);
+  stroke-width: 1;
+}
+
+.graph-area {
+  fill: url("#feelScoreArea");
+  opacity: 0;
+  animation: graphAreaIn 900ms ease 350ms forwards;
+}
+
+.graph-line {
+  fill: none;
+  stroke: url("#feelScoreLine");
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 760;
+  stroke-dashoffset: 760;
+  filter: drop-shadow(0 0 10px rgba(123,211,137,0.34));
+  animation: graphDraw 1400ms cubic-bezier(.2,.9,.2,1) 180ms forwards;
+}
+
+.graph-point {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: graphPointIn 420ms ease var(--point-delay) forwards;
+}
+
+.graph-point circle {
+  fill: #07111f;
+  stroke: #9ff3aa;
+  stroke-width: 3;
+}
+
+.graph-score {
+  fill: #f7fbff;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.graph-day {
+  fill: rgba(232,238,252,0.64);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.graph-runner {
+  fill: #f7c873;
+  filter: drop-shadow(0 0 10px rgba(247,200,115,0.74));
+  opacity: 0;
+  animation: runnerIn 500ms ease 1500ms forwards;
+}
+
+.forecast-signal-carousel {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(190px, 1fr);
+  gap: 10px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(126,166,255,0.36) transparent;
+  padding-bottom: 4px;
+}
+
+.forecast-signal-card {
+  scroll-snap-align: start;
+  position: relative;
+  overflow: hidden;
+  min-height: 128px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 12px;
+  background:
+    radial-gradient(circle at 86% 0%, rgba(110,168,255,0.16), transparent 52%),
+    rgba(255,255,255,0.045);
+}
+
+.forecast-signal-card.sunny {
+  background:
+    radial-gradient(circle at 86% 0%, rgba(247,200,115,0.22), transparent 52%),
+    rgba(255,255,255,0.045);
+}
+
+.forecast-signal-card.rain {
+  background:
+    radial-gradient(circle at 86% 0%, rgba(96,165,250,0.22), transparent 52%),
+    rgba(255,255,255,0.045);
+}
+
+.forecast-signal-card.cloudy {
+  background:
+    radial-gradient(circle at 86% 0%, rgba(180,198,218,0.18), transparent 52%),
+    rgba(255,255,255,0.045);
+}
+
+.signal-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.signal-card-top span {
+  color: rgba(232,238,252,0.66);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.signal-card-top strong {
+  color: #9ff3aa;
+  font-size: 0.78rem;
+}
+
+.signal-card-score {
+  margin-top: 10px;
+  color: #f7fbff;
+  font-size: 2.35rem;
+  font-weight: 900;
+  line-height: 0.95;
+}
+
+.forecast-signal-card p {
+  margin-top: 10px;
+  color: rgba(232,238,252,0.72);
+  font-size: 0.82rem;
+  line-height: 1.38;
+}
+
+@keyframes graphDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes graphAreaIn {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes graphPointIn {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes runnerIn {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes storySheen {
+  0%, 62%, 100% {
+    transform: translateX(-120%);
+  }
+  78% {
+    transform: translateX(120%);
+  }
+}
+
+@media (max-width: 760px) {
+  .forecast-story {
+    grid-template-columns: 1fr;
+    padding: 14px;
+  }
+
+  .forecast-story-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .forecast-story {
+    border-radius: 14px;
+    gap: 12px;
+  }
+
+  .forecast-story-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .story-stat {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 9px 10px;
+  }
+
+  .story-stat span {
+    margin-top: 0;
+  }
+
+  .forecast-signal-carousel {
+    grid-auto-columns: minmax(168px, 82%);
+    margin-right: -14px;
+    padding-right: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .forecast-story::before,
+  .graph-line,
+  .graph-area,
+  .graph-point,
+  .graph-runner {
+    animation: none;
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ============================================================
+   FORECAST PAGE - WARM EDITORIAL THEME
+   Scoped to forecast.html so the shared app shell stays stable.
+   ============================================================ */
+
+.forecast-warm {
+  --forecast-ink: #142033;
+  --forecast-muted: #617085;
+  --forecast-line: #dce5ed;
+  --forecast-paper: #f6f2eb;
+  --forecast-white: #fffdf8;
+  --forecast-blue: #0f4cc4;
+  --forecast-blue-dark: #081a3c;
+  --forecast-blue-soft: #dbe8ff;
+  --forecast-orange: #f57d23;
+  --forecast-gold: #f7c873;
+  --forecast-green: #63c979;
+  --forecast-shadow: 0 18px 44px rgba(11, 30, 67, 0.12);
+  color: var(--forecast-ink);
+  background:
+    radial-gradient(circle at 85% 120px, rgba(245,125,35,0.14), transparent 30%),
+    linear-gradient(180deg, #fffaf2 0%, var(--forecast-paper) 360px, #eef4ff 100%);
+}
+
+.forecast-warm .app-header {
+  position: sticky;
+  top: 0;
+  background: rgba(255,253,248,0.94);
+  border-bottom: 1px solid var(--forecast-line);
+  box-shadow: 0 10px 28px rgba(11, 30, 67, 0.07);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.forecast-warm .header-inner {
+  max-width: 920px;
+}
+
+.forecast-warm .brand-title {
+  color: var(--forecast-ink);
+  font-weight: 950;
+  letter-spacing: 0;
+}
+
+.forecast-warm .brand-sub {
+  color: var(--forecast-muted);
+  font-weight: 700;
+}
+
+.forecast-warm .forecast-page {
+  max-width: 960px;
+}
+
+.forecast-warm .forecast-page::before {
+  background:
+    radial-gradient(circle at 28% 0%, rgba(15,76,196,0.16), transparent 42%),
+    radial-gradient(circle at 72% 16%, rgba(245,125,35,0.14), transparent 34%);
+}
+
+.forecast-warm .forecast-page .section-header h1 {
+  color: var(--forecast-ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 900;
+}
+
+.forecast-warm .forecast-lead {
+  overflow: hidden;
+  border: 0;
+  border-radius: 24px;
+  color: var(--forecast-white);
+  background:
+    radial-gradient(circle at 88% 0%, rgba(245,125,35,0.34), transparent 30%),
+    radial-gradient(circle at 22% 100%, rgba(99,201,121,0.18), transparent 32%),
+    linear-gradient(135deg, var(--forecast-blue-dark), var(--forecast-blue) 82%);
+  box-shadow: var(--forecast-shadow);
+}
+
+.forecast-warm .forecast-kicker {
+  color: var(--forecast-gold);
+}
+
+.forecast-warm .forecast-headline {
+  color: var(--forecast-white);
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.forecast-warm .forecast-lead .temp-block {
+  color: var(--forecast-white);
+}
+
+.forecast-warm .forecast-lead .temp-block.low {
+  color: rgba(255,253,248,0.76);
+}
+
+.forecast-warm .forecast-lead .takeaway,
+.forecast-warm .forecast-lead .forecast-local {
+  color: rgba(255,253,248,0.8);
+}
+
+.forecast-warm .forecast-lead .forecast-local {
+  border-left-color: rgba(247,200,115,0.7);
+}
+
+.forecast-warm .forecast-lead .forecast-local span,
+.forecast-warm .forecast-lead .temp-block span,
+.forecast-warm .forecast-lead .forecast-timeline-block span {
+  color: rgba(255,253,248,0.66);
+}
+
+.forecast-warm .forecast-lead .forecast-timeline-block {
+  background: rgba(255,253,248,0.1);
+  border-color: rgba(255,253,248,0.16);
+}
+
+.forecast-warm .forecast-lead .forecast-timeline-block strong {
+  color: rgba(255,253,248,0.92);
+}
+
+.forecast-warm .forecast-story {
+  border-color: var(--forecast-line);
+  border-radius: 20px;
+  color: var(--forecast-ink);
+  background:
+    radial-gradient(circle at 94% 0%, rgba(245,125,35,0.18), transparent 30%),
+    radial-gradient(circle at 8% 100%, rgba(99,201,121,0.18), transparent 34%),
+    var(--forecast-white);
+  box-shadow: var(--forecast-shadow);
+}
+
+.forecast-warm .forecast-story::before {
+  background:
+    linear-gradient(110deg, transparent 0%, rgba(15,76,196,0.08) 42%, transparent 64%);
+}
+
+.forecast-warm .forecast-story-kicker {
+  color: var(--forecast-orange);
+}
+
+.forecast-warm .forecast-story h2 {
+  color: var(--forecast-ink);
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.forecast-warm .forecast-story p {
+  color: var(--forecast-muted);
+}
+
+.forecast-warm .story-stat,
+.forecast-warm .forecast-story-visual,
+.forecast-warm .forecast-signal-card {
+  border-color: var(--forecast-line);
+  background: rgba(246,242,235,0.72);
+}
+
+.forecast-warm .story-stat strong,
+.forecast-warm .signal-card-score {
+  color: var(--forecast-ink);
+}
+
+.forecast-warm .story-stat.best strong,
+.forecast-warm .signal-card-top strong {
+  color: #247756;
+}
+
+.forecast-warm .story-stat.watch strong {
+  color: var(--forecast-orange);
+}
+
+.forecast-warm .story-stat span,
+.forecast-warm .signal-card-top span {
+  color: var(--forecast-muted);
+}
+
+.forecast-warm .forecast-story-visual {
+  background:
+    linear-gradient(180deg, rgba(255,253,248,0.9), rgba(219,232,255,0.5));
+}
+
+.forecast-warm .graph-grid line {
+  stroke: rgba(20,32,51,0.12);
+}
+
+.forecast-warm .graph-point circle {
+  fill: var(--forecast-white);
+  stroke: #247756;
+}
+
+.forecast-warm .graph-score {
+  fill: var(--forecast-ink);
+}
+
+.forecast-warm .graph-day {
+  fill: var(--forecast-muted);
+}
+
+.forecast-warm .forecast-signal-card {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+}
+
+.forecast-warm .forecast-signal-card.sunny {
+  background:
+    radial-gradient(circle at 88% 0%, rgba(247,200,115,0.32), transparent 46%),
+    rgba(255,253,248,0.9);
+}
+
+.forecast-warm .forecast-signal-card.partly {
+  background:
+    radial-gradient(circle at 88% 0%, rgba(245,125,35,0.2), transparent 48%),
+    rgba(255,253,248,0.9);
+}
+
+.forecast-warm .forecast-signal-card.cloudy {
+  background:
+    radial-gradient(circle at 88% 0%, rgba(219,232,255,0.82), transparent 48%),
+    rgba(255,253,248,0.9);
+}
+
+.forecast-warm .forecast-signal-card.rain {
+  background:
+    radial-gradient(circle at 88% 0%, rgba(96,165,250,0.26), transparent 48%),
+    rgba(255,253,248,0.9);
+}
+
+.forecast-warm .forecast-signal-card p {
+  color: var(--forecast-muted);
+}
+
+.forecast-warm .forecast-row {
+  border-color: var(--forecast-line);
+  color: var(--forecast-ink);
+  background:
+    radial-gradient(120% 120% at 92% 0%, rgba(245,125,35,0.1), transparent 48%),
+    var(--forecast-white);
+  box-shadow: var(--forecast-shadow);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.forecast-warm .forecast-row::after {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+}
+
+.forecast-warm .forecast-row.sunny::before {
+  background: radial-gradient(circle at 86% 0%, rgba(247,200,115,0.24), transparent 58%);
+}
+
+.forecast-warm .forecast-row.partly::before {
+  background: radial-gradient(circle at 86% 0%, rgba(245,125,35,0.18), transparent 58%);
+}
+
+.forecast-warm .forecast-row.cloudy::before {
+  background: radial-gradient(circle at 86% 0%, rgba(15,76,196,0.12), transparent 58%);
+}
+
+.forecast-warm .forecast-row.rain::before {
+  background: radial-gradient(circle at 86% 0%, rgba(96,165,250,0.18), transparent 58%);
+}
+
+.forecast-warm .day,
+.forecast-warm .forecast-expand-label,
+.forecast-warm .temp-block span,
+.forecast-warm .forecast-local span,
+.forecast-warm .hour-time {
+  color: var(--forecast-muted);
+  opacity: 1;
+}
+
+.forecast-warm .temp-block,
+.forecast-warm .forecast-row .day-headline,
+.forecast-warm .hour-temp {
+  color: var(--forecast-ink);
+}
+
+.forecast-warm .temp-block.low {
+  color: #46627e;
+  opacity: 1;
+}
+
+.forecast-warm .forecast-row .takeaway,
+.forecast-warm .forecast-local {
+  color: var(--forecast-muted);
+}
+
+.forecast-warm .forecast-local {
+  border-left-color: var(--forecast-orange);
+}
+
+.forecast-warm .forecast-signal {
+  color: #27405c;
+  background: var(--forecast-blue-soft);
+  border-color: rgba(15,76,196,0.12);
+}
+
+.forecast-warm .forecast-signal-rain {
+  color: #0f3f79;
+  background: #dbeafe;
+  border-color: rgba(15,76,196,0.18);
+}
+
+.forecast-warm .forecast-signal-wind {
+  color: #1d4c71;
+  background: #e5f4ff;
+  border-color: rgba(29,76,113,0.14);
+}
+
+.forecast-warm .forecast-signal-humidity {
+  color: #247756;
+  background: #e2f5e8;
+  border-color: rgba(36,119,86,0.14);
+}
+
+.forecast-warm .forecast-row.open .expand-content {
+  border-top-color: var(--forecast-line);
+}
+
+.forecast-warm .hour {
+  background: rgba(246,242,235,0.84);
+}
+
+.forecast-warm .site-footer {
+  color: var(--forecast-muted);
+  background: rgba(255,253,248,0.72);
+  border-top: 1px solid var(--forecast-line);
+}
+
+.forecast-warm .footer-logo,
+.forecast-warm .footer-links a {
+  color: var(--forecast-ink);
+}
+
+/* ============================================================
    CURRENT OBS + FEELSCORE LAYOUT RESET
    Last in file so it wins against the older component rules.
    ============================================================ */
