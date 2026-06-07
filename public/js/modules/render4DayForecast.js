@@ -37,6 +37,8 @@ export async function render4DayForecast(container) {
       ${days.map(renderForecastCard).join("")}
     </section>
   `;
+
+  initWeekAheadCarousel(container);
 }
 
 async function loadForecastOverrides() {
@@ -216,30 +218,38 @@ function renderBoardHero(board) {
 
 function renderWeekAheadSignals(input, board = {}) {
   const signals = normalizeWeekAheadSignals(input);
-  const globalMarkup = renderGlobalSignals(signals.global);
-  const hasExtraSignals = Boolean(globalMarkup || signals.cards.length);
-  const sectionClass = hasExtraSignals
-    ? "week-ahead-signals"
-    : "week-ahead-signals signals-summary-only";
+  const slides = buildWeekAheadCarouselSlides(signals, board);
 
   return `
-    <section class="${sectionClass}" aria-label="Week ahead signals">
+    <section class="week-ahead-signals week-ahead-carousel" aria-label="Week ahead signals">
       <div class="week-ahead-signals-head">
         <div>
           <span>Tim's weather signals</span>
           <h2>Week Ahead Signals</h2>
         </div>
-        <p>A curated look at the pattern, comfort, timing, and watch points.</p>
+        <p>Tap the signal card to rotate through the pattern, comfort, timing, and watch points.</p>
       </div>
 
-      ${renderSignalSummaryChips(board)}
-      ${globalMarkup}
+      <div class="week-ahead-carousel-shell" data-week-ahead-carousel>
+        <button class="week-ahead-carousel-button" type="button" data-week-ahead-next aria-live="polite">
+          ${slides.map((slide, index) => `
+            <span class="week-ahead-carousel-slide${index === 0 ? " is-active" : ""}" data-week-ahead-slide="${index}">
+              <span class="week-ahead-carousel-count">${index + 1} / ${slides.length}</span>
+              <span class="week-ahead-carousel-label">${escapeHtml(slide.label)}</span>
+              <strong>${escapeHtml(slide.value)}</strong>
+              <span class="week-ahead-carousel-detail">${escapeHtml(slide.detail)}</span>
+            </span>
+          `).join("")}
+        </button>
 
-      ${signals.cards.length ? `
-        <div class="week-ahead-signal-grid card-count-${signals.cards.length}">
-          ${signals.cards.map(renderSignalCard).join("")}
+        <div class="week-ahead-carousel-controls" aria-label="Week Ahead Signal controls">
+          <button type="button" data-week-ahead-prev aria-label="Previous week ahead signal">‹</button>
+          <div class="week-ahead-carousel-dots" aria-hidden="true">
+            ${slides.map((_, index) => `<span class="${index === 0 ? "is-active" : ""}" data-week-ahead-dot="${index}"></span>`).join("")}
+          </div>
+          <button type="button" data-week-ahead-next aria-label="Next week ahead signal">›</button>
         </div>
-      ` : ""}
+      </div>
     </section>
   `;
 }
@@ -415,6 +425,47 @@ function renderSignalSummaryChips(board = {}) {
   `;
 }
 
+function buildWeekAheadCarouselSlides(signals, board = {}) {
+  const summarySlides = [
+    {
+      label: "Rain Risk",
+      value: formatCategory(board.rainRisk),
+      detail: "How much rain is likely to interfere with outdoor plans across the next few days."
+    },
+    {
+      label: "Comfort Trend",
+      value: formatCategory(board.comfortTrend),
+      detail: "The broad feel of the stretch, based on temperature, humidity, wind, and usable weather."
+    },
+    {
+      label: "Best Outdoor Day",
+      value: board.bestOutdoorDay || "TBD",
+      detail: "The day that currently looks easiest for errands, patios, walks, or mountain time."
+    },
+    {
+      label: "Forecast Confidence",
+      value: formatPercent(board.forecastConfidence),
+      detail: "How settled the forecast read is right now."
+    }
+  ];
+
+  const globalSlides = getGlobalSignalFields(signals.global).map(field => ({
+    label: field.label,
+    value: field.value,
+    detail: detailForGlobalSignal(field.type)
+  }));
+
+  const cardSlides = signals.cards.map(card => ({
+    label: card.label,
+    value: card.value,
+    detail: card.detail || detailForSignalType(card.type)
+  }));
+
+  return [...summarySlides, ...globalSlides, ...cardSlides]
+    .filter(slide => hasText(slide.value))
+    .slice(0, 10);
+}
+
 function normalizeWeekAheadSignals(input) {
   const cards = Array.isArray(input?.cards)
     ? input.cards
@@ -462,7 +513,7 @@ function typeForSignalLabel(label) {
   return "custom";
 }
 
-function renderGlobalSignals(global = {}) {
+function getGlobalSignalFields(global = {}) {
   const fields = [
     { label: "Weather Pattern", value: global.weatherPattern, type: "pattern" },
     { label: "Temperature Trend", value: global.temperatureTrend, type: "temperature" },
@@ -470,6 +521,12 @@ function renderGlobalSignals(global = {}) {
     { label: "Rainfall Trend", value: global.rainfallTrend, type: "rain" },
     { label: "Mountain Visibility", value: global.mountainVisibility, type: "mountain" }
   ].filter(field => hasText(field.value));
+
+  return fields;
+}
+
+function renderGlobalSignals(global = {}) {
+  const fields = getGlobalSignalFields(global);
 
   if (!fields.length) return "";
 
@@ -493,6 +550,78 @@ function renderSignalCard(card) {
       ${card.detail ? `<p>${escapeHtml(card.detail)}</p>` : ""}
     </article>
   `;
+}
+
+function detailForGlobalSignal(type) {
+  if (type === "pattern") return "The main weather setup driving the week ahead.";
+  if (type === "temperature") return "Whether the period leans warmer, cooler, or more changeable than usual.";
+  if (type === "wind") return "How much wind may affect comfort and exposed places.";
+  if (type === "rain") return "Whether rainfall looks isolated, widespread, or mostly absent.";
+  if (type === "mountain") return "How the pattern may affect views, ridges, and higher terrain.";
+  return "A signal worth keeping in mind for the next few days.";
+}
+
+function detailForSignalType(type) {
+  if (type === "comfort") return "The factor most likely to shape how usable the weather feels.";
+  if (type === "impact") return "The main weather-maker or disruption to keep an eye on.";
+  if (type === "pattern") return "The larger setup behind the forecast.";
+  if (type === "uncertainty") return "The part of the forecast that could still shift.";
+  if (type === "mountain") return "The signal most relevant to higher terrain and views.";
+  return "A forecast note worth watching.";
+}
+
+function initWeekAheadCarousel(container) {
+  const carousel = container.querySelector("[data-week-ahead-carousel]");
+  if (!carousel || carousel.dataset.initialized === "true") return;
+
+  const slides = Array.from(carousel.querySelectorAll("[data-week-ahead-slide]"));
+  const dots = Array.from(carousel.querySelectorAll("[data-week-ahead-dot]"));
+  if (slides.length <= 1) return;
+
+  carousel.dataset.initialized = "true";
+  let activeIndex = 0;
+  let timer = null;
+
+  const show = (nextIndex) => {
+    activeIndex = (nextIndex + slides.length) % slides.length;
+    slides.forEach((slide, index) => {
+      slide.classList.toggle("is-active", index === activeIndex);
+    });
+    dots.forEach((dot, index) => {
+      dot.classList.toggle("is-active", index === activeIndex);
+    });
+  };
+
+  const advance = (step = 1) => show(activeIndex + step);
+  const start = () => {
+    stop();
+    timer = window.setInterval(() => advance(1), 5200);
+  };
+  const stop = () => {
+    if (timer) window.clearInterval(timer);
+    timer = null;
+  };
+
+  carousel.querySelectorAll("[data-week-ahead-next]").forEach(button => {
+    button.addEventListener("click", () => {
+      advance(1);
+      start();
+    });
+  });
+
+  carousel.querySelectorAll("[data-week-ahead-prev]").forEach(button => {
+    button.addEventListener("click", () => {
+      advance(-1);
+      start();
+    });
+  });
+
+  carousel.addEventListener("mouseenter", stop);
+  carousel.addEventListener("mouseleave", start);
+  carousel.addEventListener("focusin", stop);
+  carousel.addEventListener("focusout", start);
+
+  start();
 }
 
 function renderForecastCard(day) {
