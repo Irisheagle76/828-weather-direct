@@ -2693,7 +2693,7 @@
 
         <article class="fold-tool-card hiking">
           <div class="kicker">Hiking Guidance</div>
-          <h2>Trail guidance has live mountain context.</h2>
+          <h2 id="homeHikingHeadline">Pick the trail by the mountain mood.</h2>
           <div class="hiking-mini-profile" aria-hidden="true">
             <span class="hiking-mini-line"></span>
             <span class="hiking-mini-label">Elevation read</span>
@@ -2708,21 +2708,21 @@
             </div>
           </div>
           <div class="tool-snapshot">
-            <span class="tool-index"><strong>82</strong> HikerScore</span>
+            <span class="tool-index"><strong id="homeHikerScore">82</strong> HikerScore</span>
             <span class="tool-index"><strong>15°</strong> Mitchell drop</span>
           </div>
-          <p>
+          <p id="homeHikingSummary">
             Lower and mid-elevation trails look manageable, while Mount Mitchell and exposed ridges
             still deserve a separate wind, cloud, and layer check.
           </p>
           <div class="hiking-callouts" aria-label="Hiking guidance preview details">
             <div class="hiking-callout">
               <b>Best bet</b>
-              <span>Lower to mid-elevation trails where cloud cover helps comfort.</span>
+              <span id="homeHikingBestBet">Lower to mid-elevation trails where cloud cover helps comfort.</span>
             </div>
             <div class="hiking-callout">
               <b>Use care</b>
-              <span>Higher peaks can feel cooler and more exposed than Asheville.</span>
+              <span id="homeHikingUseCare">Higher peaks can feel cooler and more exposed than Asheville.</span>
             </div>
           </div>
           <div class="fold-tool-actions">
@@ -2944,6 +2944,14 @@
 
   <script type="module">
     import { calculateComfort } from "./js/intel/comfort.js";
+    import {
+      cleanHikingText,
+      homeHikingBestBet,
+      homeHikingHeadline,
+      homeHikingScore,
+      homeHikingSummary,
+      homeHikingUseCare
+    } from "./js/hiking-home-card.js?v=20260607-narrative";
     import { buildHumanActionIntelFS } from "./js/intel/human-action-feelscore.js?v=20260526-rain-window";
     import { computeSkyIntel } from "./js/intel/sky-intel.js";
     import { generateSkyNarrative } from "./js/intel/sky-narrative.js";
@@ -3398,6 +3406,30 @@
     function updateText(selector, value) {
       const el = document.querySelector(selector);
       if (el) el.textContent = value;
+    }
+
+    function renderHomeHikingCard(data = {}) {
+      const guidance = data?.guidance || {};
+      const score = homeHikingScore(guidance);
+      const mitchellDrop = Number(guidance.mitchellDrop);
+      const dropEl = document.querySelector(".fold-tool-card.hiking .tool-snapshot .tool-index:nth-child(2) strong");
+
+      updateText("#homeHikingHeadline", homeHikingHeadline(guidance));
+      updateText("#homeHikerScore", score);
+      if (dropEl && Number.isFinite(mitchellDrop)) dropEl.textContent = `${Math.round(mitchellDrop)}\u00b0`;
+      updateText("#homeHikingSummary", cleanHikingText(homeHikingSummary(guidance)));
+      updateText("#homeHikingBestBet", homeHikingBestBet(guidance));
+      updateText("#homeHikingUseCare", homeHikingUseCare(guidance));
+    }
+
+    async function hydrateHomeHikingCard() {
+      try {
+        const res = await fetch(`data/hiking-guidance.json?t=${Date.now()}`);
+        if (!res.ok) throw new Error(`Hiking guidance failed: ${res.status}`);
+        renderHomeHikingCard(await res.json());
+      } catch (error) {
+        console.warn("Homepage hiking module using fallback copy", error);
+      }
     }
 
     function renderDroughtFireCard(data) {
@@ -4039,12 +4071,14 @@
     applyConditionalHomepageFeatures();
     hydrateSubstackCard();
     hydrateDroughtFireCard();
+    hydrateHomeHikingCard();
     hydratePulsePreview();
     hydrateObservationChips();
     hydrateLiveComfortModules();
     await hydrateSkyModule();
     hideHomeSplash(0);
     setInterval(hydrateObservationChips, 5 * 60 * 1000);
+    setInterval(hydrateHomeHikingCard, 5 * 60 * 1000);
     setInterval(hydrateSkyModule, 5 * 60 * 1000);
 
     const radarThumbImage = document.querySelector("#radarThumbImage");
