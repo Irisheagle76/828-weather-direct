@@ -152,6 +152,16 @@ function cloudTextureScore(cloudCover) {
   return 24;
 }
 
+function cloudViewScore(cloudCover) {
+  if (!Number.isFinite(cloudCover)) return 58;
+  if (cloudCover <= 20) return 96;
+  if (cloudCover <= 45) return 88;
+  if (cloudCover <= 65) return 72;
+  if (cloudCover <= 82) return 66;
+  if (cloudCover <= 94) return 58;
+  return 34;
+}
+
 function ratingFor(score) {
   if (score >= 90) return "Exceptional";
   if (score >= 75) return "Excellent";
@@ -162,17 +172,18 @@ function ratingFor(score) {
 }
 
 function buildScores(metrics) {
-  const cloudScore = 100 - (metrics.cloudCover ?? 60);
+  const cloudScore = cloudViewScore(metrics.cloudCover);
+  const clearSkyScore = 100 - (metrics.cloudCover ?? 60);
   const transparency = metrics.transparency ?? 55;
   const darkness = metrics.darkness ?? 45;
   const wind = metrics.windComfort ?? 70;
   const hazePenalty = ((metrics.humidityPenalty ?? 45) + (metrics.smokePenalty ?? 35)) / 2;
-  const summitView = cloudScore * 0.55 + transparency * 0.3 + wind * 0.1 + (100 - hazePenalty) * 0.05;
+  const summitView = cloudScore * 0.35 + transparency * 0.35 + wind * 0.15 + (100 - hazePenalty) * 0.15;
   const sunriseSunset = cloudTextureScore(metrics.cloudCover) * 0.55 + transparency * 0.3 + wind * 0.15;
-  const nightSky = cloudScore * 0.45 + transparency * 0.3 + darkness * 0.2 + wind * 0.05;
+  const nightSky = clearSkyScore * 0.45 + transparency * 0.3 + darkness * 0.2 + wind * 0.05;
   const undercast = (
     (metrics.humidityPenalty ?? 45) * 0.35 +
-    cloudScore * 0.25 +
+    clearSkyScore * 0.25 +
     wind * 0.2 +
     transparency * 0.1 +
     cloudTextureScore(metrics.cloudCover) * 0.1
@@ -194,8 +205,8 @@ function buildLanguage(site, scores, metrics, degraded = false) {
     : scores.summitView >= 60
       ? "Worth a look, but check the chart before making a special drive."
       : scores.summitView >= 40
-        ? "Mixed view potential; clouds or haze may soften distant ridges."
-        : "Not worth a special drive for long-range views right now.";
+        ? "Mixed view potential; live cameras may still show useful ridge detail between clouds."
+        : "Low chart-based signal for long-range views; verify with the live cameras before deciding.";
   const sunsetPhrase = scores.sunriseSunset >= scores.nightSky
     ? "Sunrise or sunset has the better viewing signal than stargazing."
     : "Night-sky potential is the stronger signal if clouds hold off.";
@@ -209,7 +220,7 @@ function buildLanguage(site, scores, metrics, degraded = false) {
     rating,
     headline: degraded
       ? `${site.name} sky chart is reachable, but the index is using a cautious fallback read.`
-      : `${rating} summit-view signal for ${site.name}${cloud != null ? ` with about ${cloud}% cloud cover sampled` : ""}.`,
+      : `${rating} summit-view signal for ${site.name}${cloud != null ? ` with about ${cloud}% cloud cover in the sky chart` : ""}.`,
     bullets: [
       visibilityPhrase,
       sunsetPhrase,
