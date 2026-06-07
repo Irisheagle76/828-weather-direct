@@ -2966,6 +2966,9 @@
       return `${Math.round(clamp(value <= 1 ? value : value / 100) * 100)}%`;
     }
 
+    let latestSkyIntel = null;
+    let latestObservationClouds = null;
+
     function labelize(value) {
       if (!value) return "--";
       const labels = {
@@ -3238,7 +3241,14 @@
       setText("#obsWind", `Wind ${Number.isFinite(wind) ? `${Math.round(wind)} mph` : "-- mph"}`);
       setText("#obsPressure", `Pressure ${Number.isFinite(pressure) ? `${pressure.toFixed(2)}"` : '--"'}`);
       setText("#obsRainChance", `Rain chance ${Number.isFinite(rain) ? pct(rain) : "--"}`);
-      setText("#obsClouds", `Clouds ${Number.isFinite(clouds) ? pct(clouds) : "--"}`);
+      latestObservationClouds = Number.isFinite(clouds) ? clouds : null;
+      renderCloudObservationChip();
+    }
+
+    function renderCloudObservationChip() {
+      const cameraClouds = Number(latestSkyIntel?.cloud);
+      const displayClouds = Number.isFinite(cameraClouds) ? cameraClouds : latestObservationClouds;
+      setText("#obsClouds", `Clouds ${Number.isFinite(displayClouds) ? pct(displayClouds) : "--"}`);
     }
 
     async function hydrateObservationChips() {
@@ -4048,6 +4058,7 @@
         if (!res.ok) throw new Error("Sky data unavailable");
         const data = await res.json();
         const skyIntel = computeSkyIntel({ camera: data });
+        latestSkyIntel = skyIntel;
         const narrative = generateSkyNarrative(data, skyIntel);
         const metrics = data?.metrics || {};
         const frameVersion = parseTimestamp(data?.timestamp) || Date.now();
@@ -4063,6 +4074,7 @@
         document.querySelector("#skyHomeCloud").textContent = pct(skyIntel?.cloud);
         document.querySelector("#skyHomeLight").textContent = metrics.sunlightDetected ? labelize(metrics.sunlightLevel) : "Low";
         document.querySelector("#skyHomeConfidence").textContent = pct(skyIntel?.confidence);
+        renderCloudObservationChip();
       } catch (error) {
         console.warn("Sky module unavailable", error);
       }
