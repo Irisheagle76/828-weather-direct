@@ -1050,15 +1050,20 @@
     .hour-card {
       min-height: 116px;
       padding: 12px 8px;
-      border: 1px solid var(--line);
+      border: 1px solid rgba(120, 149, 181, 0.24);
       border-radius: 14px;
-      background: #f8fafc;
+      background:
+        radial-gradient(circle at 50% 38%, rgba(255, 255, 255, 0.95), transparent 34px),
+        linear-gradient(180deg, #fbfdff 0%, #f4f8fd 100%);
       text-align: center;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
     }
 
     .hour-card.best {
       border-color: rgba(79, 166, 106, 0.45);
-      background: #f0faef;
+      background:
+        radial-gradient(circle at 50% 38%, rgba(255, 255, 255, 0.95), transparent 34px),
+        linear-gradient(180deg, #f3fff2 0%, #ecf9f0 100%);
     }
 
     .hour-card b {
@@ -1068,9 +1073,52 @@
     }
 
     .hour-card .icon {
-      display: block;
-      margin: 9px 0;
-      font-size: 1.35rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 30px;
+      margin: 9px auto 8px;
+      border-radius: 999px;
+      font-size: 1.45rem;
+      line-height: 1;
+      filter: drop-shadow(0 5px 8px rgba(46, 77, 118, 0.18));
+    }
+
+    .hour-card .sky-clear {
+      color: #f6a51d;
+      background: rgba(255, 202, 72, 0.18);
+      text-shadow: 0 0 11px rgba(255, 183, 36, 0.55);
+    }
+
+    .hour-card .sky-partly {
+      color: #f0a51d;
+      background: linear-gradient(135deg, rgba(255, 216, 92, 0.22), rgba(74, 151, 225, 0.12));
+      text-shadow: 0 0 9px rgba(255, 196, 68, 0.45);
+    }
+
+    .hour-card .sky-cloudy {
+      color: #5f7899;
+      background: rgba(129, 166, 205, 0.15);
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.9);
+    }
+
+    .hour-card .sky-rain {
+      color: #2874d0;
+      background: rgba(67, 153, 225, 0.16);
+      text-shadow: 0 0 10px rgba(66, 153, 225, 0.42);
+    }
+
+    .hour-card .sky-snow {
+      color: #2aa5c8;
+      background: rgba(142, 225, 244, 0.2);
+      text-shadow: 0 0 9px rgba(97, 205, 234, 0.42);
+    }
+
+    .hour-card .sky-fog,
+    .hour-card .sky-night {
+      color: #536b92;
+      background: rgba(131, 150, 178, 0.15);
     }
 
     .hour-card span {
@@ -1091,41 +1139,61 @@
       justify-content: center;
       align-items: baseline;
       gap: 4px;
+      font-size: 0.92rem;
       font-weight: 950;
+      line-height: 1.05;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.9);
     }
 
     .hour-temp-value {
       color: #f57d23;
     }
 
-    .temp-cool {
-      color: #2f80ed;
+    .hour-card .temp-cool {
+      color: #1f77d4;
     }
 
-    .temp-mild {
-      color: #2f9e78;
+    .hour-card .temp-mild {
+      color: #17875f;
     }
 
-    .temp-warm {
-      color: #d79a00;
+    .hour-card .temp-warm {
+      color: #c98100;
     }
 
-    .temp-hot {
-      color: #f57d23;
+    .hour-card .temp-hot {
+      color: #e66d16;
     }
 
-    .temp-very-hot {
-      color: #d9472f;
+    .hour-card .temp-very-hot {
+      color: #c93b2b;
     }
 
     .hour-fs-value {
-      color: #0f4cc4;
+      color: #1462c8;
     }
 
     .hour-fs-value em {
       font-style: normal;
       font-size: 0.68rem;
       letter-spacing: 0.04em;
+      opacity: 0.88;
+    }
+
+    .hour-card .fs-great {
+      color: #16905e;
+    }
+
+    .hour-card .fs-good {
+      color: #177cbe;
+    }
+
+    .hour-card .fs-fair {
+      color: #b87900;
+    }
+
+    .hour-card .fs-low {
+      color: #c4512c;
     }
 
     .editorial {
@@ -2537,12 +2605,12 @@
             <div class="best-pill" id="nextSixBestScore">86</div>
           </div>
           <div class="hour-row" id="nextSixHourRow">
-            <div class="hour-card best"><b>11 AM</b><span class="icon">☁</span><div class="hour-values"><span class="hour-temp-value temp-mild">70°</span><span class="hour-fs-value"><em>FS</em> 86</span></div></div>
-            <div class="hour-card"><b>12 PM</b><span class="icon">☁</span><div class="hour-values"><span class="hour-temp-value temp-mild">72°</span><span class="hour-fs-value"><em>FS</em> 84</span></div></div>
-            <div class="hour-card"><b>1 PM</b><span class="icon">☁</span><div class="hour-values"><span class="hour-temp-value temp-warm">73°</span><span class="hour-fs-value"><em>FS</em> 82</span></div></div>
-            <div class="hour-card"><b>2 PM</b><span class="icon">🌧</span><div class="hour-values"><span class="hour-temp-value temp-warm">74°</span><span class="hour-fs-value"><em>FS</em> 76</span></div></div>
-            <div class="hour-card"><b>3 PM</b><span class="icon">☁</span><div class="hour-values"><span class="hour-temp-value temp-hot">75°</span><span class="hour-fs-value"><em>FS</em> 78</span></div></div>
-            <div class="hour-card"><b>4 PM</b><span class="icon">⛅</span><div class="hour-values"><span class="hour-temp-value temp-hot">75°</span><span class="hour-fs-value"><em>FS</em> 80</span></div></div>
+            <div class="hour-card best"><b>11 AM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-mild">70°</span><span class="hour-fs-value fs-great"><em>FS</em> 86</span></div></div>
+            <div class="hour-card"><b>12 PM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-mild">72°</span><span class="hour-fs-value fs-great"><em>FS</em> 84</span></div></div>
+            <div class="hour-card"><b>1 PM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-warm">73°</span><span class="hour-fs-value fs-great"><em>FS</em> 82</span></div></div>
+            <div class="hour-card"><b>2 PM</b><span class="icon sky-rain">🌧</span><div class="hour-values"><span class="hour-temp-value temp-warm">74°</span><span class="hour-fs-value fs-good"><em>FS</em> 76</span></div></div>
+            <div class="hour-card"><b>3 PM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-hot">75°</span><span class="hour-fs-value fs-good"><em>FS</em> 78</span></div></div>
+            <div class="hour-card"><b>4 PM</b><span class="icon sky-partly">⛅</span><div class="hour-values"><span class="hour-temp-value temp-hot">75°</span><span class="hour-fs-value fs-good"><em>FS</em> 80</span></div></div>
           </div>
           <p class="editorial" id="nextSixEditorial">
             The Next 6 remains the practical timing strip. The Current Sky card above gives it a visual proof point:
@@ -3632,6 +3700,27 @@
       }[label] || "☁";
     }
 
+    function iconClass(label) {
+      return {
+        Rain: "sky-rain",
+        Snow: "sky-snow",
+        Fog: "sky-fog",
+        Cloudy: "sky-cloudy",
+        Partly: "sky-partly",
+        PartlyNight: "sky-night",
+        Moon: "sky-night",
+        Clear: "sky-clear"
+      }[label] || "sky-cloudy";
+    }
+
+    function fsClass(score) {
+      if (!Number.isFinite(score)) return "fs-good";
+      if (score >= 80) return "fs-great";
+      if (score >= 68) return "fs-good";
+      if (score >= 55) return "fs-fair";
+      return "fs-low";
+    }
+
     function formatHour(ts) {
       return new Date(ts).toLocaleTimeString("en-US", {
         hour: "numeric",
@@ -3806,10 +3895,10 @@
         return `
           <div class="hour-card ${isBest ? "best" : ""}">
             <b>${formatHour(hour.timestamp)}</b>
-            <span class="icon" title="${icon}">${iconGlyph(icon)}</span>
+            <span class="icon ${iconClass(icon)}" title="${icon}">${iconGlyph(icon)}</span>
             <div class="hour-values">
               <span class="hour-temp-value ${tempClass(temp)}">${temp}°</span>
-              <span class="hour-fs-value"><em>FS</em> ${Number.isFinite(score) ? score : "--"}</span>
+              <span class="hour-fs-value ${fsClass(score)}"><em>FS</em> ${Number.isFinite(score) ? score : "--"}</span>
             </div>
           </div>
         `;
