@@ -2584,7 +2584,7 @@
           </button>
           <div class="radar-home-copy">
             <div class="kicker">Radar check</div>
-            <h3>Nearby rain stays easy to verify.</h3>
+            <h3>Asheville radar animation</h3>
             <p>
               A compact KGSP radar loop can live with the sky snapshot as the quick reality check:
               what the sky looks like, plus whether showers are actually moving toward Asheville.
@@ -2622,10 +2622,9 @@
             <div class="kicker">Tomorrow</div>
             <div class="tomorrow-score" id="tomorrowScore">79</div>
           </div>
-          <h3 id="tomorrowHeadline">Usable, with clouds and humidity still part of the feel.</h3>
+          <h3 id="tomorrowHeadline">Tomorrow looks pleasant for comfort.</h3>
           <p id="tomorrowNarrative">
-            Tomorrow keeps the forward-looking anchor. The homepage flow becomes: comfort now,
-            sky now, timing next, then tomorrow.
+            Temperature, humidity, dew point, and wind will shape where tomorrow lands on the same FeelScore scale.
           </p>
           <ul id="tomorrowBullets">
             <li>Clouds may linger early.</li>
@@ -3931,7 +3930,7 @@
       document.querySelector("#liveFeelScoreHeadline").textContent =
         feelscore.headline || "Reading the current comfort signal.";
       document.querySelector("#liveFeelScoreSubhead").textContent =
-        feelscore.subHeadline || feelscore.narrative || "Temperature, humidity, dew point, and wind are shaping how usable the air feels.";
+        feelscore.subHeadline || feelscore.narrative || "Temperature, humidity, dew point, and wind are shaping how the air feels.";
 
       const bullets = Array.isArray(feelscore.bullets) ? feelscore.bullets.slice(0, 3) : [];
       const uvSignal = getHighUvSignal(hourly, liveHour);
@@ -4040,7 +4039,7 @@
         ? cloudAvg >= 0.7 ? "clouds look fairly dominant" : cloudAvg >= 0.35 ? "clouds mix in at times" : "sun should have room to work"
         : "sky cover is still being resolved";
       const humidityPhrase = Number.isFinite(maxDew)
-        ? maxDew >= 67 ? "muggy air is part of the feel" : maxDew >= 60 ? "humidity is noticeable but not overwhelming" : "humidity stays manageable"
+        ? maxDew >= 67 ? "muggy air is part of the feel" : maxDew >= 60 ? "humidity is noticeable but not overwhelming" : "humidity should not dominate the feel"
         : "humidity is being pulled from the hourly forecast";
       const rainPhrase = Number.isFinite(rainChance)
         ? rainChance >= 0.4 ? "rain chances are worth planning around" : rainChance >= 0.2 ? "a low-end rain chance stays in the picture" : "rain chances stay low"

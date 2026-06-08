@@ -519,8 +519,8 @@ function describeComfortHeadline(ctx, label, avoid = "") {
   if (temp <= 48 && score >= 75) {
     return pickDistinct(
       isTomorrow
-        ? ["Cool start, nice finish", "A crisp start, then easier", "Chilly early, comfortable later"]
-        : ["A cool start, then easier", "Crisp early, comfortable later", "The cool air relaxes a bit"],
+        ? ["Cool start, pleasant finish", "A crisp start, then pleasant", "Chilly early, pleasant later"]
+        : ["A cool start, then pleasant", "Crisp early, pleasant later", "The cool air relaxes a bit"],
       avoid
     );
   }
@@ -528,7 +528,7 @@ function describeComfortHeadline(ctx, label, avoid = "") {
   if (dew != null && dew < 52 && score >= 75) {
     return pickDistinct(
       isTomorrow
-        ? ["Dry air keeps it pleasant", "Low humidity does the heavy lifting", "A clean, easy feel outside"]
+        ? ["Dry air keeps it pleasant", "Low humidity does the heavy lifting", "A clean, pleasant feel outside"]
         : ["Dry air keeps things pleasant", "Low humidity helps a lot", "A clean feel outside"],
       avoid
     );
@@ -537,8 +537,8 @@ function describeComfortHeadline(ctx, label, avoid = "") {
   if (wind >= 10) {
     return pickDistinct(
       isTomorrow
-        ? ["A little breeze in the mix", "Comfortable, with some breeze", "Easy overall, just breezy at times"]
-        : ["A light breeze in the mix", "Comfortable, with a breeze", "Easy overall, just a bit breezy"],
+        ? ["A little breeze in the mix", "Pleasant, with some breeze", "Great overall, just breezy at times"]
+        : ["A light breeze in the mix", "Pleasant, with a breeze", "Great overall, just a bit breezy"],
       avoid
     );
   }
@@ -546,16 +546,16 @@ function describeComfortHeadline(ctx, label, avoid = "") {
   if (score >= 85) {
     return pickDistinct(
       isTomorrow
-        ? ["Another easy day outside", "A really usable day", "Comfort holds up well"]
-        : ["A good day to be outside", "Comfort holds up well", "A really usable stretch"],
+        ? ["Tomorrow looks great outside", "A great FeelScore day", "Comfort holds up well"]
+        : ["A great day to be outside", "Comfort holds up well", "A great FeelScore stretch"],
       avoid
     );
   }
 
   return pickDistinct(
     isTomorrow
-      ? ["Tomorrow stays manageable", "A decent setup for tomorrow", "Comfort looks steady tomorrow"]
-      : ["Comfort looks steady", "A manageable setup", "Not much fighting comfort"],
+      ? ["Tomorrow looks noticeable but workable", "A noticeable setup for tomorrow", "Comfort looks steady tomorrow"]
+      : ["Comfort looks steady", "A noticeable setup", "Not much fighting comfort"],
     avoid
   );
 }
