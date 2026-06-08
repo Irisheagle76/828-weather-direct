@@ -93,6 +93,8 @@ function renderFallback() {
 
 function renderSite(site) {
   const scores = site.scores || {};
+  const siteId = String(site.id || site.name || "summit").replace(/[^a-z0-9_-]/gi, "-").toLowerCase();
+  const detailsId = `summit-details-${siteId}`;
   const minis = [
     ["View", scores.summitView],
     ["Sunset", scores.sunriseSunset],
@@ -122,25 +124,28 @@ function renderSite(site) {
         </div>
       </div>
       <p class="summit-headline">${escapeHtml(site.headline || "Sky-viewing signal is updating.")}</p>
-      <div class="summit-mini-grid">
-        ${minis.map(([label, value]) => `
-          <div class="summit-mini">
-            <b>${score(value)}</b>
-            <span>${label}</span>
-          </div>
-        `).join("")}
-      </div>
-      <ul class="summit-bullets">
-        ${(Array.isArray(site.bullets) ? site.bullets.slice(0, 3) : []).map((bullet) => `<li>${escapeHtml(bullet)}</li>`).join("")}
-      </ul>
-      ${window ? `
-        <div class="summit-window">
-          <b>${escapeHtml(window.label)}:</b> ${escapeHtml(window.summary || "Best window is updating.")}
+      <button class="summit-toggle" type="button" aria-expanded="false" aria-controls="${detailsId}">View more</button>
+      <div class="summit-details" id="${detailsId}" hidden>
+        <div class="summit-mini-grid">
+          ${minis.map(([label, value]) => `
+            <div class="summit-mini">
+              <b>${score(value)}</b>
+              <span>${label}</span>
+            </div>
+          `).join("")}
         </div>
-      ` : ""}
-      ${statusNote}
-      <div class="summit-actions">
-        <a href="${escapeHtml(site.chartUrl)}" target="_blank" rel="noopener noreferrer">Open sky chart</a>
+        <ul class="summit-bullets">
+          ${(Array.isArray(site.bullets) ? site.bullets.slice(0, 3) : []).map((bullet) => `<li>${escapeHtml(bullet)}</li>`).join("")}
+        </ul>
+        ${window ? `
+          <div class="summit-window">
+            <b>${escapeHtml(window.label)}:</b> ${escapeHtml(window.summary || "Best window is updating.")}
+          </div>
+        ` : ""}
+        ${statusNote}
+        <div class="summit-actions">
+          <a href="${escapeHtml(site.chartUrl)}" target="_blank" rel="noopener noreferrer">Open sky chart</a>
+        </div>
       </div>
     </article>
   `;
@@ -159,3 +164,26 @@ async function hydrateSkyIndex() {
 }
 
 hydrateSkyIndex();
+
+els.grid?.addEventListener("click", (event) => {
+  const button = event.target.closest(".summit-toggle");
+  if (!button) return;
+
+  const details = document.getElementById(button.getAttribute("aria-controls"));
+  if (!details) return;
+
+  const isExpanded = button.getAttribute("aria-expanded") === "true";
+
+  if (!isExpanded) {
+    els.grid.querySelectorAll(".summit-toggle[aria-expanded='true']").forEach((openButton) => {
+      const openDetails = document.getElementById(openButton.getAttribute("aria-controls"));
+      openButton.setAttribute("aria-expanded", "false");
+      openButton.textContent = "View more";
+      if (openDetails) openDetails.hidden = true;
+    });
+  }
+
+  button.setAttribute("aria-expanded", String(!isExpanded));
+  button.textContent = isExpanded ? "View more" : "Show less";
+  details.hidden = isExpanded;
+});

@@ -478,7 +478,7 @@
 
     .summit-index-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 16px;
       padding: 18px 24px 24px;
     }
@@ -486,7 +486,7 @@
     .summit-site-card,
     .summit-index-fallback {
       min-height: 100%;
-      padding: 18px;
+      padding: 15px;
       border: 1px solid rgba(255, 253, 248, 0.16);
       border-top: 4px solid var(--orange);
       border-radius: 16px;
@@ -502,10 +502,14 @@
       border-top-color: #8ab8ff;
     }
 
+    .summit-site-card:nth-child(4) {
+      border-top-color: var(--gold);
+    }
+
     .summit-site-top {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
-      gap: 14px;
+      gap: 12px;
       align-items: start;
     }
 
@@ -513,7 +517,7 @@
       display: block;
       color: var(--white);
       font-family: Georgia, "Times New Roman", serif;
-      font-size: clamp(1.55rem, 3.4vw, 2.3rem);
+      font-size: clamp(1.35rem, 2.6vw, 1.95rem);
       line-height: 1;
     }
 
@@ -528,8 +532,8 @@
     .summit-score {
       display: grid;
       place-items: center;
-      width: 82px;
-      height: 82px;
+      width: 68px;
+      height: 68px;
       border-radius: 50%;
       color: #0f2446;
       background: linear-gradient(145deg, #ffdca3, var(--gold));
@@ -540,7 +544,7 @@
     .summit-score strong {
       display: block;
       font-family: Georgia, "Times New Roman", serif;
-      font-size: 2.15rem;
+      font-size: 1.8rem;
       line-height: 0.82;
     }
 
@@ -555,9 +559,9 @@
     .summit-rating {
       display: inline-flex;
       align-items: center;
-      min-height: 32px;
-      margin-top: 12px;
-      padding: 0 11px;
+      min-height: 28px;
+      margin-top: 9px;
+      padding: 0 10px;
       border-radius: 999px;
       color: var(--white);
       background: rgba(99, 201, 121, 0.24);
@@ -566,10 +570,37 @@
     }
 
     .summit-headline {
-      margin: 14px 0 0;
+      margin: 12px 0 0;
       color: rgba(255, 253, 248, 0.9);
-      font-size: 1.05rem;
+      font-size: 0.98rem;
       line-height: 1.42;
+    }
+
+    .summit-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 36px;
+      margin-top: 14px;
+      padding: 0 13px;
+      border: 1px solid rgba(255, 253, 248, 0.22);
+      border-radius: 999px;
+      color: var(--white);
+      background: rgba(255, 253, 248, 0.12);
+      font: inherit;
+      font-size: 0.86rem;
+      font-weight: 950;
+      cursor: pointer;
+    }
+
+    .summit-toggle:hover,
+    .summit-toggle:focus-visible {
+      background: rgba(255, 253, 248, 0.2);
+      outline: none;
+    }
+
+    .summit-details[hidden] {
+      display: none;
     }
 
     .summit-mini-grid {
