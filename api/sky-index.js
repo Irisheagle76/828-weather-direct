@@ -62,6 +62,25 @@ const SITES = [
       url: "https://cameraftpapi.drivehq.com/api/Camera/GetCameraThumbnail.ashx?parentID=361818469&shareID=17333090",
       roi: { x0: 0.04, y0: 0.05, x1: 0.96, y1: 0.70 }
     }
+  },
+  {
+    id: "maxpatch",
+    name: "Max Patch North",
+    elevationFt: 4420,
+    chartUrl: "https://www.cleardarksky.com/c/WntHwkObTNcsk.gif",
+    rows: {
+      cloud: 85,
+      transparency: 100,
+      darkness: 145,
+      humidity: 115,
+      smoke: 130,
+      wind: 175
+    },
+    columns: { start: 180, endPad: 80, step: 22 },
+    camera: {
+      url: "https://assets2.webcam.io/w/9W1ZRz/latest.jpg",
+      roi: { x0: 0.04, y0: 0.05, x1: 0.96, y1: 0.72 }
+    }
   }
 ];
 

@@ -15,6 +15,10 @@ const FALLBACK_CHARTS = [
   {
     name: "Grassland Mountain",
     url: "https://www.cleardarksky.com/c/GssMtnObNCcsk.gif"
+  },
+  {
+    name: "Max Patch North",
+    url: "https://www.cleardarksky.com/c/WntHwkObTNcsk.gif"
   }
 ];
 
