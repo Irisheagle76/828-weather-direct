@@ -1,4 +1,6 @@
 import { GifReader } from "omggif";
+import jpeg from "jpeg-js";
+import https from "node:https";
 
 const CACHE_MS = 10 * 60 * 1000;
 let memoryCache = null;
@@ -17,7 +19,11 @@ const SITES = [
       smoke: 130,
       wind: 175
     },
-    columns: { start: 180, endPad: 80, step: 22 }
+    columns: { start: 180, endPad: 80, step: 22 },
+    camera: {
+      url: "https://nchighpeaks.org/cam11/up/image.jpg",
+      roi: { x0: 0.06, y0: 0.06, x1: 0.94, y1: 0.46 }
+    }
   },
   {
     id: "pisgah",
@@ -32,7 +38,11 @@ const SITES = [
       smoke: 115,
       wind: 175
     },
-    columns: { start: 180, endPad: 80, step: 22 }
+    columns: { start: 180, endPad: 80, step: 22 },
+    camera: {
+      url: "https://streamer5.brownrice.com/cam-images/pisgahinn1.jpg",
+      roi: { x0: 0.04, y0: 0.05, x1: 0.96, y1: 0.72 }
+    }
   },
   {
     id: "grassland",
@@ -47,7 +57,11 @@ const SITES = [
       smoke: 130,
       wind: 175
     },
-    columns: { start: 180, endPad: 80, step: 22 }
+    columns: { start: 180, endPad: 80, step: 22 },
+    camera: {
+      url: "https://cameraftpapi.drivehq.com/api/Camera/GetCameraThumbnail.ashx?parentID=361818469&shareID=17333090",
+      roi: { x0: 0.04, y0: 0.05, x1: 0.96, y1: 0.70 }
+    }
   }
 ];
 
@@ -240,13 +254,215 @@ function liveSignalFor(site, observations = {}) {
 }
 
 function applyLiveSignal(scores, signal) {
-  if (signal?.type !== "summit-fog") return scores;
+  if (!signal) return scores;
+  if (signal.type === "camera-fog") {
+    return {
+      summitView: Math.min(scores.summitView, signal.scoreCaps.summitView),
+      sunriseSunset: Math.min(scores.sunriseSunset, signal.scoreCaps.sunriseSunset),
+      nightSky: Math.min(scores.nightSky, signal.scoreCaps.nightSky),
+      undercast: Math.min(scores.undercast, signal.scoreCaps.undercast)
+    };
+  }
+  if (signal.type === "camera-limited") {
+    return {
+      summitView: Math.min(scores.summitView, signal.scoreCaps.summitView),
+      sunriseSunset: Math.min(scores.sunriseSunset, signal.scoreCaps.sunriseSunset),
+      nightSky: Math.min(scores.nightSky, signal.scoreCaps.nightSky),
+      undercast: scores.undercast
+    };
+  }
+  if (signal.type !== "summit-fog") return scores;
   return {
     summitView: Math.min(scores.summitView, signal.scoreCaps.summitView),
     sunriseSunset: Math.min(scores.sunriseSunset, signal.scoreCaps.sunriseSunset),
     nightSky: Math.min(scores.nightSky, signal.scoreCaps.nightSky),
     undercast: Math.min(scores.undercast, signal.scoreCaps.undercast)
   };
+}
+
+async function fetchCameraObservation(site) {
+  if (!site.camera?.url) return null;
+  const url = site.camera.url.includes("?")
+    ? `${site.camera.url}&t=${Date.now()}`
+    : `${site.camera.url}?t=${Date.now()}`;
+  const buffer = await fetchCameraBuffer(url, site.name);
+  const decoded = jpeg.decode(buffer, { useTArray: true });
+  const metrics = analyzeCameraFrame(decoded, site.camera.roi);
+  return {
+    url: site.camera.url,
+    observedAt: new Date().toISOString(),
+    width: decoded.width,
+    height: decoded.height,
+    ...metrics
+  };
+}
+
+async function fetchCameraBuffer(url, siteName) {
+  try {
+    const response = await fetch(url, {
+      headers: {
+        "user-agent": "828 Weather Direct sky index/1.0",
+        accept: "image/jpeg,image/*"
+      }
+    });
+    if (!response.ok) throw new Error(`${siteName} camera fetch failed: ${response.status}`);
+    return Buffer.from(await response.arrayBuffer());
+  } catch (error) {
+    const host = new URL(url).hostname;
+    if (host !== "streamer5.brownrice.com") throw error;
+    return fetchPublicCameraWithLooseCert(url, siteName);
+  }
+}
+
+function fetchPublicCameraWithLooseCert(url, siteName) {
+  return new Promise((resolve, reject) => {
+    const request = https.get(url, {
+      rejectUnauthorized: false,
+      headers: {
+        "user-agent": "828 Weather Direct sky index/1.0",
+        accept: "image/jpeg,image/*"
+      }
+    }, (response) => {
+      if ((response.statusCode ?? 0) < 200 || (response.statusCode ?? 0) >= 300) {
+        response.resume();
+        reject(new Error(`${siteName} camera fallback failed: ${response.statusCode}`));
+        return;
+      }
+      const chunks = [];
+      response.on("data", (chunk) => chunks.push(chunk));
+      response.on("end", () => resolve(Buffer.concat(chunks)));
+    });
+    request.on("error", reject);
+    request.setTimeout(9000, () => {
+      request.destroy(new Error(`${siteName} camera fetch timed out`));
+    });
+  });
+}
+
+function analyzeCameraFrame(image, roi = {}) {
+  const { width, height, data } = image;
+  const x0 = Math.max(0, Math.floor(width * (roi.x0 ?? 0)));
+  const x1 = Math.min(width - 1, Math.ceil(width * (roi.x1 ?? 1)));
+  const y0 = Math.max(0, Math.floor(height * (roi.y0 ?? 0)));
+  const y1 = Math.min(height - 1, Math.ceil(height * (roi.y1 ?? 1)));
+  const step = Math.max(3, Math.floor(Math.min(width, height) / 90));
+  const brightnessValues = [];
+  const saturationValues = [];
+  const blueValues = [];
+  const localDiffs = [];
+  let grayPixels = 0;
+  let darkPixels = 0;
+  let sampleCount = 0;
+
+  for (let y = y0; y < y1; y += step) {
+    for (let x = x0; x < x1; x += step) {
+      const i = (y * width + x) * 4;
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      const bright = (r + g + b) / 3 / 255;
+      const sat = (max - min) / 255;
+      brightnessValues.push(bright);
+      saturationValues.push(sat);
+      blueValues.push((b - Math.max(r, g)) / 255);
+      if (sat < 0.08 && bright > 0.24 && bright < 0.88) grayPixels += 1;
+      if (bright < 0.18) darkPixels += 1;
+
+      const nx = Math.min(width - 1, x + step);
+      const ni = (y * width + nx) * 4;
+      const neighborBright = (data[ni] + data[ni + 1] + data[ni + 2]) / 3 / 255;
+      localDiffs.push(Math.abs(bright - neighborBright));
+      sampleCount += 1;
+    }
+  }
+
+  const meanBrightness = average(brightnessValues) ?? 0;
+  const meanSaturation = average(saturationValues) ?? 0;
+  const meanBlueSignal = average(blueValues) ?? 0;
+  const contrast = Math.sqrt(average(brightnessValues.map((value) => (value - meanBrightness) ** 2)) ?? 0);
+  const localContrast = average(localDiffs) ?? 0;
+  const grayShare = sampleCount ? grayPixels / sampleCount : 0;
+  const darkShare = sampleCount ? darkPixels / sampleCount : 0;
+  const clarityScore = roundScore(
+    contrast * 260 +
+    localContrast * 420 +
+    meanSaturation * 180 +
+    Math.max(0, meanBlueSignal) * 80 -
+    grayShare * 35 -
+    darkShare * 20
+  );
+
+  let condition = "usable";
+  if ((contrast < 0.105 && meanSaturation < 0.135 && grayShare > 0.34) || clarityScore < 24) {
+    condition = "fog_or_low_cloud";
+  } else if (clarityScore < 50 || contrast < 0.12 || (meanSaturation < 0.12 && grayShare > 0.5)) {
+    condition = "limited_visibility";
+  } else if (clarityScore >= 62 && contrast >= 0.18) {
+    condition = "clear_view";
+  }
+
+  return {
+    condition,
+    clarityScore,
+    contrast: Number(contrast.toFixed(3)),
+    localContrast: Number(localContrast.toFixed(3)),
+    saturation: Number(meanSaturation.toFixed(3)),
+    grayShare: Number(grayShare.toFixed(3)),
+    darkShare: Number(darkShare.toFixed(3)),
+    blueSignal: Number(meanBlueSignal.toFixed(3))
+  };
+}
+
+function cameraSignalFor(site, observations = {}) {
+  const camera = observations.cameras?.[site.id];
+  if (!camera) {
+    return {
+      type: "camera-unavailable",
+      camera,
+      summary: `${site.name} camera check is unavailable, so the index is leaning on the sky chart.`
+    };
+  }
+
+  if (camera.condition === "fog_or_low_cloud") {
+    return {
+      type: "camera-fog",
+      camera,
+      summary: `${site.name} camera shows fog, low cloud, or a washed-out view right now.`,
+      scoreCaps: {
+        summitView: 28,
+        sunriseSunset: 42,
+        nightSky: 32,
+        undercast: 62
+      }
+    };
+  }
+
+  if (camera.condition === "limited_visibility") {
+    return {
+      type: "camera-limited",
+      camera,
+      summary: `${site.name} camera shows limited visibility, so the chart-based view score is capped.`,
+      scoreCaps: {
+        summitView: 58,
+        sunriseSunset: 65,
+        nightSky: 55
+      }
+    };
+  }
+
+  return {
+    type: "camera-usable",
+    camera,
+    summary: `${site.name} camera check is usable and does not currently cap the chart-based score.`
+  };
+}
+
+function mergeSignals(weatherSignal, cameraSignal) {
+  if (weatherSignal?.type === "summit-fog") return weatherSignal;
+  if (cameraSignal?.type === "camera-fog" || cameraSignal?.type === "camera-limited") return cameraSignal;
+  return weatherSignal || cameraSignal;
 }
 
 function buildScores(metrics) {
@@ -281,7 +497,7 @@ function buildLanguage(site, scores, metrics, degraded = false, liveSignal = nul
   if (liveSignal?.type === "summit-fog") {
     const obs = liveSignal.observation;
     const humidity = Number.isFinite(obs.humidityPct) ? `${Math.round(obs.humidityPct)}% humidity` : "saturated air";
-    const dewSpread = Number.isFinite(liveSignal.dewSpread) ? `temp/dew point spread near ${Math.round(liveSignal.dewSpread)}°F` : "temp and dew point nearly matched";
+    const dewSpread = Number.isFinite(liveSignal.dewSpread) ? `temp/dew point spread near ${Math.round(liveSignal.dewSpread)}degF` : "temp and dew point nearly matched";
     return {
       rating,
       headline: `Poor live summit-view signal for ${site.name}: the summit station is reporting ${humidity} with ${dewSpread}.`,
@@ -299,6 +515,42 @@ function buildLanguage(site, scores, metrics, degraded = false, liveSignal = nul
       ]
     };
   }
+  if (liveSignal?.type === "camera-fog") {
+    return {
+      rating,
+      headline: `${rating} live summit-view signal for ${site.name}: the camera check shows fog, low cloud, or a washed-out view.`,
+      bullets: [
+        "The live camera is overriding the chart because current visibility looks poor.",
+        "Long-range views are unlikely until the camera shows more ridge detail or blue-sky contrast.",
+        "Use the source chart for later timing, but let the live image decide the current go/no-go."
+      ],
+      windows: [
+        {
+          label: "Now",
+          score: scores.summitView,
+          summary: "Current camera visibility is poor, so the live view score is capped."
+        }
+      ]
+    };
+  }
+  if (liveSignal?.type === "camera-limited") {
+    return {
+      rating,
+      headline: `${rating} summit-view signal for ${site.name}: the chart is decent, but the live camera is limiting confidence.`,
+      bullets: [
+        "The camera check is capping the current view score until visibility improves.",
+        "Some ridge detail may be possible, but this is not a clean long-range view signal.",
+        "Recheck the camera before making a special drive."
+      ],
+      windows: [
+        {
+          label: "Now",
+          score: scores.summitView,
+          summary: "Current camera visibility is limited; use the live image before heading up."
+        }
+      ]
+    };
+  }
 
   const visibilityPhrase = scores.summitView >= 75
     ? "Strong summit-view signal if the chart verifies on arrival."
@@ -307,6 +559,11 @@ function buildLanguage(site, scores, metrics, degraded = false, liveSignal = nul
       : scores.summitView >= 40
         ? "Mixed view potential; live cameras may still show useful ridge detail between clouds."
         : "Low chart-based signal for long-range views; verify with the live cameras before deciding.";
+  const cameraPhrase = liveSignal?.type === "camera-usable"
+    ? "Live camera check is usable and is not capping the chart-based score."
+    : liveSignal?.type === "camera-unavailable"
+      ? "Live camera check is unavailable, so this remains a chart-based score until the image returns."
+      : visibilityPhrase;
   const sunsetPhrase = scores.sunriseSunset >= scores.nightSky
     ? "Sunrise or sunset has the better viewing signal than stargazing."
     : "Night-sky potential is the stronger signal if clouds hold off.";
@@ -322,7 +579,7 @@ function buildLanguage(site, scores, metrics, degraded = false, liveSignal = nul
       ? `${site.name} sky chart is reachable, but the index is using a cautious fallback read.`
       : `${rating} summit-view signal for ${site.name}${cloud != null ? ` with about ${cloud}% cloud cover in the sky chart` : ""}.`,
     bullets: [
-      visibilityPhrase,
+      cameraPhrase,
       sunsetPhrase,
       undercastPhrase
     ],
@@ -363,9 +620,20 @@ async function parseSite(site, observations = {}) {
   };
   const usable = Object.values(metrics).filter(Number.isFinite).length >= 3;
   const rawScores = usable ? buildScores(metrics) : buildScores({});
-  const liveSignal = liveSignalFor(site, observations);
+  const weatherSignal = liveSignalFor(site, observations);
+  const cameraSignal = cameraSignalFor(site, observations);
+  const liveSignal = mergeSignals(weatherSignal, cameraSignal);
   const scores = applyLiveSignal(rawScores, liveSignal);
   const language = buildLanguage(site, scores, metrics, !usable, liveSignal);
+  const status = liveSignal?.type === "summit-fog"
+    ? "live-fog"
+    : liveSignal?.type === "camera-fog"
+      ? "camera-fog"
+      : liveSignal?.type === "camera-limited"
+        ? "camera-limited"
+        : liveSignal?.type === "camera-unavailable"
+          ? "camera-unavailable"
+          : usable ? "ok" : "degraded";
 
   return {
     id: site.id,
@@ -377,7 +645,17 @@ async function parseSite(site, observations = {}) {
     headline: language.headline,
     bullets: language.bullets,
     windows: language.windows,
-    status: liveSignal?.type === "summit-fog" ? "live-fog" : usable ? "ok" : "degraded",
+    status,
+    cameraObservation: cameraSignal?.camera
+      ? {
+          condition: cameraSignal.camera.condition,
+          clarityScore: cameraSignal.camera.clarityScore,
+          contrast: cameraSignal.camera.contrast,
+          saturation: cameraSignal.camera.saturation,
+          grayShare: cameraSignal.camera.grayShare,
+          observedAt: cameraSignal.camera.observedAt
+        }
+      : null,
     liveSignal: liveSignal?.type === "summit-fog"
       ? {
           type: liveSignal.type,
@@ -387,6 +665,14 @@ async function parseSite(site, observations = {}) {
           dewPointF: liveSignal.observation.dewPointF,
           humidityPct: liveSignal.observation.humidityPct
         }
+      : liveSignal?.type === "camera-fog" || liveSignal?.type === "camera-limited"
+        ? {
+            type: liveSignal.type,
+            summary: liveSignal.summary,
+            observedAt: liveSignal.camera.observedAt,
+            clarityScore: liveSignal.camera.clarityScore,
+            condition: liveSignal.camera.condition
+          }
       : undefined
   };
 }
@@ -425,6 +711,13 @@ async function buildPayload() {
   } catch {
     observations.mitchell = null;
   }
+  observations.cameras = Object.fromEntries(await Promise.all(SITES.map(async (site) => {
+    try {
+      return [site.id, await fetchCameraObservation(site)];
+    } catch {
+      return [site.id, null];
+    }
+  })));
 
   const sites = await Promise.all(SITES.map(async (site) => {
     try {

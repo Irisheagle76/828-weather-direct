@@ -98,6 +98,8 @@ function renderSite(site) {
   const window = Array.isArray(site.windows) ? site.windows[0] : null;
   const statusNote = site.status === "live-fog"
     ? `<div class="summit-window"><b>Live fog signal:</b> ${escapeHtml(site.liveSignal?.summary || "Current summit conditions are limiting visibility.")}</div>`
+    : site.status === "camera-fog" || site.status === "camera-limited"
+      ? `<div class="summit-window"><b>Camera check:</b> ${escapeHtml(site.liveSignal?.summary || "The live camera is limiting confidence in the chart-based score.")}</div>`
     : site.status && site.status !== "ok"
       ? `<div class="summit-window"><b>${escapeHtml(site.status)}:</b> Sky index is using a cautious fallback read. Open the chart before making a special drive.</div>`
     : "";
