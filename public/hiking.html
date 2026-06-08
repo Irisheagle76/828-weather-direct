@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>828 Hiking Guidance</title>
-  <link rel="stylesheet" href="css/hiking.css?v=20260603-style-refresh" />
+  <link rel="stylesheet" href="css/hiking.css?v=20260608-narrative-expand" />
 </head>
 <body>
   <header class="site-header">
@@ -29,7 +29,10 @@
             <div class="score-word" id="hikerLabel">Loading</div>
           </div>
           <h1 class="hero-headline" id="hikerHeadline">Reading current trail guidance.</h1>
-          <p class="hero-narrative" id="hikerNarrative">The latest elevation-aware hiking read will appear here.</p>
+          <div class="hero-narrative-wrap" id="hikerNarrativeWrap">
+            <p class="hero-narrative" id="hikerNarrative">The latest elevation-aware hiking read will appear here.</p>
+            <button class="narrative-toggle" id="hikerNarrativeToggle" type="button" hidden>Click for more</button>
+          </div>
           <div class="hero-actions">
             <a class="button" href="#trail-choice">Trail choice</a>
             <a class="button secondary" href="#mountain-views">Live mountain views</a>
@@ -227,7 +230,7 @@
     </div>
   </footer>
 
-  <script type="module" src="js/hiking-page.js?v=20260605-mountain-now"></script>
+  <script type="module" src="js/hiking-page.js?v=20260608-narrative-expand"></script>
   <script type="module" src="js/sky-index.js?v=20260605-summit-index"></script>
 </body>
 </html>

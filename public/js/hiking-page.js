@@ -2,7 +2,9 @@ const els = {
       hikerScore: document.querySelector("#hikerScore"),
       hikerLabel: document.querySelector("#hikerLabel"),
       hikerHeadline: document.querySelector("#hikerHeadline"),
+      hikerNarrativeWrap: document.querySelector("#hikerNarrativeWrap"),
       hikerNarrative: document.querySelector("#hikerNarrative"),
+      hikerNarrativeToggle: document.querySelector("#hikerNarrativeToggle"),
       localSpread: document.querySelector("#localSpread"),
       mitchellDrop: document.querySelector("#mitchellDrop"),
       fogRisk: document.querySelector("#fogRisk"),
@@ -23,6 +25,9 @@ const els = {
     const MITCHELL_CAM_URL = "https://nchighpeaks.org/cam11/up/image.jpg";
     const PISGAH_CAM_URL = "https://streamer5.brownrice.com/cam-images/pisgahinn1.jpg";
     const GRASSLAND_CAM_URL = "https://cameraftpapi.drivehq.com/api/Camera/GetCameraThumbnail.ashx?parentID=361818469&shareID=17333090";
+    const NARRATIVE_PREVIEW_CHARS = 200;
+    let isNarrativeExpanded = false;
+    let fullNarrative = "";
 
     function round(value) {
       return Number.isFinite(value) ? Math.round(value) : "--";
@@ -34,6 +39,31 @@ const els = {
 
     function cleanText(value) {
       return String(value || "").replace(/degF/g, "\u00b0F");
+    }
+
+    function previewText(value, maxChars = NARRATIVE_PREVIEW_CHARS) {
+      const text = cleanText(value).trim();
+      if (text.length <= maxChars) return text;
+      const clipped = text.slice(0, maxChars).replace(/\s+\S*$/, "").trim();
+      return clipped || text.slice(0, maxChars).trim();
+    }
+
+    function renderNarrative(value) {
+      fullNarrative = cleanText(value || "The latest elevation-aware hiking read will appear here.").trim();
+      const shouldCollapse = fullNarrative.length > NARRATIVE_PREVIEW_CHARS;
+      const visibleText = isNarrativeExpanded || !shouldCollapse
+        ? fullNarrative
+        : previewText(fullNarrative);
+
+      els.hikerNarrative.textContent = visibleText;
+      els.hikerNarrativeWrap?.classList.toggle("is-collapsed", shouldCollapse && !isNarrativeExpanded);
+      els.hikerNarrativeWrap?.classList.toggle("is-expanded", shouldCollapse && isNarrativeExpanded);
+
+      if (els.hikerNarrativeToggle) {
+        els.hikerNarrativeToggle.hidden = !shouldCollapse;
+        els.hikerNarrativeToggle.textContent = isNarrativeExpanded ? "Show less" : "Click for more";
+        els.hikerNarrativeToggle.setAttribute("aria-expanded", String(isNarrativeExpanded));
+      }
     }
 
     function scoreFromGuidance(guidance = {}) {
@@ -284,7 +314,7 @@ const els = {
       els.hikerScore.textContent = score;
       els.hikerLabel.textContent = labelFromScore(score);
       els.hikerHeadline.textContent = cleanText(guidance.bestWindow || "Trail conditions are updating.");
-      els.hikerNarrative.textContent = cleanText(guidance.hikerNarrative || "The latest elevation-aware hiking read will appear here.");
+      renderNarrative(guidance.hikerNarrative);
       els.localSpread.textContent = `${round(guidance.localTempSpread)}\u00b0`;
       els.mitchellDrop.textContent = `${round(guidance.mitchellDrop)}\u00b0`;
       els.fogRisk.textContent = guidance.fogRisk || "--";
@@ -311,6 +341,11 @@ const els = {
         console.warn("Hiking guidance unavailable", error);
       }
     }
+
+    els.hikerNarrativeToggle?.addEventListener("click", () => {
+      isNarrativeExpanded = !isNarrativeExpanded;
+      renderNarrative(fullNarrative);
+    });
 
     await loadHiking();
     refreshMountainViews();
