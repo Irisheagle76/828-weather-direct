@@ -2488,21 +2488,20 @@
               </button>
             </div>
             <div class="fs-row">
-              <div class="fs-score" id="liveFeelScoreValue">82</div>
-              <div class="fs-word" id="liveFeelScoreLabel">Great</div>
+              <div class="fs-score" id="liveFeelScoreValue">--</div>
+              <div class="fs-word" id="liveFeelScoreLabel">Updating</div>
             </div>
-            <div class="fs-headline" id="liveFeelScoreHeadline">The air still feels friendly, even with clouds taking over.</div>
+            <div class="fs-headline" id="liveFeelScoreHeadline">Reading the current comfort signal.</div>
             <div class="fs-subhead" id="liveFeelScoreSubhead">
-              FeelScore remains the lead: comfort, humidity, wind, and temperature tell people how usable the day feels.
-              The sky module below simply adds the visual read.
+              Temperature, humidity, dew point, and wind are loading before the score appears.
             </div>
           </div>
           <aside class="fs-support" aria-label="FeelScore supporting notes">
             <div class="fs-bullets">
               <ul id="liveFeelScoreBullets">
-                <li>Low humidity helps</li>
-                <li>Winds stay light</li>
-                <li>A mix of sun and clouds</li>
+                <li>Current weather feed loading</li>
+                <li>Hourly comfort math pending</li>
+                <li>Local observations syncing</li>
               </ul>
             </div>
             <div class="fs-temp-markers" aria-label="Important temperature markers">
@@ -2874,7 +2873,7 @@
           humidity, dew point, and wind so the number reflects how the air actually feels,
           not just what the thermometer says.
         </p>
-        <div class="modal-score-pill">Right now: 82 - Great</div>
+        <div class="modal-score-pill">Right now: updating</div>
       </div>
       <div class="preview-modal-body">
         <div class="modal-info-grid">
@@ -2981,23 +2980,25 @@
         .replace(/\b\w/g, (char) => char.toUpperCase());
     }
 
-    const HOME_SPLASH_MIN_MS = 2700;
+    const HOME_SPLASH_MIN_MS = 3600;
+    const HOME_SPLASH_MAX_MS = 9000;
     const homeSplashStartedAt = Date.now();
+    let homeSplashHideTimer = null;
 
     function hideHomeSplash(delay = 0) {
       const splash = document.querySelector("#homeSplash");
       if (!splash) return;
+      if (homeSplashHideTimer || splash.classList.contains("is-hidden")) return;
       const elapsed = Date.now() - homeSplashStartedAt;
       const remaining = Math.max(0, HOME_SPLASH_MIN_MS - elapsed);
-      window.setTimeout(() => {
+      homeSplashHideTimer = window.setTimeout(() => {
         splash.classList.add("is-hidden");
         document.body.classList.remove("splash-active");
         window.setTimeout(() => splash.remove(), 650);
       }, Math.max(delay, remaining));
     }
 
-    window.addEventListener("load", () => hideHomeSplash(0), { once: true });
-    window.setTimeout(() => hideHomeSplash(0), 5200);
+    window.setTimeout(() => hideHomeSplash(0), HOME_SPLASH_MAX_MS);
 
     function parseTimestamp(value) {
       if (typeof value !== "string" || !value) return null;
@@ -3044,6 +3045,10 @@
     const PREVIEW_RADAR_OFF = params.get("radar") === "off";
     const RAIN_CHANCE_PREVIEW = 14;
     const PRECIP_SIGNAL_ACTIVE = RAIN_CHANCE_PREVIEW >= 25;
+    const RADAR_RAIN_CHANCE_THRESHOLD = 0.25;
+    const RADAR_PRECIP_AMOUNT_THRESHOLD = 0.005;
+    const RADAR_FORECAST_HOURS = 72;
+    let liveRadarSignalActive = PRECIP_SIGNAL_ACTIVE;
     const SUBSTACK_CLOUDINARY_IMAGE_OVERRIDE = "";
     const LATEST_SUBSTACK_FALLBACK = {
       title: "The Story of Asheville's Wild Spring",
@@ -3121,7 +3126,7 @@
       const skyHomeFeature = document.querySelector("#skyHomeFeature");
       const skyHomeFeatureLabel = document.querySelector("#skyHomeFeatureLabel");
       const radianceActive = (PREVIEW_RADIANCE_ACTIVE || localHour() >= 15) && isSunsetRadianceWindow();
-      const radarActive = !PREVIEW_RADAR_OFF && (PREVIEW_RADAR_ACTIVE || PRECIP_SIGNAL_ACTIVE);
+      const radarActive = !PREVIEW_RADAR_OFF && (PREVIEW_RADAR_ACTIVE || liveRadarSignalActive);
 
       skyHomeModule?.classList.toggle("radiance-active", radianceActive);
       if (skyHomeFeature && skyHomeFeatureLabel) {
@@ -3129,6 +3134,46 @@
         skyHomeFeatureLabel.textContent = radianceActive ? "Sunset Radiance watch" : "Visual weather layer";
       }
       radarHomeCard?.classList.toggle("is-hidden", !radarActive);
+    }
+
+    function normalizeProbabilityValue(value) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return null;
+      return n > 1 ? n / 100 : n;
+    }
+
+    function hasRainWeatherCode(code) {
+      return [51, 53, 55, 61, 63, 65, 80, 81, 82, 95, 96, 99].includes(Number(code));
+    }
+
+    function hourHasRadarRainSignal(hour = {}) {
+      const probability = normalizeProbabilityValue(
+        hour.precipProbability ?? hour.precipitation_probability ?? hour.probabilityOfPrecipitation
+      );
+      const precipAmount = Number(hour.precipAmount ?? hour.precipitation ?? hour.rain ?? 0);
+      return (
+        (Number.isFinite(probability) && probability >= RADAR_RAIN_CHANCE_THRESHOLD) ||
+        (Number.isFinite(precipAmount) && precipAmount >= RADAR_PRECIP_AMOUNT_THRESHOLD) ||
+        hasRainWeatherCode(hour.weatherCode ?? hour.weather_code)
+      );
+    }
+
+    function updateRadarHomeSignalFromWeather(weather = {}) {
+      const hourly = Array.isArray(weather.hourly) ? weather.hourly.slice(0, RADAR_FORECAST_HOURS) : [];
+      liveRadarSignalActive =
+        PRECIP_SIGNAL_ACTIVE ||
+        hourly.some(hourHasRadarRainSignal);
+      applyConditionalHomepageFeatures();
+    }
+
+    function updateRadarHomeSignalFromObservation(obs = {}) {
+      const hourly = Array.isArray(obs.radarHourly) ? obs.radarHourly.slice(0, RADAR_FORECAST_HOURS) : [];
+      const rainChance = normalizeProbabilityValue(obs.rainChance);
+      liveRadarSignalActive =
+        PRECIP_SIGNAL_ACTIVE ||
+        hourly.some(hourHasRadarRainSignal) ||
+        (Number.isFinite(rainChance) && rainChance >= RADAR_RAIN_CHANCE_THRESHOLD);
+      applyConditionalHomepageFeatures();
     }
 
     function isSkyDataStale(value) {
@@ -3202,12 +3247,12 @@
       const url = [
         "https://api.open-meteo.com/v1/forecast?latitude=35.5951&longitude=-82.5515",
         "current=temperature_2m,relative_humidity_2m,dew_point_2m,precipitation,pressure_msl,cloud_cover,wind_speed_10m",
-        "hourly=precipitation_probability,cloud_cover",
+        "hourly=precipitation,precipitation_probability,weather_code,cloud_cover",
         "temperature_unit=fahrenheit",
         "wind_speed_unit=mph",
         "precipitation_unit=inch",
         "timezone=America%2FNew_York",
-        "forecast_days=1"
+        "forecast_days=3"
       ].join("&");
       const res = await fetch(url);
       if (!res.ok) throw new Error(`Open-Meteo obs failed: ${res.status}`);
@@ -3221,6 +3266,12 @@
         pressure: hpaToInHg(current.pressure_msl),
         rainChance: data.hourly?.precipitation_probability?.[0],
         clouds: current.cloud_cover ?? data.hourly?.cloud_cover?.[0],
+        radarHourly: (data.hourly?.time || []).map((time, index) => ({
+          time,
+          precipitation: data.hourly?.precipitation?.[index] ?? 0,
+          precipProbability: data.hourly?.precipitation_probability?.[index] ?? 0,
+          weatherCode: data.hourly?.weather_code?.[index] ?? null
+        })),
         timestamp: current.time ? new Date(current.time).getTime() : Date.now()
       };
     }
@@ -3254,10 +3305,13 @@
     async function hydrateObservationChips() {
       try {
         const weather = await fetchRouteJson("weather&type=hourly&lat=35.5951&lon=-82.5515");
+        updateRadarHomeSignalFromWeather(weather);
         renderObservationChips(normalizeObsFromWeather(weather));
       } catch (error) {
         try {
-          renderObservationChips(await fetchOpenMeteoObsFallback());
+          const fallbackObs = await fetchOpenMeteoObsFallback();
+          updateRadarHomeSignalFromObservation(fallbackObs);
+          renderObservationChips(fallbackObs);
         } catch (fallbackError) {
           console.warn("Observation chips unavailable", error, fallbackError);
           setText("#obsUpdated", `Obs pending ${formatLocalTime()}`);
@@ -3693,6 +3747,10 @@
       return Math.round(raw <= 10 ? raw * 10 : raw);
     }
 
+    function hasFeelScoreInputs(hour = {}) {
+      return Boolean(hour) && Number.isFinite(Number(hour.temperatureF ?? hour.temp));
+    }
+
     function scoreLabel(score) {
       if (score >= 90) return "Ideal";
       if (score >= 80) return "Great";
@@ -3854,13 +3912,20 @@
     function renderLiveFeelScore(feelscore, hourly = [], daily = [], currentHour = null) {
       if (!feelscore) return;
 
-      const liveHour = currentHour || hourly.find((hour) => hour.timestamp >= Date.now() - 45 * 60 * 1000) || hourly[0] || null;
+      const liveHour = hasFeelScoreInputs(currentHour)
+        ? currentHour
+        : hourly.find((hour) => hour.timestamp >= Date.now() - 45 * 60 * 1000 && hasFeelScoreInputs(hour))
+          || null;
       const liveScore = comfortScore100(liveHour);
-      const score = Number.isFinite(liveScore) ? liveScore : Math.round(Number(feelscore.score));
+      const score = Number.isFinite(liveScore) ? liveScore : null;
       if (Number.isFinite(score)) {
         document.querySelector("#liveFeelScoreValue").textContent = score;
         document.querySelector("#liveFeelScoreLabel").textContent = scoreLabel(score);
         document.querySelector(".modal-score-pill").textContent = `Right now: ${score} - ${scoreLabel(score)}`;
+      } else {
+        document.querySelector("#liveFeelScoreValue").textContent = "--";
+        document.querySelector("#liveFeelScoreLabel").textContent = "Updating";
+        document.querySelector(".modal-score-pill").textContent = "Right now: updating";
       }
 
       document.querySelector("#liveFeelScoreHeadline").textContent =
@@ -4036,6 +4101,7 @@
         const daily = Array.isArray(weather?.daily) ? weather.daily : [];
         const current = weather?.current || weather?.current_conditions || null;
         const currentHour = normalizeCurrentConditions(current);
+        updateRadarHomeSignalFromWeather({ ...weather, hourly });
 
         const human = buildHumanActionIntelFS({
           ...weather,
@@ -4086,8 +4152,9 @@
     hydrateHomeHikingCard();
     hydratePulsePreview();
     hydrateObservationChips();
-    hydrateLiveComfortModules();
-    await hydrateSkyModule();
+    const liveComfortReady = hydrateLiveComfortModules();
+    const skyReady = hydrateSkyModule();
+    await Promise.allSettled([liveComfortReady, skyReady]);
     hideHomeSplash(0);
     setInterval(hydrateObservationChips, 5 * 60 * 1000);
     setInterval(hydrateHomeHikingCard, 5 * 60 * 1000);
