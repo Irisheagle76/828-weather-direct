@@ -5,7 +5,7 @@
   <title>Tim's Forecast Board &bull; 828 Weather</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <link rel="stylesheet" href="/css/app-v2.css?v=forecast-signal-carousel-20260607" />
+  <link rel="stylesheet" href="/css/app-v2.css?v=forecast-splash-20260608" />
 </head>
 
 <body class="forecast-refresh forecast-warm">
@@ -39,8 +39,32 @@
        ===================================== -->
   <div id="splash" class="splash">
     <div class="splash-inner">
-      <div class="splash-title">Tim's Forecast Board</div>
-      <div class="splash-sub">Preparing the Asheville outlook...</div>
+      <div class="splash-card" role="status" aria-live="polite">
+        <div class="splash-sky" aria-hidden="true">
+          <div class="splash-sun"></div>
+          <div class="splash-cloud splash-cloud-one"></div>
+          <div class="splash-cloud splash-cloud-two"></div>
+          <div class="splash-ridge splash-ridge-back"></div>
+          <div class="splash-ridge splash-ridge-front"></div>
+        </div>
+
+        <div class="splash-copy">
+          <div class="splash-kicker">828 Weather Direct</div>
+          <div class="splash-title">Tim's Forecast Board</div>
+          <div class="splash-sub">Reading the local signals for Asheville</div>
+        </div>
+
+        <div class="splash-signal" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+
+        <div class="splash-progress" aria-hidden="true">
+          <div class="splash-progress-bar"></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -119,7 +143,7 @@
        SCRIPT
        ===================================== -->
   <script type="module">
-    import { render4DayForecast } from '/js/modules/render4DayForecast.js?v=forecast-signal-carousel-20260607';
+    import { render4DayForecast } from '/js/modules/render4DayForecast.js?v=forecast-splash-20260608';
 
     const root = document.getElementById('forecast-root');
 
@@ -139,7 +163,10 @@
 
     function hideSplash() {
       const splash = document.getElementById('splash');
-      if (splash) splash.classList.add('hide');
+      if (!splash) return;
+      splash.classList.add('hide');
+      splash.setAttribute('aria-hidden', 'true');
+      setTimeout(() => splash.remove(), 700);
     }
 
     if (document.readyState === "loading") {
