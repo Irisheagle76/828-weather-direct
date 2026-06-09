@@ -2506,16 +2506,16 @@
             </div>
             <div class="fs-temp-markers" aria-label="Important temperature markers">
               <div class="fs-temp-marker">
-                <span id="liveTempMarkerOneLabel">Morning low</span>
-                <b id="liveTempMarkerOne">51&deg;</b>
+                <span id="liveTempMarkerOneLabel">Now</span>
+                <b id="liveTempMarkerOne">--</b>
               </div>
               <div class="fs-temp-marker">
                 <span id="liveTempMarkerTwoLabel">Mid-afternoon</span>
-                <b id="liveTempMarkerTwo">77&deg;</b>
+                <b id="liveTempMarkerTwo">--</b>
               </div>
               <div class="fs-temp-marker">
                 <span id="liveTempMarkerThreeLabel">9 PM</span>
-                <b id="liveTempMarkerThree">66&deg;</b>
+                <b id="liveTempMarkerThree">--</b>
               </div>
             </div>
           </aside>
@@ -3111,6 +3111,11 @@
 
     function localHour() {
       return localTimeParts().hour;
+    }
+
+    function isDaylightUiWindow() {
+      const hour = localHour();
+      return hour >= 6 && hour < 20;
     }
 
     function isSunsetRadianceWindow() {
@@ -3895,6 +3900,71 @@
       };
     }
 
+    function primaryLiveHour(hourly = [], currentHour = null) {
+      if (hasFeelScoreInputs(currentHour)) return currentHour;
+      return hourly.find((hour) => (
+        hour.timestamp >= Date.now() - 45 * 60 * 1000 &&
+        hasFeelScoreInputs(hour)
+      )) || hourly.find(hasFeelScoreInputs) || null;
+    }
+
+    function buildFallbackFeelScoreBullets(hourly = [], currentHour = null, score = null) {
+      const now = Date.now();
+      const hours = [
+        primaryLiveHour(hourly, currentHour),
+        ...hourly.filter((hour) => (
+          hour.timestamp >= now - 30 * 60 * 1000 &&
+          hour.timestamp <= now + 6 * 60 * 60 * 1000
+        ))
+      ].filter(Boolean);
+      const bullets = [];
+      const rainValues = hours
+        .map((hour) => Number(hour.precipProbability))
+        .filter(Number.isFinite);
+      const precipValues = hours
+        .map((hour) => Number(hour.precipAmount))
+        .filter(Number.isFinite);
+      const dewValues = hours
+        .map((hour) => Number(hour.dewpointF))
+        .filter(Number.isFinite);
+      const temps = hours
+        .map((hour) => Number(hour.temperatureF))
+        .filter(Number.isFinite);
+      const winds = hours
+        .map((hour) => Number(hour.windSpeed))
+        .filter(Number.isFinite);
+
+      const rainChance = rainValues.length ? Math.max(...rainValues) : null;
+      const precipAmount = precipValues.length ? Math.max(...precipValues) : 0;
+      const maxDew = dewValues.length ? Math.max(...dewValues) : null;
+      const maxWind = winds.length ? Math.max(...winds) : null;
+
+      if ((Number.isFinite(rainChance) && rainChance >= 0.25) || precipAmount >= 0.005) {
+        bullets.push(Number.isFinite(rainChance)
+          ? `Rain chance reaches ${formatPercent(rainChance)} in the next few hours`
+          : "A few showers stay possible nearby");
+      }
+      if (Number.isFinite(maxDew) && maxDew >= 67) {
+        bullets.push("Muggy air is part of the feel");
+      } else if (Number.isFinite(maxDew) && maxDew >= 60) {
+        bullets.push("Humidity is noticeable but not overwhelming");
+      }
+      if (temps.length) {
+        const low = Math.min(...temps);
+        const high = Math.max(...temps);
+        bullets.push(Math.round(low) === Math.round(high)
+          ? `Temperatures hold near ${Math.round(high)}°`
+          : `Temperatures run from ${Math.round(low)}° to ${Math.round(high)}°`);
+      }
+      if (Number.isFinite(maxWind) && maxWind >= 10) {
+        bullets.push(`Breeze peaks near ${Math.round(maxWind)} mph`);
+      }
+      if (!bullets.length && Number.isFinite(score)) {
+        bullets.push(`Current FeelScore reads ${scoreLabel(score).toLowerCase()}`);
+      }
+      return bullets.slice(0, 3);
+    }
+
     function nearestHour(hourly = [], localHour, dayOffset = 0, maxDistanceHours = 2) {
       return hourly
         .filter((hour) => sameLocalDay(hour.timestamp, dayOffset) && Number.isFinite(hour.temperatureF))
@@ -3939,6 +4009,7 @@
     function renderLiveFeelScore(feelscore, hourly = [], daily = [], currentHour = null) {
       if (!feelscore) return;
 
+      const liveHour = primaryLiveHour(hourly, currentHour);
       const payloadScore = normalizeScore100(feelscore.score);
       const fallbackScore = nearTermFeelScore(hourly, currentHour);
       const score = Number.isFinite(payloadScore) ? payloadScore : fallbackScore;
@@ -3957,7 +4028,9 @@
       document.querySelector("#liveFeelScoreSubhead").textContent =
         feelscore.subHeadline || feelscore.narrative || "Temperature, humidity, dew point, and wind are shaping how the air feels.";
 
-      const bullets = Array.isArray(feelscore.bullets) ? feelscore.bullets.slice(0, 3) : [];
+      const bullets = Array.isArray(feelscore.bullets) && feelscore.bullets.length
+        ? feelscore.bullets.slice(0, 3)
+        : buildFallbackFeelScoreBullets(hourly, currentHour, score);
       const uvSignal = getHighUvSignal(hourly, liveHour);
       if (uvSignal) {
         const peakText = `${Math.round(uvSignal.uv)}${uvSignal.hour ? ` around ${uvSignal.hour}` : ""}`;
@@ -3983,8 +4056,8 @@
       renderTempMarker(
         document.querySelector("#liveTempMarkerOneLabel"),
         document.querySelector("#liveTempMarkerOne"),
-        "Morning low",
-        nearestHour(hourly, 7, 0, 2) || tempHourFromValue(day?.tempMin)
+        "Now",
+        liveHour || hourly[0]
       );
       renderTempMarker(
         document.querySelector("#liveTempMarkerTwoLabel"),
@@ -4153,14 +4226,29 @@
         const metrics = data?.metrics || {};
         const frameVersion = parseTimestamp(data?.timestamp) || Date.now();
         const skyStale = isSkyDataStale(data?.timestamp);
+        const daylightNightMismatch = isDaylightUiWindow() && (
+          metrics.mode === "night" ||
+          skyIntel?.atmosphericState === "night" ||
+          narrative?.type === "night"
+        );
+        const skyNarrative = daylightNightMismatch
+          ? {
+              headline: "Daylight sky update is catching up.",
+              detail: "The live image is refreshing after sunrise while the sky analysis catches up.",
+              type: "daylight-pending"
+            }
+          : narrative;
+        const skyLabel = daylightNightMismatch
+          ? "Daylight Update"
+          : labelize(skyIntel?.atmosphericState);
 
         document.querySelector("#skyHomeImage").src = skyImageUrl(frameVersion, skyStale);
-        document.querySelector("#skyHomeLabel").textContent = labelize(skyIntel?.atmosphericState);
+        document.querySelector("#skyHomeLabel").textContent = skyLabel;
         document.querySelector("#skyHomeCapture").textContent = skyStale
           ? `Live image refreshed ${formatLocalTime()}`
           : `Camera capture ${formatCaptureTime(data?.timestamp)}`;
-        document.querySelector("#skyHomeHeadline").textContent = narrative?.headline || "Reading the Asheville sky.";
-        document.querySelector("#skyHomeDetail").textContent = narrative?.detail || "The camera snapshot adds visual context to the forecast.";
+        document.querySelector("#skyHomeHeadline").textContent = skyNarrative?.headline || "Reading the Asheville sky.";
+        document.querySelector("#skyHomeDetail").textContent = skyNarrative?.detail || "The camera snapshot adds visual context to the forecast.";
         document.querySelector("#skyHomeCloud").textContent = pct(skyIntel?.cloud);
         document.querySelector("#skyHomeLight").textContent = metrics.sunlightDetected ? labelize(metrics.sunlightLevel) : "Low";
         document.querySelector("#skyHomeConfidence").textContent = pct(skyIntel?.confidence);
