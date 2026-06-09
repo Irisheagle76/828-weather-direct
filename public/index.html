@@ -3746,8 +3746,36 @@
       return Math.round(raw <= 10 ? raw * 10 : raw);
     }
 
+    function normalizeScore100(value) {
+      const score = Number(value);
+      if (!Number.isFinite(score)) return null;
+      return Math.round(score <= 10 ? score * 10 : score);
+    }
+
     function hasFeelScoreInputs(hour = {}) {
       return Boolean(hour) && Number.isFinite(Number(hour.temperatureF ?? hour.temp));
+    }
+
+    function nearTermFeelScore(hourly = [], currentHour = null) {
+      const candidates = [
+        ...(hasFeelScoreInputs(currentHour) && Number.isFinite(Number(currentHour.dewpointF ?? currentHour.dewPoint))
+          ? [currentHour]
+          : []),
+        ...hourly.filter((hour) => (
+          hour.timestamp >= Date.now() - 45 * 60 * 1000 &&
+          hour.timestamp <= Date.now() + 3 * 60 * 60 * 1000 &&
+          hasFeelScoreInputs(hour)
+        ))
+      ];
+      const scores = candidates
+        .map(comfortScore100)
+        .filter(Number.isFinite)
+        .slice(0, 4);
+      if (!scores.length) return null;
+      const weights = scores.map((_, index) => index === 0 ? 2 : 1);
+      const weighted = scores.reduce((sum, score, index) => sum + score * weights[index], 0);
+      const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+      return Math.round(weighted / totalWeight);
     }
 
     function scoreLabel(score) {
@@ -3911,12 +3939,9 @@
     function renderLiveFeelScore(feelscore, hourly = [], daily = [], currentHour = null) {
       if (!feelscore) return;
 
-      const liveHour = hasFeelScoreInputs(currentHour)
-        ? currentHour
-        : hourly.find((hour) => hour.timestamp >= Date.now() - 45 * 60 * 1000 && hasFeelScoreInputs(hour))
-          || null;
-      const liveScore = comfortScore100(liveHour);
-      const score = Number.isFinite(liveScore) ? liveScore : null;
+      const payloadScore = normalizeScore100(feelscore.score);
+      const fallbackScore = nearTermFeelScore(hourly, currentHour);
+      const score = Number.isFinite(payloadScore) ? payloadScore : fallbackScore;
       if (Number.isFinite(score)) {
         document.querySelector("#liveFeelScoreValue").textContent = score;
         document.querySelector("#liveFeelScoreLabel").textContent = scoreLabel(score);
