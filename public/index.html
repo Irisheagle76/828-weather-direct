@@ -3931,6 +3931,19 @@
       valueEl.textContent = `${Math.round(hour.temperatureF)}°`;
     }
 
+    function observationTempHour(weather = {}) {
+      const obs = normalizeObsFromWeather(weather);
+      if (!Number.isFinite(Number(obs.tempF))) return null;
+      return normalizeWeatherHour({
+        timestamp: obs.timestamp ?? Date.now(),
+        temperatureF: obs.tempF,
+        dewpointF: obs.dewF,
+        relativeHumidity: obs.humidity,
+        windSpeed: obs.windMph,
+        cloudCover: obs.clouds
+      });
+    }
+
     function getHighUvSignal(hourly = [], currentHour = null) {
       const now = Date.now();
       const todayHours = hourly
@@ -4062,7 +4075,7 @@
       }).format(new Date(ts)));
     }
 
-    function renderLiveFeelScore(feelscore, hourly = [], daily = [], currentHour = null) {
+    function renderLiveFeelScore(feelscore, hourly = [], daily = [], currentHour = null, displayCurrentHour = null) {
       if (!feelscore) return;
 
       const liveHour = primaryLiveHour(hourly, currentHour);
@@ -4113,7 +4126,7 @@
         document.querySelector("#liveTempMarkerOneLabel"),
         document.querySelector("#liveTempMarkerOne"),
         "Now",
-        liveHour || hourly[0]
+        displayCurrentHour || liveHour || hourly[0]
       );
       renderTempMarker(
         document.querySelector("#liveTempMarkerTwoLabel"),
@@ -4254,6 +4267,7 @@
         const daily = Array.isArray(weather?.daily) ? weather.daily : [];
         const current = weather?.current || weather?.current_conditions || null;
         const currentHour = normalizeCurrentConditions(current);
+        const displayCurrentHour = observationTempHour(weather);
         updateRadarHomeSignalFromWeather({ ...weather, hourly });
 
         const human = buildHumanActionIntelFS({
@@ -4263,7 +4277,7 @@
           tempest: weather?.current_conditions || null
         });
 
-        renderLiveFeelScore(human?.feelscore, hourly, daily, currentHour);
+        renderLiveFeelScore(human?.feelscore, hourly, daily, currentHour, displayCurrentHour);
         renderNextSix(hourly);
         renderTomorrowLive(human?.tomorrow, hourly, daily);
       } catch (error) {
