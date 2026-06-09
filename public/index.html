@@ -3118,6 +3118,54 @@
       return hour >= 6 && hour < 20;
     }
 
+    function daylightSkyFallback(metrics = {}, skyIntel = {}) {
+      const numberOrNull = (value) => {
+        if (value == null || value === "") return null;
+        const n = Number(value);
+        return Number.isFinite(n) ? n : null;
+      };
+      const satelliteCloud = numberOrNull(metrics.satelliteCloudFraction);
+      const cloudySignal =
+        metrics.satelliteHighCloudSignal ||
+        metrics.satelliteCloudMotionSignal ||
+        metrics.softShadowSignal ||
+        metrics.sunlightDetected === false;
+      const visibleCloud = numberOrNull(metrics.cloudCoverWest);
+      const cloud = Number.isFinite(visibleCloud)
+        ? visibleCloud
+        : Number.isFinite(satelliteCloud)
+          ? Math.max(satelliteCloud, metrics.sunlightDetected === false ? 0.72 : cloudySignal ? 0.55 : satelliteCloud)
+          : skyIntel?.cloud;
+
+      if (Number.isFinite(cloud) && cloud >= 0.7) {
+        return {
+          label: "Mostly Cloudy",
+          cloud,
+          confidence: Math.max(Number(skyIntel?.confidence) || 0, 0.62),
+          headline: "Mostly cloudy skies are over Asheville.",
+          detail: "The live camera shows a gray cloud deck, with limited direct sunlight reaching downtown."
+        };
+      }
+
+      if (cloudySignal) {
+        return {
+          label: "Filtered Clouds",
+          cloud: Number.isFinite(cloud) ? cloud : null,
+          confidence: Math.max(Number(skyIntel?.confidence) || 0, 0.58),
+          headline: "Clouds are filtering the morning light.",
+          detail: "The daylight camera view and satellite clues point to a muted, cloud-filtered sky over Asheville."
+        };
+      }
+
+      return {
+        label: "Daylight Sky",
+        cloud: Number.isFinite(cloud) ? cloud : null,
+        confidence: Math.max(Number(skyIntel?.confidence) || 0, 0.5),
+        headline: "The daylight sky is visible over Asheville.",
+        detail: "The live camera is usable again after sunrise, though the automated sky read is still limited."
+      };
+    }
+
     function isSunsetRadianceWindow() {
       const { hour, minute } = localTimeParts();
       const minutes = hour * 60 + minute;
@@ -4231,16 +4279,25 @@
           skyIntel?.atmosphericState === "night" ||
           narrative?.type === "night"
         );
+        const daylightFallback = daylightNightMismatch
+          ? daylightSkyFallback(metrics, skyIntel)
+          : null;
         const skyNarrative = daylightNightMismatch
           ? {
-              headline: "Daylight sky update is catching up.",
-              detail: "The live image is refreshing after sunrise while the sky analysis catches up.",
-              type: "daylight-pending"
+              headline: daylightFallback.headline,
+              detail: daylightFallback.detail,
+              type: "daylight-analysis"
             }
           : narrative;
         const skyLabel = daylightNightMismatch
-          ? "Daylight Update"
+          ? daylightFallback.label
           : labelize(skyIntel?.atmosphericState);
+        const skyCloud = daylightNightMismatch
+          ? daylightFallback.cloud
+          : skyIntel?.cloud;
+        const skyConfidence = daylightNightMismatch
+          ? daylightFallback.confidence
+          : skyIntel?.confidence;
 
         document.querySelector("#skyHomeImage").src = skyImageUrl(frameVersion, skyStale);
         document.querySelector("#skyHomeLabel").textContent = skyLabel;
@@ -4249,9 +4306,9 @@
           : `Camera capture ${formatCaptureTime(data?.timestamp)}`;
         document.querySelector("#skyHomeHeadline").textContent = skyNarrative?.headline || "Reading the Asheville sky.";
         document.querySelector("#skyHomeDetail").textContent = skyNarrative?.detail || "The camera snapshot adds visual context to the forecast.";
-        document.querySelector("#skyHomeCloud").textContent = pct(skyIntel?.cloud);
+        document.querySelector("#skyHomeCloud").textContent = pct(skyCloud);
         document.querySelector("#skyHomeLight").textContent = metrics.sunlightDetected ? labelize(metrics.sunlightLevel) : "Low";
-        document.querySelector("#skyHomeConfidence").textContent = pct(skyIntel?.confidence);
+        document.querySelector("#skyHomeConfidence").textContent = pct(skyConfidence);
         renderCloudObservationChip();
       } catch (error) {
         console.warn("Sky module unavailable", error);
