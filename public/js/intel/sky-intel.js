@@ -52,9 +52,20 @@ export function computeSkyIntel({ camera, previous = null }) {
   // --------------------------------------------------
   // 🌫️ FOG (HARD OVERRIDE)
   // --------------------------------------------------
-  const fogDetected =
-    visibility === 0 ||
-    (visibility === 1 && contrast != null && contrast < 0.05);
+  const strongClearingSignal =
+    sunlightDetected &&
+    sunlightLevel === "strong" &&
+    cloud != null &&
+    cloud <= 25;
+  const blueClearingSignal =
+    skyBlueSignal != null &&
+    skyBlueSignal >= 1.08 &&
+    cloud != null &&
+    cloud <= 35;
+  const fogDetected = !strongClearingSignal && !blueClearingSignal && (
+    (visibility === 0 && (!sunlightDetected || cloud == null || cloud >= 45)) ||
+    (visibility === 1 && contrast != null && contrast < 0.05 && cloud != null && cloud >= 65)
+  );
 
   if (fogDetected) {
     return {

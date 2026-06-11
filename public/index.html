@@ -3417,11 +3417,11 @@
       return `${url}${url.includes("?") ? "&" : "?"}t=${encodeURIComponent(Date.now())}`;
     }
 
-    async function fetchRouteJson(route) {
-      const path = `/api/router?route=${route}&t=${Date.now()}`;
+    async function fetchRouteJson(route, { cacheBust = true } = {}) {
+      const path = `/api/router?route=${route}${cacheBust ? `&t=${Date.now()}` : ""}`;
       const isLocalPreview = ["localhost", "127.0.0.1"].includes(window.location.hostname);
       try {
-        const localRes = await fetch(path, { cache: "no-store" });
+        const localRes = await fetch(path, { cache: cacheBust ? "no-store" : "default" });
         if (localRes.ok) return localRes.json();
         if (!isLocalPreview) {
           throw new Error(`API route failed: ${localRes.status}`);
@@ -3430,7 +3430,7 @@
         if (!isLocalPreview) throw error;
       }
 
-      const liveRes = await fetch(`https://avlweather.com${path}`, { cache: "no-store" });
+      const liveRes = await fetch(`https://avlweather.com${path}`, { cache: cacheBust ? "no-store" : "default" });
       if (!liveRes.ok) throw new Error(`Live API route failed: ${liveRes.status}`);
       return liveRes.json();
     }
@@ -4454,15 +4454,22 @@
 
     async function hydrateSkyModule() {
       try {
-        const res = await fetch(`js/sky-cam/output.json?t=${Date.now()}`);
-        if (!res.ok) throw new Error("Sky data unavailable");
-        const data = await res.json();
+        let data;
+        try {
+          data = await fetchRouteJson("sky/current", { cacheBust: false });
+        } catch (liveError) {
+          console.warn("Live sky analysis unavailable; using scheduled snapshot", liveError);
+          const res = await fetch(`js/sky-cam/output.json?t=${Date.now()}`, { cache: "no-store" });
+          if (!res.ok) throw new Error("Sky data unavailable");
+          data = await res.json();
+        }
         const skyIntel = computeSkyIntel({ camera: data });
         latestSkyIntel = skyIntel;
         const narrative = generateSkyNarrative(data, skyIntel);
         const metrics = data?.metrics || {};
         const frameVersion = parseTimestamp(data?.timestamp) || Date.now();
         const skyStale = isSkyDataStale(data?.timestamp);
+        const useLiveThumbnail = metrics.source === "live-thumbnail" || skyStale;
         const daylightNightMismatch = isDaylightUiWindow() && (
           metrics.mode === "night" ||
           skyIntel?.atmosphericState === "night" ||
@@ -4488,7 +4495,7 @@
           ? daylightFallback.confidence
           : skyIntel?.confidence;
 
-        document.querySelector("#skyHomeImage").src = skyImageUrl(frameVersion, skyStale);
+        document.querySelector("#skyHomeImage").src = skyImageUrl(frameVersion, useLiveThumbnail);
         document.querySelector("#skyHomeLabel").textContent = skyLabel;
         document.querySelector("#skyHomeCapture").textContent = skyStale
           ? `Live image refreshed ${formatLocalTime()}`
@@ -4518,7 +4525,7 @@
     hideHomeSplash(0);
     setInterval(hydrateObservationChips, 5 * 60 * 1000);
     setInterval(hydrateHomeHikingCard, 5 * 60 * 1000);
-    setInterval(hydrateSkyModule, 5 * 60 * 1000);
+    setInterval(hydrateSkyModule, 60 * 1000);
     setInterval(() => loadAndRenderAlerts(activeAlerts), 60 * 1000);
 
     const radarThumbImage = document.querySelector("#radarThumbImage");

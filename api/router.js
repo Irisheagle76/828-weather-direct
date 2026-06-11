@@ -10,6 +10,7 @@ const routes = {
   "notifications/public-key": () => import("../lib/api-routes/notifications/public-key.js"),
   "notifications/status": () => import("../lib/api-routes/notifications/status.js"),
   "notifications/subscribe": () => import("../lib/api-routes/notifications/subscribe.js"),
+  "sky/current": () => import("../lib/api-routes/sky/current.js"),
   "substack-articles": () => import("../lib/api-routes/substack-articles.js"),
   "substack-og": () => import("../lib/api-routes/substack-og.js"),
   "tempest/device": () => import("../lib/api-routes/tempest/device.js"),
