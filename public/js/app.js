@@ -18,8 +18,6 @@ const CONFIG = {
   FORCE_LOCATION: true,
   DEFAULT_LAT: 35.5951,
   DEFAULT_LON: -82.5515,
-  TEMPEST_STATION_ID: "315255",
-  TEMPEST_TOKEN: "838ff386-d14b-4d45-897a-18903e6970a9",
   REFRESH_INTERVAL: 5 * 60 * 1000
 };
 
@@ -90,9 +88,7 @@ async function runRender() {
     // 2. FETCH WEATHER + INTEL
     const data = await fetchAllIntel({
       lat: currentLocation.lat,
-      lon: currentLocation.lon,
-      tempestStationId: CONFIG.TEMPEST_STATION_ID,
-      tempestToken: CONFIG.TEMPEST_TOKEN
+      lon: currentLocation.lon
     });
 
     // 3. UPDATE STATE
