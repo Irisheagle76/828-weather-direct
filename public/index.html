@@ -305,6 +305,51 @@
       font-weight: 900;
     }
 
+    .site-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .site-nav::-webkit-scrollbar {
+      display: none;
+    }
+
+    .site-nav a {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 0 12px;
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .site-nav a:hover,
+    .site-nav a:focus-visible {
+      color: var(--blue);
+      background: var(--blue-soft);
+    }
+
+    .site-nav .forecast-nav-link {
+      color: var(--white);
+      background: var(--blue);
+      box-shadow: 0 8px 18px rgba(15, 76, 196, 0.2);
+    }
+
+    .site-nav .forecast-nav-link:hover,
+    .site-nav .forecast-nav-link:focus-visible {
+      color: var(--white);
+      background: #083da6;
+    }
+
     .obs-row {
       display: flex;
       gap: 10px;
@@ -1257,6 +1302,91 @@
     .tomorrow-card li {
       color: var(--muted);
       line-height: 1.48;
+    }
+
+    .tomorrow-forecast-link {
+      display: inline-flex;
+      align-items: center;
+      margin-top: 8px;
+      color: var(--blue);
+      font-size: 0.88rem;
+      font-weight: 950;
+      text-decoration: none;
+    }
+
+    .tomorrow-forecast-link:hover,
+    .tomorrow-forecast-link:focus-visible {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .forecast-invitation {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: center;
+      padding: 18px 22px;
+      border: 1px solid rgba(15, 76, 196, 0.18);
+      border-left: 7px solid var(--orange);
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 90% 10%, rgba(15, 76, 196, 0.1), transparent 28%),
+        linear-gradient(105deg, #fffdf8, #f5f9ff);
+      box-shadow: var(--shadow);
+    }
+
+    .forecast-invitation-mark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      color: var(--white);
+      background: var(--orange);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.25rem;
+      font-weight: 900;
+    }
+
+    .forecast-invitation-copy {
+      min-width: 0;
+    }
+
+    .forecast-invitation h2 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.3rem, 2.4vw, 1.75rem);
+      line-height: 1.08;
+    }
+
+    .forecast-invitation p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .forecast-invitation-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 0 16px;
+      border-radius: 999px;
+      color: var(--white);
+      background: var(--blue);
+      font-size: 0.88rem;
+      font-weight: 950;
+      text-decoration: none;
+      white-space: nowrap;
+      box-shadow: 0 10px 20px rgba(15, 76, 196, 0.2);
+    }
+
+    .forecast-invitation-link:hover,
+    .forecast-invitation-link:focus-visible {
+      background: #083da6;
+      transform: translateY(-1px);
     }
 
     .pulse-card-lite {
@@ -2215,6 +2345,23 @@
         mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent);
       }
 
+      .site-nav {
+        margin-right: -12px;
+        padding-right: 12px;
+        mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent);
+      }
+
+      .forecast-invitation {
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 12px;
+        padding: 16px;
+      }
+
+      .forecast-invitation-link {
+        grid-column: 1 / -1;
+        width: 100%;
+      }
+
       .hour-row {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
@@ -2468,6 +2615,13 @@
         <button class="mock-notify" id="enableNotificationsBtn" type="button">Enable Notifications</button>
       </div>
 
+      <nav class="site-nav" aria-label="Main navigation">
+        <a href="#now">Now</a>
+        <a class="forecast-nav-link" href="/forecast.html">Tim's 4-Day Forecast</a>
+        <a href="#pulse-preview">Weather Pulse</a>
+        <a href="/hiking.html">Hiking Guidance</a>
+      </nav>
+
       <div class="obs-row" aria-label="Current weather observations">
         <div class="obs-chip live" id="obsUpdated">Updating obs</div>
         <div class="obs-chip" id="obsTemp">Asheville --°</div>
@@ -2483,7 +2637,7 @@
 
   <main class="preview-page">
     <div class="preview-stack">
-      <section class="feelscore-mock" aria-label="FeelScore homepage anchor">
+      <section class="feelscore-mock" id="now" aria-label="FeelScore homepage anchor">
         <div class="feelscore-inner">
           <div>
             <div class="fs-topline">
@@ -2636,8 +2790,18 @@
             <li>Breaks of sun decide how warm it feels.</li>
             <li>Rain risk stays worth watching.</li>
           </ul>
+          <a class="tomorrow-forecast-link" href="/forecast.html">See Tim's full 4-day forecast &rarr;</a>
         </aside>
       </section>
+
+      <aside class="forecast-invitation" aria-labelledby="forecastInvitationTitle">
+        <div class="forecast-invitation-mark" aria-hidden="true">4</div>
+        <div class="forecast-invitation-copy">
+          <h2 id="forecastInvitationTitle">Your Asheville forecast, written by a human.</h2>
+          <p>Tim's hand-crafted outlook for the next four days, with the local context weather apps leave out.</p>
+        </div>
+        <a class="forecast-invitation-link" href="/forecast.html">Read the 4-Day Forecast &rarr;</a>
+      </aside>
 
       <section class="pulse-card-lite" id="pulse-preview" aria-label="Weather Pulse">
         <div class="pulse-layout">
