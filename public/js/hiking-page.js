@@ -140,7 +140,7 @@ const els = {
       const ordered = stations
         .slice()
         .sort((a, b) => (a.elevationFt || 0) - (b.elevationFt || 0));
-      const xSlots = [145, 305, 455, 635, 790, 955];
+      const xSlots = ordered.map((_, index) => 145 + index * (810 / Math.max(1, ordered.length - 1)));
       const bottom = 460;
       const top = 102;
       const minElev = 1000;

@@ -7,10 +7,11 @@ const outDir = path.join(root, "public", "data");
 const jsonPath = path.join(outDir, "hiking-guidance.json");
 const htmlPath = path.join(root, "public", "hiking.html");
 const weatherFlowKey = "6bff2f89-84ab-463c-886e-fc0f443da4cf";
+const weatherUndergroundKey = "e1f10a1e78da46f5b10a1e78da96f525";
 const lightningSignalMaxAgeMs = 3 * 60 * 60 * 1000;
 
 const tempestStations = [
-  { id: "144737", name: "Lower Asheville", role: "lower trailhead feel", elevationFt: 2137, url: "https://tempestwx.com/station/144737/grid", lat: 35.60675829810566, lon: -82.54793450070898 },
+  { id: "144737", name: "Lower Asheville", role: "Asheville city weather station", elevationFt: 2137, url: "https://tempestwx.com/station/144737/grid", lat: 35.60675829810566, lon: -82.54793450070898 },
   { id: "127602", name: "Mid Asheville", role: "north/east Asheville transition", elevationFt: 2316, url: "https://tempestwx.com/station/127602/grid", lat: 35.6154509046802, lon: -82.50548363971464 },
   { id: "160562", name: "High Asheville East", role: "nearby ridge reading", elevationFt: 3363, url: "https://tempestwx.com/station/160562/grid", lat: 35.624525314972594, lon: -82.51184579162579 },
   { id: "157700", name: "High Asheville North", role: "nearby ridge cross-check", elevationFt: 3371, url: "https://tempestwx.com/station/157700/grid", lat: 35.6422544091975, lon: -82.49614863661522 }
@@ -128,18 +129,6 @@ function localTime(iso) {
     hour: "numeric",
     minute: "2-digit"
   }).format(new Date(iso));
-}
-
-function parseNceiTimestamp(text) {
-  const match = String(text || "").match(/(\d{1,2}):(\d{2})(am|pm)\s+on\s+(\d{1,2})\/(\d{1,2})\/(\d{2,4})/i);
-  if (!match) return new Date().toISOString();
-  let [, hourText, minuteText, meridiem, monthText, dayText, yearText] = match;
-  let hour = Number(hourText);
-  const minute = Number(minuteText);
-  if (/pm/i.test(meridiem) && hour !== 12) hour += 12;
-  if (/am/i.test(meridiem) && hour === 12) hour = 0;
-  const year = Number(yearText.length === 2 ? `20${yearText}` : yearText);
-  return new Date(year, Number(monthText) - 1, Number(dayText), hour, minute).toISOString();
 }
 
 function asOfTime(iso) {
@@ -276,44 +265,48 @@ async function fetchMitchell() {
   };
 }
 
-async function fetchGroveArcade() {
-  const response = await fetch("https://www.ncei.noaa.gov/access/asheville-weather/section/details", {
+async function fetchMaxPatch() {
+  const params = new URLSearchParams({
+    stationId: "KTNDELRI5",
+    format: "json",
+    units: "e",
+    numericPrecision: "decimal",
+    apiKey: weatherUndergroundKey
+  });
+  const response = await fetch(`https://api.weather.com/v2/pws/observations/current?${params}`, {
     headers: { "user-agent": userAgent }
   });
   if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
-  const html = await response.text();
-  const rowValue = (label) => {
-    const match = html.match(new RegExp(`<td class="rowHeading">${label}</td>\\s*<td>([^<]*)</td>`, "i"));
-    return match ? match[1].replace(/&deg;/g, "deg").trim() : null;
-  };
-  const currentBlock = html.match(/<td id="currentConditions"[^>]*>([\s\S]*?)<\/td>/i)?.[1] || "";
-  const updatedText = currentBlock.match(/Last Updated:\s*([^<]+)<br>/i)?.[1]?.trim();
-  const observedAt = parseNceiTimestamp(updatedText);
+  const data = await response.json();
+  const observation = data.observations?.[0];
+  if (!observation) throw new Error("Weather Underground returned no current observation");
+  const imperial = observation.imperial || {};
   return {
-    source: "NOAA NCEI",
-    id: "grove-arcade",
-    name: "Grove Arcade",
-    role: "downtown Asheville observation",
-    elevationFt: 1981,
-    url: "https://www.ncei.noaa.gov/access/asheville-weather/details",
-    lat: 35.594082,
-    lon: -82.557919,
+    source: "Weather Underground",
+    id: "max-patch",
+    stationId: observation.stationID || "KTNDELRI5",
+    name: "Max Patch",
+    role: "high-elevation bald reading",
+    elevationFt: 4420,
+    url: "https://www.wunderground.com/dashboard/pws/KTNDELRI5",
+    lat: n(observation.lat),
+    lon: n(observation.lon),
     status: "live",
-    observedAt,
+    observedAt: observation.obsTimeUtc || new Date().toISOString(),
     conditions: "Current conditions",
-    temperatureF: n(rowValue("Temp")),
-    feelsLikeF: n(rowValue("Heat Index")) ?? n(rowValue("Wind Chill")) ?? n(rowValue("Temp")),
-    dewPointF: n(rowValue("Dew Point")),
-    humidityPct: n(rowValue("Humidity")),
-    windMph: n(rowValue("Wind Speed")),
-    gustMph: n(rowValue("Gust")),
-    windDirection: rowValue("Wind Direction"),
-    uv: n(rowValue("UV Index")),
-    solarWm2: n(rowValue("Solar")),
+    temperatureF: n(imperial.temp),
+    feelsLikeF: n(imperial.heatIndex) ?? n(imperial.windChill) ?? n(imperial.temp),
+    dewPointF: n(imperial.dewpt),
+    humidityPct: n(observation.humidity),
+    windMph: n(imperial.windSpeed),
+    gustMph: n(imperial.windGust),
+    windDirection: observation.winddir == null ? null : `${observation.winddir}deg`,
+    uv: n(observation.uv),
+    solarWm2: n(observation.solarRadiation),
     wbgtF: null,
     wetBulbF: null,
-    rainTodayIn: n(rowValue("Rain")),
-    rainRateInHr: null,
+    rainTodayIn: n(imperial.precipTotal),
+    rainRateInHr: n(imperial.precipRate),
     pressureTrend: null
   };
 }
@@ -337,7 +330,7 @@ function spread(stations) {
 
 function analyze(stations) {
   const usable = stations.filter((s) => s.temperatureF != null);
-  const asheville = stations.filter((s) => s.id.startsWith("tempest-") || s.id === "grove-arcade");
+  const asheville = stations.filter((s) => s.id.startsWith("tempest-"));
   const localTempSpread = spread(asheville);
   const highs = stations.filter((s) => s.id === "tempest-160562" || s.id === "tempest-157700");
   const highStationSpread = spread(highs);
@@ -465,7 +458,7 @@ function renderHtml(payload) {
     g.mitchellDrop == null ? "Mount Mitchell comparison unavailable." : `Mount Mitchell is about ${f(g.mitchellDrop, "degF")} cooler than Asheville.`,
     g.maxGust >= 20 ? "Wind matters on exposed terrain." : "Wind is light; sun exposure is the main watch item."
   ];
-  const profileXs = [145, 305, 455, 635, 790, 955];
+  const profileXs = sortedStations.map((_, index) => 145 + index * (810 / Math.max(1, sortedStations.length - 1)));
   const profileStations = sortedStations.map((x, index) => {
     const y = Math.round(440 - ((x.elevationFt - 1000) / 6000) * 320);
     const words = x.name.split(" ");
@@ -641,7 +634,7 @@ function renderHtml(payload) {
       </div>
 
       <div class="footer-meta">
-        <div>Data: Tempest • NC Climate Office • NCHighPeaks WeeWX</div>
+        <div>Data: Tempest • Weather Underground • NCHighPeaks WeeWX</div>
         <div>Serving Asheville and the greater 828 region</div>
         <div class="footer-disclaimer">
           For general awareness only—not a substitute for official forecasts, warnings, or trail advisories.
@@ -662,7 +655,7 @@ const previous = await readPrevious();
 const previousById = new Map((previous?.stations || []).map((s) => [s.id, s]));
 const stations = [
   ...(await Promise.all(tempestStations.map((station) => withFallback(() => fetchTempest(station), `tempest-${station.id}`, previousById)))),
-  await withFallback(fetchGroveArcade, "grove-arcade", previousById),
+  await withFallback(fetchMaxPatch, "max-patch", previousById),
   await withFallback(fetchMitchell, "mount-mitchell", previousById)
 ];
 const payload = {
