@@ -408,7 +408,7 @@ function buildStorySignalText(day) {
   }
 
   if (day.wind) parts.push(`wind ${formatWind(day.wind)}`);
-  if (day.humidity) parts.push(`${formatCategory(day.humidity)} humidity`);
+  if (day.humidity) parts.push(formatHumidity(day.humidity));
 
   if (!parts.length) return day.headline || "quiet weather signal";
   return parts.slice(0, 2).join(" with ");
@@ -970,6 +970,19 @@ function formatCategory(value) {
     .filter(Boolean)
     .map(part => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
+}
+
+function formatHumidity(value) {
+  const labels = {
+    dry: "Low humidity",
+    comfortable: "Comfortable humidity",
+    moderate: "Moderate humidity",
+    humid: "High humidity",
+    very_humid: "Very high humidity",
+    tropical: "Tropical humidity"
+  };
+
+  return labels[value] || formatCategory(value);
 }
 
 function directionFromDegrees(degrees) {

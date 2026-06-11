@@ -2637,6 +2637,8 @@
 
   <main class="preview-page">
     <div class="preview-stack">
+      <div id="active-alerts" aria-live="polite"></div>
+
       <section class="feelscore-mock" id="now" aria-label="FeelScore homepage anchor">
         <div class="feelscore-inner">
           <div>
@@ -3122,6 +3124,7 @@
     import { buildHumanActionIntelFS } from "./js/intel/human-action-feelscore.js?v=20260526-rain-window";
     import { computeSkyIntel } from "./js/intel/sky-intel.js";
     import { generateSkyNarrative } from "./js/intel/sky-narrative.js";
+    import { loadAndRenderAlerts } from "./js/modules/renderAlerts.js";
     import { subscribeUserToPush } from "./js/notifications/subscribeClient.js?v=20260518-vapid-trim";
 
     function clamp(value, min = 0, max = 1) {
@@ -4502,6 +4505,8 @@
     }
 
     applyConditionalHomepageFeatures();
+    const activeAlerts = document.querySelector("#active-alerts");
+    loadAndRenderAlerts(activeAlerts);
     hydrateSubstackCard();
     hydrateDroughtFireCard();
     hydrateHomeHikingCard();
@@ -4514,6 +4519,7 @@
     setInterval(hydrateObservationChips, 5 * 60 * 1000);
     setInterval(hydrateHomeHikingCard, 5 * 60 * 1000);
     setInterval(hydrateSkyModule, 5 * 60 * 1000);
+    setInterval(() => loadAndRenderAlerts(activeAlerts), 60 * 1000);
 
     const radarThumbImage = document.querySelector("#radarThumbImage");
     const radarModalImage = document.querySelector("#radarModalImage");
