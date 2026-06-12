@@ -3,6 +3,7 @@ import jpeg from "jpeg-js";
 import https from "node:https";
 
 const CACHE_MS = 10 * 60 * 1000;
+const OBSERVATION_MAX_AGE_MS = 30 * 60 * 1000;
 let memoryCache = null;
 
 const SITES = [
@@ -213,7 +214,70 @@ function fieldFromWeatherBlock(block, label) {
   return block.match(new RegExp(`${label}:\\s*([^\\n;<]+)`, "i"))?.[1]?.trim() ?? null;
 }
 
-async function fetchMitchellObservation() {
+function easternWallClockAgeMs(value) {
+  const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/);
+  if (!match) return null;
+  const observedWallClock = Date.UTC(
+    Number(match[1]),
+    Number(match[2]) - 1,
+    Number(match[3]),
+    Number(match[4]),
+    Number(match[5]),
+    Number(match[6] || 0)
+  );
+  const nowParts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23"
+  }).formatToParts(new Date());
+  const now = Object.fromEntries(nowParts.map((part) => [part.type, part.value]));
+  const nowWallClock = Date.UTC(
+    Number(now.year),
+    Number(now.month) - 1,
+    Number(now.day),
+    Number(now.hour),
+    Number(now.minute),
+    Number(now.second)
+  );
+  return nowWallClock - observedWallClock;
+}
+
+async function fetchMitchellEconetObservation() {
+  const response = await fetch("https://products.climate.ncsu.edu/oper/cardinal/scout/panels/php/ajax_currentConditions.php", {
+    method: "POST",
+    headers: {
+      "content-type": "application/x-www-form-urlencoded",
+      "user-agent": "828 Weather Direct sky index/1.0"
+    },
+    body: "station=MITC"
+  });
+  if (!response.ok) throw new Error(`MITC observation fetch failed: ${response.status}`);
+
+  const data = await response.json();
+  const latest = data?.latest;
+  const ageMs = easternWallClockAgeMs(latest?.ob);
+  if (!latest?.ob || !Number.isFinite(ageMs) || ageMs < -5 * 60 * 1000 || ageMs > OBSERVATION_MAX_AGE_MS) {
+    throw new Error("MITC observation is stale or missing");
+  }
+
+  return {
+    source: "NC ECONet MITC",
+    sourceUrl: "https://products.climate.ncsu.edu/cardinal/scout/?station=MITC",
+    observedAt: latest.ob,
+    ageMinutes: Math.max(0, Math.round(ageMs / 60000)),
+    temperatureF: n(latest.air_temp),
+    dewPointF: n(latest.dew),
+    humidityPct: n(latest.rh),
+    windMph: n(latest.wind_speed)
+  };
+}
+
+async function fetchMitchellHighPeaksObservation() {
   const response = await fetch("https://nchighpeaks.org/davis/RSS/weewx_rss.xml", {
     headers: {
       "user-agent": "828 Weather Direct sky index/1.0"
@@ -232,12 +296,22 @@ async function fetchMitchellObservation() {
     || null;
 
   return {
+    source: "NCHighPeaks summit station",
+    sourceUrl: "https://nchighpeaks.org/davis/",
     observedAt: observedAt ? new Date(observedAt).toISOString() : null,
     temperatureF: n(fieldFromWeatherBlock(block, "Outside Temperature")),
     dewPointF: n(fieldFromWeatherBlock(block, "Dew Point")),
     humidityPct: n(fieldFromWeatherBlock(block, "Humidity")),
     windMph: n(fieldFromWeatherBlock(block, "Wind"))
   };
+}
+
+async function fetchMitchellObservation() {
+  try {
+    return await fetchMitchellEconetObservation();
+  } catch {
+    return fetchMitchellHighPeaksObservation();
+  }
 }
 
 function liveSignalFor(site, observations = {}) {
@@ -499,7 +573,7 @@ function mergeSignals(weatherSignal, cameraSignal) {
     return weatherSignal;
   }
   if (cameraSignal?.type === "camera-fog" || cameraSignal?.type === "camera-limited") return cameraSignal;
-  return weatherSignal || cameraSignal;
+  return cameraSignal || weatherSignal;
 }
 
 function buildScores(metrics) {
@@ -701,6 +775,18 @@ async function parseSite(site, observations = {}) {
     bullets: language.bullets,
     windows: language.windows,
     status,
+    stationObservation: site.id === "mitchell" && observations.mitchell
+      ? {
+          source: observations.mitchell.source,
+          sourceUrl: observations.mitchell.sourceUrl,
+          observedAt: observations.mitchell.observedAt,
+          ageMinutes: observations.mitchell.ageMinutes,
+          temperatureF: observations.mitchell.temperatureF,
+          dewPointF: observations.mitchell.dewPointF,
+          humidityPct: observations.mitchell.humidityPct,
+          windMph: observations.mitchell.windMph
+        }
+      : null,
     cameraObservation: cameraSignal?.camera
       ? {
           condition: cameraSignal.camera.condition,
@@ -718,7 +804,10 @@ async function parseSite(site, observations = {}) {
           observedAt: liveSignal.observation.observedAt,
           temperatureF: liveSignal.observation.temperatureF,
           dewPointF: liveSignal.observation.dewPointF,
-          humidityPct: liveSignal.observation.humidityPct
+          humidityPct: liveSignal.observation.humidityPct,
+          source: liveSignal.observation.source,
+          sourceUrl: liveSignal.observation.sourceUrl,
+          ageMinutes: liveSignal.observation.ageMinutes
         }
       : liveSignal?.type === "camera-fog" || liveSignal?.type === "camera-limited"
         ? {
