@@ -274,6 +274,15 @@ function liveSignalFor(site, observations = {}) {
 
 function applyLiveSignal(scores, signal) {
   if (!signal) return scores;
+  if (signal.type === "camera-usable" || signal.type === "camera-clear") {
+    const clarityScore = signal.camera?.clarityScore;
+    if (signal.camera?.condition !== "clear_view" || !Number.isFinite(clarityScore)) return scores;
+    const liveViewFloor = roundScore(60 + clarityScore * 0.3);
+    return {
+      ...scores,
+      summitView: Math.max(scores.summitView, liveViewFloor)
+    };
+  }
   if (signal.type === "camera-fog") {
     return {
       summitView: Math.min(scores.summitView, signal.scoreCaps.summitView),
@@ -479,7 +488,16 @@ function cameraSignalFor(site, observations = {}) {
 }
 
 function mergeSignals(weatherSignal, cameraSignal) {
-  if (weatherSignal?.type === "summit-fog") return weatherSignal;
+  if (weatherSignal?.type === "summit-fog") {
+    if (cameraSignal?.type === "camera-usable" && cameraSignal.camera?.condition === "clear_view") {
+      return {
+        ...cameraSignal,
+        type: "camera-clear",
+        summary: "The live camera shows a clear long-range view, so it overrides the contradictory saturated-station fog signal."
+      };
+    }
+    return weatherSignal;
+  }
   if (cameraSignal?.type === "camera-fog" || cameraSignal?.type === "camera-limited") return cameraSignal;
   return weatherSignal || cameraSignal;
 }
@@ -566,6 +584,24 @@ function buildLanguage(site, scores, metrics, degraded = false, liveSignal = nul
           label: "Now",
           score: scores.summitView,
           summary: "Current camera visibility is limited; use the live image before heading up."
+        }
+      ]
+    };
+  }
+  if (liveSignal?.type === "camera-clear") {
+    return {
+      rating,
+      headline: `${rating} live summit-view signal for ${site.name}: the camera shows a clear long-range view despite saturated station air.`,
+      bullets: [
+        "The live camera is overriding the station fog signal because distant ridges and sky detail are clearly visible.",
+        "The current view score is using the camera as a conservative floor while the source chart still guides later timing.",
+        "Recheck the live image before departure because high-peak visibility can change quickly."
+      ],
+      windows: [
+        {
+          label: "Now",
+          score: scores.summitView,
+          summary: "The live camera currently supports a clear summit view."
         }
       ]
     };
