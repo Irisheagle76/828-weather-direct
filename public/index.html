@@ -2578,6 +2578,66 @@
         gap: 10px;
       }
     }
+    .connector-home-callout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: center;
+      margin-bottom: 18px;
+      padding: clamp(22px, 4vw, 34px);
+      color: #fffdf8;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 22px;
+      background:
+        radial-gradient(circle at 88% 15%, rgba(245, 125, 35, 0.5), transparent 28%),
+        linear-gradient(125deg, #09255f, #0f4cc4);
+      box-shadow: var(--shadow);
+    }
+
+    .connector-home-kicker {
+      color: #ffd29d;
+      font-size: 0.76rem;
+      font-weight: 950;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .connector-home-callout h2 {
+      margin: 9px 0 8px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      line-height: 1;
+    }
+
+    .connector-home-callout p {
+      max-width: 760px;
+      margin: 0;
+      color: rgba(255, 253, 248, 0.8);
+      line-height: 1.55;
+    }
+
+    .connector-home-callout a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      padding: 0 18px;
+      border-radius: 999px;
+      color: #09255f;
+      background: #ffd29d;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 680px) {
+      .connector-home-callout {
+        grid-template-columns: 1fr;
+      }
+
+      .connector-home-callout a {
+        justify-self: start;
+      }
+    }
   </style>
 </head>
 <body class="splash-active">
@@ -2620,6 +2680,7 @@
         <a class="forecast-nav-link" href="/forecast.html">Tim's 4-Day Forecast</a>
         <a href="#pulse-preview">Weather Pulse</a>
         <a href="/hiking.html">Hiking Guidance</a>
+        <a href="/i26-connector.html">I-26 Connector</a>
       </nav>
 
       <div class="obs-row" aria-label="Current weather observations">
@@ -2638,6 +2699,15 @@
   <main class="preview-page">
     <div class="preview-stack">
       <div id="active-alerts" aria-live="polite"></div>
+
+      <section class="connector-home-callout" aria-label="I-26 Connector Center">
+        <div>
+          <div class="connector-home-kicker">New Asheville traffic desk</div>
+          <h2>I-26 Connector Center</h2>
+          <p>Live NCDOT closures, corridor cameras, construction milestones, project updates, and weather impacts in one place.</p>
+        </div>
+        <a href="/i26-connector.html">Open Connector Center</a>
+      </section>
 
       <section class="feelscore-mock" id="now" aria-label="FeelScore homepage anchor">
         <div class="feelscore-inner">
@@ -3016,6 +3086,7 @@
         <a href="/">Home</a>
         <a href="/forecast.html">Forecast</a>
         <a href="/hiking.html">Hiking Guidance</a>
+        <a href="/i26-connector.html">I-26 Connector</a>
         <a href="/828-sunset-radiance.html">Sunset Radiance</a>
         <a href="https://www.linkedin.com/in/timballisty">About</a>
         <a href="mailto:tballisty@gmail.com">Contact</a>

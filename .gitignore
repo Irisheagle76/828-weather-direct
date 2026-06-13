@@ -1,2 +1,5 @@
 .vercel
 vercel-dev*.log
+.env
+.env.*
+!.env.example

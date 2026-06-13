@@ -38,6 +38,8 @@ export function middleware(req) {
   return Response.redirect(loginUrl, 302);
 }
 
+export default middleware;
+
 function getApiRoute(url) {
   if (url.pathname === "/api/router") {
     return String(url.searchParams.get("route") || "").replace(/^\/+|\/+$/g, "");

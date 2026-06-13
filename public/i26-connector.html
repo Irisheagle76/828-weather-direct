@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Live I-26 Connector cameras, closures, construction updates, project milestones, and weather impacts for Asheville." />
+  <title>I-26 Connector Center | 828 Weather Direct</title>
+  <link rel="preconnect" href="https://unpkg.com" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3ynHT9tUiN7ZBxiDHdIwAzJbDss0=" crossorigin="" />
+  <link rel="stylesheet" href="/css/i26-connector.css?v=20260613-3" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="/">
+        <strong>828 Weather Direct</strong>
+        <span>Asheville conditions, translated for real life</span>
+      </a>
+      <nav aria-label="Primary navigation">
+        <a href="/">Home</a>
+        <a href="/forecast.html">Forecast</a>
+        <a href="/hiking.html">Hiking</a>
+        <a class="active" href="/i26-connector.html" aria-current="page">I-26 Connector</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-inner">
+        <div class="hero-copy">
+          <div class="eyebrow"><span></span> Asheville construction desk</div>
+          <h1>I-26 Connector Center</h1>
+          <p class="hero-lede">Closures, cameras, construction milestones, and weather impacts for Asheville's biggest transportation project.</p>
+          <div class="hero-actions">
+            <a class="button primary" href="#live-map">See live impacts</a>
+            <a class="button" href="https://www.drivenc.gov/region/Asheville" target="_blank" rel="noopener noreferrer">Open DriveNC traffic map</a>
+          </div>
+        </div>
+        <aside class="project-facts" aria-label="Project facts">
+          <div><strong>About 7 miles</strong><span>I-26, I-240, I-40, and Riverside Drive</span></div>
+          <div><strong>$1.8 billion</strong><span>Estimated overall project funding</span></div>
+          <div><strong>Late 2031</strong><span>Current target for overall completion</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="status-strip" aria-label="Live corridor summary">
+      <div><span>Active events</span><strong id="incidentCount">Loading</strong></div>
+      <div><span>Full closures</span><strong id="closureCount">--</strong></div>
+      <div><span>Weather impact</span><strong id="weatherImpactLabel">Checking</strong></div>
+      <div><span>Live update</span><strong id="lastUpdated">Connecting</strong></div>
+    </section>
+
+    <section class="page-section weather-section" id="weather-impact">
+      <div class="section-heading">
+        <div><div class="kicker">Corridor weather</div><h2>What weather means for the work zone</h2></div>
+        <a href="/forecast.html">Open full forecast</a>
+      </div>
+      <div class="weather-grid">
+        <article class="weather-main">
+          <div class="impact-badge" id="weatherImpactBadge">Loading local conditions</div>
+          <h3 id="weatherHeadline">Reading rain, wind, visibility, and temperature signals.</h3>
+          <p id="weatherNarrative">Weather guidance will appear here when the latest Asheville forecast arrives.</p>
+        </article>
+        <div class="weather-signals" id="weatherSignals" aria-live="polite">
+          <div><span>Next 12 hours</span><strong>Loading</strong></div>
+          <div><span>Peak wind gust</span><strong>--</strong></div>
+          <div><span>Visibility signal</span><strong>--</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page-section" id="live-map">
+      <div class="section-heading">
+        <div>
+          <div class="kicker">Live NCDOT feed</div>
+          <h2>Closures and road work near the Connector</h2>
+          <p class="map-intro">The highlighted route provides geographic context for Asheville's future interstate connection. Live NCDOT events are plotted around it.</p>
+        </div>
+      </div>
+      <div class="map-shell">
+        <div id="connectorMap" aria-label="Map of active NCDOT traffic events near the I-26 Connector"></div>
+        <aside class="map-key" aria-label="Map legend">
+          <strong>Map key</strong>
+          <div><span class="corridor-swatch"></span><b>Connector corridor</b><small>Approximate project reference</small></div>
+          <div><span class="closure-dot"></span><b>Closure</b><small>Live NCDOT event</small></div>
+          <div><span class="work-dot"></span><b>Road work</b><small>Live NCDOT event</small></div>
+        </aside>
+        <div class="map-note"><strong>About the blue route:</strong> It is an approximate orientation guide showing the project corridor from the southern interchanges through the French Broad River area toward Woodfin. It is not an engineering alignment or construction boundary.</div>
+      </div>
+      <div class="incident-list" id="incidentList" aria-live="polite">
+        <article class="loading-card">Loading current NCDOT events...</article>
+      </div>
+    </section>
+
+    <section class="page-section camera-section" id="cameras">
+      <div class="section-heading">
+        <div><div class="kicker">NCDOT cameras</div><h2>Visual checks along I-26, I-240, and I-40</h2></div>
+        <a href="https://www.drivenc.gov/cctv" target="_blank" rel="noopener noreferrer">All DriveNC cameras</a>
+      </div>
+      <div class="camera-grid" id="cameraGrid">
+        <article class="camera-fallback">
+          <h3>Camera views are loading.</h3>
+          <p>The official corridor camera lists remain available while the live feed connects.</p>
+        </article>
+      </div>
+      <div class="official-camera-links">
+        <a href="https://nc.prod.traveliq.co/cctv?start=0&length=10&filters%5B0%5D%5Bi%5D=2&filters%5B0%5D%5Bs%5D=Buncombe&filters%5B1%5D%5Bi%5D=3&filters%5B1%5D%5Bs%5D=I-26&order%5Bi%5D=1&order%5Bdir%5D=asc" target="_blank" rel="noopener noreferrer">I-26 cameras</a>
+        <a href="https://nc.prod.traveliq.co/cctv?start=0&length=10&filters%5B0%5D%5Bi%5D=2&filters%5B0%5D%5Bs%5D=Buncombe&filters%5B1%5D%5Bi%5D=3&filters%5B1%5D%5Bs%5D=I-240&order%5Bi%5D=1&order%5Bdir%5D=asc" target="_blank" rel="noopener noreferrer">I-240 cameras</a>
+        <a href="https://nc.prod.traveliq.co/cctv?start=0&length=10&filters%5B0%5D%5Bi%5D=2&filters%5B0%5D%5Bs%5D=Buncombe&filters%5B1%5D%5Bi%5D=3&filters%5B1%5D%5Bs%5D=I-40&order%5Bi%5D=1&order%5Bdir%5D=asc" target="_blank" rel="noopener noreferrer">I-40 cameras</a>
+      </div>
+    </section>
+
+    <section class="page-section project-section" id="project">
+      <div class="section-heading">
+        <div><div class="kicker">Project guide</div><h2>Four connected construction programs</h2></div>
+        <a href="https://www.ncdot.gov/projects/asheville-i-26-connector/Pages/default.aspx" target="_blank" rel="noopener noreferrer">Official NCDOT project page</a>
+      </div>
+      <div class="section-card-grid">
+        <article><span>AA / AB</span><h3>Southern interchange work</h3><p>Initial I-26/I-40/I-240 interchange improvements and work along I-40 toward Smokey Park Highway.</p><b>Construction underway</b></article>
+        <article><span>B / D</span><h3>North section</h3><p>New interstate across the French Broad River, Haywood Road and Broadway upgrades, plus Riverside Drive improvements.</p><b>Construction underway</b></article>
+        <article><span>AC</span><h3>I-240 widening</h3><p>I-240 upgrades from I-40 to Haywood Road, including the Brevard Road and Amboy Road interchanges.</p><b>Design and right-of-way</b></article>
+        <article><span>C</span><h3>Remaining interchange work</h3><p>Additional work at I-40, I-26/I-240, Brevard Road, and Smokey Park Highway.</p><b>Funding schedule pending</b></article>
+      </div>
+    </section>
+
+    <section class="page-section split-section">
+      <div>
+        <div class="section-heading compact"><div><div class="kicker">Milestones</div><h2>The road to 2031</h2></div></div>
+        <ol class="timeline">
+          <li class="complete"><time>June 2024</time><div><strong>North section contract awarded</strong><p>Archer-Wright Joint Venture selected for Sections B and D.</p></div></li>
+          <li class="complete"><time>March 26, 2026</time><div><strong>Federal approval received</strong><p>Updated north-section plans cleared to move forward.</p></div></li>
+          <li class="complete"><time>April 23, 2026</time><div><strong>Groundbreaking</strong><p>NCDOT marked the formal start of Connector construction.</p></div></li>
+          <li><time>2026 onward</time><div><strong>Major construction and traffic shifts</strong><p>Bridge, interchange, ramp, utility, and corridor work progresses in phases.</p></div></li>
+          <li><time>Late 2031</time><div><strong>Target completion</strong><p>Current overall completion target for the funded Connector program.</p></div></li>
+        </ol>
+      </div>
+      <div>
+        <div class="section-heading compact"><div><div class="kicker">Latest official updates</div><h2>Project news desk</h2></div></div>
+        <div class="news-list">
+          <a href="https://www.ncdot.gov/news/press-releases/Pages/2026/2026-04-23-interstate-26-connector-groundbreaking.aspx" target="_blank" rel="noopener noreferrer"><time>April 23, 2026</time><strong>NCDOT breaks ground on the I-26 Connector</strong><span>Major milestone for the north and south sections.</span></a>
+          <a href="https://www.ncdot.gov/news/press-releases/Pages/2026/04-10-26-i-26-ramp-closures.aspx" target="_blank" rel="noopener noreferrer"><time>April 10, 2026</time><strong>Ramp closures announced</strong><span>Riverside Drive, Hill Street, and Patton Avenue access changes.</span></a>
+          <a href="https://www.ncdot.gov/news/press-releases/Pages/2026/2026-03-26-i-26-connector-federal-approval.aspx" target="_blank" rel="noopener noreferrer"><time>March 26, 2026</time><strong>Federal approval clears north section</strong><span>Construction allowed to advance under the revised design.</span></a>
+          <a href="https://828newsnow.com/news/228822-were-building-it-inside-massive-i-26-connector-project-in-asheville/" target="_blank" rel="noopener noreferrer"><time>Local explainer</time><strong>Inside the massive Connector project</strong><span>Overview of sections, funding, schedule, and community changes.</span></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="source-panel">
+      <div><div class="kicker">Official resources</div><h2>Go straight to the source</h2></div>
+      <div class="source-links">
+        <a href="https://www.ncdot.gov/projects/asheville-i-26-connector/Pages/default.aspx" target="_blank" rel="noopener noreferrer">NCDOT project center</a>
+        <a href="https://www.ncdot.gov/projects/asheville-i-26-connector/Pages/project-maps.aspx" target="_blank" rel="noopener noreferrer">Project maps</a>
+        <a href="https://www.ncdot.gov/projects/asheville-i-26-connector/Documents/asheville-i-26-connector-public-meeting-handout.pdf" target="_blank" rel="noopener noreferrer">Project handout</a>
+        <a href="https://www.ashevillenc.gov/department/transportation/current-projects/i-26-connector-project/" target="_blank" rel="noopener noreferrer">City of Asheville</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div><strong>828 Weather Direct</strong><span>Connector information for general awareness. Verify closures and travel decisions with NCDOT DriveNC.</span></div>
+    <div><a href="/">Home</a><a href="https://www.drivenc.gov/region/Asheville" target="_blank" rel="noopener noreferrer">DriveNC Asheville</a></div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script type="module" src="/js/i26-connector.js?v=20260613-2"></script>
+</body>
+</html>
