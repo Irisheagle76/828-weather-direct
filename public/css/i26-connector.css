@@ -137,7 +137,7 @@ h1 { max-width: 760px; margin: 15px 0; font: 700 clamp(3.5rem, 8vw, 7rem)/0.88 G
 .incident-card p { margin: 0; color: var(--muted); line-height: 1.5; }
 .incident-meta { color: #48566b; font-size: .82rem; }
 .incident-card a { color: var(--blue); font-weight: 900; }
-.camera-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.camera-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
 .camera-card, .camera-fallback { overflow: hidden; padding: 22px; }
 .camera-card { position: relative; padding-top: 0; }
 .camera-view { position: relative; height: 180px; margin: 0 -22px 18px; overflow: hidden; color: white; background: linear-gradient(135deg, var(--blue-dark), var(--blue)); }
@@ -188,7 +188,7 @@ footer a { font-weight: 900; }
   .hero-inner, .weather-grid, .split-section { grid-template-columns: 1fr; }
   .project-facts { grid-template-columns: repeat(3, 1fr); }
   .section-card-grid { grid-template-columns: repeat(2, 1fr); }
-  .camera-grid { grid-template-columns: repeat(2, 1fr); }
+  .camera-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .source-panel { align-items: flex-start; flex-direction: column; }
   .source-links { justify-content: flex-start; }
 }
