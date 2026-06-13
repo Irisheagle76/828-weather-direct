@@ -7,7 +7,7 @@
   <title>I-26 Connector Center | 828 Weather Direct</title>
   <link rel="preconnect" href="https://unpkg.com" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3ynHT9tUiN7ZBxiDHdIwAzJbDss0=" crossorigin="" />
-  <link rel="stylesheet" href="/css/i26-connector.css?v=20260613-3" />
+  <link rel="stylesheet" href="/css/i26-connector.css?v=20260613-4" />
 </head>
 <body>
   <header class="site-header">
@@ -96,7 +96,11 @@
 
     <section class="page-section camera-section" id="cameras">
       <div class="section-heading">
-        <div><div class="kicker">NCDOT cameras</div><h2>Visual checks along I-26, I-240, and I-40</h2></div>
+        <div>
+          <div class="kicker">NCDOT cameras</div>
+          <h2>Visual checks along I-26, I-240, and I-40</h2>
+          <p class="map-intro">Official DriveNC still images refresh about once per minute, providing a quick near-live look at traffic flow, pavement, visibility, and active work zones.</p>
+        </div>
         <a href="https://www.drivenc.gov/cctv" target="_blank" rel="noopener noreferrer">All DriveNC cameras</a>
       </div>
       <div class="camera-grid" id="cameraGrid">
@@ -164,6 +168,6 @@
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script type="module" src="/js/i26-connector.js?v=20260613-2"></script>
+  <script type="module" src="/js/i26-connector.js?v=20260613-3"></script>
 </body>
 </html>

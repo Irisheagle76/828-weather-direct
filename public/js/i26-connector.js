@@ -13,6 +13,7 @@ const corridorPoints = [
 
 let map;
 let eventLayer;
+let cameraRefreshTimer;
 
 function escapeHtml(value = "") {
   return String(value).replace(/[&<>'"]/g, (character) => ({
@@ -131,12 +132,31 @@ function renderCameras(data) {
     return;
   }
 
-  grid.innerHTML = data.cameras.slice(0, 9).map((camera) => `<article class="camera-card">
-    <div class="camera-view">${escapeHtml(camera.roadway)} ${escapeHtml(camera.direction)}</div>
-    <h3>${escapeHtml(camera.location)}</h3>
-    <p>Status: ${escapeHtml(camera.status)}</p>
-    <a href="${escapeHtml(camera.url)}" target="_blank" rel="noopener noreferrer">Open camera view</a>
+  const refreshToken = Math.floor(Date.now() / 60000);
+  grid.innerHTML = data.cameras.map((camera) => `<article class="camera-card">
+    <a class="camera-view" href="${escapeHtml(camera.url)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${escapeHtml(camera.label || camera.location)} on DriveNC">
+      <img src="${escapeHtml(camera.imageUrl)}?t=${refreshToken}" data-camera-image="${escapeHtml(camera.imageUrl)}" alt="Near-live NCDOT camera view: ${escapeHtml(camera.label || camera.location)}" loading="lazy" />
+      <span class="camera-live-badge">Near live</span>
+    </a>
+    <div class="camera-route">${escapeHtml(camera.roadway)}${camera.direction ? ` &bull; ${escapeHtml(camera.direction)}` : ""}</div>
+    <h3>${escapeHtml(camera.label || camera.location)}</h3>
+    <p>${escapeHtml(camera.location)}</p>
+    <div class="camera-meta"><span>Refreshes every minute</span><a href="${escapeHtml(camera.url)}" target="_blank" rel="noopener noreferrer">Open on DriveNC</a></div>
   </article>`).join("");
+
+  startCameraRefresh();
+}
+
+function startCameraRefresh() {
+  clearInterval(cameraRefreshTimer);
+  cameraRefreshTimer = setInterval(() => {
+    const refreshToken = Math.floor(Date.now() / 60000);
+    document.querySelectorAll("[data-camera-image]").forEach((image) => {
+      image.classList.add("is-refreshing");
+      image.addEventListener("load", () => image.classList.remove("is-refreshing"), { once: true });
+      image.src = `${image.dataset.cameraImage}?t=${refreshToken}`;
+    });
+  }, 60 * 1000);
 }
 
 async function loadCameras() {
