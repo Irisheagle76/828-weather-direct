@@ -421,6 +421,8 @@
     .published-list {
       margin-top: 1rem;
       border-top: 1px solid rgba(255,255,255,0.08);
+      max-width: 100%;
+      min-width: 0;
       padding-top: 0.9rem;
     }
 
@@ -467,6 +469,8 @@
     .published-items {
       display: grid;
       gap: 0.45rem;
+      max-width: 100%;
+      min-width: 0;
     }
 
     .published-item {
@@ -476,8 +480,12 @@
       border-radius: 10px;
       display: grid;
       gap: 0.7rem;
-      grid-template-columns: 1fr auto;
+      grid-template-columns: minmax(0, 1fr) auto;
+      max-width: 100%;
+      min-width: 0;
+      overflow: hidden;
       padding: 0.58rem 0.65rem;
+      width: 100%;
     }
 
     .published-item.active {
@@ -489,14 +497,20 @@
       color: var(--accent);
       font-size: 0.72rem;
       margin-bottom: 0.2rem;
+      min-width: 0;
     }
 
     .published-item-text {
       color: var(--text-muted);
       font-size: 0.78rem;
+      line-height: 1.35;
       overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .published-item-edit {
+      justify-self: end;
     }
 
     .edit-banner {
