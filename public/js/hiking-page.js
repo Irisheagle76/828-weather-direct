@@ -69,15 +69,12 @@ const els = {
     }
 
     function scoreFromGuidance(guidance = {}) {
-      const uv = Number(guidance.maxUv ?? 0);
-      const fogPenalty = guidance.fogRisk === "Elevated" ? 8 : 0;
-      const gustPenalty = Number(guidance.maxGust ?? 0) >= 20 ? 8 : Number(guidance.maxGust ?? 0) >= 14 ? 4 : 0;
-      const spreadPenalty = Number(guidance.localTempSpread ?? 0) > 12 ? 5 : 0;
-      const uvPenalty = uv >= 6 ? 8 : uv >= 3 ? 3 : 0;
-      return Math.max(45, Math.min(96, Math.round(82 - fogPenalty - gustPenalty - spreadPenalty - uvPenalty)));
+      if (Number.isFinite(guidance.hikerScore)) return guidance.hikerScore;
+      return "--";
     }
 
     function labelFromScore(score) {
+      if (!Number.isFinite(score)) return "Loading";
       if (score >= 86) return "Great";
       if (score >= 70) return "Good";
       if (score >= 56) return "Mixed";
@@ -317,7 +314,7 @@ const els = {
       const score = scoreFromGuidance(guidance);
 
       els.hikerScore.textContent = score;
-      els.hikerLabel.textContent = labelFromScore(score);
+      els.hikerLabel.textContent = guidance.hikerScoreLabel || labelFromScore(score);
       els.hikerHeadline.textContent = cleanText(guidance.bestWindow || "Trail conditions are updating.");
       renderNarrative(guidance.hikerNarrative);
       els.localSpread.textContent = `${round(guidance.localTempSpread)}\u00b0`;

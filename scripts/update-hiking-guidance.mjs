@@ -147,21 +147,43 @@ function htmlValue(value) {
   return esc(value).replace(/degF/g, "&deg;F").replace(/°F/g, "&deg;F").replace(/°/g, "&deg;");
 }
 
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
 function hikerScore(g) {
-  let score = 88;
-  if (g.lightning?.active) score -= 30;
-  if (g.maxUv >= 7) score -= 12;
-  else if (g.maxUv >= 5) score -= 6;
-  else if (g.maxUv >= 3) score -= 2;
-  if (g.maxGust >= 25) score -= 15;
-  else if (g.maxGust >= 15) score -= 6;
-  if (g.fogRisk === "Elevated") score -= 10;
-  else if (g.fogRisk === "Patchy pockets") score -= 4;
-  if (g.mitchellDrop >= 15) score -= 5;
-  else if (g.mitchellDrop >= 10) score -= 2;
-  if (g.localTempSpread >= 8) score -= 4;
-  else if (g.localTempSpread >= 5) score -= 2;
-  return Math.max(0, Math.min(100, Math.round(score)));
+  const factors = [];
+  let penalty = 0;
+  const add = (amount, label) => {
+    const value = round(amount, 1);
+    if (value > 0) {
+      penalty += value;
+      factors.push({ label, penalty: value });
+    }
+  };
+
+  if (g.lightning?.active) add(45, "Nearby lightning");
+  add(g.fogRisk === "Elevated" ? 8 : g.fogRisk === "Patchy pockets" ? 4 : 0, "Fog or damp trail risk");
+  add(g.maxUv == null ? 0 : clamp((g.maxUv - 2) * 2, 0, 18), "UV exposure");
+  add(g.maxSolar == null ? 0 : clamp((g.maxSolar - 500) / 120, 0, 5), "Solar exposure");
+  add(g.maxGust == null ? 0 : clamp((g.maxGust - 12) * 0.9, 0, 18), "Wind on exposed terrain");
+  add(g.maxWbgt == null ? 0 : clamp((g.maxWbgt - 65) * 0.75, 0, 20), "Heat stress");
+  add(g.maxTemp == null || g.maxWbgt != null ? 0 : clamp((g.maxTemp - 78) * 0.6, 0, 10), "Warm air temperature");
+  add(g.maxRainRate == null ? 0 : clamp(g.maxRainRate * 80, 0, 12), "Active rain");
+  add(g.maxRainToday == null ? 0 : clamp((g.maxRainToday - 0.1) * 8, 0, 8), "Wet ground");
+  add(g.mitchellDrop == null ? 0 : clamp((g.mitchellDrop - 10) * 0.4, 0, 7), "High-peak temperature drop");
+  add(g.localTempSpread == null ? 0 : clamp((g.localTempSpread - 4) * 0.6, 0, 8), "Local microclimate spread");
+
+  const score = Math.round(clamp(92 - penalty, 0, 100));
+  return { score, factors };
+}
+
+function hikerScoreLabel(score, lightningActive = false) {
+  if (lightningActive) return "Alert";
+  if (score >= 84) return "Great";
+  if (score >= 70) return "Good";
+  if (score >= 55) return "Mixed";
+  return "Use care";
 }
 
 async function readPrevious() {
@@ -352,6 +374,8 @@ function analyze(stations) {
   const maxGust = Math.max(...usable.map((s) => s.gustMph ?? s.windMph ?? 0));
   const maxTemp = Math.max(...usable.map((s) => s.temperatureF ?? -Infinity));
   const maxWbgt = Math.max(...usable.map((s) => s.wbgtF ?? -Infinity));
+  const maxRainRate = Math.max(...usable.map((s) => s.rainRateInHr ?? 0));
+  const maxRainToday = Math.max(...usable.map((s) => s.rainTodayIn ?? 0));
   const lightningStations = stations.filter((s) => s.source === "Tempest" && hasLightningSignal(s));
   const nearestLightningStation = lightningStations
     .slice()
@@ -380,6 +404,21 @@ function analyze(stations) {
   const hikerNarrative = lightningActive
     ? `Tempest lightning may be in the vicinity of your hike. ${nearestLightningStation ? `${nearestLightningStation.name} reported ${lightningDetails || "a recent lightning signal"}.` : "A nearby Tempest station reported a recent lightning signal."} Stay alert and avoid exposed ridges, balds, summits, and open slopes until the signal clears.`
     : `If you are heading out, Asheville-area trails look ${overall.toLowerCase()}. The nearby readings sit within about ${f(localTempSpread, "degF")} of each other, so elevation alone may not change the feel very much. The two high Asheville readings ${highStationSpread != null && highStationSpread >= 4 ? "differ enough to show local microclimates at work" : "are telling a similar ridge story"}, which means shade, slope, and open exposure still matter. Mount Mitchell is about ${f(mitchellDrop, "degF")} cooler than the Asheville-area readings, so high-peak hikes deserve an extra layer and a separate comfort check. ${fogRisk === "Elevated" ? "Moisture is close enough for fog, low cloud, or wet leaves in sheltered spots." : "Fog is not the main signal right now."} ${maxSolar >= 500 || maxUv >= 5 ? "Open routes need sun awareness and steady water; forested trails should feel more forgiving." : "Sun exposure is manageable, especially under canopy."}`;
+  const scoreInput = {
+    localTempSpread: round(localTempSpread, 1),
+    mitchellDrop: round(mitchellDrop, 1),
+    fogRisk,
+    maxUv: maxUv === -Infinity ? null : maxUv,
+    maxSolar: maxSolar === -Infinity ? null : round(maxSolar),
+    maxGust: maxGust === -Infinity ? null : round(maxGust, 1),
+    maxTemp: maxTemp === -Infinity ? null : round(maxTemp, 1),
+    maxWbgt: maxWbgt === -Infinity ? null : round(maxWbgt, 1),
+    maxRainRate: maxRainRate === -Infinity ? null : round(maxRainRate, 2),
+    maxRainToday: maxRainToday === -Infinity ? null : round(maxRainToday, 2),
+    lightning: { active: lightningActive }
+  };
+  const scoreResult = hikerScore(scoreInput);
+  const scoreLabel = hikerScoreLabel(scoreResult.score, lightningActive);
   const bullets = [
     lightningActive
       ? `Lightning alert: ${nearestLightningStation ? nearestLightningStation.name : "Tempest"} reports nearby lightning. Stay off exposed terrain.`
@@ -396,6 +435,9 @@ function analyze(stations) {
     bestWindow,
     hikerNarrative,
     bullets,
+    hikerScore: scoreResult.score,
+    hikerScoreLabel: scoreLabel,
+    hikerScoreFactors: scoreResult.factors,
     localTempSpread: round(localTempSpread, 1),
     highStationSpread: round(highStationSpread, 1),
     lapseRate: round(lapseRate, 1),
@@ -405,7 +447,10 @@ function analyze(stations) {
     maxUv: maxUv === -Infinity ? null : maxUv,
     maxSolar: maxSolar === -Infinity ? null : round(maxSolar),
     maxGust: maxGust === -Infinity ? null : round(maxGust, 1),
+    maxTemp: maxTemp === -Infinity ? null : round(maxTemp, 1),
     maxWbgt: maxWbgt === -Infinity ? null : round(maxWbgt, 1),
+    maxRainRate: maxRainRate === -Infinity ? null : round(maxRainRate, 2),
+    maxRainToday: maxRainToday === -Infinity ? null : round(maxRainToday, 2),
     lightning: {
       active: lightningActive,
       stationName: nearestLightningStation?.name ?? null,
@@ -450,8 +495,8 @@ function renderHtml(payload) {
     ["Sun exposure", g.maxUv >= 5 || g.maxSolar >= 500 ? "Open overlooks, rock, and pavement need sun awareness and steady water." : "Sun exposure is manageable now, especially under canopy."],
     ["Wind check", g.maxGust >= 20 ? "Wind matters on exposed terrain and higher gaps." : "Wind is light at the reporting sites, so comfort is mostly about sun, shade, and layers."]
   ];
-  const score = hikerScore(g);
-  const scoreLabel = lightningActive ? "Alert" : score >= 82 ? "Great" : score >= 70 ? "Good" : score >= 55 ? "Mixed" : "Use care";
+  const score = Number.isFinite(g.hikerScore) ? g.hikerScore : hikerScore(g).score;
+  const scoreLabel = g.hikerScoreLabel || hikerScoreLabel(score, lightningActive);
   const tldrBullets = [
     lightningActive ? "Tempest lightning is nearby. Avoid exposed terrain until the signal clears." : g.bestWindow,
     g.localTempSpread == null ? "Local temperature spread unavailable." : `Asheville-area spread is about ${f(g.localTempSpread, "degF")}.`,
