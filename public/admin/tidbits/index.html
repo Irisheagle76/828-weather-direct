@@ -418,6 +418,104 @@
       white-space: nowrap;
     }
 
+    .published-list {
+      margin-top: 1rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      padding-top: 0.9rem;
+    }
+
+    .published-list-header {
+      align-items: center;
+      display: flex;
+      gap: 0.75rem;
+      justify-content: space-between;
+      margin-bottom: 0.55rem;
+    }
+
+    .published-list-title {
+      color: var(--text-main);
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .published-list-status {
+      color: var(--text-muted);
+      font-size: 0.74rem;
+      margin-top: 0.12rem;
+    }
+
+    .published-list-refresh,
+    .published-item-edit,
+    .secondary-action {
+      background: rgba(255,255,255,0.08);
+      border: 0;
+      border-radius: 999px;
+      color: #eaf1ff;
+      cursor: pointer;
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      white-space: nowrap;
+    }
+
+    .published-list-refresh:disabled,
+    .published-item-edit:disabled,
+    .secondary-action:disabled {
+      cursor: default;
+      opacity: 0.5;
+    }
+
+    .published-items {
+      display: grid;
+      gap: 0.45rem;
+    }
+
+    .published-item {
+      align-items: center;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      display: grid;
+      gap: 0.7rem;
+      grid-template-columns: 1fr auto;
+      padding: 0.58rem 0.65rem;
+    }
+
+    .published-item.active {
+      border-color: rgba(143,183,255,0.72);
+      box-shadow: 0 0 0 2px rgba(143,183,255,0.12);
+    }
+
+    .published-item-time {
+      color: var(--accent);
+      font-size: 0.72rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .published-item-text {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .edit-banner {
+      align-items: center;
+      background: rgba(143,183,255,0.12);
+      border: 1px solid rgba(143,183,255,0.35);
+      border-radius: 10px;
+      display: none;
+      gap: 0.65rem;
+      justify-content: space-between;
+      margin-bottom: 0.8rem;
+      padding: 0.55rem 0.7rem;
+    }
+
+    .edit-banner-text {
+      color: #dbeafe;
+      font-size: 0.8rem;
+    }
+
     /* Preview */
     .preview {
       margin-top: 1.1rem;
@@ -535,6 +633,9 @@
       .media-library-header {
         align-items: flex-start;
       }
+      .published-item {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -552,6 +653,11 @@
           <button type="button" id="restore-draft-btn">Restore</button>
           <button type="button" id="discard-draft-btn">Discard</button>
         </div>
+      </div>
+
+      <div id="edit-banner" class="edit-banner">
+        <span class="edit-banner-text" id="edit-banner-text">Editing published Pulse</span>
+        <button type="button" class="secondary-action" id="cancel-edit-btn">Cancel edit</button>
       </div>
 
       <div class="field">
@@ -612,6 +718,17 @@
         </span>
       </div>
 
+      <div class="published-list">
+        <div class="published-list-header">
+          <div>
+            <div class="published-list-title">Published Pulse updates</div>
+            <div class="published-list-status" id="published-list-status">Loading published updates...</div>
+          </div>
+          <button class="published-list-refresh" id="published-list-refresh" type="button">Refresh</button>
+        </div>
+        <div class="published-items" id="published-items"></div>
+      </div>
+
       <div class="preview">
         <div class="preview-label-row">
           <span>Live preview</span>
@@ -646,6 +763,12 @@
   const draftRestoreBanner = document.getElementById('draft-restore');
   const restoreDraftBtn = document.getElementById('restore-draft-btn');
   const discardDraftBtn = document.getElementById('discard-draft-btn');
+  const editBanner = document.getElementById('edit-banner');
+  const editBannerText = document.getElementById('edit-banner-text');
+  const cancelEditBtn = document.getElementById('cancel-edit-btn');
+  const publishedListStatus = document.getElementById('published-list-status');
+  const publishedListRefresh = document.getElementById('published-list-refresh');
+  const publishedItems = document.getElementById('published-items');
 
   const DRAFT_KEY = '828_pulse_draft_v1';
 
@@ -655,6 +778,8 @@
   let isUploading = false;
   let draftSaveTimer = null;
   let recentAssets = [];
+  let publishedPulses = [];
+  let editingTimestamp = null;
   let savedEditorRange = null;
 
   // -----------------------------
@@ -1029,6 +1154,110 @@
     }[char]));
   }
 
+  function htmlToText(html) {
+    const div = document.createElement("div");
+    div.innerHTML = html || "";
+    return (div.textContent || "").replace(/\s+/g, " ").trim();
+  }
+
+  function formatPublishedTime(timestamp) {
+    if (!timestamp) return "Untimed Pulse";
+    return new Date(timestamp).toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit"
+    });
+  }
+
+  function publishButtonLabel() {
+    return publishBtn.querySelector("span");
+  }
+
+  function setEditingPulse(pulse) {
+    editingTimestamp = Number(pulse.timestamp) || null;
+    editor.innerHTML = pulse.text || pulse.body || pulse.content || "";
+    currentFile = null;
+    mediaInput.value = "";
+    currentMediaUrl = pulse.mediaUrl || pulse.image || "";
+    currentMediaType = pulse.mediaType || (currentMediaUrl ? "image" : null);
+    mediaFilename.textContent = currentMediaUrl ? `Using published ${currentMediaType || "media"}` : "";
+    editBannerText.textContent = `Editing Pulse from ${formatPublishedTime(editingTimestamp)}`;
+    editBanner.style.display = "flex";
+    publishButtonLabel().textContent = "Update Pulse";
+    clearDraft();
+    renderMediaLibrary();
+    renderPublishedPulses();
+    updatePreview();
+    editor.focus();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function clearEditingPulse({ clearEditor = false } = {}) {
+    editingTimestamp = null;
+    editBanner.style.display = "none";
+    publishButtonLabel().textContent = "Publish Pulse";
+    if (clearEditor) {
+      editor.innerHTML = "";
+      currentMediaUrl = "";
+      currentMediaType = null;
+      currentFile = null;
+      mediaInput.value = "";
+      mediaFilename.textContent = "";
+      updatePreview();
+    }
+    renderPublishedPulses();
+  }
+
+  function renderPublishedPulses() {
+    if (!publishedPulses.length) {
+      publishedItems.innerHTML = "";
+      return;
+    }
+
+    publishedItems.innerHTML = publishedPulses.map((pulse, index) => {
+      const text = htmlToText(pulse.text || pulse.body || pulse.content || "");
+      const safeText = escapeHTML(text || "No text");
+      const time = escapeHTML(formatPublishedTime(pulse.timestamp));
+      const active = editingTimestamp && Number(pulse.timestamp) === editingTimestamp;
+
+      return `
+        <article class="published-item${active ? " active" : ""}">
+          <div>
+            <div class="published-item-time">${time}${pulse.editedAt ? " · edited" : ""}</div>
+            <div class="published-item-text">${safeText}</div>
+          </div>
+          <button class="published-item-edit" type="button" data-pulse-index="${index}">
+            ${active ? "Editing" : "Edit"}
+          </button>
+        </article>
+      `;
+    }).join("");
+  }
+
+  async function loadPublishedPulses() {
+    publishedListRefresh.disabled = true;
+    publishedListStatus.textContent = "Loading published updates...";
+
+    try {
+      const res = await fetch("/api/router?route=tidbits/pulse-feed");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Unable to load published updates");
+
+      publishedPulses = Array.isArray(data.items) ? data.items.filter((item) => item && item.timestamp) : [];
+      renderPublishedPulses();
+      publishedListStatus.textContent = publishedPulses.length
+        ? `${publishedPulses.length} published update${publishedPulses.length === 1 ? "" : "s"} available`
+        : "No Pulse updates have been published yet";
+    } catch {
+      publishedPulses = [];
+      publishedItems.innerHTML = "";
+      publishedListStatus.textContent = "Could not load published Pulse updates";
+    }
+
+    publishedListRefresh.disabled = false;
+  }
+
   function selectCloudinaryAsset(asset) {
     currentFile = null;
     mediaInput.value = "";
@@ -1110,6 +1339,16 @@
   });
 
   mediaLibraryRefresh.addEventListener("click", loadRecentMedia);
+
+  publishedItems.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-pulse-index]");
+    if (!btn) return;
+    const pulse = publishedPulses[Number(btn.dataset.pulseIndex)];
+    if (pulse) setEditingPulse(pulse);
+  });
+
+  publishedListRefresh.addEventListener("click", loadPublishedPulses);
+  cancelEditBtn.addEventListener("click", () => clearEditingPulse());
 
   function showProgress(show) {
     mediaProgress.style.display = show ? 'block' : 'none';
@@ -1373,7 +1612,8 @@ function updateTimestamp() {
           title: "Weather Pulse",
           text: html,
           mediaUrl,
-          mediaType
+          mediaType,
+          timestamp: editingTimestamp
         })
       });
 
@@ -1382,15 +1622,18 @@ function updateTimestamp() {
         throw new Error(`API error: ${res.status} - ${text}`);
       }
 
-      setStatus("Published", "success");
+      setStatus(editingTimestamp ? "Updated" : "Published", "success");
       editor.innerHTML = "";
       currentMediaUrl = "";
       currentMediaType = null;
       currentFile = null;
+      mediaInput.value = "";
       mediaFilename.textContent = "";
+      clearEditingPulse();
       renderMediaLibrary();
       updatePreview();
       clearDraft();
+      await loadPublishedPulses();
 
       setTimeout(() => {
         setStatus("", null);
@@ -1412,6 +1655,7 @@ function updateTimestamp() {
     updatePreview();
     checkForDraft();
     loadRecentMedia();
+    loadPublishedPulses();
   }
 
   init();
