@@ -233,15 +233,24 @@ async function loadEmailAlerts() {
 }
 
 function newsMediaMarkup(item) {
-  const media = item.mediaUrl || "";
-  if (!media) return "";
-  const safeMedia = escapeHtml(media);
-  const isVideo = item.mediaType === "video" || media.endsWith(".mp4") || media.includes("/video/");
+  const mediaItems = Array.isArray(item.mediaItems) && item.mediaItems.length
+    ? item.mediaItems
+    : item.mediaUrl
+      ? [{ mediaUrl: item.mediaUrl, mediaType: item.mediaType }]
+      : [];
 
-  return `<div class="connector-news-media">
-    ${isVideo
-      ? `<video controls playsinline src="${safeMedia}"></video>`
-      : `<img src="${safeMedia}" alt="${escapeHtml(item.title || "Connector update media")}" loading="lazy" />`}
+  const visible = mediaItems.filter((media) => media?.mediaUrl).slice(0, 8);
+  if (!visible.length) return "";
+
+  return `<div class="connector-news-media ${visible.length > 1 ? "gallery" : ""}">
+    ${visible.map((media) => {
+      const mediaUrl = media.mediaUrl || "";
+      const safeMedia = escapeHtml(mediaUrl);
+      const isVideo = media.mediaType === "video" || mediaUrl.endsWith(".mp4") || mediaUrl.includes("/video/");
+      return isVideo
+        ? `<video controls playsinline src="${safeMedia}"></video>`
+        : `<img src="${safeMedia}" alt="${escapeHtml(item.title || "Connector update media")}" loading="lazy" />`;
+    }).join("")}
   </div>`;
 }
 

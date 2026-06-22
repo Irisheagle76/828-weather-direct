@@ -38,6 +38,13 @@
     .media-zone { display: flex; justify-content: space-between; gap: 14px; align-items: center; padding: 14px; border: 1px dashed rgba(255,255,255,.2); border-radius: 10px; background: rgba(15,21,37,.85); cursor: pointer; }
     .media-zone.dragover { border-color: var(--accent); background: rgba(79,124,255,.12); }
     #media-input { display: none; }
+    .selected-media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 8px; margin-top: 9px; }
+    .selected-media-item { overflow: hidden; border: 1px solid rgba(255,255,255,.12); border-radius: 10px; background: rgba(255,255,255,.04); }
+    .selected-media-item img,
+    .selected-media-item video { width: 100%; aspect-ratio: 16 / 9; display: block; object-fit: cover; background: #020617; }
+    .selected-media-item div { display: flex; justify-content: space-between; gap: 6px; align-items: center; padding: 6px; }
+    .selected-media-item span { min-width: 0; color: var(--muted); font-size: .7rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .selected-media-item button { border: 0; border-radius: 999px; color: #fff; background: rgba(255,255,255,.1); cursor: pointer; font-size: .68rem; padding: 3px 7px; }
     .media-progress { height: 4px; margin-top: 7px; border-radius: 999px; overflow: hidden; background: rgba(255,255,255,.08); }
     .media-progress div { width: 0%; height: 100%; background: linear-gradient(135deg, var(--accent-strong), var(--accent)); }
     .media-library { margin-top: 10px; padding: 10px; border: 1px solid rgba(255,255,255,.08); border-radius: 10px; background: rgba(15,21,37,.55); }
@@ -54,7 +61,10 @@
     .status.error { color: var(--danger); }
     .preview { margin-top: 20px; }
     .preview-card { overflow: hidden; border: 1px solid rgba(255,255,255,.1); border-radius: 14px; background: #101827; }
-    .preview-media img, .preview-media video { width: 100%; max-height: 360px; display: block; object-fit: cover; }
+    .preview-media, .preview-media-grid { display: grid; gap: 8px; padding: 8px; background: rgba(8, 40, 95, .34); }
+    .preview-media-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .preview-media img, .preview-media video, .preview-media-grid img, .preview-media-grid video { width: 100%; max-height: 360px; display: block; object-fit: cover; border-radius: 10px; }
+    .preview-media-grid img, .preview-media-grid video { aspect-ratio: 16 / 9; max-height: 240px; }
     .preview-body { padding: 16px; }
     .preview-label { color: #ffcf8e; font-size: .74rem; font-weight: 800; text-transform: uppercase; }
     .preview-body h2 { margin: 6px 0 8px; font-family: Georgia, serif; }
@@ -124,8 +134,9 @@
           </div>
           <span>Choose file</span>
         </div>
-        <input id="media-input" type="file" accept="image/*,video/mp4" />
+        <input id="media-input" type="file" accept="image/*,video/mp4" multiple />
         <div class="hint" id="media-filename"></div>
+        <div class="selected-media-grid" id="selected-media-grid"></div>
         <div class="media-progress" id="media-progress" style="display:none;"><div id="media-progress-bar"></div></div>
         <div class="media-library">
           <div class="media-library-head">
@@ -173,6 +184,7 @@
     const mediaZone = document.querySelector("#media-zone");
     const mediaInput = document.querySelector("#media-input");
     const mediaFilename = document.querySelector("#media-filename");
+    const selectedMediaGrid = document.querySelector("#selected-media-grid");
     const mediaProgress = document.querySelector("#media-progress");
     const mediaProgressBar = document.querySelector("#media-progress-bar");
     const mediaGrid = document.querySelector("#media-grid");
@@ -186,9 +198,7 @@
     const publishedItems = document.querySelector("#published-items");
     const publishedRefresh = document.querySelector("#published-refresh");
 
-    let currentFile = null;
-    let currentMediaUrl = "";
-    let currentMediaType = "";
+    let mediaItems = [];
     let recentAssets = [];
     let published = [];
     let editingTimestamp = null;
@@ -259,11 +269,66 @@
       statusEl.className = `status ${type}`;
     }
 
-    function mediaHtml(url, type) {
-      if (!url) return "";
-      const safe = escapeHTML(url);
-      const isVideo = type === "video" || safe.endsWith(".mp4") || safe.includes("/video/");
-      return `<div class="preview-media">${isVideo ? `<video controls playsinline src="${safe}"></video>` : `<img src="${safe}" alt="" />`}</div>`;
+    function mediaItemsFromEntry(item = {}) {
+      if (Array.isArray(item.mediaItems) && item.mediaItems.length) {
+        return item.mediaItems
+          .filter((media) => media?.mediaUrl)
+          .map((media) => ({
+            mediaUrl: media.mediaUrl,
+            mediaType: media.mediaType || "",
+            label: media.label || "Published media"
+          }));
+      }
+
+      if (item.mediaUrl) {
+        return [{
+          mediaUrl: item.mediaUrl,
+          mediaType: item.mediaType || "",
+          label: `Published ${item.mediaType || "media"}`
+        }];
+      }
+
+      return [];
+    }
+
+    function mediaUrlForDisplay(item) {
+      return item.previewUrl || item.mediaUrl || "";
+    }
+
+    function isVideoMedia(item) {
+      const url = mediaUrlForDisplay(item);
+      return item.mediaType === "video" || url.endsWith(".mp4") || url.includes("/video/");
+    }
+
+    function mediaItemHtml(item) {
+      const safe = escapeHTML(mediaUrlForDisplay(item));
+      if (!safe) return "";
+      return isVideoMedia(item)
+        ? `<video controls playsinline src="${safe}"></video>`
+        : `<img src="${safe}" alt="" />`;
+    }
+
+    function mediaGalleryHtml(items = []) {
+      const visible = items.filter((item) => mediaUrlForDisplay(item));
+      if (!visible.length) return "";
+      const className = visible.length === 1 ? "preview-media" : "preview-media-grid";
+      return `<div class="${className}">${visible.map(mediaItemHtml).join("")}</div>`;
+    }
+
+    function renderSelectedMedia() {
+      selectedMediaGrid.innerHTML = mediaItems.map((item, index) => `
+        <article class="selected-media-item">
+          ${mediaItemHtml(item)}
+          <div>
+            <span title="${escapeHTML(item.label || "Media")}">${escapeHTML(item.label || "Media")}</span>
+            <button type="button" data-remove-media="${index}">Remove</button>
+          </div>
+        </article>
+      `).join("");
+
+      mediaFilename.textContent = mediaItems.length
+        ? `${mediaItems.length} media item${mediaItems.length === 1 ? "" : "s"} selected`
+        : "";
     }
 
     function updatePreview() {
@@ -272,7 +337,7 @@
       const text = sanitizeEditorHtml(editor.innerHTML) || "<p>Update text will appear here.</p>";
       preview.innerHTML = `
         <article class="preview-card">
-          ${mediaHtml(currentMediaUrl, currentMediaType)}
+          ${mediaGalleryHtml(mediaItems)}
           <div class="preview-body">
             <div class="preview-label">${escapeHTML(label)}</div>
             <h2>${escapeHTML(title)}</h2>
@@ -316,17 +381,32 @@
     mediaZone.addEventListener("drop", (event) => {
       event.preventDefault();
       mediaZone.classList.remove("dragover");
-      if (event.dataTransfer.files[0]) selectFile(event.dataTransfer.files[0]);
+      if (event.dataTransfer.files.length) selectFiles(event.dataTransfer.files);
     });
     mediaInput.addEventListener("change", () => {
-      if (mediaInput.files[0]) selectFile(mediaInput.files[0]);
+      if (mediaInput.files.length) selectFiles(mediaInput.files);
     });
 
-    function selectFile(file) {
-      currentFile = file;
-      currentMediaUrl = "";
-      currentMediaType = file.type.startsWith("video/") ? "video" : "image";
-      mediaFilename.textContent = `${file.name} (${Math.round(file.size / 1024)} KB)`;
+    selectedMediaGrid.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-remove-media]");
+      if (!button) return;
+      mediaItems.splice(Number(button.dataset.removeMedia), 1);
+      renderSelectedMedia();
+      renderMediaLibrary();
+      updatePreview();
+    });
+
+    function selectFiles(files) {
+      Array.from(files).forEach((file) => {
+        mediaItems.push({
+          file,
+          previewUrl: URL.createObjectURL(file),
+          mediaType: file.type.startsWith("video/") ? "video" : "image",
+          label: `${file.name} (${Math.round(file.size / 1024)} KB)`
+        });
+      });
+      mediaInput.value = "";
+      renderSelectedMedia();
       renderMediaLibrary();
       updatePreview();
     }
@@ -337,7 +417,7 @@
 
     function renderMediaLibrary() {
       mediaGrid.innerHTML = recentAssets.map((asset, index) => `
-        <button class="media-asset${asset.mediaUrl === currentMediaUrl ? " selected" : ""}" type="button" data-asset-index="${index}">
+        <button class="media-asset${mediaItems.some((item) => item.mediaUrl === asset.mediaUrl) ? " selected" : ""}" type="button" data-asset-index="${index}">
           <img src="${escapeHTML(asset.thumbnailUrl)}" alt="" loading="lazy" />
           <span>${escapeHTML(assetLabel(asset))}</span>
         </button>
@@ -367,10 +447,14 @@
       if (!button) return;
       const asset = recentAssets[Number(button.dataset.assetIndex)];
       if (!asset) return;
-      currentFile = null;
-      currentMediaUrl = asset.mediaUrl;
-      currentMediaType = asset.mediaType;
-      mediaFilename.textContent = `${assetLabel(asset)} (Cloudinary ${asset.mediaType})`;
+      if (!mediaItems.some((item) => item.mediaUrl === asset.mediaUrl)) {
+        mediaItems.push({
+          mediaUrl: asset.mediaUrl,
+          mediaType: asset.mediaType,
+          label: `${assetLabel(asset)} (Cloudinary ${asset.mediaType})`
+        });
+      }
+      renderSelectedMedia();
       renderMediaLibrary();
       updatePreview();
     });
@@ -442,18 +526,32 @@
       setStatus("Publishing...");
 
       try {
-        let mediaUrl = currentMediaUrl;
-        let mediaType = currentMediaType;
-        if (currentFile) {
+        let uploadedItems = [];
+        if (mediaItems.some((item) => item.file)) {
           mediaProgress.style.display = "block";
-          const uploaded = await uploadMedia(currentFile);
-          mediaUrl = uploaded.mediaUrl;
-          mediaType = uploaded.mediaType;
-          currentMediaUrl = mediaUrl;
-          currentMediaType = mediaType;
-          currentFile = null;
+          uploadedItems = [];
+          for (let index = 0; index < mediaItems.length; index += 1) {
+            const item = mediaItems[index];
+            mediaProgressBar.style.width = "0%";
+            setStatus(`Uploading media ${index + 1} of ${mediaItems.length}...`);
+            if (item.file) {
+              const uploaded = await uploadMedia(item.file);
+              uploadedItems.push({ ...uploaded, label: item.label || "" });
+            } else {
+              uploadedItems.push({ mediaUrl: item.mediaUrl, mediaType: item.mediaType, label: item.label || "" });
+            }
+          }
           mediaProgress.style.display = "none";
+        } else {
+          uploadedItems = mediaItems.map((item) => ({
+            mediaUrl: item.mediaUrl,
+            mediaType: item.mediaType,
+            label: item.label || ""
+          }));
         }
+        setStatus("Publishing...");
+
+        const firstMedia = uploadedItems[0] || {};
 
         const res = await fetch("/api/router?route=i26/news-write", {
           method: "POST",
@@ -464,8 +562,9 @@
             label: labelInput.value,
             sourceUrl: sourceUrlInput.value,
             sourceLabel: sourceLabelInput.value,
-            mediaUrl,
-            mediaType,
+            mediaUrl: firstMedia.mediaUrl || "",
+            mediaType: firstMedia.mediaType || "",
+            mediaItems: uploadedItems,
             timestamp: editingTimestamp
           })
         });
@@ -488,11 +587,9 @@
       sourceUrlInput.value = "";
       sourceLabelInput.value = "Read more";
       editor.innerHTML = "";
-      currentMediaUrl = "";
-      currentMediaType = "";
-      currentFile = null;
+      mediaItems = [];
       mediaInput.value = "";
-      mediaFilename.textContent = "";
+      renderSelectedMedia();
       cancelEditBtn.style.display = "none";
       publishBtn.textContent = "Publish Connector Update";
       updatePreview();
@@ -538,11 +635,9 @@
       sourceUrlInput.value = item.sourceUrl || "";
       sourceLabelInput.value = item.sourceLabel || "Read more";
       editor.innerHTML = item.text || "";
-      currentMediaUrl = item.mediaUrl || "";
-      currentMediaType = item.mediaType || "";
-      currentFile = null;
+      mediaItems = mediaItemsFromEntry(item);
       mediaInput.value = "";
-      mediaFilename.textContent = currentMediaUrl ? `Using published ${currentMediaType || "media"}` : "";
+      renderSelectedMedia();
       cancelEditBtn.style.display = "inline-flex";
       publishBtn.textContent = "Update Connector Update";
       renderMediaLibrary();
