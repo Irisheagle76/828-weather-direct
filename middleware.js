@@ -3,6 +3,7 @@ const PROTECTED_API_PREFIXES = [
   "alerts/publish",
   "alerts/clear",
   "forecast/publish",
+  "i26/news-write",
   "notifications/status",
   "tidbits/pulse-write",
   "tidbits/pulse-media"

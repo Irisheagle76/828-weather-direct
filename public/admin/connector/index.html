@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Connector News Composer</title>
+  <style>
+    :root {
+      --bg: #0a0f1c;
+      --card: #141a2a;
+      --editor: #0f1525;
+      --text: #e5e7eb;
+      --muted: #9aa3c2;
+      --accent: #8fb7ff;
+      --accent-strong: #4f7cff;
+      --danger: #f97373;
+      --success: #4ade80;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 20px; color: var(--text); background: var(--bg); font-family: system-ui, -apple-system, Segoe UI, sans-serif; }
+    main { width: min(820px, 100%); margin: 0 auto 60px; }
+    .card { padding: 18px; border-radius: 16px; background: var(--card); box-shadow: 0 12px 30px rgba(0,0,0,.38); }
+    .topbar { display: flex; justify-content: space-between; gap: 12px; align-items: start; margin-bottom: 18px; }
+    h1 { margin: 0 0 4px; color: var(--accent); font-size: 1.35rem; }
+    .subtitle, .hint, .status, .published-status, .media-status { color: var(--muted); font-size: .84rem; line-height: 1.4; }
+    .topbar a, button.secondary { border: 0; border-radius: 999px; padding: 7px 12px; color: #eaf1ff; background: rgba(255,255,255,.08); text-decoration: none; cursor: pointer; }
+    .field { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 6px; color: var(--accent); font-size: .74rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+    input[type="text"], input[type="url"] { width: 100%; min-height: 42px; padding: 9px 11px; border: 1px solid rgba(255,255,255,.1); border-radius: 10px; color: var(--text); background: var(--editor); font: inherit; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 7px; }
+    .toolbar button { border: 0; border-radius: 7px; padding: 5px 9px; color: var(--text); background: rgba(255,255,255,.06); cursor: pointer; }
+    #editor { min-height: 150px; padding: 11px; border: 1px solid rgba(255,255,255,.1); border-radius: 10px; color: var(--text); background: var(--editor); line-height: 1.45; outline: none; }
+    #editor:focus { box-shadow: 0 0 0 2px rgba(143,183,255,.38); }
+    #editor p { margin: 0 0 .45rem; }
+    #editor a { color: #bfdbfe; }
+    .media-zone { display: flex; justify-content: space-between; gap: 14px; align-items: center; padding: 14px; border: 1px dashed rgba(255,255,255,.2); border-radius: 10px; background: rgba(15,21,37,.85); cursor: pointer; }
+    .media-zone.dragover { border-color: var(--accent); background: rgba(79,124,255,.12); }
+    #media-input { display: none; }
+    .media-progress { height: 4px; margin-top: 7px; border-radius: 999px; overflow: hidden; background: rgba(255,255,255,.08); }
+    .media-progress div { width: 0%; height: 100%; background: linear-gradient(135deg, var(--accent-strong), var(--accent)); }
+    .media-library { margin-top: 10px; padding: 10px; border: 1px solid rgba(255,255,255,.08); border-radius: 10px; background: rgba(15,21,37,.55); }
+    .media-library-head { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+    .media-asset { padding: 0; overflow: hidden; border: 1px solid rgba(255,255,255,.1); border-radius: 8px; color: inherit; background: rgba(255,255,255,.04); cursor: pointer; text-align: left; }
+    .media-asset.selected { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(143,183,255,.2); }
+    .media-asset img { width: 100%; aspect-ratio: 16 / 9; display: block; object-fit: cover; background: #020617; }
+    .media-asset span { display: block; padding: 6px; color: var(--muted); font-size: .7rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    button.primary { border: 0; border-radius: 999px; padding: 10px 18px; color: white; background: linear-gradient(135deg, var(--accent-strong), var(--accent)); font-weight: 700; cursor: pointer; }
+    button:disabled { opacity: .55; cursor: default; }
+    .status.success { color: var(--success); }
+    .status.error { color: var(--danger); }
+    .preview { margin-top: 20px; }
+    .preview-card { overflow: hidden; border: 1px solid rgba(255,255,255,.1); border-radius: 14px; background: #101827; }
+    .preview-media img, .preview-media video { width: 100%; max-height: 360px; display: block; object-fit: cover; }
+    .preview-body { padding: 16px; }
+    .preview-label { color: #ffcf8e; font-size: .74rem; font-weight: 800; text-transform: uppercase; }
+    .preview-body h2 { margin: 6px 0 8px; font-family: Georgia, serif; }
+    .preview-text { color: #d9e4f4; line-height: 1.55; }
+    .published { margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.1); }
+    .published-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 10px; }
+    .published-items { display: grid; gap: 8px; }
+    .published-item { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 10px; padding: 10px; border: 1px solid rgba(255,255,255,.1); border-radius: 10px; background: rgba(255,255,255,.04); }
+    .published-item strong, .published-item span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .published-item span { color: var(--muted); font-size: .78rem; }
+    @media (max-width: 620px) {
+      .topbar, .media-zone, .media-library-head, .published-head { align-items: stretch; flex-direction: column; }
+      .published-item { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="card">
+      <div class="topbar">
+        <div>
+          <h1>Connector News Composer</h1>
+          <div class="subtitle">Publish media and text to the I-26 Connector project news desk.</div>
+        </div>
+        <a href="/admin/index.html">Admin home</a>
+      </div>
+
+      <div class="field">
+        <label for="title">Headline</label>
+        <input id="title" type="text" placeholder="Ramp closure planned Tuesday night" />
+      </div>
+
+      <div class="field">
+        <label for="label">Label</label>
+        <input id="label" type="text" value="Connector update" />
+      </div>
+
+      <div class="field">
+        <label>Update text</label>
+        <div class="toolbar" id="toolbar">
+          <button type="button" data-action="bold">Bold</button>
+          <button type="button" data-action="italic">Italic</button>
+          <button type="button" data-action="ul">List</button>
+          <button type="button" data-action="link">Link</button>
+          <button type="button" data-action="clear">Clear</button>
+        </div>
+        <div id="editor" contenteditable="true"></div>
+      </div>
+
+      <div class="field">
+        <label for="source-url">Source link</label>
+        <input id="source-url" type="url" placeholder="https://www.ncdot.gov/..." />
+      </div>
+
+      <div class="field">
+        <label for="source-label">Source label</label>
+        <input id="source-label" type="text" value="Read more" />
+      </div>
+
+      <div class="field">
+        <label>Media</label>
+        <div class="media-zone" id="media-zone">
+          <div>
+            <strong>Drop image or video here</strong>
+            <div class="hint">Tap to browse. JPG, PNG, or MP4.</div>
+          </div>
+          <span>Choose file</span>
+        </div>
+        <input id="media-input" type="file" accept="image/*,video/mp4" />
+        <div class="hint" id="media-filename"></div>
+        <div class="media-progress" id="media-progress" style="display:none;"><div id="media-progress-bar"></div></div>
+        <div class="media-library">
+          <div class="media-library-head">
+            <div>
+              <strong>Recent Cloudinary media</strong>
+              <div class="media-status" id="media-status">Loading media...</div>
+            </div>
+            <button class="secondary" id="media-refresh" type="button">Refresh</button>
+          </div>
+          <div class="media-grid" id="media-grid"></div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="primary" id="publish" type="button">Publish Connector Update</button>
+        <button class="secondary" id="cancel-edit" type="button" style="display:none;">Cancel edit</button>
+        <span class="status" id="status"></span>
+      </div>
+
+      <div class="preview">
+        <label>Preview</label>
+        <div id="preview"></div>
+      </div>
+
+      <div class="published">
+        <div class="published-head">
+          <div>
+            <strong>Published Connector updates</strong>
+            <div class="published-status" id="published-status">Loading...</div>
+          </div>
+          <button class="secondary" id="published-refresh" type="button">Refresh</button>
+        </div>
+        <div class="published-items" id="published-items"></div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const titleInput = document.querySelector("#title");
+    const labelInput = document.querySelector("#label");
+    const sourceUrlInput = document.querySelector("#source-url");
+    const sourceLabelInput = document.querySelector("#source-label");
+    const editor = document.querySelector("#editor");
+    const toolbar = document.querySelector("#toolbar");
+    const mediaZone = document.querySelector("#media-zone");
+    const mediaInput = document.querySelector("#media-input");
+    const mediaFilename = document.querySelector("#media-filename");
+    const mediaProgress = document.querySelector("#media-progress");
+    const mediaProgressBar = document.querySelector("#media-progress-bar");
+    const mediaGrid = document.querySelector("#media-grid");
+    const mediaStatus = document.querySelector("#media-status");
+    const mediaRefresh = document.querySelector("#media-refresh");
+    const publishBtn = document.querySelector("#publish");
+    const cancelEditBtn = document.querySelector("#cancel-edit");
+    const statusEl = document.querySelector("#status");
+    const preview = document.querySelector("#preview");
+    const publishedStatus = document.querySelector("#published-status");
+    const publishedItems = document.querySelector("#published-items");
+    const publishedRefresh = document.querySelector("#published-refresh");
+
+    let currentFile = null;
+    let currentMediaUrl = "";
+    let currentMediaType = "";
+    let recentAssets = [];
+    let published = [];
+    let editingTimestamp = null;
+
+    function escapeHTML(value) {
+      return String(value || "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[char]));
+    }
+
+    function textFromHtml(html) {
+      const div = document.createElement("div");
+      div.innerHTML = html || "";
+      return (div.textContent || "").replace(/\s+/g, " ").trim();
+    }
+
+    function formatTime(value) {
+      if (!value) return "Untimed";
+      return new Date(value).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+    }
+
+    function setStatus(message, type = "") {
+      statusEl.textContent = message;
+      statusEl.className = `status ${type}`;
+    }
+
+    function mediaHtml(url, type) {
+      if (!url) return "";
+      const safe = escapeHTML(url);
+      const isVideo = type === "video" || safe.endsWith(".mp4") || safe.includes("/video/");
+      return `<div class="preview-media">${isVideo ? `<video controls playsinline src="${safe}"></video>` : `<img src="${safe}" alt="" />`}</div>`;
+    }
+
+    function updatePreview() {
+      const title = titleInput.value.trim() || "Connector update headline";
+      const label = labelInput.value.trim() || "Connector update";
+      const text = editor.innerHTML.trim() || "<p>Update text will appear here.</p>";
+      preview.innerHTML = `
+        <article class="preview-card">
+          ${mediaHtml(currentMediaUrl, currentMediaType)}
+          <div class="preview-body">
+            <div class="preview-label">${escapeHTML(label)}</div>
+            <h2>${escapeHTML(title)}</h2>
+            <div class="preview-text">${text}</div>
+          </div>
+        </article>`;
+    }
+
+    toolbar.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-action]");
+      if (!button) return;
+      const action = button.dataset.action;
+      editor.focus();
+      if (action === "bold") document.execCommand("bold");
+      if (action === "italic") document.execCommand("italic");
+      if (action === "ul") document.execCommand("insertUnorderedList");
+      if (action === "clear") document.execCommand("removeFormat");
+      if (action === "link") {
+        const url = window.prompt("Enter URL:");
+        if (url) document.execCommand("createLink", false, url);
+      }
+      updatePreview();
+    });
+
+    editor.addEventListener("input", updatePreview);
+    [titleInput, labelInput, sourceUrlInput, sourceLabelInput].forEach((input) => input.addEventListener("input", updatePreview));
+
+    mediaZone.addEventListener("click", () => mediaInput.click());
+    mediaZone.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      mediaZone.classList.add("dragover");
+    });
+    mediaZone.addEventListener("dragleave", () => mediaZone.classList.remove("dragover"));
+    mediaZone.addEventListener("drop", (event) => {
+      event.preventDefault();
+      mediaZone.classList.remove("dragover");
+      if (event.dataTransfer.files[0]) selectFile(event.dataTransfer.files[0]);
+    });
+    mediaInput.addEventListener("change", () => {
+      if (mediaInput.files[0]) selectFile(mediaInput.files[0]);
+    });
+
+    function selectFile(file) {
+      currentFile = file;
+      currentMediaUrl = "";
+      currentMediaType = file.type.startsWith("video/") ? "video" : "image";
+      mediaFilename.textContent = `${file.name} (${Math.round(file.size / 1024)} KB)`;
+      renderMediaLibrary();
+      updatePreview();
+    }
+
+    function assetLabel(asset) {
+      return (asset.publicId || "Cloudinary media").split("/").pop();
+    }
+
+    function renderMediaLibrary() {
+      mediaGrid.innerHTML = recentAssets.map((asset, index) => `
+        <button class="media-asset${asset.mediaUrl === currentMediaUrl ? " selected" : ""}" type="button" data-asset-index="${index}">
+          <img src="${escapeHTML(asset.thumbnailUrl)}" alt="" loading="lazy" />
+          <span>${escapeHTML(assetLabel(asset))}</span>
+        </button>
+      `).join("");
+    }
+
+    async function loadRecentMedia() {
+      mediaRefresh.disabled = true;
+      mediaStatus.textContent = "Loading media...";
+      try {
+        const res = await fetch("/api/router?route=tidbits/pulse-media");
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Unable to load media");
+        recentAssets = Array.isArray(data.assets) ? data.assets : [];
+        mediaStatus.textContent = recentAssets.length ? `${recentAssets.length} assets available` : "No Cloudinary media found";
+        renderMediaLibrary();
+      } catch {
+        recentAssets = [];
+        mediaStatus.textContent = "Could not load Cloudinary media";
+        renderMediaLibrary();
+      }
+      mediaRefresh.disabled = false;
+    }
+
+    mediaGrid.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-asset-index]");
+      if (!button) return;
+      const asset = recentAssets[Number(button.dataset.assetIndex)];
+      if (!asset) return;
+      currentFile = null;
+      currentMediaUrl = asset.mediaUrl;
+      currentMediaType = asset.mediaType;
+      mediaFilename.textContent = `${assetLabel(asset)} (Cloudinary ${asset.mediaType})`;
+      renderMediaLibrary();
+      updatePreview();
+    });
+
+    mediaRefresh.addEventListener("click", loadRecentMedia);
+
+    async function getSignedUploadConfig() {
+      const res = await fetch("/api/router?route=tidbits/pulse-upload-signature", { method: "POST" });
+      return res.ok ? res.json() : null;
+    }
+
+    async function uploadMedia(file) {
+      const config = await getSignedUploadConfig();
+      if (!config) throw new Error("Cloudinary upload signing is unavailable.");
+      const form = new FormData();
+      form.append("file", file);
+      form.append("api_key", config.apiKey);
+      form.append("timestamp", config.timestamp);
+      form.append("signature", config.signature);
+      form.append("folder", config.folder);
+
+      const endpoint = `https://api.cloudinary.com/v1_1/${config.cloudName}/auto/upload`;
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", endpoint);
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) mediaProgressBar.style.width = `${(event.loaded / event.total) * 100}%`;
+        };
+        xhr.onload = () => {
+          const data = JSON.parse(xhr.responseText || "{}");
+          if (xhr.status >= 200 && xhr.status < 300 && data.secure_url) {
+            resolve({ mediaUrl: data.secure_url, mediaType: file.type.startsWith("video/") ? "video" : "image" });
+          } else {
+            reject(new Error(data?.error?.message || "Upload failed"));
+          }
+        };
+        xhr.onerror = () => reject(new Error("Upload failed"));
+        xhr.send(form);
+      });
+    }
+
+    async function publish() {
+      const title = titleInput.value.trim();
+      const text = editor.innerHTML.trim();
+      if (!title || !text) {
+        setStatus("Add a headline and update text first.", "error");
+        return;
+      }
+
+      publishBtn.disabled = true;
+      setStatus("Publishing...");
+
+      try {
+        let mediaUrl = currentMediaUrl;
+        let mediaType = currentMediaType;
+        if (currentFile) {
+          mediaProgress.style.display = "block";
+          const uploaded = await uploadMedia(currentFile);
+          mediaUrl = uploaded.mediaUrl;
+          mediaType = uploaded.mediaType;
+          currentMediaUrl = mediaUrl;
+          currentMediaType = mediaType;
+          currentFile = null;
+          mediaProgress.style.display = "none";
+        }
+
+        const res = await fetch("/api/router?route=i26/news-write", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title,
+            text,
+            label: labelInput.value,
+            sourceUrl: sourceUrlInput.value,
+            sourceLabel: sourceLabelInput.value,
+            mediaUrl,
+            mediaType,
+            timestamp: editingTimestamp
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Publish failed");
+
+        setStatus(editingTimestamp ? "Updated." : "Published.", "success");
+        clearForm();
+        await loadPublished();
+      } catch (error) {
+        setStatus(error.message || "Unable to publish.", "error");
+      }
+      publishBtn.disabled = false;
+    }
+
+    function clearForm() {
+      editingTimestamp = null;
+      titleInput.value = "";
+      labelInput.value = "Connector update";
+      sourceUrlInput.value = "";
+      sourceLabelInput.value = "Read more";
+      editor.innerHTML = "";
+      currentMediaUrl = "";
+      currentMediaType = "";
+      currentFile = null;
+      mediaInput.value = "";
+      mediaFilename.textContent = "";
+      cancelEditBtn.style.display = "none";
+      publishBtn.textContent = "Publish Connector Update";
+      updatePreview();
+      renderMediaLibrary();
+    }
+
+    publishBtn.addEventListener("click", publish);
+    cancelEditBtn.addEventListener("click", clearForm);
+
+    async function loadPublished() {
+      publishedRefresh.disabled = true;
+      publishedStatus.textContent = "Loading...";
+      try {
+        const res = await fetch("/api/router?route=i26/news-feed");
+        const data = await res.json();
+        published = Array.isArray(data.items) ? data.items : [];
+        publishedStatus.textContent = published.length ? `${published.length} updates available` : "No Connector updates published yet";
+        publishedItems.innerHTML = published.map((item, index) => `
+          <article class="published-item">
+            <div>
+              <strong>${escapeHTML(item.title || "Untitled update")}</strong>
+              <span>${escapeHTML(formatTime(item.timestamp))} - ${escapeHTML(textFromHtml(item.text).slice(0, 90))}</span>
+            </div>
+            <button class="secondary" type="button" data-edit-index="${index}">Edit</button>
+          </article>
+        `).join("");
+      } catch {
+        published = [];
+        publishedStatus.textContent = "Could not load published updates";
+        publishedItems.innerHTML = "";
+      }
+      publishedRefresh.disabled = false;
+    }
+
+    publishedItems.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-edit-index]");
+      if (!button) return;
+      const item = published[Number(button.dataset.editIndex)];
+      if (!item) return;
+      editingTimestamp = item.timestamp;
+      titleInput.value = item.title || "";
+      labelInput.value = item.label || "Connector update";
+      sourceUrlInput.value = item.sourceUrl || "";
+      sourceLabelInput.value = item.sourceLabel || "Read more";
+      editor.innerHTML = item.text || "";
+      currentMediaUrl = item.mediaUrl || "";
+      currentMediaType = item.mediaType || "";
+      currentFile = null;
+      mediaInput.value = "";
+      mediaFilename.textContent = currentMediaUrl ? `Using published ${currentMediaType || "media"}` : "";
+      cancelEditBtn.style.display = "inline-flex";
+      publishBtn.textContent = "Update Connector Update";
+      renderMediaLibrary();
+      updatePreview();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    publishedRefresh.addEventListener("click", loadPublished);
+
+    updatePreview();
+    loadRecentMedia();
+    loadPublished();
+  </script>
+</body>
+</html>

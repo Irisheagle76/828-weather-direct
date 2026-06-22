@@ -28,6 +28,57 @@ function formatTime(value) {
   }).format(new Date(value));
 }
 
+function formatShortDate(value) {
+  if (!value) return "Not listed";
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/New_York"
+  }).format(new Date(value));
+}
+
+function formatRelativeTime(value) {
+  if (!value) return "Not listed";
+  const timestamp = new Date(value).getTime();
+  if (!Number.isFinite(timestamp)) return "Not listed";
+
+  const diffMinutes = Math.round((Date.now() - timestamp) / 60000);
+  if (diffMinutes < 1) return "Just now";
+  if (diffMinutes < 60) return `${diffMinutes} min ago`;
+
+  const diffHours = Math.round(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours} hr ago`;
+
+  const diffDays = Math.round(diffHours / 24);
+  return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
+}
+
+function sanitizeNewsHtml(html = "") {
+  const template = document.createElement("template");
+  template.innerHTML = String(html || "");
+  const allowedTags = new Set(["A", "B", "BR", "EM", "I", "LI", "OL", "P", "STRONG", "U", "UL"]);
+  const walker = document.createTreeWalker(template.content, NodeFilter.SHOW_ELEMENT);
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+
+  nodes.forEach((node) => {
+    if (!allowedTags.has(node.tagName)) {
+      node.replaceWith(...Array.from(node.childNodes));
+      return;
+    }
+
+    Array.from(node.attributes).forEach((attr) => {
+      if (node.tagName === "A" && attr.name === "href" && /^https?:\/\//i.test(attr.value)) return;
+      node.removeAttribute(attr.name);
+    });
+
+    if (node.tagName === "A") {
+      node.target = "_blank";
+      node.rel = "noopener noreferrer";
+    }
+  });
+
+  return template.innerHTML;
+}
+
 function initMap() {
   if (!window.L) return;
   map = L.map("connectorMap", { scrollWheelZoom: false }).setView([35.586, -82.582], 12);
@@ -122,6 +173,104 @@ async function loadIncidents() {
     console.error(error);
     document.querySelector("#incidentCount").textContent = "Unavailable";
     document.querySelector("#incidentList").innerHTML = '<article class="loading-card">The live incident feed is temporarily unavailable. Use the official DriveNC Asheville map for current conditions.</article>';
+  }
+}
+
+function renderEmailAlerts(data = {}) {
+  const list = document.querySelector("#emailAlertList");
+  const summary = document.querySelector("#emailAlertSummary");
+  if (!list || !summary) return;
+
+  const alerts = Array.isArray(data.alerts) ? data.alerts : [];
+  const active = alerts.filter((alert) => !alert.cleared);
+  const latest = alerts[0];
+
+  summary.innerHTML = `
+    <article><span>Recent alerts</span><strong>${alerts.length ? alerts.length : "None"}</strong></article>
+    <article><span>Active notices</span><strong>${active.length}</strong></article>
+    <article><span>Last email</span><strong>${latest ? formatRelativeTime(latest.receivedAt) : "None yet"}</strong></article>`;
+
+  if (!alerts.length) {
+    list.innerHTML = '<article class="loading-card">No DriveNC notification emails have been published to this feed yet. Standing DriveNC records remain below.</article>';
+    return;
+  }
+
+  list.innerHTML = alerts.slice(0, 8).map((alert) => {
+    const classes = ["email-alert-card", `severity-${alert.severity || "advisory"}`].join(" ");
+    const timing = [alert.startTime ? `Starts ${formatShortDate(alert.startTime)}` : alert.startTimeText, alert.endTime ? `Ends ${formatShortDate(alert.endTime)}` : alert.endTimeText]
+      .filter(Boolean)
+      .join(" • ");
+
+    return `<article class="${classes}">
+      <div class="email-alert-top">
+        <div>
+          <span>${escapeHtml(alert.road || "Connector area")}</span>
+          <h3>${escapeHtml(alert.title || "DriveNC alert")}</h3>
+        </div>
+        <b>${escapeHtml(alert.cleared ? "Cleared" : alert.typeLabel || "Alert")}</b>
+      </div>
+      <p>${escapeHtml(alert.description || "DriveNC notification for the I-26 Connector area.")}</p>
+      <div class="email-alert-meta">${escapeHtml(formatRelativeTime(alert.receivedAt))}${timing ? ` • ${escapeHtml(timing)}` : ""}</div>
+      <a href="${escapeHtml(alert.url || "https://www.drivenc.gov/region/Asheville")}" target="_blank" rel="noopener noreferrer">Verify on DriveNC</a>
+    </article>`;
+  }).join("");
+}
+
+async function loadEmailAlerts() {
+  try {
+    const response = await fetch(`${ROUTE_BASE}i26/email-alerts`);
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Email alert feed unavailable");
+    renderEmailAlerts(data);
+  } catch (error) {
+    console.error(error);
+    document.querySelector("#emailAlertSummary").innerHTML = `
+      <article><span>Recent alerts</span><strong>Unavailable</strong></article>
+      <article><span>Active notices</span><strong>--</strong></article>
+      <article><span>Last email</span><strong>--</strong></article>`;
+    document.querySelector("#emailAlertList").innerHTML = '<article class="loading-card">DriveNC email notifications are temporarily unavailable. Use the official DriveNC map before travel.</article>';
+  }
+}
+
+function newsMediaMarkup(item) {
+  const media = item.mediaUrl || "";
+  if (!media) return "";
+  const safeMedia = escapeHtml(media);
+  const isVideo = item.mediaType === "video" || media.endsWith(".mp4") || media.includes("/video/");
+
+  return `<div class="connector-news-media">
+    ${isVideo
+      ? `<video controls playsinline src="${safeMedia}"></video>`
+      : `<img src="${safeMedia}" alt="${escapeHtml(item.title || "Connector update media")}" loading="lazy" />`}
+  </div>`;
+}
+
+function renderConnectorNews(items = []) {
+  const list = document.querySelector("#connectorNewsList");
+  if (!list || !items.length) return;
+
+  list.innerHTML = items.slice(0, 6).map((item) => `
+    <article class="connector-news-item">
+      ${newsMediaMarkup(item)}
+      <div class="connector-news-meta">
+        <time>${escapeHtml(formatShortDate(item.timestamp))}</time>
+        <span>${escapeHtml(item.label || "Connector update")}</span>
+      </div>
+      <h3>${escapeHtml(item.title || "Connector update")}</h3>
+      <div class="connector-news-text">${sanitizeNewsHtml(item.text || "")}</div>
+      ${item.sourceUrl ? `<a class="connector-news-source" href="${escapeHtml(item.sourceUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.sourceLabel || "Read more")}</a>` : ""}
+    </article>
+  `).join("");
+}
+
+async function loadConnectorNews() {
+  try {
+    const response = await fetch(`${ROUTE_BASE}i26/news-feed`);
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Connector news unavailable");
+    if (!data.fallback && Array.isArray(data.items)) renderConnectorNews(data.items);
+  } catch (error) {
+    console.warn("Connector news using static fallback", error);
   }
 }
 
@@ -225,4 +374,4 @@ async function loadWeather() {
 }
 
 initMap();
-Promise.allSettled([loadIncidents(), loadCameras(), loadWeather()]);
+Promise.allSettled([loadEmailAlerts(), loadConnectorNews(), loadIncidents(), loadCameras(), loadWeather()]);
