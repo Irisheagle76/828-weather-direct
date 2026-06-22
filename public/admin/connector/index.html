@@ -31,6 +31,7 @@
     .toolbar { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 7px; }
     .toolbar button { border: 0; border-radius: 7px; padding: 5px 9px; color: var(--text); background: rgba(255,255,255,.06); cursor: pointer; }
     #editor { min-height: 150px; padding: 11px; border: 1px solid rgba(255,255,255,.1); border-radius: 10px; color: var(--text); background: var(--editor); line-height: 1.45; outline: none; }
+    #editor *, .preview-text * { color: inherit !important; background: transparent !important; font: inherit !important; }
     #editor:focus { box-shadow: 0 0 0 2px rgba(143,183,255,.38); }
     #editor p { margin: 0 0 .45rem; }
     #editor a { color: #bfdbfe; }
@@ -58,6 +59,7 @@
     .preview-label { color: #ffcf8e; font-size: .74rem; font-weight: 800; text-transform: uppercase; }
     .preview-body h2 { margin: 6px 0 8px; font-family: Georgia, serif; }
     .preview-text { color: #d9e4f4; line-height: 1.55; }
+    .preview-text a { color: #8fb7ff !important; font-weight: 700; }
     .published { margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.1); }
     .published-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 10px; }
     .published-items { display: grid; gap: 8px; }
@@ -203,6 +205,50 @@
       return (div.textContent || "").replace(/\s+/g, " ").trim();
     }
 
+    function sanitizeEditorHtml(html = "") {
+      const template = document.createElement("template");
+      template.innerHTML = String(html || "");
+      const allowedTags = new Set(["A", "B", "BR", "EM", "I", "LI", "OL", "P", "STRONG", "U", "UL"]);
+      const walker = document.createTreeWalker(template.content, NodeFilter.SHOW_ELEMENT);
+      const nodes = [];
+
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+
+      nodes.forEach((node) => {
+        if (!allowedTags.has(node.tagName)) {
+          node.replaceWith(...Array.from(node.childNodes));
+          return;
+        }
+
+        Array.from(node.attributes).forEach((attr) => {
+          if (node.tagName === "A" && attr.name === "href" && /^https?:\/\//i.test(attr.value)) return;
+          node.removeAttribute(attr.name);
+        });
+
+        if (node.tagName === "A") {
+          node.target = "_blank";
+          node.rel = "noopener noreferrer";
+        }
+      });
+
+      return template.innerHTML.trim();
+    }
+
+    function insertPlainText(text) {
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) {
+        editor.appendChild(document.createTextNode(text));
+        return;
+      }
+
+      const range = selection.getRangeAt(0);
+      range.deleteContents();
+      range.insertNode(document.createTextNode(text));
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+
     function formatTime(value) {
       if (!value) return "Untimed";
       return new Date(value).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
@@ -223,7 +269,7 @@
     function updatePreview() {
       const title = titleInput.value.trim() || "Connector update headline";
       const label = labelInput.value.trim() || "Connector update";
-      const text = editor.innerHTML.trim() || "<p>Update text will appear here.</p>";
+      const text = sanitizeEditorHtml(editor.innerHTML) || "<p>Update text will appear here.</p>";
       preview.innerHTML = `
         <article class="preview-card">
           ${mediaHtml(currentMediaUrl, currentMediaType)}
@@ -248,6 +294,13 @@
         const url = window.prompt("Enter URL:");
         if (url) document.execCommand("createLink", false, url);
       }
+      updatePreview();
+    });
+
+    editor.addEventListener("paste", (event) => {
+      event.preventDefault();
+      const text = (event.clipboardData || window.clipboardData).getData("text/plain");
+      insertPlainText(text);
       updatePreview();
     });
 
@@ -379,8 +432,8 @@
 
     async function publish() {
       const title = titleInput.value.trim();
-      const text = editor.innerHTML.trim();
-      if (!title || !text) {
+      const text = sanitizeEditorHtml(editor.innerHTML);
+      if (!title || !textFromHtml(text)) {
         setStatus("Add a headline and update text first.", "error");
         return;
       }
