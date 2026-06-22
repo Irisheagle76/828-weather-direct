@@ -325,21 +325,39 @@
     mediaRefresh.addEventListener("click", loadRecentMedia);
 
     async function getSignedUploadConfig() {
-      const res = await fetch("/api/router?route=tidbits/pulse-upload-signature", { method: "POST" });
-      return res.ok ? res.json() : null;
+      try {
+        const res = await fetch("/api/router?route=tidbits/pulse-upload-signature", { method: "POST" });
+        if (res.ok) return await res.json();
+
+        const text = await res.text();
+        console.warn("Signed upload unavailable, using preset fallback:", text);
+        return null;
+      } catch (error) {
+        console.warn("Signed upload unavailable, using preset fallback:", error);
+        return null;
+      }
     }
 
     async function uploadMedia(file) {
+      const isVideo = file.type.startsWith("video/");
       const config = await getSignedUploadConfig();
-      if (!config) throw new Error("Cloudinary upload signing is unavailable.");
       const form = new FormData();
       form.append("file", file);
-      form.append("api_key", config.apiKey);
-      form.append("timestamp", config.timestamp);
-      form.append("signature", config.signature);
-      form.append("folder", config.folder);
 
-      const endpoint = `https://api.cloudinary.com/v1_1/${config.cloudName}/auto/upload`;
+      if (config) {
+        form.append("api_key", config.apiKey);
+        form.append("timestamp", config.timestamp);
+        form.append("signature", config.signature);
+        form.append("folder", config.folder);
+      } else {
+        form.append("upload_preset", "pulse_upload");
+      }
+
+      const cloudName = config?.cloudName || "dz45rrije";
+      const endpoint = config
+        ? `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`
+        : `https://api.cloudinary.com/v1_1/${cloudName}/${isVideo ? "video" : "image"}/upload`;
+
       return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open("POST", endpoint);
@@ -349,7 +367,7 @@
         xhr.onload = () => {
           const data = JSON.parse(xhr.responseText || "{}");
           if (xhr.status >= 200 && xhr.status < 300 && data.secure_url) {
-            resolve({ mediaUrl: data.secure_url, mediaType: file.type.startsWith("video/") ? "video" : "image" });
+            resolve({ mediaUrl: data.secure_url, mediaType: isVideo ? "video" : "image" });
           } else {
             reject(new Error(data?.error?.message || "Upload failed"));
           }
