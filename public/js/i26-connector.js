@@ -1,8 +1,27 @@
 const ROUTE_BASE = "/api/router?route=";
 const ASHEVILLE = { lat: 35.5951, lon: -82.5515 };
+const PROJECT_PLAN_LAYERS = [
+  {
+    name: "DOT right-of-way",
+    url: "https://services6.arcgis.com/VLA0ImJ33zhtGEaP/arcgis/rest/services/I_26_RW_Plans/FeatureServer/1/query?where=1%3D1&outFields=OBJECTID&returnGeometry=true&outSR=4326&f=geojson",
+    color: "#1f8f5f",
+    fillColor: "#47d16c",
+    fillOpacity: 0.12,
+    weight: 1.5
+  },
+  {
+    name: "New DOT right-of-way - 2018 plan",
+    url: "https://services6.arcgis.com/VLA0ImJ33zhtGEaP/arcgis/rest/services/I_26_RW_Plans/FeatureServer/0/query?where=1%3D1&outFields=OBJECTID&returnGeometry=true&outSR=4326&f=geojson",
+    color: "#0d4fc7",
+    fillColor: "#2f80ff",
+    fillOpacity: 0.32,
+    weight: 2
+  }
+];
 
 let map;
 let eventLayer;
+let projectPlanLayer;
 let cameraRefreshTimer;
 
 function escapeHtml(value = "") {
@@ -76,7 +95,58 @@ function initMap() {
     maxZoom: 18,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
   }).addTo(map);
+  projectPlanLayer = L.layerGroup().addTo(map);
+  loadProjectPlanLayers();
   eventLayer = L.layerGroup().addTo(map);
+}
+
+function geoJsonStyle(config) {
+  return {
+    color: config.color,
+    fillColor: config.fillColor,
+    fillOpacity: config.fillOpacity,
+    opacity: 0.85,
+    weight: config.weight
+  };
+}
+
+async function loadProjectPlanLayers() {
+  if (!projectPlanLayer || !window.L) return;
+
+  const results = await Promise.allSettled(PROJECT_PLAN_LAYERS.map(async (config) => {
+    const response = await fetch(config.url);
+    if (!response.ok) throw new Error(`${config.name} unavailable`);
+    const geojson = await response.json();
+    return { config, geojson };
+  }));
+
+  const bounds = [];
+  let loadedCount = 0;
+  results.forEach((result) => {
+    if (result.status !== "fulfilled") {
+      console.warn("Project plan layer failed to load", result.reason);
+      return;
+    }
+
+    const { config, geojson } = result.value;
+    const layer = L.geoJSON(geojson, {
+      style: geoJsonStyle(config),
+      onEachFeature: (_feature, featureLayer) => {
+        featureLayer.bindPopup(`<strong>${escapeHtml(config.name)}</strong><br>Source-backed ArcGIS plan geometry.`);
+      }
+    }).addTo(projectPlanLayer);
+    const layerBounds = layer.getBounds();
+    if (layerBounds.isValid()) bounds.push(layerBounds);
+    loadedCount += geojson.features?.length || 0;
+  });
+
+  if (bounds.length) {
+    const combinedBounds = bounds.reduce((merged, layerBounds) => merged.extend(layerBounds), bounds[0]);
+    map.fitBounds(combinedBounds, { padding: [28, 28] });
+  }
+
+  const note = document.querySelector("#projectPlanStatus");
+  if (note) note.textContent = loadedCount ? `${loadedCount} ArcGIS plan features loaded` : "Plan layer unavailable";
 }
 
 function eventColor(event) {
