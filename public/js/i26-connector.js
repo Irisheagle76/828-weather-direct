@@ -1,46 +1,6 @@
 const ROUTE_BASE = "/api/router?route=";
 const ASHEVILLE = { lat: 35.5951, lon: -82.5515 };
 
-const projectSegments = [
-  {
-    name: "I-240 widening / southern approach",
-    points: [
-      [35.5458, -82.6147],
-      [35.5518, -82.6109],
-      [35.5588, -82.6059],
-      [35.5664, -82.6026],
-      [35.5738, -82.5988],
-      [35.5811, -82.5943],
-      [35.5866, -82.5902]
-    ]
-  },
-  {
-    name: "New interstate section north across the French Broad",
-    points: [
-      [35.5866, -82.5902],
-      [35.5920, -82.5886],
-      [35.5983, -82.5858],
-      [35.6053, -82.5830],
-      [35.6130, -82.5800],
-      [35.6221, -82.5772]
-    ]
-  },
-  {
-    name: "Patton Avenue / downtown connector tie-in",
-    points: [
-      [35.5866, -82.5902],
-      [35.5844, -82.5847],
-      [35.5827, -82.5783],
-      [35.5829, -82.5712],
-      [35.5858, -82.5634],
-      [35.5902, -82.5560],
-      [35.5940, -82.5500]
-    ]
-  }
-];
-
-const projectPoints = projectSegments.flatMap((segment) => segment.points);
-
 let map;
 let eventLayer;
 let cameraRefreshTimer;
@@ -116,54 +76,7 @@ function initMap() {
     maxZoom: 18,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
   }).addTo(map);
-  projectSegments.forEach(drawProjectSegment);
-
-  map.fitBounds(L.latLngBounds(projectPoints), { padding: [30, 30] });
-
-  addCorridorLabel([35.5855, -82.5908], "Connector project footprint", "corridor-label", [178, 24], [-89, -12]);
-  addCorridorLabel([35.552, -82.611], "I-240 widening begins", "corridor-node", [126, 22], [-130, 8]);
-  addCorridorLabel([35.600, -82.585], "New section crosses north", "corridor-node", [132, 22], [10, -10]);
-  addCorridorLabel([35.589, -82.557], "Patton / downtown tie-in", "corridor-node", [128, 22], [10, -10]);
   eventLayer = L.layerGroup().addTo(map);
-}
-
-function drawProjectSegment(segment) {
-  L.polyline(segment.points, {
-    color: "#26c7d9",
-    weight: 30,
-    opacity: 0.38,
-    lineCap: "round",
-    lineJoin: "round",
-    interactive: false
-  }).addTo(map);
-  L.polyline(segment.points, {
-    color: "#ffffff",
-    weight: 12,
-    opacity: 0.96,
-    lineCap: "round",
-    lineJoin: "round",
-    interactive: false
-  }).addTo(map);
-  L.polyline(segment.points, {
-    color: "#0a55c7",
-    weight: 7,
-    opacity: 0.98,
-    lineCap: "round",
-    lineJoin: "round"
-  }).bindPopup(`<strong>${segment.name}</strong><br>Simplified I-26 Connector project guide based on NCDOT project mapping and local sketch context.`).addTo(map);
-}
-
-function addCorridorLabel(position, label, className, iconSize, iconAnchor) {
-  L.marker(position, {
-    interactive: false,
-    keyboard: false,
-    icon: L.divIcon({
-      className,
-      html: className === "corridor-node" ? `<span>${label}</span>` : label,
-      iconSize,
-      iconAnchor
-    })
-  }).addTo(map);
 }
 
 function eventColor(event) {
