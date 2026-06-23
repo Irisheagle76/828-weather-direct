@@ -38,6 +38,23 @@ DRIVENC_EMAIL_INGEST_SECRET=<same value as Vercel>
 
 Then run `publishDriveNcConnectorEmails` on a time trigger, such as every 5 minutes.
 
+### Zoho Mail direct ingest
+
+If DriveNC sends alerts directly to `tim@avlweather.com` in Zoho Mail, use a Zoho Mail outgoing webhook:
+
+```
+https://avlweather.com/api/router?route=i26/email-alerts-ingest&secret=<DRIVENC_EMAIL_INGEST_SECRET>
+```
+
+Configure the webhook for Mail with conditions similar to:
+
+```txt
+From contains drivenc-notify@drivenc.gov
+Subject contains Events Within I-26 Connector
+```
+
+Leave Limited Data List off so Zoho posts the email body/HTML. The ingest route accepts Zoho fields such as `fromAddress`, `toAddress`, `receivedTime`, `summary`, and `html`, then stores the parsed alert in the Connector email alert feed.
+
 ## Admin and push setup
 
 Set these environment variables in Vercel:
