@@ -7,7 +7,7 @@
   <title>I-26 Connector Center | 828 Weather Direct</title>
   <link rel="preconnect" href="https://unpkg.com" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3ynHT9tUiN7ZBxiDHdIwAzJbDss0=" crossorigin="" />
-  <link rel="stylesheet" href="/css/i26-connector.css?v=20260622-1" />
+  <link rel="stylesheet" href="/css/i26-connector.css?v=20260623-connector-path" />
 </head>
 <body>
   <header class="site-header">
@@ -133,18 +133,18 @@
         <div>
           <div class="kicker">Active DriveNC records</div>
           <h2>Standing closures and road work near the Connector</h2>
-          <p class="map-intro">The highlighted route provides geographic context for Asheville's future interstate connection. These records are active in DriveNC, but many are long-duration construction entries rather than newly changed alerts.</p>
+          <p class="map-intro">The highlighted pathway is a refined visual approximation of the future Connector alignment, based on NCDOT concept mapping and local sketch context. Active DriveNC records are plotted around it.</p>
         </div>
       </div>
       <div class="map-shell">
         <div id="connectorMap" aria-label="Map of active NCDOT traffic events near the I-26 Connector"></div>
         <aside class="map-key" aria-label="Map legend">
           <strong>Map key</strong>
-          <div><span class="corridor-swatch"></span><b>Connector corridor</b><small>Approximate project reference</small></div>
+          <div><span class="corridor-swatch"></span><b>Projected pathway</b><small>Approximate visual guide</small></div>
           <div><span class="closure-dot"></span><b>Closure</b><small>Active DriveNC record</small></div>
           <div><span class="work-dot"></span><b>Road work</b><small>Active DriveNC record</small></div>
         </aside>
-        <div class="map-note"><strong>About the blue route:</strong> It is an approximate orientation guide showing the project corridor from the southern interchanges through the French Broad River area toward Woodfin. It is not an engineering alignment or construction boundary.</div>
+        <div class="map-note"><strong>About the highlighted pathway:</strong> This route is an approximate visual guide, refined from NCDOT concept mapping and local sketch context. It is intended to show the general future Connector path from the southern interchange area, across the French Broad side of the corridor, and north toward Woodfin. It is not survey-grade geometry, an engineering alignment, or a construction boundary.</div>
       </div>
       <div class="incident-list" id="incidentList" aria-live="polite">
         <article class="loading-card">Loading current NCDOT events...</article>
@@ -194,6 +194,6 @@
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script type="module" src="/js/i26-connector.js?v=20260622-1"></script>
+  <script type="module" src="/js/i26-connector.js?v=20260623-connector-path"></script>
 </body>
 </html>

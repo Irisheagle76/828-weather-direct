@@ -2,13 +2,17 @@ const ROUTE_BASE = "/api/router?route=";
 const ASHEVILLE = { lat: 35.5951, lon: -82.5515 };
 
 const corridorPoints = [
-  [35.542, -82.612],
-  [35.557, -82.604],
-  [35.575, -82.593],
-  [35.588, -82.579],
-  [35.596, -82.570],
-  [35.606, -82.574],
-  [35.620, -82.570]
+  [35.5464, -82.6166],
+  [35.5517, -82.6117],
+  [35.5588, -82.6080],
+  [35.5672, -82.6061],
+  [35.5765, -82.6072],
+  [35.5848, -82.6047],
+  [35.5917, -82.6002],
+  [35.5987, -82.5934],
+  [35.6062, -82.5905],
+  [35.6147, -82.5887],
+  [35.6237, -82.5869]
 ];
 
 let map;
@@ -87,25 +91,33 @@ function initMap() {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
   }).addTo(map);
   L.polyline(corridorPoints, {
-    color: "#ffffff",
-    weight: 13,
-    opacity: 0.9,
+    color: "#26c7d9",
+    weight: 28,
+    opacity: 0.42,
     lineCap: "round",
     lineJoin: "round",
     interactive: false
   }).addTo(map);
   L.polyline(corridorPoints, {
-    color: "#0d4fc7",
-    weight: 7,
-    opacity: 0.92,
+    color: "#ffffff",
+    weight: 11,
+    opacity: 0.96,
+    lineCap: "round",
+    lineJoin: "round",
+    interactive: false
+  }).addTo(map);
+  L.polyline(corridorPoints, {
+    color: "#0a55c7",
+    weight: 6,
+    opacity: 0.98,
     lineCap: "round",
     lineJoin: "round"
-  }).bindPopup("<strong>Approximate I-26 Connector corridor</strong><br>Orientation reference only, not an engineering alignment.").addTo(map);
+  }).bindPopup("<strong>Projected I-26 Connector pathway</strong><br>Approximate visual reference refined from NCDOT concept mapping and local sketch context.").addTo(map);
 
-  addCorridorLabel([35.582, -82.588], "Approx. Connector corridor", "corridor-label", [150, 24], [-75, -12]);
-  addCorridorLabel([35.548, -82.608], "Southern interchanges", "corridor-node", [120, 22], [-126, 7]);
-  addCorridorLabel([35.596, -82.570], "French Broad / downtown", "corridor-node", [132, 22], [10, -10]);
-  addCorridorLabel([35.620, -82.570], "North toward Woodfin", "corridor-node", [120, 22], [10, -10]);
+  addCorridorLabel([35.586, -82.603], "Projected connector pathway", "corridor-label", [172, 24], [-86, -12]);
+  addCorridorLabel([35.550, -82.612], "Southern tie-in", "corridor-node", [105, 22], [-112, 8]);
+  addCorridorLabel([35.594, -82.598], "French Broad crossing area", "corridor-node", [145, 22], [10, -10]);
+  addCorridorLabel([35.619, -82.588], "North toward Woodfin", "corridor-node", [120, 22], [10, -10]);
   eventLayer = L.layerGroup().addTo(map);
 }
 
