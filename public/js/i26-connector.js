@@ -1,8 +1,13 @@
 const ROUTE_BASE = "/api/router?route=";
 const ASHEVILLE = { lat: 35.5951, lon: -82.5515 };
+const CONNECTOR_PLAN_LAYER = {
+  name: "New DOT RW - 2018 Plan",
+  url: "https://services6.arcgis.com/VLA0ImJ33zhtGEaP/arcgis/rest/services/I_26_RW_Plans/FeatureServer/0/query?where=1%3D1&outFields=OBJECTID&returnGeometry=true&outSR=4326&f=geojson"
+};
 
 let map;
 let eventLayer;
+let connectorPlanLayer;
 let cameraRefreshTimer;
 
 function escapeHtml(value = "") {
@@ -76,7 +81,41 @@ function initMap() {
     maxZoom: 18,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
   }).addTo(map);
+  connectorPlanLayer = L.layerGroup().addTo(map);
+  loadConnectorPlanLayer();
   eventLayer = L.layerGroup().addTo(map);
+}
+
+async function loadConnectorPlanLayer() {
+  if (!connectorPlanLayer || !window.L) return;
+
+  try {
+    const response = await fetch(CONNECTOR_PLAN_LAYER.url);
+    if (!response.ok) throw new Error("Connector plan layer unavailable");
+    const geojson = await response.json();
+    const layer = L.geoJSON(geojson, {
+      style: {
+        color: "#0d4fc7",
+        fillColor: "#2f80ff",
+        fillOpacity: 0.32,
+        opacity: 0.9,
+        weight: 2
+      },
+      onEachFeature: (_feature, featureLayer) => {
+        featureLayer.bindPopup(`<strong>${escapeHtml(CONNECTOR_PLAN_LAYER.name)}</strong><br>Official ArcGIS right-of-way plan geometry.`);
+      }
+    }).addTo(connectorPlanLayer);
+
+    const bounds = layer.getBounds();
+    if (bounds.isValid()) map.fitBounds(bounds, { padding: [28, 28] });
+
+    const note = document.querySelector("#projectPlanStatus");
+    if (note) note.textContent = `${geojson.features?.length || 0} plan features loaded`;
+  } catch (error) {
+    console.warn(error);
+    const note = document.querySelector("#projectPlanStatus");
+    if (note) note.textContent = "Plan layer unavailable";
+  }
 }
 
 function eventColor(event) {
