@@ -1,4 +1,28 @@
 {
-  "alerts": [],
-  "updatedAt": null
+  "alerts": [
+    {
+      "id": "drivenc-d805b74f1a613a03",
+      "eventId": "2873",
+      "source": "DriveNC email",
+      "sourceEmail": "DriveNC-Notify@DriveNC.gov",
+      "subject": "Events Within I-26 Connector",
+      "type": "road-work",
+      "typeLabel": "Road Work",
+      "status": "Cleared",
+      "cleared": true,
+      "road": "I-240",
+      "title": "Road Work - Cleared",
+      "description": "Cleared: Construction on I-240 Eastbound in Buncombe County from mile marker 3 to mile marker 3.0. 1 Left lane closed. Id: 2873",
+      "startTimeText": "Jun 22 2026, 9:45 PM",
+      "endTimeText": "Jun 23 2026, 6:00 AM",
+      "startTime": "2026-06-23T01:45:00.000Z",
+      "endTime": "2026-06-23T10:00:00.000Z",
+      "url": "https://www.drivenc.gov/region/Asheville",
+      "area": "I-26 Connector",
+      "severity": "cleared",
+      "receivedAt": "2026-06-23T09:17:18.000Z",
+      "updatedAt": "2026-06-23T09:17:18.000Z"
+    }
+  ],
+  "updatedAt": "2026-06-23T09:17:18.000Z"
 }
