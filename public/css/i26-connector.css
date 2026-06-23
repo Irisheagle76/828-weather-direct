@@ -130,11 +130,7 @@ h1 { max-width: 760px; margin: 15px 0; font: 700 clamp(3.5rem, 8vw, 7rem)/0.88 G
 .email-alert-meta { color: #48566b; font-size: .82rem; line-height: 1.45; }
 .email-alert-card a { color: var(--blue); font-weight: 900; }
 .map-intro { max-width: 780px; margin: 14px 0 0; color: var(--muted); font-size: 1rem; line-height: 1.6; }
-.closure-dot, .work-dot, .plan-swatch { width: 10px; height: 10px; display: inline-block; }
-.plan-swatch { border-radius: 3px; box-shadow: inset 0 0 0 2px rgba(255,255,255,.72), 0 0 0 1px rgba(9,37,95,.2); }
-.plan-proposed { background: rgba(47, 128, 255, .65); }
-.plan-existing { background: rgba(71, 209, 108, .62); }
-.closure-dot, .work-dot { border-radius: 50%; }
+.closure-dot, .work-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 .closure-dot { background: var(--red); }.work-dot { background: var(--orange); }
 .map-shell { position: relative; overflow: hidden; }
 #connectorMap { height: 470px; background: #dce7ef; }
@@ -146,6 +142,7 @@ h1 { max-width: 760px; margin: 15px 0; font: 700 clamp(3.5rem, 8vw, 7rem)/0.88 G
 .map-key small { grid-column: 2; margin-top: 1px; color: var(--muted); font-size: .68rem; }
 .map-note { padding: 14px 18px; color: var(--muted); background: #f8fafc; font-size: .78rem; line-height: 1.5; }
 .map-note strong { color: var(--blue-dark); }
+.map-note a { color: var(--blue); font-weight: 900; }
 .incident-list { margin-top: 16px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
 .incident-card, .loading-card { padding: 22px; }
 .incident-card { display: grid; gap: 10px; }
