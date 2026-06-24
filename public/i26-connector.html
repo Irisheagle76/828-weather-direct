@@ -7,7 +7,7 @@
   <title>I-26 Connector Center | 828 Weather Direct</title>
   <link rel="preconnect" href="https://unpkg.com" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3ynHT9tUiN7ZBxiDHdIwAzJbDss0=" crossorigin="" />
-  <link rel="stylesheet" href="/css/i26-connector.css?v=20260623-new-dot-rw" />
+  <link rel="stylesheet" href="/css/i26-connector.css?v=20260624-unified-updates" />
 </head>
 <body>
   <header class="site-header">
@@ -109,30 +109,30 @@
       </div>
     </section>
 
-    <section class="page-section ncdot-email-section" id="drivenc-email-alerts">
+    <section class="page-section ncdot-email-section" id="traffic-updates">
       <div class="section-heading">
         <div>
-          <div class="kicker">DriveNC email alerts</div>
-          <h2>Recent Connector-area notifications</h2>
-          <p class="map-intro">These are the newest DriveNC notifications sent for the I-26 Connector alert area, including incidents, closures, road work, and cleared events near I-26, I-240, and I-40.</p>
+          <div class="kicker">DriveNC traffic desk</div>
+          <h2>Connector traffic &amp; construction updates</h2>
+          <p class="map-intro">A single feed blending near-real-time DriveNC email alerts with active DriveNC records near the Connector. Email alerts lead the feed, while standing records appear only when they add context.</p>
         </div>
         <a href="https://www.drivenc.gov/region/Asheville" target="_blank" rel="noopener noreferrer">Verify on DriveNC</a>
       </div>
       <div class="email-alert-summary" id="emailAlertSummary">
-        <article><span>Recent alerts</span><strong>Loading</strong></article>
+        <article><span>Feed items</span><strong>Loading</strong></article>
         <article><span>Active notices</span><strong>--</strong></article>
-        <article><span>Last email</span><strong>Connecting</strong></article>
+        <article><span>Newest update</span><strong>Connecting</strong></article>
       </div>
       <div class="email-alert-list" id="emailAlertList" aria-live="polite">
-        <article class="loading-card">Loading recent DriveNC email notifications...</article>
+        <article class="loading-card">Loading Connector traffic and construction updates...</article>
       </div>
     </section>
 
     <section class="page-section" id="live-map">
       <div class="section-heading">
         <div>
-          <div class="kicker">Active DriveNC records</div>
-          <h2>Standing closures and road work near the Connector</h2>
+          <div class="kicker">Connector map</div>
+          <h2>Project plan and active traffic geography</h2>
           <p class="map-intro">This map overlays the official ArcGIS <em>New DOT RW - 2018 Plan</em> layer with active DriveNC records near the I-26 Connector work area.</p>
         </div>
       </div>
@@ -145,9 +145,6 @@
           <div><span class="work-dot"></span><b>Road work</b><small>Active DriveNC record</small></div>
         </aside>
         <div class="map-note"><strong>About this map:</strong> The blue overlay uses the source ArcGIS <em>New DOT RW - 2018 Plan</em> layer, shown here as a visual guide to the future Connector construction area. DriveNC events are plotted from live NCDOT records when locations are available. <span id="projectPlanStatus">Loading plan features...</span> <a href="https://www.arcgis.com/apps/mapviewer/index.html?webmap=8edfbbb2600140a99596e628a706b70c" target="_blank" rel="noopener noreferrer">Open source ArcGIS map</a>.</div>
-      </div>
-      <div class="incident-list" id="incidentList" aria-live="polite">
-        <article class="loading-card">Loading current NCDOT events...</article>
       </div>
     </section>
 
@@ -194,6 +191,6 @@
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script type="module" src="/js/i26-connector.js?v=20260623-new-dot-rw"></script>
+  <script type="module" src="/js/i26-connector.js?v=20260624-unified-updates"></script>
 </body>
 </html>

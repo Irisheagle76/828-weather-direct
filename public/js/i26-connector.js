@@ -9,6 +9,8 @@ let map;
 let eventLayer;
 let connectorPlanLayer;
 let cameraRefreshTimer;
+let emailAlertState = { alerts: [], updatedAt: null, loaded: false, error: false };
+let incidentState = { incidents: [], updatedAt: null, loaded: false, error: false };
 
 function escapeHtml(value = "") {
   return String(value).replace(/[&<>'"]/g, (character) => ({
@@ -123,7 +125,6 @@ function eventColor(event) {
 }
 
 function renderIncidents(incidents = []) {
-  const list = document.querySelector("#incidentList");
   const closures = incidents.filter((event) => event.fullClosure || event.condition.toLowerCase().includes("closed"));
   document.querySelector("#incidentCount").textContent = incidents.length ? String(incidents.length) : "None listed";
   document.querySelector("#closureCount").textContent = String(closures.length);
@@ -142,20 +143,7 @@ function renderIncidents(incidents = []) {
     marker.addTo(eventLayer);
   });
 
-  if (!incidents.length) {
-    list.innerHTML = '<article class="loading-card">No active NCDOT events are currently listed inside the Connector map area. Check DriveNC before travel.</article>';
-    return;
-  }
-
-  list.innerHTML = incidents.slice(0, 8).map((event) => {
-    const closure = event.fullClosure || event.condition.toLowerCase().includes("closed");
-    return `<article class="incident-card">
-      <div class="incident-top"><div class="incident-road">${escapeHtml(event.road)}</div><span class="event-tag ${closure ? "closure" : ""}">${closure ? "Closure" : "Road work"}</span></div>
-      <p>${escapeHtml(event.description)}</p>
-      <div class="incident-meta">${escapeHtml(event.lanesAffected || event.condition)}${event.updatedTime ? ` &bull; Updated ${formatTime(event.updatedTime)}` : ""}</div>
-      <a href="${escapeHtml(event.url)}" target="_blank" rel="noopener noreferrer">Verify on DriveNC</a>
-    </article>`;
-  }).join("");
+  renderUnifiedUpdates();
 }
 
 async function loadIncidents() {
@@ -163,51 +151,139 @@ async function loadIncidents() {
     const response = await fetch(`${ROUTE_BASE}i26/incidents`);
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "Incident feed unavailable");
+    incidentState = { incidents: Array.isArray(data.incidents) ? data.incidents : [], updatedAt: data.updatedAt, loaded: true, error: false };
     renderIncidents(data.incidents);
     document.querySelector("#lastUpdated").textContent = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(new Date(data.updatedAt));
   } catch (error) {
     console.error(error);
+    incidentState = { incidents: [], updatedAt: null, loaded: true, error: true };
     document.querySelector("#incidentCount").textContent = "Unavailable";
-    document.querySelector("#incidentList").innerHTML = '<article class="loading-card">The live incident feed is temporarily unavailable. Use the official DriveNC Asheville map for current conditions.</article>';
+    renderUnifiedUpdates();
   }
 }
 
-function renderEmailAlerts(data = {}) {
+function compactText(value = "") {
+  return String(value).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function compactEventKey(item = {}) {
+  return String(item.eventId || item.id || "").trim();
+}
+
+function normalizeUpdateTime(value) {
+  const timestamp = new Date(value || 0).getTime();
+  return Number.isFinite(timestamp) ? timestamp : 0;
+}
+
+function emailCoversIncident(alert, incident) {
+  const alertKey = compactEventKey(alert);
+  const incidentKey = compactEventKey(incident);
+  if (alertKey && incidentKey && alertKey === incidentKey) return true;
+
+  const alertText = compactText(`${alert.road || ""} ${alert.description || ""}`);
+  const incidentText = compactText(`${incident.road || ""} ${incident.description || ""}`);
+  if (!alertText || !incidentText) return false;
+
+  return alertText.includes(incidentText.slice(0, 70)) || incidentText.includes(alertText.slice(0, 70));
+}
+
+function normalizeEmailUpdate(alert) {
+  const timing = [alert.startTime ? `Starts ${formatShortDate(alert.startTime)}` : alert.startTimeText, alert.endTime ? `Ends ${formatShortDate(alert.endTime)}` : alert.endTimeText]
+    .filter(Boolean)
+    .join(" &bull; ");
+
+  return {
+    id: alert.id,
+    eventId: alert.eventId,
+    sourceKind: "email",
+    sourceLabel: "Email alert",
+    road: alert.road || "Connector area",
+    title: alert.title || "DriveNC alert",
+    description: alert.description || "DriveNC notification for the I-26 Connector area.",
+    badge: alert.cleared ? "Cleared" : alert.typeLabel || "Alert",
+    severity: alert.severity || "advisory",
+    active: !alert.cleared,
+    url: alert.url || "https://www.drivenc.gov/region/Asheville",
+    primaryTime: alert.receivedAt || alert.updatedAt,
+    meta: `${formatRelativeTime(alert.receivedAt || alert.updatedAt)}${timing ? ` &bull; ${timing}` : ""}`
+  };
+}
+
+function normalizeIncidentUpdate(event) {
+  const condition = event.condition || "";
+  const closure = event.fullClosure || condition.toLowerCase().includes("closed");
+  const timing = [event.updatedTime ? `Updated ${formatTime(event.updatedTime)}` : "", event.lanesAffected || condition]
+    .filter(Boolean)
+    .join(" &bull; ");
+
+  return {
+    id: event.id,
+    eventId: event.id,
+    sourceKind: "record",
+    sourceLabel: "Active DriveNC record",
+    road: event.road || "Connector area",
+    title: `${closure ? "Closure" : "Road work"} - DriveNC record`,
+    description: event.description || "Active NCDOT event near the Connector.",
+    badge: closure ? "Closure" : "Road work",
+    severity: closure ? "closure" : "advisory",
+    active: true,
+    url: event.url || "https://www.drivenc.gov/region/Asheville",
+    primaryTime: event.updatedTime || event.startTime || Date.now(),
+    meta: timing
+  };
+}
+
+function buildUnifiedUpdates() {
+  const emailAlerts = Array.isArray(emailAlertState.alerts) ? emailAlertState.alerts : [];
+  const incidents = Array.isArray(incidentState.incidents) ? incidentState.incidents : [];
+  const incidentAdditions = incidents
+    .filter((event) => !emailAlerts.some((alert) => emailCoversIncident(alert, event)))
+    .map(normalizeIncidentUpdate);
+
+  return [...emailAlerts.map(normalizeEmailUpdate), ...incidentAdditions]
+    .sort((a, b) => normalizeUpdateTime(b.primaryTime) - normalizeUpdateTime(a.primaryTime))
+    .slice(0, 12);
+}
+
+function renderUnifiedUpdates() {
   const list = document.querySelector("#emailAlertList");
   const summary = document.querySelector("#emailAlertSummary");
   if (!list || !summary) return;
 
-  const alerts = Array.isArray(data.alerts) ? data.alerts : [];
-  const active = alerts.filter((alert) => !alert.cleared);
-  const latest = alerts[0];
+  const loaded = emailAlertState.loaded && incidentState.loaded;
+  const updates = buildUnifiedUpdates();
+  const active = updates.filter((item) => item.active);
+  const latest = updates[0];
 
   summary.innerHTML = `
-    <article><span>Recent alerts</span><strong>${alerts.length ? alerts.length : "None"}</strong></article>
+    <article><span>Feed items</span><strong>${loaded ? updates.length || "None" : "Loading"}</strong></article>
     <article><span>Active notices</span><strong>${active.length}</strong></article>
-    <article><span>Last email</span><strong>${latest ? formatRelativeTime(latest.receivedAt) : "None yet"}</strong></article>`;
+    <article><span>Newest update</span><strong>${latest ? formatRelativeTime(latest.primaryTime) : loaded ? "None yet" : "Connecting"}</strong></article>`;
 
-  if (!alerts.length) {
-    list.innerHTML = '<article class="loading-card">No DriveNC notification emails have been published to this feed yet. Standing DriveNC records remain below.</article>';
+  if (!loaded && !updates.length) {
+    list.innerHTML = '<article class="loading-card">Loading Connector traffic and construction updates...</article>';
     return;
   }
 
-  list.innerHTML = alerts.slice(0, 8).map((alert) => {
-    const classes = ["email-alert-card", `severity-${alert.severity || "advisory"}`].join(" ");
-    const timing = [alert.startTime ? `Starts ${formatShortDate(alert.startTime)}` : alert.startTimeText, alert.endTime ? `Ends ${formatShortDate(alert.endTime)}` : alert.endTimeText]
-      .filter(Boolean)
-      .join(" • ");
+  if (!updates.length) {
+    list.innerHTML = '<article class="loading-card">No Connector-area traffic or construction updates are currently listed. Check DriveNC before travel.</article>';
+    return;
+  }
 
+  list.innerHTML = updates.map((item) => {
+    const classes = ["email-alert-card", `severity-${item.severity || "advisory"}`, `source-${item.sourceKind}`].join(" ");
     return `<article class="${classes}">
       <div class="email-alert-top">
         <div>
-          <span>${escapeHtml(alert.road || "Connector area")}</span>
-          <h3>${escapeHtml(alert.title || "DriveNC alert")}</h3>
+          <span>${escapeHtml(item.road || "Connector area")}</span>
+          <h3>${escapeHtml(item.title || "DriveNC update")}</h3>
         </div>
-        <b>${escapeHtml(alert.cleared ? "Cleared" : alert.typeLabel || "Alert")}</b>
+        <b>${escapeHtml(item.badge || "Update")}</b>
       </div>
-      <p>${escapeHtml(alert.description || "DriveNC notification for the I-26 Connector area.")}</p>
-      <div class="email-alert-meta">${escapeHtml(formatRelativeTime(alert.receivedAt))}${timing ? ` • ${escapeHtml(timing)}` : ""}</div>
-      <a href="${escapeHtml(alert.url || "https://www.drivenc.gov/region/Asheville")}" target="_blank" rel="noopener noreferrer">Verify on DriveNC</a>
+      <div class="update-source">${escapeHtml(item.sourceLabel)}</div>
+      <p>${escapeHtml(item.description)}</p>
+      <div class="email-alert-meta">${escapeHtml(item.meta || formatRelativeTime(item.primaryTime))}</div>
+      <a href="${escapeHtml(item.url || "https://www.drivenc.gov/region/Asheville")}" target="_blank" rel="noopener noreferrer">Verify on DriveNC</a>
     </article>`;
   }).join("");
 }
@@ -217,14 +293,12 @@ async function loadEmailAlerts() {
     const response = await fetch(`${ROUTE_BASE}i26/email-alerts`);
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "Email alert feed unavailable");
-    renderEmailAlerts(data);
+    emailAlertState = { alerts: Array.isArray(data.alerts) ? data.alerts : [], updatedAt: data.updatedAt, loaded: true, error: false };
+    renderUnifiedUpdates();
   } catch (error) {
     console.error(error);
-    document.querySelector("#emailAlertSummary").innerHTML = `
-      <article><span>Recent alerts</span><strong>Unavailable</strong></article>
-      <article><span>Active notices</span><strong>--</strong></article>
-      <article><span>Last email</span><strong>--</strong></article>`;
-    document.querySelector("#emailAlertList").innerHTML = '<article class="loading-card">DriveNC email notifications are temporarily unavailable. Use the official DriveNC map before travel.</article>';
+    emailAlertState = { alerts: [], updatedAt: null, loaded: true, error: true };
+    renderUnifiedUpdates();
   }
 }
 
