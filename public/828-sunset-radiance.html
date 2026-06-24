@@ -66,9 +66,87 @@
       min-height: 100vh;
     }
 
+    .mock-header {
+      border-bottom: 1px solid var(--line);
+      background: var(--white);
+    }
+
+    .mock-header-inner {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 22px 0 18px;
+    }
+
+    .mock-brand-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .mock-brand-title {
+      color: var(--ink);
+      font-size: 1.55rem;
+      font-weight: 950;
+      letter-spacing: 0;
+      line-height: 1.05;
+    }
+
+    .mock-brand-sub {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    .site-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .site-nav::-webkit-scrollbar {
+      display: none;
+    }
+
+    .site-nav a {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 0 12px;
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .site-nav a:hover,
+    .site-nav a:focus-visible {
+      color: var(--blue);
+      background: var(--blue-soft);
+    }
+
+    .site-nav .sunset-nav-link {
+      color: var(--white);
+      background: var(--blue);
+      box-shadow: 0 8px 18px rgba(15, 76, 196, 0.2);
+    }
+
+    .site-nav .sunset-nav-link:hover,
+    .site-nav .sunset-nav-link:focus-visible {
+      color: var(--white);
+      background: #083da6;
+    }
+
     .hero {
       position: relative;
-      min-height: 88vh;
+      min-height: clamp(560px, 70vh, 720px);
       display: flex;
       align-items: stretch;
       color: var(--white);
@@ -87,62 +165,12 @@
         linear-gradient(0deg, rgba(8, 19, 42, 0.88) 0%, rgba(8, 19, 42, 0.08) 45%);
     }
 
-    .nav {
-      position: absolute;
-      z-index: 3;
-      top: 0;
-      left: 0;
-      right: 0;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 20px;
-      padding: 22px clamp(18px, 4vw, 56px);
-    }
-
-    .brand {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      min-width: 0;
-    }
-
-    .brand strong {
-      font-size: 18px;
-      letter-spacing: 0;
-    }
-
-    .brand span {
-      color: rgba(255, 253, 248, 0.72);
-      font-size: 12px;
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 18px;
-      color: rgba(255, 253, 248, 0.84);
-      font-size: 14px;
-    }
-
-    .weather-link {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 38px;
-      padding: 0 14px;
-      border: 1px solid rgba(255, 253, 248, 0.35);
-      border-radius: 6px;
-      background: rgba(255, 253, 248, 0.1);
-      backdrop-filter: blur(12px);
-    }
-
     .hero-inner {
       position: relative;
       z-index: 2;
       width: min(1160px, calc(100% - 36px));
       margin: 0 auto;
-      padding: 132px 0 42px;
+      padding: clamp(58px, 8vw, 92px) 0 42px;
       display: grid;
       grid-template-columns: minmax(0, 1fr);
       align-content: end;
@@ -1103,10 +1131,6 @@
     }
 
     @media (max-width: 900px) {
-      .nav-links {
-        display: none;
-      }
-
       .hero-strip,
       .radiance-layout,
       .window-grid,
@@ -1122,12 +1146,34 @@
 
     @media (max-width: 680px) {
       .hero {
-        min-height: 86vh;
+        min-height: 620px;
       }
 
       .hero-inner {
         width: min(100% - 28px, 1160px);
-        padding-top: 108px;
+        padding-top: 56px;
+      }
+
+      .mock-header {
+        padding: 12px 0;
+      }
+
+      .mock-header-inner {
+        width: min(100% - 16px, 1120px);
+      }
+
+      .mock-brand-row {
+        display: grid;
+      }
+
+      .mock-brand-title {
+        font-size: 1.45rem;
+      }
+
+      .site-nav {
+        margin-right: -12px;
+        padding-right: 12px;
+        mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent);
       }
 
       .section,
@@ -1196,21 +1242,28 @@
 </head>
 <body>
   <div class="site-shell">
-    <header class="hero">
-      <nav class="nav" aria-label="Main navigation">
-        <a class="brand" href="828-sunset-radiance.html">
-          <strong>828 Sunset Radiance</strong>
-          <span>Asheville sky color guide</span>
-        </a>
-        <div class="nav-links">
-          <a href="#snapshot">Sky snapshot</a>
-          <a href="#signals">Signals</a>
-          <a href="#timing">Timing</a>
-          <a href="/water.html">Water Conditions</a>
-          <a class="weather-link" href="index.html">Check weather</a>
+    <header class="mock-header">
+      <div class="mock-header-inner">
+        <div class="mock-brand-row">
+          <a href="/" aria-label="828 Weather Direct home">
+            <div class="mock-brand-title">828 Weather Direct</div>
+            <div class="mock-brand-sub">Hyper-local Asheville forecast built by Tim Ballisty</div>
+          </a>
         </div>
-      </nav>
 
+        <nav class="site-nav" aria-label="Main navigation">
+          <a href="/">Now</a>
+          <a href="/forecast.html">Tim's 4-Day Forecast</a>
+          <a href="/#pulse-preview">Weather Pulse</a>
+          <a href="/hiking.html">Hiking Guidance</a>
+          <a href="/water.html">Water Conditions</a>
+          <a href="/i26-connector.html">I-26 Connector</a>
+          <a class="sunset-nav-link" href="/828-sunset-radiance.html" aria-current="page">Sunset Radiance</a>
+        </nav>
+      </div>
+    </header>
+
+    <header class="hero">
       <div class="hero-inner">
         <div class="hero-copy">
           <div class="eyebrow">828 Weather Update</div>
