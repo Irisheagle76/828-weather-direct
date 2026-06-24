@@ -474,7 +474,7 @@
 
     .sky-context-grid {
       display: grid;
-      grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 18px;
       margin-top: 22px;
     }
@@ -512,6 +512,25 @@
     .context-media.satellite img {
       object-fit: contain;
       background: #081426;
+    }
+
+    .context-media.youtube-live {
+      cursor: default;
+      aspect-ratio: 16 / 9;
+      min-height: 230px;
+      background: #081426;
+    }
+
+    .context-media.youtube-live::after {
+      display: none;
+    }
+
+    .context-media.youtube-live iframe {
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: 230px;
+      border: 0;
     }
 
     .context-media.unca-camera {
@@ -1203,6 +1222,7 @@
           <div class="hero-actions">
             <a class="button primary" href="#snapshot">See the sky</a>
             <a class="button secondary" href="#timing">Plan sunset</a>
+            <a class="button secondary" href="https://www.youtube.com/watch?v=UxUU3Fc1vBw" target="_blank" rel="noopener noreferrer">Watch live camera</a>
           </div>
         </div>
 
@@ -1318,6 +1338,21 @@
             </button>
             <div class="context-copy">
               Click to enlarge the latest NOAA GOES-East Southeast GeoColor loop for upstream cloud breaks and clearing trends.
+            </div>
+          </article>
+
+          <article class="context-card">
+            <div class="context-media youtube-live">
+              <iframe
+                src="https://www.youtube-nocookie.com/embed/UxUU3Fc1vBw"
+                title="Live Asheville sunset camera on YouTube"
+                loading="lazy"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen
+              ></iframe>
+            </div>
+            <div class="context-copy">
+              Live player from the Asheville sky camera. <a href="https://www.youtube.com/watch?v=UxUU3Fc1vBw" target="_blank" rel="noopener noreferrer">Open on YouTube</a>.
             </div>
           </article>
         </div>
@@ -1836,7 +1871,7 @@
       const m = camera?.metrics || {};
       const earlySetup = phase?.state === "setup" || phase?.state === "waiting";
       let score = 56;
-      if (skyIntel?.atmosphericState === "mostly_clear") score = 74;
+      if (skyIntel?.atmosphericState === "mostly_clear") score = 62;
       if (skyIntel?.atmosphericState === "partly_cloudy") score = 86;
       if (skyIntel?.atmosphericState === "mostly_cloudy") score = 58;
       if (skyIntel?.atmosphericState === "overcast") score = 30;
@@ -1904,9 +1939,9 @@
         title: phase.state === "closed" ? "Tonight's radiance window has closed"
           : obscured ? (earlySetup ? "Fog is muting the early setup" : "Fog is muting the sunset setup")
           : earlySetup ? "Early sunset setup"
-          : score >= 88 ? "High radiance potential"
-          : score >= 74 ? "Strong sunset chance"
-          : score >= 60 ? "Worth watching"
+          : score >= 90 ? "High radiance potential"
+          : score >= 80 ? "Strong sunset chance"
+          : score >= 65 ? "Worth watching"
           : score >= 45 ? "Mixed sunset setup"
           : "Low color potential",
         detail: phase.state === "closed"
@@ -1915,9 +1950,11 @@
           ? "The live camera view is obscured by fog or low cloud. Forecast ingredients can still improve later, but the current sky read should stay cautious."
           : earlySetup
           ? "This is still a long-lead setup read. Morning sky conditions are informative, but the true sunset signal starts to matter much more after about 3 PM."
-          : score >= 74
+          : score >= 80
           ? "The sky has enough working ingredients to justify keeping an eye on the western horizon."
-          : score >= 45
+          : score >= 65
+            ? "There are useful ingredients, but the signal is still short of a strong sunset alert."
+            : score >= 45
             ? "There are useful ingredients, but one or two limits may keep color localized or brief."
             : "The current setup is likely to stay muted unless the western sky opens quickly.",
         factors: [
