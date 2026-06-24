@@ -1458,8 +1458,7 @@
   </div>
 
   <script type="module">
-    import { computeSkyIntel } from "./js/intel/sky-intel.js";
-    import { generateSkyNarrative } from "./js/intel/sky-narrative.js";
+    import { buildSkyConditionRead, isObscuredSky } from "./js/intel/sky-read.js";
 
     const ASHEVILLE = {
       lat: 35.5951,
@@ -1762,7 +1761,17 @@
       return { state: "active", label: "Monitoring sunset" };
     }
 
-    function scoreCloudTexture(cameraCloud, forecastCloud, phase) {
+    function scoreCloudTexture(cameraCloud, forecastCloud, phase, skyIntel = null) {
+      if (isObscuredSky(skyIntel)) {
+        return {
+          score: 24,
+          label: "Live view obscured",
+          detail: phase?.state === "setup" || phase?.state === "waiting"
+            ? "Fog or low cloud is hiding the current cloud texture. It is useful now context, but not a clean sunset texture read yet."
+            : "Fog or low cloud is hiding the actual cloud texture, so the sunset read should stay cautious."
+        };
+      }
+
       const cloud = Number.isFinite(forecastCloud) ? forecastCloud * 100 : cameraCloud;
       const hasForecastCloud = Number.isFinite(forecastCloud);
       const earlySetup = phase?.state === "setup" || phase?.state === "waiting";
@@ -1793,10 +1802,10 @@
       };
     }
 
-    function scoreMoisture(hour, camera, phase) {
+    function scoreMoisture(hour, camera, phase, skyIntel = null) {
       const humidity = pickNumber(hour, ["relativeHumidity", "relative_humidity", "humidity"]);
       const precip = pickNumber(hour, ["precipProbability", "precipitation_probability", "probabilityOfPrecipitation"]);
-      const fog = camera?.metrics?.visibilityScore === 0;
+      const fog = isObscuredSky(skyIntel) || camera?.metrics?.visibilityScore === 0;
       const earlySetup = phase?.state === "setup" || phase?.state === "waiting";
       let score = 78;
       if (Number.isFinite(humidity)) {
@@ -1832,12 +1841,16 @@
       if (skyIntel?.atmosphericState === "mostly_cloudy") score = 58;
       if (skyIntel?.atmosphericState === "overcast") score = 30;
       if (skyIntel?.atmosphericState === "fog") score = 18;
-      if (m.sunlightDetected) score += m.sunlightLevel === "strong" ? 10 : 5;
-      if (Number.isFinite(m.skyBlueSignal) && m.skyBlueSignal > 1.05) score += 8;
+      if (skyIntel?.atmosphericState === "low_cloud") score = 22;
+      const obscured = isObscuredSky(skyIntel);
+      if (m.sunlightDetected && !obscured) score += m.sunlightLevel === "strong" ? 10 : 5;
+      if (Number.isFinite(m.skyBlueSignal) && m.skyBlueSignal > (obscured ? 1.2 : 1.05)) score += 8;
       return {
         score: clamp(score),
         label: earlySetup ? `Current sky: ${labelize(skyIntel?.atmosphericState)}` : labelize(skyIntel?.atmosphericState),
-        detail: earlySetup
+        detail: obscured
+          ? "A low cloud or fog layer is obscuring the view, which limits the current sunset color case."
+          : earlySetup
           ? "This describes what Asheville looks like now. It is useful context, but the real clearing signal matters most after mid-afternoon."
           : m.sunlightDetected
           ? "Sunlight is still getting into the cloud deck, which helps the evening color case."
@@ -1871,22 +1884,25 @@
       const daily = getTodayDaily(state.weather);
       const phase = getRadiancePhase(daily);
       const earlySetup = phase.state === "setup" || phase.state === "waiting";
-      const texture = scoreCloudTexture(cameraCloud, sunsetHour?.cloudCover, phase);
-      const moisture = scoreMoisture(sunsetHour, state.skyData, phase);
+      const texture = scoreCloudTexture(cameraCloud, sunsetHour?.cloudCover, phase, state.skyIntel);
+      const moisture = scoreMoisture(sunsetHour, state.skyData, phase, state.skyIntel);
       const clearing = scoreClearing(state.skyIntel, state.skyData, phase);
       const timing = scoreTiming(state.weather);
 
-      const score = Math.round(
+      let score = Math.round(
         texture.score * 0.36 +
         clearing.score * 0.28 +
         moisture.score * 0.22 +
         timing.score * 0.14
       );
+      const obscured = isObscuredSky(state.skyIntel);
+      if (obscured) score = Math.min(score, earlySetup ? 56 : 48);
 
       return {
         phase,
         score,
         title: phase.state === "closed" ? "Tonight's radiance window has closed"
+          : obscured ? (earlySetup ? "Fog is muting the early setup" : "Fog is muting the sunset setup")
           : earlySetup ? "Early sunset setup"
           : score >= 88 ? "High radiance potential"
           : score >= 74 ? "Strong sunset chance"
@@ -1895,6 +1911,8 @@
           : "Low color potential",
         detail: phase.state === "closed"
           ? "The useful sunset and twilight period has passed for Asheville. The sky snapshot remains here for context, and tomorrow's window will come back into focus after the next daylight cycle begins."
+          : obscured
+          ? "The live camera view is obscured by fog or low cloud. Forecast ingredients can still improve later, but the current sky read should stay cautious."
           : earlySetup
           ? "This is still a long-lead setup read. Morning sky conditions are informative, but the true sunset signal starts to matter much more after about 3 PM."
           : score >= 74
@@ -1935,11 +1953,12 @@
       const statusCloud = pickNumber(statusHour, ["cloudCover", "cloud_cover", "cloudcover"]);
       const statusHumidity = pickNumber(forecastStatusHour, ["relativeHumidity", "relative_humidity", "humidity"]);
       const statusPrecip = pickNumber(forecastStatusHour, ["precipProbability", "precipitation_probability", "probabilityOfPrecipitation"]);
-      const cameraCloudAvailable = Number.isFinite(state.skyIntel?.cloud);
+      const obscuredSky = isObscuredSky(state.skyIntel);
+      const cameraCloudAvailable = Number.isFinite(state.skyIntel?.cloud) && !obscuredSky;
       const displayCloud = cameraCloudAvailable ? state.skyIntel.cloud : statusCloud;
       els.cloudStatus.textContent = isEarlySetup
-        ? `Now clouds ${statusPct(displayCloud, "Pending")}`
-        : `Clouds ${statusPct(displayCloud, "Pending")}`;
+        ? (obscuredSky ? "Now clouds obscured" : `Now clouds ${statusPct(displayCloud, "Pending")}`)
+        : (obscuredSky ? "Clouds obscured" : `Clouds ${statusPct(displayCloud, "Pending")}`);
       els.humidityStatus.textContent = isEarlySetup
         ? `Sunset humidity ${statusPct(statusHumidity, "Pending")}`
         : `Humidity ${statusPct(statusHumidity, "Pending")}`;
@@ -1975,11 +1994,11 @@
       els.windowTitle.textContent = isClosed ? "Window closed" : daily?.sunset ? `Sunset ${formatTime(daily.sunset)}` : "Sunset pending";
       els.windowCopy.textContent = isClosed ? "The evening radiance window has passed. Check back tomorrow as the next sunset setup develops." : radiance.factors[3].detail;
 
-      els.cloudMetric.textContent = pct(displayCloud);
-      els.cloudMetricLabel.textContent = cameraCloudAvailable ? "Camera cloud cover" : "Forecast cloud cover";
+      els.cloudMetric.textContent = obscuredSky ? "Obscured" : pct(displayCloud);
+      els.cloudMetricLabel.textContent = obscuredSky ? "Camera cloud cover" : cameraCloudAvailable ? "Camera cloud cover" : "Forecast cloud cover";
       els.lightMetric.textContent = staleNightAnalysis
         ? "Bright"
-        : camera.sunlightDetected ? labelize(camera.sunlightLevel) : "Low";
+        : state.skyIntel?.sunlightDetected ? labelize(state.skyIntel.sunlightLevel) : "Low";
       els.confidenceMetric.textContent = pct(state.skyIntel?.confidence);
 
       renderTimeline();
@@ -2138,6 +2157,15 @@
       const now = Date.now();
       const nearSunrise = Number.isFinite(daylight?.sunrise) && now >= daylight.sunrise && now <= daylight.sunrise + 3 * 60 * 60 * 1000;
       const metrics = state.skyData?.metrics || {};
+      if (isObscuredSky(state.skyIntel)) {
+        const context = Number.isFinite(humidityPct)
+          ? ` Forecast context still shows ${Number.isFinite(cloudPct) ? `${Math.round(cloudPct)}% clouds, ` : ""}${Math.round(humidityPct)}% humidity${Number.isFinite(rainPct) ? `, ${Math.round(rainPct)}% rain chance` : ""}.`
+          : "";
+        return {
+          headline: "Fog or low cloud is obscuring the Asheville sky.",
+          detail: `The live view is washed out, so the page is treating cloud texture and sunlight cautiously instead of calling the sky open.${context}`
+        };
+      }
       const blueSkySignal = Number.isFinite(metrics.skyBlueSignal) && metrics.skyBlueSignal >= 1.12;
       const strongSunSignal = metrics.sunlightDetected && metrics.sunlightLevel === "strong";
 
@@ -2184,17 +2212,19 @@
       const captureVersion = parseTimestamp(state.skyData?.timestamp) || Date.now();
       const skyStale = isSkyDataStale(state.skyData?.timestamp);
       const staleNightAnalysis = skyStale && state.skyData?.metrics?.mode === "night" && isCurrentDaylight();
-      const liveNarrative = staleNightAnalysis ? buildLiveViewNarrative() : null;
-      const skyLabel = staleNightAnalysis ? "Live Sky" : labelize(skyIntel?.atmosphericState);
+      const skyRead = buildSkyConditionRead({
+        camera: state.skyData,
+        previous: state.skyIntel,
+        useLiveNarrative: staleNightAnalysis,
+        liveNarrative: staleNightAnalysis ? buildLiveViewNarrative() : null
+      });
+      const liveNarrative = skyRead.narrative;
+      const skyLabel = skyRead.label;
 
       els.skyChip.textContent = skyLabel;
       els.heroSky.textContent = skyLabel;
-      els.skyHeadline.textContent = staleNightAnalysis
-        ? liveNarrative.headline
-        : narrative?.headline || "Reading the western sky.";
-      els.skyDetail.textContent = staleNightAnalysis
-        ? liveNarrative.detail
-        : narrative?.detail || "The camera snapshot will update automatically.";
+      els.skyHeadline.textContent = liveNarrative?.headline || narrative?.headline || "Reading the western sky.";
+      els.skyDetail.textContent = liveNarrative?.detail || narrative?.detail || "The camera snapshot will update automatically.";
       els.liveStatus.textContent = skyStale
         ? "Live sky image active"
         : `Camera captured ${formatCaptureTime(state.skyData?.timestamp)}`;
@@ -2299,13 +2329,13 @@
         const res = await fetch(skyDataUrl());
         if (!res.ok) throw new Error("Sky camera feed failed");
         const data = await res.json();
-        const skyIntel = computeSkyIntel({
+        const skyRead = buildSkyConditionRead({
           camera: data,
           previous: state.skyIntel
         });
         state.skyData = data;
-        state.skyIntel = skyIntel;
-        state.narrative = generateSkyNarrative(data, skyIntel);
+        state.skyIntel = skyRead.skyIntel;
+        state.narrative = skyRead.narrative;
         state.previousCamera = data;
         renderSky();
       } catch (error) {

@@ -112,6 +112,12 @@ def compute_metrics(sky_img, full_img):
         blue_ratio = np.mean(b) / (np.mean(r) + 1e-5)
     sky_blue_signal = round(float(blue_ratio), 2)
 
+    obscured_view = (
+        visibility_score <= 2 and
+        contrast <= 0.08 and
+        brightness < 0.60
+    )
+
     # --------------------------------------------------------
     # ☀️ SUNLIGHT DETECTION (GROUND-BASED)
     # --------------------------------------------------------
@@ -135,6 +141,10 @@ def compute_metrics(sky_img, full_img):
         sunlight_level = "weak"
 
     sunlight_detected = sunlight_strength > 0.07
+
+    if obscured_view:
+        sunlight_detected = False
+        sunlight_level = "weak"
 
     # --------------------------------------------------------
     # 🌙 NIGHT HANDLING
@@ -175,6 +185,7 @@ def compute_metrics(sky_img, full_img):
     "filteredSunshineSignal": bool(filtered_sunshine_signal),
 
     "skyBlueSignal": float(sky_blue_signal) if sky_blue_signal is not None else None,
+    "obscuredView": bool(obscured_view),
 
     "precipVisible": False,
     "mode": str(mode)

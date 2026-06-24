@@ -3325,8 +3325,7 @@
       homeHikingUseCare
     } from "./js/hiking-home-card.js?v=20260607-narrative";
     import { buildHumanActionIntelFS } from "./js/intel/human-action-feelscore.js?v=20260526-rain-window";
-    import { computeSkyIntel } from "./js/intel/sky-intel.js";
-    import { generateSkyNarrative } from "./js/intel/sky-narrative.js";
+    import { buildSkyConditionRead } from "./js/intel/sky-read.js";
     import { loadAndRenderAlerts } from "./js/modules/renderAlerts.js";
     import { subscribeUserToPush } from "./js/notifications/subscribeClient.js?v=20260518-vapid-trim";
 
@@ -4666,9 +4665,10 @@
           if (!res.ok) throw new Error("Sky data unavailable");
           data = await res.json();
         }
-        const skyIntel = computeSkyIntel({ camera: data });
+        const skyRead = buildSkyConditionRead({ camera: data });
+        const skyIntel = skyRead.skyIntel;
         latestSkyIntel = skyIntel;
-        const narrative = generateSkyNarrative(data, skyIntel);
+        const narrative = skyRead.narrative;
         const metrics = data?.metrics || {};
         const frameVersion = parseTimestamp(data?.timestamp) || Date.now();
         const skyStale = isSkyDataStale(data?.timestamp);
@@ -4705,9 +4705,9 @@
           : `Camera capture ${formatCaptureTime(data?.timestamp)}`;
         document.querySelector("#skyHomeHeadline").textContent = skyNarrative?.headline || "Reading the Asheville sky.";
         document.querySelector("#skyHomeDetail").textContent = skyNarrative?.detail || "The camera snapshot adds visual context to the forecast.";
-        document.querySelector("#skyHomeCloud").textContent = pct(skyCloud);
-        document.querySelector("#skyHomeLight").textContent = metrics.sunlightDetected ? labelize(metrics.sunlightLevel) : "Low";
-        document.querySelector("#skyHomeConfidence").textContent = pct(skyConfidence);
+        document.querySelector("#skyHomeCloud").textContent = daylightNightMismatch ? pct(skyCloud) : skyRead.cloudMetric;
+        document.querySelector("#skyHomeLight").textContent = daylightNightMismatch ? (metrics.sunlightDetected ? labelize(metrics.sunlightLevel) : "Low") : skyRead.sunlightMetric;
+        document.querySelector("#skyHomeConfidence").textContent = daylightNightMismatch ? pct(skyConfidence) : skyRead.confidenceMetric;
         renderCloudObservationChip();
       } catch (error) {
         console.warn("Sky module unavailable", error);

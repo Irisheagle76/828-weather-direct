@@ -1,19 +1,16 @@
-// ============================================================
-// SKY INTEL — Balanced Dominance System (Sun vs Clouds)
-// ============================================================
+// SKY INTEL - balanced dominance system with obscured-view safeguards.
 
 export function computeSkyIntel({ camera, previous = null }) {
   if (!camera || !camera.metrics) return null;
 
   const m = camera.metrics;
 
-  // --------------------------------------------------
-  // INPUTS
-  // --------------------------------------------------
   const cloud = m.cloudCoverWest ?? null;
   const contrast = m.contrast ?? null;
   const groundContrast = m.groundContrast ?? null;
   const visibility = m.visibilityScore ?? null;
+  const brightness = m.brightness ?? null;
+  const sensorObscuredView = m.obscuredView === true;
 
   const sunlightDetected = m.sunlightDetected ?? false;
   const sunlightLevel = m.sunlightLevel ?? "weak";
@@ -36,55 +33,70 @@ export function computeSkyIntel({ camera, previous = null }) {
   let transition = null;
   let confidence = 0.65;
 
-  // --------------------------------------------------
-  // 🌙 NIGHT
-  // --------------------------------------------------
   if (mode === "night") {
     return {
       cloud,
+      displayCloud: cloud,
+      cloudCoverReliable: true,
       cloudState: "unknown",
       atmosphericState: "night",
       transition: null,
+      sunlightDetected: false,
+      sunlightLevel: "none",
       confidence: 0.4
     };
   }
 
-  // --------------------------------------------------
-  // 🌫️ FOG (HARD OVERRIDE)
-  // --------------------------------------------------
-  const strongClearingSignal =
-    sunlightDetected &&
-    sunlightLevel === "strong" &&
-    cloud != null &&
-    cloud <= 25;
-  const blueClearingSignal =
-    skyBlueSignal != null &&
-    skyBlueSignal >= 1.08 &&
-    cloud != null &&
-    cloud <= 35;
-  const fogDetected = !strongClearingSignal && !blueClearingSignal && (
-    (visibility === 0 && (!sunlightDetected || cloud == null || cloud >= 45)) ||
-    (visibility === 1 && contrast != null && contrast < 0.05 && cloud != null && cloud >= 65)
-  );
+  const strongSun = sunlightDetected && sunlightLevel === "strong";
+  const moderateSun = sunlightDetected && sunlightLevel === "moderate";
+  const strongBlue = skyBlueSignal != null && skyBlueSignal > 1.2;
+  const moderateBlue = skyBlueSignal != null && skyBlueSignal > 1.05;
 
-  if (fogDetected) {
+  const lowCloudSignal = cloud != null && cloud <= 20;
+  const poorVisibilityFlatView =
+    visibility != null &&
+    visibility <= 2 &&
+    contrast != null &&
+    contrast <= 0.08 &&
+    brightness != null &&
+    brightness < 0.6;
+  const clearSkyCounterSignal =
+    lowCloudSignal &&
+    !poorVisibilityFlatView &&
+    (strongBlue || (strongSun && skyBlueSignal != null && skyBlueSignal >= 1.45));
+  const flatGrayView = contrast != null && contrast <= 0.1 && !strongBlue;
+  const dimGrayView = (brightness != null && brightness < 0.62 && flatGrayView) || poorVisibilityFlatView;
+  const obscuredView =
+    !clearSkyCounterSignal &&
+    (sensorObscuredView || (visibility != null && visibility <= 2 && dimGrayView));
+  const cloudCoverUnreliable =
+    obscuredView || (!clearSkyCounterSignal && visibility != null && visibility <= 1 && flatGrayView);
+  const lowDeckDetected = obscuredView && (cloud == null || cloud >= 35 || cloud <= 10);
+  const fogDetected =
+    !clearSkyCounterSignal &&
+    (sensorObscuredView ||
+      visibility === 0 ||
+      (visibility === 1 && flatGrayView) ||
+      (visibility === 2 && dimGrayView && (cloud == null || cloud <= 20)));
+
+  if (fogDetected || lowDeckDetected) {
     return {
       cloud,
+      displayCloud: null,
+      cloudCoverReliable: false,
       cloudState: "obscured",
-      atmosphericState: "fog",
+      atmosphericState: fogDetected ? "fog" : "low_cloud",
       transition: null,
-      confidence: 0.9
+      sunlightDetected: false,
+      sunlightLevel: "low",
+      confidence: fogDetected ? 0.82 : 0.72,
+      filteredSun: false,
+      softShadowSignal,
+      satelliteHighCloudSignal,
+      satelliteCloudMotionSignal
     };
   }
 
-  // --------------------------------------------------
-  // 🌈 SIGNALS
-  // --------------------------------------------------
-  const strongSun = sunlightDetected && sunlightLevel === "strong";
-  const moderateSun = sunlightDetected && sunlightLevel === "moderate";
-
-  const strongBlue = skyBlueSignal != null && skyBlueSignal > 1.2;
-  const moderateBlue = skyBlueSignal != null && skyBlueSignal > 1.05;
   const filteredSun = (
     filteredSunshineSignal ||
     satelliteHighCloudSignal ||
@@ -92,22 +104,14 @@ export function computeSkyIntel({ camera, previous = null }) {
     (sunlightDetected && softShadowSignal && cloud != null && cloud >= 20)
   );
 
-  // 🔥 KEY CHANGE: raise heavy threshold
   const heavyCloud = cloud != null && cloud >= 90;
   const midCloud = cloud != null && cloud >= 65;
   const lowCloud = cloud != null && cloud >= 40;
-
-  // 🔥 NEW: sun dominance override
   const sunDominant = strongSun && strongBlue && !filteredSun;
 
-  // --------------------------------------------------
-  // 🧠 DOMINANCE LOGIC
-  // --------------------------------------------------
-
-  // ☁️ HEAVY CLOUD
   if (heavyCloud) {
     if (sunDominant) {
-      atmosphericState = "partly_cloudy";   // 🔥 override fix
+      atmosphericState = "partly_cloudy";
       confidence = 0.85;
     } else if (strongSun || moderateBlue) {
       atmosphericState = "overcast_bright";
@@ -116,10 +120,7 @@ export function computeSkyIntel({ camera, previous = null }) {
       atmosphericState = "overcast";
       confidence = 0.85;
     }
-  }
-
-  // ☁️ MOSTLY CLOUDY
-  else if (midCloud) {
+  } else if (midCloud) {
     if (filteredSun) {
       atmosphericState = "mostly_cloudy_filtered";
       confidence = 0.88;
@@ -133,10 +134,7 @@ export function computeSkyIntel({ camera, previous = null }) {
       atmosphericState = "mostly_cloudy";
       confidence = 0.75;
     }
-  }
-
-  // 🌤 PARTLY CLOUDY RANGE
-  else if (lowCloud) {
+  } else if (lowCloud) {
     if (filteredSun) {
       atmosphericState = (cloud >= 50 || satelliteHighCloudSignal) ? "mostly_cloudy_filtered" : "filtered_sunshine";
       confidence = 0.86;
@@ -150,10 +148,7 @@ export function computeSkyIntel({ camera, previous = null }) {
       atmosphericState = "mostly_cloudy";
       confidence = 0.7;
     }
-  }
-
-  // ☀️ LOW CLOUD
-  else if (cloud != null) {
+  } else if (cloud != null) {
     if (filteredSun) {
       atmosphericState = (cloud >= 20 && satelliteHighCloudSignal) ? "mostly_cloudy_filtered" : "filtered_sunshine";
       confidence = 0.78;
@@ -164,16 +159,11 @@ export function computeSkyIntel({ camera, previous = null }) {
       atmosphericState = "partly_cloudy";
       confidence = 0.75;
     }
-  }
-
-  else {
+  } else {
     atmosphericState = "clear";
     confidence = 0.7;
   }
 
-  // --------------------------------------------------
-  // ☁️ CLOUD LABEL (UI ONLY)
-  // --------------------------------------------------
   if (cloud != null) {
     if (cloud >= 90) cloudState = "overcast";
     else if (cloud >= 65) cloudState = "mostly_cloudy";
@@ -181,9 +171,6 @@ export function computeSkyIntel({ camera, previous = null }) {
     else cloudState = "mostly_clear";
   }
 
-  // --------------------------------------------------
-  // 🔄 TRANSITIONS
-  // --------------------------------------------------
   if (previous?.atmosphericState) {
     if (
       previous.atmosphericState === "overcast" &&
@@ -203,14 +190,15 @@ export function computeSkyIntel({ camera, previous = null }) {
     }
   }
 
-  // --------------------------------------------------
-  // FINAL OUTPUT
-  // --------------------------------------------------
   return {
     cloud,
+    displayCloud: cloudCoverUnreliable ? null : cloud,
+    cloudCoverReliable: !cloudCoverUnreliable,
     cloudState,
     atmosphericState,
     transition,
+    sunlightDetected,
+    sunlightLevel,
     confidence: Number(Math.min(confidence, 1).toFixed(2)),
     filteredSun,
     softShadowSignal,

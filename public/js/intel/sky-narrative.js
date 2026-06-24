@@ -69,6 +69,16 @@ export function generateSkyNarrative(data, skyIntel = null) {
     };
   }
 
+  if (state === "low_cloud") {
+    return {
+      headline: "Low cloud is obscuring the view.",
+      detail:
+        "The camera view is washed out, so cloud cover and sunlight are being treated cautiously.",
+      confidence: "medium",
+      type: "fog"
+    };
+  }
+
   // --------------------------------------------------
   // ☁️ OVERCAST (DARK)
   // --------------------------------------------------
