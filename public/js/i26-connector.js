@@ -190,7 +190,7 @@ function emailCoversIncident(alert, incident) {
 function normalizeEmailUpdate(alert) {
   const timing = [alert.startTime ? `Starts ${formatShortDate(alert.startTime)}` : alert.startTimeText, alert.endTime ? `Ends ${formatShortDate(alert.endTime)}` : alert.endTimeText]
     .filter(Boolean)
-    .join(" &bull; ");
+    .join(" - ");
 
   return {
     id: alert.id,
@@ -205,7 +205,7 @@ function normalizeEmailUpdate(alert) {
     active: !alert.cleared,
     url: alert.url || "https://www.drivenc.gov/region/Asheville",
     primaryTime: alert.receivedAt || alert.updatedAt,
-    meta: `${formatRelativeTime(alert.receivedAt || alert.updatedAt)}${timing ? ` &bull; ${timing}` : ""}`
+    meta: `${formatRelativeTime(alert.receivedAt || alert.updatedAt)}${timing ? ` - ${timing}` : ""}`
   };
 }
 
@@ -214,7 +214,7 @@ function normalizeIncidentUpdate(event) {
   const closure = event.fullClosure || condition.toLowerCase().includes("closed");
   const timing = [event.updatedTime ? `Updated ${formatTime(event.updatedTime)}` : "", event.lanesAffected || condition]
     .filter(Boolean)
-    .join(" &bull; ");
+    .join(" - ");
 
   return {
     id: event.id,
