@@ -9,6 +9,7 @@ const htmlPath = path.join(root, "public", "hiking.html");
 const weatherFlowKey = "6bff2f89-84ab-463c-886e-fc0f443da4cf";
 const weatherUndergroundKey = "e1f10a1e78da46f5b10a1e78da96f525";
 const lightningSignalMaxAgeMs = 3 * 60 * 60 * 1000;
+const observationMaxAgeMs = 3 * 60 * 60 * 1000;
 
 const tempestStations = [
   { id: "144737", name: "Lower Asheville", role: "Asheville city weather station", elevationFt: 2137, url: "https://tempestwx.com/station/144737/grid", lat: 35.60675829810566, lon: -82.54793450070898 },
@@ -135,6 +136,50 @@ function asOfTime(iso) {
   return localTime(iso).replace(/\s([AP])M$/, (_, meridiem) => `${meridiem.toLowerCase()}m ET`);
 }
 
+function easternWallClockDate(value) {
+  const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})$/);
+  if (!match) return null;
+  const [, year, month, day, hour, minute, second] = match.map(Number);
+  const wallClockUtc = Date.UTC(year, month - 1, day, hour, minute, second);
+  const probe = new Date(wallClockUtc);
+  const offsetPart = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    timeZoneName: "shortOffset"
+  }).formatToParts(probe).find((part) => part.type === "timeZoneName")?.value || "";
+  const offset = offsetPart.match(/GMT([+-])(\d{1,2})(?::(\d{2}))?/);
+  if (!offset) return null;
+  const sign = offset[1] === "-" ? -1 : 1;
+  const offsetMinutes = sign * (Number(offset[2]) * 60 + Number(offset[3] || 0));
+  return new Date(wallClockUtc - offsetMinutes * 60 * 1000);
+}
+
+function easternWallClockAgeMs(value) {
+  const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})$/);
+  if (!match) return null;
+  const [, year, month, day, hour, minute, second] = match.map(Number);
+  const observedWallClock = Date.UTC(year, month - 1, day, hour, minute, second);
+  const nowParts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23"
+  }).formatToParts(new Date());
+  const now = Object.fromEntries(nowParts.map((part) => [part.type, part.value]));
+  const nowWallClock = Date.UTC(
+    Number(now.year),
+    Number(now.month) - 1,
+    Number(now.day),
+    Number(now.hour),
+    Number(now.minute),
+    Number(now.second)
+  );
+  return nowWallClock - observedWallClock;
+}
+
 function esc(value) {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -248,41 +293,47 @@ async function fetchTempest(station) {
 }
 
 async function fetchMitchell() {
-  const response = await fetch("https://nchighpeaks.org/davis/RSS/weewx_rss.xml", {
-    headers: { "user-agent": userAgent }
+  const response = await fetch("https://products.climate.ncsu.edu/oper/cardinal/scout/panels/php/ajax_currentConditions.php", {
+    method: "POST",
+    headers: {
+      "content-type": "application/x-www-form-urlencoded",
+      "user-agent": userAgent
+    },
+    body: "station=MITC"
   });
   if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
-  const xml = await response.text();
-  const pubDate = xml.match(/<lastBuildDate>([^<]+)<\/lastBuildDate>/)?.[1]
-    || xml.match(/<pubDate>([^<]+)<\/pubDate>/)?.[1];
-  const encoded = xml.match(/<content:encoded><!\[CDATA\[([\s\S]*?)\]\]><\/content:encoded>/)?.[1] || "";
-  const block = encoded.replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "").replace(/&#176;/g, "deg");
-  const field = (label) => block.match(new RegExp(`${label}:\\s*([^\\n;]+)`, "i"))?.[1]?.trim();
-  const windText = field("Wind") || "";
-  const wind = windText.match(/([\d.]+)\s*mph\s*from\s*(.*)$/i);
+  const data = await response.json();
+  const latest = data?.latest || {};
+  const observedAt = easternWallClockDate(latest.ob);
+  const ageMs = easternWallClockAgeMs(latest.ob);
+  if (!latest.ob || !observedAt || !Number.isFinite(ageMs) || ageMs < -5 * 60 * 1000 || ageMs > observationMaxAgeMs) {
+    throw new Error("NC ECONet MITC observation is stale or missing");
+  }
+
   return {
-    source: "NCHighPeaks WeeWX",
+    source: "NC ECONet MITC",
     id: "mount-mitchell",
+    stationId: "MITC",
     name: "Mount Mitchell",
     role: "WNC high-peak reading",
-    elevationFt: 6684,
-    url: "https://nchighpeaks.org/davis/RSS/weewx_rss.xml",
+    elevationFt: n(data?.meta?.elev) ?? 6215,
+    url: "https://econet.climate.ncsu.edu/m/?id=MITC",
     status: "live",
-    observedAt: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
+    observedAt: observedAt.toISOString(),
     conditions: "Current conditions",
-    temperatureF: n(field("Outside Temperature")),
-    feelsLikeF: n(field("Wind Chill")) ?? n(field("Heat Index")),
-    dewPointF: n(field("Dew Point")),
-    humidityPct: n(field("Humidity")),
-    windMph: wind ? n(wind[1]) : null,
-    gustMph: null,
-    windDirection: wind ? wind[2].trim() : null,
+    temperatureF: n(latest.air_temp),
+    feelsLikeF: n(latest.air_temp),
+    dewPointF: n(latest.dew),
+    humidityPct: n(latest.rh),
+    windMph: n(latest.wind_speed),
+    gustMph: n(latest.wind_gust),
+    windDirection: null,
     uv: null,
-    solarWm2: null,
+    solarWm2: n(latest.sr),
     wbgtF: null,
     wetBulbF: null,
     rainTodayIn: null,
-    rainRateInHr: n(field("Rain Rate")),
+    rainRateInHr: null,
     pressureTrend: null
   };
 }
@@ -679,7 +730,7 @@ function renderHtml(payload) {
       </div>
 
       <div class="footer-meta">
-        <div>Data: Tempest • Weather Underground • NCHighPeaks WeeWX</div>
+        <div>Data: Tempest • Weather Underground • NC ECONet MITC</div>
         <div>Serving Asheville and the greater 828 region</div>
         <div class="footer-disclaimer">
           For general awareness only—not a substitute for official forecasts, warnings, or trail advisories.

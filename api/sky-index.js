@@ -210,10 +210,6 @@ function n(value) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function fieldFromWeatherBlock(block, label) {
-  return block.match(new RegExp(`${label}:\\s*([^\\n;<]+)`, "i"))?.[1]?.trim() ?? null;
-}
-
 function easternWallClockAgeMs(value) {
   const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/);
   if (!match) return null;
@@ -267,7 +263,7 @@ async function fetchMitchellEconetObservation() {
 
   return {
     source: "NC ECONet MITC",
-    sourceUrl: "https://products.climate.ncsu.edu/cardinal/scout/?station=MITC",
+    sourceUrl: "https://econet.climate.ncsu.edu/m/?id=MITC",
     observedAt: latest.ob,
     ageMinutes: Math.max(0, Math.round(ageMs / 60000)),
     temperatureF: n(latest.air_temp),
@@ -277,41 +273,8 @@ async function fetchMitchellEconetObservation() {
   };
 }
 
-async function fetchMitchellHighPeaksObservation() {
-  const response = await fetch("https://nchighpeaks.org/davis/RSS/weewx_rss.xml", {
-    headers: {
-      "user-agent": "828 Weather Direct sky index/1.0"
-    }
-  });
-  if (!response.ok) throw new Error(`Mount Mitchell observation fetch failed: ${response.status}`);
-
-  const xml = await response.text();
-  const encoded = xml.match(/<content:encoded><!\[CDATA\[([\s\S]*?)\]\]><\/content:encoded>/)?.[1] || "";
-  const block = encoded
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&#176;/g, "deg");
-  const observedAt = xml.match(/<lastBuildDate>([^<]+)<\/lastBuildDate>/)?.[1]
-    || xml.match(/<pubDate>([^<]+)<\/pubDate>/)?.[1]
-    || null;
-
-  return {
-    source: "NCHighPeaks summit station",
-    sourceUrl: "https://nchighpeaks.org/davis/",
-    observedAt: observedAt ? new Date(observedAt).toISOString() : null,
-    temperatureF: n(fieldFromWeatherBlock(block, "Outside Temperature")),
-    dewPointF: n(fieldFromWeatherBlock(block, "Dew Point")),
-    humidityPct: n(fieldFromWeatherBlock(block, "Humidity")),
-    windMph: n(fieldFromWeatherBlock(block, "Wind"))
-  };
-}
-
 async function fetchMitchellObservation() {
-  try {
-    return await fetchMitchellEconetObservation();
-  } catch {
-    return fetchMitchellHighPeaksObservation();
-  }
+  return fetchMitchellEconetObservation();
 }
 
 function liveSignalFor(site, observations = {}) {

@@ -1584,6 +1584,76 @@
         linear-gradient(135deg, #fffdf8, #f4fbf5);
     }
 
+    .fold-tool-card.water {
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(circle at 92% 0%, rgba(57, 184, 216, 0.18), transparent 34%),
+        linear-gradient(135deg, #fffdf8, #eef8ff);
+    }
+
+    .water-mini-profile {
+      position: relative;
+      min-height: 96px;
+      margin: 16px 0;
+      overflow: hidden;
+      border: 1px solid rgba(15, 76, 196, 0.16);
+      border-radius: 14px;
+      background:
+        linear-gradient(180deg, rgba(15, 76, 196, 0.12), transparent 48%),
+        #e9f8fc;
+    }
+
+    .water-mini-profile::before,
+    .water-mini-profile::after {
+      content: "";
+      position: absolute;
+      left: -5%;
+      right: -5%;
+      border-radius: 50%;
+      background: rgba(15, 76, 196, 0.22);
+    }
+
+    .water-mini-profile::before {
+      bottom: -44px;
+      height: 88px;
+    }
+
+    .water-mini-profile::after {
+      bottom: -60px;
+      height: 108px;
+      background: rgba(57, 184, 216, 0.46);
+    }
+
+    .water-mini-fall {
+      position: absolute;
+      top: 14px;
+      left: 18%;
+      width: 58px;
+      height: 92px;
+      border-radius: 999px 999px 12px 12px;
+      background: linear-gradient(180deg, rgba(255, 253, 248, 0.96), rgba(57, 184, 216, 0.72));
+      box-shadow: 0 10px 22px rgba(8, 26, 60, 0.12);
+    }
+
+    .water-mini-label {
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      z-index: 3;
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      color: var(--white);
+      background: var(--blue);
+      font-size: 0.76rem;
+      font-weight: 950;
+    }
+
     .hiking-mini-profile {
       position: relative;
       min-height: 96px;
@@ -1703,6 +1773,14 @@
       border: 1px solid rgba(79, 166, 106, 0.2);
       border-radius: 12px;
       background: rgba(255, 253, 248, 0.72);
+    }
+
+    .fold-tool-card.water .hiking-callout {
+      border-color: rgba(57, 184, 216, 0.24);
+    }
+
+    .fold-tool-card.water .hiking-callout b {
+      color: var(--blue);
     }
 
     .hiking-callout b {
@@ -2703,6 +2781,7 @@
         <a class="forecast-nav-link" href="/forecast.html">Tim's 4-Day Forecast</a>
         <a href="#pulse-preview">Weather Pulse</a>
         <a href="/hiking.html">Hiking Guidance</a>
+        <a href="/water.html">Water Conditions</a>
         <a href="/i26-connector.html">I-26 Connector</a>
       </nav>
 
@@ -2992,6 +3071,35 @@
           </div>
         </article>
 
+        <article class="fold-tool-card water">
+          <div class="kicker">Water Conditions</div>
+          <h2>Check waterfalls and river plans before you go.</h2>
+          <div class="water-mini-profile" aria-hidden="true">
+            <span class="water-mini-fall"></span>
+            <span class="water-mini-label">Flow read</span>
+          </div>
+          <div class="tool-snapshot">
+            <span class="tool-index"><strong>9</strong> waterfalls</span>
+            <span class="tool-index"><strong>8</strong> river segments</span>
+          </div>
+          <p>
+            A local read on waterfall flow, tubing, paddling, fishing, and swimming around Asheville and WNC.
+          </p>
+          <div class="hiking-callouts" aria-label="Water conditions preview details">
+            <div class="hiking-callout">
+              <b>Waterfalls</b>
+              <span>Recent rain, basin response, photo potential, and slick-rock caution.</span>
+            </div>
+            <div class="hiking-callout">
+              <b>Rivers</b>
+              <span>Activity-specific guidance for tubing, paddling, fishing, and wading.</span>
+            </div>
+          </div>
+          <div class="fold-tool-actions">
+            <a href="water.html">Open Water Conditions</a>
+          </div>
+        </article>
+
         <article class="fold-tool-card fire">
           <div class="fire-card-head">
             <div>
@@ -3109,6 +3217,7 @@
         <a href="/">Home</a>
         <a href="/forecast.html">Forecast</a>
         <a href="/hiking.html">Hiking Guidance</a>
+        <a href="/water.html">Water Conditions</a>
         <a href="/i26-connector.html">I-26 Connector</a>
         <a href="/828-sunset-radiance.html">Sunset Radiance</a>
         <a href="https://www.linkedin.com/in/timballisty">About</a>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>828 Water Conditions</title>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <link rel="stylesheet" href="css/water.css?v=20260621-water" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="/water.html">
+        <div class="brand-title">828 Water Conditions</div>
+        <div class="brand-sub">Waterfalls, rivers, and outdoor water guidance for Asheville and WNC</div>
+      </a>
+      <nav class="nav-links" aria-label="Site navigation">
+        <a href="/">Home</a>
+        <a href="/forecast.html">Forecast</a>
+        <a href="/hiking.html">Hiking</a>
+        <a class="active" href="/water.html" aria-current="page">Water Conditions</a>
+        <a href="/828-sunset-radiance.html">Sunset Radiance</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="water-hero" aria-label="Water conditions overview">
+      <div class="hero-inner">
+        <div>
+          <div class="water-mark">WaterScore</div>
+          <h1>828 Water Conditions</h1>
+          <p class="hero-narrative">
+            Waterfalls, rivers, tubing, paddling, and flow conditions around Asheville.
+            Built for the local question: what water adventures make sense today?
+          </p>
+          <div class="hero-actions">
+            <a class="button" href="#waterfall-flow">Waterfall Flow Index</a>
+            <a class="button secondary" href="#river-recreation">River Recreation Index</a>
+            <a class="button secondary" href="#live-webcams">Live webcams</a>
+            <a class="button secondary" href="#safety-notes">Safety notes</a>
+          </div>
+        </div>
+        <aside class="hero-side" aria-label="Quick water guidance">
+          <div class="side-card">
+            <b>Rainfall driven</b>
+            <span>First version estimates flows from recent rain, basin response, and known river character.</span>
+          </div>
+          <div class="side-card">
+            <b>Activity specific</b>
+            <span>Tubing, paddling, fishing, and swimming are scored differently.</span>
+          </div>
+          <div class="side-card">
+            <b id="generatedAt">Building water read</b>
+            <span>Live gauge and rainfall integrations are scaffolded for the next step.</span>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="summary-grid" id="summaryGrid" aria-label="Top water summary">
+      <article class="summary-card">
+        <span>Loading</span>
+        <strong>Reading local water signals</strong>
+        <p>Waterfall and river recommendations will appear here.</p>
+      </article>
+    </section>
+
+    <section class="visual-dashboard" id="visualDashboard" aria-label="Live water visuals and map">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Look First</div>
+          <h2>Live water views and WNC map</h2>
+          <p>
+            Visual checks first, numbers second. Use the camera wall and map to orient before digging into the detailed cards.
+          </p>
+        </div>
+      </div>
+      <div class="visual-layout">
+        <div class="live-camera-wall" id="liveCameraWall"></div>
+        <div class="water-map" id="waterMap" role="img" aria-label="Map of water camera and featured condition locations around Western North Carolina"></div>
+      </div>
+    </section>
+
+    <section class="section-card" id="waterfall-flow" aria-label="Waterfall Flow Index">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Waterfall Flow Index</div>
+          <h2>Popular WNC waterfalls</h2>
+          <p>
+            A rainfall-based estimate of how full the falls should look today, with extra caution when recent rain can make rocks slick.
+          </p>
+        </div>
+      </div>
+      <details class="index-explainer" id="waterfall-index-explainer">
+        <summary>
+          <span>How this index is calculated</span>
+          <b>Tap for score breakdown</b>
+        </summary>
+        <div class="explainer-grid">
+          <article>
+            <strong>Rain drives the score</strong>
+            <p>Recent rain, 3-day rain, 7-day rain, and 14-day wetness are weighted to estimate how full each waterfall should look.</p>
+          </article>
+          <article>
+            <strong>Each basin responds differently</strong>
+            <p>Fast-response creeks react quickly to storms. Larger or slower basins hold water longer, so older rain still matters.</p>
+          </article>
+          <article>
+            <strong>Safety modifies the read</strong>
+            <p>High recent rain can boost the hazard signal for waterfalls with slick-rock or high-current sensitivity.</p>
+          </article>
+          <article>
+            <strong>Scores are guidance, not guarantees</strong>
+            <p>Use the index to decide what is worth checking, then confirm closures, trail conditions, and your own comfort level.</p>
+          </article>
+        </div>
+      </details>
+      <div class="waterfall-grid" id="waterfallGrid"></div>
+    </section>
+
+    <section class="section-card" id="river-recreation" aria-label="River Recreation Index">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">River Recreation Index</div>
+          <h2>Activity-by-activity river guidance</h2>
+          <p>
+            High flow can be bad for tubing but useful for skilled paddlers. Each river is scored with its own character in mind.
+          </p>
+        </div>
+      </div>
+      <div class="river-grid" id="riverGrid"></div>
+    </section>
+
+    <section class="section-card webcam-section" id="live-webcams" aria-label="Live Water Webcams">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Live Water Webcams</div>
+          <h2>Visual checks before you drive</h2>
+          <p>
+            A small set of water-facing cameras and river visual references. Open the source for the live feed;
+            this page treats offline or limited gauge cameras honestly.
+          </p>
+        </div>
+      </div>
+      <p class="webcam-summary" id="webcamSummary">Checking live water camera references.</p>
+      <div class="webcam-grid" id="webcamGrid"></div>
+    </section>
+
+    <section class="section-card dark" id="rainfall-snapshot" aria-label="Recent Rainfall Snapshot">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Recent Rainfall Snapshot</div>
+          <h2>Rain signal behind the read</h2>
+          <p>
+            Waterfalls and smaller creeks respond first to recent rain. Larger rivers carry more of the multi-day signal.
+          </p>
+        </div>
+      </div>
+      <div class="rainfall-layout" id="rainfallGrid"></div>
+      <p class="rainfall-narrative" id="rainfallNarrative">Recent rainfall interpretation is loading.</p>
+    </section>
+
+    <section class="safety-card" id="safety-notes" aria-label="Safety Notes">
+      <h2>Safety Notes</h2>
+      <p>
+        Conditions can change quickly, especially after thunderstorms. Always check local closures, posted warnings,
+        and your own skill level before entering the water.
+      </p>
+      <ul id="safetyList"></ul>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="footer-logo">828 Weather Direct</div>
+        <div class="footer-tagline">
+          Hyper-local weather, written for how it actually feels across Western North Carolina.
+        </div>
+      </div>
+
+      <div class="footer-links">
+        <a href="/">Home</a>
+        <a href="/forecast.html">Forecast</a>
+        <a href="/hiking.html">Hiking Guidance</a>
+        <a href="/water.html">Water Conditions</a>
+        <a href="/828-sunset-radiance.html">Sunset Radiance</a>
+        <a href="https://www.linkedin.com/in/timballisty">About</a>
+        <a href="mailto:tballisty@gmail.com">Contact</a>
+      </div>
+
+      <div class="footer-meta">
+        <div>Data: mock rainfall and gauge estimates in this first version</div>
+        <div>Serving Asheville and the greater 828 region</div>
+        <div class="footer-disclaimer">
+          For general awareness only - not a substitute for official forecasts, warnings, closures, or river advisories.
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        &copy; 2026 828 Weather Direct
+      </div>
+    </div>
+  </footer>
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+  <script type="module" src="js/water/water-render.js?v=20260621-water"></script>
+</body>
+</html>
