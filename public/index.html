@@ -25,6 +25,10 @@
       box-sizing: border-box;
     }
 
+    html {
+      overflow-x: hidden;
+    }
+
     body {
       margin: 0;
       color: var(--ink);
@@ -414,14 +418,105 @@
       align-items: center;
       justify-content: space-between;
       gap: 14px;
+      flex-wrap: wrap;
     }
 
     .feelscore-inner {
       display: grid;
-      grid-template-columns: minmax(0, 0.78fr) minmax(310px, 0.42fr);
+      grid-template-columns: minmax(0, 0.92fr) minmax(300px, 0.48fr);
       gap: 24px;
       padding: clamp(24px, 4vw, 38px);
+      align-items: stretch;
+    }
+
+    .now-panel {
+      display: grid;
+      align-content: start;
+      gap: 16px;
+    }
+
+    .now-kicker {
+      color: #ffcf99;
+      font-size: 0.78rem;
+      font-weight: 950;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .now-temp-row {
+      display: flex;
       align-items: end;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .now-temp {
+      color: var(--white);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(5.2rem, 13vw, 8.8rem);
+      line-height: 0.8;
+      letter-spacing: 0;
+    }
+
+    .now-condition {
+      padding-bottom: 7px;
+      color: #ffcf99;
+      font-size: clamp(1.35rem, 3vw, 2.25rem);
+      font-weight: 950;
+      line-height: 1;
+    }
+
+    .now-observation-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .now-observation {
+      min-height: 78px;
+      padding: 12px;
+      border: 1px solid rgba(255, 253, 248, 0.18);
+      border-radius: 14px;
+      background: rgba(255, 253, 248, 0.09);
+    }
+
+    .now-observation strong {
+      display: block;
+      color: var(--gold);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.5rem, 3vw, 2.1rem);
+      line-height: 0.95;
+    }
+
+    .now-observation span {
+      display: block;
+      margin-top: 7px;
+      color: rgba(255, 253, 248, 0.72);
+      font-size: 0.72rem;
+      font-weight: 950;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .feel-panel {
+      display: grid;
+      align-content: start;
+      gap: 18px;
+      padding: clamp(20px, 3vw, 30px);
+      border-left: 1px solid rgba(255, 253, 248, 0.16);
+      background: rgba(8, 22, 48, 0.42);
+    }
+
+    .feel-panel .fs-temp-markers {
+      display: none;
+    }
+
+    .feel-panel .fs-bullets {
+      padding: 14px;
+    }
+
+    .feel-panel .fs-bullets ul {
+      font-size: 0.92rem;
     }
 
     .section-label {
@@ -495,22 +590,31 @@
     }
 
     .fs-row {
-      display: flex;
-      align-items: baseline;
-      gap: 18px;
-      margin-top: 12px;
+      display: grid;
+      justify-items: start;
+      gap: 12px;
+      margin-top: 0;
     }
 
     .fs-score {
+      display: grid;
+      place-items: center;
+      width: min(190px, 42vw);
+      aspect-ratio: 1;
+      border-radius: 50%;
       color: #7bd389;
+      background:
+        radial-gradient(circle, #10224a 0 48%, transparent 49%),
+        conic-gradient(#7bd389 0 var(--fs-progress, 72%), rgba(255, 253, 248, 0.15) var(--fs-progress, 72%) 100%);
       font-family: Georgia, "Times New Roman", serif;
-      font-size: clamp(5rem, 13vw, 9rem);
-      line-height: 0.8;
+      font-size: clamp(4rem, 9vw, 6.6rem);
+      line-height: 1;
+      box-shadow: 0 20px 42px rgba(0, 0, 0, 0.22), inset 0 0 0 10px rgba(123, 211, 137, 0.08);
     }
 
     .fs-word {
       color: #7bd389;
-      font-size: clamp(1.5rem, 4vw, 2.7rem);
+      font-size: clamp(1.3rem, 3vw, 2.1rem);
       font-weight: 950;
     }
 
@@ -1020,7 +1124,7 @@
     }
 
     .content-grid {
-      grid-template-columns: 1.12fr 0.88fr;
+      grid-template-columns: 1fr;
       gap: 18px;
       background: transparent;
     }
@@ -1250,13 +1354,15 @@
     .tomorrow-card {
       position: relative;
       overflow: hidden;
-      padding: 22px;
-      border: 1px solid rgba(245, 125, 35, 0.24);
+      padding: clamp(22px, 4vw, 30px);
+      border: 1px solid rgba(15, 76, 196, 0.16);
       border-top: 4px solid var(--orange);
-      border-radius: 18px;
+      border-right: 2px solid rgba(15, 76, 196, 0.35);
+      border-radius: 22px;
       background:
-        radial-gradient(circle at 88% 16%, rgba(15, 76, 196, 0.16), transparent 30%),
-        linear-gradient(135deg, #fffdf8 0%, #fff5ec 52%, #eef5ff 100%);
+        radial-gradient(circle at 88% 10%, rgba(15, 76, 196, 0.18), transparent 30%),
+        radial-gradient(circle at 8% 88%, rgba(245, 125, 35, 0.12), transparent 30%),
+        linear-gradient(135deg, #fffdf8 0%, #fff5ec 46%, #eef5ff 100%);
       box-shadow: var(--shadow);
     }
 
@@ -1277,24 +1383,23 @@
     }
 
     .tomorrow-score {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 66px;
-      min-height: 48px;
-      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      min-width: 82px;
+      min-height: 82px;
+      border-radius: 50%;
       color: var(--white);
       background: linear-gradient(135deg, var(--blue), #08318b);
-      font-size: 1.35rem;
+      font-size: 2rem;
       font-weight: 950;
-      box-shadow: 0 12px 24px rgba(15, 76, 196, 0.24);
+      box-shadow: 0 18px 34px rgba(15, 76, 196, 0.28);
     }
 
     .tomorrow-card h3 {
       margin: 18px 0 10px;
       font-family: Georgia, "Times New Roman", serif;
-      font-size: 2rem;
-      line-height: 1.05;
+      font-size: clamp(2.05rem, 4.4vw, 3.35rem);
+      line-height: 0.98;
       letter-spacing: 0;
     }
 
@@ -1307,30 +1412,127 @@
     .tomorrow-forecast-link {
       display: inline-flex;
       align-items: center;
-      margin-top: 8px;
-      color: var(--blue);
-      font-size: 0.88rem;
+      justify-content: center;
+      width: fit-content;
+      min-height: 42px;
+      margin-top: 10px;
+      padding: 0 16px;
+      border-radius: 999px;
+      color: var(--white);
+      background: var(--blue);
+      font-size: 0.9rem;
       font-weight: 950;
       text-decoration: none;
+      box-shadow: 0 12px 24px rgba(15, 76, 196, 0.22);
     }
 
     .tomorrow-forecast-link:hover,
     .tomorrow-forecast-link:focus-visible {
-      text-decoration: underline;
-      text-underline-offset: 3px;
+      background: #083da6;
+      transform: translateY(-1px);
+    }
+
+    .tomorrow-signal-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 18px 0 14px;
+    }
+
+    .tomorrow-signal {
+      min-height: 78px;
+      padding: 12px;
+      border: 1px solid rgba(15, 76, 196, 0.12);
+      border-radius: 14px;
+      background: rgba(255, 253, 248, 0.72);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+
+    .tomorrow-signal strong {
+      display: block;
+      color: var(--blue);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.8rem, 4vw, 2.55rem);
+      line-height: 0.9;
+    }
+
+    .tomorrow-signal span {
+      display: block;
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 950;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .tomorrow-signal.rain strong {
+      color: var(--orange);
+    }
+
+    .tomorrow-mini-chart {
+      position: relative;
+      min-height: 104px;
+      margin: 16px 0;
+      overflow: hidden;
+      border: 1px solid rgba(15, 76, 196, 0.14);
+      border-radius: 16px;
+      background:
+        linear-gradient(180deg, rgba(219, 232, 255, 0.75), rgba(255, 253, 248, 0.78));
+    }
+
+    .tomorrow-chart-line {
+      position: absolute;
+      left: 8%;
+      right: 9%;
+      top: 43%;
+      height: 6px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--orange), var(--blue));
+      transform: rotate(-4deg);
+      transform-origin: left center;
+      box-shadow: 0 12px 24px rgba(15, 76, 196, 0.14);
+    }
+
+    .tomorrow-chart-area {
+      position: absolute;
+      left: -3%;
+      right: -3%;
+      bottom: -8px;
+      height: 66%;
+      clip-path: polygon(0 100%, 0 68%, 19% 55%, 38% 62%, 59% 36%, 77% 48%, 100% 25%, 100% 100%);
+      background: rgba(15, 76, 196, 0.16);
+    }
+
+    .tomorrow-chart-label {
+      position: absolute;
+      right: 14px;
+      top: 14px;
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 0 10px;
+      border-radius: 999px;
+      color: var(--white);
+      background: var(--orange);
+      font-size: 0.74rem;
+      font-weight: 950;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
     }
 
     .forecast-invitation {
       display: grid;
       grid-template-columns: auto minmax(0, 1fr) auto;
-      gap: 16px;
+      gap: 18px;
       align-items: center;
-      padding: 18px 22px;
+      padding: clamp(18px, 3vw, 24px);
       border: 1px solid rgba(15, 76, 196, 0.18);
       border-left: 7px solid var(--orange);
-      border-radius: 18px;
+      border-radius: 22px;
       background:
-        radial-gradient(circle at 90% 10%, rgba(15, 76, 196, 0.1), transparent 28%),
+        radial-gradient(circle at 90% 10%, rgba(15, 76, 196, 0.14), transparent 28%),
+        radial-gradient(circle at 4% 92%, rgba(245, 125, 35, 0.12), transparent 28%),
         linear-gradient(105deg, #fffdf8, #f5f9ff);
       box-shadow: var(--shadow);
     }
@@ -1343,10 +1545,11 @@
       height: 42px;
       border-radius: 50%;
       color: var(--white);
-      background: var(--orange);
+      background: linear-gradient(135deg, var(--orange), var(--blue));
       font-family: Georgia, "Times New Roman", serif;
-      font-size: 1.25rem;
+      font-size: 1.35rem;
       font-weight: 900;
+      box-shadow: 0 12px 24px rgba(15, 76, 196, 0.2);
     }
 
     .forecast-invitation-copy {
@@ -1356,8 +1559,8 @@
     .forecast-invitation h2 {
       margin: 0;
       font-family: Georgia, "Times New Roman", serif;
-      font-size: clamp(1.3rem, 2.4vw, 1.75rem);
-      line-height: 1.08;
+      font-size: clamp(1.55rem, 3.4vw, 2.45rem);
+      line-height: 1;
     }
 
     .forecast-invitation p {
@@ -1509,9 +1712,11 @@
     }
 
     .fold-tool-card.update {
+      grid-column: 1 / -1;
       display: grid;
-      grid-template-rows: auto 1fr;
-      gap: 16px;
+      grid-template-columns: minmax(260px, 0.52fr) minmax(0, 1fr);
+      gap: 22px;
+      align-items: center;
       color: var(--white);
       background:
         radial-gradient(circle at 90% 0%, rgba(245, 125, 35, 0.4), transparent 32%),
@@ -1579,6 +1784,7 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      border-color: rgba(79, 166, 106, 0.28);
       background:
         radial-gradient(circle at 92% 0%, rgba(79, 166, 106, 0.16), transparent 34%),
         linear-gradient(135deg, #fffdf8, #f4fbf5);
@@ -1589,6 +1795,7 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      border-color: rgba(57, 184, 216, 0.26);
       background:
         radial-gradient(circle at 92% 0%, rgba(57, 184, 216, 0.18), transparent 34%),
         linear-gradient(135deg, #fffdf8, #eef8ff);
@@ -2419,6 +2626,10 @@
         grid-column: auto;
       }
 
+      .fold-tool-card.update {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
       .fire-driver-grid {
         grid-template-columns: 1fr;
       }
@@ -2481,6 +2692,20 @@
         padding: 18px;
       }
 
+      .feel-panel {
+        border-left: 0;
+        border-top: 1px solid rgba(255, 253, 248, 0.16);
+        padding: 16px;
+      }
+
+      .now-observation-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .now-temp {
+        font-size: clamp(4.3rem, 20vw, 5.6rem);
+      }
+
       .fs-topline {
         display: grid;
         grid-template-columns: 1fr;
@@ -2503,7 +2728,8 @@
       }
 
       .fs-score {
-        font-size: clamp(4.3rem, 20vw, 5.4rem);
+        width: min(150px, 54vw);
+        font-size: clamp(3.5rem, 16vw, 4.7rem);
       }
 
       .fs-word {
@@ -2544,12 +2770,20 @@
 
       .tomorrow-score {
         min-width: 54px;
-        min-height: 42px;
-        font-size: 1.15rem;
+        min-height: 54px;
+        font-size: 1.25rem;
       }
 
       .tomorrow-card h3 {
         font-size: 1.58rem;
+      }
+
+      .tomorrow-signal-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .tomorrow-mini-chart {
+        min-height: 88px;
       }
 
       .sky-home-copy,
@@ -2802,18 +3036,38 @@
     <div class="preview-stack">
       <div id="active-alerts" aria-live="polite"></div>
 
-      <section class="connector-home-callout" aria-label="I-26 Connector Center">
-        <div>
-          <div class="connector-home-kicker">New Asheville traffic desk</div>
-          <h2>I-26 Connector Center</h2>
-          <p>Live NCDOT closures, corridor cameras, construction milestones, project updates, and weather impacts in one place.</p>
-        </div>
-        <a href="/i26-connector.html">Open Connector Center</a>
-      </section>
-
       <section class="feelscore-mock" id="now" aria-label="FeelScore homepage anchor">
         <div class="feelscore-inner">
-          <div>
+          <div class="now-panel">
+            <div class="now-kicker">Now in Asheville</div>
+            <div class="now-temp-row">
+              <div class="now-temp" id="heroCurrentTemp">--°</div>
+              <div class="now-condition" id="heroSkyCondition">Reading the sky</div>
+            </div>
+            <div class="fs-headline" id="liveFeelScoreHeadline">Reading the current comfort signal.</div>
+            <div class="fs-subhead" id="liveFeelScoreSubhead">
+              Temperature, humidity, dew point, wind, and sky cover are loading before the full read appears.
+            </div>
+            <div class="now-observation-grid" aria-label="Current observation highlights">
+              <div class="now-observation">
+                <strong id="heroFeelsLike">--°</strong>
+                <span>Feels like</span>
+              </div>
+              <div class="now-observation">
+                <strong id="heroDewpoint">--°</strong>
+                <span>Dew point</span>
+              </div>
+              <div class="now-observation">
+                <strong id="heroWind">-- mph</strong>
+                <span>Wind</span>
+              </div>
+              <div class="now-observation">
+                <strong id="heroRainChance">--</strong>
+                <span>Rain chance</span>
+              </div>
+            </div>
+          </div>
+          <aside class="feel-panel" aria-label="FeelScore supporting notes">
             <div class="fs-topline">
               <div class="section-label feelscore-mark">FeelScore</div>
               <button class="fs-info-button" id="feelScoreInfoButton" type="button" aria-haspopup="dialog">
@@ -2824,12 +3078,6 @@
               <div class="fs-score" id="liveFeelScoreValue">--</div>
               <div class="fs-word" id="liveFeelScoreLabel">Updating</div>
             </div>
-            <div class="fs-headline" id="liveFeelScoreHeadline">Reading the current comfort signal.</div>
-            <div class="fs-subhead" id="liveFeelScoreSubhead">
-              Temperature, humidity, dew point, and wind are loading before the score appears.
-            </div>
-          </div>
-          <aside class="fs-support" aria-label="FeelScore supporting notes">
             <div class="fs-bullets">
               <ul id="liveFeelScoreBullets">
                 <li>Current weather feed loading</li>
@@ -2959,6 +3207,25 @@
           <p id="tomorrowNarrative">
             Temperature, humidity, dew point, and wind will shape where tomorrow lands on the same FeelScore scale.
           </p>
+          <div class="tomorrow-signal-strip" aria-label="Tomorrow forecast highlights">
+            <div class="tomorrow-signal">
+              <strong id="tomorrowHigh">--°</strong>
+              <span>High</span>
+            </div>
+            <div class="tomorrow-signal">
+              <strong id="tomorrowLow">--°</strong>
+              <span>Low</span>
+            </div>
+            <div class="tomorrow-signal rain">
+              <strong id="tomorrowRain">--</strong>
+              <span>Rain chance</span>
+            </div>
+          </div>
+          <div class="tomorrow-mini-chart" aria-hidden="true">
+            <span class="tomorrow-chart-area"></span>
+            <span class="tomorrow-chart-line"></span>
+            <span class="tomorrow-chart-label">Tim's read</span>
+          </div>
           <ul id="tomorrowBullets">
             <li>Clouds may linger early.</li>
             <li>Breaks of sun decide how warm it feels.</li>
@@ -3029,74 +3296,6 @@
               <a id="substackLink" href="https://timothyballisty.substack.com/p/the-story-of-ashevilles-wild-spring" target="_blank" rel="noopener noreferrer">Read latest update</a>
               <a href="forecast.html">Open Forecast</a>
             </div>
-          </div>
-        </article>
-
-        <article class="fold-tool-card hiking">
-          <div class="kicker">Hiking Guidance</div>
-          <h2 id="homeHikingHeadline">Pick the trail by the mountain mood.</h2>
-          <div class="hiking-mini-profile" aria-hidden="true">
-            <span class="hiking-mini-line"></span>
-            <span class="hiking-mini-label">Elevation read</span>
-          </div>
-          <div class="hiking-now-strip" aria-label="Live mountain view preview">
-            <a class="hiking-now-image" href="hiking.html#mountain-views">
-              <img id="homeMitchellCamImage" src="https://nchighpeaks.org/cam11/up/image.jpg" alt="Live Mount Mitchell summit camera preview" loading="lazy" />
-            </a>
-            <div class="hiking-now-copy">
-              <b>Mountain views now</b>
-              <span>Mitchell summit cam plus Pisgah Inn at 5,000 ft help check cloud deck and visibility.</span>
-            </div>
-          </div>
-          <div class="tool-snapshot">
-            <span class="tool-index"><strong id="homeHikerScore">82</strong> HikerScore</span>
-            <span class="tool-index"><strong>15°</strong> Mitchell drop</span>
-          </div>
-          <p id="homeHikingSummary">
-            Lower and mid-elevation trails look manageable, while Mount Mitchell and exposed ridges
-            still deserve a separate wind, cloud, and layer check.
-          </p>
-          <div class="hiking-callouts" aria-label="Hiking guidance preview details">
-            <div class="hiking-callout">
-              <b>Best bet</b>
-              <span id="homeHikingBestBet">Lower to mid-elevation trails where cloud cover helps comfort.</span>
-            </div>
-            <div class="hiking-callout">
-              <b>Use care</b>
-              <span id="homeHikingUseCare">Higher peaks can feel cooler and more exposed than Asheville.</span>
-            </div>
-          </div>
-          <div class="fold-tool-actions">
-            <a href="hiking.html">Open Hiking Guidance</a>
-          </div>
-        </article>
-
-        <article class="fold-tool-card water">
-          <div class="kicker">Water Conditions</div>
-          <h2>Check waterfalls and river plans before you go.</h2>
-          <div class="water-mini-profile" aria-hidden="true">
-            <span class="water-mini-fall"></span>
-            <span class="water-mini-label">Flow read</span>
-          </div>
-          <div class="tool-snapshot">
-            <span class="tool-index"><strong>9</strong> waterfalls</span>
-            <span class="tool-index"><strong>8</strong> river segments</span>
-          </div>
-          <p>
-            A local read on waterfall flow, tubing, paddling, fishing, and swimming around Asheville and WNC.
-          </p>
-          <div class="hiking-callouts" aria-label="Water conditions preview details">
-            <div class="hiking-callout">
-              <b>Waterfalls</b>
-              <span>Recent rain, basin response, photo potential, and slick-rock caution.</span>
-            </div>
-            <div class="hiking-callout">
-              <b>Rivers</b>
-              <span>Activity-specific guidance for tubing, paddling, fishing, and wading.</span>
-            </div>
-          </div>
-          <div class="fold-tool-actions">
-            <a href="water.html">Open Water Conditions</a>
           </div>
         </article>
 
@@ -3198,6 +3397,85 @@
               <li>High drought plus high fire threat means the landscape is primed and the day may activate that risk.</li>
               <li>Rain can lower fire threat quickly, but drought stress usually needs repeated or soaking rainfall.</li>
             </ul>
+          </div>
+        </article>
+      </section>
+
+      <section class="connector-home-callout" aria-label="I-26 Connector Center">
+        <div>
+          <div class="connector-home-kicker">New Asheville traffic desk</div>
+          <h2>I-26 Connector Center</h2>
+          <p>Live NCDOT closures, corridor cameras, construction milestones, project updates, and weather impacts in one place.</p>
+        </div>
+        <a href="/i26-connector.html">Open Connector Center</a>
+      </section>
+
+      <section class="fold-tool-row outdoor-tool-row" aria-label="Outdoor decision cards">
+        <article class="fold-tool-card hiking">
+          <div class="kicker">Hiking Guidance</div>
+          <h2 id="homeHikingHeadline">Pick the trail by the mountain mood.</h2>
+          <div class="hiking-mini-profile" aria-hidden="true">
+            <span class="hiking-mini-line"></span>
+            <span class="hiking-mini-label">Elevation read</span>
+          </div>
+          <div class="hiking-now-strip" aria-label="Live mountain view preview">
+            <a class="hiking-now-image" href="hiking.html#mountain-views">
+              <img id="homeMitchellCamImage" src="https://nchighpeaks.org/cam11/up/image.jpg" alt="Live Mount Mitchell summit camera preview" loading="lazy" />
+            </a>
+            <div class="hiking-now-copy">
+              <b>Mountain views now</b>
+              <span>Mitchell summit cam plus Pisgah Inn at 5,000 ft help check cloud deck and visibility.</span>
+            </div>
+          </div>
+          <div class="tool-snapshot">
+            <span class="tool-index"><strong id="homeHikerScore">82</strong> HikerScore</span>
+            <span class="tool-index"><strong>15°</strong> Mitchell drop</span>
+          </div>
+          <p id="homeHikingSummary">
+            Lower and mid-elevation trails look manageable, while Mount Mitchell and exposed ridges
+            still deserve a separate wind, cloud, and layer check.
+          </p>
+          <div class="hiking-callouts" aria-label="Hiking guidance preview details">
+            <div class="hiking-callout">
+              <b>Best bet</b>
+              <span id="homeHikingBestBet">Lower to mid-elevation trails where cloud cover helps comfort.</span>
+            </div>
+            <div class="hiking-callout">
+              <b>Use care</b>
+              <span id="homeHikingUseCare">Higher peaks can feel cooler and more exposed than Asheville.</span>
+            </div>
+          </div>
+          <div class="fold-tool-actions">
+            <a href="hiking.html">Open Hiking Guidance</a>
+          </div>
+        </article>
+
+        <article class="fold-tool-card water">
+          <div class="kicker">Water Conditions</div>
+          <h2 id="homeWaterHeadline">Check waterfalls and river plans before you go.</h2>
+          <div class="water-mini-profile" aria-hidden="true">
+            <span class="water-mini-fall"></span>
+            <span class="water-mini-label">Flow read</span>
+          </div>
+          <div class="tool-snapshot">
+            <span class="tool-index"><strong id="homeWaterfallCount">9</strong> waterfalls</span>
+            <span class="tool-index"><strong id="homeRiverCount">8</strong> river segments</span>
+          </div>
+          <p id="homeWaterSummary">
+            A local read on waterfall flow, tubing, paddling, fishing, and swimming around Asheville and WNC.
+          </p>
+          <div class="hiking-callouts" aria-label="Water conditions preview details">
+            <div class="hiking-callout">
+              <b>Waterfalls</b>
+              <span id="homeWaterfallBest">Recent rain, basin response, photo potential, and slick-rock caution.</span>
+            </div>
+            <div class="hiking-callout">
+              <b>Rivers</b>
+              <span id="homeRiverBest">Activity-specific guidance for tubing, paddling, fishing, and wading.</span>
+            </div>
+          </div>
+          <div class="fold-tool-actions">
+            <a href="water.html">Open Water Conditions</a>
           </div>
         </article>
       </section>
@@ -3328,6 +3606,9 @@
     import { buildSkyConditionRead } from "./js/intel/sky-read.js";
     import { loadAndRenderAlerts } from "./js/modules/renderAlerts.js";
     import { subscribeUserToPush } from "./js/notifications/subscribeClient.js?v=20260518-vapid-trim";
+    import { getWaterPageInputs } from "./js/water/water-data.js?v=20260621-water";
+    import { buildRiverIndex } from "./js/water/river-index.js?v=20260621-water";
+    import { buildWaterfallIndex } from "./js/water/waterfall-index.js?v=20260621-water";
 
     function clamp(value, min = 0, max = 1) {
       return Math.min(max, Math.max(min, value));
@@ -3732,6 +4013,11 @@
       setText("#obsWind", `Wind ${Number.isFinite(wind) ? `${Math.round(wind)} mph` : "-- mph"}`);
       setText("#obsPressure", `Pressure ${Number.isFinite(pressure) ? `${pressure.toFixed(2)}"` : '--"'}`);
       setText("#obsRainChance", `Rain chance ${Number.isFinite(rain) ? pct(rain) : "--"}`);
+      setText("#heroCurrentTemp", Number.isFinite(temp) ? `${Math.round(temp)}°` : "--°");
+      setText("#heroFeelsLike", Number.isFinite(temp) ? `${Math.round(temp)}°` : "--°");
+      setText("#heroDewpoint", Number.isFinite(dew) ? `${Math.round(dew)}°` : "--°");
+      setText("#heroWind", Number.isFinite(wind) ? `${Math.round(wind)} mph` : "-- mph");
+      setText("#heroRainChance", Number.isFinite(rain) ? pct(rain) : "--");
       latestObservationClouds = Number.isFinite(clouds) ? clouds : null;
       renderCloudObservationChip();
     }
@@ -3933,6 +4219,63 @@
         renderHomeHikingCard(await res.json());
       } catch (error) {
         console.warn("Homepage hiking module using fallback copy", error);
+      }
+    }
+
+    function bestRiverActivity(rivers = []) {
+      return rivers
+        .flatMap((item) => (item.activityScores || [])
+          .filter((score) => !["Hazardous", "Not Applicable"].includes(score.rating))
+          .map((score) => ({ river: item.river, gauge: item.gauge, score })))
+        .sort((a, b) => Number(b.score.score || 0) - Number(a.score.score || 0))[0];
+    }
+
+    function renderHomeWaterCard(inputs = {}) {
+      const waterfalls = Array.isArray(inputs.waterfalls) ? inputs.waterfalls : [];
+      const rivers = Array.isArray(inputs.rivers) ? inputs.rivers : [];
+      const rainfallById = Object.fromEntries((inputs.waterfallRainfall || [])
+        .map((item) => [item.waterfallId, item.rainfall || {}]));
+      const riverInputById = Object.fromEntries((inputs.riverInputs || [])
+        .map((item) => [item.riverId, item]));
+      const waterfallIndex = buildWaterfallIndex(waterfalls, rainfallById);
+      const riverIndex = buildRiverIndex(rivers, riverInputById, inputs.weather || {});
+      const bestFall = waterfallIndex[0];
+      const bestRiver = bestRiverActivity(riverIndex);
+      const liveGaugeCount = riverIndex.filter((item) => item.gauge?.isLive).length;
+
+      updateText("#homeWaterfallCount", waterfalls.length || "--");
+      updateText("#homeRiverCount", rivers.length || "--");
+      updateText(
+        "#homeWaterHeadline",
+        bestFall?.waterfall?.name
+          ? `${bestFall.waterfall.name} leads the waterfall read.`
+          : "Check waterfalls and river plans before you go."
+      );
+      updateText(
+        "#homeWaterSummary",
+        liveGaugeCount
+          ? `${liveGaugeCount} live river gauges are feeding the water read where available, paired with waterfall response and recent rainfall context.`
+          : "Waterfall and river guidance is using the existing water index while live gauges are checked."
+      );
+      updateText(
+        "#homeWaterfallBest",
+        bestFall
+          ? `${bestFall.category.label}: ${bestFall.category.explanation}`
+          : "Recent rain, basin response, photo potential, and slick-rock caution."
+      );
+      updateText(
+        "#homeRiverBest",
+        bestRiver
+          ? `${bestRiver.score.rating}: ${bestRiver.river.name} ${bestRiver.river.segmentName}. ${bestRiver.score.guidance}`
+          : "Activity-specific guidance for tubing, paddling, fishing, and wading."
+      );
+    }
+
+    async function hydrateHomeWaterCard() {
+      try {
+        renderHomeWaterCard(await getWaterPageInputs());
+      } catch (error) {
+        console.warn("Homepage water module using fallback copy", error);
       }
     }
 
@@ -4462,14 +4805,23 @@
       const payloadScore = normalizeScore100(feelscore.score);
       const fallbackScore = nearTermFeelScore(hourly, currentHour);
       const score = Number.isFinite(payloadScore) ? payloadScore : fallbackScore;
+      const scoreEl = document.querySelector("#liveFeelScoreValue");
       if (Number.isFinite(score)) {
-        document.querySelector("#liveFeelScoreValue").textContent = score;
+        scoreEl.textContent = score;
+        scoreEl.style.setProperty("--fs-progress", `${Math.max(0, Math.min(100, score))}%`);
         document.querySelector("#liveFeelScoreLabel").textContent = scoreLabel(score);
         document.querySelector(".modal-score-pill").textContent = `Right now: ${score} - ${scoreLabel(score)}`;
       } else {
-        document.querySelector("#liveFeelScoreValue").textContent = "--";
+        scoreEl.textContent = "--";
+        scoreEl.style.setProperty("--fs-progress", "0%");
         document.querySelector("#liveFeelScoreLabel").textContent = "Updating";
         document.querySelector(".modal-score-pill").textContent = "Right now: updating";
+      }
+
+      const currentDisplayTemp = Number(displayCurrentHour?.temperatureF ?? liveHour?.temperatureF);
+      if (Number.isFinite(currentDisplayTemp)) {
+        setText("#heroCurrentTemp", `${Math.round(currentDisplayTemp)}°`);
+        setText("#heroFeelsLike", `${Math.round(currentDisplayTemp)}°`);
       }
 
       document.querySelector("#liveFeelScoreHeadline").textContent =
@@ -4608,6 +4960,9 @@
 
       return {
         score,
+        high,
+        low,
+        rainChance,
         headline,
         narrative: `${tempSentence} ${detailSentence.charAt(0).toUpperCase()}${detailSentence.slice(1)}`,
         bullets: [
@@ -4626,6 +4981,9 @@
       if (Number.isFinite(score)) {
         document.querySelector("#tomorrowScore").textContent = score;
       }
+      updateText("#tomorrowHigh", Number.isFinite(summary.high) ? `${Math.round(summary.high)}°` : "--°");
+      updateText("#tomorrowLow", Number.isFinite(summary.low) ? `${Math.round(summary.low)}°` : "--°");
+      updateText("#tomorrowRain", Number.isFinite(summary.rainChance) ? formatPercent(summary.rainChance) : "--");
       document.querySelector("#tomorrowHeadline").textContent = summary.headline;
       document.querySelector("#tomorrowNarrative").textContent = summary.narrative;
 
@@ -4732,6 +5090,7 @@
           : `Camera capture ${formatCaptureTime(data?.timestamp)}`;
         document.querySelector("#skyHomeHeadline").textContent = skyNarrative?.headline || "Reading the Asheville sky.";
         document.querySelector("#skyHomeDetail").textContent = skyNarrative?.detail || "The camera snapshot adds visual context to the forecast.";
+        setText("#heroSkyCondition", skyNarrative?.headline || skyLabel || "Current sky");
         document.querySelector("#skyHomeCloud").textContent = daylightNightMismatch ? pct(skyCloud) : skyRead.cloudMetric;
         document.querySelector("#skyHomeLight").textContent = daylightNightMismatch ? (metrics.sunlightDetected ? labelize(metrics.sunlightLevel) : "Low") : skyRead.sunlightMetric;
         document.querySelector("#skyHomeConfidence").textContent = daylightNightMismatch ? pct(skyConfidence) : skyRead.confidenceMetric;
@@ -4747,6 +5106,7 @@
     hydrateSubstackCard();
     hydrateDroughtFireCard();
     hydrateHomeHikingCard();
+    hydrateHomeWaterCard();
     hydratePulsePreview();
     hydrateObservationChips();
     const liveComfortReady = hydrateLiveComfortModules();
@@ -4755,6 +5115,7 @@
     hideHomeSplash(0);
     setInterval(hydrateObservationChips, 5 * 60 * 1000);
     setInterval(hydrateHomeHikingCard, 5 * 60 * 1000);
+    setInterval(hydrateHomeWaterCard, 10 * 60 * 1000);
     setInterval(hydrateSkyModule, 60 * 1000);
     setInterval(() => loadAndRenderAlerts(activeAlerts), 60 * 1000);
 
