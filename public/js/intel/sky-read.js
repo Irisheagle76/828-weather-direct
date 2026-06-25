@@ -13,13 +13,14 @@ export function formatSkyPercent(value) {
 }
 
 export function isObscuredSky(skyIntel) {
-  return skyIntel?.cloudCoverReliable === false ||
+  return skyIntel?.visualObscured === true ||
     skyIntel?.atmosphericState === "fog" ||
     skyIntel?.atmosphericState === "low_cloud";
 }
 
 export function skyCloudMetricLabel(skyIntel) {
   if (isObscuredSky(skyIntel)) return "Obscured";
+  if (skyIntel?.cloudMetricLabel) return skyIntel.cloudMetricLabel;
   return formatSkyPercent(skyIntel?.displayCloud ?? skyIntel?.cloud);
 }
 

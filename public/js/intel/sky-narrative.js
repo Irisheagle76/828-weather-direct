@@ -79,6 +79,16 @@ export function generateSkyNarrative(data, skyIntel = null) {
     };
   }
 
+  if (state === "low_stratus") {
+    return {
+      headline: "A gray low cloud deck is in place.",
+      detail:
+        "Downtown buildings and the ridge line are still readable, but the cloud base is keeping the morning sky flat and muted.",
+      confidence: "high",
+      type: "cloud"
+    };
+  }
+
   // --------------------------------------------------
   // ☁️ OVERCAST (DARK)
   // --------------------------------------------------

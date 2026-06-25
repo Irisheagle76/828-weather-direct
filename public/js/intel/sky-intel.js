@@ -8,6 +8,7 @@ export function computeSkyIntel({ camera, previous = null }) {
   const cloud = m.cloudCoverWest ?? null;
   const contrast = m.contrast ?? null;
   const groundContrast = m.groundContrast ?? null;
+  const groundBrightness = m.groundBrightness ?? null;
   const visibility = m.visibilityScore ?? null;
   const brightness = m.brightness ?? null;
   const sensorObscuredView = m.obscuredView === true;
@@ -51,6 +52,14 @@ export function computeSkyIntel({ camera, previous = null }) {
   const moderateSun = sunlightDetected && sunlightLevel === "moderate";
   const strongBlue = skyBlueSignal != null && skyBlueSignal > 1.2;
   const moderateBlue = skyBlueSignal != null && skyBlueSignal > 1.05;
+  const visibleStructureSignal =
+    m.visibleStructureSignal === true ||
+    (
+      groundContrast != null &&
+      groundBrightness != null &&
+      groundContrast >= 0.13 &&
+      groundBrightness >= 0.18
+    );
 
   const lowCloudSignal = cloud != null && cloud <= 20;
   const poorVisibilityFlatView =
@@ -66,14 +75,31 @@ export function computeSkyIntel({ camera, previous = null }) {
     (strongBlue || (strongSun && skyBlueSignal != null && skyBlueSignal >= 1.45));
   const flatGrayView = contrast != null && contrast <= 0.1 && !strongBlue;
   const dimGrayView = (brightness != null && brightness < 0.62 && flatGrayView) || poorVisibilityFlatView;
+  const structureVisibilityCounterSignal =
+    visibleStructureSignal &&
+    (
+      visibility == null ||
+      visibility >= 1 ||
+      (groundContrast != null && groundContrast >= 0.15)
+    );
+  const lowStratusDeck =
+    structureVisibilityCounterSignal &&
+    flatGrayView &&
+    !strongSun &&
+    !strongBlue &&
+    (cloud == null || cloud <= 35 || cloud >= 70);
   const obscuredView =
     !clearSkyCounterSignal &&
+    !structureVisibilityCounterSignal &&
     (sensorObscuredView || (visibility != null && visibility <= 2 && dimGrayView));
   const cloudCoverUnreliable =
-    obscuredView || (!clearSkyCounterSignal && visibility != null && visibility <= 1 && flatGrayView);
+    obscuredView ||
+    lowStratusDeck ||
+    (!clearSkyCounterSignal && !structureVisibilityCounterSignal && visibility != null && visibility <= 1 && flatGrayView);
   const lowDeckDetected = obscuredView && (cloud == null || cloud >= 35 || cloud <= 10);
   const fogDetected =
     !clearSkyCounterSignal &&
+    !structureVisibilityCounterSignal &&
     (sensorObscuredView ||
       visibility === 0 ||
       (visibility === 1 && flatGrayView) ||
@@ -90,6 +116,7 @@ export function computeSkyIntel({ camera, previous = null }) {
       sunlightDetected: false,
       sunlightLevel: "low",
       confidence: fogDetected ? 0.82 : 0.72,
+      visualObscured: true,
       filteredSun: false,
       softShadowSignal,
       satelliteHighCloudSignal,
@@ -109,7 +136,11 @@ export function computeSkyIntel({ camera, previous = null }) {
   const lowCloud = cloud != null && cloud >= 40;
   const sunDominant = strongSun && strongBlue && !filteredSun;
 
-  if (heavyCloud) {
+  if (lowStratusDeck) {
+    atmosphericState = brightness != null && brightness >= 0.46 ? "overcast_bright" : "low_stratus";
+    cloudState = "low_stratus";
+    confidence = 0.8;
+  } else if (heavyCloud) {
     if (sunDominant) {
       atmosphericState = "partly_cloudy";
       confidence = 0.85;
@@ -200,6 +231,9 @@ export function computeSkyIntel({ camera, previous = null }) {
     sunlightDetected,
     sunlightLevel,
     confidence: Number(Math.min(confidence, 1).toFixed(2)),
+    visualObscured: false,
+    visibleStructureSignal: structureVisibilityCounterSignal,
+    cloudMetricLabel: lowStratusDeck ? "Low stratus" : null,
     filteredSun,
     softShadowSignal,
     satelliteHighCloudSignal,
