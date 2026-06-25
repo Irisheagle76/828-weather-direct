@@ -3340,6 +3340,7 @@
 
     let latestSkyIntel = null;
     let latestObservationClouds = null;
+    let latestSkyWeatherContext = null;
 
     function labelize(value) {
       if (!value) return "--";
@@ -3566,6 +3567,16 @@
       const n = Number(value);
       if (!Number.isFinite(n)) return null;
       return n > 1 ? n / 100 : n;
+    }
+
+    function buildSkyWeatherContext(hour = null) {
+      if (!hour) return null;
+      return {
+        cloudCover: normalizeProbabilityValue(hour.cloudCover ?? hour.cloud_cover ?? hour.cloudcover),
+        humidity: normalizeProbabilityValue(hour.relativeHumidity ?? hour.relative_humidity ?? hour.humidity),
+        precipProbability: normalizeProbabilityValue(hour.precipProbability ?? hour.precipitation_probability),
+        weatherCode: hour.weatherCode ?? hour.weather_code ?? null
+      };
     }
 
     function hasRainWeatherCode(code) {
@@ -4637,6 +4648,7 @@
         const current = weather?.current || weather?.current_conditions || null;
         const currentHour = normalizeCurrentConditions(current);
         const displayCurrentHour = observationTempHour(weather);
+        latestSkyWeatherContext = buildSkyWeatherContext(displayCurrentHour || currentHour || hourly[0]);
         updateRadarHomeSignalFromWeather({ ...weather, hourly });
 
         const human = buildHumanActionIntelFS({
@@ -4665,7 +4677,22 @@
           if (!res.ok) throw new Error("Sky data unavailable");
           data = await res.json();
         }
-        const skyRead = buildSkyConditionRead({ camera: data });
+        let weatherContext = latestSkyWeatherContext;
+        if (!weatherContext) {
+          try {
+            const weather = await fetchRouteJson("weather&type=hourly&lat=35.5951&lon=-82.5515", { cacheBust: false });
+            const hourly = (Array.isArray(weather?.hourly) ? weather.hourly : [])
+              .map(normalizeWeatherHour)
+              .filter(Boolean)
+              .sort((a, b) => a.timestamp - b.timestamp);
+            const currentHour = normalizeCurrentConditions(weather?.current || weather?.current_conditions || null);
+            weatherContext = buildSkyWeatherContext(observationTempHour(weather) || currentHour || hourly[0]);
+            latestSkyWeatherContext = weatherContext;
+          } catch (weatherError) {
+            console.warn("Sky module weather cross-check unavailable", weatherError);
+          }
+        }
+        const skyRead = buildSkyConditionRead({ camera: data, weatherContext });
         const skyIntel = skyRead.skyIntel;
         latestSkyIntel = skyIntel;
         const narrative = skyRead.narrative;

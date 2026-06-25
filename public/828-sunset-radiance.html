@@ -1808,6 +1808,17 @@
       return null;
     }
 
+    function buildSkyWeatherContext() {
+      const currentHour = getCurrentHour(state.weather);
+      if (!currentHour) return null;
+      return {
+        cloudCover: normalizePercentValue(pickNumber(currentHour, ["cloudCover", "cloud_cover", "cloudcover"])),
+        humidity: normalizePercentValue(pickNumber(currentHour, ["relativeHumidity", "relative_humidity", "humidity"])),
+        precipProbability: normalizePercentValue(pickNumber(currentHour, ["precipProbability", "precipitation_probability", "probabilityOfPrecipitation"])),
+        weatherCode: pickNumber(currentHour, ["weatherCode", "weather_code"])
+      };
+    }
+
     function getRadiancePhase(daily) {
       const now = Date.now();
       const sunrise = daily?.sunrise;
@@ -2305,6 +2316,7 @@
       const skyRead = buildSkyConditionRead({
         camera: state.skyData,
         previous: state.skyIntel,
+        weatherContext: buildSkyWeatherContext(),
         useLiveNarrative: staleNightAnalysis,
         liveNarrative: staleNightAnalysis ? buildLiveViewNarrative() : null
       });
@@ -2421,7 +2433,8 @@
         const data = await res.json();
         const skyRead = buildSkyConditionRead({
           camera: data,
-          previous: state.skyIntel
+          previous: state.skyIntel,
+          weatherContext: buildSkyWeatherContext()
         });
         state.skyData = data;
         state.skyIntel = skyRead.skyIntel;
