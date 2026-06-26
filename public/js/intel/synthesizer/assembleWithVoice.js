@@ -5,6 +5,17 @@ import { buildHumanVoice } from "../human-voice.js";
 const pick = (options = []) =>
   options[Math.floor(Math.random() * options.length)] || "";
 
+function hasPrecipFocus(intel = {}, headline = "") {
+  const precipProbability = Number(intel.precipProbability ?? intel.signals?.precipProbability ?? 0);
+  const precipAmount = Number(intel.precipAmount ?? intel.signals?.precipAmount ?? 0);
+  return (
+    intel.dominantFactor === "rain" ||
+    precipProbability >= 0.2 ||
+    precipAmount >= 0.03 ||
+    /rain|shower|wet|storm/i.test(headline)
+  );
+}
+
 export function assembleWithVoice(
   intel,
   period,
@@ -48,7 +59,7 @@ export function assembleWithVoice(
     else if (scoreTrend < -5) trend = "subtle-dip";
   }
 
-  if (headline && trend) {
+  if (headline && trend && !hasPrecipFocus(intel, headline)) {
     const modifiers = {
       "improving-fast": (h) => {
         if (/cool|chill/i.test(h)) return "Warming up quickly";
