@@ -3774,6 +3774,17 @@
       return hour >= 6 && hour < 20;
     }
 
+    function nighttimeSkyFallback() {
+      return {
+        label: "Night Sky",
+        cloud: null,
+        confidence: 0.4,
+        headline: "Quiet conditions have settled in for the night.",
+        detail: "It's too dark to reliably assess sky conditions right now.",
+        type: "night"
+      };
+    }
+
     function daylightSkyFallback(metrics = {}, skyIntel = {}) {
       const numberOrNull = (value) => {
         if (value == null || value === "") return null;
@@ -5058,28 +5069,43 @@
         const frameVersion = parseTimestamp(data?.timestamp) || Date.now();
         const skyStale = isSkyDataStale(data?.timestamp);
         const useLiveThumbnail = metrics.source === "live-thumbnail" || skyStale;
-        const daylightNightMismatch = isDaylightUiWindow() && (
+        const daylightWindow = isDaylightUiWindow();
+        const cameraNightSignal = (
           metrics.mode === "night" ||
           skyIntel?.atmosphericState === "night" ||
           narrative?.type === "night"
         );
+        const nighttimeFallback = daylightWindow ? null : nighttimeSkyFallback();
+        const daylightNightMismatch = daylightWindow && cameraNightSignal;
         const daylightFallback = daylightNightMismatch
           ? daylightSkyFallback(metrics, skyIntel)
           : null;
-        const skyNarrative = daylightNightMismatch
+        const skyNarrative = nighttimeFallback
+          ? {
+              headline: nighttimeFallback.headline,
+              detail: nighttimeFallback.detail,
+              type: "night"
+            }
+          : daylightNightMismatch
           ? {
               headline: daylightFallback.headline,
               detail: daylightFallback.detail,
               type: "daylight-analysis"
             }
           : narrative;
-        const skyLabel = daylightNightMismatch
+        const skyLabel = nighttimeFallback
+          ? nighttimeFallback.label
+          : daylightNightMismatch
           ? daylightFallback.label
           : labelize(skyIntel?.atmosphericState);
-        const skyCloud = daylightNightMismatch
+        const skyCloud = nighttimeFallback
+          ? nighttimeFallback.cloud
+          : daylightNightMismatch
           ? daylightFallback.cloud
           : skyIntel?.cloud;
-        const skyConfidence = daylightNightMismatch
+        const skyConfidence = nighttimeFallback
+          ? nighttimeFallback.confidence
+          : daylightNightMismatch
           ? daylightFallback.confidence
           : skyIntel?.confidence;
 
@@ -5091,9 +5117,9 @@
         document.querySelector("#skyHomeHeadline").textContent = skyNarrative?.headline || "Reading the Asheville sky.";
         document.querySelector("#skyHomeDetail").textContent = skyNarrative?.detail || "The camera snapshot adds visual context to the forecast.";
         setText("#heroSkyCondition", skyNarrative?.headline || skyLabel || "Current sky");
-        document.querySelector("#skyHomeCloud").textContent = daylightNightMismatch ? pct(skyCloud) : skyRead.cloudMetric;
-        document.querySelector("#skyHomeLight").textContent = daylightNightMismatch ? (metrics.sunlightDetected ? labelize(metrics.sunlightLevel) : "Low") : skyRead.sunlightMetric;
-        document.querySelector("#skyHomeConfidence").textContent = daylightNightMismatch ? pct(skyConfidence) : skyRead.confidenceMetric;
+        document.querySelector("#skyHomeCloud").textContent = nighttimeFallback ? "--" : daylightNightMismatch ? pct(skyCloud) : skyRead.cloudMetric;
+        document.querySelector("#skyHomeLight").textContent = nighttimeFallback ? "Night" : daylightNightMismatch ? (metrics.sunlightDetected ? labelize(metrics.sunlightLevel) : "Low") : skyRead.sunlightMetric;
+        document.querySelector("#skyHomeConfidence").textContent = nighttimeFallback ? "Low" : daylightNightMismatch ? pct(skyConfidence) : skyRead.confidenceMetric;
         renderCloudObservationChip();
       } catch (error) {
         console.warn("Sky module unavailable", error);
