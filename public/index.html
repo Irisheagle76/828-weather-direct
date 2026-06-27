@@ -3631,6 +3631,10 @@
     let latestSkyIntel = null;
     let latestObservationClouds = null;
     let latestSkyWeatherContext = null;
+    const STORM_NARRATIVE_MAX_MS = 10 * 60 * 1000;
+    const STORM_LEVEL_RANK = { none: 0, watching: 1, developing: 2, strong: 3 };
+    let stormNarrativeStartedAt = null;
+    let stormNarrativeLevel = "none";
 
     function labelize(value) {
       if (!value) return "--";
@@ -5125,7 +5129,26 @@
 
         const stormPayload = await stormPromise;
         const stormSignal = stormPayload?.signal;
-        if (daylightWindow && stormSignal?.active && stormSignal.headline && stormSignal.detail) {
+        const stormActive = daylightWindow && stormSignal?.active && stormSignal.headline && stormSignal.detail;
+        const nextStormLevel = stormActive ? (stormSignal.level || "watching") : "none";
+        const currentRank = STORM_LEVEL_RANK[stormNarrativeLevel] || 0;
+        const nextRank = STORM_LEVEL_RANK[nextStormLevel] || 0;
+
+        if (!stormActive) {
+          stormNarrativeStartedAt = null;
+          stormNarrativeLevel = "none";
+        } else if (stormNarrativeStartedAt == null || nextRank > currentRank) {
+          stormNarrativeStartedAt = Date.now();
+          stormNarrativeLevel = nextStormLevel;
+        } else {
+          stormNarrativeLevel = nextStormLevel;
+        }
+
+        const stormNarrativeWithinWindow = stormActive &&
+          stormNarrativeStartedAt != null &&
+          Date.now() - stormNarrativeStartedAt < STORM_NARRATIVE_MAX_MS;
+
+        if (stormNarrativeWithinWindow) {
           skyNarrative = {
             headline: stormSignal.headline,
             detail: stormSignal.detail,
