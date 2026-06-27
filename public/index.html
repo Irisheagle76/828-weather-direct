@@ -1318,15 +1318,24 @@
       color: #c93b2b;
     }
 
-    .hour-fs-value {
+    .hour-card .hour-fs-value {
       color: #1462c8;
+      margin-top: 2px;
+      font-size: 1.12rem;
+      line-height: 1;
     }
 
-    .hour-fs-value em {
+    .hour-card .hour-fs-value em {
       font-style: normal;
-      font-size: 0.68rem;
-      letter-spacing: 0.04em;
-      opacity: 0.88;
+      font-size: 0.74rem;
+      letter-spacing: 0.055em;
+      opacity: 0.94;
+      text-transform: uppercase;
+    }
+
+    .hour-card .hour-fs-value strong {
+      font-size: 1.12em;
+      font-weight: 950;
     }
 
     .hour-card .fs-great {
@@ -3185,12 +3194,12 @@
             <div class="best-pill" id="nextSixBestScore">86</div>
           </div>
           <div class="hour-row" id="nextSixHourRow">
-            <div class="hour-card best"><b>11 AM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-mild">70°</span><span class="hour-fs-value fs-great"><em>FS</em> 86</span></div></div>
-            <div class="hour-card"><b>12 PM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-mild">72°</span><span class="hour-fs-value fs-great"><em>FS</em> 84</span></div></div>
-            <div class="hour-card"><b>1 PM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-warm">73°</span><span class="hour-fs-value fs-great"><em>FS</em> 82</span></div></div>
-            <div class="hour-card"><b>2 PM</b><span class="icon sky-rain">🌧</span><div class="hour-values"><span class="hour-temp-value temp-warm">74°</span><span class="hour-fs-value fs-good"><em>FS</em> 76</span></div></div>
-            <div class="hour-card"><b>3 PM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-hot">75°</span><span class="hour-fs-value fs-good"><em>FS</em> 78</span></div></div>
-            <div class="hour-card"><b>4 PM</b><span class="icon sky-partly">⛅</span><div class="hour-values"><span class="hour-temp-value temp-hot">75°</span><span class="hour-fs-value fs-good"><em>FS</em> 80</span></div></div>
+            <div class="hour-card best"><b>11 AM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-mild">70°</span><span class="hour-fs-value fs-great"><em>FeelScore</em> <strong>86</strong></span></div></div>
+            <div class="hour-card"><b>12 PM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-mild">72°</span><span class="hour-fs-value fs-great"><em>FeelScore</em> <strong>84</strong></span></div></div>
+            <div class="hour-card"><b>1 PM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-warm">73°</span><span class="hour-fs-value fs-great"><em>FeelScore</em> <strong>82</strong></span></div></div>
+            <div class="hour-card"><b>2 PM</b><span class="icon sky-rain">🌧</span><div class="hour-values"><span class="hour-temp-value temp-warm">74°</span><span class="hour-fs-value fs-good"><em>FeelScore</em> <strong>76</strong></span></div></div>
+            <div class="hour-card"><b>3 PM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-hot">75°</span><span class="hour-fs-value fs-good"><em>FeelScore</em> <strong>78</strong></span></div></div>
+            <div class="hour-card"><b>4 PM</b><span class="icon sky-partly">⛅</span><div class="hour-values"><span class="hour-temp-value temp-hot">75°</span><span class="hour-fs-value fs-good"><em>FeelScore</em> <strong>80</strong></span></div></div>
           </div>
           <p class="editorial" id="nextSixEditorial">
             The Next 6 remains the practical timing strip. The Current Sky card above gives it a visual proof point:
@@ -3964,7 +3973,7 @@
       const current = weather.current || weather.current_conditions || {};
       const firstHour = Array.isArray(weather.hourly) ? weather.hourly[0] || {} : {};
       return {
-        tempF: current.temperatureF ?? current.tempF ?? firstHour.temperatureF ?? toF(current.air_temperature),
+        tempF: current.temperatureF ?? current.tempF ?? toF(current.air_temperature) ?? firstHour.temperatureF,
         dewF: current.dewpointF ?? current.dewPoint ?? firstHour.dewpointF ?? toF(current.dew_point),
         humidity: current.relativeHumidity ?? current.relative_humidity ?? current.humidity ?? firstHour.relativeHumidity,
         windMph: current.windSpeed ?? current.wind ?? firstHour.windSpeed ?? toMph(current.wind_avg),
@@ -4914,7 +4923,7 @@
             <span class="icon ${iconClass(icon)}" title="${icon}">${iconGlyph(icon)}</span>
             <div class="hour-values">
               <span class="hour-temp-value ${tempClass(temp)}">${temp}°</span>
-              <span class="hour-fs-value ${fsClass(score)}"><em>FS</em> ${Number.isFinite(score) ? score : "--"}</span>
+              <span class="hour-fs-value ${fsClass(score)}"><em>FeelScore</em> <strong>${Number.isFinite(score) ? score : "--"}</strong></span>
             </div>
           </div>
         `;
