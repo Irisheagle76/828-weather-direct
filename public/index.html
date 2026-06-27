@@ -3632,9 +3632,36 @@
     let latestObservationClouds = null;
     let latestSkyWeatherContext = null;
     const STORM_NARRATIVE_MAX_MS = 10 * 60 * 1000;
+    const STORM_NARRATIVE_STORAGE_KEY = "avlweather.stormNarrativeWindow";
     const STORM_LEVEL_RANK = { none: 0, watching: 1, developing: 2, strong: 3 };
-    let stormNarrativeStartedAt = null;
-    let stormNarrativeLevel = "none";
+
+    function readStormNarrativeWindow() {
+      try {
+        const stored = JSON.parse(sessionStorage.getItem(STORM_NARRATIVE_STORAGE_KEY) || "null");
+        return {
+          startedAt: Number.isFinite(Number(stored?.startedAt)) ? Number(stored.startedAt) : null,
+          level: STORM_LEVEL_RANK[stored?.level] ? stored.level : "none"
+        };
+      } catch {
+        return { startedAt: null, level: "none" };
+      }
+    }
+
+    function saveStormNarrativeWindow(startedAt, level) {
+      try {
+        if (startedAt == null || level === "none") {
+          sessionStorage.removeItem(STORM_NARRATIVE_STORAGE_KEY);
+        } else {
+          sessionStorage.setItem(STORM_NARRATIVE_STORAGE_KEY, JSON.stringify({ startedAt, level }));
+        }
+      } catch {
+        // The in-memory timer still works when browser storage is unavailable.
+      }
+    }
+
+    const storedStormWindow = readStormNarrativeWindow();
+    let stormNarrativeStartedAt = storedStormWindow.startedAt;
+    let stormNarrativeLevel = storedStormWindow.level;
 
     function labelize(value) {
       if (!value) return "--";
@@ -5137,11 +5164,14 @@
         if (!stormActive) {
           stormNarrativeStartedAt = null;
           stormNarrativeLevel = "none";
+          saveStormNarrativeWindow(null, "none");
         } else if (stormNarrativeStartedAt == null || nextRank > currentRank) {
           stormNarrativeStartedAt = Date.now();
           stormNarrativeLevel = nextStormLevel;
+          saveStormNarrativeWindow(stormNarrativeStartedAt, stormNarrativeLevel);
         } else {
           stormNarrativeLevel = nextStormLevel;
+          saveStormNarrativeWindow(stormNarrativeStartedAt, stormNarrativeLevel);
         }
 
         const stormNarrativeWithinWindow = stormActive &&
