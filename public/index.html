@@ -5046,6 +5046,11 @@
 
     async function hydrateSkyModule() {
       try {
+        const stormPromise = fetchRouteJson("storm/current", { cacheBust: false })
+          .catch((error) => {
+            console.warn("Combined storm signal unavailable", error);
+            return null;
+          });
         let data;
         try {
           data = await fetchRouteJson("sky/current", { cacheBust: false });
@@ -5089,7 +5094,7 @@
         const daylightFallback = daylightNightMismatch
           ? daylightSkyFallback(metrics, skyIntel)
           : null;
-        const skyNarrative = nighttimeFallback
+        let skyNarrative = nighttimeFallback
           ? {
               headline: nighttimeFallback.headline,
               detail: nighttimeFallback.detail,
@@ -5102,7 +5107,7 @@
               type: "daylight-analysis"
             }
           : narrative;
-        const skyLabel = nighttimeFallback
+        let skyLabel = nighttimeFallback
           ? nighttimeFallback.label
           : daylightNightMismatch
           ? daylightFallback.label
@@ -5112,11 +5117,25 @@
           : daylightNightMismatch
           ? daylightFallback.cloud
           : skyIntel?.cloud;
-        const skyConfidence = nighttimeFallback
+        let skyConfidence = nighttimeFallback
           ? nighttimeFallback.confidence
           : daylightNightMismatch
           ? daylightFallback.confidence
           : skyIntel?.confidence;
+
+        const stormPayload = await stormPromise;
+        const stormSignal = stormPayload?.signal;
+        if (daylightWindow && stormSignal?.active && stormSignal.headline && stormSignal.detail) {
+          skyNarrative = {
+            headline: stormSignal.headline,
+            detail: stormSignal.detail,
+            type: `storm-${stormSignal.level || "developing"}`
+          };
+          skyLabel = "Building West";
+          skyConfidence = Math.max(Number(skyConfidence) || 0, Number(stormSignal.confidence) || 0);
+          liveRadarSignalActive = true;
+          applyConditionalHomepageFeatures();
+        }
 
         document.querySelector("#skyHomeImage").src = skyImageUrl(frameVersion, useLiveThumbnail);
         document.querySelector("#skyHomeLabel").textContent = skyLabel;

@@ -17,6 +17,7 @@ const routes = {
   "i26/news-feed": () => import("../lib/api-routes/i26/news-feed.js"),
   "i26/news-write": () => import("../lib/api-routes/i26/news-write.js"),
   "sky/current": () => import("../lib/api-routes/sky/current.js"),
+  "storm/current": () => import("../lib/api-routes/storm/current.js"),
   "substack-articles": () => import("../lib/api-routes/substack-articles.js"),
   "substack-og": () => import("../lib/api-routes/substack-og.js"),
   "tempest/device": () => import("../lib/api-routes/tempest/device.js"),
