@@ -27,6 +27,7 @@
 
     html {
       overflow-x: hidden;
+      scroll-behavior: smooth;
     }
 
     body {
@@ -354,6 +355,39 @@
       background: #083da6;
     }
 
+    .pulse-nav-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-left: 7px;
+      padding: 3px 7px;
+      border: 1px solid rgba(245, 125, 35, 0.42);
+      border-radius: 999px;
+      color: #9a3f00;
+      background: rgba(245, 125, 35, 0.13);
+      font-size: 0.64rem;
+      font-weight: 950;
+      letter-spacing: 0.06em;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .pulse-nav-badge::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--orange);
+      box-shadow: 0 0 0 3px rgba(245, 125, 35, 0.14);
+    }
+
+    .pulse-nav-badge[hidden],
+    .pulse-fresh-badge[hidden],
+    .pulse-alert-strip[hidden],
+    .pulse-alert-thumbnail[hidden] {
+      display: none;
+    }
+
     .obs-row {
       display: flex;
       gap: 10px;
@@ -367,6 +401,131 @@
 
     .obs-row::-webkit-scrollbar {
       display: none;
+    }
+
+    .pulse-alert-strip {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 168px auto;
+      gap: 12px 20px;
+      align-items: center;
+      margin-top: 16px;
+      padding: 15px 17px;
+      border: 1px solid rgba(245, 125, 35, 0.42);
+      border-left: 6px solid var(--orange);
+      border-radius: 18px;
+      background:
+        linear-gradient(90deg, rgba(245, 125, 35, 0.13), rgba(15, 76, 196, 0.07)),
+        #fffaf4;
+      box-shadow: 0 10px 26px rgba(15, 35, 80, 0.1);
+    }
+
+    .pulse-alert-strip.is-fresh {
+      box-shadow: 0 10px 28px rgba(245, 125, 35, 0.17);
+    }
+
+    .pulse-alert-copy {
+      min-width: 0;
+    }
+
+    .pulse-alert-kicker {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 7px;
+      color: #a54504;
+      font-size: 0.72rem;
+      font-weight: 950;
+      letter-spacing: 0.075em;
+      text-transform: uppercase;
+    }
+
+    .pulse-alert-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--orange);
+      box-shadow: 0 0 0 5px rgba(245, 125, 35, 0.13);
+    }
+
+    .pulse-alert-freshness::before {
+      content: "\00b7";
+      margin-right: 7px;
+    }
+
+    .pulse-alert-title {
+      margin: 5px 0 0;
+      color: #101b3d;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.18rem, 2.1vw, 1.5rem);
+      line-height: 1.08;
+    }
+
+    .pulse-alert-summary {
+      margin: 5px 0 0;
+      color: #52627a;
+      font-size: 0.9rem;
+      line-height: 1.42;
+    }
+
+    .pulse-alert-thumbnail {
+      position: relative;
+      display: block;
+      width: 168px;
+      height: 96px;
+      overflow: hidden;
+      border: 1px solid rgba(15, 76, 196, 0.16);
+      border-radius: 14px;
+      background: #dfe8f2;
+      box-shadow: 0 8px 20px rgba(15, 35, 80, 0.14);
+    }
+
+    .pulse-alert-thumbnail img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.2s ease;
+    }
+
+    .pulse-alert-thumbnail::after {
+      content: "View";
+      position: absolute;
+      right: 7px;
+      bottom: 7px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      color: var(--white);
+      background: rgba(8, 26, 60, 0.78);
+      font-size: 0.62rem;
+      font-weight: 950;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .pulse-alert-thumbnail:hover img,
+    .pulse-alert-thumbnail:focus-visible img {
+      transform: scale(1.04);
+    }
+
+    .pulse-alert-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 0 14px;
+      border-radius: 999px;
+      color: var(--white);
+      background: var(--orange);
+      font-size: 0.84rem;
+      font-weight: 950;
+      white-space: nowrap;
+      box-shadow: 0 8px 18px rgba(245, 125, 35, 0.22);
+    }
+
+    .pulse-alert-button:hover,
+    .pulse-alert-button:focus-visible {
+      background: #db6817;
+      transform: translateY(-1px);
     }
 
     .obs-chip {
@@ -1363,7 +1522,7 @@
     .tomorrow-card {
       position: relative;
       overflow: hidden;
-      padding: clamp(22px, 4vw, 30px);
+      padding: clamp(18px, 2.5vw, 24px);
       border: 1px solid rgba(15, 76, 196, 0.16);
       border-top: 4px solid var(--orange);
       border-right: 2px solid rgba(15, 76, 196, 0.35);
@@ -1391,31 +1550,40 @@
       z-index: 1;
     }
 
+    .tomorrow-card .module-title {
+      margin-bottom: 0;
+    }
+
     .tomorrow-score {
       display: grid;
       place-items: center;
-      min-width: 82px;
-      min-height: 82px;
+      min-width: 64px;
+      min-height: 64px;
       border-radius: 50%;
       color: var(--white);
       background: linear-gradient(135deg, var(--blue), #08318b);
-      font-size: 2rem;
+      font-size: 1.55rem;
       font-weight: 950;
-      box-shadow: 0 18px 34px rgba(15, 76, 196, 0.28);
+      box-shadow: 0 12px 24px rgba(15, 76, 196, 0.22);
     }
 
     .tomorrow-card h3 {
-      margin: 18px 0 10px;
+      margin: 8px 0 7px;
       font-family: Georgia, "Times New Roman", serif;
-      font-size: clamp(2.05rem, 4.4vw, 3.35rem);
-      line-height: 0.98;
+      font-size: clamp(1.65rem, 3.2vw, 2.45rem);
+      line-height: 1.04;
       letter-spacing: 0;
     }
 
     .tomorrow-card p,
     .tomorrow-card li {
       color: var(--muted);
-      line-height: 1.48;
+      line-height: 1.4;
+    }
+
+    .tomorrow-card p {
+      margin: 0;
+      font-size: 0.95rem;
     }
 
     .tomorrow-forecast-link {
@@ -1423,8 +1591,8 @@
       align-items: center;
       justify-content: center;
       width: fit-content;
-      min-height: 42px;
-      margin-top: 10px;
+      min-height: 38px;
+      margin: 0;
       padding: 0 16px;
       border-radius: 999px;
       color: var(--white);
@@ -1444,13 +1612,13 @@
     .tomorrow-signal-strip {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
-      margin: 18px 0 14px;
+      gap: 8px;
+      margin: 13px 0 8px;
     }
 
     .tomorrow-signal {
-      min-height: 78px;
-      padding: 12px;
+      min-height: 64px;
+      padding: 10px 12px;
       border: 1px solid rgba(15, 76, 196, 0.12);
       border-radius: 14px;
       background: rgba(255, 253, 248, 0.72);
@@ -1461,13 +1629,13 @@
       display: block;
       color: var(--blue);
       font-family: Georgia, "Times New Roman", serif;
-      font-size: clamp(1.8rem, 4vw, 2.55rem);
+      font-size: clamp(1.55rem, 3vw, 2rem);
       line-height: 0.9;
     }
 
     .tomorrow-signal span {
       display: block;
-      margin-top: 7px;
+      margin-top: 5px;
       color: var(--muted);
       font-size: 0.72rem;
       font-weight: 950;
@@ -1479,55 +1647,11 @@
       color: var(--orange);
     }
 
-    .tomorrow-mini-chart {
-      position: relative;
-      min-height: 104px;
-      margin: 16px 0;
-      overflow: hidden;
-      border: 1px solid rgba(15, 76, 196, 0.14);
-      border-radius: 16px;
-      background:
-        linear-gradient(180deg, rgba(219, 232, 255, 0.75), rgba(255, 253, 248, 0.78));
-    }
-
-    .tomorrow-chart-line {
-      position: absolute;
-      left: 8%;
-      right: 9%;
-      top: 43%;
-      height: 6px;
-      border-radius: 999px;
-      background: linear-gradient(90deg, var(--orange), var(--blue));
-      transform: rotate(-4deg);
-      transform-origin: left center;
-      box-shadow: 0 12px 24px rgba(15, 76, 196, 0.14);
-    }
-
-    .tomorrow-chart-area {
-      position: absolute;
-      left: -3%;
-      right: -3%;
-      bottom: -8px;
-      height: 66%;
-      clip-path: polygon(0 100%, 0 68%, 19% 55%, 38% 62%, 59% 36%, 77% 48%, 100% 25%, 100% 100%);
-      background: rgba(15, 76, 196, 0.16);
-    }
-
-    .tomorrow-chart-label {
-      position: absolute;
-      right: 14px;
-      top: 14px;
-      display: inline-flex;
-      align-items: center;
-      min-height: 30px;
-      padding: 0 10px;
-      border-radius: 999px;
-      color: var(--white);
-      background: var(--orange);
-      font-size: 0.74rem;
-      font-weight: 950;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
+    .tomorrow-actions {
+      display: flex;
+      justify-content: flex-end;
+      padding-top: 8px;
+      border-top: 1px solid rgba(15, 76, 196, 0.12);
     }
 
     .forecast-invitation {
@@ -2366,6 +2490,22 @@
       font-style: normal;
     }
 
+    .pulse-fresh-badge {
+      display: inline-flex;
+      align-items: center;
+      margin-left: 2px;
+      padding: 4px 8px;
+      border: 1px solid rgba(245, 125, 35, 0.42);
+      border-radius: 999px;
+      color: #9a3f00;
+      background: rgba(245, 125, 35, 0.13);
+      font-size: 0.68rem;
+      font-weight: 950;
+      letter-spacing: 0.06em;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
     .pulse-dot {
       width: 11px;
       height: 11px;
@@ -2398,6 +2538,10 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
       .pulse-head,
       .pulse-dot {
         animation: none;
@@ -2672,6 +2816,26 @@
         mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent);
       }
 
+      .pulse-alert-strip {
+        grid-template-columns: minmax(0, 1fr) auto;
+        padding: 14px;
+      }
+
+      .pulse-alert-copy {
+        grid-column: 1 / -1;
+      }
+
+      .pulse-alert-button {
+        align-self: center;
+        justify-self: start;
+      }
+
+      .pulse-alert-thumbnail {
+        justify-self: start;
+        width: 150px;
+        height: 86px;
+      }
+
       .forecast-invitation {
         grid-template-columns: auto minmax(0, 1fr);
         gap: 12px;
@@ -2778,21 +2942,32 @@
       }
 
       .tomorrow-score {
-        min-width: 54px;
-        min-height: 54px;
-        font-size: 1.25rem;
+        min-width: 50px;
+        min-height: 50px;
+        font-size: 1.15rem;
       }
 
       .tomorrow-card h3 {
-        font-size: 1.58rem;
+        font-size: 1.48rem;
       }
 
       .tomorrow-signal-strip {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
       }
 
-      .tomorrow-mini-chart {
-        min-height: 88px;
+      .tomorrow-signal {
+        min-height: 58px;
+        padding: 9px 8px;
+      }
+
+      .tomorrow-signal strong {
+        font-size: 1.45rem;
+      }
+
+      .tomorrow-signal span {
+        font-size: 0.61rem;
+        letter-spacing: 0.05em;
       }
 
       .sky-home-copy,
@@ -3022,7 +3197,7 @@
       <nav class="site-nav" aria-label="Main navigation">
         <a href="#now">Now</a>
         <a class="forecast-nav-link" href="/forecast.html">Tim's 4-Day Forecast</a>
-        <a href="#pulse-preview">Weather Pulse</a>
+        <a href="#pulse-preview">Weather Pulse <span class="pulse-nav-badge" id="pulseNavBadge" hidden>New</span></a>
         <a href="/hiking.html">Hiking Guidance</a>
         <a href="/water.html">Water Conditions</a>
         <a href="/i26-connector.html">I-26 Connector</a>
@@ -3038,6 +3213,22 @@
         <div class="obs-chip" id="obsRainChance">Rain chance --</div>
         <div class="obs-chip" id="obsClouds">Clouds --</div>
       </div>
+
+      <aside class="pulse-alert-strip" id="pulseAlertStrip" aria-labelledby="pulseAlertTitle" hidden>
+        <div class="pulse-alert-copy">
+          <div class="pulse-alert-kicker">
+            <span class="pulse-alert-dot" aria-hidden="true"></span>
+            <span>828 Weather Pulse</span>
+            <span class="pulse-alert-freshness" id="pulseAlertFreshness">Updated just now</span>
+          </div>
+          <h2 class="pulse-alert-title" id="pulseAlertTitle">What I'm watching in the weather right now.</h2>
+          <p class="pulse-alert-summary" id="pulseAlertSummary"></p>
+        </div>
+        <a class="pulse-alert-thumbnail" id="pulseAlertThumbnail" href="#pulse-preview" aria-label="View the latest Weather Pulse media" hidden>
+          <img id="pulseAlertThumbnailImage" alt="Latest Weather Pulse media thumbnail" decoding="async" />
+        </a>
+        <a class="pulse-alert-button" href="#pulse-preview" aria-label="Read the latest 828 Weather Pulse update">Read Pulse &rarr;</a>
+      </aside>
     </div>
   </header>
 
@@ -3230,17 +3421,9 @@
               <span>Rain chance</span>
             </div>
           </div>
-          <div class="tomorrow-mini-chart" aria-hidden="true">
-            <span class="tomorrow-chart-area"></span>
-            <span class="tomorrow-chart-line"></span>
-            <span class="tomorrow-chart-label">Tim's read</span>
+          <div class="tomorrow-actions">
+            <a class="tomorrow-forecast-link" href="/forecast.html">See Tim's full 4-day forecast &rarr;</a>
           </div>
-          <ul id="tomorrowBullets">
-            <li>Clouds may linger early.</li>
-            <li>Breaks of sun decide how warm it feels.</li>
-            <li>Rain risk stays worth watching.</li>
-          </ul>
-          <a class="tomorrow-forecast-link" href="/forecast.html">See Tim's full 4-day forecast &rarr;</a>
         </aside>
       </section>
 
@@ -3256,10 +3439,11 @@
       <section class="pulse-card-lite" id="pulse-preview" aria-label="Weather Pulse">
         <div class="pulse-layout">
           <div>
-            <div class="pulse-head"><span class="pulse-dot"></span>828 Weather Pulse</div>
+            <div class="pulse-head"><span class="pulse-dot"></span>Live Weather Note</div>
             <time class="pulse-published-meta" id="pulsePublishedMeta">
-              <span>Published</span>
+              <span>Updated</span>
               <strong>Checking latest Pulse...</strong>
+              <b class="pulse-fresh-badge" id="pulseFreshBadge" hidden>Fresh Update</b>
             </time>
             <h2 id="pulsePreviewTitle">What I'm watching in the weather right now.</h2>
             <p id="pulsePreviewText">
@@ -3613,6 +3797,11 @@
     } from "./js/hiking-home-card.js?v=20260607-narrative";
     import { buildHumanActionIntelFS } from "./js/intel/human-action-feelscore.js?v=20260526-rain-window";
     import { buildSkyConditionRead } from "./js/intel/sky-read.js";
+    import {
+      applyPrecipOverrideToNarrative,
+      getCurrentPrecipOverride
+    } from "./js/intel/precip-override.js?v=20260628-precip-first";
+    import { buildDuskSkyFallback, findTodaySolarTimes, getSkyTimePhase } from "./js/intel/sky-time.js?v=20260627-dusk";
     import { loadAndRenderAlerts } from "./js/modules/renderAlerts.js";
     import { subscribeUserToPush } from "./js/notifications/subscribeClient.js?v=20260518-vapid-trim";
     import { getWaterPageInputs } from "./js/water/water-data.js?v=20260621-water";
@@ -3631,6 +3820,9 @@
     let latestSkyIntel = null;
     let latestObservationClouds = null;
     let latestSkyWeatherContext = null;
+    let latestPrecipOverride = null;
+    let latestSunriseAt = null;
+    let latestSunsetAt = null;
     const STORM_NARRATIVE_MAX_MS = 10 * 60 * 1000;
     const STORM_NARRATIVE_STORAGE_KEY = "avlweather.stormNarrativeWindow";
     const STORM_LEVEL_RANK = { none: 0, watching: 1, developing: 2, strong: 3 };
@@ -3809,9 +4001,11 @@
       return localTimeParts().hour;
     }
 
-    function isDaylightUiWindow() {
-      const hour = localHour();
-      return hour >= 6 && hour < 20;
+    function currentSkyTimePhase() {
+      return getSkyTimePhase({
+        sunriseAt: latestSunriseAt,
+        sunsetAt: latestSunsetAt
+      });
     }
 
     function nighttimeSkyFallback() {
@@ -4157,16 +4351,17 @@
 
       const stamp = formatPulsePublished(value);
       if (!stamp) {
-        el.innerHTML = `<span>Published</span><strong>Timestamp unavailable</strong>`;
+        el.innerHTML = `<span>Updated</span><strong>Timestamp unavailable</strong><b class="pulse-fresh-badge" id="pulseFreshBadge" hidden>Fresh Update</b>`;
         el.removeAttribute("datetime");
         return;
       }
 
       el.dateTime = stamp.date.toISOString();
       el.innerHTML = `
-        <span>Published</span>
+        <span>Updated</span>
         <strong>${stamp.relative}</strong>
         <em>${stamp.exact}</em>
+        <b class="pulse-fresh-badge" id="pulseFreshBadge" hidden>Fresh Update</b>
       `;
     }
 
@@ -4429,6 +4624,75 @@
       return `${text.slice(0, 187).replace(/\s+\S*$/, "")}...`;
     }
 
+    function pulseHeadline(pulse = {}) {
+      const candidate = String(pulse.headline || pulse.title || "").trim();
+      if (candidate && !/^(828\s+)?weather\s+pulse$/i.test(candidate)) return candidate;
+      return "What I'm watching in the weather right now.";
+    }
+
+    function isPulseFresh(value) {
+      const stamp = value ? new Date(value).getTime() : NaN;
+      if (!Number.isFinite(stamp)) return false;
+      const age = Date.now() - stamp;
+      return age >= -5 * 60 * 1000 && age <= 6 * 60 * 60 * 1000;
+    }
+
+    function pulseUpdatedAt(pulse = {}) {
+      return pulse.editedAt || pulse.timestamp || null;
+    }
+
+    function pulseThumbnailUrl(url = "", mediaType = "") {
+      if (!url) return "";
+
+      const isCloudinary = url.includes("res.cloudinary.com") && url.includes("/upload/");
+      const isVideo = mediaType === "video" || /\.(mp4|mov|webm)(?:$|\?)/i.test(url) || url.includes("/video/upload/");
+
+      if (!isCloudinary) return isVideo ? "" : url;
+
+      const transform = isVideo
+        ? "so_0,c_fill,g_auto,h_192,w_336,q_auto"
+        : "c_fill,g_auto,h_192,w_336,q_auto,f_auto";
+      const transformed = url.replace("/upload/", `/upload/${transform}/`);
+
+      return isVideo
+        ? transformed.replace(/\.(mp4|mov|webm)(\?.*)?$/i, ".jpg$2")
+        : transformed;
+    }
+
+    function renderPulseVisibility(pulse, text) {
+      const strip = document.querySelector("#pulseAlertStrip");
+      const navBadge = document.querySelector("#pulseNavBadge");
+      const freshBadge = document.querySelector("#pulseFreshBadge");
+      const thumbnail = document.querySelector("#pulseAlertThumbnail");
+      const thumbnailImage = document.querySelector("#pulseAlertThumbnailImage");
+      const updatedAt = pulseUpdatedAt(pulse);
+      const stamp = formatPulsePublished(updatedAt);
+      const fresh = isPulseFresh(updatedAt);
+      const thumbnailUrl = pulseThumbnailUrl(pulse.mediaUrl || pulse.image || "", pulse.mediaType || "");
+
+      if (strip) {
+        document.querySelector("#pulseAlertTitle").textContent = pulseHeadline(pulse);
+        document.querySelector("#pulseAlertSummary").textContent = text;
+        document.querySelector("#pulseAlertFreshness").textContent = stamp ? `Updated ${stamp.relative.toLowerCase()}` : "Latest update";
+        strip.classList.toggle("is-fresh", fresh);
+        strip.hidden = false;
+      }
+
+      if (thumbnail && thumbnailImage) {
+        if (thumbnailUrl) {
+          thumbnailImage.src = thumbnailUrl;
+          thumbnail.href = "#pulse-preview";
+          thumbnail.hidden = false;
+        } else {
+          thumbnail.removeAttribute("href");
+          thumbnail.hidden = true;
+        }
+      }
+
+      if (navBadge) navBadge.hidden = !fresh;
+      if (freshBadge) freshBadge.hidden = !fresh;
+    }
+
     function pulseMediaMarkup(url, mediaType) {
       if (!url) {
         return `
@@ -4476,11 +4740,12 @@
         mediaType: isVideo ? "video" : "image"
       };
 
-      document.querySelector("#pulsePreviewTitle").textContent = "What I'm watching in the weather right now.";
-      renderPulsePublished(pulse.timestamp);
+      document.querySelector("#pulsePreviewTitle").textContent = pulseHeadline(pulse);
+      renderPulsePublished(pulseUpdatedAt(pulse));
       if (text) {
         document.querySelector("#pulsePreviewText").textContent = text;
       }
+      renderPulseVisibility(pulse, text || "Open the latest note from the 828 Weather Direct weather desk.");
       document.querySelector("#pulseMediaSlot").innerHTML = `
         ${pulseMediaMarkup(mediaUrl, mediaType)}
         <figcaption class="pulse-media-label" id="pulseMediaLabel">${isVideo ? "Latest video" : "Latest pulse"}</figcaption>
@@ -4849,8 +5114,10 @@
       }).format(new Date(ts)));
     }
 
-    function renderLiveFeelScore(feelscore, hourly = [], daily = [], currentHour = null, displayCurrentHour = null) {
+    function renderLiveFeelScore(feelscore, hourly = [], daily = [], currentHour = null, displayCurrentHour = null, precipOverride = null) {
       if (!feelscore) return;
+
+      feelscore = applyPrecipOverrideToNarrative(feelscore, precipOverride);
 
       const liveHour = primaryLiveHour(hourly, currentHour);
       const payloadScore = normalizeScore100(feelscore.score);
@@ -4974,7 +5241,6 @@
       const temps = tomorrowHours.map((hour) => Number(hour.temperatureF)).filter(Number.isFinite);
       const scores = tomorrowHours.map(comfortScore100).filter(Number.isFinite);
       const dewpoints = tomorrowHours.map((hour) => Number(hour.dewpointF)).filter(Number.isFinite);
-      const winds = tomorrowHours.map((hour) => Number(hour.windSpeed)).filter(Number.isFinite);
       const cloudValues = tomorrowHours.map((hour) => Number(hour.cloudCover)).filter(Number.isFinite);
       const rainValues = tomorrowHours.map((hour) => Number(hour.precipProbability)).filter(Number.isFinite);
 
@@ -4982,7 +5248,6 @@
       const high = Number.isFinite(Number(day?.tempMax)) ? Number(day.tempMax) : Math.max(...temps);
       const score = scores.length ? Math.round(scores.reduce((sum, value) => sum + value, 0) / scores.length) : Math.round(Number(fallback.score));
       const maxDew = dewpoints.length ? Math.max(...dewpoints) : null;
-      const maxWind = winds.length ? Math.max(...winds) : null;
       const cloudAvg = cloudValues.length ? cloudValues.reduce((sum, value) => sum + value, 0) / cloudValues.length : Number(day?.cloudCover);
       const rainChance = rainValues.length ? Math.max(...rainValues) : Number(day?.precipProbability);
       const cloudPhrase = Number.isFinite(cloudAvg)
@@ -5015,13 +5280,7 @@
         low,
         rainChance,
         headline,
-        narrative: `${tempSentence} ${detailSentence.charAt(0).toUpperCase()}${detailSentence.slice(1)}`,
-        bullets: [
-          Number.isFinite(high) ? `Afternoon high near ${Math.round(high)}°` : null,
-          Number.isFinite(low) ? `Morning low near ${Math.round(low)}°` : null,
-          Number.isFinite(rainChance) ? `Rain chance ${formatPercent(rainChance)}` : null,
-          Number.isFinite(maxWind) ? `Peak wind near ${Math.round(maxWind)} mph` : null
-        ].filter(Boolean).slice(0, 3)
+        narrative: `${tempSentence} ${detailSentence.charAt(0).toUpperCase()}${detailSentence.slice(1)}`
       };
     }
 
@@ -5037,13 +5296,6 @@
       updateText("#tomorrowRain", Number.isFinite(summary.rainChance) ? formatPercent(summary.rainChance) : "--");
       document.querySelector("#tomorrowHeadline").textContent = summary.headline;
       document.querySelector("#tomorrowNarrative").textContent = summary.narrative;
-
-      const bullets = Array.isArray(summary.bullets) ? summary.bullets.slice(0, 3) : [];
-      if (bullets.length) {
-        document.querySelector("#tomorrowBullets").innerHTML = bullets
-          .map((bullet) => `<li>${cleanSubstackText(bullet)}</li>`)
-          .join("");
-      }
     }
 
     async function hydrateLiveComfortModules() {
@@ -5054,9 +5306,16 @@
           .filter(Boolean)
           .sort((a, b) => a.timestamp - b.timestamp);
         const daily = Array.isArray(weather?.daily) ? weather.daily : [];
+        const solarTimes = findTodaySolarTimes(daily);
+        latestSunriseAt = solarTimes.sunriseAt;
+        latestSunsetAt = solarTimes.sunsetAt;
         const current = weather?.current || weather?.current_conditions || null;
         const currentHour = normalizeCurrentConditions(current);
         const displayCurrentHour = observationTempHour(weather);
+        latestPrecipOverride = getCurrentPrecipOverride({
+          current,
+          hourly
+        });
         latestSkyWeatherContext = buildSkyWeatherContext(displayCurrentHour || currentHour || hourly[0]);
         updateRadarHomeSignalFromWeather({ ...weather, hourly });
 
@@ -5067,7 +5326,14 @@
           tempest: weather?.current_conditions || null
         });
 
-        renderLiveFeelScore(human?.feelscore, hourly, daily, currentHour, displayCurrentHour);
+        renderLiveFeelScore(
+          human?.feelscore,
+          hourly,
+          daily,
+          currentHour,
+          displayCurrentHour,
+          latestPrecipOverride
+        );
         renderNextSix(hourly);
         renderTomorrowLive(human?.tomorrow, hourly, daily);
       } catch (error) {
@@ -5092,7 +5358,9 @@
           data = await res.json();
         }
         let weatherContext = latestSkyWeatherContext;
-        if (!weatherContext) {
+        // Refresh the precipitation decision with every sky update so active-rain
+        // wording expires promptly when Tempest returns to zero.
+        {
           try {
             const weather = await fetchRouteJson("weather&type=hourly&lat=35.5951&lon=-82.5515", { cacheBust: false });
             const hourly = (Array.isArray(weather?.hourly) ? weather.hourly : [])
@@ -5100,8 +5368,15 @@
               .filter(Boolean)
               .sort((a, b) => a.timestamp - b.timestamp);
             const currentHour = normalizeCurrentConditions(weather?.current || weather?.current_conditions || null);
+            latestPrecipOverride = getCurrentPrecipOverride({
+              current: weather?.current || weather?.current_conditions || null,
+              hourly
+            });
             weatherContext = buildSkyWeatherContext(observationTempHour(weather) || currentHour || hourly[0]);
             latestSkyWeatherContext = weatherContext;
+            const solarTimes = findTodaySolarTimes(Array.isArray(weather?.daily) ? weather.daily : []);
+            latestSunriseAt = solarTimes.sunriseAt;
+            latestSunsetAt = solarTimes.sunsetAt;
           } catch (weatherError) {
             console.warn("Sky module weather cross-check unavailable", weatherError);
           }
@@ -5114,18 +5389,31 @@
         const frameVersion = parseTimestamp(data?.timestamp) || Date.now();
         const skyStale = isSkyDataStale(data?.timestamp);
         const useLiveThumbnail = metrics.source === "live-thumbnail" || skyStale;
-        const daylightWindow = isDaylightUiWindow();
+        const skyTimePhase = currentSkyTimePhase();
+        const daylightWindow = skyTimePhase === "day";
+        const duskWindow = skyTimePhase === "dusk";
         const cameraNightSignal = (
           metrics.mode === "night" ||
           skyIntel?.atmosphericState === "night" ||
           narrative?.type === "night"
         );
-        const nighttimeFallback = daylightWindow ? null : nighttimeSkyFallback();
+        const nighttimeFallback = skyTimePhase === "night" ? nighttimeSkyFallback() : null;
+        const duskFallback = duskWindow
+          ? buildDuskSkyFallback({
+              cloudCover: weatherContext?.cloudCover ?? skyIntel?.displayCloud ?? skyIntel?.cloud ?? metrics.cloudCoverWest
+            })
+          : null;
         const daylightNightMismatch = daylightWindow && cameraNightSignal;
         const daylightFallback = daylightNightMismatch
           ? daylightSkyFallback(metrics, skyIntel)
           : null;
-        let skyNarrative = nighttimeFallback
+        let skyNarrative = duskFallback
+          ? {
+              headline: duskFallback.headline,
+              detail: duskFallback.detail,
+              type: "dusk"
+            }
+          : nighttimeFallback
           ? {
               headline: nighttimeFallback.headline,
               detail: nighttimeFallback.detail,
@@ -5138,17 +5426,23 @@
               type: "daylight-analysis"
             }
           : narrative;
-        let skyLabel = nighttimeFallback
+        let skyLabel = duskFallback
+          ? duskFallback.label
+          : nighttimeFallback
           ? nighttimeFallback.label
           : daylightNightMismatch
           ? daylightFallback.label
           : labelize(skyIntel?.atmosphericState);
-        const skyCloud = nighttimeFallback
+        const skyCloud = duskFallback
+          ? duskFallback.cloud
+          : nighttimeFallback
           ? nighttimeFallback.cloud
           : daylightNightMismatch
           ? daylightFallback.cloud
           : skyIntel?.cloud;
-        let skyConfidence = nighttimeFallback
+        let skyConfidence = duskFallback
+          ? duskFallback.confidence
+          : nighttimeFallback
           ? nighttimeFallback.confidence
           : daylightNightMismatch
           ? daylightFallback.confidence
@@ -5156,7 +5450,7 @@
 
         const stormPayload = await stormPromise;
         const stormSignal = stormPayload?.signal;
-        const stormActive = daylightWindow && stormSignal?.active && stormSignal.headline && stormSignal.detail;
+        const stormActive = !nighttimeFallback && stormSignal?.active && stormSignal.headline && stormSignal.detail;
         const nextStormLevel = stormActive ? (stormSignal.level || "watching") : "none";
         const currentRank = STORM_LEVEL_RANK[stormNarrativeLevel] || 0;
         const nextRank = STORM_LEVEL_RANK[nextStormLevel] || 0;
@@ -5190,6 +5484,28 @@
           applyConditionalHomepageFeatures();
         }
 
+        const precipNarrativeAllowed = latestPrecipOverride?.active &&
+          (latestPrecipOverride.mode === "active" || !stormNarrativeWithinWindow);
+        if (precipNarrativeAllowed) {
+          skyNarrative = {
+            headline: latestPrecipOverride.skyPhrase || latestPrecipOverride.headline,
+            detail: latestPrecipOverride.summary,
+            type: `precip-${latestPrecipOverride.mode}`
+          };
+          skyLabel = latestPrecipOverride.mode === "active"
+            ? latestPrecipOverride.type === "storm"
+              ? "Storm Now"
+              : latestPrecipOverride.type === "snow"
+                ? "Snow Now"
+                : "Rain Now"
+            : "Recent Rain";
+          skyConfidence = latestPrecipOverride.confidence === "high"
+            ? Math.max(Number(skyConfidence) || 0, 0.9)
+            : Math.max(Number(skyConfidence) || 0, 0.7);
+          liveRadarSignalActive = true;
+          applyConditionalHomepageFeatures();
+        }
+
         document.querySelector("#skyHomeImage").src = skyImageUrl(frameVersion, useLiveThumbnail);
         document.querySelector("#skyHomeLabel").textContent = skyLabel;
         document.querySelector("#skyHomeCapture").textContent = skyStale
@@ -5198,9 +5514,9 @@
         document.querySelector("#skyHomeHeadline").textContent = skyNarrative?.headline || "Reading the Asheville sky.";
         document.querySelector("#skyHomeDetail").textContent = skyNarrative?.detail || "The camera snapshot adds visual context to the forecast.";
         setText("#heroSkyCondition", skyNarrative?.headline || skyLabel || "Current sky");
-        document.querySelector("#skyHomeCloud").textContent = nighttimeFallback ? "--" : daylightNightMismatch ? pct(skyCloud) : skyRead.cloudMetric;
-        document.querySelector("#skyHomeLight").textContent = nighttimeFallback ? "Night" : daylightNightMismatch ? (metrics.sunlightDetected ? labelize(metrics.sunlightLevel) : "Low") : skyRead.sunlightMetric;
-        document.querySelector("#skyHomeConfidence").textContent = nighttimeFallback ? "Low" : daylightNightMismatch ? pct(skyConfidence) : skyRead.confidenceMetric;
+        document.querySelector("#skyHomeCloud").textContent = nighttimeFallback ? "--" : duskFallback ? pct(skyCloud) : daylightNightMismatch ? pct(skyCloud) : skyRead.cloudMetric;
+        document.querySelector("#skyHomeLight").textContent = nighttimeFallback ? "Night" : duskFallback ? "Twilight" : daylightNightMismatch ? (metrics.sunlightDetected ? labelize(metrics.sunlightLevel) : "Low") : skyRead.sunlightMetric;
+        document.querySelector("#skyHomeConfidence").textContent = nighttimeFallback ? "Low" : duskFallback ? pct(skyConfidence) : daylightNightMismatch ? pct(skyConfidence) : skyRead.confidenceMetric;
         renderCloudObservationChip();
       } catch (error) {
         console.warn("Sky module unavailable", error);
@@ -5221,6 +5537,7 @@
     await Promise.allSettled([liveComfortReady, skyReady]);
     hideHomeSplash(0);
     setInterval(hydrateObservationChips, 5 * 60 * 1000);
+    setInterval(hydrateLiveComfortModules, 60 * 1000);
     setInterval(hydrateHomeHikingCard, 5 * 60 * 1000);
     setInterval(hydrateHomeWaterCard, 10 * 60 * 1000);
     setInterval(hydrateSkyModule, 60 * 1000);
