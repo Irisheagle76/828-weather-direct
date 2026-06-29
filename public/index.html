@@ -51,13 +51,27 @@
       position: fixed;
       inset: 0;
       z-index: 10000;
+      overflow: hidden;
       display: grid;
       place-items: center;
       padding: 24px;
-      color: var(--white);
+      color: var(--ink);
       background:
-        linear-gradient(145deg, rgba(8, 23, 57, 0.96), rgba(9, 37, 95, 0.94) 54%, rgba(245, 125, 35, 0.86));
-      transition: opacity 0.55s ease, visibility 0.55s ease;
+        linear-gradient(180deg, rgba(255, 250, 242, 0.97), rgba(238, 244, 255, 0.98)),
+        var(--paper);
+      cursor: progress;
+      transition: opacity 0.42s ease, visibility 0.42s ease;
+    }
+
+    .home-splash::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(rgba(15, 76, 196, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15, 76, 196, 0.05) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: linear-gradient(180deg, transparent, #000 16%, #000 74%, transparent);
     }
 
     .home-splash.is-hidden {
@@ -67,162 +81,151 @@
     }
 
     .home-splash-card {
-      width: min(920px, 100%);
+      position: relative;
+      z-index: 1;
+      overflow: hidden;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(260px, 0.72fr);
-      gap: clamp(20px, 4vw, 38px);
-      align-items: center;
-      padding: clamp(22px, 4vw, 42px);
-      border: 1px solid rgba(255, 253, 248, 0.18);
-      border-radius: 22px;
-      background: rgba(12, 27, 54, 0.68);
-      box-shadow: 0 28px 80px rgba(3, 12, 29, 0.42);
+      gap: 16px;
+      width: min(390px, 100%);
+      padding: 16px;
+      border: 1px solid rgba(15, 76, 196, 0.14);
+      border-radius: 8px;
+      background: rgba(255, 253, 248, 0.88);
+      box-shadow: 0 28px 70px rgba(11, 30, 67, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.92);
       backdrop-filter: blur(18px);
     }
 
     .home-splash-kicker {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      color: #ffdca3;
-      font-size: 0.84rem;
+      color: var(--orange);
+      font-size: 0.74rem;
       font-weight: 950;
-      letter-spacing: 0.16em;
+      letter-spacing: 0.13em;
       text-transform: uppercase;
     }
 
-    .home-splash-kicker::before {
-      content: "";
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: var(--orange);
-      box-shadow: 0 0 0 7px rgba(245, 125, 35, 0.18);
-      animation: splashPulse 1.5s ease-in-out infinite;
-    }
-
     .home-splash-title {
-      margin: 14px 0 0;
+      margin: 5px 0 0;
       font-family: Georgia, "Times New Roman", serif;
-      font-size: clamp(3.2rem, 10vw, 6.6rem);
-      line-height: 0.86;
+      font-size: clamp(2.5rem, 10vw, 3.5rem);
+      line-height: 0.94;
       letter-spacing: 0;
     }
 
     .home-splash-title span {
-      display: block;
-      color: #ffb15f;
+      color: var(--blue);
     }
 
     .home-splash-copy {
-      max-width: 590px;
-      margin: 18px 0 0;
-      color: rgba(255, 253, 248, 0.8);
-      font-size: clamp(1rem, 2.2vw, 1.28rem);
-      line-height: 1.5;
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      font-weight: 750;
+      line-height: 1.35;
     }
 
-    .home-splash-signals {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 24px;
-    }
-
-    .home-splash-signal {
-      display: inline-flex;
-      align-items: center;
-      min-height: 38px;
-      padding: 0 13px;
-      border: 1px solid rgba(255, 253, 248, 0.2);
-      border-radius: 999px;
-      color: rgba(255, 253, 248, 0.9);
-      background: rgba(255, 253, 248, 0.09);
-      font-weight: 900;
-    }
-
-    .home-splash-signal.primary {
-      color: #0f2446;
-      background: #ffdca3;
-      border-color: transparent;
-    }
-
-    .home-splash-media {
+    .home-splash-sky {
       position: relative;
+      min-height: 180px;
       overflow: hidden;
-      min-height: 290px;
-      border-radius: 18px;
-      background: #0b1629;
-      box-shadow: inset 0 0 0 1px rgba(255, 253, 248, 0.18);
+      border-radius: 8px;
+      background: linear-gradient(180deg, #dbe8ff 0%, #fff4df 64%, #d9ecdf 100%);
     }
 
-    .home-splash-media img {
-      width: 100%;
-      height: 100%;
-      min-height: 290px;
-      object-fit: cover;
-      opacity: 0.82;
-      filter: saturate(1.1) contrast(1.05);
-      transform: scale(1.03);
+    .home-splash-sun {
+      position: absolute;
+      top: 26px;
+      right: 46px;
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 0 13px rgba(247, 200, 115, 0.18), 0 14px 34px rgba(245, 125, 35, 0.28);
+      animation: homeSplashSun 1.8s ease-in-out infinite;
     }
 
-    .home-splash-media::after {
+    .home-splash-cloud {
+      position: absolute;
+      top: 72px;
+      left: 36px;
+      width: 112px;
+      height: 23px;
+      border-radius: 999px;
+      background: rgba(255, 253, 248, 0.92);
+      box-shadow: 0 10px 24px rgba(11, 30, 67, 0.08);
+      animation: homeSplashDrift 2.2s ease-in-out infinite;
+    }
+
+    .home-splash-cloud::before,
+    .home-splash-cloud::after {
       content: "";
       position: absolute;
-      inset: 0;
-      background: linear-gradient(180deg, rgba(10, 24, 51, 0.08), rgba(10, 24, 51, 0.64));
+      bottom: 7px;
+      border-radius: 50%;
+      background: inherit;
     }
 
-    .home-splash-media-label {
-      position: absolute;
+    .home-splash-cloud::before {
       left: 18px;
-      right: 18px;
-      bottom: 18px;
-      z-index: 1;
-      display: flex;
-      align-items: end;
-      justify-content: space-between;
-      gap: 14px;
+      width: 33px;
+      height: 33px;
     }
 
-    .home-splash-media-label strong {
-      display: block;
-      font-family: Georgia, "Times New Roman", serif;
-      font-size: clamp(1.5rem, 4vw, 2.25rem);
-      line-height: 0.95;
+    .home-splash-cloud::after {
+      right: 17px;
+      width: 25px;
+      height: 25px;
     }
 
-    .home-splash-media-label span {
-      display: inline-flex;
-      align-items: center;
-      min-height: 34px;
-      padding: 0 12px;
+    .home-splash-ridge {
+      position: absolute;
+      right: -10%;
+      bottom: 0;
+      left: -10%;
+      height: 90px;
+      clip-path: polygon(0 70%, 12% 46%, 24% 62%, 36% 28%, 50% 58%, 64% 34%, 78% 60%, 91% 36%, 100% 64%, 100% 100%, 0 100%);
+      background: linear-gradient(180deg, #247756, #142033);
+    }
+
+    .home-splash-progress {
+      overflow: hidden;
+      height: 7px;
       border-radius: 999px;
-      color: var(--white);
-      background: var(--orange);
-      font-size: 0.78rem;
-      font-weight: 950;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      white-space: nowrap;
+      background: rgba(15, 76, 196, 0.12);
     }
 
-    @keyframes splashPulse {
-      0%, 100% {
-        transform: scale(1);
-        box-shadow: 0 0 0 7px rgba(245, 125, 35, 0.18);
-      }
-      50% {
-        transform: scale(1.16);
-        box-shadow: 0 0 0 11px rgba(245, 125, 35, 0.08);
-      }
+    .home-splash-progress-bar {
+      width: 48%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--blue), var(--orange));
+      animation: homeSplashProgress 1.05s ease-in-out infinite;
+    }
+
+    @keyframes homeSplashSun {
+      50% { transform: translateY(4px); }
+    }
+
+    @keyframes homeSplashDrift {
+      50% { transform: translateX(12px); }
+    }
+
+    @keyframes homeSplashProgress {
+      0% { transform: translateX(-110%); }
+      70%, 100% { transform: translateX(220%); }
     }
 
     @media (prefers-reduced-motion: reduce) {
       .home-splash,
-      .home-splash-kicker::before {
+      .home-splash-sun,
+      .home-splash-cloud,
+      .home-splash-progress-bar {
         animation: none;
         transition: none;
+      }
+
+      .home-splash-progress-bar {
+        width: 100%;
+        transform: none;
       }
     }
 
@@ -232,32 +235,11 @@
       }
 
       .home-splash-card {
-        grid-template-columns: 1fr;
-        gap: 18px;
-        padding: 22px;
-        border-radius: 18px;
+        padding: 14px;
       }
 
-      .home-splash-media {
-        min-height: 210px;
-        order: -1;
-      }
-
-      .home-splash-media img {
-        min-height: 210px;
-      }
-
-      .home-splash-title {
-        font-size: clamp(3rem, 17vw, 4.8rem);
-      }
-
-      .home-splash-copy {
-        font-size: 1rem;
-      }
-
-      .home-splash-media-label {
-        align-items: start;
-        flex-direction: column;
+      .home-splash-sky {
+        min-height: 165px;
       }
     }
 
@@ -3162,25 +3144,19 @@
 <body class="splash-active">
   <div class="home-splash" id="homeSplash" role="status" aria-live="polite" aria-label="Loading 828 Weather Direct">
     <div class="home-splash-card">
-      <div>
-        <div class="home-splash-kicker">Live Asheville Weather Desk</div>
-        <h1 class="home-splash-title">828 Weather <span>Direct</span></h1>
-        <p class="home-splash-copy">
-          FeelScore, current sky, Pulse, hiking guidance, and local risk signals are coming into focus.
-        </p>
-        <div class="home-splash-signals" aria-label="Homepage tools loading">
-          <span class="home-splash-signal primary">FeelScore first</span>
-          <span class="home-splash-signal">Current sky</span>
-          <span class="home-splash-signal">828 Pulse</span>
-        </div>
+      <div class="home-splash-sky" aria-hidden="true">
+        <div class="home-splash-sun"></div>
+        <div class="home-splash-cloud"></div>
+        <div class="home-splash-ridge"></div>
       </div>
-      <figure class="home-splash-media" aria-label="Asheville sky preview">
-        <img src="js/sky-cam/frame.jpg" alt="" />
-        <figcaption class="home-splash-media-label">
-          <strong>Asheville, right now.</strong>
-          <span>Loading</span>
-        </figcaption>
-      </figure>
+      <div>
+        <div class="home-splash-kicker">Asheville weather</div>
+        <h1 class="home-splash-title">828 Weather <span>Direct</span></h1>
+        <p class="home-splash-copy">Bringing the latest local conditions into focus</p>
+      </div>
+      <div class="home-splash-progress" aria-hidden="true">
+        <div class="home-splash-progress-bar"></div>
+      </div>
     </div>
   </div>
 
@@ -3867,8 +3843,8 @@
         .replace(/\b\w/g, (char) => char.toUpperCase());
     }
 
-    const HOME_SPLASH_MIN_MS = 3600;
-    const HOME_SPLASH_MAX_MS = 9000;
+    const HOME_SPLASH_MIN_MS = 900;
+    const HOME_SPLASH_MAX_MS = 1600;
     const homeSplashStartedAt = Date.now();
     let homeSplashHideTimer = null;
 
@@ -3880,8 +3856,9 @@
       const remaining = Math.max(0, HOME_SPLASH_MIN_MS - elapsed);
       homeSplashHideTimer = window.setTimeout(() => {
         splash.classList.add("is-hidden");
+        splash.setAttribute("aria-hidden", "true");
         document.body.classList.remove("splash-active");
-        window.setTimeout(() => splash.remove(), 650);
+        window.setTimeout(() => splash.remove(), 450);
       }, Math.max(delay, remaining));
     }
 
