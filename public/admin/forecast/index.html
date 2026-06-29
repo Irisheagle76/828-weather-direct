@@ -2093,7 +2093,13 @@ async function publishForecast() {
       throw new Error(result.error || "Publish failed");
     }
 
-    setStatus("Published. Refresh /forecast.html to see the live forecast.");
+    try {
+      localStorage.setItem("forecast:last-published", result.publishedAt || new Date().toISOString());
+    } catch {
+      // Publishing still succeeds when browser storage is unavailable.
+    }
+
+    setStatus("Published. The forecast page and homepage signals are now live.");
   } catch (err) {
     console.error("Forecast publish failed:", err);
     setStatus("Publish failed. The copy buttons still work as a fallback.");
