@@ -1547,6 +1547,8 @@
 
   <script type="module">
     import { buildSkyConditionRead, isObscuredSky } from "./js/intel/sky-read.js";
+    import { buildDuskSkyFallback, getSkyTimePhase } from "./js/intel/sky-time.js?v=20260629-shared-sunset";
+    import { getCurrentPrecipOverride } from "./js/intel/precip-override.js?v=20260628-precip-first";
 
     const ASHEVILLE = {
       lat: 35.5951,
@@ -1823,24 +1825,23 @@
       const now = Date.now();
       const sunrise = daily?.sunrise;
       const sunset = daily?.sunset;
-      const twilightEnd = Number.isFinite(sunset) ? sunset + 75 * 60000 : null;
-      const glowStart = Number.isFinite(sunset) ? sunset - 45 * 60000 : null;
-      const glowEnd = Number.isFinite(sunset) ? sunset + 15 * 60000 : null;
 
       if (!Number.isFinite(sunrise) || !Number.isFinite(sunset)) {
         return { state: "pending", label: "Window pending" };
       }
 
-      if (Number.isFinite(twilightEnd) && now > twilightEnd) {
+      const skyTimePhase = getSkyTimePhase({ now, sunriseAt: sunrise, sunsetAt: sunset });
+
+      if (skyTimePhase === "night" && now > sunset) {
         return { state: "closed", label: "Closed after twilight" };
       }
 
-      if (now >= glowStart && now <= glowEnd) {
+      if (skyTimePhase === "sunset") {
         return { state: "peak", label: "Peak color window" };
       }
 
-      if (now > glowEnd && now <= twilightEnd) {
-        return { state: "afterglow", label: "Afterglow watch" };
+      if (skyTimePhase === "afterglow") {
+        return { state: "post_sunset", label: "Post-sunset check" };
       }
 
       if (now < sunrise) {
@@ -1973,7 +1974,7 @@
         label: formatTime(daily.sunset),
         detail: minutes > 0
           ? `Best color usually builds from about ${formatTime(daily.sunset - 35 * 60000)} through ${formatTime(daily.sunset + 15 * 60000)}.`
-          : "Today's sunset has passed, so the score is leaning on afterglow and current sky texture."
+          : "Today's sunset has passed, so the score is leaning on current twilight and sky texture."
       };
     }
 
@@ -1981,11 +1982,11 @@
       const cameraCloud = state.skyIntel?.cloud;
       const sunsetHour = getSunsetHour(state.weather);
       const daily = getTodayDaily(state.weather);
-      const phase = getRadiancePhase(daily);
-      const earlySetup = phase.state === "setup" || phase.state === "waiting";
-      const texture = scoreCloudTexture(cameraCloud, sunsetHour?.cloudCover, phase, state.skyIntel);
-      const moisture = scoreMoisture(sunsetHour, state.skyData, phase, state.skyIntel);
-      const clearing = scoreClearing(state.skyIntel, state.skyData, phase);
+      const rawPhase = getRadiancePhase(daily);
+      const earlySetup = rawPhase.state === "setup" || rawPhase.state === "waiting";
+      const texture = scoreCloudTexture(cameraCloud, sunsetHour?.cloudCover, rawPhase, state.skyIntel);
+      const moisture = scoreMoisture(sunsetHour, state.skyData, rawPhase, state.skyIntel);
+      const clearing = scoreClearing(state.skyIntel, state.skyData, rawPhase);
       const timing = scoreTiming(state.weather);
 
       let score = Math.round(
@@ -1997,10 +1998,55 @@
       const obscured = isObscuredSky(state.skyIntel);
       if (obscured) score = Math.min(score, earlySetup ? 56 : 48);
 
+      const currentHour = getCurrentHour(state.weather);
+      const current = state.weather?.current || state.weather?.current_conditions || {};
+      const precipAmount = pickNumber(currentHour, ["precipAmount", "precipitation", "rain"]);
+      const weatherCode = pickNumber(currentHour, ["weatherCode", "weather_code"]);
+      const precipOverride = getCurrentPrecipOverride({
+        current,
+        hourly: state.weather?.hourly || []
+      });
+      const sharedSunsetRead = buildDuskSkyFallback({
+        cameraCloud: state.skyIntel?.displayCloud ?? state.skyIntel?.cloud,
+        cloudCover: pickNumber(currentHour, ["cloudCover", "cloud_cover", "cloudcover"]),
+        phase: rawPhase.state === "peak" ? "sunset" : "afterglow",
+        sunsetAt: daily?.sunset,
+        precipActive: precipOverride?.mode === "active",
+        recentRain: precipOverride?.mode === "recent",
+        precipAmount,
+        precipProbability: pickNumber(currentHour, ["precipProbability", "precipitation_probability", "probabilityOfPrecipitation"]),
+        weatherCode,
+        sunlightDetected: state.skyIntel?.sunlightDetected,
+        sunlightLevel: state.skyIntel?.sunlightLevel,
+        obscured
+      });
+      const gateCloud = sharedSunsetRead.cloud;
+      const wetSignal = sharedSunsetRead.wetSignal;
+      const afterglowVetted = rawPhase.state === "post_sunset" && sharedSunsetRead.radianceVetted;
+      const phase = rawPhase.state === "post_sunset"
+        ? afterglowVetted
+          ? { ...rawPhase, state: "afterglow", label: "Verified afterglow" }
+          : {
+              ...rawPhase,
+              state: "twilight",
+              label: wetSignal
+                ? "Wet twilight"
+                : Number.isFinite(gateCloud) && gateCloud >= 0.75
+                  ? "Cloudy twilight"
+                  : "Post-sunset check"
+            }
+        : rawPhase;
+
+      const sharedSunsetCaution = (rawPhase.state === "peak" || rawPhase.state === "post_sunset") &&
+        !sharedSunsetRead.radianceVetted;
+
       return {
         phase,
         score,
-        title: phase.state === "closed" ? "Tonight's radiance window has closed"
+        afterglowVetted,
+        wetSignal,
+        title: sharedSunsetCaution ? sharedSunsetRead.headline
+          : phase.state === "closed" ? "Tonight's radiance window has closed"
           : obscured ? (earlySetup ? "Fog is muting the early setup" : "Fog is muting the sunset setup")
           : earlySetup ? "Early sunset setup"
           : score >= 90 ? "High radiance potential"
@@ -2008,7 +2054,8 @@
           : score >= 65 ? "Worth watching"
           : score >= 45 ? "Mixed sunset setup"
           : "Low color potential",
-        detail: phase.state === "closed"
+        detail: sharedSunsetCaution ? sharedSunsetRead.detail
+          : phase.state === "closed"
           ? "The useful sunset and twilight period has passed for Asheville. The sky snapshot remains here for context, and tomorrow's window will come back into focus after the next daylight cycle begins."
           : obscured
           ? "The live camera view is obscured by fog or low cloud. Forecast ingredients can still improve later, but the current sky read should stay cautious."
@@ -2139,7 +2186,7 @@
         els.daylightSummary.textContent = `For ${ASHEVILLE.label}, sunrise is ${formatTime(sunrise)} and sunset follows at ${formatTime(sunset)}.`;
       } else if (now > sunset) {
         els.solarPosition.textContent = "After sunset";
-        els.daylightSummary.textContent = `For ${ASHEVILLE.label}, sunset was ${formatTime(sunset)}. The afterglow window usually fades within 15 to 25 minutes.`;
+        els.daylightSummary.textContent = `For ${ASHEVILLE.label}, sunset was ${formatTime(sunset)}. Remaining twilight depends on the live cloud, rain, and western-light signals.`;
       } else {
         const remaining = formatDuration(sunset - now);
         els.solarPosition.textContent = `${Math.round(progress * 100)}% of daylight`;
@@ -2308,25 +2355,23 @@
     }
 
     function renderSky() {
-      const narrative = state.narrative;
-      const skyIntel = state.skyIntel;
       const captureVersion = parseTimestamp(state.skyData?.timestamp) || Date.now();
       const skyStale = isSkyDataStale(state.skyData?.timestamp);
       const staleNightAnalysis = skyStale && state.skyData?.metrics?.mode === "night" && isCurrentDaylight();
       const skyRead = buildSkyConditionRead({
         camera: state.skyData,
         previous: state.skyIntel,
-        weatherContext: buildSkyWeatherContext(),
-        useLiveNarrative: staleNightAnalysis,
-        liveNarrative: staleNightAnalysis ? buildLiveViewNarrative() : null
+        weatherContext: buildSkyWeatherContext()
       });
-      const liveNarrative = skyRead.narrative;
-      const skyLabel = skyRead.label;
+      state.skyIntel = skyRead.skyIntel;
+      state.narrative = skyRead.narrative;
+      const liveNarrative = staleNightAnalysis ? buildLiveViewNarrative() : skyRead.narrative;
+      const skyLabel = staleNightAnalysis ? "Live Sky" : skyRead.label;
 
       els.skyChip.textContent = skyLabel;
       els.heroSky.textContent = skyLabel;
-      els.skyHeadline.textContent = liveNarrative?.headline || narrative?.headline || "Reading the western sky.";
-      els.skyDetail.textContent = liveNarrative?.detail || narrative?.detail || "The camera snapshot will update automatically.";
+      els.skyHeadline.textContent = liveNarrative?.headline || "Reading the western sky.";
+      els.skyDetail.textContent = liveNarrative?.detail || "The camera snapshot will update automatically.";
       els.liveStatus.textContent = skyStale
         ? "Live sky image active"
         : `Camera captured ${formatCaptureTime(state.skyData?.timestamp)}`;
@@ -2503,7 +2548,7 @@
         after: {
           title: "After sunset",
           steps: [
-            ["Stay", sunset ? `Give the sky until about ${formatTime(sunset + 15 * 60000)} if the horizon is still glowing.` : "Afterglow can continue for 10 to 20 minutes when cloud bases stay lit."],
+            ["Stay", sunset ? `Give the sky until about ${formatTime(sunset + 15 * 60000)} only if the western horizon is still visibly lit.` : "Stay only while the western horizon and cloud bases remain visibly lit."],
             ["Scan", "Pink and orange often peak after the sun is gone, especially with broken mid-level clouds."],
             ["Call it", "If the cloud deck turns flat gray and the western edge closes, the best color window is probably done."]
           ]

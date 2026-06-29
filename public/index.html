@@ -263,6 +263,7 @@
     }
 
     .mock-brand-row {
+      position: relative;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -283,6 +284,9 @@
     }
 
     .mock-notify {
+      flex: 0 0 auto;
+      width: max-content;
+      max-width: 48vw;
       min-height: 38px;
       padding: 0 14px;
       border: 1px solid var(--line);
@@ -2820,7 +2824,38 @@
 
     @media (max-width: 900px) {
       .mock-brand-row {
-        display: grid;
+        display: block;
+        min-height: 64px;
+      }
+
+      .mock-brand-row > div {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .mock-brand-title {
+        width: calc(100% - min(46vw, 190px));
+        font-size: clamp(1.05rem, 5vw, 1.35rem);
+        line-height: 1.05;
+        letter-spacing: -0.02em;
+        white-space: nowrap;
+      }
+
+      .mock-brand-sub {
+        width: 100%;
+        margin-top: 10px;
+        font-size: clamp(0.62rem, 2.8vw, 0.82rem);
+        letter-spacing: -0.01em;
+        white-space: nowrap;
+      }
+
+      .mock-notify {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: max-content !important;
+        max-width: 44vw;
+        white-space: nowrap;
       }
 
       .feelscore-inner,
@@ -3119,7 +3154,13 @@
       }
 
       .mock-brand-title {
-        font-size: 1.45rem;
+        font-size: clamp(1rem, 5vw, 1.2rem);
+      }
+
+      .mock-notify {
+        min-height: 36px;
+        padding-inline: 9px;
+        font-size: 0.74rem;
       }
 
       .feelscore-inner,
@@ -3887,7 +3928,7 @@
       applyPrecipOverrideToNarrative,
       getCurrentPrecipOverride
     } from "./js/intel/precip-override.js?v=20260628-precip-first";
-    import { buildDuskSkyFallback, findTodaySolarTimes, getSkyTimePhase } from "./js/intel/sky-time.js?v=20260627-dusk";
+    import { buildDuskSkyFallback, findTodaySolarTimes, getSkyTimePhase } from "./js/intel/sky-time.js?v=20260629-shared-sunset";
     import { loadAndRenderAlerts } from "./js/modules/renderAlerts.js";
     import { subscribeUserToPush } from "./js/notifications/subscribeClient.js?v=20260518-vapid-trim";
     import { getWaterPageInputs } from "./js/water/water-data.js?v=20260621-water";
@@ -4011,6 +4052,7 @@
 
     const SKY_STALE_MS = 20 * 60 * 1000;
     const LIVE_THUMBNAIL_URL = "https://i.ytimg.com/vi/UxUU3Fc1vBw/maxresdefault_live.jpg";
+    const SKYCAM_RAW_BASE = "https://raw.githubusercontent.com/Irisheagle76/828-weather-direct/main/public/js/sky-cam";
     const RADAR_LOOP_URL = "https://radar.weather.gov/ridge/standard/KGSP_loop.gif";
     const MITCHELL_CAM_URL = "https://nchighpeaks.org/cam11/up/image.jpg";
     const params = new URLSearchParams(window.location.search);
@@ -4188,8 +4230,17 @@
         cloudCover: normalizeProbabilityValue(hour.cloudCover ?? hour.cloud_cover ?? hour.cloudcover),
         humidity: normalizeProbabilityValue(hour.relativeHumidity ?? hour.relative_humidity ?? hour.humidity),
         precipProbability: normalizeProbabilityValue(hour.precipProbability ?? hour.precipitation_probability),
+        precipAmount: Number(hour.precipAmount ?? hour.precipitation ?? hour.rain ?? 0) || 0,
         weatherCode: hour.weatherCode ?? hour.weather_code ?? null
       };
+    }
+
+    function closestCurrentForecastHour(hourly = [], now = Date.now()) {
+      return hourly.reduce((closest, hour) => {
+        if (!Number.isFinite(hour?.timestamp)) return closest;
+        if (!closest) return hour;
+        return Math.abs(hour.timestamp - now) < Math.abs(closest.timestamp - now) ? hour : closest;
+      }, null);
     }
 
     function hasRainWeatherCode(code) {
@@ -4232,11 +4283,21 @@
       return Date.now() - ts > SKY_STALE_MS;
     }
 
+    function isProductionHost() {
+      return location.hostname === "avlweather.com" || location.hostname.endsWith(".vercel.app");
+    }
+
+    function scheduledSkyDataUrl() {
+      const base = isProductionHost() ? `${SKYCAM_RAW_BASE}/output.json` : "js/sky-cam/output.json";
+      return `${base}?t=${encodeURIComponent(Date.now())}`;
+    }
+
     function skyImageUrl(frameVersion, useLiveThumbnail = false) {
       if (useLiveThumbnail) {
         return `${LIVE_THUMBNAIL_URL}?t=${encodeURIComponent(Date.now())}`;
       }
-      return `js/sky-cam/frame.jpg?t=${encodeURIComponent(frameVersion)}`;
+      const base = isProductionHost() ? `${SKYCAM_RAW_BASE}/frame.jpg` : "js/sky-cam/frame.jpg";
+      return `${base}?t=${encodeURIComponent(frameVersion)}`;
     }
 
     function cacheBustedUrl(url) {
@@ -5439,7 +5500,7 @@
           current,
           hourly
         });
-        latestSkyWeatherContext = buildSkyWeatherContext(displayCurrentHour || currentHour || hourly[0]);
+        latestSkyWeatherContext = buildSkyWeatherContext(closestCurrentForecastHour(hourly) || currentHour || hourly[0]);
         updateRadarHomeSignalFromWeather({ ...weather, hourly });
 
         const human = buildHumanActionIntelFS({
@@ -5473,12 +5534,12 @@
           });
         let data;
         try {
-          data = await fetchRouteJson("sky/current", { cacheBust: false });
-        } catch (liveError) {
-          console.warn("Live sky analysis unavailable; using scheduled snapshot", liveError);
-          const res = await fetch(`js/sky-cam/output.json?t=${Date.now()}`, { cache: "no-store" });
+          const res = await fetch(scheduledSkyDataUrl(), { cache: "no-store" });
           if (!res.ok) throw new Error("Sky data unavailable");
           data = await res.json();
+        } catch (scheduledError) {
+          console.warn("Scheduled sky analysis unavailable; using live analyzer", scheduledError);
+          data = await fetchRouteJson("sky/current", { cacheBust: false });
         }
         let weatherContext = latestSkyWeatherContext;
         // Refresh the precipitation decision with every sky update so active-rain
@@ -5495,7 +5556,7 @@
               current: weather?.current || weather?.current_conditions || null,
               hourly
             });
-            weatherContext = buildSkyWeatherContext(observationTempHour(weather) || currentHour || hourly[0]);
+            weatherContext = buildSkyWeatherContext(closestCurrentForecastHour(hourly) || currentHour || hourly[0]);
             latestSkyWeatherContext = weatherContext;
             const solarTimes = findTodaySolarTimes(Array.isArray(weather?.daily) ? weather.daily : []);
             latestSunriseAt = solarTimes.sunriseAt;
@@ -5514,7 +5575,7 @@
         const useLiveThumbnail = metrics.source === "live-thumbnail" || skyStale;
         const skyTimePhase = currentSkyTimePhase();
         const daylightWindow = skyTimePhase === "day";
-        const duskWindow = skyTimePhase === "dusk";
+        const duskWindow = skyTimePhase === "sunset" || skyTimePhase === "afterglow";
         const cameraNightSignal = (
           metrics.mode === "night" ||
           skyIntel?.atmosphericState === "night" ||
@@ -5523,7 +5584,18 @@
         const nighttimeFallback = skyTimePhase === "night" ? nighttimeSkyFallback() : null;
         const duskFallback = duskWindow
           ? buildDuskSkyFallback({
-              cloudCover: weatherContext?.cloudCover ?? skyIntel?.displayCloud ?? skyIntel?.cloud ?? metrics.cloudCoverWest
+              cloudCover: weatherContext?.cloudCover,
+              cameraCloud: skyIntel?.displayCloud ?? skyIntel?.cloud ?? metrics.cloudCoverWest,
+              phase: skyTimePhase,
+              sunsetAt: latestSunsetAt,
+              precipActive: latestPrecipOverride?.mode === "active",
+              recentRain: latestPrecipOverride?.mode === "recent",
+              precipAmount: weatherContext?.precipAmount,
+              precipProbability: weatherContext?.precipProbability,
+              weatherCode: weatherContext?.weatherCode,
+              sunlightDetected: skyIntel?.sunlightDetected ?? metrics.sunlightDetected,
+              sunlightLevel: skyIntel?.sunlightLevel ?? metrics.sunlightLevel,
+              obscured: skyRead.obscured
             })
           : null;
         const daylightNightMismatch = daylightWindow && cameraNightSignal;
@@ -5534,7 +5606,7 @@
           ? {
               headline: duskFallback.headline,
               detail: duskFallback.detail,
-              type: "dusk"
+              type: duskFallback.type
             }
           : nighttimeFallback
           ? {
@@ -5638,7 +5710,7 @@
         document.querySelector("#skyHomeDetail").textContent = skyNarrative?.detail || "The camera snapshot adds visual context to the forecast.";
         setText("#heroSkyCondition", skyNarrative?.headline || skyLabel || "Current sky");
         document.querySelector("#skyHomeCloud").textContent = nighttimeFallback ? "--" : duskFallback ? pct(skyCloud) : daylightNightMismatch ? pct(skyCloud) : skyRead.cloudMetric;
-        document.querySelector("#skyHomeLight").textContent = nighttimeFallback ? "Night" : duskFallback ? "Twilight" : daylightNightMismatch ? (metrics.sunlightDetected ? labelize(metrics.sunlightLevel) : "Low") : skyRead.sunlightMetric;
+        document.querySelector("#skyHomeLight").textContent = nighttimeFallback ? "Night" : duskFallback ? duskFallback.lightLabel : daylightNightMismatch ? (metrics.sunlightDetected ? labelize(metrics.sunlightLevel) : "Low") : skyRead.sunlightMetric;
         document.querySelector("#skyHomeConfidence").textContent = nighttimeFallback ? "Low" : duskFallback ? pct(skyConfidence) : daylightNightMismatch ? pct(skyConfidence) : skyRead.confidenceMetric;
         renderCloudObservationChip();
       } catch (error) {

@@ -127,7 +127,7 @@ export function computeSkyIntel({ camera, previous = null }) {
   const filteredSun = (
     filteredSunshineSignal ||
     satelliteHighCloudSignal ||
-    satelliteCloudMotionSignal ||
+    (satelliteCloudMotionSignal && (cloud == null || cloud >= 20)) ||
     (sunlightDetected && softShadowSignal && cloud != null && cloud >= 20)
   );
 
