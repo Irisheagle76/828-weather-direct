@@ -49,6 +49,14 @@ export function computeSkyIntel({ camera, previous = null, weatherContext = null
     (stationSolarRadiation != null && stationSolarRadiation >= 120) ||
     (stationUv != null && stationUv >= 1) ||
     (stationLux != null && stationLux >= 7000);
+  const stationSunlightLevel =
+    (stationSolarRadiation != null && stationSolarRadiation >= 500) ||
+    (stationUv != null && stationUv >= 5) ||
+    (stationLux != null && stationLux >= 30000)
+      ? "strong"
+      : stationBrightSignal
+        ? "moderate"
+        : "weak";
 
   let atmosphericState = "unknown";
   let cloudState = "unknown";
@@ -73,6 +81,11 @@ export function computeSkyIntel({ camera, previous = null, weatherContext = null
   const moderateSun = sunlightDetected && sunlightLevel === "moderate";
   const strongBlue = skyBlueSignal != null && skyBlueSignal > 1.2;
   const moderateBlue = skyBlueSignal != null && skyBlueSignal > 1.05;
+  const brightGroundSignal = groundBrightness != null && groundBrightness >= 0.34;
+  const blueOpenSceneSignal =
+    strongBlue &&
+    brightGroundSignal &&
+    (cloud == null || cloud <= 20 || stationDaylightSignal);
   const brightBlueSkySignal =
     (strongBlue || (moderateBlue && (strongSun || moderateSun))) &&
     (brightness == null || brightness >= 0.42) &&
@@ -93,15 +106,17 @@ export function computeSkyIntel({ camera, previous = null, weatherContext = null
     contrast != null &&
     contrast <= 0.08 &&
     brightness != null &&
-    brightness < 0.6;
+    brightness < 0.6 &&
+    !blueOpenSceneSignal &&
+    !stationBrightSignal;
   const stationLightCounterSignal =
     stationBrightSignal &&
     !poorVisibilityFlatView &&
     (strongSun || moderateBlue || visibleStructureSignal);
   const clearSkyCounterSignal =
     !poorVisibilityFlatView &&
-    (lowCloudSignal || brightBlueSkySignal || stationLightCounterSignal) &&
-    (strongBlue || brightBlueSkySignal || stationLightCounterSignal || (strongSun && skyBlueSignal != null && skyBlueSignal >= 1.45));
+    (lowCloudSignal || brightBlueSkySignal || blueOpenSceneSignal || stationLightCounterSignal) &&
+    (strongBlue || brightBlueSkySignal || blueOpenSceneSignal || stationLightCounterSignal || (strongSun && skyBlueSignal != null && skyBlueSignal >= 1.45));
   const flatGrayView = contrast != null && contrast <= 0.1 && !strongBlue;
   const dimGrayView = (brightness != null && brightness < 0.62 && flatGrayView) || poorVisibilityFlatView;
   const structureVisibilityCounterSignal =
@@ -113,6 +128,7 @@ export function computeSkyIntel({ camera, previous = null, weatherContext = null
     );
   const openViewCounterSignal =
     clearSkyCounterSignal ||
+    blueOpenSceneSignal ||
     (brightBlueSkySignal && structureVisibilityCounterSignal) ||
     (stationBrightSignal && structureVisibilityCounterSignal) ||
     (strongSun && moderateBlue && visibility != null && visibility >= 2);
@@ -263,8 +279,8 @@ export function computeSkyIntel({ camera, previous = null, weatherContext = null
     cloudState,
     atmosphericState,
     transition,
-    sunlightDetected,
-    sunlightLevel,
+    sunlightDetected: sunlightDetected || (stationBrightSignal && (strongBlue || blueOpenSceneSignal)),
+    sunlightLevel: sunlightDetected ? sunlightLevel : stationSunlightLevel,
     confidence: Number(Math.min(confidence, 1).toFixed(2)),
     visualObscured: false,
     visibleStructureSignal: structureVisibilityCounterSignal,

@@ -85,6 +85,35 @@ test("uses strong Tempest solar radiation as another veto against false fog", ()
   assert.equal(read.stationLightSignal, "bright");
 });
 
+test("rejects live false fog when blue sky and Tempest light contradict zero visibility", () => {
+  const read = computeSkyIntel({
+    camera: cameraWith({
+      cloudCoverWest: 0,
+      brightness: 0.39,
+      contrast: 0.03,
+      visibilityScore: 0,
+      obscuredView: true,
+      sunlightDetected: false,
+      sunlightLevel: "weak",
+      groundBrightness: 0.42,
+      groundContrast: 0.11,
+      softShadowSignal: true,
+      skyBlueSignal: 1.4,
+      satelliteCloudFraction: 0.12
+    }),
+    weatherContext: {
+      solarRadiation: 217,
+      uvIndex: 2
+    }
+  });
+
+  assert.notEqual(read.atmosphericState, "fog");
+  assert.equal(read.visualObscured, false);
+  assert.equal(read.cloudCoverReliable, true);
+  assert.equal(read.sunlightDetected, true);
+  assert.equal(read.sunlightLevel, "moderate");
+});
+
 test("still marks genuinely flat low-visibility scenes as fog", () => {
   const read = computeSkyIntel({
     camera: cameraWith({
