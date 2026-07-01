@@ -1,4 +1,4 @@
-import { computeSkyIntel } from "./sky-intel.js";
+import { computeSkyIntel } from "./sky-intel.js?v=20260701-blue-sky-fog-veto";
 import { generateSkyNarrative } from "./sky-narrative.js";
 
 export function labelizeSkyState(value) {
