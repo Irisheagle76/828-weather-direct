@@ -38,3 +38,45 @@ test("still treats satellite motion as filtered sunshine when cloud cover is mea
 
   assert.equal(read.atmosphericState, "filtered_sunshine");
 });
+
+test("does not let a stale fog flag override a bright blue open-view camera scene", () => {
+  const read = computeSkyIntel({
+    camera: cameraWith({
+      cloudCoverWest: 28,
+      brightness: 0.58,
+      contrast: 0.12,
+      visibilityScore: 1,
+      obscuredView: true,
+      sunlightDetected: true,
+      sunlightLevel: "strong",
+      groundBrightness: 0.31,
+      groundContrast: 0.16,
+      skyBlueSignal: 1.14
+    })
+  });
+
+  assert.notEqual(read.atmosphericState, "fog");
+  assert.equal(read.visualObscured, false);
+  assert.equal(read.cloudCoverReliable, true);
+});
+
+test("still marks genuinely flat low-visibility scenes as fog", () => {
+  const read = computeSkyIntel({
+    camera: cameraWith({
+      cloudCoverWest: 8,
+      brightness: 0.38,
+      contrast: 0.05,
+      visibilityScore: 1,
+      obscuredView: true,
+      sunlightDetected: false,
+      sunlightLevel: "weak",
+      groundBrightness: 0.12,
+      groundContrast: 0.05,
+      skyBlueSignal: 0.82
+    })
+  });
+
+  assert.equal(read.atmosphericState, "fog");
+  assert.equal(read.visualObscured, true);
+  assert.equal(read.cloudCoverReliable, false);
+});
