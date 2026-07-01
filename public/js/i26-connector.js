@@ -9,6 +9,8 @@ let map;
 let eventLayer;
 let connectorPlanLayer;
 let cameraRefreshTimer;
+let trafficRotatorTimer;
+let trafficRotatorIndex = 0;
 let emailAlertState = { alerts: [], updatedAt: null, loaded: false, error: false };
 let incidentState = { incidents: [], updatedAt: null, loaded: false, error: false };
 
@@ -245,13 +247,100 @@ function buildUnifiedUpdates() {
     .slice(0, 12);
 }
 
+function setTrafficRotatorSlide(index) {
+  const cards = Array.from(document.querySelectorAll("#trafficRotator .traffic-rotator-card"));
+  const dots = Array.from(document.querySelectorAll("#trafficRotatorDots button"));
+  if (!cards.length) return;
+
+  trafficRotatorIndex = ((index % cards.length) + cards.length) % cards.length;
+  cards.forEach((card, cardIndex) => {
+    const active = cardIndex === trafficRotatorIndex;
+    card.classList.toggle("is-active", active);
+    card.setAttribute("aria-hidden", active ? "false" : "true");
+  });
+  dots.forEach((dot, dotIndex) => {
+    dot.classList.toggle("is-active", dotIndex === trafficRotatorIndex);
+    dot.setAttribute("aria-current", dotIndex === trafficRotatorIndex ? "true" : "false");
+  });
+}
+
+function startTrafficRotator(count) {
+  clearInterval(trafficRotatorTimer);
+  if (count <= 1) return;
+  trafficRotatorTimer = setInterval(() => {
+    setTrafficRotatorSlide(trafficRotatorIndex + 1);
+  }, 6500);
+}
+
+function renderTrafficSpotlight(updates = [], loaded = false) {
+  const rotator = document.querySelector("#trafficRotator");
+  const dots = document.querySelector("#trafficRotatorDots");
+  if (!rotator || !dots) return;
+
+  const spotlightItems = updates.slice(0, 5);
+  clearInterval(trafficRotatorTimer);
+
+  if (!loaded && !spotlightItems.length) {
+    rotator.innerHTML = `<article class="traffic-rotator-card is-active" aria-hidden="false">
+      <span>Loading live feed</span>
+      <h3>Checking the newest DriveNC Connector updates.</h3>
+      <p>The five most recent incidents will rotate here when the traffic desk connects.</p>
+    </article>`;
+    dots.innerHTML = "";
+    trafficRotatorIndex = 0;
+    return;
+  }
+
+  if (!spotlightItems.length) {
+    rotator.innerHTML = `<article class="traffic-rotator-card is-active" aria-hidden="false">
+      <span>No current incidents</span>
+      <h3>No Connector-area traffic updates are currently listed.</h3>
+      <p>Use DriveNC before travel for the official current status.</p>
+      <a href="https://www.drivenc.gov/region/Asheville" target="_blank" rel="noopener noreferrer">Verify on DriveNC</a>
+    </article>`;
+    dots.innerHTML = "";
+    trafficRotatorIndex = 0;
+    return;
+  }
+
+  trafficRotatorIndex = Math.min(trafficRotatorIndex, spotlightItems.length - 1);
+  rotator.innerHTML = spotlightItems.map((item, index) => {
+    const classes = ["traffic-rotator-card", `severity-${item.severity || "advisory"}`, index === trafficRotatorIndex ? "is-active" : ""].join(" ");
+    return `<article class="${classes}" aria-hidden="${index === trafficRotatorIndex ? "false" : "true"}">
+      <div class="traffic-rotator-meta">
+        <span>${escapeHtml(item.road || "Connector area")}</span>
+        <b>${escapeHtml(item.badge || "Update")}</b>
+      </div>
+      <h3>${escapeHtml(item.title || "DriveNC update")}</h3>
+      <p>${escapeHtml(item.description)}</p>
+      <div class="traffic-rotator-footer">
+        <span>${escapeHtml(item.sourceLabel || "DriveNC")}</span>
+        <time>${escapeHtml(formatRelativeTime(item.primaryTime))}</time>
+        <a href="${escapeHtml(item.url || "https://www.drivenc.gov/region/Asheville")}" target="_blank" rel="noopener noreferrer">Verify</a>
+      </div>
+    </article>`;
+  }).join("");
+
+  dots.innerHTML = spotlightItems.map((_item, index) => `<button type="button" aria-label="Show traffic update ${index + 1}" aria-current="${index === trafficRotatorIndex ? "true" : "false"}" class="${index === trafficRotatorIndex ? "is-active" : ""}"></button>`).join("");
+  dots.querySelectorAll("button").forEach((button, index) => {
+    button.addEventListener("click", () => {
+      setTrafficRotatorSlide(index);
+      startTrafficRotator(spotlightItems.length);
+    });
+  });
+  setTrafficRotatorSlide(trafficRotatorIndex);
+  startTrafficRotator(spotlightItems.length);
+}
+
 function renderUnifiedUpdates() {
   const list = document.querySelector("#emailAlertList");
   const summary = document.querySelector("#emailAlertSummary");
-  if (!list || !summary) return;
 
   const loaded = emailAlertState.loaded && incidentState.loaded;
   const updates = buildUnifiedUpdates();
+  renderTrafficSpotlight(updates, loaded);
+  if (!list || !summary) return;
+
   const active = updates.filter((item) => item.active);
   const latest = updates[0];
 
