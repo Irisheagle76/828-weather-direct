@@ -77,7 +77,7 @@ export function buildSkyConditionRead({
   liveLabel = "Live Sky",
   weatherContext = null
 } = {}) {
-  const skyIntel = applyWeatherContext(computeSkyIntel({ camera, previous }), weatherContext);
+  const skyIntel = applyWeatherContext(computeSkyIntel({ camera, previous, weatherContext }), weatherContext);
   const cameraNarrative = generateSkyNarrative(camera, skyIntel);
   const narrative = useLiveNarrative && liveNarrative ? liveNarrative : cameraNarrative;
   const label = useLiveNarrative ? liveLabel : labelizeSkyState(skyIntel?.atmosphericState);

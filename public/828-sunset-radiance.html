@@ -1812,12 +1812,16 @@
 
     function buildSkyWeatherContext() {
       const currentHour = getCurrentHour(state.weather);
-      if (!currentHour) return null;
+      const current = state.weather?.current || state.weather?.current_conditions || null;
+      if (!currentHour && !current) return null;
+      const solarSource = current || currentHour || {};
       return {
         cloudCover: normalizePercentValue(pickNumber(currentHour, ["cloudCover", "cloud_cover", "cloudcover"])),
-        humidity: normalizePercentValue(pickNumber(currentHour, ["relativeHumidity", "relative_humidity", "humidity"])),
+        humidity: normalizePercentValue(pickNumber(currentHour, ["relativeHumidity", "relative_humidity", "humidity"]) ?? pickNumber(current, ["relativeHumidity", "relative_humidity", "humidity"])),
         precipProbability: normalizePercentValue(pickNumber(currentHour, ["precipProbability", "precipitation_probability", "probabilityOfPrecipitation"])),
-        weatherCode: pickNumber(currentHour, ["weatherCode", "weather_code"])
+        solarRadiation: pickNumber(solarSource, ["solarRadiation", "solar_radiation", "solarWm2", "solar"]),
+        uvIndex: pickNumber(solarSource, ["uvIndex", "uv_index", "uv"]),
+        weatherCode: pickNumber(currentHour, ["weatherCode", "weather_code"]) ?? pickNumber(current, ["weatherCode", "weather_code"])
       };
     }
 

@@ -60,6 +60,31 @@ test("does not let a stale fog flag override a bright blue open-view camera scen
   assert.equal(read.cloudCoverReliable, true);
 });
 
+test("uses strong Tempest solar radiation as another veto against false fog", () => {
+  const read = computeSkyIntel({
+    camera: cameraWith({
+      cloudCoverWest: 48,
+      brightness: 0.5,
+      contrast: 0.1,
+      visibilityScore: 1,
+      obscuredView: true,
+      sunlightDetected: true,
+      sunlightLevel: "moderate",
+      groundBrightness: 0.28,
+      groundContrast: 0.14,
+      skyBlueSignal: 1.02
+    }),
+    weatherContext: {
+      solarRadiation: 540,
+      uvIndex: 5
+    }
+  });
+
+  assert.notEqual(read.atmosphericState, "fog");
+  assert.equal(read.visualObscured, false);
+  assert.equal(read.stationLightSignal, "bright");
+});
+
 test("still marks genuinely flat low-visibility scenes as fog", () => {
   const read = computeSkyIntel({
     camera: cameraWith({
@@ -79,4 +104,28 @@ test("still marks genuinely flat low-visibility scenes as fog", () => {
   assert.equal(read.atmosphericState, "fog");
   assert.equal(read.visualObscured, true);
   assert.equal(read.cloudCoverReliable, false);
+});
+
+test("does not let Tempest solar override a flat gray low-visibility camera scene by itself", () => {
+  const read = computeSkyIntel({
+    camera: cameraWith({
+      cloudCoverWest: 8,
+      brightness: 0.38,
+      contrast: 0.05,
+      visibilityScore: 1,
+      obscuredView: true,
+      sunlightDetected: false,
+      sunlightLevel: "weak",
+      groundBrightness: 0.12,
+      groundContrast: 0.05,
+      skyBlueSignal: 0.82
+    }),
+    weatherContext: {
+      solarRadiation: 540,
+      uvIndex: 5
+    }
+  });
+
+  assert.equal(read.atmosphericState, "fog");
+  assert.equal(read.visualObscured, true);
 });
