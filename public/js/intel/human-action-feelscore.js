@@ -5,6 +5,7 @@
 import { calculateComfort } from "./comfort.js";
 import { assembleWithVoice } from "./synthesizer/assembleWithVoice.js?v=20260526-natural-narrative";
 import { buildFullExplanation } from "../intel/explanations/buildFullExplanation.js";
+import { calculatePeriodScoreTrend } from "./trend/scoreTrend.js";
 
 // ============================================================
 // HELPERS
@@ -390,7 +391,10 @@ function buildPeriod(hoursInput, label, periodContext = null) {
   if (!scores.length) return null;
 
   const score = Math.round(avg(scores));
-  const trend = scores.at(-1) - scores[0];
+  // For the current-period headline, describe the hours immediately ahead.
+  // Comparing "now" with the final hour near midnight can falsely claim
+  // improvement when late-night cooling follows a worsening afternoon.
+  const trend = calculatePeriodScoreTrend(scores, label);
 
   const windValues = hours.map(h => h.windSpeed ?? 0);
   const gustValues = hours.map(h => h.windGust ?? 0);
