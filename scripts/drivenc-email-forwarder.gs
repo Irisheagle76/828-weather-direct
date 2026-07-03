@@ -11,38 +11,52 @@ function publishDriveNcConnectorEmails() {
   }
 
   const processed = loadProcessedIds(props);
-  const threads = GmailApp.search(SEARCH_QUERY, 0, 25);
+  const messages = GmailApp.search(SEARCH_QUERY, 0, 25)
+    .reduce((all, thread) => all.concat(thread.getMessages()), [])
+    .sort((a, b) => a.getDate().getTime() - b.getDate().getTime());
 
-  threads.forEach((thread) => {
-    thread.getMessages().forEach((message) => {
-      const messageId = message.getId();
-      if (processed.has(messageId)) return;
+  messages.forEach((message) => {
+    const messageId = message.getId();
+    if (processed.has(messageId)) return;
 
+    try {
       const response = UrlFetchApp.fetch(ingestUrl, {
-        method: "post",
-        contentType: "application/json",
-        headers: {
-          Authorization: `Bearer ${ingestSecret}`
-        },
-        payload: JSON.stringify({
-          from: message.getFrom(),
-          subject: message.getSubject(),
-          body: message.getPlainBody(),
-          receivedAt: message.getDate().toISOString()
-        }),
-        muteHttpExceptions: true
+          method: "post",
+          contentType: "application/json",
+          headers: {
+            Authorization: `Bearer ${ingestSecret}`
+          },
+          payload: JSON.stringify({
+            messageId,
+            from: message.getFrom(),
+            subject: message.getSubject(),
+            body: message.getPlainBody(),
+            receivedAt: message.getDate().toISOString()
+          }),
+          muteHttpExceptions: true
       });
 
       const status = response.getResponseCode();
-      if (status < 200 || status >= 300) {
-        throw new Error(`DriveNC ingest failed with HTTP ${status}: ${response.getContentText()}`);
+      if (status >= 200 && status < 300) {
+        processed.add(messageId);
+        saveProcessedIds(props, processed);
+        console.log(`Published DriveNC message ${messageId}.`);
+        return;
       }
 
-      processed.add(messageId);
-    });
-  });
+      const detail = response.getContentText();
+      if (status >= 400 && status < 500 && status !== 401 && status !== 403) {
+        processed.add(messageId);
+        saveProcessedIds(props, processed);
+        console.error(`Skipped DriveNC message ${messageId} after HTTP ${status}: ${detail}`);
+        return;
+      }
 
-  saveProcessedIds(props, processed);
+      console.error(`DriveNC ingest temporarily failed for ${messageId} with HTTP ${status}: ${detail}`);
+    } catch (error) {
+      console.error(`DriveNC ingest request failed for ${messageId}: ${error}`);
+    }
+  });
 }
 
 function loadProcessedIds(props) {
