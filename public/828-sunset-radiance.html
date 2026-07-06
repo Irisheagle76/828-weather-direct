@@ -1321,13 +1321,11 @@
         <div class="radiance-layout">
           <article class="sky-panel">
             <div class="sky-frame">
-              <iframe
-                id="skyStream"
-                src="https://www.youtube-nocookie.com/embed/UxUU3Fc1vBw?playsinline=1&rel=0"
-                title="Live downtown Asheville WNW sky camera"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowfullscreen
-              ></iframe>
+              <img
+                id="skyImage"
+                src="https://i.ytimg.com/vi/UxUU3Fc1vBw/maxresdefault_live.jpg"
+                alt="Current YouTube thumbnail from the downtown Asheville WNW sky camera"
+              />
               <div class="sky-caption">
                 <div class="sky-chip" id="skyChip">Loading</div>
                 <h2 id="skyHeadline">Reading the western sky.</h2>
@@ -1614,7 +1612,7 @@
       humidityStatus: document.querySelector("#humidityStatus"),
       precipStatus: document.querySelector("#precipStatus"),
       windowStatus: document.querySelector("#windowStatus"),
-      skyStream: document.querySelector("#skyStream"),
+      skyImage: document.querySelector("#skyImage"),
       uncaCameraImage: document.querySelector("#uncaCameraImage"),
       satelliteLoopImage: document.querySelector("#satelliteLoopImage"),
       mediaLightbox: document.querySelector("#mediaLightbox"),
@@ -1734,8 +1732,11 @@
     }
 
     function setSkyFrame(version, useLiveThumbnail = false) {
+      const frameUrl = liveThumbnailUrl();
+      els.skyImage.src = frameUrl;
       els.hero.style.backgroundImage = `
-        linear-gradient(120deg, rgba(8, 28, 71, 0.94), rgba(15, 76, 196, 0.72) 52%, rgba(245, 125, 35, 0.5))
+        linear-gradient(120deg, rgba(8, 28, 71, 0.94), rgba(15, 76, 196, 0.64) 46%, rgba(245, 125, 35, 0.48)),
+        url("${frameUrl}")
       `;
     }
 
@@ -2415,9 +2416,9 @@
       els.heroSky.textContent = skyLabel;
       els.skyHeadline.textContent = liveNarrative?.headline || "Reading the western sky.";
       els.skyDetail.textContent = liveNarrative?.detail || "The camera snapshot will update automatically.";
-      els.liveStatus.textContent = `Directional sky read updated ${formatCaptureTime(state.skyData?.timestamp)}`;
-      els.captureMetric.textContent = "Live";
-      els.captureMetricLabel.textContent = "WNW stream";
+      els.liveStatus.textContent = `WNW thumbnail analyzed ${formatCaptureTime(state.skyData?.timestamp)}`;
+      els.captureMetric.textContent = "Current";
+      els.captureMetricLabel.textContent = "WNW YouTube still";
       setSkyFrame(captureVersion, skyStale);
       renderRadiance();
     }
