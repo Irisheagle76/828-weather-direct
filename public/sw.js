@@ -1,4 +1,4 @@
-const SW_VERSION = "v1.1.0-notifications";
+const SW_VERSION = "v1.2.0-notification-images";
 console.log("SW VERSION:", SW_VERSION);
 
 self.addEventListener("install", event => {
@@ -23,6 +23,7 @@ self.addEventListener("push", event => {
       body: data.body || "",
       icon: "/828-brand-card.png",
       badge: "/828-brand-card.png",
+      image: data.image || undefined,
       tag: data.tag || "828-weather-update",
       renotify: Boolean(data.renotify),
       data: {

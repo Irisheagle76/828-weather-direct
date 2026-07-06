@@ -161,6 +161,33 @@
     line-height: 1.4;
   }
 
+  .image-field {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .image-field button {
+    padding: 10px 12px;
+  }
+
+  .image-help {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.4;
+    text-transform: none;
+  }
+
+  .preview-image {
+    width: 100%;
+    max-height: 240px;
+    object-fit: cover;
+    border-radius: 6px;
+    margin-bottom: 4px;
+  }
+
   .preview {
     display: grid;
     gap: 6px;
@@ -253,6 +280,7 @@
             <option value="temperature">Temperature</option>
             <option value="fire-weather">Fire weather</option>
             <option value="air-quality">Air quality</option>
+            <option value="traffic">Traffic</option>
             <option value="site-notice">Site notice</option>
           </select>
         </label>
@@ -291,12 +319,23 @@
           <input id="action" placeholder="Keep an eye on radar if you have evening plans." />
         </label>
 
+        <label class="full">
+          Notification image
+          <div class="image-field">
+            <input id="imageUrl" type="url" placeholder="https://..." />
+            <button id="imageUploadBtn" class="secondary" type="button">Choose image</button>
+          </div>
+          <input id="imageInput" type="file" accept="image/*" hidden />
+          <span class="image-help" id="imageHelp">Optional large image. JPG, PNG, or WebP with a landscape crop works best.</span>
+        </label>
+
         <label>
           Link target
           <select id="url">
             <option value="/">Home</option>
             <option value="/forecast.html">4-day Forecast</option>
             <option value="/pulse.html">Weather Pulse</option>
+            <option value="/i26-connector.html">I-26 Connector</option>
           </select>
         </label>
 
@@ -338,6 +377,7 @@
     title: document.getElementById("title"),
     message: document.getElementById("message"),
     action: document.getElementById("action"),
+    imageUrl: document.getElementById("imageUrl"),
     url: document.getElementById("url"),
     expiresAt: document.getElementById("expiresAt"),
     sendPush: document.getElementById("sendPush")
@@ -350,6 +390,10 @@
   const clearBtn = document.getElementById("clearBtn");
   const subscriberLabel = document.getElementById("subscriberLabel");
   const pushDiagnostics = document.getElementById("pushDiagnostics");
+  const imageInput = document.getElementById("imageInput");
+  const imageUploadBtn = document.getElementById("imageUploadBtn");
+  const imageHelp = document.getElementById("imageHelp");
+  let imageUploading = false;
 
   function setDefaultExpiry() {
     const d = new Date(Date.now() + 6 * 60 * 60 * 1000);
@@ -366,6 +410,7 @@
       title: fields.title.value,
       message: fields.message.value,
       action: fields.action.value,
+      imageUrl: fields.imageUrl.value,
       url: fields.url.value,
       expiresAt: fields.expiresAt.value ? new Date(fields.expiresAt.value).toISOString() : "",
       sendPush: fields.sendPush.checked
@@ -376,6 +421,7 @@
     const data = getPayload();
     previewEl.className = `preview ${data.severity}`;
     previewEl.innerHTML = `
+      ${data.imageUrl ? `<img class="preview-image" src="${escapeHtml(data.imageUrl)}" alt="Notification preview" />` : ""}
       <div class="preview-meta">${escapeHtml(formatType(data.type))} - ${escapeHtml(data.timing || "Now")}</div>
       <div class="preview-title">${escapeHtml(data.title || "Alert title")}</div>
       <div class="preview-body">${escapeHtml(data.message || "Main alert message will appear here.")}</div>
@@ -387,6 +433,10 @@
     const payload = getPayload();
     if (!payload.title.trim() || !payload.message.trim()) {
       setStatus("Add a title and message first.");
+      return;
+    }
+    if (imageUploading) {
+      setStatus("Wait for the image upload to finish.");
       return;
     }
 
@@ -419,6 +469,57 @@
       publishBtn.disabled = false;
     }
   }
+
+  async function getSignedUploadConfig() {
+    const res = await fetch("/api/router?route=tidbits/pulse-upload-signature", { method: "POST" });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || "Image upload is unavailable");
+    return data;
+  }
+
+  async function uploadNotificationImage(file) {
+    if (!file?.type.startsWith("image/")) throw new Error("Choose an image file");
+
+    const config = await getSignedUploadConfig();
+    const form = new FormData();
+    form.append("file", file);
+    form.append("api_key", config.apiKey);
+    form.append("timestamp", config.timestamp);
+    form.append("signature", config.signature);
+    form.append("folder", config.folder);
+
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${config.cloudName}/image/upload`, {
+      method: "POST",
+      body: form
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.secure_url) throw new Error(data?.error?.message || "Image upload failed");
+    return data.secure_url;
+  }
+
+  imageUploadBtn.addEventListener("click", () => imageInput.click());
+  imageInput.addEventListener("change", async () => {
+    const file = imageInput.files?.[0];
+    if (!file) return;
+
+    imageUploading = true;
+    imageUploadBtn.disabled = true;
+    publishBtn.disabled = true;
+    imageHelp.textContent = `Uploading ${file.name}...`;
+    try {
+      fields.imageUrl.value = await uploadNotificationImage(file);
+      imageHelp.textContent = `${file.name} uploaded. It will appear as the large notification image on supported devices.`;
+      updatePreview();
+    } catch (err) {
+      console.error(err);
+      imageHelp.textContent = err.message || "Image upload failed.";
+    } finally {
+      imageUploading = false;
+      imageUploadBtn.disabled = false;
+      publishBtn.disabled = false;
+      imageInput.value = "";
+    }
+  });
 
   async function clearAlerts() {
     clearBtn.disabled = true;
