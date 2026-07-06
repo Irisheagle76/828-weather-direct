@@ -96,7 +96,7 @@ h1 { max-width: 760px; margin: 15px 0; font: 700 clamp(3.5rem, 8vw, 7rem)/0.88 G
 .traffic-spotlight-heading a { flex: 0 0 auto; color: #ffd092; font-weight: 950; }
 .traffic-rotator { position: relative; min-height: 250px; overflow: hidden; border: 1px solid rgba(255,255,255,.16); border-radius: 16px; background: rgba(5, 26, 64, .42); }
 .traffic-rotator-card { position: absolute; inset: 0; display: grid; align-content: space-between; gap: 18px; padding: 26px; opacity: 0; transform: translateX(28px); transition: opacity .35s ease, transform .35s ease; pointer-events: none; }
-.traffic-rotator-card.is-active { opacity: 1; transform: translateX(0); pointer-events: auto; }
+.traffic-rotator-card.is-active { position: relative; inset: auto; opacity: 1; transform: translateX(0); pointer-events: auto; }
 .traffic-rotator-meta { display: flex; justify-content: space-between; gap: 14px; align-items: start; }
 .traffic-rotator-meta span, .traffic-rotator-footer span { color: #ffd092; font-size: .74rem; font-weight: 950; letter-spacing: .08em; text-transform: uppercase; }
 .traffic-rotator-meta b { flex: 0 0 auto; padding: 7px 10px; border-radius: 999px; color: var(--blue-dark); background: #ffd092; font-size: .68rem; font-weight: 950; text-transform: uppercase; }
@@ -108,6 +108,7 @@ h1 { max-width: 760px; margin: 15px 0; font: 700 clamp(3.5rem, 8vw, 7rem)/0.88 G
 .traffic-rotator-card > a, .traffic-rotator-footer a { color: #ffd092; font-weight: 950; }
 .show-on-map { padding: 0; border: 0; color: var(--blue); background: transparent; font: inherit; font-weight: 900; text-decoration: underline; cursor: pointer; }
 .traffic-rotator-footer .show-on-map { color: #ffd092; }
+.alert-map-cta { justify-self: start; color: #ffd092; font-weight: 950; }
 .traffic-rotator-footer { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; color: #dce7f7; font-size: .86rem; }
 .traffic-rotator-dots { min-height: 26px; display: flex; gap: 8px; align-items: center; margin-top: 14px; }
 .traffic-rotator-dots button { width: 34px; height: 6px; padding: 0; border: 0; border-radius: 999px; background: rgba(255,255,255,.32); cursor: pointer; }
@@ -189,8 +190,10 @@ h1 { max-width: 760px; margin: 15px 0; font: 700 clamp(3.5rem, 8vw, 7rem)/0.88 G
 .incident-card a { color: var(--blue); font-weight: 900; }
 .alert-timing { display: grid; gap: 7px; margin: 2px 0 4px; }
 .alert-timing div { display: grid; grid-template-columns: minmax(105px, .65fr) 1fr; gap: 12px; align-items: baseline; }
-.alert-timing dt { color: var(--muted); font-size: .74rem; font-weight: 900; text-transform: uppercase; }
-.alert-timing dd { margin: 0; color: var(--ink); font-weight: 850; }
+.alert-timing dt { color: var(--orange); font-size: .74rem; font-weight: 900; text-transform: uppercase; }
+.alert-timing dd { margin: 0; color: var(--orange); font-weight: 850; }
+.traffic-rotator-card .alert-timing dt,
+.traffic-rotator-card .alert-timing dd { color: #ffd092; }
 .camera-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
 .camera-card, .camera-fallback { overflow: hidden; padding: 22px; }
 .camera-card { position: relative; padding-top: 0; }

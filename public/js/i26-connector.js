@@ -360,10 +360,10 @@ function renderTrafficSpotlight(updates = [], loaded = false) {
       <h3>${escapeHtml(item.title || "DriveNC update")}</h3>
       <p>${escapeHtml(item.description)}</p>
       ${alertTimingMarkup(item)}
+      ${item.mapEventId ? `<button type="button" class="show-on-map alert-map-cta" data-map-event="${escapeHtml(item.mapEventId)}">Show this alert on the Connector map</button>` : `<a class="alert-map-cta" href="#connectorMap">View the Connector map</a>`}
       <div class="traffic-rotator-footer">
         <span>${escapeHtml(item.sourceLabel || "DriveNC")}</span>
         <time>${escapeHtml(formatRelativeTime(item.primaryTime))}</time>
-        ${item.mapEventId ? `<button type="button" class="show-on-map" data-map-event="${escapeHtml(item.mapEventId)}">Show on connector map</button>` : ""}
         <a href="${escapeHtml(item.url || "https://www.drivenc.gov/region/Asheville")}" target="_blank" rel="noopener noreferrer">Verify</a>
       </div>
     </article>`;
@@ -423,7 +423,7 @@ function renderUnifiedUpdates() {
       ${alertTimingMarkup(item)}
       <div class="email-alert-meta">${escapeHtml(item.meta || formatRelativeTime(item.primaryTime))}</div>
       <div class="alert-actions">
-        ${item.mapEventId ? `<button type="button" class="show-on-map" data-map-event="${escapeHtml(item.mapEventId)}">Show on connector map</button>` : ""}
+        ${item.mapEventId ? `<button type="button" class="show-on-map" data-map-event="${escapeHtml(item.mapEventId)}">Show this alert on the Connector map</button>` : `<a href="#connectorMap">View the Connector map</a>`}
         <a href="${escapeHtml(item.url || "https://www.drivenc.gov/region/Asheville")}" target="_blank" rel="noopener noreferrer">Verify on DriveNC</a>
       </div>
     </article>`;
