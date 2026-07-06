@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>828 Weather Direct - OBS Overlay</title>
+  <style>
+    :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color-scheme:dark}
+    *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent}
+    body{display:flex;align-items:flex-start;padding:6px;color:#fff}.card{align-self:flex-start;width:min(400px,calc(100vw - 12px));height:auto;min-height:0;padding:11px 14px 10px;border-left:4px solid #e68331;border-radius:10px;background:linear-gradient(110deg,rgba(19,28,93,.86),rgba(19,28,93,.6));box-shadow:0 5px 16px rgba(0,0,0,.22);text-shadow:0 1px 2px rgba(0,0,0,.4);backdrop-filter:blur(4px)}
+    header{display:flex;align-items:baseline;gap:10px;white-space:nowrap}.brand{color:#e68331;font-size:13px;font-weight:900;letter-spacing:.08em;line-height:1}.location{color:rgba(255,255,255,.68);font-size:9px;font-weight:650}.weather{display:grid;grid-template-columns:100px 1fr;align-items:center;gap:11px;margin-top:8px}.temperature{font-size:54px;font-weight:850;letter-spacing:-.06em;line-height:.9}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.metric{min-width:0;padding:5px 7px;border-radius:6px;background:rgba(255,255,255,.07)}.label{display:block;color:rgba(255,255,255,.55);font-size:8px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}.value{display:block;overflow:hidden;margin-top:2px;font-size:12px;font-weight:750;text-overflow:ellipsis;white-space:nowrap}.footer{display:flex;align-items:center;gap:5px;margin-top:7px;color:rgba(255,255,255,.48);font-size:9px}.live-dot{width:6px;height:6px;flex:none;border-radius:50%;background:#e68331;box-shadow:0 0 6px rgba(230,131,49,.9)}.error{display:none;min-height:74px;align-items:center;font-size:16px;font-weight:750}.card.is-error .weather{display:none}.card.is-error .error{display:flex}
+  </style>
+</head>
+<body>
+  <main class="card" id="card" aria-live="polite">
+    <header><div class="brand">828 WEATHER DIRECT</div><div class="location">Live from Asheville, NC</div></header>
+    <section class="weather">
+      <div class="temperature" id="temperature">--&deg;</div>
+      <div class="metrics">
+        <div class="metric"><span class="label">Dew point</span><span class="value" id="dewPoint">--</span></div>
+        <div class="metric"><span class="label">Wind</span><span class="value" id="wind">--</span></div>
+        <div class="metric"><span class="label">Rain today</span><span class="value" id="rain">--</span></div>
+      </div>
+    </section>
+    <div class="error">Weather data unavailable</div>
+    <footer class="footer"><span class="live-dot"></span><span id="updated">Updating weather...</span></footer>
+  </main>
+  <script>
+    const API_URLS=["https://avlweather.com/api/tempest","https://avlweather.com/api/router?route=tempest/device"],REFRESH_MS=60000,$=id=>document.getElementById(id);
+    const first=(o,keys)=>keys.map(k=>o?.[k]).find(v=>v!==null&&v!==undefined&&v!=="");
+    const numeric=value=>{const n=Number(value);return Number.isFinite(n)?n:null};
+    const cToF=n=>n*9/5+32,msToMph=n=>n*2.23694,mmToInches=n=>n/25.4;
+    function weatherObject(p){return p?.current_conditions??p?.current??p?.data?.current_conditions??p?.data?.current??p?.data??p?.obs??p}
+    function normalize(payload){
+      const d=weatherObject(payload);
+      const t=numeric(first(d,["temperatureF","tempF","temperature","temp","air_temperature"]));
+      const dp=numeric(first(d,["dewpointF","dewPointF","dew_point","dewPoint","dewpoint"]));
+      const w=numeric(first(d,["wind_speed_mph","windSpeed","wind_speed","wind_avg","wind"]));
+      const g=numeric(first(d,["wind_gust_mph","windGust","wind_gust","gust"]));
+      const r=numeric(first(d,["rain_today_inches","rainToday","rain_today","precip_today","precipAccumLocalDay","precip_accum_local_day"]));
+      return{
+        temperature:t===null?null:(d.air_temperature===t?cToF(t):t),
+        dewPoint:dp===null?null:(d.dew_point===dp&&d.dewpointF==null&&d.dewPointF==null?cToF(dp):dp),
+        wind:w===null?null:((d.wind_speed===w||d.wind_avg===w)&&d.wind_speed_mph==null&&d.windSpeed==null?msToMph(w):w),
+        gust:g===null?null:(d.wind_gust===g&&d.wind_gust_mph==null&&d.windGust==null?msToMph(g):g),
+        rain:r===null?null:((d.precipAccumLocalDay===r||d.precip_accum_local_day===r)?mmToInches(r):r),
+        updated:first(d,["updated_at","last_updated","timestamp","time","epoch"])??first(payload,["updated_at","last_updated","timestamp"])
+      };
+    }
+    function updatedLabel(value){let date=value?new Date(typeof value==="number"&&value<1e12?value*1000:value):new Date();if(Number.isNaN(date.getTime()))date=new Date();return`Last updated ${date.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}`}
+    async function refreshWeather(){try{
+      let response;for(const url of API_URLS){response=await fetch(url,{cache:"no-store"});if(response.ok)break}if(!response?.ok)throw new Error(`Weather request failed: ${response?.status}`);
+      const w=normalize(await response.json());if(w.temperature===null)throw new Error("Temperature missing");
+      $("temperature").textContent=`${Math.round(w.temperature)}°`;$("dewPoint").textContent=w.dewPoint===null?"--":`${Math.round(w.dewPoint)}°F`;$("wind").textContent=w.wind===null?"--":`${Math.round(w.wind)}${w.gust===null?"":` / ${Math.round(w.gust)}`} mph`;$("rain").textContent=w.rain===null?"--":`${w.rain.toFixed(2)} in`;$("updated").textContent=updatedLabel(w.updated);$("card").classList.remove("is-error");
+    }catch(error){console.error(error);$("updated").textContent=updatedLabel();$("card").classList.add("is-error")}}
+    refreshWeather();setInterval(refreshWeather,REFRESH_MS);
+  </script>
+</body>
+</html>

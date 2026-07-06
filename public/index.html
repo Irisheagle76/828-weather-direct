@@ -950,12 +950,14 @@
       background: #102650;
     }
 
-    .sky-home-photo img {
+    .sky-home-photo img,
+    .sky-home-photo iframe {
       display: block;
       width: 100%;
       height: 100%;
       min-height: 280px;
       object-fit: cover;
+      border: 0;
     }
 
     .sky-home-photo::after {
@@ -3093,7 +3095,8 @@
       }
 
       .sky-home-photo,
-      .sky-home-photo img {
+      .sky-home-photo img,
+      .sky-home-photo iframe {
         min-height: 210px;
       }
 
@@ -3186,6 +3189,7 @@
 
       .sky-home-photo,
       .sky-home-photo img,
+      .sky-home-photo iframe,
       .pulse-media-preview,
       .pulse-media-preview img,
       .pulse-media-preview video {
@@ -3426,7 +3430,15 @@
             </p>
           </div>
           <div class="sky-home-photo">
-            <img id="skyHomeImage" src="js/sky-cam/frame.jpg" alt="Near-live Asheville sky camera view" />
+            <iframe
+              id="skyHomeStream"
+              src="https://www.youtube.com/embed/5yZSYGNU6Os?playsinline=1&rel=0&autoplay=1&mute=1"
+              title="Live East Asheville ENE sky camera"
+              loading="lazy"
+              referrerpolicy="strict-origin-when-cross-origin"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen
+            ></iframe>
             <div class="sky-home-badge">
               <span class="sky-home-pill" id="skyHomeLabel">Loading</span>
               <span class="sky-home-pill blue" id="skyHomeCapture">Camera capture --</span>
@@ -3923,7 +3935,7 @@
       homeHikingUseCare
     } from "./js/hiking-home-card.js?v=20260607-narrative";
     import { buildHumanActionIntelFS } from "./js/intel/human-action-feelscore.js?v=20260526-rain-window";
-    import { buildSkyConditionRead } from "./js/intel/sky-read.js?v=20260701-blue-sky-fog-veto";
+    import { buildSkyConditionRead } from "./js/intel/sky-read.js?v=20260705-directional-cameras";
     import {
       applyPrecipOverrideToNarrative,
       getCurrentPrecipOverride
@@ -4051,7 +4063,7 @@
     }
 
     const SKY_STALE_MS = 20 * 60 * 1000;
-    const LIVE_THUMBNAIL_URL = "https://i.ytimg.com/vi/UxUU3Fc1vBw/maxresdefault_live.jpg";
+    const LIVE_THUMBNAIL_URL = "https://i.ytimg.com/vi/5yZSYGNU6Os/maxresdefault_live.jpg";
     const SKYCAM_RAW_BASE = "https://raw.githubusercontent.com/Irisheagle76/828-weather-direct/main/public/js/sky-cam";
     const RADAR_LOOP_URL = "https://radar.weather.gov/ridge/standard/KGSP_loop.gif";
     const MITCHELL_CAM_URL = "https://nchighpeaks.org/cam11/up/image.jpg";
@@ -4291,8 +4303,10 @@
     }
 
     function scheduledSkyDataUrl() {
-      const base = isProductionHost() ? `${SKYCAM_RAW_BASE}/output.json` : "js/sky-cam/output.json";
-      return `${base}?t=${encodeURIComponent(Date.now())}`;
+      if (isProductionHost()) {
+        return `/api/router?route=sky/current&t=${encodeURIComponent(Date.now())}`;
+      }
+      return `js/sky-cam/output.json?t=${encodeURIComponent(Date.now())}`;
     }
 
     function skyImageUrl(frameVersion, useLiveThumbnail = false) {
@@ -5710,11 +5724,8 @@
           applyConditionalHomepageFeatures();
         }
 
-        document.querySelector("#skyHomeImage").src = skyImageUrl(frameVersion, useLiveThumbnail);
         document.querySelector("#skyHomeLabel").textContent = skyLabel;
-        document.querySelector("#skyHomeCapture").textContent = skyStale
-          ? `Live image refreshed ${formatLocalTime()}`
-          : `Camera capture ${formatCaptureTime(data?.timestamp)}`;
+        document.querySelector("#skyHomeCapture").textContent = "Live ENE stream";
         document.querySelector("#skyHomeHeadline").textContent = skyNarrative?.headline || "Reading the Asheville sky.";
         document.querySelector("#skyHomeDetail").textContent = skyNarrative?.detail || "The camera snapshot adds visual context to the forecast.";
         setText("#heroSkyCondition", skyNarrative?.headline || skyLabel || "Current sky");
@@ -5743,6 +5754,7 @@
     hideHomeSplash(0);
     setInterval(hydrateObservationChips, 5 * 60 * 1000);
     setInterval(hydrateLiveComfortModules, 60 * 1000);
+    setInterval(hydrateSkyModule, 60 * 1000);
     setInterval(hydrateHomeHikingCard, 5 * 60 * 1000);
     setInterval(hydrateHomeWaterCard, 10 * 60 * 1000);
     setInterval(hydrateHomeForecastSignals, 10 * 60 * 1000);

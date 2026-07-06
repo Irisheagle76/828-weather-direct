@@ -45,7 +45,8 @@
       background: linear-gradient(90deg, rgba(219, 232, 255, 0.28), rgba(247, 200, 115, 0.38));
     }
 
-    body.radiance-closed .sky-frame img {
+    body.radiance-closed .sky-frame img,
+    body.radiance-closed .sky-frame iframe {
       filter: saturate(0.82) brightness(0.82);
     }
 
@@ -381,11 +382,14 @@
       background: #102650;
     }
 
-    .sky-frame img {
+    .sky-frame img,
+    .sky-frame iframe {
       display: block;
       width: 100%;
       min-height: 340px;
       object-fit: cover;
+      aspect-ratio: 16 / 9;
+      border: 0;
     }
 
     .sky-frame::after {
@@ -436,7 +440,7 @@
 
     .sky-meta {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 1px;
       background: var(--line);
     }
@@ -502,7 +506,7 @@
 
     .sky-context-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 18px;
       margin-top: 22px;
     }
@@ -1230,7 +1234,8 @@
       }
 
       .sky-frame,
-      .sky-frame img {
+      .sky-frame img,
+      .sky-frame iframe {
         min-height: 300px;
       }
 
@@ -1301,6 +1306,7 @@
         <div class="status-inner" aria-label="Sunset status">
           <div class="status-pill live" id="liveStatus">Live sky loading</div>
           <div class="status-pill" id="cloudStatus">Clouds --</div>
+          <div class="status-pill" id="directionStatus">WNW -- / ENE --</div>
           <div class="status-pill" id="humidityStatus">Humidity --</div>
           <div class="status-pill" id="precipStatus">Rain chance --</div>
           <div class="status-pill" id="windowStatus">Radiance window --</div>
@@ -1315,7 +1321,13 @@
         <div class="radiance-layout">
           <article class="sky-panel">
             <div class="sky-frame">
-              <img id="skyImage" src="js/sky-cam/frame.jpg" alt="Near-live western sky camera view" />
+              <iframe
+                id="skyStream"
+                src="https://www.youtube-nocookie.com/embed/UxUU3Fc1vBw?playsinline=1&rel=0"
+                title="Live downtown Asheville WNW sky camera"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen
+              ></iframe>
               <div class="sky-caption">
                 <div class="sky-chip" id="skyChip">Loading</div>
                 <h2 id="skyHeadline">Reading the western sky.</h2>
@@ -1325,7 +1337,11 @@
             <div class="sky-meta" aria-label="Camera metrics">
               <div>
                 <b id="cloudMetric">--</b>
-                <span id="cloudMetricLabel">Camera cloud cover</span>
+                <span id="cloudMetricLabel">WNW downtown clouds</span>
+              </div>
+              <div>
+                <b id="eneCloudMetric">--</b>
+                <span>ENE East Asheville clouds</span>
               </div>
               <div>
                 <b id="lightMetric">--</b>
@@ -1397,6 +1413,22 @@
           <article class="context-card">
             <div class="context-media youtube-live">
               <iframe
+                src="https://www.youtube.com/embed/5yZSYGNU6Os?playsinline=1&rel=0&autoplay=1&mute=1"
+                title="Live East Asheville ENE sky camera on YouTube"
+                loading="lazy"
+                referrerpolicy="strict-origin-when-cross-origin"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen
+              ></iframe>
+            </div>
+            <div class="context-copy">
+              <strong>East Asheville · ENE view.</strong> This live camera supplies the east-northeast side of the directional Sky Read. <a href="https://www.youtube.com/channel/UCf88ZzHs8HzzRMMO7OGKmYA/live" target="_blank" rel="noopener noreferrer">Open on YouTube</a>.
+            </div>
+          </article>
+
+          <article class="context-card">
+            <div class="context-media youtube-live">
+              <iframe
                 src="https://www.youtube-nocookie.com/embed/UxUU3Fc1vBw"
                 title="Live Asheville sunset camera on YouTube"
                 loading="lazy"
@@ -1405,7 +1437,7 @@
               ></iframe>
             </div>
             <div class="context-copy">
-              Live player from the Asheville sky camera. <a href="https://www.youtube.com/watch?v=UxUU3Fc1vBw" target="_blank" rel="noopener noreferrer">Open on YouTube</a>.
+              <strong>Downtown Asheville · WNW view.</strong> This live camera supplies the west-northwest side of the directional Sky Read. <a href="https://www.youtube.com/watch?v=UxUU3Fc1vBw" target="_blank" rel="noopener noreferrer">Open on YouTube</a>.
             </div>
           </article>
         </div>
@@ -1546,7 +1578,7 @@
   </div>
 
   <script type="module">
-    import { buildSkyConditionRead, isObscuredSky } from "./js/intel/sky-read.js?v=20260701-blue-sky-fog-veto";
+    import { buildSkyConditionRead, isObscuredSky } from "./js/intel/sky-read.js?v=20260705-directional-cameras";
     import { buildDuskSkyFallback, getSkyTimePhase } from "./js/intel/sky-time.js?v=20260629-shared-sunset";
     import { getCurrentPrecipOverride } from "./js/intel/precip-override.js?v=20260628-precip-first";
 
@@ -1578,10 +1610,11 @@
       heroSunset: document.querySelector("#heroSunset"),
       liveStatus: document.querySelector("#liveStatus"),
       cloudStatus: document.querySelector("#cloudStatus"),
+      directionStatus: document.querySelector("#directionStatus"),
       humidityStatus: document.querySelector("#humidityStatus"),
       precipStatus: document.querySelector("#precipStatus"),
       windowStatus: document.querySelector("#windowStatus"),
-      skyImage: document.querySelector("#skyImage"),
+      skyStream: document.querySelector("#skyStream"),
       uncaCameraImage: document.querySelector("#uncaCameraImage"),
       satelliteLoopImage: document.querySelector("#satelliteLoopImage"),
       mediaLightbox: document.querySelector("#mediaLightbox"),
@@ -1594,6 +1627,7 @@
       skyDetail: document.querySelector("#skyDetail"),
       cloudMetric: document.querySelector("#cloudMetric"),
       cloudMetricLabel: document.querySelector("#cloudMetricLabel"),
+      eneCloudMetric: document.querySelector("#eneCloudMetric"),
       lightMetric: document.querySelector("#lightMetric"),
       confidenceMetric: document.querySelector("#confidenceMetric"),
       captureMetric: document.querySelector("#captureMetric"),
@@ -1668,8 +1702,10 @@
     }
 
     function skyDataUrl() {
-      const base = isProductionHost() ? `${SKYCAM_RAW_BASE}/output.json` : "js/sky-cam/output.json";
-      return `${base}?t=${encodeURIComponent(Date.now())}`;
+      if (isProductionHost()) {
+        return `/api/router?route=sky/current&t=${encodeURIComponent(Date.now())}`;
+      }
+      return `js/sky-cam/output.json?t=${encodeURIComponent(Date.now())}`;
     }
 
     function skyFrameUrl(version) {
@@ -1698,11 +1734,8 @@
     }
 
     function setSkyFrame(version, useLiveThumbnail = false) {
-      const frameUrl = useLiveThumbnail ? liveThumbnailUrl() : skyFrameUrl(version);
-      els.skyImage.src = frameUrl;
       els.hero.style.backgroundImage = `
-        linear-gradient(120deg, rgba(8, 28, 71, 0.94), rgba(15, 76, 196, 0.64) 46%, rgba(245, 125, 35, 0.48)),
-        url("${frameUrl}")
+        linear-gradient(120deg, rgba(8, 28, 71, 0.94), rgba(15, 76, 196, 0.72) 52%, rgba(245, 125, 35, 0.5))
       `;
     }
 
@@ -2146,8 +2179,14 @@
       els.windowTitle.textContent = isClosed ? "Window closed" : daily?.sunset ? `Sunset ${formatTime(daily.sunset)}` : "Sunset pending";
       els.windowCopy.textContent = isClosed ? "The evening radiance window has passed. Check back tomorrow as the next sunset setup develops." : radiance.factors[3].detail;
 
-      els.cloudMetric.textContent = obscuredSky ? "Obscured" : pct(displayCloud);
-      els.cloudMetricLabel.textContent = obscuredSky ? "Camera cloud cover" : cameraCloudAvailable ? "Camera cloud cover" : "Forecast cloud cover";
+      const wnwCloud = Number(state.skyData?.metrics?.cloudCoverWest);
+      const eneCloud = Number(state.skyData?.metrics?.cloudCoverENE);
+      const hasWNW = Number.isFinite(wnwCloud);
+      const hasENE = Number.isFinite(eneCloud);
+      els.cloudMetric.textContent = hasWNW ? pct(wnwCloud) : obscuredSky ? "Obscured" : pct(displayCloud);
+      els.cloudMetricLabel.textContent = hasWNW ? "WNW downtown clouds" : "Camera cloud cover";
+      els.eneCloudMetric.textContent = hasENE ? pct(eneCloud) : "--";
+      els.directionStatus.textContent = `WNW ${hasWNW ? pct(wnwCloud) : "--"} / ENE ${hasENE ? pct(eneCloud) : "--"}`;
       els.lightMetric.textContent = staleNightAnalysis
         ? "Bright"
         : state.skyIntel?.sunlightDetected ? labelize(state.skyIntel.sunlightLevel) : "Low";
@@ -2376,11 +2415,9 @@
       els.heroSky.textContent = skyLabel;
       els.skyHeadline.textContent = liveNarrative?.headline || "Reading the western sky.";
       els.skyDetail.textContent = liveNarrative?.detail || "The camera snapshot will update automatically.";
-      els.liveStatus.textContent = skyStale
-        ? "Live sky image active"
-        : `Camera captured ${formatCaptureTime(state.skyData?.timestamp)}`;
-      els.captureMetric.textContent = skyStale ? "Current" : formatCaptureTime(state.skyData?.timestamp);
-      els.captureMetricLabel.textContent = skyStale ? "Live thumbnail" : "Camera capture";
+      els.liveStatus.textContent = `Directional sky read updated ${formatCaptureTime(state.skyData?.timestamp)}`;
+      els.captureMetric.textContent = "Live";
+      els.captureMetricLabel.textContent = "WNW stream";
       setSkyFrame(captureVersion, skyStale);
       renderRadiance();
     }

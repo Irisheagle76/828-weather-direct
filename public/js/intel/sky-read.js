@@ -79,7 +79,13 @@ export function buildSkyConditionRead({
 } = {}) {
   const skyIntel = applyWeatherContext(computeSkyIntel({ camera, previous, weatherContext }), weatherContext);
   const cameraNarrative = generateSkyNarrative(camera, skyIntel);
-  const narrative = useLiveNarrative && liveNarrative ? liveNarrative : cameraNarrative;
+  const baseNarrative = useLiveNarrative && liveNarrative ? liveNarrative : cameraNarrative;
+  const directionalNarrative = camera?.directionalComparison?.narrative;
+  const narrative = directionalNarrative
+    ? typeof baseNarrative === "string"
+      ? `${baseNarrative} ${directionalNarrative}`
+      : { ...baseNarrative, detail: `${baseNarrative?.detail || ""} ${directionalNarrative}`.trim() }
+    : baseNarrative;
   const label = useLiveNarrative ? liveLabel : labelizeSkyState(skyIntel?.atmosphericState);
 
   return {
