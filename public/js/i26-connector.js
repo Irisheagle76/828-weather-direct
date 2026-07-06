@@ -11,6 +11,7 @@ let connectorPlanLayer;
 let cameraRefreshTimer;
 let trafficRotatorTimer;
 let trafficRotatorIndex = 0;
+const incidentMarkers = new Map();
 let emailAlertState = { alerts: [], updatedAt: null, loaded: false, error: false };
 let incidentState = { incidents: [], updatedAt: null, loaded: false, error: false };
 
@@ -32,6 +33,19 @@ function formatShortDate(value) {
   return new Intl.DateTimeFormat("en-US", {
     month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/New_York"
   }).format(new Date(value));
+}
+
+function alertTimingMarkup(item = {}) {
+  const rows = [
+    ["Start time", item.startTime],
+    ["Anticipated end", item.endTime]
+  ].filter(([, value]) => value);
+
+  if (!rows.length) return "";
+
+  return `<dl class="alert-timing">
+    ${rows.map(([label, value]) => `<div><dt>${label}</dt><dd>${escapeHtml(formatShortDate(value))}</dd></div>`).join("")}
+  </dl>`;
 }
 
 function formatRelativeTime(value) {
@@ -132,6 +146,7 @@ function renderIncidents(incidents = []) {
   document.querySelector("#closureCount").textContent = String(closures.length);
 
   if (eventLayer) eventLayer.clearLayers();
+  incidentMarkers.clear();
   incidents.forEach((event) => {
     if (!eventLayer) return;
     const marker = L.circleMarker([event.latitude, event.longitude], {
@@ -143,9 +158,33 @@ function renderIncidents(incidents = []) {
     });
     marker.bindPopup(`<strong>${escapeHtml(event.road)}</strong><br>${escapeHtml(event.description)}<br><a href="${escapeHtml(event.url)}" target="_blank" rel="noopener noreferrer">Open in DriveNC</a>`);
     marker.addTo(eventLayer);
+    incidentMarkers.set(String(event.id), marker);
   });
 
   renderUnifiedUpdates();
+}
+
+function showIncidentOnMap(eventId) {
+  const marker = incidentMarkers.get(String(eventId));
+  const mapElement = document.querySelector("#connectorMap");
+  if (!marker || !map || !mapElement) return;
+
+  mapElement.scrollIntoView({ behavior: "smooth", block: "center" });
+  map.flyTo(marker.getLatLng(), Math.max(map.getZoom(), 15), { duration: 0.8 });
+  window.setTimeout(() => {
+    marker.openPopup();
+    const markerElement = marker.getElement();
+    if (!markerElement) return;
+    markerElement.classList.remove("incident-map-pulse");
+    void markerElement.getBoundingClientRect();
+    markerElement.classList.add("incident-map-pulse");
+  }, 850);
+}
+
+function connectMapButtons(container) {
+  container?.querySelectorAll("[data-map-event]").forEach((button) => {
+    button.addEventListener("click", () => showIncidentOnMap(button.dataset.mapEvent));
+  });
 }
 
 async function loadIncidents() {
@@ -189,11 +228,7 @@ function emailCoversIncident(alert, incident) {
   return alertText.includes(incidentText.slice(0, 70)) || incidentText.includes(alertText.slice(0, 70));
 }
 
-function normalizeEmailUpdate(alert) {
-  const timing = [alert.startTime ? `Starts ${formatShortDate(alert.startTime)}` : alert.startTimeText, alert.endTime ? `Ends ${formatShortDate(alert.endTime)}` : alert.endTimeText]
-    .filter(Boolean)
-    .join(" - ");
-
+function normalizeEmailUpdate(alert, matchingIncident) {
   return {
     id: alert.id,
     eventId: alert.eventId,
@@ -207,7 +242,10 @@ function normalizeEmailUpdate(alert) {
     active: !alert.cleared,
     url: alert.url || "https://www.drivenc.gov/region/Asheville",
     primaryTime: alert.receivedAt || alert.updatedAt,
-    meta: `${formatRelativeTime(alert.receivedAt || alert.updatedAt)}${timing ? ` - ${timing}` : ""}`
+    mapEventId: matchingIncident?.id || "",
+    startTime: alert.startTime || alert.startTimeText || "",
+    endTime: alert.endTime || alert.endTimeText || "",
+    meta: formatRelativeTime(alert.receivedAt || alert.updatedAt)
   };
 }
 
@@ -231,6 +269,9 @@ function normalizeIncidentUpdate(event) {
     active: true,
     url: event.url || "https://www.drivenc.gov/region/Asheville",
     primaryTime: event.updatedTime || event.startTime || Date.now(),
+    mapEventId: event.id || "",
+    startTime: event.startTime || "",
+    endTime: event.endTime || "",
     meta: timing
   };
 }
@@ -242,7 +283,12 @@ function buildUnifiedUpdates() {
     .filter((event) => !emailAlerts.some((alert) => emailCoversIncident(alert, event)))
     .map(normalizeIncidentUpdate);
 
-  return [...emailAlerts.map(normalizeEmailUpdate), ...incidentAdditions]
+  const normalizedEmailAlerts = emailAlerts.map((alert) => normalizeEmailUpdate(
+    alert,
+    incidents.find((incident) => emailCoversIncident(alert, incident))
+  ));
+
+  return [...normalizedEmailAlerts, ...incidentAdditions]
     .sort((a, b) => normalizeUpdateTime(b.primaryTime) - normalizeUpdateTime(a.primaryTime))
     .slice(0, 12);
 }
@@ -313,13 +359,16 @@ function renderTrafficSpotlight(updates = [], loaded = false) {
       </div>
       <h3>${escapeHtml(item.title || "DriveNC update")}</h3>
       <p>${escapeHtml(item.description)}</p>
+      ${alertTimingMarkup(item)}
       <div class="traffic-rotator-footer">
         <span>${escapeHtml(item.sourceLabel || "DriveNC")}</span>
         <time>${escapeHtml(formatRelativeTime(item.primaryTime))}</time>
+        ${item.mapEventId ? `<button type="button" class="show-on-map" data-map-event="${escapeHtml(item.mapEventId)}">Show on connector map</button>` : ""}
         <a href="${escapeHtml(item.url || "https://www.drivenc.gov/region/Asheville")}" target="_blank" rel="noopener noreferrer">Verify</a>
       </div>
     </article>`;
   }).join("");
+  connectMapButtons(rotator);
 
   dots.innerHTML = spotlightItems.map((_item, index) => `<button type="button" aria-label="Show traffic update ${index + 1}" aria-current="${index === trafficRotatorIndex ? "true" : "false"}" class="${index === trafficRotatorIndex ? "is-active" : ""}"></button>`).join("");
   dots.querySelectorAll("button").forEach((button, index) => {
@@ -371,10 +420,15 @@ function renderUnifiedUpdates() {
       </div>
       <div class="update-source">${escapeHtml(item.sourceLabel)}</div>
       <p>${escapeHtml(item.description)}</p>
+      ${alertTimingMarkup(item)}
       <div class="email-alert-meta">${escapeHtml(item.meta || formatRelativeTime(item.primaryTime))}</div>
-      <a href="${escapeHtml(item.url || "https://www.drivenc.gov/region/Asheville")}" target="_blank" rel="noopener noreferrer">Verify on DriveNC</a>
+      <div class="alert-actions">
+        ${item.mapEventId ? `<button type="button" class="show-on-map" data-map-event="${escapeHtml(item.mapEventId)}">Show on connector map</button>` : ""}
+        <a href="${escapeHtml(item.url || "https://www.drivenc.gov/region/Asheville")}" target="_blank" rel="noopener noreferrer">Verify on DriveNC</a>
+      </div>
     </article>`;
   }).join("");
+  connectMapButtons(list);
 }
 
 async function loadEmailAlerts() {

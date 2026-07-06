@@ -106,6 +106,8 @@ h1 { max-width: 760px; margin: 15px 0; font: 700 clamp(3.5rem, 8vw, 7rem)/0.88 G
 .traffic-rotator-card h3 { max-width: 850px; margin: 0; font: 700 clamp(1.8rem, 3.6vw, 3.25rem)/1.02 Georgia, serif; letter-spacing: -.02em; }
 .traffic-rotator-card p { max-width: 900px; margin: 0; color: #dce7f7; font-size: 1.03rem; line-height: 1.55; }
 .traffic-rotator-card > a, .traffic-rotator-footer a { color: #ffd092; font-weight: 950; }
+.show-on-map { padding: 0; border: 0; color: var(--blue); background: transparent; font: inherit; font-weight: 900; text-decoration: underline; cursor: pointer; }
+.traffic-rotator-footer .show-on-map { color: #ffd092; }
 .traffic-rotator-footer { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; color: #dce7f7; font-size: .86rem; }
 .traffic-rotator-dots { min-height: 26px; display: flex; gap: 8px; align-items: center; margin-top: 14px; }
 .traffic-rotator-dots button { width: 34px; height: 6px; padding: 0; border: 0; border-radius: 999px; background: rgba(255,255,255,.32); cursor: pointer; }
@@ -149,6 +151,7 @@ h1 { max-width: 760px; margin: 15px 0; font: 700 clamp(3.5rem, 8vw, 7rem)/0.88 G
 .email-alert-card p { margin: 0; color: var(--muted); line-height: 1.5; }
 .email-alert-meta { color: #48566b; font-size: .82rem; line-height: 1.45; }
 .email-alert-card a { color: var(--blue); font-weight: 900; }
+.alert-actions { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
 .update-source { width: max-content; padding: 4px 8px; border-radius: 999px; color: #48566b; background: #edf3f8; font-size: .68rem; font-weight: 950; text-transform: uppercase; }
 .email-alert-card.source-record { opacity: .9; }
 .email-alert-card.source-record .update-source { color: #8a3d0b; background: #ffead5; }
@@ -159,6 +162,12 @@ h1 { max-width: 760px; margin: 15px 0; font: 700 clamp(3.5rem, 8vw, 7rem)/0.88 G
 .closure-dot { background: var(--red); }.work-dot { background: var(--orange); }
 .map-shell { position: relative; overflow: hidden; }
 #connectorMap { height: 470px; background: #dce7ef; }
+.incident-map-pulse { animation: incident-map-pulse 1.8s ease-out 2; }
+@keyframes incident-map-pulse {
+  0% { stroke-width: 2; filter: drop-shadow(0 0 0 rgba(201, 53, 43, 0)); }
+  35% { stroke-width: 7; filter: drop-shadow(0 0 9px rgba(201, 53, 43, .95)); }
+  100% { stroke-width: 2; filter: drop-shadow(0 0 0 rgba(201, 53, 43, 0)); }
+}
 .map-key { position: absolute; z-index: 900; top: 16px; right: 16px; width: 235px; padding: 16px; border: 1px solid rgba(9, 37, 95, .14); border-radius: 15px; color: var(--ink); background: rgba(255, 253, 248, .94); box-shadow: 0 10px 30px rgba(9, 37, 95, .18); backdrop-filter: blur(10px); pointer-events: none; }
 .map-key > strong { display: block; margin-bottom: 11px; color: var(--blue-dark); font-family: Georgia, serif; font-size: 1.08rem; }
 .map-key div { display: grid; grid-template-columns: 18px 1fr; column-gap: 9px; align-items: center; padding: 7px 0; border-top: 1px solid rgba(9, 37, 95, .09); }
@@ -178,6 +187,10 @@ h1 { max-width: 760px; margin: 15px 0; font: 700 clamp(3.5rem, 8vw, 7rem)/0.88 G
 .incident-card p { margin: 0; color: var(--muted); line-height: 1.5; }
 .incident-meta { color: #48566b; font-size: .82rem; }
 .incident-card a { color: var(--blue); font-weight: 900; }
+.alert-timing { display: grid; gap: 7px; margin: 2px 0 4px; }
+.alert-timing div { display: grid; grid-template-columns: minmax(105px, .65fr) 1fr; gap: 12px; align-items: baseline; }
+.alert-timing dt { color: var(--muted); font-size: .74rem; font-weight: 900; text-transform: uppercase; }
+.alert-timing dd { margin: 0; color: var(--ink); font-weight: 850; }
 .camera-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
 .camera-card, .camera-fallback { overflow: hidden; padding: 22px; }
 .camera-card { position: relative; padding-top: 0; }
@@ -264,6 +277,7 @@ footer a { font-weight: 900; }
   .traffic-rotator-card { padding: 21px; }
   .traffic-rotator-meta { align-items: flex-start; flex-direction: column; }
   .traffic-rotator-card h3 { font-size: 1.85rem; }
+  .alert-timing div { grid-template-columns: 1fr; gap: 2px; }
   .section-heading { align-items: flex-start; flex-direction: column; }
   .email-alert-summary, .email-alert-list, .incident-list, .camera-grid, .section-card-grid { grid-template-columns: 1fr; }
   .connector-news-media.gallery { grid-template-columns: 1fr; }
@@ -275,5 +289,6 @@ footer a { font-weight: 900; }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .incident-map-pulse { animation: none; }
   .traffic-rotator-card { transition: none; }
 }
