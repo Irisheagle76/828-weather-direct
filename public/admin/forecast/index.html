@@ -678,11 +678,28 @@ pre {
     grid-template-columns: 1fr;
   }
 }
+.automatic-status-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px; margin:12px 0; }
+.automatic-status-grid div { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:10px; }
+.automatic-status-grid span { display:block; color:var(--muted); font-size:.75rem; margin-bottom:4px; }
+.automatic-actions { display:flex; flex-wrap:wrap; gap:10px; }
+#automaticOutput { max-height:360px; overflow:auto; white-space:pre-wrap; margin-top:12px; font-size:.78rem; }
 </style>
 </head>
 
 <body>
 <main class="composer-shell">
+  <section class="panel" aria-labelledby="automaticForecastTitle">
+    <div class="panel-header">
+      <h1 id="automaticForecastTitle">Automatic Forecast</h1>
+      <div class="hint">Vacation-mode status and safe preview controls.</div>
+    </div>
+    <div class="automatic-status-grid" id="automaticStatus"><div>Loading status…</div></div>
+    <div class="automatic-actions">
+      <button class="btn" id="automaticDryRunBtn" type="button">Run Dry-Run Preview</button>
+      <button class="btn" id="automaticPublishBtn" type="button">Run Authorized Update</button>
+    </div>
+    <pre id="automaticOutput" hidden></pre>
+  </section>
   <section class="panel">
     <div class="panel-header">
       <h1>Forecast Composer</h1>
@@ -1145,6 +1162,50 @@ const state = {
 let getSystemForecastForDate = null;
 
 init();
+initAutomaticForecastPanel();
+
+async function initAutomaticForecastPanel() {
+  el("automaticDryRunBtn").addEventListener("click", () => runAutomaticPreview(true));
+  el("automaticPublishBtn").addEventListener("click", () => runAutomaticPreview(false));
+  await refreshAutomaticStatus();
+}
+
+async function refreshAutomaticStatus() {
+  const box = el("automaticStatus");
+  try {
+    const response = await fetch("/api/router?route=forecast/automatic", { cache: "no-store" });
+    const status = await response.json();
+    if (!response.ok) throw new Error(status.error || "Status unavailable");
+    const last = status.last || {};
+    box.innerHTML = [
+      ["Automation", status.config.enabled ? "Enabled" : "Disabled"],
+      ["Vacation window", `${status.config.start} through ${status.config.end}`],
+      ["Window status", status.window.inside ? "Inside window" : "Outside window"],
+      ["Last attempt", last.attemptedAt || "None"],
+      ["Last automatic publish", last.publishedAt || "None"],
+      ["Last result", last.status ? `${last.status}${last.reason ? `: ${last.reason}` : ""}` : "None"],
+      ["Current source", status.currentForecastSource],
+      ["Manual protection", status.manualOverrideActive ? "Active" : "Not active"],
+      ["Validation", last.validation?.valid === true ? "Passed" : last.validation?.valid === false ? "Failed" : "Not run"],
+      ["Source freshness", status.sourceDataFreshness?.forecastUpdated || "Not available"]
+    ].map(([label,value]) => `<div><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("");
+  } catch (error) { box.textContent = error.message; }
+}
+
+async function runAutomaticPreview(dryRun) {
+  const button = el(dryRun ? "automaticDryRunBtn" : "automaticPublishBtn");
+  const output = el("automaticOutput");
+  button.disabled = true;
+  output.hidden = false;
+  output.textContent = dryRun ? "Building preview…" : "Running update…";
+  try {
+    const response = await fetch("/api/router?route=forecast/automatic", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({dryRun,force:!dryRun}) });
+    const result = await response.json();
+    output.textContent = JSON.stringify(result, null, 2);
+    if (!response.ok) throw new Error(result.error || "Request failed");
+  } catch (error) { output.textContent = `Automatic forecast request failed: ${error.message}`; }
+  finally { button.disabled=false; await refreshAutomaticStatus(); }
+}
 
 async function init() {
   await loadOptionalForecastEngine();

@@ -5,6 +5,10 @@
       "includeFiles": "public/admin/**"
     }
   },
+  "crons": [
+    { "path": "/api/router?route=forecast/automatic", "schedule": "15 9 * * *" },
+    { "path": "/api/router?route=forecast/automatic", "schedule": "15 19 * * *" }
+  ],
   "routes": [
     {
       "src": "/admin/?",
