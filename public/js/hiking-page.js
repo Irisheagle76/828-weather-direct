@@ -122,13 +122,16 @@ const els = {
     function shortName(name = "") {
       return String(name)
         .replace("High Asheville East", "High East")
-        .replace("High Asheville North", "High North");
+        .replace("High Asheville North", "High North")
+        .replace("Frying Pan / Pisgah Ridgeline", "Pisgah Ridge")
+        .replace("Mount Mitchell", "Mitchell");
     }
 
     function profileNameLines(name = "") {
       const label = String(name || "");
-      if (label === "High Asheville East") return ["High Asheville", "East"];
-      if (label === "High Asheville North") return ["High Asheville", "North"];
+      if (label === "High Asheville East") return ["High East"];
+      if (label === "High Asheville North") return ["High North"];
+      if (label === "Frying Pan / Pisgah Ridgeline") return ["Frying Pan", "Pisgah Ridge"];
       if (label === "Mount Mitchell") return ["Mount", "Mitchell"];
       return [label];
     }
@@ -162,7 +165,8 @@ const els = {
         .join("");
       const sites = points.map(({ station, x, y }) => {
         const isPeak = station.name === "Mount Mitchell";
-        const labelY = isPeak ? Math.max(18, y - 148) : Math.max(72, y - 86);
+        const isPisgah = station.name === "Frying Pan / Pisgah Ridgeline";
+        const labelY = isPeak ? Math.max(18, y - 148) : isPisgah ? Math.max(52, y - 112) : Math.max(72, y - 86);
         const labelLines = profileNameLines(station.name)
           .map((line, index) => `<tspan x="${x}" dy="${index === 0 ? 0 : 24}">${line}</tspan>`)
           .join("");

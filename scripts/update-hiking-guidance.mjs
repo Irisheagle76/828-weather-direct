@@ -292,14 +292,22 @@ async function fetchTempest(station) {
   };
 }
 
-async function fetchMitchell() {
+async function fetchEconetStation({
+  stationId,
+  id,
+  name,
+  role,
+  elevationFt,
+  url,
+  source = `NC ECONet ${stationId}`
+}) {
   const response = await fetch("https://products.climate.ncsu.edu/oper/cardinal/scout/panels/php/ajax_currentConditions.php", {
     method: "POST",
     headers: {
       "content-type": "application/x-www-form-urlencoded",
       "user-agent": userAgent
     },
-    body: "station=MITC"
+    body: `station=${encodeURIComponent(stationId)}`
   });
   if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
   const data = await response.json();
@@ -307,17 +315,19 @@ async function fetchMitchell() {
   const observedAt = easternWallClockDate(latest.ob);
   const ageMs = easternWallClockAgeMs(latest.ob);
   if (!latest.ob || !observedAt || !Number.isFinite(ageMs) || ageMs < -5 * 60 * 1000 || ageMs > observationMaxAgeMs) {
-    throw new Error("NC ECONet MITC observation is stale or missing");
+    throw new Error(`NC ECONet ${stationId} observation is stale or missing`);
   }
 
   return {
-    source: "NC ECONet MITC",
-    id: "mount-mitchell",
-    stationId: "MITC",
-    name: "Mount Mitchell",
-    role: "WNC high-peak reading",
-    elevationFt: n(data?.meta?.elev) ?? 6215,
-    url: "https://econet.climate.ncsu.edu/m/?id=MITC",
+    source,
+    id,
+    stationId,
+    name,
+    role,
+    elevationFt: elevationFt ?? n(data?.meta?.elev),
+    url,
+    lat: n(data?.meta?.lat),
+    lon: n(data?.meta?.lon),
     status: "live",
     observedAt: observedAt.toISOString(),
     conditions: "Current conditions",
@@ -327,7 +337,7 @@ async function fetchMitchell() {
     humidityPct: n(latest.rh),
     windMph: n(latest.wind_speed),
     gustMph: n(latest.wind_gust),
-    windDirection: null,
+    windDirection: latest.wind_dir_deg == null ? null : `${latest.wind_dir_deg}deg`,
     uv: null,
     solarWm2: n(latest.sr),
     wbgtF: null,
@@ -336,6 +346,28 @@ async function fetchMitchell() {
     rainRateInHr: null,
     pressureTrend: null
   };
+}
+
+async function fetchMitchell() {
+  return fetchEconetStation({
+    stationId: "MITC",
+    id: "mount-mitchell",
+    name: "Mount Mitchell",
+    role: "WNC high-peak reading",
+    elevationFt: 6215,
+    url: "https://econet.climate.ncsu.edu/m/?id=MITC"
+  });
+}
+
+async function fetchFryingPan() {
+  return fetchEconetStation({
+    stationId: "FRYI",
+    id: "frying-pan-pisgah-ridgeline",
+    name: "Frying Pan / Pisgah Ridgeline",
+    role: "Pisgah ridgeline reading",
+    elevationFt: 5000,
+    url: "https://econet.climate.ncsu.edu/m/?id=FRYI"
+  });
 }
 
 async function fetchMaxPatch() {
@@ -730,7 +762,7 @@ function renderHtml(payload) {
       </div>
 
       <div class="footer-meta">
-        <div>Data: Tempest • Weather Underground • NC ECONet MITC</div>
+        <div>Data: Tempest • Weather Underground • NC ECONet</div>
         <div>Serving Asheville and the greater 828 region</div>
         <div class="footer-disclaimer">
           For general awareness only—not a substitute for official forecasts, warnings, or trail advisories.
@@ -752,6 +784,7 @@ const previousById = new Map((previous?.stations || []).map((s) => [s.id, s]));
 const stations = [
   ...(await Promise.all(tempestStations.map((station) => withFallback(() => fetchTempest(station), `tempest-${station.id}`, previousById)))),
   await withFallback(fetchMaxPatch, "max-patch", previousById),
+  await withFallback(fetchFryingPan, "frying-pan-pisgah-ridgeline", previousById),
   await withFallback(fetchMitchell, "mount-mitchell", previousById)
 ];
 const payload = {
