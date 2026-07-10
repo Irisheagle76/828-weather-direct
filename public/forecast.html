@@ -150,10 +150,13 @@
     import { render4DayForecast } from '/js/modules/render4DayForecast.js?v=forecast-splash-20260608';
 
     const root = document.getElementById('forecast-root');
+    const FORECAST_UPDATE_STORAGE_KEY = 'forecast:last-published';
+    const FORECAST_UPDATE_CHANNEL = 'forecast-updates';
+    let renderInFlight = null;
 
     async function init() {
       try {
-        await render4DayForecast(root);
+        await refreshForecastBoard();
       } catch (e) {
         console.error('Forecast load failed:', e);
         if (root) {
@@ -177,6 +180,37 @@
       document.addEventListener("DOMContentLoaded", init);
     } else {
       init();
+    }
+
+    async function refreshForecastBoard() {
+      if (!root) return;
+      if (!renderInFlight) {
+        renderInFlight = render4DayForecast(root).finally(() => {
+          renderInFlight = null;
+        });
+      }
+      return renderInFlight;
+    }
+
+    function refreshForecastBoardWhenVisible() {
+      if (document.visibilityState === 'visible') {
+        refreshForecastBoard();
+      }
+    }
+
+    window.addEventListener('focus', refreshForecastBoardWhenVisible);
+    document.addEventListener('visibilitychange', refreshForecastBoardWhenVisible);
+    window.addEventListener('storage', event => {
+      if (event.key === FORECAST_UPDATE_STORAGE_KEY) refreshForecastBoard();
+    });
+
+    try {
+      const channel = new BroadcastChannel(FORECAST_UPDATE_CHANNEL);
+      channel.addEventListener('message', event => {
+        if (event.data?.type === 'forecast-published') refreshForecastBoard();
+      });
+    } catch {
+      // Storage and focus events cover browsers without BroadcastChannel.
     }
   </script>
 

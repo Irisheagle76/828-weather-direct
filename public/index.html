@@ -4630,6 +4630,7 @@
     }
 
     const FORECAST_UPDATE_STORAGE_KEY = "forecast:last-published";
+    const FORECAST_UPDATE_CHANNEL = "forecast-updates";
 
     function refreshHomeForecastSignalsWhenVisible() {
       if (document.visibilityState === "visible") {
@@ -4644,6 +4645,17 @@
         hydrateHomeForecastSignals();
       }
     });
+
+    try {
+      const forecastUpdateChannel = new BroadcastChannel(FORECAST_UPDATE_CHANNEL);
+      forecastUpdateChannel.addEventListener("message", (event) => {
+        if (event.data?.type === "forecast-published") {
+          hydrateHomeForecastSignals();
+        }
+      });
+    } catch {
+      // Storage and focus events cover browsers without BroadcastChannel.
+    }
 
     function renderHomeHikingCard(data = {}) {
       const guidance = data?.guidance || {};

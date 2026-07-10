@@ -1151,6 +1151,8 @@ const SIGNAL_CARD_COUNT = 4;
 
 const DAY_COUNT = 4;
 const STORAGE_KEY = "forecast-composer-v1";
+const FORECAST_UPDATE_STORAGE_KEY = "forecast:last-published";
+const FORECAST_UPDATE_CHANNEL = "forecast-updates";
 const el = id => document.getElementById(id);
 const state = {
   activeDate: "",
@@ -2154,19 +2156,43 @@ async function publishForecast() {
       throw new Error(result.error || "Publish failed");
     }
 
-    try {
-      localStorage.setItem("forecast:last-published", result.publishedAt || new Date().toISOString());
-    } catch {
-      // Publishing still succeeds when browser storage is unavailable.
-    }
+    const publishedAt = result.publishedAt || forecast.lastUpdated;
+    await verifyPublishedForecast(publishedAt);
+    notifyForecastPublished(publishedAt);
 
     setStatus("Published. The forecast page and homepage signals are now live.");
   } catch (err) {
     console.error("Forecast publish failed:", err);
-    setStatus("Publish failed. The copy buttons still work as a fallback.");
+    setStatus(`Publish failed: ${err.message || "The copy buttons still work as a fallback."}`);
   } finally {
     button.disabled = false;
     button.textContent = "Publish Forecast";
+  }
+}
+
+async function verifyPublishedForecast(publishedAt) {
+  const res = await fetch(`/api/router?route=forecast/latest&t=${Date.now()}`, { cache: "no-store" });
+  if (!res.ok) throw new Error(`Live forecast check failed (${res.status})`);
+
+  const latest = await res.json();
+  if (latest?.lastUpdated !== publishedAt) {
+    throw new Error("The live forecast did not update after publish.");
+  }
+}
+
+function notifyForecastPublished(publishedAt) {
+  try {
+    localStorage.setItem(FORECAST_UPDATE_STORAGE_KEY, publishedAt || new Date().toISOString());
+  } catch {
+    // Publishing still succeeds when browser storage is unavailable.
+  }
+
+  try {
+    const channel = new BroadcastChannel(FORECAST_UPDATE_CHANNEL);
+    channel.postMessage({ type: "forecast-published", publishedAt });
+    channel.close();
+  } catch {
+    // Older browsers still get the storage event path.
   }
 }
 
