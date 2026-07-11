@@ -3939,7 +3939,7 @@
     import {
       applyPrecipOverrideToNarrative,
       getCurrentPrecipOverride
-    } from "./js/intel/precip-override.js?v=20260628-precip-first";
+    } from "./js/intel/precip-override.js?v=20260711-radar-lightning";
     import { buildDuskSkyFallback, findTodaySolarTimes, getSkyTimePhase } from "./js/intel/sky-time.js?v=20260629-shared-sunset";
     import { loadAndRenderAlerts } from "./js/modules/renderAlerts.js";
     import { subscribeUserToPush } from "./js/notifications/subscribeClient.js?v=20260518-vapid-trim";
@@ -5519,7 +5519,10 @@
 
     async function hydrateLiveComfortModules() {
       try {
-        const weather = await fetchRouteJson("weather&type=hourly&lat=35.5951&lon=-82.5515");
+        const [weather, stormPayload] = await Promise.all([
+          fetchRouteJson("weather&type=hourly&lat=35.5951&lon=-82.5515"),
+          fetchRouteJson("storm/current", { cacheBust: false }).catch(() => null)
+        ]);
         const hourly = (Array.isArray(weather?.hourly) ? weather.hourly : [])
           .map(normalizeWeatherHour)
           .filter(Boolean)
@@ -5533,7 +5536,9 @@
         const displayCurrentHour = observationTempHour(weather);
         latestPrecipOverride = getCurrentPrecipOverride({
           current,
-          hourly
+          hourly,
+          radar: stormPayload?.radar,
+          lightningCount: stormPayload?.weather?.lightningCount
         });
         latestSkyWeatherContext = buildSkyWeatherContext(closestCurrentForecastHour(hourly) || currentHour || hourly[0], current);
         updateRadarHomeSignalFromWeather({ ...weather, hourly });
@@ -5576,6 +5581,7 @@
           console.warn("Scheduled sky analysis unavailable; using live analyzer", scheduledError);
           data = await fetchRouteJson("sky/current", { cacheBust: false });
         }
+        const stormPayload = await stormPromise;
         let weatherContext = latestSkyWeatherContext;
         // Refresh the precipitation decision with every sky update so active-rain
         // wording expires promptly when Tempest returns to zero.
@@ -5589,7 +5595,9 @@
             const currentHour = normalizeCurrentConditions(weather?.current || weather?.current_conditions || null);
             latestPrecipOverride = getCurrentPrecipOverride({
               current: weather?.current || weather?.current_conditions || null,
-              hourly
+              hourly,
+              radar: stormPayload?.radar,
+              lightningCount: stormPayload?.weather?.lightningCount
             });
             weatherContext = buildSkyWeatherContext(closestCurrentForecastHour(hourly) || currentHour || hourly[0], weather?.current || weather?.current_conditions || null);
             latestSkyWeatherContext = weatherContext;
@@ -5678,7 +5686,6 @@
           ? daylightFallback.confidence
           : skyIntel?.confidence;
 
-        const stormPayload = await stormPromise;
         const stormSignal = stormPayload?.signal;
         const stormActive = !nighttimeFallback && stormSignal?.active && stormSignal.headline && stormSignal.detail;
         const nextStormLevel = stormActive ? (stormSignal.level || "watching") : "none";
