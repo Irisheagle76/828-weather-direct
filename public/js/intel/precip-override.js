@@ -1,4 +1,5 @@
 const ACTIVE_OBSERVATION_MAX_MS = 5 * 60 * 1000;
+const DRY_CONFIRMATION_MINUTES = 4;
 const RECENT_RAIN_MAX_MINUTES = 10;
 const RECENT_LIGHTNING_MAX_MINUTES = 30;
 const RADAR_MAX_AGE_MINUTES = 15;
@@ -189,13 +190,18 @@ export function getCurrentPrecipOverride(context = {}) {
   let lastRainDetectedAt = timestampOrNull(previous.lastRainDetectedAt);
   if (observationFresh && rainRate > 0) lastRainDetectedAt = rainRateObservedAt;
   else if (accumulationIncreased) lastRainDetectedAt = rainRateObservedAt;
-
-  const minutesSinceRainDetected = Number.isFinite(lastRainDetectedAt)
-    ? Math.max(0, (now - lastRainDetectedAt) / 60000)
-    : null;
   const activeRainNow = observationFresh && rainRate > 0;
-  const recentRainOnly = !activeRainNow && Number.isFinite(minutesSinceRainDetected) &&
-    minutesSinceRainDetected <= RECENT_RAIN_MAX_MINUTES;
+  let dryObservationStartedAt = timestampOrNull(previous.dryObservationStartedAt);
+  if (activeRainNow || accumulationIncreased) {
+    dryObservationStartedAt = null;
+  } else if (observationFresh && rainRate === 0 && !Number.isFinite(dryObservationStartedAt)) {
+    dryObservationStartedAt = rainRateObservedAt;
+  }
+  const dryObservationMinutes = Number.isFinite(dryObservationStartedAt)
+    ? Math.max(0, (now - dryObservationStartedAt) / 60000)
+    : null;
+  const dryConfirmed = observationFresh && rainRate === 0 &&
+    Number.isFinite(dryObservationMinutes) && dryObservationMinutes >= DRY_CONFIRMATION_MINUTES;
 
   const forecastTimestamp = timestampOrNull(currentHour?._timestamp);
   const forecastFresh = Number.isFinite(forecastTimestamp) && Math.abs(forecastTimestamp - now) <= 90 * 60 * 1000;
@@ -212,8 +218,14 @@ export function getCurrentPrecipOverride(context = {}) {
   const radarFresh = radar.available === true && Number(radar.ageMinutes) <= RADAR_MAX_AGE_MINUTES;
   const radarOverhead = radarFresh && Number(radar.nearestEchoMiles) <= RADAR_OVERHEAD_MILES &&
     (Number(radar.echoPixels) > 0 || Number(radar.echoCoverage) > 0);
-  const radarSupportedRain = !activeRainNow && !recentRainOnly && radarOverhead &&
+  const radarSupportedRain = !activeRainNow && !dryConfirmed && radarOverhead &&
     (strongForecastRain || current.isRainingNow === true || Number(current.relative_humidity ?? current.relativeHumidity) >= 90);
+  if (radarSupportedRain && !Number.isFinite(lastRainDetectedAt)) lastRainDetectedAt = now;
+  const minutesSinceRainDetected = Number.isFinite(lastRainDetectedAt)
+    ? Math.max(0, (now - lastRainDetectedAt) / 60000)
+    : null;
+  const recentRainOnly = !activeRainNow && !radarSupportedRain && Number.isFinite(minutesSinceRainDetected) &&
+    minutesSinceRainDetected <= RECENT_RAIN_MAX_MINUTES;
   const forecastActive = !activeRainNow && !recentRainOnly && !radarSupportedRain && tempestUnavailable && strongForecastRain;
 
   const observedLightningCount = Math.max(0, Number(
@@ -252,6 +264,7 @@ export function getCurrentPrecipOverride(context = {}) {
 
   writeState(storage, {
     lastRainDetectedAt,
+    dryObservationStartedAt,
     accumulation: Number.isFinite(accumulation) ? accumulation : previousAccumulation,
     observedAt: rainRateObservedAt,
     lastLightningDetectedAt,
@@ -278,6 +291,8 @@ export function getCurrentPrecipOverride(context = {}) {
     lastRainDetectedAt,
     minutesSinceRainDetected,
     activeRainNow,
+    dryConfirmed,
+    dryObservationMinutes,
     radarSupportedRain,
     radarFresh,
     radarOverhead,
