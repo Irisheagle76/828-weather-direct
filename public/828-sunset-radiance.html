@@ -1306,7 +1306,7 @@
         <div class="status-inner" aria-label="Sunset status">
           <div class="status-pill live" id="liveStatus">Live sky loading</div>
           <div class="status-pill" id="cloudStatus">Clouds --</div>
-          <div class="status-pill" id="directionStatus">WNW -- / ENE --</div>
+          <div class="status-pill" id="directionStatus">West -- / ENE --</div>
           <div class="status-pill" id="humidityStatus">Humidity --</div>
           <div class="status-pill" id="precipStatus">Rain chance --</div>
           <div class="status-pill" id="windowStatus">Radiance window --</div>
@@ -1324,7 +1324,7 @@
               <img
                 id="skyImage"
                 src="https://i.ytimg.com/vi/UxUU3Fc1vBw/maxresdefault_live.jpg"
-                alt="Current YouTube thumbnail from the downtown Asheville WNW sky camera"
+                alt="Current YouTube thumbnail from the rotating downtown Asheville western sky camera"
               />
               <div class="sky-caption">
                 <div class="sky-chip" id="skyChip">Loading</div>
@@ -1335,7 +1335,7 @@
             <div class="sky-meta" aria-label="Camera metrics">
               <div>
                 <b id="cloudMetric">--</b>
-                <span id="cloudMetricLabel">WNW downtown clouds</span>
+                <span id="cloudMetricLabel">Western sky clouds</span>
               </div>
               <div>
                 <b id="eneCloudMetric">--</b>
@@ -1435,7 +1435,7 @@
               ></iframe>
             </div>
             <div class="context-copy">
-              <strong>Downtown Asheville · WNW view.</strong> This live camera supplies the west-northwest side of the directional Sky Read. <a href="https://www.youtube.com/watch?v=UxUU3Fc1vBw" target="_blank" rel="noopener noreferrer">Open on YouTube</a>.
+              <strong>Downtown Asheville · Western sky.</strong> This live camera rotates across the west-southwest, west, and west-northwest sky for the directional Sky Read. <a href="https://www.youtube.com/watch?v=UxUU3Fc1vBw" target="_blank" rel="noopener noreferrer">Open on YouTube</a>.
             </div>
           </article>
         </div>
@@ -2205,9 +2205,9 @@
       const hasWNW = Number.isFinite(wnwCloud);
       const hasENE = Number.isFinite(eneCloud);
       els.cloudMetric.textContent = hasWNW ? pct(wnwCloud) : obscuredSky ? "Obscured" : pct(displayCloud);
-      els.cloudMetricLabel.textContent = hasWNW ? "WNW downtown clouds" : "Camera cloud cover";
+      els.cloudMetricLabel.textContent = hasWNW ? "Western sky clouds" : "Camera cloud cover";
       els.eneCloudMetric.textContent = hasENE ? pct(eneCloud) : "--";
-      els.directionStatus.textContent = `WNW ${hasWNW ? pct(wnwCloud) : "--"} / ENE ${hasENE ? pct(eneCloud) : "--"}`;
+      els.directionStatus.textContent = `West ${hasWNW ? pct(wnwCloud) : "--"} / ENE ${hasENE ? pct(eneCloud) : "--"}`;
       els.lightMetric.textContent = staleNightAnalysis
         ? "Bright"
         : state.skyIntel?.sunlightDetected ? labelize(state.skyIntel.sunlightLevel) : "Low";
@@ -2438,9 +2438,9 @@
       els.heroSky.textContent = skyLabel;
       els.skyHeadline.textContent = liveNarrative?.headline || "Reading the western sky.";
       els.skyDetail.textContent = liveNarrative?.detail || "The camera snapshot will update automatically.";
-      els.liveStatus.textContent = `WNW thumbnail analyzed ${formatCaptureTime(state.skyData?.timestamp)}`;
+      els.liveStatus.textContent = `Western sky thumbnail analyzed ${formatCaptureTime(state.skyData?.timestamp)}`;
       els.captureMetric.textContent = "Current";
-      els.captureMetricLabel.textContent = "WNW YouTube still";
+      els.captureMetricLabel.textContent = "Western sky YouTube still";
       setSkyFrame(captureVersion, skyStale);
       renderRadiance();
     }
