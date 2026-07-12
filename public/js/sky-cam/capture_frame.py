@@ -5,7 +5,7 @@ from urllib.request import Request, urlopen
 BASE_DIR = os.path.dirname(__file__)
 OUTPUT_PATH = os.path.join(BASE_DIR, "frame.jpg")
 
-YOUTUBE_THUMBNAIL_URL = "https://i.ytimg.com/vi/hQL1tvHKX9o/maxresdefault_live.jpg"
+YOUTUBE_THUMBNAIL_URL = "https://i.ytimg.com/vi/8C7HlP17G1s/maxresdefault_live.jpg"
 MIN_IMAGE_BYTES = 10000
 
 
