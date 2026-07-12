@@ -1578,7 +1578,7 @@
   <script type="module">
     import { buildSkyConditionRead, isObscuredSky } from "./js/intel/sky-read.js?v=20260705-directional-cameras";
     import { buildDuskSkyFallback, getSkyTimePhase } from "./js/intel/sky-time.js?v=20260629-shared-sunset";
-    import { getCurrentPrecipOverride } from "./js/intel/precip-override.js?v=20260628-precip-first";
+    import { applyPrecipOverrideToNarrative, getCurrentPrecipOverride } from "./js/intel/precip-override.js?v=20260628-precip-first";
 
     const ASHEVILLE = {
       lat: 35.5951,
@@ -1857,6 +1857,26 @@
         uvIndex: pickNumber(solarSource, ["uvIndex", "uv_index", "uv"]),
         weatherCode: pickNumber(currentHour, ["weatherCode", "weather_code"]) ?? pickNumber(current, ["weatherCode", "weather_code"])
       };
+    }
+
+    function getSkyPrecipOverride() {
+      if (!state.weather) return null;
+      return getCurrentPrecipOverride({
+        current: state.weather.current || state.weather.current_conditions || {},
+        hourly: state.weather.hourly || []
+      });
+    }
+
+    function getPrecipSkyLabel(precipOverride) {
+      if (!precipOverride?.active) return null;
+      if (precipOverride.mode === "recent") return "Rain Easing";
+      return {
+        storm: "Rain & Lightning",
+        snow: "Snow",
+        drizzle: "Light Rain",
+        showers: "Showers",
+        rain: "Rain"
+      }[precipOverride.type] || "Rain";
     }
 
     function getRadiancePhase(daily) {
@@ -2409,8 +2429,10 @@
       });
       state.skyIntel = skyRead.skyIntel;
       state.narrative = skyRead.narrative;
-      const liveNarrative = staleNightAnalysis ? buildLiveViewNarrative() : skyRead.narrative;
-      const skyLabel = staleNightAnalysis ? "Live Sky" : skyRead.label;
+      const precipOverride = getSkyPrecipOverride();
+      const baseNarrative = staleNightAnalysis ? buildLiveViewNarrative() : skyRead.narrative;
+      const liveNarrative = applyPrecipOverrideToNarrative(baseNarrative, precipOverride);
+      const skyLabel = getPrecipSkyLabel(precipOverride) || (staleNightAnalysis ? "Live Sky" : skyRead.label);
 
       els.skyChip.textContent = skyLabel;
       els.heroSky.textContent = skyLabel;
