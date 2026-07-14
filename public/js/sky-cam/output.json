@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-07-14T17:49:29.734025+00:00",
+  "timestamp": "2026-07-14T18:50:12.937530+00:00",
   "metrics": {
     "cloudCoverWest": 1,
     "brightness": 0.63,
@@ -18,8 +18,8 @@
     "mode": "day",
     "satelliteHighCloudSignal": true,
     "satelliteCloudMotionSignal": true,
-    "satelliteCloudFraction": 0.91,
-    "satelliteMotion": 0.05
+    "satelliteCloudFraction": 0.93,
+    "satelliteMotion": 0.04
   },
   "trend": {
     "cloudTrend": "steady",
