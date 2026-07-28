@@ -3926,6 +3926,7 @@
 
   <script type="module">
     import { calculateComfort } from "./js/intel/comfort.js";
+    import { buildTomorrowSummary } from "./js/intel/tomorrow-summary.js?v=20260728-daytime-humidity";
     import {
       cleanHikingText,
       homeHikingBestBet,
@@ -5456,51 +5457,10 @@
         const ts = item.timestamp ?? item.time ?? item.date;
         return Number.isFinite(ts) ? sameLocalDay(ts, 1) : sameLocalDay(new Date(ts).getTime(), 1);
       }) || daily[1] || null;
-
-      const temps = tomorrowHours.map((hour) => Number(hour.temperatureF)).filter(Number.isFinite);
-      const scores = tomorrowHours.map(comfortScore100).filter(Number.isFinite);
-      const dewpoints = tomorrowHours.map((hour) => Number(hour.dewpointF)).filter(Number.isFinite);
-      const cloudValues = tomorrowHours.map((hour) => Number(hour.cloudCover)).filter(Number.isFinite);
-      const rainValues = tomorrowHours.map((hour) => Number(hour.precipProbability)).filter(Number.isFinite);
-
-      const low = Number.isFinite(Number(day?.tempMin)) ? Number(day.tempMin) : Math.min(...temps);
-      const high = Number.isFinite(Number(day?.tempMax)) ? Number(day.tempMax) : Math.max(...temps);
-      const score = scores.length ? Math.round(scores.reduce((sum, value) => sum + value, 0) / scores.length) : Math.round(Number(fallback.score));
-      const maxDew = dewpoints.length ? Math.max(...dewpoints) : null;
-      const cloudAvg = cloudValues.length ? cloudValues.reduce((sum, value) => sum + value, 0) / cloudValues.length : Number(day?.cloudCover);
-      const rainChance = rainValues.length ? Math.max(...rainValues) : Number(day?.precipProbability);
-      const cloudPhrase = Number.isFinite(cloudAvg)
-        ? cloudAvg >= 0.7 ? "clouds look fairly dominant" : cloudAvg >= 0.35 ? "clouds mix in at times" : "sun should have room to work"
-        : "sky cover is still being resolved";
-      const humidityPhrase = Number.isFinite(maxDew)
-        ? maxDew >= 67 ? "muggy air is part of the feel" : maxDew >= 60 ? "humidity is noticeable but not overwhelming" : "humidity should not dominate the feel"
-        : "humidity is being pulled from the hourly forecast";
-      const rainPhrase = Number.isFinite(rainChance)
-        ? rainChance >= 0.4 ? "rain chances are worth planning around" : rainChance >= 0.2 ? "a low-end rain chance stays in the picture" : "rain chances stay low"
-        : "rain chances are still updating";
-
-      let headline = `Tomorrow looks ${scoreLabel(score).toLowerCase()} for comfort.`;
-      if (Number.isFinite(rainChance) && rainChance >= 0.4) {
-        headline = "Rain chances may shape tomorrow's comfort.";
-      } else if (Number.isFinite(maxDew) && maxDew >= 67) {
-        headline = "Humidity is the main comfort watch tomorrow.";
-      } else if (Number.isFinite(high) && high >= 86) {
-        headline = "Warmth builds into tomorrow's comfort read.";
-      }
-
-      const tempSentence = Number.isFinite(low) && Number.isFinite(high)
-        ? `Expect a morning low near ${Math.round(low)}° and an afternoon high near ${Math.round(high)}°.`
-        : "Tomorrow's temperature range is still updating.";
-      const detailSentence = `${humidityPhrase}, ${rainPhrase}, and ${cloudPhrase}.`;
-
-      return {
-        score,
-        high,
-        low,
-        rainChance,
-        headline,
-        narrative: `${tempSentence} ${detailSentence.charAt(0).toUpperCase()}${detailSentence.slice(1)}`
-      };
+      return buildTomorrowSummary(tomorrowHours, day, fallback, {
+        scoreHour: comfortScore100,
+        localHour: localHourNumber
+      });
     }
 
     function renderTomorrowLive(tomorrow, hourly = [], daily = []) {
