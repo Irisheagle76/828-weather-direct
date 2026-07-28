@@ -19,14 +19,33 @@ function renderAlerts(container, alerts = []) {
     return;
   }
 
-  container.innerHTML = active.map(alert => `
+  container.innerHTML = active.map(buildAlertMarkup).join("");
+}
+
+export function buildAlertMarkup(alert = {}) {
+  const imageUrl = normalizePublicImageUrl(alert.imageUrl);
+
+  return `
     <a class="site-alert site-alert-${escapeAttr(alert.severity || "heads-up")}" href="${escapeAttr(alert.url || "/")}">
+      ${imageUrl ? `<img class="site-alert-image" src="${escapeAttr(imageUrl)}" alt="${escapeAttr(alert.title ? `${alert.title} alert image` : "Alert image")}" loading="lazy" />` : ""}
       <span class="site-alert-meta">${escapeHtml(formatType(alert.type))} - ${escapeHtml(alert.timing || "Now")}</span>
       <strong>${escapeHtml(alert.title)}</strong>
       <span>${escapeHtml(alert.message)}</span>
       ${alert.action ? `<em>${escapeHtml(alert.action)}</em>` : ""}
     </a>
-  `).join("");
+  `;
+}
+
+function normalizePublicImageUrl(value) {
+  const imageUrl = String(value || "").trim();
+  if (!imageUrl) return "";
+
+  try {
+    const parsed = new URL(imageUrl);
+    return parsed.protocol === "https:" ? parsed.href : "";
+  } catch {
+    return "";
+  }
 }
 
 function isExpired(alert) {

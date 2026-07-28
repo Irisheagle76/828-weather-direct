@@ -70,6 +70,15 @@ body {
   margin-top: 8px;
 }
 
+.site-alert-image {
+  display: block;
+  width: calc(100% + 28px);
+  max-height: 320px;
+  margin: -12px -14px 7px;
+  border-radius: 7px 7px 0 0;
+  object-fit: cover;
+}
+
 .site-alert-notable {
   background: #6f4f18;
 }

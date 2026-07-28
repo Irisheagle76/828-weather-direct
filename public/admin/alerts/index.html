@@ -320,13 +320,13 @@
         </label>
 
         <label class="full">
-          Notification image
+          Alert image
           <div class="image-field">
             <input id="imageUrl" type="url" placeholder="https://..." />
             <button id="imageUploadBtn" class="secondary" type="button">Choose image</button>
           </div>
           <input id="imageInput" type="file" accept="image/*" hidden />
-          <span class="image-help" id="imageHelp">Optional large image. JPG, PNG, or WebP with a landscape crop works best.</span>
+          <span class="image-help" id="imageHelp">Optional image for the published site alert and supported push notifications. JPG, PNG, or WebP with a landscape crop works best.</span>
         </label>
 
         <label>
@@ -421,7 +421,7 @@
     const data = getPayload();
     previewEl.className = `preview ${data.severity}`;
     previewEl.innerHTML = `
-      ${data.imageUrl ? `<img class="preview-image" src="${escapeHtml(data.imageUrl)}" alt="Notification preview" />` : ""}
+      ${data.imageUrl ? `<img class="preview-image" src="${escapeHtml(data.imageUrl)}" alt="Published alert preview" />` : ""}
       <div class="preview-meta">${escapeHtml(formatType(data.type))} - ${escapeHtml(data.timing || "Now")}</div>
       <div class="preview-title">${escapeHtml(data.title || "Alert title")}</div>
       <div class="preview-body">${escapeHtml(data.message || "Main alert message will appear here.")}</div>
@@ -508,7 +508,7 @@
     imageHelp.textContent = `Uploading ${file.name}...`;
     try {
       fields.imageUrl.value = await uploadNotificationImage(file);
-      imageHelp.textContent = `${file.name} uploaded. It will appear as the large notification image on supported devices.`;
+      imageHelp.textContent = `${file.name} uploaded. It will appear on the published site alert and supported push notifications.`;
       updatePreview();
     } catch (err) {
       console.error(err);
