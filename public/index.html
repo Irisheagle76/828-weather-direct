@@ -3631,7 +3631,7 @@
           </div>
         </article>
 
-        <article class="fold-tool-card fire">
+        <article class="fold-tool-card fire" id="droughtFireCard" hidden>
           <div class="fire-card-head">
             <div>
               <div class="kicker">Drought & Fire Threat</div>
@@ -4078,6 +4078,8 @@
     const RADAR_PRECIP_AMOUNT_THRESHOLD = 0.005;
     const RADAR_FORECAST_HOURS = 72;
     let liveRadarSignalActive = PRECIP_SIGNAL_ACTIVE;
+    // Seasonal module: turn this back on when drought or fire conditions warrant homepage prominence.
+    const DROUGHT_FIRE_MODULE_ENABLED = false;
     const SUBSTACK_CLOUDINARY_IMAGE_OVERRIDE = "";
     const LATEST_SUBSTACK_FALLBACK = {
       title: "The Story of Asheville's Wild Spring",
@@ -4806,6 +4808,10 @@
     }
 
     async function hydrateDroughtFireCard() {
+      const card = document.querySelector("#droughtFireCard");
+      if (!DROUGHT_FIRE_MODULE_ENABLED) return;
+      if (card) card.hidden = false;
+
       renderDroughtFireCard(DROUGHT_FIRE_FALLBACK);
 
       try {
