@@ -354,233 +354,72 @@ export const WATER_WEBCAMS = [
   }
 ];
 
-const MOCK_RAINFALL_BY_BASIN = {
-  "Looking Glass Creek": { rain24h: 0.42, rain3d: 1.35, rain7d: 2.1, rain14d: 3.15 },
-  "Little River": { rain24h: 0.36, rain3d: 1.18, rain7d: 1.85, rain14d: 2.7 },
-  "Catawba River": { rain24h: 0.2, rain3d: 0.82, rain7d: 1.55, rain14d: 2.35 },
-  "Crabtree Creek": { rain24h: 0.55, rain3d: 1.52, rain7d: 2.25, rain14d: 3.4 },
-  "Linville River": { rain24h: 0.28, rain3d: 1.05, rain7d: 2.35, rain14d: 4.1 },
-  "Yellowstone Prong": { rain24h: 0.68, rain3d: 1.78, rain7d: 2.6, rain14d: 3.85 },
-  default: { rain24h: 0.35, rain3d: 1.1, rain7d: 1.95, rain14d: 3.0 }
-};
-
-const MOCK_RIVER_GAUGES = {
-  "03451500": { dischargeCfs: 2400, gaugeHeightFt: 3.6, waterTempF: 69, normalMedianCfs: 1510 },
-  "03453500": { dischargeCfs: 3100, gaugeHeightFt: 4.1, waterTempF: 68, normalMedianCfs: 2350 },
-  "03441000": { dischargeCfs: 145, gaugeHeightFt: 1.7, waterTempF: 58, normalMedianCfs: 180 },
-  "02150062": { dischargeCfs: 760, gaugeHeightFt: 2.4, waterTempF: 61, normalMedianCfs: 610 },
-  "03505550": { dischargeCfs: 820, gaugeHeightFt: 2.7, waterTempF: 54, normalMedianCfs: 690 },
-  "03512000": { dischargeCfs: 1500, gaugeHeightFt: 3.2, waterTempF: 66, normalMedianCfs: 980 },
-  "03461500": { dischargeCfs: 1900, gaugeHeightFt: 3.5, waterTempF: 63, normalMedianCfs: 1500 },
-  "03451000": { dischargeCfs: 430, gaugeHeightFt: 2.2, waterTempF: 67, normalMedianCfs: 250 }
-};
-
-export const MOCK_WEATHER_CONTEXT = {
-  airTempF: 78,
-  windMph: 7,
-  thunderstormRisk: 0.22,
-  generatedAt: new Date().toISOString()
-};
-
-export async function getRecentRainfallForLocation(lat, lon, basin = "default") {
-  void lat;
-  void lon;
-  // TODO: Replace this mock with NOAA/MRMS or another gridded rainfall source.
-  // Keep this function as the single rainfall abstraction for future live data.
+function unavailableRainfall() {
   return {
-    ...(MOCK_RAINFALL_BY_BASIN[basin] || MOCK_RAINFALL_BY_BASIN.default),
-    source: "Mock rainfall estimate"
+    available: false,
+    rain6h: null,
+    rain24h: null,
+    rain3d: null,
+    rain7d: null,
+    rain14d: null,
+    observedThrough: null,
+    source: "Precipitation unavailable"
   };
 }
 
-export async function fetchUSGSGaugeData(gaugeId) {
-  // TODO: Integrate USGS instantaneous values API for discharge, gauge height, and water temperature.
-  // The page is designed to keep working when this returns null or partial data.
-  const mock = MOCK_RIVER_GAUGES[gaugeId];
-  if (!mock) return null;
+function unavailablePayload() {
   return {
-    gaugeId,
-    ...mock,
-    percentNormal: mock.normalMedianCfs ? Math.round((mock.dischargeCfs / mock.normalMedianCfs) * 100) : null,
-    observedAt: new Date().toISOString(),
-    source: "Mock gauge estimate",
-    isLive: false
-  };
-}
-
-function numberOrNull(value) {
-  const n = Number(value);
-  return Number.isFinite(n) ? n : null;
-}
-
-function todayEasternParts() {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/New_York",
-    month: "numeric",
-    day: "numeric"
-  }).formatToParts(new Date());
-  return {
-    month: Number(parts.find((part) => part.type === "month")?.value),
-    day: Number(parts.find((part) => part.type === "day")?.value)
-  };
-}
-
-function parseUSGSInstantaneousValues(payload) {
-  const byGauge = {};
-  const series = payload?.value?.timeSeries || [];
-  series.forEach((item) => {
-    const gaugeId = item.sourceInfo?.siteCode?.[0]?.value;
-    const parameter = item.variable?.variableCode?.[0]?.value;
-    const reading = item.values?.[0]?.value?.[0];
-    if (!gaugeId || !parameter || !reading) return;
-    byGauge[gaugeId] ||= { gaugeId };
-    byGauge[gaugeId].quality ||= {};
-    const value = numberOrNull(reading.value);
-    if (parameter === "00060") byGauge[gaugeId].dischargeCfs = value;
-    if (parameter === "00065") byGauge[gaugeId].gaugeHeightFt = value;
-    if (parameter === "00010") {
-      byGauge[gaugeId].waterTempF = value !== null ? (value * 9) / 5 + 32 : null;
-      byGauge[gaugeId].quality.waterTempF = byGauge[gaugeId].waterTempF;
+    waterfallRainfall: WATERFALLS.map((waterfall) => ({
+      waterfallId: waterfall.id,
+      rainfall: unavailableRainfall()
+    })),
+    riverInputs: RIVERS.map((river) => ({
+      riverId: river.id,
+      rainfall: unavailableRainfall(),
+      gauge: null
+    })),
+    weather: {
+      airTempF: null,
+      windMph: null,
+      thunderstormRisk: null,
+      observedAt: null,
+      source: "Weather guidance unavailable"
+    },
+    meta: {
+      generatedAt: null,
+      status: "unavailable",
+      precipitationAvailable: false,
+      gaugesAvailable: false,
+      precipitationSource: "Unavailable",
+      gaugeSource: "Unavailable"
     }
-    if (parameter === "00095") byGauge[gaugeId].quality.specificConductance = value;
-    if (parameter === "00300") byGauge[gaugeId].quality.dissolvedOxygen = value;
-    if (parameter === "00400") byGauge[gaugeId].quality.ph = value;
-    if (parameter === "63680" || parameter === "99133") byGauge[gaugeId].quality.turbidity = value;
-    byGauge[gaugeId].observedAt = reading.dateTime || byGauge[gaugeId].observedAt;
-    byGauge[gaugeId].quality.observedAt = reading.dateTime || byGauge[gaugeId].quality.observedAt;
-  });
-  return byGauge;
-}
-
-function parseUSGSDailyMedianStats(text, month, day) {
-  const byGauge = {};
-  String(text || "").split(/\r?\n/).forEach((line) => {
-    if (!line || line.startsWith("#") || line.startsWith("agency_cd") || line.startsWith("5s")) return;
-    const cols = line.split("\t");
-    const gaugeId = cols[1];
-    const rowMonth = Number(cols[5]);
-    const rowDay = Number(cols[6]);
-    if (!gaugeId || rowMonth !== month || rowDay !== day) return;
-    byGauge[gaugeId] = {
-      normalMedianCfs: numberOrNull(cols[10]),
-      normalStartYear: numberOrNull(cols[7]),
-      normalEndYear: numberOrNull(cols[8]),
-      normalSampleCount: numberOrNull(cols[9])
-    };
-  });
-  return byGauge;
-}
-
-async function fetchUSGSGaugeBundle(gaugeIds = []) {
-  const uniqueIds = [...new Set(gaugeIds.filter(Boolean))];
-  if (!uniqueIds.length) return {};
-
-  const ids = uniqueIds.join(",");
-  const { month, day } = todayEasternParts();
-  const ivUrl = `https://waterservices.usgs.gov/nwis/iv/?format=json&sites=${encodeURIComponent(ids)}&parameterCd=00060,00065,00010,00095,00300,00400,63680,99133&siteStatus=all`;
-  const statUrl = `https://waterservices.usgs.gov/nwis/stat/?format=rdb&sites=${encodeURIComponent(ids)}&statReportType=daily&statTypeCd=median&parameterCd=00060`;
-
-  try {
-    const [ivResponse, statResponse] = await Promise.all([
-      fetch(ivUrl),
-      fetch(statUrl)
-    ]);
-    if (!ivResponse.ok || !statResponse.ok) throw new Error("USGS gauge request failed");
-    const [ivPayload, statText] = await Promise.all([
-      ivResponse.json(),
-      statResponse.text()
-    ]);
-    const currentByGauge = parseUSGSInstantaneousValues(ivPayload);
-    const normalByGauge = parseUSGSDailyMedianStats(statText, month, day);
-    return Object.fromEntries(uniqueIds.map((gaugeId) => {
-      const mock = MOCK_RIVER_GAUGES[gaugeId] || {};
-      const live = currentByGauge[gaugeId] || {};
-      const normal = normalByGauge[gaugeId] || {};
-      const dischargeCfs = live.dischargeCfs ?? mock.dischargeCfs ?? null;
-      const normalMedianCfs = normal.normalMedianCfs ?? mock.normalMedianCfs ?? null;
-      const percentNormal = dischargeCfs && normalMedianCfs
-        ? Math.round((dischargeCfs / normalMedianCfs) * 100)
-        : null;
-      return [gaugeId, {
-        gaugeId,
-        dischargeCfs,
-        gaugeHeightFt: live.gaugeHeightFt ?? mock.gaugeHeightFt ?? null,
-        waterTempF: live.waterTempF ?? mock.waterTempF ?? null,
-        quality: live.quality && Object.keys(live.quality).length ? live.quality : null,
-        normalMedianCfs,
-        percentNormal,
-        normalStartYear: normal.normalStartYear || null,
-        normalEndYear: normal.normalEndYear || null,
-        normalSampleCount: normal.normalSampleCount || null,
-        observedAt: live.observedAt || new Date().toISOString(),
-        source: "USGS instantaneous values and daily median statistics",
-        isLive: Boolean(live.dischargeCfs)
-      }];
-    }));
-  } catch {
-    return Object.fromEntries(uniqueIds.map((gaugeId) => [gaugeId, {
-      gaugeId,
-      ...(MOCK_RIVER_GAUGES[gaugeId] || {}),
-      percentNormal: MOCK_RIVER_GAUGES[gaugeId]?.normalMedianCfs
-        ? Math.round((MOCK_RIVER_GAUGES[gaugeId].dischargeCfs / MOCK_RIVER_GAUGES[gaugeId].normalMedianCfs) * 100)
-        : null,
-      observedAt: new Date().toISOString(),
-      source: "Mock gauge estimate",
-      isLive: false
-    }]));
-  }
-}
-
-export function normalizeGaugeData(raw) {
-  if (!raw) return null;
-  return {
-    gaugeId: raw.gaugeId,
-    dischargeCfs: Number.isFinite(Number(raw.dischargeCfs)) ? Number(raw.dischargeCfs) : null,
-    gaugeHeightFt: Number.isFinite(Number(raw.gaugeHeightFt)) ? Number(raw.gaugeHeightFt) : null,
-    waterTempF: Number.isFinite(Number(raw.waterTempF)) ? Number(raw.waterTempF) : null,
-    quality: raw.quality && typeof raw.quality === "object" ? {
-      waterTempF: Number.isFinite(Number(raw.quality.waterTempF)) ? Number(raw.quality.waterTempF) : null,
-      turbidity: Number.isFinite(Number(raw.quality.turbidity)) ? Number(raw.quality.turbidity) : null,
-      dissolvedOxygen: Number.isFinite(Number(raw.quality.dissolvedOxygen)) ? Number(raw.quality.dissolvedOxygen) : null,
-      ph: Number.isFinite(Number(raw.quality.ph)) ? Number(raw.quality.ph) : null,
-      specificConductance: Number.isFinite(Number(raw.quality.specificConductance)) ? Number(raw.quality.specificConductance) : null,
-      observedAt: raw.quality.observedAt || null
-    } : null,
-    normalMedianCfs: Number.isFinite(Number(raw.normalMedianCfs)) ? Number(raw.normalMedianCfs) : null,
-    percentNormal: Number.isFinite(Number(raw.percentNormal)) ? Number(raw.percentNormal) : null,
-    normalStartYear: Number.isFinite(Number(raw.normalStartYear)) ? Number(raw.normalStartYear) : null,
-    normalEndYear: Number.isFinite(Number(raw.normalEndYear)) ? Number(raw.normalEndYear) : null,
-    normalSampleCount: Number.isFinite(Number(raw.normalSampleCount)) ? Number(raw.normalSampleCount) : null,
-    observedAt: raw.observedAt || null,
-    source: raw.source || "Gauge data",
-    isLive: Boolean(raw.isLive)
   };
 }
 
 export async function getWaterPageInputs() {
-  const gaugeById = await fetchUSGSGaugeBundle(RIVERS.map((river) => river.usgsGaugeId));
+  let live = unavailablePayload();
 
-  const waterfallRainfall = await Promise.all(
-    WATERFALLS.map(async (waterfall) => ({
-      waterfallId: waterfall.id,
-      rainfall: await getRecentRainfallForLocation(waterfall.lat, waterfall.lon, waterfall.basin)
-    }))
-  );
-
-  const riverInputs = await Promise.all(
-    RIVERS.map(async (river) => ({
-      riverId: river.id,
-      rainfall: await getRecentRainfallForLocation(river.lat, river.lon, river.name),
-      gauge: normalizeGaugeData(gaugeById[river.usgsGaugeId] || await fetchUSGSGaugeData(river.usgsGaugeId))
-    }))
-  );
+  try {
+    const response = await fetch("/api/router?route=water/conditions&v=20260730-live2", {
+      headers: { Accept: "application/json" }
+    });
+    if (!response.ok) throw new Error(`Water conditions returned ${response.status}`);
+    live = await response.json();
+  } catch (error) {
+    console.warn("Live water inputs unavailable", error);
+  }
 
   return {
     waterfalls: WATERFALLS,
     rivers: RIVERS,
     webcams: WATER_WEBCAMS,
-    waterfallRainfall,
-    riverInputs,
-    weather: MOCK_WEATHER_CONTEXT
+    waterfallRainfall: Array.isArray(live.waterfallRainfall)
+      ? live.waterfallRainfall
+      : unavailablePayload().waterfallRainfall,
+    riverInputs: Array.isArray(live.riverInputs)
+      ? live.riverInputs
+      : unavailablePayload().riverInputs,
+    weather: live.weather || unavailablePayload().weather,
+    meta: live.meta || unavailablePayload().meta
   };
 }

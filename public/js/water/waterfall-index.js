@@ -1,92 +1,130 @@
-const RESPONSE_SPEED_WEIGHTS = {
-  fast: { recent: 36, multiDay: 24, week: 14, wetness: 10, dryPenalty: 20 },
-  moderate: { recent: 28, multiDay: 28, week: 18, wetness: 13, dryPenalty: 14 },
-  slow: { recent: 20, multiDay: 28, week: 24, wetness: 18, dryPenalty: 8 }
-};
-
-const HAZARD_BOOST = {
-  low: 0,
-  medium: 5,
-  high: 10
+const RESPONSE_PROFILES = {
+  fast: {
+    base: 12,
+    weights: [55, 38, 20, 10],
+    scales: [0.55, 1.25, 1.8, 2.8]
+  },
+  moderate: {
+    base: 15,
+    weights: [46, 42, 28, 15],
+    scales: [0.7, 1.45, 2.1, 3]
+  },
+  slow: {
+    base: 18,
+    weights: [34, 43, 38, 22],
+    scales: [0.9, 1.6, 2.4, 3.4]
+  }
 };
 
 function clamp(value, min = 0, max = 100) {
   return Math.max(min, Math.min(max, value));
 }
 
-function scale(value, usefulMax) {
+function finiteRain(value) {
   const n = Number(value);
-  if (!Number.isFinite(n) || n <= 0) return 0;
-  return clamp(n / usefulMax, 0, 1);
+  return Number.isFinite(n) && n >= 0 ? n : 0;
+}
+
+function rainfallAvailable(rainfall = {}) {
+  return rainfall.available !== false &&
+    ["rain24h", "rain3d", "rain7d", "rain14d"].some((key) => Number.isFinite(Number(rainfall[key])));
+}
+
+function saturatingSignal(amount, usefulScale) {
+  if (amount <= 0) return 0;
+  return 1 - Math.exp(-amount / usefulScale);
+}
+
+export function splitRainfallWindows(rainfall = {}) {
+  const rain24h = finiteRain(rainfall.rain24h);
+  const rain3d = Math.max(rain24h, finiteRain(rainfall.rain3d));
+  const rain7d = Math.max(rain3d, finiteRain(rainfall.rain7d));
+  const rain14d = Math.max(rain7d, finiteRain(rainfall.rain14d));
+  return [
+    rain24h,
+    Math.max(0, rain3d - rain24h),
+    Math.max(0, rain7d - rain3d),
+    Math.max(0, rain14d - rain7d)
+  ];
 }
 
 export function scoreWaterfallFlow(waterfall, rainfall = {}) {
-  const weights = RESPONSE_SPEED_WEIGHTS[waterfall.responseSpeed] || RESPONSE_SPEED_WEIGHTS.moderate;
-  const rain24h = Number(rainfall.rain24h || 0);
-  const rain3d = Number(rainfall.rain3d || 0);
-  const rain7d = Number(rainfall.rain7d || 0);
-  const rain14d = Number(rainfall.rain14d || 0);
-  const antecedentWetness = clamp((rain14d - rain7d) / 2.8, -0.35, 1);
-  const drynessPenalty = rain7d < 0.6 ? weights.dryPenalty : rain14d < 1.25 ? weights.dryPenalty * 0.6 : 0;
-  const raw =
-    24 +
-    scale(rain24h, 1.35) * weights.recent +
-    scale(rain3d, 2.2) * weights.multiDay +
-    scale(rain7d, 3.4) * weights.week +
-    Math.max(0, antecedentWetness) * weights.wetness -
-    drynessPenalty;
-  const hazardRainBoost = rain24h >= 1.6 || rain3d >= 3.25 ? HAZARD_BOOST[waterfall.hazardSensitivity] || 0 : 0;
-  return clamp(Math.round(raw + hazardRainBoost));
+  if (!rainfallAvailable(rainfall)) return null;
+  const profile = RESPONSE_PROFILES[waterfall.responseSpeed] || RESPONSE_PROFILES.moderate;
+  const buckets = splitRainfallWindows(rainfall);
+  const signal = buckets.reduce((total, amount, index) =>
+    total + saturatingSignal(amount, profile.scales[index]) * profile.weights[index]
+  , 0);
+  const dry14d = finiteRain(rainfall.rain14d) < 0.35;
+  const score = profile.base + signal - (dry14d ? 7 : 0);
+  return clamp(Math.round(score), 0, 96);
+}
+
+function hazardousRainfall(waterfall, rainfall = {}) {
+  const sensitivity = waterfall.hazardSensitivity || "medium";
+  const rain6h = finiteRain(rainfall.rain6h);
+  const rain24h = finiteRain(rainfall.rain24h);
+  const rain3d = finiteRain(rainfall.rain3d);
+  const multiplier = sensitivity === "high" ? 1 : sensitivity === "medium" ? 1.3 : 1.65;
+  return rain6h >= 1.05 * multiplier ||
+    rain24h >= 1.75 * multiplier ||
+    rain3d >= 3.5 * multiplier;
 }
 
 export function categorizeWaterfall(score, waterfall, rainfall = {}) {
-  const rain24h = Number(rainfall.rain24h || 0);
-  const rain3d = Number(rainfall.rain3d || 0);
-  const sensitive = waterfall.hazardSensitivity === "high";
+  if (!Number.isFinite(score)) {
+    return {
+      label: "Data unavailable",
+      icon: "",
+      tone: "muted",
+      useCase: "Check a live camera or local report",
+      explanation: "The precipitation feed is unavailable, so this waterfall is not being scored."
+    };
+  }
 
-  if ((rain24h >= 1.75 || rain3d >= 3.4) && sensitive) {
+  if (hazardousRainfall(waterfall, rainfall)) {
     return {
       label: "Potentially Hazardous",
       icon: "⚠️",
       tone: "hazard",
-      useCase: "Avoid entering the water",
-      explanation: "Heavy recent rain can make nearby rocks slick and currents stronger than they look."
+      useCase: "View only from a safe, established area",
+      explanation: "Intense recent rain may create slick approaches, heavy spray, and stronger currents."
     };
   }
-  if (score >= 88) {
+  if (score >= 84) {
     return {
       label: "Roaring",
       icon: "💦",
       tone: "roaring",
-      useCase: "Sightseeing from safe overlooks",
-      explanation: "Big visual flow is likely, with spray and slick rock surfaces around the falls."
+      useCase: "Big-flow sightseeing from safe overlooks",
+      explanation: "The basin has a strong recent and multi-day rain signal, so impressive flow is likely."
     };
   }
-  if (score >= 72) {
+  if (score >= 68) {
     return {
       label: "Strong",
       icon: "💧",
       tone: "strong",
       useCase: waterfall.photoValue === "high" ? "Photography" : "Sightseeing",
-      explanation: "Recent rainfall should have the falls running nicely with strong photo potential."
+      explanation: "Recent basin rainfall should support a healthy, photogenic flow."
     };
   }
-  if (score >= 52) {
+  if (score >= 47) {
     return {
       label: "Normal",
       icon: "🌊",
       tone: "normal",
       useCase: waterfall.familyFriendly ? "Family-friendly sightseeing" : "Sightseeing",
-      explanation: "Flow should look healthy without the higher-water caution signals taking over."
+      explanation: "The rainfall signal supports typical flow without a major high-water signal."
     };
   }
-  if (score >= 34) {
+  if (score >= 27) {
     return {
       label: "Below Normal",
       icon: "💧",
       tone: "below",
       useCase: waterfall.familyFriendly ? "Easy viewing" : "Low-key sightseeing",
-      explanation: "The falls should still be worth a look, but smaller streams may be dropping off."
+      explanation: "Recent rain is limited, and smaller streams may be running light."
     };
   }
   return {
@@ -94,20 +132,22 @@ export function categorizeWaterfall(score, waterfall, rainfall = {}) {
     icon: "💧",
     tone: "low",
     useCase: "Best for quiet scouting",
-    explanation: "Dry recent weather likely has smaller cascades running light."
+    explanation: "The basin has a weak recent rain signal, so smaller cascades may be sparse."
   };
 }
 
 export function buildWaterfallIndex(waterfalls, rainfallById) {
   return waterfalls.map((waterfall) => {
-    const rainfall = rainfallById[waterfall.id] || {};
+    const rainfall = rainfallById[waterfall.id] || { available: false };
     const score = scoreWaterfallFlow(waterfall, rainfall);
     const category = categorizeWaterfall(score, waterfall, rainfall);
-    const why = [
-      `${Number(rainfall.rain3d || 0).toFixed(2)} in rain in 3 days`,
-      `${waterfall.responseSpeed} response basin`,
-      category.tone === "hazard" || score >= 78 ? "Slick rocks possible" : "Flow estimate from rainfall"
-    ];
+    const why = Number.isFinite(score)
+      ? [
+          `${finiteRain(rainfall.rain6h).toFixed(2)} in last 6 hours`,
+          `${finiteRain(rainfall.rain3d).toFixed(2)} in last 3 days`,
+          `${waterfall.responseSpeed} response basin`
+        ]
+      : ["Live precipitation estimate unavailable"];
     return {
       waterfall,
       rainfall,
@@ -115,5 +155,9 @@ export function buildWaterfallIndex(waterfalls, rainfallById) {
       category,
       why
     };
-  }).sort((a, b) => b.score - a.score);
+  }).sort((a, b) => {
+    if (!Number.isFinite(a.score)) return 1;
+    if (!Number.isFinite(b.score)) return -1;
+    return b.score - a.score;
+  });
 }

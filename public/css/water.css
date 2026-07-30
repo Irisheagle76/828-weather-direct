@@ -1822,6 +1822,14 @@ a {
   line-height: 1.5;
 }
 
+.data-source {
+  display: block;
+  margin-top: 0.7rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
 .safety-card {
   padding: 22px;
   border-top: 4px solid var(--orange);

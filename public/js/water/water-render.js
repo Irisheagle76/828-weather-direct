@@ -1,9 +1,10 @@
-import { getWaterPageInputs } from "./water-data.js";
-import { buildWaterfallIndex } from "./waterfall-index.js";
-import { ACTIVITY_LABELS, buildRiverIndex } from "./river-index.js";
+import { getWaterPageInputs } from "./water-data.js?v=20260730-water-live2";
+import { buildWaterfallIndex } from "./waterfall-index.js?v=20260730-water-live2";
+import { ACTIVITY_LABELS, buildRiverIndex } from "./river-index.js?v=20260730-water-live2";
 
 const els = {
   generatedAt: document.querySelector("#generatedAt"),
+  dataStatus: document.querySelector("#dataStatus"),
   summaryGrid: document.querySelector("#summaryGrid"),
   visualDashboard: document.querySelector("#visualDashboard"),
   liveCameraWall: document.querySelector("#liveCameraWall"),
@@ -36,8 +37,8 @@ function formatInches(value) {
 
 function formatDateTime(value) {
   const ts = new Date(value).getTime();
-  if (!Number.isFinite(ts)) return "Sample water read";
-  return `Updated ${new Date(ts).toLocaleString([], {
+  if (!Number.isFinite(ts)) return "Live data unavailable";
+  return `Live data checked ${new Date(ts).toLocaleString([], {
     month: "short",
     day: "numeric",
     hour: "numeric",
@@ -47,7 +48,11 @@ function formatDateTime(value) {
 }
 
 function averageRainfall(items, key) {
-  const values = items.map((item) => Number(item.rainfall?.[key])).filter(Number.isFinite);
+  const values = items
+    .filter((item) => item.rainfall?.available !== false)
+    .map((item) => item.rainfall?.[key])
+    .filter((value) => Number.isFinite(Number(value)))
+    .map(Number);
   if (!values.length) return null;
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
@@ -58,7 +63,11 @@ function pickBestTubing(rivers) {
       river: item.river,
       rec: item.activityScores.find((score) => score.activity === "tubing")
     }))
-    .filter((item) => item.rec && !["Hazardous", "Not Applicable"].includes(item.rec.rating))
+    .filter((item) =>
+      item.rec &&
+      Number.isFinite(item.rec.score) &&
+      !["Hazardous", "Not Applicable", "Data Limited"].includes(item.rec.rating)
+    )
     .sort((a, b) => b.rec.score - a.rec.score)[0];
   return tubing ? `${tubing.river.name} ${tubing.river.segmentName}` : "No easy tubing pick";
 }
@@ -66,7 +75,11 @@ function pickBestTubing(rivers) {
 function pickBestPaddling(rivers) {
   const paddling = rivers
     .flatMap((item) => item.activityScores
-      .filter((score) => ["canoeing", "kayaking", "rafting"].includes(score.activity) && score.rating !== "Not Applicable")
+        .filter((score) =>
+          ["canoeing", "kayaking", "rafting"].includes(score.activity) &&
+          Number.isFinite(score.score) &&
+          !["Not Applicable", "Data Limited"].includes(score.rating)
+        )
       .map((score) => ({ river: item.river, rec: score })))
     .filter((item) => !["Hazardous"].includes(item.rec.rating))
     .sort((a, b) => b.rec.score - a.rec.score)[0];
@@ -83,18 +96,19 @@ function mainSafetyConcern(waterfalls, rivers, weather) {
 }
 
 function renderSummary(waterfalls, rivers, weather) {
-  const bestFall = waterfalls[0];
+  const bestFall = waterfalls.find((item) => Number.isFinite(item.score) && item.category.tone !== "hazard") ||
+    waterfalls.find((item) => Number.isFinite(item.score));
   const cards = [
     {
       label: "Best Waterfall Pick Today",
-      value: bestFall?.waterfall?.name || "Checking falls",
-      detail: bestFall ? `${bestFall.category.label} - ${bestFall.score}/100` : "Flow estimate loading",
+      value: bestFall?.waterfall?.name || "Rainfall data unavailable",
+      detail: bestFall ? `${bestFall.category.label} - ${bestFall.score}/100` : "No placeholder score is being shown",
       tone: "blue"
     },
     {
       label: "Best Tubing Pick Today",
       value: pickBestTubing(rivers),
-      detail: "Based on flow fit, recent rain, and river character.",
+      detail: "Based on live flow, seasonal normal, trend, runoff, and river character.",
       tone: "green"
     },
     {
@@ -313,7 +327,7 @@ function renderWaterfalls(items) {
               <h3>${escapeHtml(waterfall.name)}</h3>
             </div>
             <div class="score-badge compact">
-              <strong>${score}</strong>
+              <strong>${Number.isFinite(score) ? score : "--"}</strong>
               <span>/100</span>
             </div>
             <div class="flow-label">
@@ -342,7 +356,7 @@ function renderWaterfalls(items) {
                 <b>${escapeHtml(waterfall.name)}</b>
                 <small>${escapeHtml(waterfall.region)}</small>
               </span>
-              <span class="rank-score">${score}<small>/100</small></span>
+              <span class="rank-score">${Number.isFinite(score) ? score : "--"}<small>/100</small></span>
               <span class="rank-status">${escapeHtml(category.label)}</span>
             </summary>
             <div class="rank-detail">
@@ -356,6 +370,7 @@ function renderWaterfalls(items) {
                 <span>3d ${formatInches(rainfall.rain3d)}</span>
                 <span>7d ${formatInches(rainfall.rain7d)}</span>
               </div>
+              <small class="data-source">${escapeHtml(rainfall.source || "Precipitation source unavailable")}</small>
             </div>
           </details>
         `).join("")}
@@ -365,11 +380,36 @@ function renderWaterfalls(items) {
 }
 
 function formatPercentNormal(gauge) {
-  if (!Number.isFinite(Number(gauge?.percentNormal))) return "normal unavailable";
+  if (gauge?.percentNormal === null || gauge?.percentNormal === undefined || !Number.isFinite(Number(gauge.percentNormal))) {
+    return "normal unavailable";
+  }
   return `${Math.round(gauge.percentNormal)}% of normal`;
 }
 
+function formatFlowTrend(gauge) {
+  if (gauge?.trend12hPct === null || gauge?.trend12hPct === undefined) return "";
+  const trend = Number(gauge?.trend12hPct);
+  if (!Number.isFinite(trend)) return "";
+  const direction = trend >= 8 ? "rising" : trend <= -8 ? "falling" : "steady";
+  const signed = trend > 0 ? `+${Math.round(trend)}` : `${Math.round(trend)}`;
+  return `12h ${direction} (${signed}%) &middot; `;
+}
+
+function formatGaugeObservation(gauge) {
+  if (!gauge?.observedAt) return "Current USGS observation time unavailable";
+  const ts = new Date(gauge?.observedAt).getTime();
+  if (!Number.isFinite(ts)) return "Current USGS observation time unavailable";
+  return `USGS observation ${new Date(ts).toLocaleString([], {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "America/New_York"
+  })}`;
+}
+
 function normalFlowTone(percentNormal) {
+  if (percentNormal === null || percentNormal === undefined || percentNormal === "") return "unknown";
   const pct = Number(percentNormal);
   if (!Number.isFinite(pct)) return "unknown";
   if (pct < 55) return "low";
@@ -433,7 +473,11 @@ function renderRivers(items) {
   const activityLeaders = featuredActivities.map((activity) => {
     const candidates = items
       .flatMap((item) => item.activityScores
-        .filter((score) => score.activity === activity && !["Not Applicable", "Hazardous"].includes(score.rating))
+        .filter((score) =>
+          score.activity === activity &&
+          Number.isFinite(score.score) &&
+          !["Not Applicable", "Hazardous", "Data Limited"].includes(score.rating)
+        )
         .map((score) => ({ item, score })))
       .sort((a, b) => b.score.score - a.score.score);
     return { activity, leader: candidates[0] || null };
@@ -464,7 +508,7 @@ function renderRivers(items) {
                 <small>${escapeHtml(bestActivity?.rating || "Check")}</small>
               </span>
               <span class="rank-score river-cfs">
-                ${gauge?.dischargeCfs ? Math.round(gauge.dischargeCfs).toLocaleString() : "--"}
+                ${gauge?.dischargeCfs !== null && gauge?.dischargeCfs !== undefined && Number.isFinite(Number(gauge.dischargeCfs)) ? Math.round(gauge.dischargeCfs).toLocaleString() : "--"}
                 <small>cfs</small>
               </span>
             </summary>
@@ -492,8 +536,9 @@ function renderRivers(items) {
               </div>
               <p class="river-note">${escapeHtml(river.notes)}</p>
               <div class="why-line">
-                ${gauge?.gaugeHeightFt ? `Gauge height ${gauge.gaugeHeightFt.toFixed(1)} ft &middot; ` : ""}${gauge?.waterTempF ? `Water ${Math.round(gauge.waterTempF)}F &middot; ` : ""}${gauge?.normalSampleCount ? `${gauge.normalSampleCount} years in normal comparison &middot; ` : ""}USGS ${escapeHtml(river.usgsGaugeId)}
+                ${gauge?.gaugeHeightFt !== null && gauge?.gaugeHeightFt !== undefined && Number.isFinite(Number(gauge.gaugeHeightFt)) ? `Gauge height ${Number(gauge.gaugeHeightFt).toFixed(1)} ft &middot; ` : ""}${gauge?.waterTempF !== null && gauge?.waterTempF !== undefined && Number.isFinite(Number(gauge.waterTempF)) ? `Water ${Math.round(gauge.waterTempF)}F &middot; ` : ""}${formatFlowTrend(gauge)}${gauge?.normalSampleCount ? `${gauge.normalSampleCount} years in normal comparison &middot; ` : ""}USGS ${escapeHtml(river.usgsGaugeId)}
               </div>
+              <small class="data-source">${escapeHtml(formatGaugeObservation(gauge))}</small>
             </div>
           </details>
         `).join("")}
@@ -548,6 +593,7 @@ function renderRainfallSnapshot(waterfallInputs, riverInputs) {
   const rain7d = averageRainfall(combined, "rain7d");
   const rain14d = averageRainfall(combined, "rain14d");
   const wetBoost = rain3d >= 1.25 || rain7d >= 2;
+  const availableCount = combined.filter((item) => item.rainfall?.available !== false).length;
 
   els.rainfallGrid.innerHTML = [
     ["24-hour rainfall", rain24h],
@@ -561,9 +607,11 @@ function renderRainfallSnapshot(waterfallInputs, riverInputs) {
     </article>
   `).join("");
 
-  els.rainfallNarrative.textContent = wetBoost
-    ? "Recent rain has boosted waterfall flow, but some smaller creeks may still drop quickly between storms."
-    : "Recent rain is modest, so smaller waterfalls and creeks may look quieter unless a storm has hit that basin directly.";
+  els.rainfallNarrative.textContent = !availableCount
+    ? "Basin precipitation estimates are temporarily unavailable. Waterfall scores are withheld until the feed returns."
+    : wetBoost
+      ? `Radar-estimated and modeled basin rainfall is elevated across ${availableCount} locations. Fast creeks respond first; check access and slick-rock conditions.`
+      : `Radar-estimated and modeled rainfall is modest across ${availableCount} locations, so smaller waterfalls and creeks may be quieter.`;
 }
 
 function renderSafetyNotes() {
@@ -584,7 +632,14 @@ export async function renderWaterPage() {
   const waterfalls = buildWaterfallIndex(data.waterfalls, rainfallById);
   const rivers = buildRiverIndex(data.rivers, riverInputById, data.weather);
 
-  if (els.generatedAt) els.generatedAt.textContent = formatDateTime(data.weather.generatedAt);
+  if (els.generatedAt) els.generatedAt.textContent = formatDateTime(data.meta?.generatedAt);
+  if (els.dataStatus) {
+    els.dataStatus.textContent = data.meta?.status === "live"
+      ? "Radar-estimated basin rainfall and live USGS gauges are feeding this read."
+      : data.meta?.status === "partial"
+        ? "Some live inputs are unavailable; affected scores are clearly withheld."
+        : "Live inputs are unavailable; placeholder scores are not being used.";
+  }
   renderSummary(waterfalls, rivers, data.weather);
   renderVisualDashboard(data.webcams || [], waterfalls, rivers);
   renderWaterfalls(waterfalls);

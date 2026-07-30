@@ -9,33 +9,34 @@ export const ACTIVITY_LABELS = {
 };
 
 const ACTIVITY_PROFILES = {
-  tubing: { idealMin: 0.35, idealMax: 0.85, highPenalty: 46, lowPenalty: 22 },
-  canoeing: { idealMin: 0.35, idealMax: 1.08, highPenalty: 30, lowPenalty: 24 },
-  kayaking: { idealMin: 0.35, idealMax: 1.25, highPenalty: 18, lowPenalty: 28 },
-  rafting: { idealMin: 0.55, idealMax: 1.35, highPenalty: 12, lowPenalty: 35 },
-  fishing: { idealMin: 0.18, idealMax: 0.95, highPenalty: 34, lowPenalty: 8 },
-  swimming: { idealMin: 0.15, idealMax: 0.65, highPenalty: 52, lowPenalty: 5 },
-  wading: { idealMin: 0.1, idealMax: 0.55, highPenalty: 55, lowPenalty: 4 }
+  tubing: { idealMin: 0.72, idealMax: 1.35, lowPenalty: 38, highPenalty: 58 },
+  canoeing: { idealMin: 0.62, idealMax: 1.65, lowPenalty: 35, highPenalty: 48 },
+  kayaking: { idealMin: 0.58, idealMax: 2.25, lowPenalty: 40, highPenalty: 30 },
+  rafting: { idealMin: 0.85, idealMax: 2.6, lowPenalty: 50, highPenalty: 24 },
+  fishing: { idealMin: 0.45, idealMax: 1.35, lowPenalty: 22, highPenalty: 48 },
+  swimming: { idealMin: 0.35, idealMax: 0.95, lowPenalty: 18, highPenalty: 68 },
+  wading: { idealMin: 0.28, idealMax: 0.78, lowPenalty: 15, highPenalty: 74 }
 };
 
 const TYPE_ADJUSTMENTS = {
-  urban: { tubing: -3, swimming: -12, fishing: -2 },
-  recreational: { tubing: 7, canoeing: 5, kayaking: 3, fishing: 2 },
-  whitewater: { tubing: -100, swimming: -30, kayaking: 10, rafting: 12, fishing: -4 },
-  coldwater: { fishing: 12, swimming: -10, kayaking: -8, tubing: -15 },
-  mountain_stream: { swimming: -6, wading: 2, fishing: 5, tubing: -20 }
+  urban: { tubing: -5, swimming: -15, fishing: -3 },
+  recreational: { tubing: 6, canoeing: 4, kayaking: 2, fishing: 2 },
+  whitewater: { tubing: -100, swimming: -35, kayaking: 8, rafting: 10, fishing: -5 },
+  coldwater: { fishing: 10, swimming: -12, kayaking: -8, tubing: -18 },
+  mountain_stream: { swimming: -8, wading: 3, fishing: 5, tubing: -25 }
 };
+
+const CONTACT_ACTIVITIES = new Set(["tubing", "swimming", "wading"]);
+const CASUAL_CURRENT_ACTIVITIES = new Set(["tubing", "swimming", "wading", "canoeing"]);
 
 function clamp(value, min = 0, max = 100) {
   return Math.max(min, Math.min(max, value));
 }
 
-function flowRatio(discharge, range = []) {
-  const [normalMin, normalMax] = range;
-  if (!Number.isFinite(discharge) || !Number.isFinite(normalMin) || !Number.isFinite(normalMax) || normalMax <= normalMin) {
-    return null;
-  }
-  return discharge / normalMax;
+function numberOrNull(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
 }
 
 function rangeStatus(discharge, river) {
@@ -49,23 +50,101 @@ function rangeStatus(discharge, river) {
   return "normal";
 }
 
-function weatherPenalty(activity, rainfall = {}, weather = {}) {
-  const rain24h = Number(rainfall.rain24h || 0);
-  const rain3d = Number(rainfall.rain3d || 0);
-  const thunder = Number(weather.thunderstormRisk || 0);
-  const stormPenalty = thunder >= 0.55 ? 28 : thunder >= 0.35 ? 15 : thunder >= 0.2 ? 7 : 0;
-  const dirtyWaterPenalty = ["tubing", "swimming", "wading"].includes(activity)
-    ? rain24h >= 0.9 ? 22 : rain3d >= 1.8 ? 12 : 0
-    : rain24h >= 1.4 ? 10 : 0;
-  const windPenalty = Number(weather.windMph || 0) >= 18 && ["canoeing", "kayaking"].includes(activity) ? 8 : 0;
-  const tempPenalty = Number(weather.airTempF || 0) < 70 && ["tubing", "swimming"].includes(activity) ? 8 : 0;
-  return stormPenalty + dirtyWaterPenalty + windPenalty + tempPenalty;
+export function seasonalFlowRatio(gauge, river) {
+  const percentNormal = numberOrNull(gauge?.percentNormal);
+  if (percentNormal !== null && percentNormal >= 0) return percentNormal / 100;
+  const discharge = numberOrNull(gauge?.dischargeCfs);
+  const median = numberOrNull(gauge?.normalMedianCfs);
+  if (discharge !== null && median > 0) return discharge / median;
+  const [normalMin, normalMax] = river.normalFlowRange || [];
+  if (discharge !== null && Number.isFinite(normalMin) && Number.isFinite(normalMax)) {
+    return discharge / ((normalMin + normalMax) / 2);
+  }
+  return null;
+}
+
+function fitPenalty(ratio, profile) {
+  if (ratio < profile.idealMin) {
+    return Math.min(58, ((profile.idealMin - ratio) / profile.idealMin) * profile.lowPenalty);
+  }
+  if (ratio > profile.idealMax) {
+    return Math.min(72, ((ratio - profile.idealMax) / profile.idealMax) * profile.highPenalty);
+  }
+  const midpoint = (profile.idealMin + profile.idealMax) / 2;
+  const halfWidth = (profile.idealMax - profile.idealMin) / 2;
+  return halfWidth > 0 ? Math.abs(ratio - midpoint) / halfWidth * 5 : 0;
+}
+
+function weatherAndWaterPenalty(activity, rainfall = {}, weather = {}, gauge = {}) {
+  let penalty = 0;
+  const details = [];
+  const rain6h = numberOrNull(rainfall.rain6h);
+  const rain24h = numberOrNull(rainfall.rain24h);
+  const rain3d = numberOrNull(rainfall.rain3d);
+  const thunder = numberOrNull(weather.thunderstormRisk);
+  const trend12hPct = numberOrNull(gauge.trend12hPct);
+  const turbidity = numberOrNull(gauge.quality?.turbidity);
+
+  if (thunder !== null) {
+    const stormPenalty = thunder >= 0.7 ? 34 : thunder >= 0.45 ? 22 : thunder >= 0.25 ? 10 : 0;
+    penalty += stormPenalty;
+    if (stormPenalty) details.push("Thunderstorm risk");
+  }
+
+  if (CONTACT_ACTIVITIES.has(activity) && rainfall.available !== false) {
+    const runoffPenalty = rain6h >= 0.75 || rain24h >= 1.35
+      ? 24
+      : rain24h >= 0.65 || rain3d >= 1.8
+        ? 12
+        : 0;
+    penalty += runoffPenalty;
+    if (runoffPenalty) details.push("Recent runoff");
+  }
+
+  if (trend12hPct !== null && trend12hPct >= 18) {
+    const risingPenalty = CONTACT_ACTIVITIES.has(activity)
+      ? trend12hPct >= 40 ? 24 : 12
+      : activity === "canoeing"
+        ? trend12hPct >= 40 ? 14 : 7
+        : activity === "fishing"
+          ? trend12hPct >= 40 ? 10 : 5
+          : trend12hPct >= 40 ? 5 : 2;
+    penalty += risingPenalty;
+    details.push(`River rising ${Math.round(trend12hPct)}% in 12h`);
+  }
+
+  if (CONTACT_ACTIVITIES.has(activity) && turbidity !== null) {
+    const turbidityPenalty = turbidity >= 50 ? 18 : turbidity >= 20 ? 8 : 0;
+    penalty += turbidityPenalty;
+    if (turbidityPenalty) details.push("Elevated turbidity");
+  }
+
+  const windMph = numberOrNull(weather.windMph);
+  if (windMph !== null && windMph >= 18 && ["canoeing", "kayaking"].includes(activity)) {
+    penalty += 8;
+    details.push("Strong wind");
+  }
+
+  const airTempF = numberOrNull(weather.airTempF);
+  if (airTempF !== null && airTempF < 70 && ["tubing", "swimming"].includes(activity)) {
+    penalty += 8;
+    details.push("Cool air");
+  }
+
+  return { penalty, details };
+}
+
+function ratingForScore(score) {
+  if (score >= 88) return { rating: "Great", tone: "great" };
+  if (score >= 68) return { rating: "Good", tone: "good" };
+  if (score >= 48) return { rating: "Fair", tone: "fair" };
+  return { rating: "Not Ideal", tone: "not-ideal" };
 }
 
 export function scoreRiverActivity(river, activity, gauge, rainfall = {}, weather = {}) {
   if (!river.activities.includes(activity)) {
     return {
-      score: 0,
+      score: null,
       rating: "Not Applicable",
       tone: "muted",
       guidance: `${ACTIVITY_LABELS[activity] || activity} is not a good fit for this stretch.`,
@@ -73,95 +152,107 @@ export function scoreRiverActivity(river, activity, gauge, rainfall = {}, weathe
     };
   }
 
-  const profile = ACTIVITY_PROFILES[activity] || ACTIVITY_PROFILES.kayaking;
-  const discharge = Number(gauge?.dischargeCfs);
-  const ratio = flowRatio(discharge, river.normalFlowRange);
-  const status = rangeStatus(discharge, river);
-  let score = 74;
-  const details = [];
-
-  if (ratio === null) {
-    score -= 8;
-    details.push("Gauge unavailable");
-  } else {
-    details.push(`${Math.round(discharge).toLocaleString()} cfs estimate`);
-    if (ratio < profile.idealMin) score -= (profile.idealMin - ratio) * profile.lowPenalty * 2.2;
-    if (ratio > profile.idealMax) score -= (ratio - profile.idealMax) * profile.highPenalty * 1.7;
+  const discharge = numberOrNull(gauge?.dischargeCfs);
+  const ratio = seasonalFlowRatio(gauge, river);
+  if (!gauge?.isLive || discharge === null || ratio === null) {
+    return {
+      score: null,
+      rating: "Data Limited",
+      tone: "muted",
+      guidance: `A current USGS flow reading is unavailable; check the gauge before planning ${ACTIVITY_LABELS[activity].toLowerCase()}.`,
+      details: ["Live flow unavailable"]
+    };
   }
 
-  if (status === "hazard") score -= ["kayaking", "rafting"].includes(activity) && river.riverType === "whitewater" ? 18 : 55;
-  if (status === "caution") score -= ["kayaking", "rafting"].includes(activity) ? 6 : 24;
-  if (status === "low" && activity === "rafting") score -= 18;
+  const status = rangeStatus(discharge, river);
+  const profile = ACTIVITY_PROFILES[activity] || ACTIVITY_PROFILES.kayaking;
+  const details = [
+    `${Math.round(discharge).toLocaleString()} cfs`,
+    `${Math.round(ratio * 100)}% of seasonal normal`
+  ];
+  let score = 84 - fitPenalty(ratio, profile);
+  score += TYPE_ADJUSTMENTS[river.riverType]?.[activity] || 0;
 
-  score += (TYPE_ADJUSTMENTS[river.riverType]?.[activity] || 0);
-  const weatherHit = weatherPenalty(activity, rainfall, weather);
-  score -= weatherHit;
-  if (weatherHit) details.push("Recent storm/weather caution");
-  if (Number.isFinite(Number(gauge?.waterTempF))) details.push(`${Math.round(gauge.waterTempF)}F water`);
+  const environmental = weatherAndWaterPenalty(activity, rainfall, weather, gauge);
+  score -= environmental.penalty;
+  details.push(...environmental.details);
+
+  if (status === "caution") {
+    const cautionPenalty = ["kayaking", "rafting"].includes(activity) && river.riverType === "whitewater" ? 7 : 24;
+    score -= cautionPenalty;
+    details.push("River-specific caution flow");
+  }
+  if (status === "low" && activity === "rafting") {
+    score -= 16;
+    details.push("Below the normal rafting range");
+  }
 
   score = clamp(Math.round(score));
 
-  if (status === "hazard" && ["tubing", "swimming", "wading", "canoeing"].includes(activity)) {
+  if (status === "hazard" && CASUAL_CURRENT_ACTIVITIES.has(activity)) {
     return {
       score,
       rating: "Hazardous",
       tone: "hazard",
-      guidance: activity === "tubing" ? "Not recommended for tubing; swift current possible." : "Avoid entering the water; swift current possible.",
+      guidance: "Avoid entering the water; this gauge is at the river-specific hazardous-flow threshold.",
       details
     };
   }
-
-  if (river.riverType === "whitewater" && ["kayaking", "rafting"].includes(activity) && status === "hazard") {
+  if (status === "hazard" && river.riverType === "whitewater" && ["kayaking", "rafting"].includes(activity)) {
     return {
       score,
       rating: "Experts Only",
       tone: "expert",
-      guidance: "Experienced paddlers only; high water changes the character fast.",
+      guidance: "Experienced whitewater users only; high water changes this run quickly.",
+      details
+    };
+  }
+  if (status === "hazard") {
+    return {
+      score,
+      rating: "Hazardous",
+      tone: "hazard",
+      guidance: "This gauge is at the river-specific hazardous-flow threshold.",
       details
     };
   }
 
-  if (score >= 82) {
-    return { score, rating: "Great", tone: "great", guidance: `${ACTIVITY_LABELS[activity]} looks like one of the better choices today.`, details };
-  }
-  if (score >= 68) {
-    return { score, rating: "Good", tone: "good", guidance: `${ACTIVITY_LABELS[activity]} should be reasonable with normal river awareness.`, details };
-  }
-  if (score >= 50) {
-    return { score, rating: "Fair", tone: "fair", guidance: `${ACTIVITY_LABELS[activity]} is workable, but check the latest local read before committing.`, details };
-  }
-  if (score >= 30) {
-    return { score, rating: "Not Ideal", tone: "not-ideal", guidance: `${ACTIVITY_LABELS[activity]} is not the best match for today's estimated flow.`, details };
-  }
-  return {
-    score,
-    rating: status === "hazard" ? "Hazardous" : "Not Ideal",
-    tone: status === "hazard" ? "hazard" : "not-ideal",
-    guidance: status === "hazard" ? "Avoid entering the water; swift current possible." : `${ACTIVITY_LABELS[activity]} is better saved for another day.`,
-    details
-  };
+  const { rating, tone } = ratingForScore(score);
+  const guidance = rating === "Great"
+    ? `${ACTIVITY_LABELS[activity]} is one of the stronger choices today.`
+    : rating === "Good"
+      ? `${ACTIVITY_LABELS[activity]} should be reasonable with normal river awareness.`
+      : rating === "Fair"
+        ? `${ACTIVITY_LABELS[activity]} may work, but review the live gauge and local access conditions first.`
+        : `${ACTIVITY_LABELS[activity]} is better saved for another day or another stretch.`;
+  return { score, rating, tone, guidance, details };
 }
 
 export function buildRiverIndex(rivers, inputById, weather) {
   return rivers.map((river) => {
     const input = inputById[river.id] || {};
     const activityScores = Object.keys(ACTIVITY_LABELS)
-      .filter((activity) => river.activities.includes(activity) || ["tubing", "canoeing", "kayaking", "rafting", "fishing", "swimming"].includes(activity))
+      .filter((activity) =>
+        river.activities.includes(activity) ||
+        ["tubing", "canoeing", "kayaking", "rafting", "fishing", "swimming"].includes(activity)
+      )
       .map((activity) => ({
         activity,
         ...scoreRiverActivity(river, activity, input.gauge, input.rainfall, weather)
       }))
       .filter((item) => item.rating !== "Not Applicable" || ["tubing", "rafting", "swimming"].includes(item.activity));
 
-    const bestScore = Math.max(...activityScores.map((item) => item.score));
-    const bestActivity = activityScores.find((item) => item.score === bestScore);
+    const scored = activityScores.filter((item) => Number.isFinite(item.score));
+    const bestActivity = scored.sort((a, b) => b.score - a.score)[0] ||
+      activityScores.find((item) => item.rating === "Data Limited") ||
+      null;
     const fallbackNotice = input.gauge?.isLive
       ? null
-      : "Live river gauge unavailable - using recent rainfall and weather estimate.";
+      : "Current USGS flow is unavailable. Ratings are withheld instead of estimated from placeholder data.";
 
     return {
       river,
-      rainfall: input.rainfall || {},
+      rainfall: input.rainfall || { available: false },
       gauge: input.gauge || null,
       activityScores,
       bestActivity,

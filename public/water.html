@@ -10,7 +10,7 @@
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
     crossorigin=""
   />
-  <link rel="stylesheet" href="css/water.css?v=20260621-water" />
+  <link rel="stylesheet" href="css/water.css?v=20260730-water-live2" />
 </head>
 <body>
   <header class="site-header">
@@ -49,7 +49,7 @@
         <aside class="hero-side" aria-label="Quick water guidance">
           <div class="side-card">
             <b>Rainfall driven</b>
-            <span>First version estimates flows from recent rain, basin response, and known river character.</span>
+            <span>Each waterfall uses radar-estimated basin rainfall, antecedent wetness, and its own response speed.</span>
           </div>
           <div class="side-card">
             <b>Activity specific</b>
@@ -57,7 +57,7 @@
           </div>
           <div class="side-card">
             <b id="generatedAt">Building water read</b>
-            <span>Live gauge and rainfall integrations are scaffolded for the next step.</span>
+            <span id="dataStatus">Checking radar-estimated rainfall and live USGS gauges.</span>
           </div>
         </aside>
       </div>
@@ -105,7 +105,7 @@
         <div class="explainer-grid">
           <article>
             <strong>Rain drives the score</strong>
-            <p>Recent rain, 3-day rain, 7-day rain, and 14-day wetness are weighted to estimate how full each waterfall should look.</p>
+            <p>Non-overlapping recent and antecedent rainfall windows are weighted to estimate how full each waterfall should look.</p>
           </article>
           <article>
             <strong>Each basin responds differently</strong>
@@ -117,7 +117,7 @@
           </article>
           <article>
             <strong>Scores are guidance, not guarantees</strong>
-            <p>Use the index to decide what is worth checking, then confirm closures, trail conditions, and your own comfort level.</p>
+            <p>Radar and model estimates can miss localized downpours. Confirm cameras, closures, trail conditions, and your own comfort level.</p>
           </article>
         </div>
       </details>
@@ -196,7 +196,7 @@
       </div>
 
       <div class="footer-meta">
-        <div>Data: mock rainfall and gauge estimates in this first version</div>
+        <div>Data: NOAA MRMS QPE, Open-Meteo antecedent estimates, and USGS Water Services</div>
         <div>Serving Asheville and the greater 828 region</div>
         <div class="footer-disclaimer">
           For general awareness only - not a substitute for official forecasts, warnings, closures, or river advisories.
@@ -214,6 +214,6 @@
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
     crossorigin=""
   ></script>
-  <script type="module" src="js/water/water-render.js?v=20260621-water"></script>
+  <script type="module" src="js/water/water-render.js?v=20260730-water-live2"></script>
 </body>
 </html>

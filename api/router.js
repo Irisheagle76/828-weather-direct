@@ -27,6 +27,7 @@ const routes = {
   "tidbits/pulse-media": () => import("../lib/api-routes/tidbits/pulse-media.js"),
   "tidbits/pulse-upload-signature": () => import("../lib/api-routes/tidbits/pulse-upload-signature.js"),
   "tidbits/pulse-write": () => import("../lib/api-routes/tidbits/pulse-write.js"),
+  "water/conditions": () => import("../lib/api-routes/water/conditions.js"),
   "weather": () => import("../lib/api-routes/weather.js")
 };
 
