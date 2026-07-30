@@ -141,12 +141,19 @@ export function buildWaterfallIndex(waterfalls, rainfallById) {
     const rainfall = rainfallById[waterfall.id] || { available: false };
     const score = scoreWaterfallFlow(waterfall, rainfall);
     const category = categorizeWaterfall(score, waterfall, rainfall);
+    const basin = rainfall.basin;
     const why = Number.isFinite(score)
-      ? [
-          `${finiteRain(rainfall.rain6h).toFixed(2)} in last 6 hours`,
-          `${finiteRain(rainfall.rain3d).toFixed(2)} in last 3 days`,
-          `${waterfall.responseSpeed} response basin`
-        ]
+      ? basin
+        ? [
+            `${finiteRain(rainfall.rain3d).toFixed(2)} in effective 3-day basin rain`,
+            `${basin.sampleCount} radar samples across ${finiteRain(basin.drainageAreaSqMi).toFixed(1)} sq mi`,
+            `${waterfall.responseSpeed} response basin`
+          ]
+        : [
+            `${finiteRain(rainfall.rain6h).toFixed(2)} in last 6 hours`,
+            `${finiteRain(rainfall.rain3d).toFixed(2)} in last 3 days`,
+            `${waterfall.responseSpeed} response basin`
+          ]
       : ["Live precipitation estimate unavailable"];
     return {
       waterfall,

@@ -27,8 +27,8 @@ export const WATERFALLS = [
     id: "hooker-falls",
     name: "Hooker Falls",
     region: "DuPont State Recreational Forest",
-    lat: 35.2053,
-    lon: -82.6174,
+    lat: 35.2020605,
+    lon: -82.6237349,
     basin: "Little River",
     responseSpeed: "moderate",
     familyFriendly: true,
@@ -39,8 +39,8 @@ export const WATERFALLS = [
     id: "triple-falls",
     name: "Triple Falls",
     region: "DuPont State Recreational Forest",
-    lat: 35.1982,
-    lon: -82.6188,
+    lat: 35.1989797,
+    lon: -82.6171123,
     basin: "Little River",
     responseSpeed: "moderate",
     familyFriendly: false,
@@ -51,8 +51,8 @@ export const WATERFALLS = [
     id: "high-falls",
     name: "High Falls",
     region: "DuPont State Recreational Forest",
-    lat: 35.1938,
-    lon: -82.6221,
+    lat: 35.19265,
+    lon: -82.61365,
     basin: "Little River",
     responseSpeed: "moderate",
     familyFriendly: true,
@@ -400,7 +400,7 @@ export async function getWaterPageInputs() {
   let live = unavailablePayload();
 
   try {
-    const response = await fetch("/api/router?route=water/conditions&v=20260730-live2", {
+    const response = await fetch("/api/router?route=water/conditions&v=20260730-basin3", {
       headers: { Accept: "application/json" }
     });
     if (!response.ok) throw new Error(`Water conditions returned ${response.status}`);
