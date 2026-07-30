@@ -10,7 +10,7 @@
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
     crossorigin=""
   />
-  <link rel="stylesheet" href="css/water.css?v=20260730-water-live2" />
+  <link rel="stylesheet" href="css/water.css?v=20260730-section-identity3" />
 </head>
 <body>
   <header class="site-header">
@@ -63,18 +63,33 @@
       </div>
     </section>
 
-    <section class="summary-grid" id="summaryGrid" aria-label="Top water summary">
-      <article class="summary-card">
-        <span>Loading</span>
-        <strong>Reading local water signals</strong>
-        <p>Waterfall and river recommendations will appear here.</p>
-      </article>
+    <section class="overview-section" aria-label="Top water summary">
+      <div class="section-head">
+        <div>
+          <div class="section-eyebrow">
+            <span class="section-number">01</span>
+            <span class="section-kicker">At a Glance</span>
+          </div>
+          <h2>Today’s water read</h2>
+          <p>The quickest answer for choosing a waterfall, river activity, or deciding when conditions deserve more caution.</p>
+        </div>
+      </div>
+      <div class="summary-grid" id="summaryGrid">
+        <article class="summary-card">
+          <span>Loading</span>
+          <strong>Reading local water signals</strong>
+          <p>Waterfall and river recommendations will appear here.</p>
+        </article>
+      </div>
     </section>
 
     <section class="visual-dashboard" id="visualDashboard" aria-label="Live water visuals and map">
       <div class="section-head">
         <div>
-          <div class="section-kicker">Look First</div>
+          <div class="section-eyebrow">
+            <span class="section-number">02</span>
+            <span class="section-kicker">Look First</span>
+          </div>
           <h2>Live water views and WNC map</h2>
           <p>
             Visual checks first, numbers second. Use the camera wall and map to orient before digging into the detailed cards.
@@ -90,7 +105,10 @@
     <section class="section-card" id="waterfall-flow" aria-label="Waterfall Flow Index">
       <div class="section-head">
         <div>
-          <div class="section-kicker">Waterfall Flow Index</div>
+          <div class="section-eyebrow">
+            <span class="section-number">03</span>
+            <span class="section-kicker">Waterfall Flow Index</span>
+          </div>
           <h2>Popular WNC waterfalls</h2>
           <p>
             A rainfall-based estimate of how full the falls should look today, with extra caution when recent rain can make rocks slick.
@@ -131,7 +149,10 @@
     <section class="section-card" id="river-recreation" aria-label="River Recreation Index">
       <div class="section-head">
         <div>
-          <div class="section-kicker">River Recreation Index</div>
+          <div class="section-eyebrow">
+            <span class="section-number">04</span>
+            <span class="section-kicker">River Recreation Index</span>
+          </div>
           <h2>Activity-by-activity river guidance</h2>
           <p>
             High flow can be bad for tubing but useful for skilled paddlers. Each river is scored with its own character in mind.
@@ -144,7 +165,10 @@
     <section class="section-card webcam-section" id="live-webcams" aria-label="Live Water Webcams">
       <div class="section-head">
         <div>
-          <div class="section-kicker">Live Water Webcams</div>
+          <div class="section-eyebrow">
+            <span class="section-number">05</span>
+            <span class="section-kicker">Live Water Webcams</span>
+          </div>
           <h2>Visual checks before you drive</h2>
           <p>
             A small set of water-facing cameras and river visual references. Open the source for the live feed;
@@ -159,7 +183,10 @@
     <section class="section-card dark" id="rainfall-snapshot" aria-label="Recent Rainfall Snapshot">
       <div class="section-head">
         <div>
-          <div class="section-kicker">Recent Rainfall Snapshot</div>
+          <div class="section-eyebrow">
+            <span class="section-number">06</span>
+            <span class="section-kicker">Recent Rainfall Snapshot</span>
+          </div>
           <h2>Rain signal behind the read</h2>
           <p>
             Waterfalls and smaller creeks respond first to recent rain. Larger rivers carry more of the multi-day signal.
@@ -171,11 +198,17 @@
     </section>
 
     <section class="safety-card" id="safety-notes" aria-label="Safety Notes">
-      <h2>Safety Notes</h2>
-      <p>
-        Conditions can change quickly, especially after thunderstorms. Always check local closures, posted warnings,
-        and your own skill level before entering the water.
-      </p>
+      <div class="safety-heading">
+        <span class="safety-mark" aria-hidden="true">!</span>
+        <div>
+          <div class="section-kicker">Before You Go</div>
+          <h2>Safety Notes</h2>
+          <p>
+            Conditions can change quickly, especially after thunderstorms. Always check local closures, posted warnings,
+            and your own skill level before entering the water.
+          </p>
+        </div>
+      </div>
       <ul id="safetyList"></ul>
     </section>
   </main>
