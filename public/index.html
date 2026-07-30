@@ -3610,7 +3610,7 @@
           <a class="substack-thumb-card" id="substackThumbLink" href="https://timothyballisty.substack.com/p/the-story-of-ashevilles-wild-spring" target="_blank" rel="noopener noreferrer" aria-label="Open latest 828 Weather Update on Substack">
             <img
               id="substackThumb"
-              src="https://substackcdn.com/image/fetch/$s_!sdM6!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F1e5a0b90-571a-4e56-9d23-4cfc6d61d3e9_1694x929.png"
+              src="/images/828-weather-update-default.png"
               alt="Latest 828 Weather Update thumbnail"
               loading="lazy"
             />
@@ -4081,14 +4081,14 @@
     // Seasonal module: turn this back on when drought or fire conditions warrant homepage prominence.
     const DROUGHT_FIRE_MODULE_ENABLED = false;
     const SUBSTACK_CLOUDINARY_IMAGE_OVERRIDE = "";
+    const SUBSTACK_DEFAULT_IMAGE = "/images/828-weather-update-default.png";
     const LATEST_SUBSTACK_FALLBACK = {
       title: "The Story of Asheville's Wild Spring",
       link: "https://timothyballisty.substack.com/p/the-story-of-ashevilles-wild-spring",
       pubDate: "2026-06-04T18:36:35.000Z",
       description:
         "Drought concerns, early-season heat, record rainfall, and a fluctuating local climate. That was spring 2026 in Asheville.",
-      ogImage:
-        "https://substackcdn.com/image/fetch/$s_!sdM6!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F1e5a0b90-571a-4e56-9d23-4cfc6d61d3e9_1694x929.png"
+      ogImage: SUBSTACK_DEFAULT_IMAGE
     };
     const DROUGHT_FIRE_FALLBACK = {
       DSS: 75,
@@ -4533,23 +4533,41 @@
       `;
     }
 
+    function usableSubstackImageUrl(value) {
+      const url = String(value || "").trim();
+      return url && !/\.(?:m4a|mp3|mp4|mov|m4v|ogg|wav|webm)(?:[?#]|$)/i.test(url)
+        ? url
+        : "";
+    }
+
     function renderSubstackCard(post = LATEST_SUBSTACK_FALLBACK) {
       const title = cleanSubstackText(post.title || LATEST_SUBSTACK_FALLBACK.title);
       const link = post.link || LATEST_SUBSTACK_FALLBACK.link;
       const excerpt = shortSubstackExcerpt(post.description || post.contentSnippet || LATEST_SUBSTACK_FALLBACK.description);
+      const enclosureType = String(post.enclosure?.type || "").toLowerCase();
+      const enclosureUrl = usableSubstackImageUrl(post.enclosure?.url);
+      const enclosureImage = enclosureType.startsWith("image/") ||
+        !enclosureType
+        ? enclosureUrl
+        : "";
       const image =
         SUBSTACK_CLOUDINARY_IMAGE_OVERRIDE ||
-        post.enclosure?.url ||
-        post.image ||
-        (post.ogImage && !post.fallback ? post.ogImage : null) ||
-        LATEST_SUBSTACK_FALLBACK.ogImage;
+        enclosureImage ||
+        usableSubstackImageUrl(post.image) ||
+        (!post.fallback ? usableSubstackImageUrl(post.ogImage) : "") ||
+        SUBSTACK_DEFAULT_IMAGE;
+      const thumbnail = document.querySelector("#substackThumb");
 
       document.querySelector("#substackTitle").textContent = title;
       document.querySelector("#substackExcerpt").textContent = excerpt;
       document.querySelector("#substackMeta").textContent = formatSubstackDate(post.pubDate || post.isoDate || LATEST_SUBSTACK_FALLBACK.pubDate);
       document.querySelector("#substackLink").href = link;
       document.querySelector("#substackThumbLink").href = link;
-      document.querySelector("#substackThumb").src = image;
+      thumbnail.onerror = () => {
+        thumbnail.onerror = null;
+        thumbnail.src = SUBSTACK_DEFAULT_IMAGE;
+      };
+      thumbnail.src = image;
     }
 
     async function hydrateSubstackCard() {
