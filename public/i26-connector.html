@@ -208,7 +208,17 @@
     <div><a href="/">Home</a><a href="https://www.drivenc.gov/region/Asheville" target="_blank" rel="noopener noreferrer">DriveNC Asheville</a></div>
   </footer>
 
+  <dialog class="connector-image-lightbox" id="connectorImageLightbox" aria-labelledby="connectorImageLightboxTitle">
+    <div class="connector-image-lightbox-frame">
+      <div class="connector-image-lightbox-bar">
+        <span id="connectorImageLightboxTitle">Connector update image</span>
+        <button type="button" class="connector-image-lightbox-close" aria-label="Close enlarged image">Close</button>
+      </div>
+      <img id="connectorImageLightboxImage" src="" alt="" />
+    </div>
+  </dialog>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script type="module" src="/js/i26-connector.js?v=20260706-alert-map-contrast"></script>
+  <script type="module" src="/js/i26-connector.js?v=20260730-image-lightbox"></script>
 </body>
 </html>

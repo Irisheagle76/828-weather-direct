@@ -462,9 +462,45 @@ function newsMediaMarkup(item) {
       const isVideo = media.mediaType === "video" || mediaUrl.endsWith(".mp4") || mediaUrl.includes("/video/");
       return isVideo
         ? `<video controls playsinline src="${safeMedia}"></video>`
-        : `<img src="${safeMedia}" alt="${escapeHtml(item.title || "Connector update media")}" loading="lazy" />`;
+        : `<button type="button" class="connector-news-image-button" data-lightbox-src="${safeMedia}" aria-label="Enlarge image: ${escapeHtml(item.title || "Connector update")}">
+            <img src="${safeMedia}" alt="${escapeHtml(item.title || "Connector update media")}" loading="lazy" />
+            <span class="connector-news-image-hint" aria-hidden="true">Click to enlarge</span>
+          </button>`;
     }).join("")}
   </div>`;
+}
+
+function initConnectorImageLightbox() {
+  const dialog = document.querySelector("#connectorImageLightbox");
+  const lightboxImage = document.querySelector("#connectorImageLightboxImage");
+  const lightboxTitle = document.querySelector("#connectorImageLightboxTitle");
+  const closeButton = dialog?.querySelector(".connector-image-lightbox-close");
+  if (!dialog || !lightboxImage || !lightboxTitle || !closeButton) return;
+
+  const closeLightbox = () => {
+    if (dialog.open) dialog.close();
+  };
+
+  document.addEventListener("click", (event) => {
+    const trigger = event.target.closest("[data-lightbox-src]");
+    if (!trigger) return;
+
+    const preview = trigger.querySelector("img");
+    const imageTitle = preview?.alt || "Connector update image";
+    lightboxImage.src = trigger.dataset.lightboxSrc || "";
+    lightboxImage.alt = imageTitle;
+    lightboxTitle.textContent = imageTitle;
+    dialog.showModal();
+  });
+
+  closeButton.addEventListener("click", closeLightbox);
+  dialog.addEventListener("click", (event) => {
+    if (event.target === dialog) closeLightbox();
+  });
+  dialog.addEventListener("close", () => {
+    lightboxImage.removeAttribute("src");
+    lightboxImage.alt = "";
+  });
 }
 
 function renderConnectorNews(items = []) {
@@ -595,5 +631,6 @@ async function loadWeather() {
   }
 }
 
+initConnectorImageLightbox();
 initMap();
 Promise.allSettled([loadEmailAlerts(), loadConnectorNews(), loadIncidents(), loadCameras(), loadWeather()]);
