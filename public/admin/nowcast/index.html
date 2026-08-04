@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>828 Nowcast Console</title>
+  <link rel="stylesheet" href="/admin/nowcast/console.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">828</span><span>Weather Operations</span></div>
+    <nav><a href="/admin/index.html">Admin home</a><button id="refreshButton" class="button ghost" type="button" disabled>Fetch now</button></nav>
+  </header>
+
+  <main class="console-shell">
+    <section class="session-console" aria-labelledby="sessionHeading">
+      <div class="session-main">
+        <div>
+          <p class="eyebrow">Manual operations session</p>
+          <h2 id="sessionHeading">Weather Operations is idle</h2>
+          <p id="sessionDescription" class="subtle">Start a session when Asheville weather deserves closer attention. No data is collected while operations are idle.</p>
+        </div>
+        <div class="session-actions">
+          <button id="startSession" class="button primary" type="button">Start Operations Session</button>
+          <button id="fetchNow" class="button secondary" type="button" disabled>Fetch Now</button>
+          <button id="endSession" class="button danger" type="button" disabled>End Session</button>
+        </div>
+      </div>
+      <div class="session-readiness" aria-label="Comparison readiness">
+        <div class="readiness-item"><span id="ready15" class="readiness-dot"></span><strong>15-minute</strong><small id="ready15Text">Waiting to start</small></div>
+        <div class="readiness-item"><span id="ready30" class="readiness-dot"></span><strong>30-minute</strong><small id="ready30Text">Waiting to start</small></div>
+        <div class="readiness-item"><span id="ready60" class="readiness-dot"></span><strong>60-minute</strong><small id="ready60Text">Waiting to start</small></div>
+        <div class="session-stat"><span>Session</span><strong id="sessionDuration">Idle</strong></div>
+        <div class="session-stat"><span>Last fetch</span><strong id="sessionLastFetch">None</strong></div>
+      </div>
+    </section>
+
+    <div id="mockBanner" class="mock-banner" hidden>
+      <strong>Mock data mode</strong>
+      <span>Live sources are not being used for this view.</span>
+      <label>Scenario <select id="scenarioSelect"></select></label>
+    </div>
+
+    <section id="statusPanel" class="status-panel" aria-labelledby="statusHeading">
+      <div>
+        <p class="eyebrow">Asheville nowcast status</p>
+        <h1 id="statusHeading">Operations idle</h1>
+        <p id="statusReason" class="status-reason">Start a manual session to collect current observations and official NWS data.</p>
+      </div>
+      <div id="statusMetrics" class="status-metrics"></div>
+    </section>
+
+    <div id="errorBanner" class="error-banner" role="alert" hidden></div>
+
+    <section class="section-block" aria-labelledby="conditionsHeading">
+      <div class="section-heading"><div><p class="eyebrow">Tempest station</p><h2 id="conditionsHeading">Current Conditions</h2></div><span id="rainState" class="pill neutral">Rain data unavailable</span></div>
+      <div id="conditionsGrid" class="metric-grid loading-block">Loading current conditions…</div>
+    </section>
+
+    <section class="section-block" aria-labelledby="changesHeading">
+      <div class="section-heading"><div><p class="eyebrow">15 · 30 · 60 minute comparisons</p><h2 id="changesHeading">Change Monitor</h2></div><span id="changeCount" class="count-badge">0 flags</span></div>
+      <div id="changesList" class="change-list loading-block">Calculating changes…</div>
+    </section>
+
+    <div class="two-column">
+      <section class="section-block" aria-labelledby="forecastHeading">
+        <div class="section-heading"><div><p class="eyebrow">Official guidance</p><h2 id="forecastHeading">NWS Forecast</h2></div><span id="forecastFreshness" class="pill neutral">Checking</span></div>
+        <div id="pointForecast" class="forecast-current loading-block">Loading point forecast…</div>
+        <div id="hourlyForecast" class="hourly-strip"></div>
+      </section>
+
+      <section class="section-block" aria-labelledby="alertsHeading">
+        <div class="section-heading"><div><p class="eyebrow">Official products</p><h2 id="alertsHeading">Active Alerts</h2></div><span id="alertCount" class="count-badge">0 active</span></div>
+        <div id="alertsList" class="alert-list loading-block">Checking active alerts…</div>
+      </section>
+    </div>
+
+    <section class="section-block draft-section" aria-labelledby="draftHeading">
+      <div class="section-heading"><div><p class="eyebrow">Human review required</p><h2 id="draftHeading">Draft Nowcast</h2></div><span id="draftStatus" class="pill neutral">No draft</span></div>
+      <textarea id="draftEditor" maxlength="1200" aria-label="Nowcast draft text" placeholder="Generate a deterministic draft from the latest validated Phase 1 data."></textarea>
+      <div class="draft-toolbar">
+        <button id="generateDraft" class="button primary" type="button">Generate Draft</button>
+        <button id="regenerateDraft" class="button secondary" type="button">Regenerate</button>
+        <button id="saveDraft" class="button secondary" type="button">Save Edit</button>
+        <button id="copyDraft" class="button secondary" type="button">Copy</button>
+        <a id="copyOpenPulse" class="button primary button-link" href="/admin/tidbits/index.html" target="_blank" rel="noopener">Copy &amp; Open Weather Pulse</a>
+        <button id="approveDraft" class="button approve" type="button">Approve</button>
+        <button id="dismissDraft" class="button danger" type="button">Dismiss</button>
+        <button class="button ghost" type="button" disabled>Publishing available in a future phase</button>
+      </div>
+      <p id="draftMeta" class="subtle">Draft generation is manual and rule-based. Nothing is published.</p>
+      <details class="history-details"><summary>Draft history</summary><div id="draftHistory"></div></details>
+    </section>
+
+    <section class="section-block" aria-labelledby="historyHeading">
+      <div class="section-heading"><div><p class="eyebrow">Active operations session</p><h2 id="historyHeading">Observation History</h2></div><span id="historyCount" class="count-badge">0 collected</span></div>
+      <div class="table-scroll"><table><thead><tr><th>Time</th><th>Temp</th><th>Dew point</th><th>Humidity</th><th>Wind</th><th>Gust</th><th>Pressure</th><th>Rain rate</th><th>Freshness</th></tr></thead><tbody id="historyTable"></tbody></table></div>
+    </section>
+
+    <div class="two-column lower-grid">
+      <section class="section-block" aria-labelledby="healthHeading">
+        <div class="section-heading"><div><p class="eyebrow">Independent source checks</p><h2 id="healthHeading">Source Health</h2></div></div>
+        <div id="healthGrid" class="health-grid loading-block">Checking source health…</div>
+      </section>
+      <section class="section-block" aria-labelledby="diagnosticsHeading">
+        <div class="section-heading"><div><p class="eyebrow">Development and troubleshooting</p><h2 id="diagnosticsHeading">System Diagnostics</h2></div></div>
+        <div id="diagnosticsGrid" class="diagnostics-grid loading-block">Loading diagnostics…</div>
+        <details class="history-details"><summary>Recent structured log</summary><div id="systemLog" class="system-log"></div></details>
+      </section>
+    </div>
+  </main>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="/admin/nowcast/console.js"></script>
+</body>
+</html>

@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "test": "node --test test/**/*.test.js",
-    "check": "node --check lib/forecast/config.js && node --check lib/forecast/store.js && node --check lib/forecast/sources.js && node --check lib/forecast/generate.js && node --check lib/forecast/validate.js && node --check lib/forecast/service.js && node --check lib/api-routes/forecast/automatic.js"
+    "check": "node --check lib/forecast/config.js && node --check lib/forecast/store.js && node --check lib/forecast/sources.js && node --check lib/forecast/generate.js && node --check lib/forecast/validate.js && node --check lib/forecast/service.js && node --check lib/api-routes/forecast/automatic.js",
+    "preview:nowcast": "node scripts/nowcast-preview.mjs"
   },
   "dependencies": {
     "@vercel/kv": "^3.0.0",

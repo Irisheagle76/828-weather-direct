@@ -5,6 +5,8 @@ const PROTECTED_API_PREFIXES = [
   "forecast/publish",
   "i26/news-write",
   "notifications/status",
+  "nowcast/current",
+  "nowcast/drafts",
   "tidbits/pulse-write",
   "tidbits/pulse-media"
 ];
