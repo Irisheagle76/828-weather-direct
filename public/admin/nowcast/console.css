@@ -26,6 +26,7 @@ a { color: var(--blue); }
 .topbar nav { display: flex; align-items: center; gap: 12px; }
 .console-shell { width: min(1480px, calc(100% - 32px)); margin: 24px auto 56px; }
 .mock-banner { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; padding: 10px 14px; border: 1px solid rgba(242, 196, 109, .45); border-radius: 9px; background: rgba(242, 196, 109, .1); color: #ffe2a6; }
+.mock-banner[hidden], .error-banner[hidden] { display: none; }
 .mock-banner label { margin-left: auto; display: flex; align-items: center; gap: 8px; }
 .session-console { margin-bottom: 14px; border: 1px solid rgba(240,138,66,.3); border-radius: 11px; background: linear-gradient(110deg, rgba(17,36,58,.98), rgba(10,23,39,.98)); box-shadow: var(--shadow); overflow: hidden; }
 .session-main { padding: 17px 18px; display: flex; justify-content: space-between; align-items: center; gap: 24px; }

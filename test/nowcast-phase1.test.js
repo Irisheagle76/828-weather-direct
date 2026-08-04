@@ -11,6 +11,7 @@ import {
   sourceHealthState
 } from "../lib/nowcast/logic.js";
 import { buildDraft } from "../lib/nowcast/draftBuilder.js";
+import { normalizeTempestObservation } from "../lib/nowcast/clients.js";
 import { applyRetention } from "../lib/nowcast/storage.js";
 import { isMockModeEnabled, normalizeSessionHistory } from "../lib/nowcast/service.js";
 
@@ -38,6 +39,33 @@ test("mock mode can be enabled for local preview", () => {
 
 test("mock mode is always disabled in Vercel production", () => {
   assert.equal(isMockModeEnabled({ NOWCAST_MOCK_MODE: "true", VERCEL_ENV: "production" }), false);
+});
+
+test("Tempest object observations are normalized", () => {
+  const normalized = normalizeTempestObservation({
+    timestamp: now / 1_000,
+    air_temperature: 20,
+    dew_point: 12,
+    relative_humidity: 60,
+    feels_like: 21,
+    wind_avg: 2,
+    wind_gust: 4,
+    wind_direction: 180,
+    sea_level_pressure: 1017,
+    precip: 0.1,
+    precip_accum_local_day: 2.54,
+    lightning_strike_last_distance: 10,
+    lightning_strike_count: 2,
+    uv: 3,
+    solar_radiation: 400
+  }, now);
+
+  assert.equal(Math.round(normalized.temperatureF), 68);
+  assert.equal(Math.round(normalized.dewPointF * 10) / 10, 53.6);
+  assert.equal(Math.round(normalized.windSpeedMph * 10) / 10, 4.5);
+  assert.equal(Math.round(normalized.rainRateInPerHour * 100) / 100, 0.24);
+  assert.equal(normalized.rainAccumulationIn, 0.1);
+  assert.equal(normalized.lightningCount, 2);
 });
 
 test("temperature change is detected at 30 minutes", () => {
