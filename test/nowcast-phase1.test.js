@@ -12,7 +12,7 @@ import {
 } from "../lib/nowcast/logic.js";
 import { buildDraft } from "../lib/nowcast/draftBuilder.js";
 import { applyRetention } from "../lib/nowcast/storage.js";
-import { normalizeSessionHistory } from "../lib/nowcast/service.js";
+import { isMockModeEnabled, normalizeSessionHistory } from "../lib/nowcast/service.js";
 
 const now = Date.UTC(2026, 7, 4, 16, 0, 0);
 const obs = (minutesAgo, overrides = {}) => ({
@@ -31,6 +31,14 @@ const obs = (minutesAgo, overrides = {}) => ({
 });
 
 function types(changes) { return changes.map(change => change.type); }
+
+test("mock mode can be enabled for local preview", () => {
+  assert.equal(isMockModeEnabled({ NOWCAST_MOCK_MODE: "true" }), true);
+});
+
+test("mock mode is always disabled in Vercel production", () => {
+  assert.equal(isMockModeEnabled({ NOWCAST_MOCK_MODE: "true", VERCEL_ENV: "production" }), false);
+});
 
 test("temperature change is detected at 30 minutes", () => {
   const changes = detectObservationChanges(obs(0, { temperatureF: 65 }), [obs(30)], now);
