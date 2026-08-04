@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { ashevilleDailyNormals } from "../public/js/intel/asheville-normals.js";
 import { buildTomorrowSummary } from "../public/js/intel/tomorrow-summary.js";
 
 function hoursFrom(values) {
@@ -34,10 +35,10 @@ test("a humid midnight does not label a drying post-frontal day as muggy", () =>
   });
 
   assert.equal(summary.score, 72);
-  assert.match(summary.headline, /Humidity backs off/);
-  assert.match(summary.narrative, /humid start should not last/i);
-  assert.match(summary.narrative, /steady breeze/i);
-  assert.match(summary.narrative, /sunshine has plenty of room/i);
+  assert.match(summary.headline, /welcome relief/);
+  assert.match(summary.narrative, /drier air works in/i);
+  assert.match(summary.narrative, /Mostly sunny/i);
+  assert.match(summary.narrative, /Breezy at times/i);
   assert.doesNotMatch(summary.headline, /muggy/i);
   assert.ok(summary.diagnostics.afternoonDew < 65);
   assert.equal(summary.diagnostics.scoreWindow, "8 AM-8 PM");
@@ -56,8 +57,8 @@ test("sustained afternoon dew points still produce an honestly muggy narrative",
 
   const summary = buildTomorrowSummary(hours, { tempMin: 71, tempMax: 87 });
 
-  assert.match(summary.headline, /Warm, muggy air/);
-  assert.match(summary.narrative, /distinctly muggy edge/i);
+  assert.match(summary.headline, /Warm and muggy again/);
+  assert.match(summary.narrative, /stays muggy/i);
 });
 
 test("rain remains the lead when it is the clearest daytime disruption", () => {
@@ -73,8 +74,8 @@ test("rain remains the lead when it is the clearest daytime disruption", () => {
 
   const summary = buildTomorrowSummary(hours, { tempMin: 63, tempMax: 75 });
 
-  assert.match(summary.headline, /Showers may interrupt/);
-  assert.match(summary.narrative, /meaningful interruption/i);
+  assert.match(summary.headline, /Scattered showers/);
+  assert.match(summary.narrative, /showers may pop up/i);
 });
 
 test("an overnight shower does not dominate an otherwise dry daytime card", () => {
@@ -92,5 +93,98 @@ test("an overnight shower does not dominate an otherwise dry daytime card", () =
 
   assert.equal(summary.rainChance, 0.08);
   assert.doesNotMatch(summary.headline, /Showers/);
-  assert.match(summary.narrative, /rain offers little interference/i);
+  assert.match(summary.narrative, /Rain is unlikely/i);
+});
+
+test("changeable weather uses Tim's direct, condition-first voice", () => {
+  const hours = hoursFrom(Array.from({ length: 24 }, (_, hour) => ({
+    temp: hour < 8 ? 65 : hour < 18 ? 79 : 72,
+    dew: 66,
+    rh: 68,
+    wind: 6,
+    cloud: 0.48,
+    rain: 0.34,
+    score: 73
+  })));
+
+  const summary = buildTomorrowSummary(hours, { tempMin: 65, tempMax: 79 });
+
+  assert.equal(summary.headline, "Not a washout, but keep an eye out for a passing shower.");
+  assert.match(summary.narrative, /Starting near 65°/);
+  assert.match(summary.narrative, /You will notice some humidity/);
+  assert.match(summary.narrative, /Expect a mix of sun and clouds with a light breeze/);
+  assert.match(summary.narrative, /Most of the day should stay dry/);
+  assert.doesNotMatch(summary.narrative, /trade places|cannot be ruled out|adds a little movement|defining feature/i);
+});
+
+test("the daily narrative never runs longer than four sentences", () => {
+  const scenarios = [
+    { dew: 58, wind: 3, cloud: 0.15, rain: 0.05, score: 84 },
+    { dew: 66, wind: 6, cloud: 0.48, rain: 0.34, score: 73 },
+    { dew: 69, wind: 14, cloud: 0.82, rain: 0.62, score: 60 }
+  ];
+
+  for (const scenario of scenarios) {
+    const hours = hoursFrom(Array.from({ length: 24 }, (_, hour) => ({
+      temp: hour < 8 ? 65 : 82,
+      rh: 70,
+      ...scenario
+    })));
+    const summary = buildTomorrowSummary(hours, { tempMin: 65, tempMax: 82 });
+    const sentences = summary.narrative.match(/[^.!?]+[.!?]+/g) || [];
+
+    assert.ok(sentences.length <= 4, `${sentences.length} sentences: ${summary.narrative}`);
+  }
+});
+
+test("NOAA daily normals resolve for Asheville by calendar date", () => {
+  assert.deepEqual(ashevilleDailyNormals("2026-08-05"), {
+    high: 84.8,
+    low: 65,
+    period: "1991-2020",
+    station: "Asheville Regional Airport (USW00003812)"
+  });
+});
+
+test("a high at least ten degrees from normal adds seasonal context", () => {
+  const hours = hoursFrom(Array.from({ length: 24 }, (_, hour) => ({
+    temp: hour < 8 ? 65 : 95,
+    dew: 59,
+    rh: 48,
+    wind: 4,
+    cloud: 0.2,
+    rain: 0.05,
+    score: 58
+  })));
+  const summary = buildTomorrowSummary(
+    hours,
+    { date: "2026-08-05", tempMin: 65, tempMax: 95 },
+    {},
+    { normals: { high: 84.8, low: 65, period: "1991-2020" } }
+  );
+
+  assert.match(summary.narrative, /about 10° above average for the date/i);
+  assert.equal(summary.diagnostics.highDeparture, 10.2);
+  assert.equal(summary.diagnostics.normalHigh, 84.8);
+  assert.equal((summary.narrative.match(/[^.!?]+[.!?]+/g) || []).length, 4);
+});
+
+test("near-average temperatures do not spend space on climate context", () => {
+  const hours = hoursFrom(Array.from({ length: 24 }, (_, hour) => ({
+    temp: hour < 8 ? 65 : 94,
+    dew: 59,
+    rh: 48,
+    wind: 4,
+    cloud: 0.2,
+    rain: 0.05,
+    score: 60
+  })));
+  const summary = buildTomorrowSummary(
+    hours,
+    { date: "2026-08-05", tempMin: 65, tempMax: 94 },
+    {},
+    { normals: { high: 84.8, low: 65, period: "1991-2020" } }
+  );
+
+  assert.doesNotMatch(summary.narrative, /above average|below average/i);
 });

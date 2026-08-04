@@ -1,4 +1,7 @@
+import { ashevilleDailyNormals } from "./asheville-normals.js";
+
 const DISPLAY_TIME_ZONE = "America/New_York";
+const TEMPERATURE_CONTEXT_THRESHOLD_F = 10;
 
 export function buildTomorrowSummary(hours = [], day = null, fallback = {}, options = {}) {
   const scoreHour = typeof options.scoreHour === "function"
@@ -54,15 +57,19 @@ export function buildTomorrowSummary(hours = [], day = null, fallback = {}, opti
     noticeable: Number.isFinite(representativeDew) && representativeDew >= 60
   };
   const wind = { avg: avgWind, max: maxWind };
+  const forecastDate = day?.date ?? day?.timestamp ?? day?.time ?? rows[0]?.timestamp;
+  const normals = options.normals || ashevilleDailyNormals(forecastDate);
+  const highDeparture = departure(high, normals?.high);
+  const lowDeparture = departure(low, normals?.low);
 
   return {
     score,
     high,
     low,
     rainChance,
-    headline: buildHeadline({ score, high, rainChance, humidity, wind }),
+    headline: buildHeadline({ score, high, rainChance, humidity, wind, cloudAvg }),
     narrative: [
-      describeTemperature(low, high),
+      describeTemperature(low, high, { highDeparture, lowDeparture }),
       describeHumidity(humidity),
       describeWeather({ rainChance, cloudAvg, wind })
     ].filter(Boolean).join(" "),
@@ -74,45 +81,65 @@ export function buildTomorrowSummary(hours = [], day = null, fallback = {}, opti
       eveningDew,
       dryingAmount,
       avgWind,
-      maxWind
+      maxWind,
+      normalHigh: finite(normals?.high),
+      normalLow: finite(normals?.low),
+      highDeparture,
+      lowDeparture,
+      normalsPeriod: normals?.period || null
     }
   };
 }
 
-function buildHeadline({ score, high, rainChance, humidity, wind }) {
+function buildHeadline({ score, high, rainChance, humidity, wind, cloudAvg }) {
   if (Number.isFinite(rainChance) && rainChance >= 0.5) {
-    return "Showers may interrupt tomorrow's comfort.";
+    return "Scattered showers may pop up at times tomorrow.";
   }
   if (Number.isFinite(high) && high >= 90) {
-    return "Heat becomes tomorrow's main comfort challenge.";
+    return "The heat builds again tomorrow afternoon.";
   }
   if (humidity.drying) {
-    return Number.isFinite(wind.avg) && wind.avg >= 9
-      ? "Humidity backs off as a breezy afternoon takes shape."
-      : "A fresher afternoon takes over tomorrow.";
+    return "A humid start, then some welcome relief by afternoon.";
   }
   if (humidity.muggy) {
     return Number.isFinite(high) && high >= 85
-      ? "Warm, muggy air keeps comfort in check tomorrow."
-      : "Muggy air lingers through tomorrow.";
+      ? "Warm and muggy again tomorrow."
+      : "Another muggy day is ahead.";
   }
   if (Number.isFinite(high) && high >= 86) {
-    return "Afternoon warmth becomes tomorrow's main comfort challenge.";
+    return "Another warm afternoon is on the way.";
+  }
+  if (Number.isFinite(rainChance) && rainChance >= 0.25) {
+    return "Not a washout, but keep an eye out for a passing shower.";
   }
   if (Number.isFinite(wind.avg) && wind.avg >= 12) {
-    return "A lively breeze shapes tomorrow's feel.";
+    return "Breezy at times tomorrow.";
   }
   if (Number.isFinite(score) && score >= 80) {
-    return "Tomorrow brings an easy, comfortable feel.";
+    return "A pretty comfortable day is ahead.";
   }
-  return "Tomorrow looks pleasant with a few subtle tradeoffs.";
+  return "Not a bad day overall.";
 }
 
-function describeTemperature(low, high) {
+function describeTemperature(low, high, context = {}) {
   if (!Number.isFinite(low) || !Number.isFinite(high)) {
     return "Tomorrow's temperature range is still coming into focus.";
   }
-  return `After a start near ${Math.round(low)}°, temperatures climb to around ${Math.round(high)}° during the afternoon.`;
+
+  const base = `Starting near ${Math.round(low)}°, then warming to around ${Math.round(high)}° by afternoon`;
+  const highDeparture = meaningfulDeparture(context.highDeparture);
+  const lowDeparture = meaningfulDeparture(context.lowDeparture);
+
+  if (highDeparture && lowDeparture && Math.sign(highDeparture) === Math.sign(lowDeparture)) {
+    return `${base}, with both ends of the day running at least 10° ${departureDirection(highDeparture)} average.`;
+  }
+  if (highDeparture) {
+    return `${base}, about ${Math.round(Math.abs(highDeparture))}° ${departureDirection(highDeparture)} average for the date.`;
+  }
+  if (lowDeparture) {
+    return `Starting near ${Math.round(low)}°—about ${Math.round(Math.abs(lowDeparture))}° ${departureDirection(lowDeparture)} average—then warming to around ${Math.round(high)}° by afternoon.`;
+  }
+  return `${base}.`;
 }
 
 function describeHumidity(humidity) {
@@ -122,45 +149,55 @@ function describeHumidity(humidity) {
     const laterDew = Number.isFinite(eveningDew) && eveningDew < afternoonDew
       ? ` and into the upper ${dewDecade(eveningDew)}s by evening`
       : "";
-    return `The humid start should not last: dew points ease from near ${Math.round(morningDew)}° in the morning to around ${Math.round(afternoonDew)}° during the afternoon${laterDew}.`;
+    return `It starts humid, but drier air works in during the afternoon as dew points fall from around ${Math.round(morningDew)}° to ${Math.round(afternoonDew)}°${laterDew}.`;
   }
   if (muggy) {
-    return `Afternoon dew points hold near ${Math.round(afternoonDew)}°, keeping a distinctly muggy edge in the air.`;
+    return `It stays muggy through the afternoon with dew points near ${Math.round(afternoonDew)}°.`;
   }
   if (noticeable) {
-    return `Afternoon dew points settle near ${Math.round(afternoonDew)}°, leaving some humidity without making it the day's defining feature.`;
+    return `You will notice some humidity during the afternoon, with dew points near ${Math.round(afternoonDew)}°.`;
   }
   if (Number.isFinite(afternoonDew)) {
-    return `Afternoon dew points near ${Math.round(afternoonDew)}° should keep the air feeling relatively light.`;
+    return "Humidity should not be much of a factor.";
   }
-  return "The humidity trend is still being resolved from the hourly forecast.";
+  return "The humidity forecast is still coming into focus.";
 }
 
 function describeWeather({ rainChance, cloudAvg, wind }) {
-  const pieces = [];
-
-  if (Number.isFinite(wind.avg) && wind.avg >= 9) {
-    const speed = Number.isFinite(wind.max) ? Math.round(wind.max) : Math.round(wind.avg);
-    pieces.push(`a steady breeze occasionally near ${speed} mph keeps the air moving`);
-  } else if (Number.isFinite(wind.avg) && wind.avg >= 5) {
-    pieces.push("a light breeze adds a little movement");
-  }
+  const sentences = [];
+  let sky = "";
+  const breezy = Number.isFinite(wind.avg) && wind.avg >= 9;
+  const lightBreeze = Number.isFinite(wind.avg) && wind.avg >= 5 && !breezy;
 
   if (Number.isFinite(cloudAvg)) {
-    if (cloudAvg < 0.3) pieces.push("sunshine has plenty of room");
-    else if (cloudAvg < 0.65) pieces.push("sun and clouds trade places");
-    else pieces.push("clouds hold onto much of the sky");
+    if (cloudAvg < 0.3) sky = "mostly sunny";
+    else if (cloudAvg < 0.65) sky = "a mix of sun and clouds";
+    else sky = "mostly cloudy";
+  }
+
+  if (sky && breezy) {
+    const speed = Number.isFinite(wind.max) ? Math.round(wind.max) : Math.round(wind.avg);
+    sentences.push(`${sky.charAt(0).toUpperCase()}${sky.slice(1)} and breezy at times, with winds near ${speed} mph.`);
+  } else if (sky && lightBreeze) {
+    sentences.push(`Expect ${sky} with a light breeze.`);
+  } else if (sky) {
+    sentences.push(`${sky.charAt(0).toUpperCase()}${sky.slice(1)}.`);
+  } else if (lightBreeze) {
+    sentences.push("A light breeze at times.");
+  }
+
+  if (breezy && !sky) {
+    const speed = Number.isFinite(wind.max) ? Math.round(wind.max) : Math.round(wind.avg);
+    sentences.push(`Breezy at times with winds near ${speed} mph.`);
   }
 
   if (Number.isFinite(rainChance)) {
-    if (rainChance >= 0.5) pieces.push("showers remain a meaningful interruption");
-    else if (rainChance >= 0.25) pieces.push("a passing shower cannot be ruled out");
-    else pieces.push("rain offers little interference");
+    if (rainChance >= 0.5) sentences.push("A few showers may pop up at times.");
+    else if (rainChance >= 0.25) sentences.push("Most of the day should stay dry, though a passing shower is possible.");
+    else sentences.push("Rain is unlikely.");
   }
 
-  if (!pieces.length) return "";
-  const sentence = joinNatural(pieces);
-  return `${sentence.charAt(0).toUpperCase()}${sentence.slice(1)}.`;
+  return sentences.join(" ");
 }
 
 function windowRows(rows, start, end) {
@@ -202,8 +239,20 @@ function dewDecade(value) {
   return Math.floor(Number(value) / 10) * 10;
 }
 
-function joinNatural(items) {
-  if (items.length <= 1) return items[0] || "";
-  if (items.length === 2) return `${items[0]}, while ${items[1]}`;
-  return `${items[0]}, while ${items.slice(1).join(" and ")}`;
+function departure(value, normal) {
+  const forecast = finite(value);
+  const baseline = finite(normal);
+  return Number.isFinite(forecast) && Number.isFinite(baseline)
+    ? Math.round((forecast - baseline) * 10) / 10
+    : null;
+}
+
+function meaningfulDeparture(value) {
+  return Number.isFinite(value) && Math.abs(value) >= TEMPERATURE_CONTEXT_THRESHOLD_F
+    ? value
+    : null;
+}
+
+function departureDirection(value) {
+  return value > 0 ? "above" : "below";
 }
