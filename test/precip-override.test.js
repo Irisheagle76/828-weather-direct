@@ -1,6 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { getCurrentPrecipOverride } from "../public/js/intel/precip-override.js";
+import {
+  applyPrecipOverrideToNarrative,
+  getCurrentPrecipOverride
+} from "../public/js/intel/precip-override.js";
 
 function memoryStorage(initial = {}) {
   let value = JSON.stringify(initial);
@@ -136,4 +139,45 @@ test("a renewed Tempest rain rate cancels the dry handoff immediately", () => {
   assert.equal(resumed.mode, "active");
   assert.equal(resumed.activeRainNow, true);
   assert.equal(resumed.dryConfirmed, false);
+});
+
+test("overhead radar and recent Tempest lightning override a zero gauge rate and fog narrative", () => {
+  const now = Date.parse("2026-08-04T19:16:00Z");
+  const storage = memoryStorage({
+    lastRainDetectedAt: now - 8 * 60 * 1000,
+    dryObservationStartedAt: now - 8 * 60 * 1000
+  });
+  const result = getCurrentPrecipOverride({
+    now,
+    storage,
+    current: {
+      timestamp: now,
+      precipRate: 0,
+      relative_humidity: 97,
+      lightningStrikeCount: 4,
+      lightningStrikeDistance: 3
+    },
+    radar: {
+      available: true,
+      ageMinutes: 2,
+      nearestEchoMiles: 1.5,
+      echoPixels: 6976,
+      strongEchoPixels: 180
+    }
+  });
+
+  assert.equal(result.mode, "active");
+  assert.equal(result.type, "storm");
+  assert.equal(result.radarConfirmedThunderstorm, true);
+  assert.equal(result.dryConfirmed, true);
+  assert.match(result.headline, /thunderstorm is active over Asheville/i);
+  assert.match(result.summary, /radar shows precipitation over Asheville/i);
+  assert.doesNotMatch(result.headline, /fog|eased/i);
+
+  const narrative = applyPrecipOverrideToNarrative({
+    headline: "Fog is obscuring Asheville.",
+    detail: "The camera appears foggy."
+  }, result);
+  assert.match(narrative.headline, /thunderstorm is active over Asheville/i);
+  assert.doesNotMatch(narrative.detail, /fog/i);
 });

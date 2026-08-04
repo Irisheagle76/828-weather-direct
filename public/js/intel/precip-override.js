@@ -94,11 +94,19 @@ function lightningSentence(lightningCount, lightningDistance) {
   return `Tempest has detected ${countPhrase}${distancePhrase}.`;
 }
 
-function activeCopy(type, severity, lightning = {}) {
+function activeCopy(type, severity, lightning = {}, evidence = {}) {
   if (type === "storm") {
     const lightningDetail = lightningSentence(lightning.count, lightning.distance);
+    if (evidence.radarSupportedRain) {
+      return {
+        headline: "A thunderstorm is active over Asheville.",
+        summary: `Radar shows precipitation over Asheville, and ${lightningDetail.charAt(0).toLowerCase()}${lightningDetail.slice(1)} Expect locally heavy rain and reduced visibility near the storm.`,
+        skyPhrase: "A thunderstorm is producing rain over Asheville.",
+        bullets: ["Radar shows precipitation over Asheville", lightningDetail]
+      };
+    }
     return {
-      headline: "Rain and lightning are active around Asheville.",
+      headline: "A thunderstorm is active around Asheville.",
       summary: `Rain is falling in Asheville, and ${lightningDetail.charAt(0).toLowerCase()}${lightningDetail.slice(1)} Keep an eye on the sky and radar before heading out.`,
       skyPhrase: "Rain is falling under a stormy Asheville sky.",
       bullets: ["Rain is falling now", lightningDetail]
@@ -218,15 +226,6 @@ export function getCurrentPrecipOverride(context = {}) {
   const radarFresh = radar.available === true && Number(radar.ageMinutes) <= RADAR_MAX_AGE_MINUTES;
   const radarOverhead = radarFresh && Number(radar.nearestEchoMiles) <= RADAR_OVERHEAD_MILES &&
     (Number(radar.echoPixels) > 0 || Number(radar.echoCoverage) > 0);
-  const radarSupportedRain = !activeRainNow && !dryConfirmed && radarOverhead &&
-    (strongForecastRain || current.isRainingNow === true || Number(current.relative_humidity ?? current.relativeHumidity) >= 90);
-  if (radarSupportedRain && !Number.isFinite(lastRainDetectedAt)) lastRainDetectedAt = now;
-  const minutesSinceRainDetected = Number.isFinite(lastRainDetectedAt)
-    ? Math.max(0, (now - lastRainDetectedAt) / 60000)
-    : null;
-  const recentRainOnly = !activeRainNow && !radarSupportedRain && Number.isFinite(minutesSinceRainDetected) &&
-    minutesSinceRainDetected <= RECENT_RAIN_MAX_MINUTES;
-  const forecastActive = !activeRainNow && !recentRainOnly && !radarSupportedRain && tempestUnavailable && strongForecastRain;
 
   const observedLightningCount = Math.max(0, Number(
     context.lightningCount ?? current.lightningStrikeCount ?? current.lightning_strike_count ?? 0
@@ -254,6 +253,24 @@ export function getCurrentPrecipOverride(context = {}) {
     : null;
   const tempestLightning = Number.isFinite(minutesSinceLightning) && minutesSinceLightning <= RECENT_LIGHTNING_MAX_MINUTES;
   const lightning = tempestLightning || Number(forecastCode) >= 95;
+  // A point rain gauge can read zero beneath a convective cell because of siting,
+  // wind, or the reporting interval. Fresh overhead radar plus recent, observed
+  // Tempest lightning is stronger evidence than the dry-transition timer.
+  const radarConfirmedThunderstorm = radarOverhead && tempestLightning;
+  const radarSupportedRain = !activeRainNow && radarOverhead && (
+    radarConfirmedThunderstorm || (!dryConfirmed && (
+      strongForecastRain ||
+      current.isRainingNow === true ||
+      Number(current.relative_humidity ?? current.relativeHumidity) >= 90
+    ))
+  );
+  if (radarSupportedRain) lastRainDetectedAt = now;
+  const minutesSinceRainDetected = Number.isFinite(lastRainDetectedAt)
+    ? Math.max(0, (now - lastRainDetectedAt) / 60000)
+    : null;
+  const recentRainOnly = !activeRainNow && !radarSupportedRain && Number.isFinite(minutesSinceRainDetected) &&
+    minutesSinceRainDetected <= RECENT_RAIN_MAX_MINUTES;
+  const forecastActive = !activeRainNow && !recentRainOnly && !radarSupportedRain && tempestUnavailable && strongForecastRain;
   const severity = getSeverity(rainRate ?? (forecastAmount * 25.4));
   const type = getType({
     rate: rainRate ?? 0,
@@ -274,7 +291,12 @@ export function getCurrentPrecipOverride(context = {}) {
 
   const mode = activeRainNow || radarSupportedRain || forecastActive ? "active" : recentRainOnly ? "recent" : "expired";
   const copy = mode === "active"
-    ? activeCopy(type, severity, { count: recentLightningCount || observedLightningCount, distance: recentLightningDistance ?? lightningDistance })
+    ? activeCopy(
+        type,
+        severity,
+        { count: recentLightningCount || observedLightningCount, distance: recentLightningDistance ?? lightningDistance },
+        { radarSupportedRain, radarConfirmedThunderstorm }
+      )
     : mode === "recent" ? recentCopy() : {};
   const result = {
     active: mode !== "expired",
@@ -294,6 +316,7 @@ export function getCurrentPrecipOverride(context = {}) {
     dryConfirmed,
     dryObservationMinutes,
     radarSupportedRain,
+    radarConfirmedThunderstorm,
     radarFresh,
     radarOverhead,
     recentRainOnly,

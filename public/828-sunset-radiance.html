@@ -1578,7 +1578,7 @@
   <script type="module">
     import { buildSkyConditionRead, isObscuredSky } from "./js/intel/sky-read.js?v=20260705-directional-cameras";
     import { buildDuskSkyFallback, getSkyTimePhase } from "./js/intel/sky-time.js?v=20260629-shared-sunset";
-    import { applyPrecipOverrideToNarrative, getCurrentPrecipOverride } from "./js/intel/precip-override.js?v=20260628-precip-first";
+    import { applyPrecipOverrideToNarrative, getCurrentPrecipOverride } from "./js/intel/precip-override.js?v=20260804-storm-priority";
 
     const ASHEVILLE = {
       lat: 35.5951,
@@ -1598,6 +1598,7 @@
       skyIntel: null,
       narrative: null,
       weather: null,
+      storm: null,
       previousCamera: null,
       selectedPlan: "now"
     };
@@ -1861,9 +1862,18 @@
 
     function getSkyPrecipOverride() {
       if (!state.weather) return null;
+      const current = state.weather.current || state.weather.current_conditions || {};
+      const stormWeather = state.storm?.weather || {};
       return getCurrentPrecipOverride({
-        current: state.weather.current || state.weather.current_conditions || {},
-        hourly: state.weather.hourly || []
+        current,
+        hourly: state.weather.hourly || [],
+        radar: state.storm?.radar || {},
+        lightningCount: Math.max(
+          Number(current.lightningStrikeCount ?? current.lightning_strike_count) || 0,
+          Number(stormWeather.lightningCount ?? stormWeather.lightning_strike_count) || 0
+        ),
+        lightningDistance: current.lightningStrikeDistance ?? current.lightning_strike_last_distance,
+        lightningObservedAt: current.lightningStrikeLastAt ?? current.lightning_strike_last_epoch ?? stormWeather.observedAt
       });
     }
 
@@ -1871,7 +1881,7 @@
       if (!precipOverride?.active) return null;
       if (precipOverride.mode === "recent") return "Rain Easing";
       return {
-        storm: "Rain & Lightning",
+        storm: "Thunderstorm",
         snow: "Snow",
         drizzle: "Light Rain",
         showers: "Showers",
@@ -2057,13 +2067,9 @@
       if (obscured) score = Math.min(score, earlySetup ? 56 : 48);
 
       const currentHour = getCurrentHour(state.weather);
-      const current = state.weather?.current || state.weather?.current_conditions || {};
       const precipAmount = pickNumber(currentHour, ["precipAmount", "precipitation", "rain"]);
       const weatherCode = pickNumber(currentHour, ["weatherCode", "weather_code"]);
-      const precipOverride = getCurrentPrecipOverride({
-        current,
-        hourly: state.weather?.hourly || []
-      });
+      const precipOverride = getSkyPrecipOverride();
       const sharedSunsetRead = buildDuskSkyFallback({
         cameraCloud: state.skyIntel?.displayCloud ?? state.skyIntel?.cloud,
         cloudCover: pickNumber(currentHour, ["cloudCover", "cloud_cover", "cloudcover"]),
@@ -2103,7 +2109,9 @@
         score,
         afterglowVetted,
         wetSignal,
-        title: sharedSunsetCaution ? sharedSunsetRead.headline
+        title: precipOverride?.type === "storm" && precipOverride?.mode === "active"
+          ? "A thunderstorm is controlling the sunset setup"
+          : sharedSunsetCaution ? sharedSunsetRead.headline
           : phase.state === "closed" ? "Tonight's radiance window has closed"
           : obscured ? (earlySetup ? "Fog is muting the early setup" : "Fog is muting the sunset setup")
           : earlySetup ? "Early sunset setup"
@@ -2112,7 +2120,9 @@
           : score >= 65 ? "Worth watching"
           : score >= 45 ? "Mixed sunset setup"
           : "Low color potential",
-        detail: sharedSunsetCaution ? sharedSunsetRead.detail
+        detail: precipOverride?.type === "storm" && precipOverride?.mode === "active"
+          ? precipOverride.summary
+          : sharedSunsetCaution ? sharedSunsetRead.detail
           : phase.state === "closed"
           ? "The useful sunset and twilight period has passed for Asheville. The sky snapshot remains here for context, and tomorrow's window will come back into focus after the next daylight cycle begins."
           : obscured
@@ -2588,6 +2598,18 @@
       }
     }
 
+    async function loadStorm() {
+      try {
+        const res = await fetch(`/api/router?route=storm/current&t=${encodeURIComponent(Date.now())}`);
+        if (!res.ok) throw new Error("Storm feed failed");
+        state.storm = await res.json();
+        if (state.skyData && state.weather) renderSky();
+        renderRadiance();
+      } catch (error) {
+        console.warn("Storm cross-check unavailable", error);
+      }
+    }
+
     function renderTimeline() {
       const daily = getTodayDaily(state.weather);
       const sunset = daily?.sunset;
@@ -2639,10 +2661,11 @@
 
     setupLightbox();
     refreshContextMedia();
-    await Promise.all([loadSky(), loadWeather()]);
+    await Promise.all([loadSky(), loadWeather(), loadStorm()]);
     setInterval(loadSky, SKY_REFRESH_MS);
     setInterval(refreshContextMedia, 5 * 60 * 1000);
     setInterval(loadWeather, 10 * 60 * 1000);
+    setInterval(loadStorm, 2 * 60 * 1000);
   </script>
 </body>
 </html>
