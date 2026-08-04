@@ -181,3 +181,96 @@ test("overhead radar and recent Tempest lightning override a zero gauge rate and
   assert.match(narrative.headline, /thunderstorm is active over Asheville/i);
   assert.doesNotMatch(narrative.detail, /fog/i);
 });
+
+test("distant lightning and a clearing camera produce clearing-after-storms copy", () => {
+  const now = Date.parse("2026-08-04T20:02:00Z");
+  const result = getCurrentPrecipOverride({
+    now,
+    storage: memoryStorage({
+      lastRainDetectedAt: now - 5 * 60 * 1000,
+      dryObservationStartedAt: now - 8 * 60 * 1000
+    }),
+    current: {
+      timestamp: now,
+      precipRate: 0,
+      relative_humidity: 92,
+      lightningStrikeCount: 0,
+      lightningStrikeDistance: 41,
+      lightningStrikeLastAt: now - 1 * 60 * 1000
+    },
+    radar: {
+      available: true,
+      ageMinutes: 3,
+      nearestEchoMiles: 4.1,
+      echoPixels: 5497,
+      strongEchoPixels: 277,
+      approaching: false
+    },
+    skyClearing: true
+  });
+
+  assert.equal(result.mode, "clearing");
+  assert.equal(result.radarConfirmedThunderstorm, false);
+  assert.equal(result.lightningActive, true);
+  assert.equal(result.lightningLocal, false);
+  assert.match(result.headline, /sky is clearing after storms/i);
+  assert.match(result.summary, /41 miles away/i);
+});
+
+test("distant recent lightning is labeled storms nearby when the sky is not clearing", () => {
+  const now = Date.parse("2026-08-04T20:02:00Z");
+  const result = getCurrentPrecipOverride({
+    now,
+    storage: memoryStorage({ dryObservationStartedAt: now - 8 * 60 * 1000 }),
+    current: {
+      timestamp: now,
+      precipRate: 0,
+      lightningStrikeDistance: 38,
+      lightningStrikeLastAt: now - 2 * 60 * 1000
+    },
+    radar: { available: true, ageMinutes: 3, nearestEchoMiles: 4, echoPixels: 500 },
+    skyClearing: false
+  });
+
+  assert.equal(result.mode, "nearby");
+  assert.equal(result.lightningLocal, false);
+  assert.match(result.headline, /storms are nearby, but not over Asheville/i);
+});
+
+test("radar older than ten minutes cannot confirm a local thunderstorm", () => {
+  const now = Date.parse("2026-08-04T20:02:00Z");
+  const result = getCurrentPrecipOverride({
+    now,
+    storage: memoryStorage({ dryObservationStartedAt: now - 8 * 60 * 1000 }),
+    current: {
+      timestamp: now,
+      precipRate: 0,
+      lightningStrikeDistance: 8,
+      lightningStrikeLastAt: now - 2 * 60 * 1000
+    },
+    radar: { available: true, ageMinutes: 11, nearestEchoMiles: 2, echoPixels: 500 }
+  });
+
+  assert.equal(result.radarFresh, false);
+  assert.equal(result.radarConfirmedThunderstorm, false);
+  assert.equal(result.mode, "nearby");
+});
+
+test("lightning expires from the current observation after fifteen minutes", () => {
+  const now = Date.parse("2026-08-04T20:02:00Z");
+  const result = getCurrentPrecipOverride({
+    now,
+    storage: memoryStorage(),
+    current: {
+      timestamp: now,
+      precipRate: 0,
+      lightningStrikeDistance: 8,
+      lightningStrikeLastAt: now - 16 * 60 * 1000
+    },
+    radar: { available: true, ageMinutes: 3, nearestEchoMiles: 2, echoPixels: 500 }
+  });
+
+  assert.equal(result.lightningActive, false);
+  assert.equal(result.radarConfirmedThunderstorm, false);
+  assert.equal(result.mode, "expired");
+});

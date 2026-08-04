@@ -1578,7 +1578,7 @@
   <script type="module">
     import { buildSkyConditionRead, isObscuredSky } from "./js/intel/sky-read.js?v=20260705-directional-cameras";
     import { buildDuskSkyFallback, getSkyTimePhase } from "./js/intel/sky-time.js?v=20260629-shared-sunset";
-    import { applyPrecipOverrideToNarrative, getCurrentPrecipOverride } from "./js/intel/precip-override.js?v=20260804-storm-priority";
+    import { applyPrecipOverrideToNarrative, getCurrentPrecipOverride } from "./js/intel/precip-override.js?v=20260804-observation-cadence";
 
     const ASHEVILLE = {
       lat: 35.5951,
@@ -1586,7 +1586,7 @@
       label: "Asheville, North Carolina",
       timeZone: "America/New_York"
     };
-    const SKY_REFRESH_MS = 5000;
+    const OBSERVATION_REFRESH_MS = 3 * 60 * 1000;
     const SKY_STALE_MS = 20 * 60 * 1000;
     const LIVE_THUMBNAIL_URL = "https://i.ytimg.com/vi/UxUU3Fc1vBw/maxresdefault_live.jpg";
     const SKYCAM_RAW_BASE = "https://raw.githubusercontent.com/Irisheagle76/828-weather-direct/main/public/js/sky-cam";
@@ -1864,6 +1864,9 @@
       if (!state.weather) return null;
       const current = state.weather.current || state.weather.current_conditions || {};
       const stormWeather = state.storm?.weather || {};
+      const cameraCloud = Number(state.skyIntel?.displayCloud ?? state.skyIntel?.cloud);
+      const skyClearing = state.skyIntel?.sunlightLevel === "strong" ||
+        (Number.isFinite(cameraCloud) && cameraCloud <= 35 && state.skyIntel?.brightnessTrend !== "decreasing");
       return getCurrentPrecipOverride({
         current,
         hourly: state.weather.hourly || [],
@@ -1873,12 +1876,15 @@
           Number(stormWeather.lightningCount ?? stormWeather.lightning_strike_count) || 0
         ),
         lightningDistance: current.lightningStrikeDistance ?? current.lightning_strike_last_distance,
-        lightningObservedAt: current.lightningStrikeLastAt ?? current.lightning_strike_last_epoch ?? stormWeather.observedAt
+        lightningObservedAt: current.lightningStrikeLastAt ?? current.lightning_strike_last_epoch ?? stormWeather.observedAt,
+        skyClearing
       });
     }
 
     function getPrecipSkyLabel(precipOverride) {
       if (!precipOverride?.active) return null;
+      if (precipOverride.mode === "clearing") return "Clearing After Storms";
+      if (precipOverride.mode === "nearby") return "Storms Nearby";
       if (precipOverride.mode === "recent") return "Rain Easing";
       return {
         storm: "Thunderstorm",
@@ -2109,7 +2115,11 @@
         score,
         afterglowVetted,
         wetSignal,
-        title: precipOverride?.type === "storm" && precipOverride?.mode === "active"
+        title: precipOverride?.mode === "clearing"
+          ? "Clearing is returning after the storms"
+          : precipOverride?.mode === "nearby"
+          ? "Storms remain nearby"
+          : precipOverride?.type === "storm" && precipOverride?.mode === "active"
           ? "A thunderstorm is controlling the sunset setup"
           : sharedSunsetCaution ? sharedSunsetRead.headline
           : phase.state === "closed" ? "Tonight's radiance window has closed"
@@ -2120,7 +2130,8 @@
           : score >= 65 ? "Worth watching"
           : score >= 45 ? "Mixed sunset setup"
           : "Low color potential",
-        detail: precipOverride?.type === "storm" && precipOverride?.mode === "active"
+        detail: ["active", "clearing", "nearby"].includes(precipOverride?.mode) &&
+          (precipOverride?.type === "storm" || precipOverride?.mode !== "active")
           ? precipOverride.summary
           : sharedSunsetCaution ? sharedSunsetRead.detail
           : phase.state === "closed"
@@ -2662,10 +2673,10 @@
     setupLightbox();
     refreshContextMedia();
     await Promise.all([loadSky(), loadWeather(), loadStorm()]);
-    setInterval(loadSky, SKY_REFRESH_MS);
+    setInterval(loadSky, OBSERVATION_REFRESH_MS);
     setInterval(refreshContextMedia, 5 * 60 * 1000);
-    setInterval(loadWeather, 10 * 60 * 1000);
-    setInterval(loadStorm, 2 * 60 * 1000);
+    setInterval(loadWeather, OBSERVATION_REFRESH_MS);
+    setInterval(loadStorm, OBSERVATION_REFRESH_MS);
   </script>
 </body>
 </html>

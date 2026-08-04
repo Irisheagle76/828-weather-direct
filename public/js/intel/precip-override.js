@@ -1,9 +1,10 @@
 const ACTIVE_OBSERVATION_MAX_MS = 5 * 60 * 1000;
-const DRY_CONFIRMATION_MINUTES = 4;
+const DRY_CONFIRMATION_MINUTES = 3;
 const RECENT_RAIN_MAX_MINUTES = 10;
-const RECENT_LIGHTNING_MAX_MINUTES = 30;
-const RADAR_MAX_AGE_MINUTES = 15;
+const RECENT_LIGHTNING_MAX_MINUTES = 15;
+const RADAR_MAX_AGE_MINUTES = 10;
 const RADAR_OVERHEAD_MILES = 8;
+const LOCAL_LIGHTNING_MAX_MILES = 20;
 const STORAGE_KEY = "avlweather.precipOverride.v1";
 
 function numberOrNull(value) {
@@ -161,6 +162,29 @@ function recentCopy() {
   };
 }
 
+function nearbyStormCopy(lightning = {}) {
+  const lightningDetail = lightningSentence(lightning.count, lightning.distance);
+  return {
+    headline: "Storms are nearby, but not over Asheville.",
+    summary: `${lightningDetail} The latest local observations do not support an active thunderstorm over Asheville right now, but keep an eye on conditions nearby.`,
+    skyPhrase: "Storms remain nearby while Asheville is outside the active core.",
+    bullets: [lightningDetail, "No active thunderstorm is confirmed over Asheville"]
+  };
+}
+
+function clearingCopy(lightning = {}) {
+  const distance = Number(lightning.distance);
+  const lightningContext = Number.isFinite(distance)
+    ? ` Tempest's latest lightning was about ${Math.round(distance)} miles away.`
+    : "";
+  return {
+    headline: "The sky is clearing after storms.",
+    summary: `Rain has ended at the local station, radar is not showing an approaching storm, and brighter breaks are returning.${lightningContext}`,
+    skyPhrase: "Brighter breaks are returning after the storms.",
+    bullets: ["The local sky is clearing", "No approaching storm is indicated"]
+  };
+}
+
 function debugOverride(payload) {
   try {
     const local = typeof window !== "undefined" && ["localhost", "127.0.0.1"].includes(window.location.hostname);
@@ -252,11 +276,17 @@ export function getCurrentPrecipOverride(context = {}) {
     ? Math.max(0, (now - lastLightningDetectedAt) / 60000)
     : null;
   const tempestLightning = Number.isFinite(minutesSinceLightning) && minutesSinceLightning <= RECENT_LIGHTNING_MAX_MINUTES;
-  const lightning = tempestLightning || Number(forecastCode) >= 95;
+  const effectiveLightningDistance = recentLightningDistance ?? lightningDistance;
+  const lightningLocal = tempestLightning && (
+    Number.isFinite(effectiveLightningDistance)
+      ? effectiveLightningDistance <= LOCAL_LIGHTNING_MAX_MILES
+      : activeRainNow && radarOverhead
+  );
+  const lightning = lightningLocal || Number(forecastCode) >= 95;
   // A point rain gauge can read zero beneath a convective cell because of siting,
   // wind, or the reporting interval. Fresh overhead radar plus recent, observed
   // Tempest lightning is stronger evidence than the dry-transition timer.
-  const radarConfirmedThunderstorm = radarOverhead && tempestLightning;
+  const radarConfirmedThunderstorm = radarOverhead && lightningLocal;
   const radarSupportedRain = !activeRainNow && radarOverhead && (
     radarConfirmedThunderstorm || (!dryConfirmed && (
       strongForecastRain ||
@@ -271,6 +301,9 @@ export function getCurrentPrecipOverride(context = {}) {
   const recentRainOnly = !activeRainNow && !radarSupportedRain && Number.isFinite(minutesSinceRainDetected) &&
     minutesSinceRainDetected <= RECENT_RAIN_MAX_MINUTES;
   const forecastActive = !activeRainNow && !recentRainOnly && !radarSupportedRain && tempestUnavailable && strongForecastRain;
+  const clearingAfterStorm = context.skyClearing === true && dryConfirmed && radar.approaching !== true &&
+    (recentRainOnly || (tempestLightning && !radarConfirmedThunderstorm));
+  const nearbyStormOnly = tempestLightning && !activeRainNow && !radarConfirmedThunderstorm && !clearingAfterStorm;
   const severity = getSeverity(rainRate ?? (forecastAmount * 25.4));
   const type = getType({
     rate: rainRate ?? 0,
@@ -289,14 +322,28 @@ export function getCurrentPrecipOverride(context = {}) {
     lightningDistance: recentLightningDistance
   });
 
-  const mode = activeRainNow || radarSupportedRain || forecastActive ? "active" : recentRainOnly ? "recent" : "expired";
+  const mode = activeRainNow || radarSupportedRain || forecastActive
+    ? "active"
+    : clearingAfterStorm
+      ? "clearing"
+      : nearbyStormOnly
+        ? "nearby"
+        : recentRainOnly
+          ? "recent"
+          : "expired";
+  const copyLightning = {
+    count: recentLightningCount || observedLightningCount,
+    distance: effectiveLightningDistance
+  };
   const copy = mode === "active"
     ? activeCopy(
         type,
         severity,
-        { count: recentLightningCount || observedLightningCount, distance: recentLightningDistance ?? lightningDistance },
+        copyLightning,
         { radarSupportedRain, radarConfirmedThunderstorm }
       )
+    : mode === "clearing" ? clearingCopy(copyLightning)
+    : mode === "nearby" ? nearbyStormCopy(copyLightning)
     : mode === "recent" ? recentCopy() : {};
   const result = {
     active: mode !== "expired",
@@ -307,7 +354,7 @@ export function getCurrentPrecipOverride(context = {}) {
     summary: copy.summary ?? "",
     skyPhrase: copy.skyPhrase ?? "",
     bullets: copy.bullets ?? [],
-    confidence: activeRainNow ? "high" : mode === "recent" || radarSupportedRain || forecastActive ? "medium" : "low",
+    confidence: activeRainNow ? "high" : mode !== "expired" || radarSupportedRain || forecastActive ? "medium" : "low",
     rainRate,
     rainRateObservedAt,
     lastRainDetectedAt,
@@ -320,12 +367,20 @@ export function getCurrentPrecipOverride(context = {}) {
     radarFresh,
     radarOverhead,
     recentRainOnly,
-    lightningActive: lightning,
+    clearingAfterStorm,
+    nearbyStormOnly,
+    lightningActive: tempestLightning,
+    lightningLocal,
     lightningCount: recentLightningCount || observedLightningCount,
-    lightningDistance: recentLightningDistance ?? lightningDistance,
+    lightningDistance: effectiveLightningDistance,
     minutesSinceLightning,
     overrideExpired: mode === "expired",
-    source: activeRainNow || recentRainOnly ? "tempest" : radarSupportedRain ? "noaa-radar" : forecastActive ? "current-hour" : null
+    source: activeRainNow || recentRainOnly ? "tempest"
+      : radarSupportedRain ? "noaa-radar"
+      : clearingAfterStorm ? "camera+tempest"
+      : nearbyStormOnly ? "tempest"
+      : forecastActive ? "current-hour"
+      : null
   };
 
   debugOverride(result);
