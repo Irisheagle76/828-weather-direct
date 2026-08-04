@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-04T06:44:47.452403+00:00",
+  "timestamp": "2026-08-04T09:29:01.036404+00:00",
   "metrics": {
     "cloudCoverWest": null,
     "brightness": 0.11,
@@ -23,7 +23,7 @@
   },
   "trend": {
     "cloudTrend": "unknown",
-    "brightnessTrend": "increasing",
+    "brightnessTrend": "steady",
     "overallTrend": "steady"
   }
 }
