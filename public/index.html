@@ -540,6 +540,10 @@
       gap: 22px;
     }
 
+    #active-alerts:empty {
+      display: none;
+    }
+
     .feelscore-inner > *,
     .sky-home-grid > *,
     .content-grid > *,
@@ -2972,6 +2976,18 @@
         justify-self: start;
         width: 150px;
         height: 86px;
+      }
+
+      .mock-header:has(.pulse-alert-strip:not([hidden])) {
+        padding-bottom: 0;
+      }
+
+      .mock-header:has(.pulse-alert-strip:not([hidden])) .mock-header-inner {
+        padding-bottom: 0;
+      }
+
+      .mock-header:has(.pulse-alert-strip:not([hidden])) + .preview-page {
+        padding-top: 12px;
       }
 
       .forecast-invitation {
