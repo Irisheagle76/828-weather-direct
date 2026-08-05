@@ -3439,6 +3439,71 @@
       pointer-events: none;
     }
 
+    .feel-panel .fs-row {
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: clamp(15px, 2.5vw, 24px);
+    }
+
+    .fs-word-block {
+      display: grid;
+      justify-items: start;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .fs-word-line {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+    }
+
+    .fs-state-emoji {
+      display: inline-grid;
+      flex: 0 0 auto;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      border: 1px solid rgba(123, 211, 137, 0.34);
+      border-radius: 50%;
+      background: rgba(123, 211, 137, 0.12);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      font-size: 1.35rem;
+      line-height: 1;
+    }
+
+    .fs-word {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.6rem, 3.2vw, 2.35rem);
+      font-style: italic;
+      font-weight: 900;
+      letter-spacing: -0.025em;
+      line-height: 0.95;
+      text-shadow: 0 2px 14px rgba(123, 211, 137, 0.16);
+    }
+
+    .fs-wear-cue {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 34px;
+      max-width: 100%;
+      padding: 0 11px;
+      border: 1px solid rgba(255, 253, 248, 0.2);
+      border-radius: 999px;
+      color: rgba(255, 253, 248, 0.9);
+      background: rgba(255, 253, 248, 0.1);
+      font-size: 0.78rem;
+      font-weight: 850;
+      line-height: 1.1;
+    }
+
+    .fs-wear-emoji {
+      flex: 0 0 auto;
+      font-size: 1rem;
+    }
+
     @media (max-width: 900px) {
       .feelscore-inner {
         grid-template-columns: minmax(0, 1fr);
@@ -3561,7 +3626,23 @@
       }
 
       .fs-word {
-        font-size: 1.35rem;
+        font-size: clamp(1.35rem, 6.5vw, 1.65rem);
+      }
+
+      .fs-word-block {
+        gap: 8px;
+      }
+
+      .fs-state-emoji {
+        width: 32px;
+        height: 32px;
+        font-size: 1.1rem;
+      }
+
+      .fs-wear-cue {
+        min-height: 31px;
+        padding: 0 9px;
+        font-size: 0.71rem;
       }
 
       .feel-panel .fs-bullets {
@@ -3793,7 +3874,16 @@
             </div>
             <div class="fs-row">
               <div class="fs-score" id="liveFeelScoreValue">--</div>
-              <div class="fs-word" id="liveFeelScoreLabel">Updating</div>
+              <div class="fs-word-block">
+                <div class="fs-word-line">
+                  <span class="fs-state-emoji" id="liveFeelScoreEmoji" aria-hidden="true">⏳</span>
+                  <div class="fs-word" id="liveFeelScoreLabel">Updating</div>
+                </div>
+                <div class="fs-wear-cue" id="liveFeelScoreWear" aria-label="What to wear: checking conditions">
+                  <span class="fs-wear-emoji" id="liveFeelScoreWearEmoji" aria-hidden="true">👕</span>
+                  <span id="liveFeelScoreWearText">Checking layers</span>
+                </div>
+              </div>
             </div>
             <div class="fs-bullets">
               <ul id="liveFeelScoreBullets">
@@ -5539,6 +5629,54 @@
       return "Harsh";
     }
 
+    function feelScoreStateEmoji(score, temperatureF = null) {
+      if (!Number.isFinite(score)) return "⏳";
+      if (score >= 90) return "😌";
+      if (score >= 80) return "😎";
+      if (score >= 70) return "🙂";
+      if (score >= 55) return "🤔";
+      if (score >= 40) return "😬";
+      if (Number.isFinite(temperatureF) && temperatureF >= 82) return "🥵";
+      if (Number.isFinite(temperatureF) && temperatureF <= 45) return "🥶";
+      return "😣";
+    }
+
+    function feelScoreWearCue(hour = {}, precipOverride = null, score = null) {
+      const temperatureF = Number(hour?.temperatureF);
+      const windMph = Number(hour?.windSpeed);
+      const rainChance = normalizeProbabilityValue(hour?.precipProbability);
+      const precipAmount = Number(hour?.precipAmount);
+      const uv = Number(hour?.uvIndex ?? hour?.uv ?? hour?.uv_index);
+      const rainMode = String(precipOverride?.mode || "").toLowerCase();
+      const rainNearby = precipOverride?.active && ["active", "nearby"].includes(rainMode);
+
+      if (rainNearby || precipAmount >= 0.005 || (Number.isFinite(rainChance) && rainChance >= 0.5)) {
+        return { emoji: "☔", text: "Take a rain layer" };
+      }
+      if (Number.isFinite(temperatureF) && temperatureF <= 40) {
+        return { emoji: "🧥", text: "Coat weather" };
+      }
+      if (Number.isFinite(temperatureF) && temperatureF <= 55) {
+        return { emoji: "🧥", text: "Bring a light jacket" };
+      }
+      if (Number.isFinite(windMph) && windMph >= 18 && Number.isFinite(temperatureF) && temperatureF < 68) {
+        return { emoji: "🧥", text: "Add a wind layer" };
+      }
+      if (Number.isFinite(temperatureF) && temperatureF >= 88) {
+        return { emoji: "👕", text: "Dress light" };
+      }
+      if (Number.isFinite(temperatureF) && temperatureF >= 78) {
+        return { emoji: "👕", text: "Light, breathable layers" };
+      }
+      if (Number.isFinite(uv) && uv >= 6) {
+        return { emoji: "🕶️", text: "Add sun protection" };
+      }
+      if (Number.isFinite(score) && score >= 80) {
+        return { emoji: "👕", text: "Easy everyday layers" };
+      }
+      return { emoji: "👕", text: "Comfortable layers" };
+    }
+
     function tempClass(temp) {
       if (!Number.isFinite(temp)) return "temp-mild";
       if (temp < 55) return "temp-cool";
@@ -5775,24 +5913,35 @@
       const payloadScore = normalizeScore100(feelscore.score);
       const fallbackScore = nearTermFeelScore(hourly, currentHour);
       const score = Number.isFinite(payloadScore) ? payloadScore : fallbackScore;
+      const currentDisplayTemp = Number(displayCurrentHour?.temperatureF ?? liveHour?.temperatureF);
       const scoreEl = document.querySelector("#liveFeelScoreValue");
       if (Number.isFinite(score)) {
         scoreEl.textContent = score;
         scoreEl.style.setProperty("--fs-progress", `${Math.max(0, Math.min(100, score))}%`);
         document.querySelector("#liveFeelScoreLabel").textContent = scoreLabel(score);
+        document.querySelector("#liveFeelScoreEmoji").textContent = feelScoreStateEmoji(score, currentDisplayTemp);
         document.querySelector(".modal-score-pill").textContent = `Right now: ${score} - ${scoreLabel(score)}`;
       } else {
         scoreEl.textContent = "--";
         scoreEl.style.setProperty("--fs-progress", "0%");
         document.querySelector("#liveFeelScoreLabel").textContent = "Updating";
+        document.querySelector("#liveFeelScoreEmoji").textContent = "⏳";
         document.querySelector(".modal-score-pill").textContent = "Right now: updating";
       }
 
-      const currentDisplayTemp = Number(displayCurrentHour?.temperatureF ?? liveHour?.temperatureF);
       if (Number.isFinite(currentDisplayTemp)) {
         setText("#heroCurrentTemp", `${Math.round(currentDisplayTemp)}°`);
         setText("#heroFeelsLike", `${Math.round(currentDisplayTemp)}°`);
       }
+
+      const wearCue = feelScoreWearCue({
+        ...(liveHour || {}),
+        temperatureF: currentDisplayTemp
+      }, precipOverride, score);
+      setText("#liveFeelScoreWearEmoji", wearCue.emoji);
+      setText("#liveFeelScoreWearText", wearCue.text);
+      document.querySelector("#liveFeelScoreWear")
+        ?.setAttribute("aria-label", `What to wear: ${wearCue.text}`);
 
       document.querySelector("#liveFeelScoreHeadline").textContent =
         feelscore.headline || "Reading the current comfort signal.";
