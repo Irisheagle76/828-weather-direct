@@ -271,16 +271,33 @@
     }
 
     .mock-brand-title {
+      width: fit-content;
+      color: var(--blue-dark);
       font-size: 1.55rem;
       font-weight: 950;
-      letter-spacing: 0;
+      line-height: 1.05;
+      letter-spacing: -0.025em;
+    }
+
+    .mock-brand-title span {
+      color: var(--orange);
+    }
+
+    .mock-brand-title::after {
+      content: "";
+      display: block;
+      width: 72%;
+      height: 3px;
+      margin-top: 7px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--orange) 0 32%, var(--blue) 32% 100%);
     }
 
     .mock-brand-sub {
-      margin-top: 3px;
+      margin-top: 8px;
       color: var(--muted);
       font-size: 0.88rem;
-      font-weight: 700;
+      font-weight: 750;
     }
 
     .mock-notify {
@@ -2880,7 +2897,7 @@
       .mock-brand-sub {
         width: 100%;
         margin-top: 10px;
-        font-size: clamp(0.62rem, 2.8vw, 0.82rem);
+        font-size: clamp(0.75rem, 2.8vw, 0.88rem);
         letter-spacing: -0.01em;
         white-space: nowrap;
       }
@@ -3808,6 +3825,7 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="/css/brand-lockup.css?v=20260805-brand2" />
 </head>
 <body class="splash-active">
   <div class="home-splash" id="homeSplash" role="status" aria-live="polite" aria-label="Loading 828 Weather Direct">
@@ -3832,8 +3850,8 @@
     <div class="mock-header-inner">
       <div class="mock-brand-row">
         <div>
-          <div class="mock-brand-title">828 Weather Direct</div>
-          <div class="mock-brand-sub">Hyper-local Asheville forecast built by Tim Ballisty</div>
+          <div class="mock-brand-title site-brand-title"><span class="site-brand-828">828</span> Weather Direct</div>
+          <div class="mock-brand-sub site-brand-sub">Hyper-local Asheville forecast built by Tim Ballisty</div>
         </div>
         <button class="mock-notify" id="enableNotificationsBtn" type="button">Enable Notifications</button>
       </div>
@@ -3842,6 +3860,7 @@
         <a href="#now">Now</a>
         <a class="forecast-nav-link" href="/forecast.html">Tim's 4-Day Forecast</a>
         <a href="#pulse-preview">Weather Pulse <span class="pulse-nav-badge" id="pulseNavBadge" hidden>New</span></a>
+        <a href="/828-sunset-radiance.html">Sunset Radiance</a>
         <a href="/hiking.html">Hiking Guidance</a>
         <a href="/water.html">Water Conditions</a>
         <a href="/i26-connector.html">I-26 Connector</a>
