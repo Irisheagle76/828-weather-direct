@@ -3273,6 +3273,372 @@
         justify-self: start;
       }
     }
+
+    /* Distinct, compact cards for the homepage's three current-weather reads. */
+    .feelscore-mock {
+      overflow: visible;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .feelscore-inner {
+      grid-template-columns: minmax(0, 1.08fr) minmax(300px, 0.72fr);
+      gap: 14px;
+      padding: 0;
+    }
+
+    .now-panel,
+    .feel-panel {
+      position: relative;
+      overflow: hidden;
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .now-panel {
+      padding: clamp(22px, 4vw, 34px);
+      border: 1px solid rgba(255, 191, 118, 0.24);
+      border-top: 4px solid var(--orange);
+      background:
+        radial-gradient(circle at 92% 5%, rgba(245, 125, 35, 0.3), transparent 32%),
+        linear-gradient(140deg, #101b33, #12336f);
+    }
+
+    .now-panel::before,
+    .feel-panel::before,
+    .sky-home-module::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 7px;
+      pointer-events: none;
+    }
+
+    .now-panel::before {
+      background: linear-gradient(180deg, var(--orange), #ffcf99);
+    }
+
+    .feel-panel {
+      padding: clamp(20px, 3vw, 28px);
+      border: 1px solid rgba(123, 211, 137, 0.3);
+      border-top: 4px solid #55cf87;
+      background:
+        radial-gradient(circle at 88% 0%, rgba(123, 211, 137, 0.25), transparent 34%),
+        linear-gradient(145deg, #082f3e, #0a4a50 56%, #0c5960);
+    }
+
+    .feel-panel::before {
+      background: linear-gradient(180deg, #7bd389, #2aa6a2);
+    }
+
+    .sky-home-module {
+      position: relative;
+      border-color: rgba(15, 76, 196, 0.2);
+      border-top: 4px solid #4c9ae8;
+      background:
+        radial-gradient(circle at 92% 2%, rgba(76, 154, 232, 0.2), transparent 32%),
+        linear-gradient(135deg, #f8fcff, #eaf4ff);
+    }
+
+    .sky-home-module::before {
+      z-index: 3;
+      background: linear-gradient(180deg, #4c9ae8, #0f4cc4);
+    }
+
+    .sky-home-copy {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(230, 243, 255, 0.78));
+    }
+
+    .sky-home-metric {
+      background: rgba(248, 252, 255, 0.96);
+    }
+
+    .radar-home-card {
+      position: relative;
+      overflow: hidden;
+      padding: clamp(18px, 3vw, 24px);
+      border: 1px solid rgba(116, 58, 108, 0.22);
+      border-top: 4px solid #ef7b45;
+      border-radius: 22px;
+      background:
+        radial-gradient(circle at 92% 4%, rgba(116, 58, 108, 0.17), transparent 34%),
+        radial-gradient(circle at 4% 94%, rgba(239, 123, 69, 0.2), transparent 32%),
+        linear-gradient(135deg, #fffaf2, #fff0e3 52%, #f6edf7);
+      box-shadow: var(--shadow);
+    }
+
+    .radar-home-card::before {
+      content: "";
+      position: absolute;
+      z-index: 3;
+      inset: 0 auto 0 0;
+      width: 7px;
+      background: linear-gradient(180deg, #ef7b45, #743a6c);
+      pointer-events: none;
+    }
+
+    .radar-home-card .kicker {
+      color: #b44e28;
+    }
+
+    .radar-home-card .kicker::before {
+      background: #b44e28;
+    }
+
+    .radar-home-copy h3 {
+      color: #38203c;
+    }
+
+    .radar-home-copy a {
+      color: #fffdf8;
+      background: #743a6c;
+      box-shadow: 0 10px 20px rgba(116, 58, 108, 0.2);
+    }
+
+    .radar-home-copy a:hover,
+    .radar-home-copy a:focus-visible {
+      color: #fffdf8;
+      background: #5d2d57;
+      transform: translateY(-1px);
+    }
+
+    @media (max-width: 900px) {
+      .feelscore-inner {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 14px;
+      }
+
+      .feel-panel {
+        border-left: 1px solid rgba(123, 211, 137, 0.3);
+        border-top: 4px solid #55cf87;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .preview-stack {
+        gap: 16px;
+      }
+
+      .feelscore-inner {
+        gap: 16px;
+        padding: 0;
+      }
+
+      .now-panel,
+      .feel-panel {
+        border-radius: 20px;
+      }
+
+      .now-panel {
+        gap: 11px;
+        padding: 18px 17px 17px 21px;
+      }
+
+      .now-kicker {
+        font-size: 0.7rem;
+      }
+
+      .now-temp-row {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 13px;
+        align-items: end;
+      }
+
+      .now-temp {
+        font-size: clamp(3.8rem, 18vw, 4.7rem);
+      }
+
+      .now-condition {
+        padding-bottom: 3px;
+        font-size: clamp(1.05rem, 5.2vw, 1.35rem);
+      }
+
+      .now-panel .fs-headline {
+        margin-top: 3px;
+        font-size: clamp(1.55rem, 7vw, 1.86rem);
+        line-height: 1.02;
+      }
+
+      .now-panel .fs-subhead {
+        margin-top: 2px;
+        font-size: 0.86rem;
+        line-height: 1.42;
+      }
+
+      .now-observation-grid {
+        gap: 7px;
+      }
+
+      .now-observation {
+        min-height: 59px;
+        padding: 10px;
+        border-radius: 12px;
+      }
+
+      .now-observation strong {
+        font-size: 1.42rem;
+      }
+
+      .now-observation span {
+        margin-top: 5px;
+        font-size: 0.62rem;
+      }
+
+      .feel-panel {
+        gap: 12px;
+        padding: 16px 16px 16px 20px;
+      }
+
+      .fs-topline {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 8px;
+      }
+
+      .feelscore-mark {
+        min-height: 38px;
+        padding: 0 12px;
+        font-size: 0.9rem;
+      }
+
+      .feelscore-mark::before {
+        width: 10px;
+        height: 10px;
+      }
+
+      .fs-info-button {
+        margin-left: auto;
+        white-space: nowrap;
+      }
+
+      .fs-row {
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: center;
+        gap: 15px;
+      }
+
+      .fs-score {
+        width: 112px;
+        font-size: 3.5rem;
+      }
+
+      .fs-word {
+        font-size: 1.35rem;
+      }
+
+      .feel-panel .fs-bullets {
+        padding: 11px 12px;
+      }
+
+      .feel-panel .fs-bullets ul {
+        gap: 5px;
+        font-size: 0.84rem;
+      }
+
+      .sky-home-module {
+        border-radius: 20px;
+      }
+
+      .sky-home-copy {
+        gap: 9px;
+        padding: 16px 16px 15px 20px;
+      }
+
+      .sky-home-headline {
+        font-size: clamp(1.5rem, 7vw, 1.82rem);
+      }
+
+      .sky-home-detail {
+        font-size: 0.86rem;
+        line-height: 1.4;
+      }
+
+      .sky-home-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 7px;
+      }
+
+      .sky-home-link {
+        min-height: 36px;
+        padding: 0 10px;
+        font-size: 0.76rem;
+        text-align: center;
+      }
+
+      .sky-home-note {
+        display: none;
+      }
+
+      .sky-home-photo,
+      .sky-home-photo img,
+      .sky-home-photo iframe {
+        min-height: 165px;
+      }
+
+      .sky-home-badge {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        gap: 6px;
+      }
+
+      .sky-home-pill {
+        min-height: 28px;
+        padding: 0 8px;
+        font-size: 0.67rem;
+      }
+
+      .sky-home-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .sky-home-metric {
+        min-height: 62px;
+        padding: 10px 13px;
+      }
+
+      .sky-home-metric strong {
+        font-size: 1.18rem;
+      }
+
+      .sky-home-metric span {
+        margin-top: 4px;
+        font-size: 0.62rem;
+      }
+
+      .radar-home-card {
+        gap: 14px;
+        padding: 14px 14px 16px 18px;
+        border-radius: 20px;
+      }
+
+      .radar-thumb,
+      .radar-thumb img {
+        min-height: 168px;
+      }
+
+      .radar-home-copy {
+        gap: 7px;
+        padding: 2px 2px 0;
+      }
+
+      .radar-home-copy h3 {
+        font-size: clamp(1.6rem, 7.5vw, 1.95rem);
+      }
+
+      .radar-home-copy p {
+        font-size: 0.86rem;
+        line-height: 1.42;
+      }
+
+      .radar-home-copy a {
+        min-height: 36px;
+        font-size: 0.82rem;
+      }
+    }
   </style>
 </head>
 <body class="splash-active">
@@ -3346,10 +3712,10 @@
     <div class="preview-stack">
       <div id="active-alerts" aria-live="polite"></div>
 
-      <section class="feelscore-mock" id="now" aria-label="FeelScore homepage anchor">
+      <section class="feelscore-mock" id="now" aria-label="Current conditions and FeelScore">
         <div class="feelscore-inner">
-          <div class="now-panel">
-            <div class="now-kicker">Now in Asheville</div>
+          <div class="now-panel" aria-label="Current Asheville conditions">
+            <div class="now-kicker">Current Conditions</div>
             <div class="now-temp-row">
               <div class="now-temp" id="heroCurrentTemp">--°</div>
               <div class="now-condition" id="heroSkyCondition">Reading the sky</div>
@@ -3377,7 +3743,7 @@
               </div>
             </div>
           </div>
-          <aside class="feel-panel" aria-label="FeelScore supporting notes">
+          <aside class="feel-panel" aria-label="Current FeelScore">
             <div class="fs-topline">
               <div class="section-label feelscore-mark">FeelScore</div>
               <button class="fs-info-button" id="feelScoreInfoButton" type="button" aria-haspopup="dialog">
@@ -3476,20 +3842,21 @@
             <div>Watch<span>Live</span></div>
           </a>
         </div>
-        <div class="radar-home-card is-hidden" id="radarHomeCard">
-          <button class="radar-thumb" id="radarThumbButton" type="button" aria-haspopup="dialog">
-            <img id="radarThumbImage" src="https://radar.weather.gov/ridge/standard/KGSP_loop.gif" alt="KGSP radar loop preview" loading="lazy" />
-            <span class="radar-thumb-label">Tap to enlarge</span>
-          </button>
-          <div class="radar-home-copy">
-            <div class="kicker">Radar check</div>
-            <h3>Asheville radar animation</h3>
-            <p>
-              A compact KGSP radar loop can live with the sky snapshot as the quick reality check:
-              what the sky looks like, plus whether showers are actually moving toward Asheville.
-            </p>
-            <a href="https://radar.weather.gov/ridge/standard/KGSP_loop.gif" target="_blank" rel="noopener">Open radar source</a>
-          </div>
+      </section>
+
+      <section class="radar-home-card is-hidden" id="radarHomeCard" aria-label="Asheville radar check">
+        <button class="radar-thumb" id="radarThumbButton" type="button" aria-haspopup="dialog">
+          <img id="radarThumbImage" src="https://radar.weather.gov/ridge/standard/KGSP_loop.gif" alt="KGSP radar loop preview" loading="lazy" />
+          <span class="radar-thumb-label">Tap to enlarge</span>
+        </button>
+        <div class="radar-home-copy">
+          <div class="kicker">Radar check</div>
+          <h3>Asheville radar animation</h3>
+          <p>
+            Radar gets its own quick reality check: whether showers are nearby and how they are
+            moving toward Asheville.
+          </p>
+          <a href="https://radar.weather.gov/ridge/standard/KGSP_loop.gif" target="_blank" rel="noopener">Open radar source</a>
         </div>
       </section>
 
