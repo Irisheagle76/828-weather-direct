@@ -1345,7 +1345,7 @@
 
     .hour-card {
       min-height: 116px;
-      padding: 12px 8px;
+      padding: 10px 7px;
       border: 1px solid rgba(120, 149, 181, 0.24);
       border-radius: 14px;
       background:
@@ -1374,7 +1374,7 @@
       justify-content: center;
       width: 34px;
       height: 30px;
-      margin: 9px auto 8px;
+      margin: 5px auto 3px;
       border-radius: 999px;
       font-size: 1.45rem;
       line-height: 1;
@@ -1426,6 +1426,7 @@
 
     .hour-values {
       display: grid;
+      justify-items: center;
       gap: 5px;
     }
 
@@ -1441,8 +1442,29 @@
       text-shadow: 0 1px 0 rgba(255, 255, 255, 0.9);
     }
 
-    .hour-temp-value {
+    .hour-card .hour-temp-value {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 5px;
       color: #f57d23;
+      font-size: 1rem;
+      line-height: 1;
+    }
+
+    .hour-card .hour-temp-value em {
+      color: var(--muted);
+      font-size: 0.58rem;
+      font-style: normal;
+      font-weight: 950;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .hour-card .hour-temp-value strong {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.5rem, 3vw, 1.72rem);
+      font-weight: 900;
+      letter-spacing: -0.035em;
     }
 
     .hour-card .temp-cool {
@@ -1467,21 +1489,29 @@
 
     .hour-card .hour-fs-value {
       color: #1462c8;
-      margin-top: 2px;
-      font-size: 1.12rem;
+      display: inline-flex;
+      width: fit-content;
+      min-height: 25px;
+      margin: 0 auto;
+      padding: 0 9px;
+      border: 1px solid currentColor;
+      border-radius: 999px;
+      background: rgba(20, 98, 200, 0.07);
+      font-size: 0.9rem;
       line-height: 1;
+      text-shadow: none;
     }
 
     .hour-card .hour-fs-value em {
       font-style: normal;
-      font-size: 0.74rem;
-      letter-spacing: 0.055em;
-      opacity: 0.94;
+      font-size: 0.58rem;
+      letter-spacing: 0.07em;
+      opacity: 0.9;
       text-transform: uppercase;
     }
 
     .hour-card .hour-fs-value strong {
-      font-size: 1.12em;
+      font-size: 1.05rem;
       font-weight: 950;
     }
 
@@ -4001,12 +4031,12 @@
             <div class="best-pill" id="nextSixBestScore">86</div>
           </div>
           <div class="hour-row" id="nextSixHourRow">
-            <div class="hour-card best"><b>11 AM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-mild">70°</span><span class="hour-fs-value fs-great"><em>FeelScore</em> <strong>86</strong></span></div></div>
-            <div class="hour-card"><b>12 PM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-mild">72°</span><span class="hour-fs-value fs-great"><em>FeelScore</em> <strong>84</strong></span></div></div>
-            <div class="hour-card"><b>1 PM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-warm">73°</span><span class="hour-fs-value fs-great"><em>FeelScore</em> <strong>82</strong></span></div></div>
-            <div class="hour-card"><b>2 PM</b><span class="icon sky-rain">🌧</span><div class="hour-values"><span class="hour-temp-value temp-warm">74°</span><span class="hour-fs-value fs-good"><em>FeelScore</em> <strong>76</strong></span></div></div>
-            <div class="hour-card"><b>3 PM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-hot">75°</span><span class="hour-fs-value fs-good"><em>FeelScore</em> <strong>78</strong></span></div></div>
-            <div class="hour-card"><b>4 PM</b><span class="icon sky-partly">⛅</span><div class="hour-values"><span class="hour-temp-value temp-hot">75°</span><span class="hour-fs-value fs-good"><em>FeelScore</em> <strong>80</strong></span></div></div>
+            <div class="hour-card best"><b>11 AM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-mild"><em>Temp</em><strong>70°</strong></span><span class="hour-fs-value fs-great"><em>FeelScore</em> <strong>86</strong></span></div></div>
+            <div class="hour-card"><b>12 PM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-mild"><em>Temp</em><strong>72°</strong></span><span class="hour-fs-value fs-great"><em>FeelScore</em> <strong>84</strong></span></div></div>
+            <div class="hour-card"><b>1 PM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-warm"><em>Temp</em><strong>73°</strong></span><span class="hour-fs-value fs-great"><em>FeelScore</em> <strong>82</strong></span></div></div>
+            <div class="hour-card"><b>2 PM</b><span class="icon sky-rain">🌧</span><div class="hour-values"><span class="hour-temp-value temp-warm"><em>Temp</em><strong>74°</strong></span><span class="hour-fs-value fs-good"><em>FeelScore</em> <strong>76</strong></span></div></div>
+            <div class="hour-card"><b>3 PM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-hot"><em>Temp</em><strong>75°</strong></span><span class="hour-fs-value fs-good"><em>FeelScore</em> <strong>78</strong></span></div></div>
+            <div class="hour-card"><b>4 PM</b><span class="icon sky-partly">⛅</span><div class="hour-values"><span class="hour-temp-value temp-hot"><em>Temp</em><strong>75°</strong></span><span class="hour-fs-value fs-good"><em>FeelScore</em> <strong>80</strong></span></div></div>
           </div>
           <p class="editorial" id="nextSixEditorial">
             The Next 6 remains the practical timing strip. The Current Sky card above gives it a visual proof point:
@@ -6021,7 +6051,7 @@
             <b>${formatHour(hour.timestamp)}</b>
             <span class="icon ${iconClass(icon)}" title="${icon}">${iconGlyph(icon)}</span>
             <div class="hour-values">
-              <span class="hour-temp-value ${tempClass(temp)}">${temp}°</span>
+              <span class="hour-temp-value ${tempClass(temp)}"><em>Temp</em><strong>${temp}°</strong></span>
               <span class="hour-fs-value ${fsClass(score)}"><em>FeelScore</em> <strong>${Number.isFinite(score) ? score : "--"}</strong></span>
             </div>
           </div>
