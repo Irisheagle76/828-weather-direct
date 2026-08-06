@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Live radar and animated satellite imagery for Asheville, Western North Carolina, and the Southeast United States." />
+  <meta name="theme-color" content="#081a3c" />
+  <title>Radar &amp; Satellite | 828 Weather Direct</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23081a3c'/%3E%3Ccircle cx='16' cy='16' r='9' fill='%23f57d23'/%3E%3Cpath d='M7 20c5-5 11-5 18 0' fill='none' stroke='%23fffdfa' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://unpkg.com" />
+  <link rel="preconnect" href="https://basemaps.cartocdn.com" />
+  <link rel="preconnect" href="https://mapservices.weather.noaa.gov" />
+  <link rel="preconnect" href="https://cdn.star.nesdis.noaa.gov" />
+  <link rel="preconnect" href="https://www.atms.unca.edu" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root {
+      --ink: #142033;
+      --muted: #5d6b7d;
+      --paper: #f3f0e9;
+      --white: #fffdf8;
+      --panel: #ffffff;
+      --line: #d8e0e8;
+      --blue: #0f4cc4;
+      --blue-dark: #081a3c;
+      --blue-soft: #e9f0ff;
+      --orange: #f57d23;
+      --gold: #f5bd61;
+      --green: #426b59;
+      --shadow-sm: 0 10px 28px rgba(11, 30, 67, 0.08);
+      --shadow: 0 24px 64px rgba(11, 30, 67, 0.14);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 82% 2%, rgba(15, 76, 196, 0.09), transparent 27rem),
+        var(--paper);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    img,
+    video {
+      max-width: 100%;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    a:focus-visible,
+    button:focus-visible,
+    input:focus-visible {
+      outline: 3px solid rgba(245, 125, 35, 0.55);
+      outline-offset: 3px;
+    }
+
+    .skip-link {
+      position: fixed;
+      z-index: 1000;
+      top: 8px;
+      left: 8px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      color: var(--white);
+      background: var(--blue-dark);
+      transform: translateY(-150%);
+    }
+
+    .skip-link:focus {
+      transform: translateY(0);
+    }
+
+    .site-header {
+      position: sticky;
+      z-index: 100;
+      top: 0;
+      border-bottom: 1px solid rgba(20, 32, 51, 0.1);
+      background: rgba(255, 253, 248, 0.94);
+      box-shadow: 0 5px 24px rgba(11, 30, 67, 0.06);
+      backdrop-filter: blur(18px);
+    }
+
+    .header-inner {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 17px 0 13px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      position: relative;
+      flex: 0 0 auto;
+      width: 38px;
+      height: 38px;
+      overflow: hidden;
+      border-radius: 11px;
+      background: linear-gradient(145deg, var(--blue), var(--blue-dark));
+      box-shadow: 0 8px 18px rgba(15, 76, 196, 0.22);
+    }
+
+    .brand-mark::before {
+      content: "";
+      position: absolute;
+      top: 7px;
+      right: 7px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 0 4px rgba(245, 189, 97, 0.18);
+    }
+
+    .brand-mark::after {
+      content: "";
+      position: absolute;
+      right: 7px;
+      bottom: 8px;
+      left: 7px;
+      height: 8px;
+      border-top: 3px solid var(--white);
+      border-radius: 50%;
+      transform: rotate(-7deg);
+    }
+
+    .brand-title {
+      display: block;
+      font-weight: 950;
+      letter-spacing: -0.025em;
+    }
+
+    .brand-subtitle {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .official-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      padding: 0 13px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--blue-dark);
+      background: var(--white);
+      font-size: 0.82rem;
+      font-weight: 900;
+      white-space: nowrap;
+      transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+    }
+
+    .official-link:hover {
+      border-color: rgba(15, 76, 196, 0.32);
+      box-shadow: var(--shadow-sm);
+      transform: translateY(-1px);
+    }
+
+    .site-nav {
+      display: flex;
+      gap: 5px;
+      overflow-x: auto;
+      padding: 0 0 11px;
+      scrollbar-width: none;
+    }
+
+    .site-nav::-webkit-scrollbar {
+      display: none;
+    }
+
+    .site-nav a {
+      flex: 0 0 auto;
+      padding: 8px 11px;
+      border-radius: 999px;
+      color: #435168;
+      font-size: 0.82rem;
+      font-weight: 850;
+      transition: color 160ms ease, background 160ms ease;
+    }
+
+    .site-nav a:hover {
+      color: var(--blue);
+      background: var(--blue-soft);
+    }
+
+    .site-nav a[aria-current="page"] {
+      color: var(--white);
+      background: var(--blue);
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      color: var(--white);
+      background:
+        linear-gradient(120deg, rgba(8, 26, 60, 0.97), rgba(18, 61, 111, 0.91)),
+        radial-gradient(circle at 85% 20%, rgba(77, 172, 255, 0.5), transparent 30rem);
+    }
+
+    .hero::before,
+    .hero::after {
+      content: "";
+      position: absolute;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .hero::before {
+      top: -260px;
+      right: -140px;
+      width: 620px;
+      height: 620px;
+      box-shadow: 0 0 0 72px rgba(255, 255, 255, 0.025), 0 0 0 144px rgba(255, 255, 255, 0.018);
+    }
+
+    .hero::after {
+      right: 178px;
+      bottom: -210px;
+      width: 360px;
+      height: 360px;
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: clamp(54px, 8vw, 94px) 0 clamp(48px, 7vw, 78px);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: #b8d5ff;
+      font-size: 0.75rem;
+      font-weight: 950;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--orange);
+      box-shadow: 0 0 0 6px rgba(245, 125, 35, 0.16);
+    }
+
+    h1,
+    h2 {
+      font-family: Georgia, "Times New Roman", serif;
+      letter-spacing: -0.025em;
+    }
+
+    h1 {
+      max-width: 860px;
+      margin: 16px 0 18px;
+      font-size: clamp(3.2rem, 8vw, 6.5rem);
+      line-height: 0.88;
+    }
+
+    .hero-copy {
+      max-width: 720px;
+      margin: 0;
+      color: rgba(255, 255, 255, 0.76);
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      font-weight: 650;
+      line-height: 1.6;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 26px;
+    }
+
+    .hero-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 0 16px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 999px;
+      color: var(--white);
+      background: rgba(255, 255, 255, 0.08);
+      font-size: 0.88rem;
+      font-weight: 900;
+      backdrop-filter: blur(8px);
+      transition: background 160ms ease, transform 160ms ease;
+    }
+
+    .hero-action.primary {
+      border-color: var(--orange);
+      background: var(--orange);
+    }
+
+    .hero-action:hover {
+      background: rgba(255, 255, 255, 0.16);
+      transform: translateY(-1px);
+    }
+
+    .hero-action.primary:hover {
+      background: #de6813;
+    }
+
+    .content-section {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: clamp(52px, 7vw, 78px) 0 0;
+    }
+
+    .section-heading {
+      display: grid;
+      grid-template-columns: minmax(0, 0.85fr) minmax(300px, 0.65fr);
+      align-items: end;
+      gap: 42px;
+      margin-bottom: 22px;
+    }
+
+    .section-kicker {
+      margin: 0 0 8px;
+      color: var(--orange);
+      font-size: 0.72rem;
+      font-weight: 950;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .section-heading h2 {
+      margin: 0;
+      font-size: clamp(2.2rem, 5vw, 4rem);
+      line-height: 0.95;
+    }
+
+    .section-heading > p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.98rem;
+      font-weight: 650;
+      line-height: 1.6;
+    }
+
+    .map-card {
+      overflow: hidden;
+      border: 1px solid rgba(20, 32, 51, 0.12);
+      border-radius: var(--radius);
+      background: #dfe6ea;
+      box-shadow: var(--shadow);
+    }
+
+    .map-stage {
+      position: relative;
+      min-height: 650px;
+      overflow: hidden;
+    }
+
+    #radarMap {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+
+    .leaflet-tile-pane {
+      filter: saturate(0.78) contrast(0.98) hue-rotate(355deg);
+    }
+
+    .leaflet-control-zoom a {
+      color: var(--ink);
+    }
+
+    .leaflet-control-attribution {
+      font-size: 10px;
+    }
+
+    .map-overlay {
+      position: absolute;
+      z-index: 2;
+      right: 18px;
+      bottom: 18px;
+      left: 18px;
+      display: grid;
+      grid-template-columns: minmax(260px, 0.72fr) minmax(320px, 1fr);
+      gap: 12px;
+      pointer-events: none;
+    }
+
+    .control-panel,
+    .legend-panel {
+      pointer-events: auto;
+      border: 1px solid rgba(255, 255, 255, 0.62);
+      border-radius: 13px;
+      background: rgba(255, 253, 248, 0.94);
+      box-shadow: 0 18px 42px rgba(11, 30, 67, 0.2);
+      backdrop-filter: blur(18px);
+    }
+
+    .control-panel {
+      padding: 14px;
+    }
+
+    .control-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .control-title strong {
+      font-size: 0.95rem;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      color: var(--green);
+      background: rgba(66, 107, 89, 0.12);
+      font-size: 0.72rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .status-pill::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    .view-buttons {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 7px;
+    }
+
+    .view-buttons button {
+      appearance: none;
+      min-height: 39px;
+      padding: 0 9px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      color: var(--ink);
+      background: #f8fafb;
+      font-size: 0.8rem;
+      font-weight: 900;
+      cursor: pointer;
+      transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+    }
+
+    .view-buttons button:hover {
+      border-color: rgba(15, 76, 196, 0.35);
+    }
+
+    .view-buttons button.is-active {
+      border-color: var(--blue);
+      color: var(--white);
+      background: var(--blue);
+    }
+
+    .opacity-row {
+      display: grid;
+      grid-template-columns: auto minmax(120px, 1fr);
+      align-items: center;
+      gap: 12px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 800;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--blue);
+    }
+
+    .legend-panel {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 16px;
+      padding: 14px;
+    }
+
+    .legend-title {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 0.7rem;
+      font-weight: 950;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .legend-ramp {
+      height: 11px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #3ea35c, #d4d947 34%, #ec8c30 58%, #c73e3f 76%, #8b3da7);
+      box-shadow: inset 0 0 0 1px rgba(20, 32, 51, 0.18);
+    }
+
+    .legend-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 0.69rem;
+      font-weight: 850;
+    }
+
+    .timestamp {
+      color: var(--blue-dark);
+      font-size: 0.79rem;
+      font-weight: 900;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .map-note {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px 18px;
+      color: var(--muted);
+      background: var(--white);
+      font-size: 0.8rem;
+      font-weight: 650;
+      line-height: 1.45;
+    }
+
+    .map-note a {
+      flex: 0 0 auto;
+      color: var(--blue);
+      font-weight: 900;
+    }
+
+    .imagery-grid,
+    .loop-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+    }
+
+    .media-card,
+    .loop-card {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow 180ms ease, transform 180ms ease;
+    }
+
+    .media-card:hover,
+    .loop-card:hover {
+      box-shadow: var(--shadow);
+      transform: translateY(-2px);
+    }
+
+    .media-card--wide {
+      grid-column: 1 / -1;
+    }
+
+    .media-frame {
+      position: relative;
+      display: grid;
+      min-height: 420px;
+      place-items: center;
+      overflow: hidden;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        #07162f;
+      background-size: 32px 32px;
+    }
+
+    .media-frame::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      pointer-events: none;
+    }
+
+    .media-frame img,
+    .media-frame video {
+      display: block;
+      width: 100%;
+      height: 100%;
+      max-height: 520px;
+      object-fit: contain;
+      background: #07162f;
+    }
+
+    .media-frame--wide {
+      min-height: 0;
+      aspect-ratio: 1.83 / 1;
+    }
+
+    .media-frame--wide img {
+      max-height: none;
+    }
+
+    .media-badge {
+      position: absolute;
+      z-index: 2;
+      top: 14px;
+      left: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 999px;
+      color: var(--white);
+      background: rgba(8, 26, 60, 0.78);
+      font-size: 0.7rem;
+      font-weight: 950;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      backdrop-filter: blur(10px);
+    }
+
+    .media-badge::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #63d69a;
+      box-shadow: 0 0 0 4px rgba(99, 214, 154, 0.16);
+    }
+
+    .card-copy {
+      padding: 20px;
+    }
+
+    .card-topline {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .card-copy h3 {
+      margin: 0;
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.4rem, 3vw, 1.9rem);
+      line-height: 1.05;
+    }
+
+    .card-copy p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 650;
+      line-height: 1.55;
+    }
+
+    .source-link {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 36px;
+      padding: 0 11px;
+      border-radius: 999px;
+      color: var(--blue);
+      background: var(--blue-soft);
+      font-size: 0.76rem;
+      font-weight: 950;
+    }
+
+    .source-link:hover {
+      background: #dce8ff;
+    }
+
+    .player-bar {
+      position: absolute;
+      z-index: 3;
+      right: 14px;
+      bottom: 14px;
+      left: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 11px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 11px;
+      color: rgba(255, 255, 255, 0.82);
+      background: rgba(8, 26, 60, 0.82);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.2);
+      font-size: 0.74rem;
+      font-weight: 850;
+      backdrop-filter: blur(12px);
+    }
+
+    .player-actions {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .player-button {
+      appearance: none;
+      min-height: 32px;
+      padding: 0 11px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 999px;
+      color: var(--white);
+      background: rgba(255, 255, 255, 0.08);
+      font-size: 0.72rem;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .player-button:hover {
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .loop-grid {
+      gap: 16px;
+    }
+
+    .loop-image-wrap {
+      position: relative;
+      overflow: hidden;
+      aspect-ratio: 1.28 / 1;
+      background: #dfe6ea;
+    }
+
+    .loop-image {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .loop-card .card-copy {
+      padding: 17px;
+    }
+
+    .loop-card .card-copy h3 {
+      font-family: inherit;
+      font-size: 1.05rem;
+      letter-spacing: -0.01em;
+    }
+
+    .guidance-strip {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 18px;
+      padding: 22px;
+      border-radius: var(--radius);
+      color: var(--white);
+      background: linear-gradient(120deg, var(--blue-dark), #173f6d);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .guidance-icon {
+      display: grid;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      place-items: center;
+      color: var(--blue-dark);
+      background: var(--gold);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.35rem;
+      font-weight: 900;
+    }
+
+    .guidance-strip strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 0.95rem;
+    }
+
+    .guidance-strip p {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.82rem;
+      font-weight: 650;
+      line-height: 1.5;
+    }
+
+    .guidance-strip a {
+      padding: 10px 13px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .site-footer {
+      margin-top: clamp(58px, 8vw, 96px);
+      padding: 44px 0 30px;
+      color: rgba(255, 253, 248, 0.78);
+      background: var(--blue-dark);
+    }
+
+    .footer-inner {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      display: grid;
+      gap: 20px;
+      font-size: 0.86rem;
+    }
+
+    .footer-brand {
+      display: grid;
+      gap: 6px;
+    }
+
+    .footer-logo {
+      color: var(--white);
+      font-size: 1.35rem;
+      font-weight: 950;
+    }
+
+    .footer-tagline {
+      max-width: 640px;
+      color: rgba(255, 253, 248, 0.68);
+      line-height: 1.5;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      padding-top: 4px;
+    }
+
+    .footer-links a {
+      color: rgba(255, 253, 248, 0.84);
+      font-weight: 850;
+    }
+
+    .footer-links a:hover {
+      color: var(--gold);
+    }
+
+    .footer-meta {
+      display: grid;
+      gap: 5px;
+      color: rgba(255, 253, 248, 0.57);
+      line-height: 1.45;
+    }
+
+    .footer-bottom {
+      padding-top: 8px;
+      color: rgba(255, 253, 248, 0.5);
+      font-size: 0.78rem;
+    }
+
+    @media (max-width: 820px) {
+      .section-heading,
+      .imagery-grid,
+      .loop-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .section-heading {
+        gap: 14px;
+      }
+
+      .map-stage {
+        min-height: 680px;
+      }
+
+      .map-overlay {
+        grid-template-columns: 1fr;
+      }
+
+      .media-frame {
+        min-height: 340px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .brand-row {
+        align-items: flex-start;
+      }
+
+      .brand-subtitle {
+        display: none;
+      }
+
+      .official-link {
+        min-height: 34px;
+        padding: 0 10px;
+        font-size: 0.73rem;
+      }
+
+      h1 {
+        font-size: clamp(3rem, 17vw, 4.6rem);
+      }
+
+      .hero-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .map-card {
+        margin-right: -8px;
+        margin-left: -8px;
+        border-radius: 14px;
+      }
+
+      .map-stage {
+        min-height: 650px;
+      }
+
+      .map-overlay {
+        right: 10px;
+        bottom: 10px;
+        left: 10px;
+      }
+
+      .legend-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .timestamp {
+        text-align: left;
+      }
+
+      .map-note,
+      .card-topline,
+      .guidance-strip {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .map-note {
+        display: grid;
+      }
+
+      .media-frame {
+        min-height: 280px;
+      }
+
+      .media-frame--wide {
+        min-height: 0;
+      }
+
+      .player-bar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .guidance-strip {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+      }
+
+      .guidance-strip a {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to radar and satellite imagery</a>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand-row">
+        <a class="brand" href="/" aria-label="828 Weather Direct home">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>
+            <span class="brand-title">828 Weather Direct</span>
+            <span class="brand-subtitle">Hyper-local Asheville weather built by Tim Ballisty</span>
+          </span>
+        </a>
+        <a class="official-link" href="https://radar.weather.gov/" target="_blank" rel="noopener noreferrer">Official NWS radar ↗</a>
+      </div>
+
+      <nav class="site-nav" aria-label="Main navigation">
+        <a href="/">Home</a>
+        <a href="/forecast.html">Tim's 4-Day Forecast</a>
+        <a href="/radar.html" aria-current="page">Radar &amp; Satellite</a>
+        <a href="/hiking.html">Hiking Guidance</a>
+        <a href="/water.html">Water Conditions</a>
+        <a href="/i26-connector.html">I-26 Connector</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <section class="hero">
+      <div class="hero-inner">
+        <span class="eyebrow">Western North Carolina weather imagery</span>
+        <h1>Radar &amp;<br />Satellite</h1>
+        <p class="hero-copy">Track precipitation around Asheville, then zoom out to watch cloud cover and storm systems move across the southern Appalachians and Southeast.</p>
+        <div class="hero-actions">
+          <a class="hero-action primary" href="#live-radar">Explore live radar</a>
+          <a class="hero-action" href="#satellite">Watch satellite loops</a>
+          <a class="hero-action" href="#quick-loops">Open quick radar loops</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-section" id="live-radar">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">Interactive radar</p>
+          <h2>What is moving toward the mountains?</h2>
+        </div>
+        <p>Pan and zoom the map, switch between local and regional views, or adjust the radar layer so roads and terrain remain easy to read.</p>
+      </div>
+
+      <div class="map-card">
+        <div class="map-stage" aria-label="Interactive NOAA radar map centered on Asheville">
+          <div id="radarMap"></div>
+          <div class="map-overlay">
+            <section class="control-panel" aria-label="Radar map controls">
+              <div class="control-title">
+                <strong>Map focus</strong>
+                <span class="status-pill">Updates about every 5 min</span>
+              </div>
+              <div class="view-buttons">
+                <button class="is-active" type="button" data-view="local" aria-pressed="true">WNC</button>
+                <button type="button" data-view="regional" aria-pressed="false">Southeast</button>
+                <button type="button" data-view="wide" aria-pressed="false">CONUS</button>
+              </div>
+              <label class="opacity-row">
+                Radar visibility
+                <input id="opacityRange" type="range" min="35" max="95" value="72" aria-label="Radar layer visibility" />
+              </label>
+            </section>
+
+            <section class="legend-panel" aria-label="Radar reflectivity legend">
+              <div>
+                <p class="legend-title">Base reflectivity</p>
+                <div class="legend-ramp" aria-hidden="true"></div>
+                <div class="legend-labels">
+                  <span>Light</span>
+                  <span>Moderate</span>
+                  <span>Heavy</span>
+                </div>
+              </div>
+              <div class="timestamp" id="timestamp" aria-live="polite">Loading radar layer…</div>
+            </section>
+          </div>
+        </div>
+        <div class="map-note">
+          <span>Radar estimates precipitation aloft and may not always show what reaches the ground at your exact location.</span>
+          <a href="https://nowcoast.noaa.gov/" target="_blank" rel="noopener noreferrer">Open NOAA nowCOAST ↗</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-section" id="satellite">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">Animated satellite &amp; regional imagery</p>
+          <h2>See the bigger weather pattern.</h2>
+        </div>
+        <p>Cloud texture, clearing lines, and upstream systems add the context radar alone cannot provide. Both views continue animating while this page is open.</p>
+      </div>
+
+      <div class="imagery-grid">
+        <article class="media-card">
+          <div class="media-frame">
+            <span class="media-badge">Animated GeoColor</span>
+            <img
+              src="https://cdn.star.nesdis.noaa.gov/WFO/gsp/GEOCOLOR/GOES19-GSP-GEOCOLOR-600x600.gif"
+              alt="Animated GOES-19 GeoColor satellite imagery centered on the western Carolinas"
+              loading="eager"
+              fetchpriority="high"
+            />
+          </div>
+          <div class="card-copy">
+            <div class="card-topline">
+              <div>
+                <h3>Western Carolinas GeoColor</h3>
+                <p>A close regional view centered near the Greenville-Spartanburg forecast area, useful for watching clouds evolve across WNC.</p>
+              </div>
+              <a class="source-link" href="https://cdn.star.nesdis.noaa.gov/WFO/gsp/GEOCOLOR/GOES19-GSP-GEOCOLOR-600x600.gif" target="_blank" rel="noopener noreferrer">Full size ↗</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="media-card">
+          <div class="media-frame">
+            <span class="media-badge">Seven-day satellite loop</span>
+            <video autoplay muted loop playsinline controls preload="metadata" aria-label="Seven-day North America satellite animation">
+              <source src="https://www.atms.unca.edu/wxwall/us_comp_large.mp4" type="video/mp4" />
+              Your browser cannot play this regional animation. Use the full-size source link below.
+            </video>
+          </div>
+          <div class="card-copy">
+            <div class="card-topline">
+              <div>
+                <h3>7-Day North America Satellite Animation</h3>
+                <p>A seven-day satellite perspective for tracking cloud systems across North America and upstream of the southern Appalachians. McIDAS credit: Space Science and Engineering Center, University of Wisconsin–Madison.</p>
+              </div>
+              <a class="source-link" href="https://www.ssec.wisc.edu/mcidas/" target="_blank" rel="noopener noreferrer">SSEC / McIDAS ↗</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="media-card media-card--wide">
+          <div class="media-frame media-frame--wide">
+            <span class="media-badge">1-km visible satellite</span>
+            <img
+              id="csuVisibleImage"
+              src="https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061456.gif"
+              alt="Animated one-kilometer visible satellite imagery for the Southeast United States"
+              loading="lazy"
+            />
+            <div class="player-bar" aria-label="Southeast visible satellite animation controls">
+              <span id="csuFrameStatus" aria-live="polite">Connecting to the latest Colorado State frames…</span>
+              <div class="player-actions">
+                <button class="player-button" id="csuPlayButton" type="button" aria-pressed="false">Pause</button>
+                <button class="player-button" id="csuRefreshButton" type="button">Refresh frames</button>
+              </div>
+            </div>
+          </div>
+          <div class="card-copy">
+            <div class="card-topline">
+              <div>
+                <h3>Southeast visible satellite loop</h3>
+                <p>A high-resolution daylight view of cloud structure across the Southeast, presented here in a responsive player using Colorado State's latest image sequence.</p>
+              </div>
+              <a class="source-link" href="https://schumacher.atmos.colostate.edu/weather/VIS_anim.php?region=se" target="_blank" rel="noopener noreferrer">Open CSU viewer ↗</a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="content-section" id="quick-loops">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">Quick radar loops</p>
+          <h2>Fast local and regional checks.</h2>
+        </div>
+        <p>These lightweight NWS loops are handy when you want a quick motion check without moving around the interactive map.</p>
+      </div>
+
+      <div class="loop-grid">
+        <article class="loop-card">
+          <div class="loop-image-wrap">
+            <img class="loop-image" src="https://radar.weather.gov/ridge/standard/KGSP_loop.gif" alt="Animated KGSP radar loop" loading="lazy" />
+          </div>
+          <div class="card-copy">
+            <div class="card-topline">
+              <div>
+                <h3>KGSP local loop</h3>
+                <p>Focused radar reference for Asheville, Upstate South Carolina, and the surrounding mountain region.</p>
+              </div>
+              <a class="source-link" href="https://radar.weather.gov/ridge/standard/KGSP_loop.gif" target="_blank" rel="noopener noreferrer">Open GIF ↗</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="loop-card">
+          <div class="loop-image-wrap">
+            <img class="loop-image" src="https://radar.weather.gov/ridge/standard/SOUTHEAST_loop.gif" alt="Animated Southeast regional radar loop" loading="lazy" />
+          </div>
+          <div class="card-copy">
+            <div class="card-topline">
+              <div>
+                <h3>Southeast radar loop</h3>
+                <p>A wider motion check for storm systems approaching the Carolinas and southern Appalachians.</p>
+              </div>
+              <a class="source-link" href="https://radar.weather.gov/ridge/standard/SOUTHEAST_loop.gif" target="_blank" rel="noopener noreferrer">Open GIF ↗</a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="content-section" aria-label="Weather safety guidance">
+      <div class="guidance-strip">
+        <div class="guidance-icon" aria-hidden="true">i</div>
+        <div>
+          <strong>Use this page for situational awareness.</strong>
+          <p>For warnings, watches, and official safety guidance, always confirm conditions with the National Weather Service.</p>
+        </div>
+        <a href="https://www.weather.gov/gsp/" target="_blank" rel="noopener noreferrer">Visit NWS Greenville-Spartanburg ↗</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="footer-logo">828 Weather Direct</div>
+        <div class="footer-tagline">Hyper-local weather, sky context, and outdoor timing for Asheville and the greater 828 region.</div>
+      </div>
+
+      <div class="footer-links">
+        <a href="/">Home</a>
+        <a href="/forecast.html">Forecast</a>
+        <a href="/radar.html">Radar &amp; Satellite</a>
+        <a href="/hiking.html">Hiking Guidance</a>
+        <a href="/water.html">Water Conditions</a>
+        <a href="/i26-connector.html">I-26 Connector</a>
+        <a href="/828-sunset-radiance.html">Sunset Radiance</a>
+        <a href="https://www.linkedin.com/in/timballisty" target="_blank" rel="noopener noreferrer">About</a>
+        <a href="mailto:tballisty@gmail.com">Contact</a>
+        <a href="https://ko-fi.com/irisheagle" target="_blank" rel="noopener noreferrer">Support</a>
+      </div>
+
+      <div class="footer-meta">
+        <div>Imagery and tools: NOAA/NWS, NOAA NESDIS/STAR, UNC Asheville Atmospheric Sciences, SSEC/McIDAS at the University of Wisconsin–Madison, and Colorado State University.</div>
+        <div>Serving Asheville, Western North Carolina, and the greater 828 region.</div>
+        <div>For general awareness only — not a substitute for official forecasts, warnings, or emergency guidance.</div>
+      </div>
+
+      <div class="footer-bottom">&copy; 2026 828 Weather Direct</div>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/esri-leaflet@3.0.14/dist/esri-leaflet.js"></script>
+  <script>
+    const NOAA_RADAR_SERVICE = "https://mapservices.weather.noaa.gov/eventdriven/rest/services/radar/radar_base_reflectivity_time/ImageServer";
+    const views = {
+      local: { center: [35.61, -82.55], zoom: 8 },
+      regional: { center: [34.8, -83.25], zoom: 6 },
+      wide: { center: [38.2, -96.4], zoom: 4 }
+    };
+
+    const map = L.map("radarMap", {
+      zoomControl: false,
+      minZoom: 3,
+      maxZoom: 11
+    }).setView(views.local.center, views.local.zoom);
+
+    L.control.zoom({ position: "topright" }).addTo(map);
+
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png", {
+      maxZoom: 19,
+      subdomains: "abcd",
+      attribution: "&copy; OpenStreetMap contributors &copy; CARTO"
+    }).addTo(map);
+
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png", {
+      maxZoom: 19,
+      subdomains: "abcd",
+      pane: "shadowPane",
+      attribution: ""
+    }).addTo(map);
+
+    const radarLayer = L.esri.imageMapLayer({
+      url: NOAA_RADAR_SERVICE,
+      opacity: 0.72,
+      attribution: "NOAA/NWS MRMS radar"
+    }).addTo(map);
+
+    L.circleMarker([35.5951, -82.5515], {
+      radius: 7,
+      color: "#fffdf8",
+      weight: 2,
+      fillColor: "#f57d23",
+      fillOpacity: 1
+    }).addTo(map).bindPopup("Asheville radar focus");
+
+    const timestamp = document.querySelector("#timestamp");
+    const opacityRange = document.querySelector("#opacityRange");
+    const buttons = document.querySelectorAll("[data-view]");
+
+    function updateTimestamp() {
+      const now = new Date();
+      timestamp.textContent = `Map refreshed ${now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+    }
+
+    buttons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const view = views[button.dataset.view];
+        map.flyTo(view.center, view.zoom, { duration: 0.7 });
+        buttons.forEach((item) => {
+          const isActive = item === button;
+          item.classList.toggle("is-active", isActive);
+          item.setAttribute("aria-pressed", String(isActive));
+        });
+      });
+    });
+
+    opacityRange.addEventListener("input", () => {
+      radarLayer.setOpacity(Number(opacityRange.value) / 100);
+    });
+
+    radarLayer.on("load", updateTimestamp);
+    radarLayer.on("requesterror", () => {
+      timestamp.textContent = "Radar layer temporarily unavailable";
+    });
+
+    updateTimestamp();
+    window.setInterval(() => {
+      radarLayer.redraw();
+      updateTimestamp();
+    }, 300000);
+
+    const csuImage = document.querySelector("#csuVisibleImage");
+    const csuFrameStatus = document.querySelector("#csuFrameStatus");
+    const csuPlayButton = document.querySelector("#csuPlayButton");
+    const csuRefreshButton = document.querySelector("#csuRefreshButton");
+    const CSU_PREVIEW_FRAMES = [
+      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061346.gif",
+      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061351.gif",
+      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061356.gif",
+      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061401.gif",
+      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061406.gif",
+      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061411.gif",
+      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061416.gif",
+      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061421.gif",
+      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061426.gif",
+      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061431.gif",
+      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061436.gif",
+      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061441.gif",
+      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061446.gif",
+      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061451.gif",
+      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061456.gif"
+    ];
+    let csuFrames = [];
+    let csuFrameIndex = 0;
+    let csuTimer = null;
+
+    function showCsuFrame(index) {
+      if (!csuFrames.length) return;
+      csuFrameIndex = (index + csuFrames.length) % csuFrames.length;
+      csuImage.src = csuFrames[csuFrameIndex];
+      csuFrameStatus.textContent = `Southeast visible • frame ${csuFrameIndex + 1} of ${csuFrames.length}`;
+    }
+
+    function stopCsuAnimation() {
+      window.clearInterval(csuTimer);
+      csuTimer = null;
+      csuPlayButton.textContent = "Play";
+      csuPlayButton.setAttribute("aria-pressed", "true");
+    }
+
+    function startCsuAnimation() {
+      if (csuFrames.length < 2) return;
+      window.clearInterval(csuTimer);
+      csuPlayButton.textContent = "Pause";
+      csuPlayButton.setAttribute("aria-pressed", "false");
+      csuTimer = window.setInterval(() => showCsuFrame(csuFrameIndex + 1), 650);
+    }
+
+    async function loadCsuFrames() {
+      csuFrameStatus.textContent = "Connecting to the latest Colorado State frames…";
+      try {
+        if (window.location.protocol === "file:") {
+          csuFrames = CSU_PREVIEW_FRAMES;
+          showCsuFrame(csuFrames.length - 1);
+          window.setTimeout(startCsuAnimation, 800);
+          return;
+        }
+
+        const response = await fetch("/api/csu-visible", { cache: "no-store" });
+        if (!response.ok) throw new Error(`Satellite feed returned ${response.status}`);
+        const payload = await response.json();
+        if (!Array.isArray(payload.frames) || !payload.frames.length) throw new Error("No frames returned");
+
+        csuFrames = payload.frames;
+        csuFrames.forEach((url) => {
+          const preload = new Image();
+          preload.src = url;
+        });
+        showCsuFrame(csuFrames.length - 1);
+        window.setTimeout(startCsuAnimation, 800);
+      } catch (error) {
+        stopCsuAnimation();
+        csuFrameStatus.textContent = "Live frame service unavailable • open the CSU viewer";
+      }
+    }
+
+    csuPlayButton.addEventListener("click", () => {
+      if (csuTimer) stopCsuAnimation();
+      else startCsuAnimation();
+    });
+
+    csuRefreshButton.addEventListener("click", loadCsuFrames);
+    loadCsuFrames();
+  </script>
+</body>
+</html>
