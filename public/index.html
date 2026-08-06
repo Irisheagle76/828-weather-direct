@@ -677,6 +677,52 @@
       display: none;
     }
 
+    @media (min-width: 1001px) {
+      .feel-panel {
+        align-content: stretch;
+        grid-template-rows: auto auto auto minmax(0, 1fr);
+      }
+
+      .feel-panel .fs-temp-markers {
+        display: grid;
+        grid-template-rows: auto repeat(3, minmax(58px, 1fr)) auto;
+        margin-top: 2px;
+      }
+    }
+
+    .fs-temp-title {
+      color: rgba(255, 253, 248, 0.68);
+      font-size: 0.72rem;
+      font-weight: 950;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .fs-temp-context {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-top: 2px;
+      padding: 11px 12px;
+      border: 1px solid rgba(255, 207, 99, 0.28);
+      border-radius: 11px;
+      color: rgba(255, 253, 248, 0.9);
+      background: rgba(255, 207, 99, 0.1);
+      font-size: 0.8rem;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+
+    .fs-temp-context:empty {
+      display: none;
+    }
+
+    .fs-temp-context-emoji {
+      flex: 0 0 auto;
+      font-size: 1.15rem;
+      line-height: 1;
+    }
+
     .feel-panel .fs-bullets {
       padding: 14px;
     }
@@ -3963,6 +4009,7 @@
               </ul>
             </div>
             <div class="fs-temp-markers" aria-label="Important temperature markers">
+              <div class="fs-temp-title">Temperature path</div>
               <div class="fs-temp-marker">
                 <span id="liveTempMarkerOneLabel">Now</span>
                 <b id="liveTempMarkerOne">--</b>
@@ -3975,6 +4022,7 @@
                 <span id="liveTempMarkerThreeLabel">9 PM</span>
                 <b id="liveTempMarkerThree">--</b>
               </div>
+              <div class="fs-temp-context" id="liveTempContext" aria-live="polite"></div>
             </div>
           </aside>
         </div>
@@ -4495,6 +4543,7 @@
   <script type="module">
     import { calculateComfort } from "./js/intel/comfort.js";
     import { buildTomorrowSummary } from "./js/intel/tomorrow-summary.js?v=20260804-tim-voice";
+    import { buildTemperaturePath } from "./js/intel/temperature-path.js?v=20260806-temp-path";
     import {
       cleanHikingText,
       homeHikingBestBet,
@@ -5933,33 +5982,6 @@
       return bullets.slice(0, 3);
     }
 
-    function nearestHour(hourly = [], localHour, dayOffset = 0, maxDistanceHours = 2) {
-      return hourly
-        .filter((hour) => sameLocalDay(hour.timestamp, dayOffset) && Number.isFinite(hour.temperatureF))
-        .map((hour) => {
-          const d = new Date(hour.timestamp);
-          const hourNumber = Number(new Intl.DateTimeFormat("en-US", {
-            hour: "numeric",
-            hour12: false,
-            timeZone: "America/New_York"
-          }).format(d));
-          return { ...hour, distance: Math.abs(hourNumber - localHour) };
-        })
-        .filter((hour) => hour.distance <= maxDistanceHours)
-        .sort((a, b) => a.distance - b.distance)[0];
-    }
-
-    function todayDaily(daily = []) {
-      return daily.find((day) => {
-        const ts = day.timestamp ?? day.time ?? day.date;
-        return Number.isFinite(ts) ? sameLocalDay(ts, 0) : sameLocalDay(new Date(ts).getTime(), 0);
-      }) || daily[0] || null;
-    }
-
-    function tempHourFromValue(value) {
-      return Number.isFinite(value) ? { temperatureF: value } : null;
-    }
-
     function formatPercent(value) {
       const n = Number(value);
       if (!Number.isFinite(n)) return "--";
@@ -6042,25 +6064,40 @@
           .join("");
       }
 
-      const day = todayDaily(daily);
-      renderTempMarker(
-        document.querySelector("#liveTempMarkerOneLabel"),
-        document.querySelector("#liveTempMarkerOne"),
-        "Now",
+      const temperaturePath = buildTemperaturePath(
+        hourly,
+        daily,
         displayCurrentHour || liveHour || hourly[0]
       );
-      renderTempMarker(
-        document.querySelector("#liveTempMarkerTwoLabel"),
-        document.querySelector("#liveTempMarkerTwo"),
-        "Mid-afternoon",
-        nearestHour(hourly, 15, 0, 2) || tempHourFromValue(day?.tempMax)
-      );
-      renderTempMarker(
-        document.querySelector("#liveTempMarkerThreeLabel"),
-        document.querySelector("#liveTempMarkerThree"),
-        "9 PM",
-        nearestHour(hourly, 21, 0, 2)
-      );
+      const markerEls = [
+        ["#liveTempMarkerOneLabel", "#liveTempMarkerOne"],
+        ["#liveTempMarkerTwoLabel", "#liveTempMarkerTwo"],
+        ["#liveTempMarkerThreeLabel", "#liveTempMarkerThree"]
+      ];
+      markerEls.forEach(([labelSelector, valueSelector], index) => {
+        const slot = temperaturePath.slots[index];
+        if (!slot) return;
+        renderTempMarker(
+          document.querySelector(labelSelector),
+          document.querySelector(valueSelector),
+          slot.label,
+          slot.hour
+        );
+      });
+
+      const contextEl = document.querySelector("#liveTempContext");
+      if (contextEl) {
+        contextEl.replaceChildren();
+        if (temperaturePath.callout) {
+          const emoji = document.createElement("span");
+          emoji.className = "fs-temp-context-emoji";
+          emoji.setAttribute("aria-hidden", "true");
+          emoji.textContent = temperaturePath.callout.emoji;
+          const text = document.createElement("span");
+          text.textContent = temperaturePath.callout.text;
+          contextEl.append(emoji, text);
+        }
+      }
     }
 
     function renderNextSix(hourly = []) {
