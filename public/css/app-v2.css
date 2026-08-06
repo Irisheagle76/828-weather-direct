@@ -7257,3 +7257,192 @@ body {
     margin-top: 28px;
   }
 }
+
+/* Forecast page: lead with the four-day outlook and give each day a stronger visual voice. */
+.forecast-refresh.forecast-warm .forecast-days {
+  display: grid;
+  gap: 14px;
+}
+
+.forecast-refresh.forecast-warm .forecast-days-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 0 4px;
+}
+
+.forecast-refresh.forecast-warm .forecast-days-heading span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--forecast-orange);
+  font-size: 0.76rem;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.forecast-refresh.forecast-warm .forecast-days-heading h2 {
+  margin: 0;
+  color: var(--forecast-ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 0.98;
+}
+
+.forecast-refresh.forecast-warm .forecast-days-heading p {
+  max-width: 390px;
+  margin: 0 0 3px;
+  color: var(--forecast-muted);
+  font-size: 0.98rem;
+  line-height: 1.45;
+  text-align: right;
+}
+
+.forecast-refresh.forecast-warm .forecast-days .forecast-board-grid {
+  gap: 16px;
+}
+
+.forecast-refresh.forecast-warm .forecast-days .forecast-board-card {
+  isolation: isolate;
+  min-height: 430px;
+  padding: 20px 18px 18px;
+  border-color: rgba(15, 76, 196, 0.12);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(15, 76, 196, 0.12), transparent 31%),
+    linear-gradient(155deg, #ffffff 0%, #fbfdff 72%);
+}
+
+.forecast-refresh.forecast-warm .forecast-days .forecast-board-card::before {
+  width: 6px;
+  z-index: 0;
+}
+
+.forecast-refresh.forecast-warm .forecast-days .forecast-board-card::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: -64px;
+  right: -56px;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: rgba(15, 76, 196, 0.07);
+  pointer-events: none;
+}
+
+.forecast-refresh.forecast-warm .forecast-days .forecast-board-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.forecast-refresh.forecast-warm .forecast-days .forecast-board-card.sunny {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(247, 200, 115, 0.34), transparent 33%),
+    linear-gradient(155deg, #fffefa 0%, #fffaf0 100%);
+}
+
+.forecast-refresh.forecast-warm .forecast-days .forecast-board-card.sunny::after {
+  background: rgba(247, 200, 115, 0.18);
+}
+
+.forecast-refresh.forecast-warm .forecast-days .forecast-board-card.partly {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(93, 151, 255, 0.22), transparent 34%),
+    linear-gradient(155deg, #ffffff 0%, #f3f7ff 100%);
+}
+
+.forecast-refresh.forecast-warm .forecast-days .forecast-board-card.cloudy {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(143, 160, 184, 0.22), transparent 34%),
+    linear-gradient(155deg, #ffffff 0%, #f4f7fa 100%);
+}
+
+.forecast-refresh.forecast-warm .forecast-days .forecast-board-card.rain {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(245, 125, 35, 0.2), transparent 34%),
+    linear-gradient(155deg, #ffffff 0%, #fff7f1 100%);
+}
+
+.forecast-refresh.forecast-warm .forecast-days .forecast-card-day {
+  font-size: 1.14rem;
+  font-weight: 950;
+}
+
+.forecast-refresh.forecast-warm .forecast-days .forecast-card-date {
+  font-size: 0.8rem;
+}
+
+.forecast-refresh.forecast-warm .forecast-days .forecast-condition {
+  max-width: 106px;
+}
+
+.forecast-refresh.forecast-warm .forecast-days .forecast-condition span {
+  font-size: 3.35rem;
+  filter: drop-shadow(0 7px 9px rgba(11, 30, 67, 0.16));
+  transform: translateY(-4px);
+}
+
+.forecast-refresh.forecast-warm .forecast-days .forecast-condition strong {
+  margin-top: -3px;
+  font-size: 0.76rem;
+  font-weight: 850;
+}
+
+.forecast-refresh.forecast-warm .forecast-days .forecast-card-temps {
+  margin-top: 16px;
+}
+
+.forecast-refresh.forecast-warm .forecast-days .forecast-card-temps div {
+  min-height: 76px;
+  padding: 10px;
+  border: 1px solid rgba(15, 76, 196, 0.08);
+}
+
+.forecast-refresh.forecast-warm .forecast-days .forecast-card-temps .forecast-temp-high {
+  background: linear-gradient(145deg, #fff4df, #ffe5c2);
+  border-color: rgba(245, 125, 35, 0.22);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+.forecast-refresh.forecast-warm .forecast-days .forecast-card-temps .forecast-temp-high span {
+  color: #a9480a;
+}
+
+.forecast-refresh.forecast-warm .forecast-days .forecast-card-temps .forecast-temp-high strong {
+  color: var(--forecast-orange);
+  font-size: clamp(1.7rem, 2.6vw, 2rem);
+  font-weight: 950;
+}
+
+.forecast-refresh.forecast-warm .forecast-days .forecast-card-temps .forecast-temp-score {
+  background: var(--forecast-blue-soft);
+}
+
+.forecast-refresh.forecast-warm .forecast-days .forecast-board-card h3 {
+  margin-top: 18px;
+  font-size: clamp(1.35rem, 2.1vw, 1.68rem);
+  line-height: 1.08;
+}
+
+.forecast-refresh.forecast-warm .forecast-days .forecast-board-card p {
+  margin-top: 10px;
+  font-size: 0.94rem;
+  line-height: 1.55;
+}
+
+@media (max-width: 680px) {
+  .forecast-refresh.forecast-warm .forecast-days-heading {
+    display: grid;
+    align-items: start;
+    gap: 8px;
+  }
+
+  .forecast-refresh.forecast-warm .forecast-days-heading p {
+    text-align: left;
+  }
+
+  .forecast-refresh.forecast-warm .forecast-days .forecast-board-card {
+    min-height: 0;
+  }
+}

@@ -31,11 +31,9 @@ export async function render4DayForecast(container) {
 
   container.innerHTML = `
     ${renderBoardHero(board)}
-    ${renderForecastStory(days)}
+    ${renderForecastDays(days)}
     ${renderWeekAheadSignals(forecastOverrides.weekAheadSignals, board)}
-    <section class="forecast-board-grid" aria-label="Four day forecast">
-      ${days.map(renderForecastCard).join("")}
-    </section>
+    ${renderForecastStory(days)}
   `;
 
   initWeekAheadCarousel(container);
@@ -212,6 +210,23 @@ function renderBoardHero(board) {
       <div class="forecast-board-kicker">Tim's Forecast Board</div>
       <h2>${escapeHtml(board.boardHeadline)}</h2>
       <p>${escapeHtml(board.boardSummary)}</p>
+    </section>
+  `;
+}
+
+function renderForecastDays(days) {
+  return `
+    <section class="forecast-days" aria-labelledby="forecast-days-title">
+      <div class="forecast-days-heading">
+        <div>
+          <span>The forecast</span>
+          <h2 id="forecast-days-title">Your next four days</h2>
+        </div>
+        <p>Daily highs, sky conditions, and Tim's practical read.</p>
+      </div>
+      <div class="forecast-board-grid">
+        ${days.map(renderForecastCard).join("")}
+      </div>
     </section>
   `;
 }
@@ -639,9 +654,9 @@ function renderForecastCard(day) {
       </div>
 
       <div class="forecast-card-temps">
-        <div><span>High</span><strong>${escapeHtml(formatTemp(day.high))}</strong></div>
-        <div><span>Low</span><strong>${escapeHtml(formatTemp(day.low))}</strong></div>
-        <div><span>FeelScore</span><strong>${escapeHtml(formatScore(day.feelScore))}</strong></div>
+        <div class="forecast-temp-high"><span>High</span><strong>${escapeHtml(formatTemp(day.high))}</strong></div>
+        <div class="forecast-temp-low"><span>Low</span><strong>${escapeHtml(formatTemp(day.low))}</strong></div>
+        <div class="forecast-temp-score"><span>FeelScore</span><strong>${escapeHtml(formatScore(day.feelScore))}</strong></div>
       </div>
 
       <h3>${escapeHtml(day.headline || "Forecast update")}</h3>
