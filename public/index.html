@@ -699,6 +699,10 @@
       text-transform: uppercase;
     }
 
+    .fs-temp-mobile-toggle {
+      display: none;
+    }
+
     .fs-temp-context {
       display: flex;
       align-items: center;
@@ -3769,6 +3773,124 @@
         font-size: 0.84rem;
       }
 
+      .feel-panel .fs-temp-mobile-toggle {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        min-height: 56px;
+        padding: 9px 12px;
+        border: 1px solid rgba(255, 253, 248, 0.18);
+        border-radius: 14px;
+        color: var(--white);
+        background: rgba(255, 253, 248, 0.09);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .fs-temp-mobile-copy {
+        display: grid;
+        gap: 3px;
+        min-width: 0;
+      }
+
+      .fs-temp-mobile-label {
+        color: rgba(255, 253, 248, 0.68);
+        font-size: 0.61rem;
+        font-weight: 950;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+      }
+
+      .fs-temp-mobile-summary {
+        overflow: hidden;
+        color: var(--gold);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 0.94rem;
+        font-weight: 900;
+        line-height: 1.15;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .fs-temp-mobile-chevron {
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border: 1px solid rgba(123, 211, 137, 0.3);
+        border-radius: 50%;
+        color: var(--mint);
+        background: rgba(123, 211, 137, 0.1);
+        font-size: 1rem;
+        font-weight: 900;
+        transition: transform 180ms ease;
+      }
+
+      .feel-panel .fs-temp-markers {
+        display: none;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      .feel-panel.temp-path-open .fs-temp-mobile-toggle {
+        border-radius: 14px 14px 8px 8px;
+      }
+
+      .feel-panel.temp-path-open .fs-temp-mobile-chevron {
+        transform: rotate(180deg);
+      }
+
+      .feel-panel.temp-path-open .fs-temp-markers {
+        display: grid;
+      }
+
+      .feel-panel .fs-temp-title {
+        display: none;
+      }
+
+      .feel-panel .fs-temp-marker {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 4px;
+        min-width: 0;
+        padding: 8px 10px 11px;
+        border-bottom: 0;
+      }
+
+      .feel-panel .fs-temp-marker + .fs-temp-marker {
+        border-left: 1px solid rgba(255, 253, 248, 0.14);
+      }
+
+      .feel-panel .fs-temp-marker span {
+        overflow: hidden;
+        font-size: 0.58rem;
+        line-height: 1.2;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .feel-panel .fs-temp-marker b {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 1.35rem;
+        line-height: 1;
+        text-align: left;
+      }
+
+      .feel-panel .fs-temp-context {
+        grid-column: 1 / -1;
+        margin: 0 9px 9px;
+        padding: 8px 9px;
+        font-size: 0.7rem;
+      }
+
+      .feel-panel .fs-temp-context-emoji {
+        font-size: 1rem;
+      }
+
       .sky-home-module {
         border-radius: 20px;
       }
@@ -4010,7 +4132,14 @@
                 <li>Local observations syncing</li>
               </ul>
             </div>
-            <div class="fs-temp-markers" aria-label="Important temperature markers">
+            <button class="fs-temp-mobile-toggle" id="liveTempMobileToggle" type="button" aria-expanded="false" aria-controls="liveTempMarkers">
+              <span class="fs-temp-mobile-copy">
+                <span class="fs-temp-mobile-label">Temperature path</span>
+                <span class="fs-temp-mobile-summary" id="liveTempMobileSummary">Tap to view temperatures</span>
+              </span>
+              <span class="fs-temp-mobile-chevron" aria-hidden="true">⌄</span>
+            </button>
+            <div class="fs-temp-markers" id="liveTempMarkers" aria-label="Important temperature markers">
               <div class="fs-temp-title">Temperature path</div>
               <div class="fs-temp-marker">
                 <span id="liveTempMarkerOneLabel">Now</span>
@@ -6118,6 +6247,17 @@
         );
       });
 
+      const mobileSummaryEl = document.querySelector("#liveTempMobileSummary");
+      if (mobileSummaryEl) {
+        const mobileTemps = temperaturePath.slots
+          .map((slot) => Number(slot?.hour?.temperatureF))
+          .filter(Number.isFinite)
+          .map((temperature) => `${Math.round(temperature)}°`);
+        mobileSummaryEl.textContent = mobileTemps.length
+          ? `${mobileTemps.join(" → ")}${temperaturePath.callout?.emoji ? ` · ${temperaturePath.callout.emoji}` : ""}`
+          : "Tap to view temperatures";
+      }
+
       const contextEl = document.querySelector("#liveTempContext");
       if (contextEl) {
         contextEl.replaceChildren();
@@ -6479,6 +6619,8 @@
     const feelScoreModal = document.querySelector("#feelScoreModal");
     const feelScoreInfoButton = document.querySelector("#feelScoreInfoButton");
     const feelScoreModalClose = document.querySelector("#feelScoreModalClose");
+    const feelScorePanel = document.querySelector(".feel-panel");
+    const tempPathMobileToggle = document.querySelector("#liveTempMobileToggle");
     const radarModal = document.querySelector("#radarModal");
     const radarThumbButton = document.querySelector("#radarThumbButton");
     const radarModalClose = document.querySelector("#radarModalClose");
@@ -6519,6 +6661,10 @@
     feelScoreModalClose?.addEventListener("click", closeFeelScoreModal);
     feelScoreModal?.addEventListener("click", (event) => {
       if (event.target === feelScoreModal) closeFeelScoreModal();
+    });
+    tempPathMobileToggle?.addEventListener("click", () => {
+      const isOpen = feelScorePanel?.classList.toggle("temp-path-open");
+      tempPathMobileToggle.setAttribute("aria-expanded", String(Boolean(isOpen)));
     });
     radarThumbButton?.addEventListener("click", () => {
       if (radarModalImage) radarModalImage.src = cacheBustedUrl(RADAR_LOOP_URL);
