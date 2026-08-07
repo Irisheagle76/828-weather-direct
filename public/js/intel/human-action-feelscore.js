@@ -2,7 +2,7 @@
 // HUMAN ACTION — FEELSCORE (CLEAN + INTELLIGENCE MERGED)
 // ============================================================
 
-import { calculateComfort } from "./comfort.js";
+import { calculateComfort } from "./comfort.js?v=20260807-humid-heat";
 import { assembleWithVoice } from "./synthesizer/assembleWithVoice.js?v=20260526-natural-narrative";
 import { buildFullExplanation } from "../intel/explanations/buildFullExplanation.js";
 import { calculatePeriodScoreTrend } from "./trend/scoreTrend.js";

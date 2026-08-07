@@ -1,6 +1,31 @@
 // /js/intel/comfort.js
 
-import { LOCATION } from "/js/config/location.js";
+import { LOCATION } from "../config/location.js";
+
+// One shared, versioned source of truth for every FeelScore consumer. Update
+// this calibration and its regression matrix together when field observations
+// reveal that the model does not match how conditions actually feel outdoors.
+export const FEELSCORE_CALIBRATION = Object.freeze({
+  version: "2026-08-07-humid-heat-v1",
+  temperature: Object.freeze({
+    idealMinF: 65,
+    idealMaxF: 75,
+    humidHeatMinF: 76
+  }),
+  dewpoint: Object.freeze({
+    noticeableF: 60,
+    muggyF: 65,
+    veryMuggyF: 67,
+    oppressiveF: 70
+  }),
+  scoreBands: Object.freeze({
+    ideal: 90,
+    great: 80,
+    pleasant: 70,
+    noticeable: 55,
+    challenging: 40
+  })
+});
 
 // ============================================================
 // UTILITIES
@@ -75,11 +100,13 @@ function computeSolarElevation(timestamp, lat, lon) {
 function computeTemperaturePenalty(temp) {
   if (temp == null) return 0.4;
 
-  if (temp >= 65 && temp <= 75) return 0;
+  const { idealMinF, idealMaxF } = FEELSCORE_CALIBRATION.temperature;
 
-  if (temp < 65) return clamp((65 - temp) / 35, 0, 1);
+  if (temp >= idealMinF && temp <= idealMaxF) return 0;
 
-  if (temp <= 82) return (temp - 75) / 20;
+  if (temp < idealMinF) return clamp((idealMinF - temp) / 35, 0, 1);
+
+  if (temp <= 82) return (temp - idealMaxF) / 20;
   if (temp <= 88) return 0.35 + (temp - 82) * 0.08;
 
   return clamp(0.8 + (temp - 88) * 0.04, 0, 1);
@@ -88,13 +115,31 @@ function computeTemperaturePenalty(temp) {
 function computeDewPenalty(dew) {
   if (dew == null) return 0.15;
 
+  const { noticeableF, muggyF, oppressiveF } = FEELSCORE_CALIBRATION.dewpoint;
+
   if (dew < 45) return 0.02;
   if (dew < 55) return 0.08;
-  if (dew < 60) return 0.18;
-  if (dew < 65) return 0.32;
-  if (dew < 70) return 0.50;
+  if (dew < noticeableF) return 0.18;
+  if (dew < muggyF) return 0.32;
+  if (dew < oppressiveF) {
+    return 0.50 + ((dew - muggyF) / (oppressiveF - muggyF)) * 0.18;
+  }
 
   return 0.70;
+}
+
+function computeHumidHeatPenalty(temp, dew) {
+  if (!Number.isFinite(temp) || !Number.isFinite(dew)) return 0;
+  const { humidHeatMinF } = FEELSCORE_CALIBRATION.temperature;
+  const { muggyF } = FEELSCORE_CALIBRATION.dewpoint;
+  if (temp < humidHeatMinF || dew < muggyF) return 0;
+
+  const heatLoad = clamp((temp - humidHeatMinF) / 12, 0, 1);
+  const moistureLoad = clamp((dew - muggyF) / 8, 0, 1);
+
+  // Warm, moisture-rich air inhibits evaporative cooling. This interaction is
+  // more uncomfortable than either the temperature or dew point in isolation.
+  return 0.04 + heatLoad * 0.08 + moistureLoad * 0.06;
 }
 
 function computeWindPenalty(wind) {
@@ -215,10 +260,12 @@ function computeComfortScore(temp, dew, wind, elev, weatherPenalty = 0) {
   const d = computeDewPenalty(dew);
   const w = computeWindPenalty(wind);
   const s = computeSolarBonus(temp, elev);
+  const humidHeat = computeHumidHeatPenalty(temp, dew);
 
   const raw =
     (t * 0.55) +
     (d * 0.45) +
+    humidHeat +
     w -
     s +
     weatherPenalty;

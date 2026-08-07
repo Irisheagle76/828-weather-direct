@@ -4683,7 +4683,10 @@
   </div>
 
   <script type="module">
-    import { calculateComfort } from "./js/intel/comfort.js";
+    import {
+      calculateComfort,
+      FEELSCORE_CALIBRATION
+    } from "./js/intel/comfort.js?v=20260807-humid-heat";
     import { buildTomorrowSummary } from "./js/intel/tomorrow-summary.js?v=20260804-tim-voice";
     import { buildTemperaturePath } from "./js/intel/temperature-path.js?v=20260806-temp-path";
     import {
@@ -4694,7 +4697,7 @@
       homeHikingSummary,
       homeHikingUseCare
     } from "./js/hiking-home-card.js?v=20260607-narrative";
-    import { buildHumanActionIntelFS } from "./js/intel/human-action-feelscore.js?v=20260526-rain-window";
+    import { buildHumanActionIntelFS } from "./js/intel/human-action-feelscore.js?v=20260807-humid-heat";
     import { buildSkyConditionRead } from "./js/intel/sky-read.js?v=20260705-directional-cameras";
     import {
       applyPrecipOverrideToNarrative,
@@ -6017,11 +6020,12 @@
     }
 
     function scoreLabel(score) {
-      if (score >= 90) return "Ideal";
-      if (score >= 80) return "Great";
-      if (score >= 70) return "Pleasant";
-      if (score >= 55) return "Noticeable";
-      if (score >= 40) return "Challenging";
+      const bands = FEELSCORE_CALIBRATION.scoreBands;
+      if (score >= bands.ideal) return "Ideal";
+      if (score >= bands.great) return "Great";
+      if (score >= bands.pleasant) return "Pleasant";
+      if (score >= bands.noticeable) return "Noticeable";
+      if (score >= bands.challenging) return "Challenging";
       return "Harsh";
     }
 
@@ -6279,9 +6283,19 @@
       feelscore = applyPrecipOverrideToNarrative(feelscore, precipOverride);
 
       const liveHour = primaryLiveHour(hourly, currentHour);
+      const observedHour = hasFeelScoreInputs(displayCurrentHour) &&
+        Number.isFinite(Number(displayCurrentHour?.dewpointF ?? displayCurrentHour?.dewPoint))
+          ? displayCurrentHour
+          : null;
+      const scoringHour = observedHour || liveHour;
       const payloadScore = normalizeScore100(feelscore.score);
       const fallbackScore = nearTermFeelScore(hourly, currentHour);
-      const score = Number.isFinite(payloadScore) ? payloadScore : fallbackScore;
+      const liveScore = comfortScore100(scoringHour);
+      const score = Number.isFinite(liveScore)
+        ? liveScore
+        : Number.isFinite(fallbackScore)
+          ? fallbackScore
+          : payloadScore;
       const currentDisplayTemp = Number(displayCurrentHour?.temperatureF ?? liveHour?.temperatureF);
       const scoreEl = document.querySelector("#liveFeelScoreValue");
       if (Number.isFinite(score)) {
@@ -6304,7 +6318,7 @@
       }
 
       const wearCue = feelScoreWearCue({
-        ...(liveHour || {}),
+        ...(scoringHour || {}),
         temperatureF: currentDisplayTemp
       }, precipOverride, score);
       setText("#liveFeelScoreWearEmoji", wearCue.emoji);
@@ -6320,6 +6334,16 @@
       const bullets = Array.isArray(feelscore.bullets) && feelscore.bullets.length
         ? feelscore.bullets.slice(0, 3)
         : buildFallbackFeelScoreBullets(hourly, currentHour, score);
+      const liveDewpoint = Number(scoringHour?.dewpointF ?? scoringHour?.dewPoint);
+      if (
+        Number.isFinite(liveDewpoint) &&
+        liveDewpoint >= FEELSCORE_CALIBRATION.dewpoint.veryMuggyF &&
+        !bullets.some((bullet) => /muggy|humid|humidity|dew point/i.test(
+          typeof bullet === "string" ? bullet : bullet?.text || ""
+        ))
+      ) {
+        bullets.unshift("Muggy air is making exertion feel harder");
+      }
       const uvSignal = getHighUvSignal(hourly, liveHour);
       if (uvSignal) {
         const peakText = `${Math.round(uvSignal.uv)}${uvSignal.hour ? ` around ${uvSignal.hour}` : ""}`;
