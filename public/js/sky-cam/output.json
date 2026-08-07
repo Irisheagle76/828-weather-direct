@@ -1,15 +1,15 @@
 {
-  "timestamp": "2026-08-07T13:06:00.019844+00:00",
+  "timestamp": "2026-08-07T14:16:34.514933+00:00",
   "metrics": {
-    "cloudCoverWest": 76,
-    "brightness": 0.63,
-    "contrast": 0.2,
+    "cloudCoverWest": 100,
+    "brightness": 0.65,
+    "contrast": 0.17,
     "visibilityScore": 2,
     "sunlightDetected": true,
-    "sunlightStrength": 0.33,
+    "sunlightStrength": 0.34,
     "sunlightLevel": "strong",
-    "groundBrightness": 0.38,
-    "groundContrast": 0.26,
+    "groundBrightness": 0.39,
+    "groundContrast": 0.28,
     "softShadowSignal": false,
     "filteredSunshineSignal": false,
     "skyBlueSignal": 1.13,
@@ -22,8 +22,8 @@
     "satelliteMotion": 0.01
   },
   "trend": {
-    "cloudTrend": "decreasing",
-    "brightnessTrend": "decreasing",
+    "cloudTrend": "increasing",
+    "brightnessTrend": "steady",
     "overallTrend": "steady"
   }
 }
