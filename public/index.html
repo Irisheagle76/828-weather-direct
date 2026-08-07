@@ -387,7 +387,8 @@
     .pulse-nav-badge[hidden],
     .pulse-fresh-badge[hidden],
     .pulse-alert-strip[hidden],
-    .pulse-alert-thumbnail[hidden] {
+    .pulse-alert-thumbnail[hidden],
+    .pulse-card-lite[hidden] {
       display: none;
     }
 
@@ -4192,7 +4193,7 @@
         </aside>
       </section>
 
-      <section class="pulse-card-lite" id="pulse-preview" aria-label="Weather Pulse">
+      <section class="pulse-card-lite" id="pulse-preview" aria-label="Weather Pulse" hidden>
         <div class="pulse-layout">
           <div>
             <div class="pulse-head"><span class="pulse-dot"></span>Live Weather Note</div>
@@ -4566,6 +4567,7 @@
     import { getWaterPageInputs } from "./js/water/water-data.js?v=20260730-water-live2";
     import { buildRiverIndex } from "./js/water/river-index.js?v=20260730-water-live2";
     import { buildWaterfallIndex } from "./js/water/waterfall-index.js?v=20260730-water-live2";
+    import { isPulseFresh, pulseExpiresAt } from "./js/pulse-freshness.js?v=20260806-three-hour-shelf-life";
 
     function clamp(value, min = 0, max = 1) {
       return Math.min(max, Math.max(min, value));
@@ -4746,6 +4748,7 @@
       url: PULSE_FALLBACK.mediaUrl,
       mediaType: PULSE_FALLBACK.mediaType
     };
+    let pulseExpirationTimer = null;
 
     function localTimeParts() {
       const parts = new Intl.DateTimeFormat("en-US", {
@@ -5487,15 +5490,34 @@
       return "What I'm watching in the weather right now.";
     }
 
-    function isPulseFresh(value) {
-      const stamp = value ? new Date(value).getTime() : NaN;
-      if (!Number.isFinite(stamp)) return false;
-      const age = Date.now() - stamp;
-      return age >= -5 * 60 * 1000 && age <= 6 * 60 * 60 * 1000;
-    }
-
     function pulseUpdatedAt(pulse = {}) {
       return pulse.editedAt || pulse.timestamp || null;
+    }
+
+    function setPulsePlacementVisible(visible) {
+      const card = document.querySelector("#pulse-preview");
+      const strip = document.querySelector("#pulseAlertStrip");
+      const navBadge = document.querySelector("#pulseNavBadge");
+      const freshBadge = document.querySelector("#pulseFreshBadge");
+      const thumbnail = document.querySelector("#pulseAlertThumbnail");
+
+      if (card) card.hidden = !visible;
+      if (!visible && strip) strip.hidden = true;
+      if (!visible && navBadge) navBadge.hidden = true;
+      if (!visible && freshBadge) freshBadge.hidden = true;
+      if (!visible && thumbnail) thumbnail.hidden = true;
+    }
+
+    function schedulePulseExpiration(updatedAt) {
+      if (pulseExpirationTimer) clearTimeout(pulseExpirationTimer);
+
+      const expiresAt = pulseExpiresAt(updatedAt);
+      if (!Number.isFinite(expiresAt)) return;
+
+      pulseExpirationTimer = setTimeout(() => {
+        setPulsePlacementVisible(false);
+        pulseExpirationTimer = null;
+      }, Math.max(0, expiresAt - Date.now()));
     }
 
     function pulseThumbnailUrl(url = "", mediaType = "") {
@@ -5586,7 +5608,16 @@
     }
 
     function renderPulsePreview(pulse) {
-      if (!pulse || pulse.fallback) return;
+      const updatedAt = pulseUpdatedAt(pulse);
+      if (!pulse || pulse.fallback || !isPulseFresh(updatedAt)) {
+        if (pulseExpirationTimer) clearTimeout(pulseExpirationTimer);
+        pulseExpirationTimer = null;
+        setPulsePlacementVisible(false);
+        return;
+      }
+
+      setPulsePlacementVisible(true);
+      schedulePulseExpiration(updatedAt);
 
       const text = pulseExcerpt(pulse.text || pulse.body || pulse.content || "");
       const mediaUrl = pulse.mediaUrl || pulse.image || "";
@@ -5598,7 +5629,7 @@
       };
 
       document.querySelector("#pulsePreviewTitle").textContent = pulseHeadline(pulse);
-      renderPulsePublished(pulseUpdatedAt(pulse));
+      renderPulsePublished(updatedAt);
       if (text) {
         document.querySelector("#pulsePreviewText").textContent = text;
       }
