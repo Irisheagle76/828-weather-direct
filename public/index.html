@@ -665,6 +665,15 @@
       text-transform: uppercase;
     }
 
+    .now-observation .rain-window {
+      display: block;
+      margin-top: 5px;
+      color: rgba(255, 253, 248, 0.62);
+      font-size: 0.66rem;
+      font-weight: 750;
+      line-height: 1.2;
+    }
+
     .feel-panel {
       display: grid;
       align-content: start;
@@ -4048,7 +4057,7 @@
         <div class="obs-chip" id="obsHumidity">Humidity --</div>
         <div class="obs-chip" id="obsWind">Wind -- mph</div>
         <div class="obs-chip" id="obsPressure">Pressure --"</div>
-        <div class="obs-chip" id="obsRainChance">Rain chance --</div>
+        <div class="obs-chip" id="obsRainChance">Peak rain chance today --</div>
         <div class="obs-chip" id="obsClouds">Clouds --</div>
       </div>
 
@@ -4101,7 +4110,8 @@
               </div>
               <div class="now-observation">
                 <strong id="heroRainChance">--</strong>
-                <span>Rain chance</span>
+                <span>Peak rain chance today</span>
+                <small class="rain-window" id="heroRainWindow" hidden></small>
               </div>
             </div>
           </div>
@@ -5116,15 +5126,108 @@
     function normalizeObsFromWeather(weather = {}) {
       const current = weather.current || weather.current_conditions || {};
       const firstHour = Array.isArray(weather.hourly) ? weather.hourly[0] || {} : {};
+      const remainingRain = remainderOfDayRainSummary(weather.hourly);
       return {
         tempF: current.temperatureF ?? current.tempF ?? toF(current.air_temperature) ?? firstHour.temperatureF,
         dewF: current.dewpointF ?? current.dewPoint ?? firstHour.dewpointF ?? toF(current.dew_point),
         humidity: current.relativeHumidity ?? current.relative_humidity ?? current.humidity ?? firstHour.relativeHumidity,
         windMph: current.windSpeed ?? current.wind ?? firstHour.windSpeed ?? toMph(current.wind_avg),
         pressure: hpaToInHg(current.sea_level_pressure ?? current.pressure ?? current.pressure_msl ?? current.barometric_pressure),
-        rainChance: firstHour.precipProbability ?? current.precipProbability,
+        rainChance: remainingRain?.chance ?? firstHour.precipProbability ?? current.precipProbability,
+        rainWindow: remainingRain?.window ?? null,
         clouds: firstHour.cloudCover ?? current.cloudCover,
         timestamp: current.timestamp ?? firstHour.timestamp ?? Date.now()
+      };
+    }
+
+    function easternDateHour(value = Date.now()) {
+      // Open-Meteo fallback timestamps are local Asheville wall-clock strings.
+      // Preserve that meaning instead of letting the viewer's browser timezone
+      // reinterpret them.
+      if (typeof value === "string") {
+        const localMatch = value.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}):/);
+        if (localMatch && !/(?:Z|[+-]\d{2}:?\d{2})$/.test(value)) {
+          return { dateKey: localMatch[1], hour: Number(localMatch[2]) };
+        }
+      }
+
+      const timestamp = Number.isFinite(Number(value))
+        ? Number(value)
+        : new Date(value).getTime();
+      if (!Number.isFinite(timestamp)) return null;
+
+      const parts = new Intl.DateTimeFormat("en-US", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        hourCycle: "h23",
+        timeZone: "America/New_York"
+      }).formatToParts(new Date(timestamp));
+      const part = (type) => parts.find((item) => item.type === type)?.value;
+      return {
+        dateKey: `${part("year")}-${part("month")}-${part("day")}`,
+        hour: Number(part("hour"))
+      };
+    }
+
+    function formatRainWindowHour(hour) {
+      if (hour >= 24) return "midnight";
+      if (hour === 0) return "midnight";
+      if (hour === 12) return "noon";
+      return `${hour % 12} ${hour < 12 ? "AM" : "PM"}`;
+    }
+
+    function remainderOfDayRainSummary(hourly = [], now = Date.now()) {
+      const current = easternDateHour(now);
+      if (!current || !Array.isArray(hourly)) return null;
+
+      const remaining = hourly
+        .map((hour) => {
+          const forecastTime = easternDateHour(hour?.timestamp ?? hour?.time ?? hour?.ts);
+          const probability = normalizeProbabilityValue(
+            hour?.precipProbability ?? hour?.precipitation_probability ?? hour?.probabilityOfPrecipitation
+          );
+          if (!forecastTime || !Number.isFinite(probability)) return null;
+          return { forecastTime, probability };
+        })
+        .filter((entry) => (
+          entry &&
+            entry.forecastTime &&
+            entry.forecastTime.dateKey === current.dateKey &&
+            entry.forecastTime.hour >= current.hour
+        ))
+        .sort((a, b) => a.forecastTime.hour - b.forecastTime.hour);
+
+      if (!remaining.length) return null;
+
+      const chance = Math.max(...remaining.map((entry) => entry.probability));
+      const peakIndex = remaining.findIndex((entry) => entry.probability === chance);
+      const nearPeakThreshold = Math.max(0, chance - 0.1);
+      let startIndex = peakIndex;
+      let endIndex = peakIndex;
+
+      while (
+        startIndex > 0 &&
+        remaining[startIndex - 1].forecastTime.hour === remaining[startIndex].forecastTime.hour - 1 &&
+        remaining[startIndex - 1].probability >= nearPeakThreshold
+      ) {
+        startIndex -= 1;
+      }
+
+      while (
+        endIndex < remaining.length - 1 &&
+        remaining[endIndex + 1].forecastTime.hour === remaining[endIndex].forecastTime.hour + 1 &&
+        remaining[endIndex + 1].probability >= nearPeakThreshold
+      ) {
+        endIndex += 1;
+      }
+
+      const startHour = remaining[startIndex].forecastTime.hour;
+      const endHour = Math.min(24, remaining[endIndex].forecastTime.hour + 1);
+      return {
+        chance,
+        window: `Highest ${formatRainWindowHour(startHour)}–${formatRainWindowHour(endHour)}`
       };
     }
 
@@ -5143,13 +5246,20 @@
       if (!res.ok) throw new Error(`Open-Meteo obs failed: ${res.status}`);
       const data = await res.json();
       const current = data.current || {};
+      const fallbackRain = remainderOfDayRainSummary(
+        (data.hourly?.time || []).map((time, index) => ({
+          time,
+          precipProbability: data.hourly?.precipitation_probability?.[index]
+        }))
+      );
       return {
         tempF: current.temperature_2m,
         dewF: current.dew_point_2m,
         humidity: current.relative_humidity_2m,
         windMph: current.wind_speed_10m,
         pressure: hpaToInHg(current.pressure_msl),
-        rainChance: data.hourly?.precipitation_probability?.[0],
+        rainChance: fallbackRain?.chance ?? null,
+        rainWindow: fallbackRain?.window ?? null,
         clouds: current.cloud_cover ?? data.hourly?.cloud_cover?.[0],
         radarHourly: (data.hourly?.time || []).map((time, index) => ({
           time,
@@ -5176,12 +5286,17 @@
       setText("#obsHumidity", `Humidity ${Number.isFinite(humidity) ? `${Math.round(humidity)}%` : "--"}`);
       setText("#obsWind", `Wind ${Number.isFinite(wind) ? `${Math.round(wind)} mph` : "-- mph"}`);
       setText("#obsPressure", `Pressure ${Number.isFinite(pressure) ? `${pressure.toFixed(2)}"` : '--"'}`);
-      setText("#obsRainChance", `Rain chance ${Number.isFinite(rain) ? pct(rain) : "--"}`);
+      setText("#obsRainChance", `Peak rain chance today ${Number.isFinite(rain) ? pct(rain) : "--"}`);
       setText("#heroCurrentTemp", Number.isFinite(temp) ? `${Math.round(temp)}°` : "--°");
       setText("#heroFeelsLike", Number.isFinite(temp) ? `${Math.round(temp)}°` : "--°");
       setText("#heroDewpoint", Number.isFinite(dew) ? `${Math.round(dew)}°` : "--°");
       setText("#heroWind", Number.isFinite(wind) ? `${Math.round(wind)} mph` : "-- mph");
       setText("#heroRainChance", Number.isFinite(rain) ? pct(rain) : "--");
+      const heroRainWindow = document.querySelector("#heroRainWindow");
+      if (heroRainWindow) {
+        heroRainWindow.textContent = obs.rainWindow || "";
+        heroRainWindow.hidden = !obs.rainWindow;
+      }
       latestObservationClouds = Number.isFinite(clouds) ? clouds : null;
       renderCloudObservationChip();
     }
