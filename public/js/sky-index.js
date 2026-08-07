@@ -102,6 +102,10 @@ function renderSite(site) {
     ["Undercast", scores.undercast]
   ];
   const window = Array.isArray(site.windows) ? site.windows[0] : null;
+  const confidence = site.confidence || null;
+  const confidenceNote = confidence
+    ? `<div class="summit-window"><b>Confidence:</b> ${escapeHtml(confidence.label)} (${score(confidence.score)}/100). ${confidence.liveObservationUsed ? "The chart and current live observation both contribute to this score." : "This score is primarily chart-based right now."}</div>`
+    : "";
   const statusNote = site.status === "live-fog"
     ? `<div class="summit-window"><b>Live fog signal:</b> ${escapeHtml(site.liveSignal?.summary || "Current summit conditions are limiting visibility.")}</div>`
     : site.status === "camera-fog" || site.status === "camera-limited"
@@ -143,6 +147,7 @@ function renderSite(site) {
           </div>
         ` : ""}
         ${statusNote}
+        ${confidenceNote}
         <div class="summit-actions">
           <a href="${escapeHtml(site.chartUrl)}" target="_blank" rel="noopener noreferrer">Open sky chart</a>
         </div>

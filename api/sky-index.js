@@ -1,6 +1,13 @@
 import { GifReader } from "omggif";
 import jpeg from "jpeg-js";
 import https from "node:https";
+import {
+  blendLiveSummitScore,
+  buildSkyScores,
+  forecastWeightedAverage,
+  roundScore,
+  scoreConfidence
+} from "../lib/sky-index-scoring.js";
 
 const CACHE_MS = 10 * 60 * 1000;
 const OBSERVATION_MAX_AGE_MS = 30 * 60 * 1000;
@@ -89,10 +96,6 @@ function clamp(value, min = 0, max = 100) {
   return Math.max(min, Math.min(max, value));
 }
 
-function roundScore(value) {
-  return Math.round(clamp(Number.isFinite(value) ? value : 0));
-}
-
 function average(values = []) {
   const valid = values.filter(Number.isFinite);
   return valid.length ? valid.reduce((sum, value) => sum + value, 0) / valid.length : null;
@@ -136,7 +139,7 @@ function estimateCloudCover(samples) {
     if (!Number.isFinite(b)) return null;
     return clamp(b * 115 - 10);
   });
-  return average(values);
+  return forecastWeightedAverage(values);
 }
 
 function estimateTransparency(samples) {
@@ -146,7 +149,7 @@ function estimateTransparency(samples) {
     const blueBias = (pixel.b - Math.max(pixel.r, pixel.g)) / 255;
     return clamp(100 - b * 55 + blueBias * 30);
   });
-  return average(values);
+  return forecastWeightedAverage(values);
 }
 
 function estimateDarkness(samples) {
@@ -155,7 +158,7 @@ function estimateDarkness(samples) {
     if (!Number.isFinite(b)) return null;
     return clamp(100 - b * 110);
   });
-  return average(values);
+  return forecastWeightedAverage(values);
 }
 
 function estimatePenalty(samples) {
@@ -164,7 +167,7 @@ function estimatePenalty(samples) {
     if (!Number.isFinite(b)) return null;
     return clamp(b * 100);
   });
-  return average(values);
+  return forecastWeightedAverage(values);
 }
 
 function estimateWindComfort(samples) {
@@ -173,27 +176,7 @@ function estimateWindComfort(samples) {
     if (!Number.isFinite(b)) return null;
     return clamp(100 - b * 70);
   });
-  return average(values);
-}
-
-function cloudTextureScore(cloudCover) {
-  if (!Number.isFinite(cloudCover)) return 55;
-  if (cloudCover >= 20 && cloudCover <= 50) return 95;
-  if (cloudCover > 50 && cloudCover <= 70) return 78;
-  if (cloudCover >= 8 && cloudCover < 20) return 68;
-  if (cloudCover > 70 && cloudCover <= 85) return 48;
-  if (cloudCover < 8) return 48;
-  return 24;
-}
-
-function cloudViewScore(cloudCover) {
-  if (!Number.isFinite(cloudCover)) return 58;
-  if (cloudCover <= 20) return 96;
-  if (cloudCover <= 45) return 88;
-  if (cloudCover <= 65) return 72;
-  if (cloudCover <= 82) return 66;
-  if (cloudCover <= 94) return 58;
-  return 34;
+  return forecastWeightedAverage(values);
 }
 
 function ratingFor(score) {
@@ -299,49 +282,7 @@ function liveSignalFor(site, observations = {}) {
     type: "summit-fog",
     observation,
     dewSpread,
-    summary: "Mount Mitchell's live station is saturated, which usually means fog, low cloud, or an inside-the-cloud summit view.",
-    scoreCaps: {
-      summitView: 22,
-      sunriseSunset: 40,
-      nightSky: 28,
-      undercast: 62
-    }
-  };
-}
-
-function applyLiveSignal(scores, signal) {
-  if (!signal) return scores;
-  if (signal.type === "camera-usable" || signal.type === "camera-clear") {
-    const clarityScore = signal.camera?.clarityScore;
-    if (signal.camera?.condition !== "clear_view" || !Number.isFinite(clarityScore)) return scores;
-    const liveViewFloor = roundScore(60 + clarityScore * 0.3);
-    return {
-      ...scores,
-      summitView: Math.max(scores.summitView, liveViewFloor)
-    };
-  }
-  if (signal.type === "camera-fog") {
-    return {
-      summitView: Math.min(scores.summitView, signal.scoreCaps.summitView),
-      sunriseSunset: Math.min(scores.sunriseSunset, signal.scoreCaps.sunriseSunset),
-      nightSky: Math.min(scores.nightSky, signal.scoreCaps.nightSky),
-      undercast: Math.min(scores.undercast, signal.scoreCaps.undercast)
-    };
-  }
-  if (signal.type === "camera-limited") {
-    return {
-      summitView: Math.min(scores.summitView, signal.scoreCaps.summitView),
-      sunriseSunset: Math.min(scores.sunriseSunset, signal.scoreCaps.sunriseSunset),
-      nightSky: Math.min(scores.nightSky, signal.scoreCaps.nightSky),
-      undercast: scores.undercast
-    };
-  }
-  if (signal.type !== "summit-fog") return scores;
-  return {
-    summitView: Math.min(scores.summitView, signal.scoreCaps.summitView),
-    sunriseSunset: Math.min(scores.sunriseSunset, signal.scoreCaps.sunriseSunset),
-    nightSky: Math.min(scores.nightSky, signal.scoreCaps.nightSky),
-    undercast: Math.min(scores.undercast, signal.scoreCaps.undercast)
+    summary: "Mount Mitchell's live station is saturated, which usually means fog, low cloud, or an inside-the-cloud summit view. The observation is blended into the current view score."
   };
 }
 
@@ -494,13 +435,7 @@ function cameraSignalFor(site, observations = {}) {
     return {
       type: "camera-fog",
       camera,
-      summary: `${site.name} camera shows fog, low cloud, or a washed-out view right now.`,
-      scoreCaps: {
-        summitView: 28,
-        sunriseSunset: 42,
-        nightSky: 32,
-        undercast: 62
-      }
+      summary: `${site.name} camera shows fog, low cloud, or a washed-out view right now, so its continuous clarity reading lowers the current view score.`
     };
   }
 
@@ -508,19 +443,14 @@ function cameraSignalFor(site, observations = {}) {
     return {
       type: "camera-limited",
       camera,
-      summary: `${site.name} camera shows limited visibility, so the chart-based view score is capped.`,
-      scoreCaps: {
-        summitView: 58,
-        sunriseSunset: 65,
-        nightSky: 55
-      }
+      summary: `${site.name} camera shows limited visibility, so its continuous clarity reading is blended into the chart-based view score.`
     };
   }
 
   return {
     type: "camera-usable",
     camera,
-    summary: `${site.name} camera check is usable and does not currently cap the chart-based score.`
+    summary: `${site.name} camera check is usable, so its continuous clarity reading is blended with the near-term chart score.`
   };
 }
 
@@ -539,32 +469,6 @@ function mergeSignals(weatherSignal, cameraSignal) {
   return cameraSignal || weatherSignal;
 }
 
-function buildScores(metrics) {
-  const cloudScore = cloudViewScore(metrics.cloudCover);
-  const clearSkyScore = 100 - (metrics.cloudCover ?? 60);
-  const transparency = metrics.transparency ?? 55;
-  const darkness = metrics.darkness ?? 45;
-  const wind = metrics.windComfort ?? 70;
-  const hazePenalty = ((metrics.humidityPenalty ?? 45) + (metrics.smokePenalty ?? 35)) / 2;
-  const summitView = cloudScore * 0.35 + transparency * 0.35 + wind * 0.15 + (100 - hazePenalty) * 0.15;
-  const sunriseSunset = cloudTextureScore(metrics.cloudCover) * 0.55 + transparency * 0.3 + wind * 0.15;
-  const nightSky = clearSkyScore * 0.45 + transparency * 0.3 + darkness * 0.2 + wind * 0.05;
-  const undercast = (
-    (metrics.humidityPenalty ?? 45) * 0.35 +
-    clearSkyScore * 0.25 +
-    wind * 0.2 +
-    transparency * 0.1 +
-    cloudTextureScore(metrics.cloudCover) * 0.1
-  );
-
-  return {
-    summitView: roundScore(summitView),
-    sunriseSunset: roundScore(sunriseSunset),
-    nightSky: roundScore(nightSky),
-    undercast: roundScore(undercast)
-  };
-}
-
 function buildLanguage(site, scores, metrics, degraded = false, liveSignal = null) {
   const rating = ratingFor(scores.summitView);
   const cloud = Number.isFinite(metrics.cloudCover) ? Math.round(metrics.cloudCover) : null;
@@ -576,7 +480,7 @@ function buildLanguage(site, scores, metrics, degraded = false, liveSignal = nul
       rating,
       headline: `Poor live summit-view signal for ${site.name}: the summit station is reporting ${humidity} with ${dewSpread}.`,
       bullets: [
-        "Live Mount Mitchell conditions are overriding the sky chart because the summit appears to be in fog or low cloud.",
+        "Live Mount Mitchell conditions are strongly lowering the near-term chart score because the summit appears to be in fog or low cloud.",
         "Long-range views are unlikely until the camera and summit humidity improve.",
         "Undercast potential exists only if the summit breaks above the cloud deck."
       ],
@@ -594,7 +498,7 @@ function buildLanguage(site, scores, metrics, degraded = false, liveSignal = nul
       rating,
       headline: `${rating} live summit-view signal for ${site.name}: the camera check shows fog, low cloud, or a washed-out view.`,
       bullets: [
-        "The live camera is overriding the chart because current visibility looks poor.",
+        "The live camera clarity reading is strongly lowering the near-term chart score because current visibility looks poor.",
         "Long-range views are unlikely until the camera shows more ridge detail or blue-sky contrast.",
         "Use the source chart for later timing, but let the live image decide the current go/no-go."
       ],
@@ -602,7 +506,7 @@ function buildLanguage(site, scores, metrics, degraded = false, liveSignal = nul
         {
           label: "Now",
           score: scores.summitView,
-          summary: "Current camera visibility is poor, so the live view score is capped."
+          summary: "Current camera visibility is poor and is being blended with the near-term sky chart."
         }
       ]
     };
@@ -612,7 +516,7 @@ function buildLanguage(site, scores, metrics, degraded = false, liveSignal = nul
       rating,
       headline: `${rating} summit-view signal for ${site.name}: the chart is decent, but the live camera is limiting confidence.`,
       bullets: [
-        "The camera check is capping the current view score until visibility improves.",
+        "The camera clarity reading is proportionally lowering the current view score until visibility improves.",
         "Some ridge detail may be possible, but this is not a clean long-range view signal.",
         "Recheck the camera before making a special drive."
       ],
@@ -620,7 +524,7 @@ function buildLanguage(site, scores, metrics, degraded = false, liveSignal = nul
         {
           label: "Now",
           score: scores.summitView,
-          summary: "Current camera visibility is limited; use the live image before heading up."
+          summary: "Current camera visibility is limited and is being blended with the near-term sky chart."
         }
       ]
     };
@@ -630,8 +534,8 @@ function buildLanguage(site, scores, metrics, degraded = false, liveSignal = nul
       rating,
       headline: `${rating} live summit-view signal for ${site.name}: the camera shows a clear long-range view despite saturated station air.`,
       bullets: [
-        "The live camera is overriding the station fog signal because distant ridges and sky detail are clearly visible.",
-        "The current view score is using the camera as a conservative floor while the source chart still guides later timing.",
+        "The live camera receives more weight than the contradictory station fog signal because distant ridges and sky detail are clearly visible.",
+        "The current view score proportionally blends camera clarity with the near-term source chart.",
         "Recheck the live image before departure because high-peak visibility can change quickly."
       ],
       windows: [
@@ -652,7 +556,7 @@ function buildLanguage(site, scores, metrics, degraded = false, liveSignal = nul
         ? "Mixed view potential; live cameras may still show useful ridge detail between clouds."
         : "Low chart-based signal for long-range views; verify with the live cameras before deciding.";
   const cameraPhrase = liveSignal?.type === "camera-usable"
-    ? "Live camera check is usable and is not capping the chart-based score."
+    ? "Live camera clarity is being proportionally blended with the near-term chart score."
     : liveSignal?.type === "camera-unavailable"
       ? "Live camera check is unavailable, so this remains a chart-based score until the image returns."
       : visibilityPhrase;
@@ -702,20 +606,31 @@ async function parseSite(site, observations = {}) {
   const rgba = new Uint8Array(reader.width * reader.height * 4);
   reader.decodeAndBlitFrameRGBA(0, rgba);
 
-  const metrics = {
-    cloudCover: estimateCloudCover(rowSamples(rgba, reader.width, reader.height, site, "cloud")),
-    transparency: estimateTransparency(rowSamples(rgba, reader.width, reader.height, site, "transparency")),
-    darkness: estimateDarkness(rowSamples(rgba, reader.width, reader.height, site, "darkness")),
-    humidityPenalty: estimatePenalty(rowSamples(rgba, reader.width, reader.height, site, "humidity")),
-    smokePenalty: estimatePenalty(rowSamples(rgba, reader.width, reader.height, site, "smoke")),
-    windComfort: estimateWindComfort(rowSamples(rgba, reader.width, reader.height, site, "wind"))
+  const sampledRows = {
+    cloudCover: rowSamples(rgba, reader.width, reader.height, site, "cloud"),
+    transparency: rowSamples(rgba, reader.width, reader.height, site, "transparency"),
+    darkness: rowSamples(rgba, reader.width, reader.height, site, "darkness"),
+    humidityPenalty: rowSamples(rgba, reader.width, reader.height, site, "humidity"),
+    smokePenalty: rowSamples(rgba, reader.width, reader.height, site, "smoke"),
+    windComfort: rowSamples(rgba, reader.width, reader.height, site, "wind")
   };
+  const metrics = {
+    cloudCover: estimateCloudCover(sampledRows.cloudCover),
+    transparency: estimateTransparency(sampledRows.transparency),
+    darkness: estimateDarkness(sampledRows.darkness),
+    humidityPenalty: estimatePenalty(sampledRows.humidityPenalty),
+    smokePenalty: estimatePenalty(sampledRows.smokePenalty),
+    windComfort: estimateWindComfort(sampledRows.windComfort)
+  };
+  const sampleCounts = Object.fromEntries(Object.entries(sampledRows).map(([key, samples]) => [key, samples.length]));
   const usable = Object.values(metrics).filter(Number.isFinite).length >= 3;
-  const rawScores = usable ? buildScores(metrics) : buildScores({});
+  const rawScores = usable ? buildSkyScores(metrics) : buildSkyScores({});
   const weatherSignal = liveSignalFor(site, observations);
   const cameraSignal = cameraSignalFor(site, observations);
   const liveSignal = mergeSignals(weatherSignal, cameraSignal);
-  const scores = applyLiveSignal(rawScores, liveSignal);
+  const liveBlend = blendLiveSummitScore(rawScores.summitView, liveSignal);
+  const scores = { ...rawScores, summitView: liveBlend.score };
+  const confidence = scoreConfidence(metrics, sampleCounts, liveSignal);
   const language = buildLanguage(site, scores, metrics, !usable, liveSignal);
   const status = liveSignal?.type === "summit-fog"
     ? "live-fog"
@@ -733,6 +648,16 @@ async function parseSite(site, observations = {}) {
     elevationFt: site.elevationFt,
     chartUrl: site.chartUrl,
     scores,
+    confidence,
+    scoreDiagnostics: {
+      version: "2.0-continuous",
+      forecastWindowHours: Math.min(12, Math.max(...Object.values(sampleCounts), 0)) * 2,
+      baseSummitView: liveBlend.baseScore,
+      liveObservationScore: liveBlend.liveScore,
+      liveObservationWeight: liveBlend.liveWeight,
+      liveAdjustment: liveBlend.adjustment,
+      metrics: Object.fromEntries(Object.entries(metrics).map(([key, value]) => [key, Number.isFinite(value) ? Number(value.toFixed(1)) : null]))
+    },
     rating: language.rating,
     headline: language.headline,
     bullets: language.bullets,
