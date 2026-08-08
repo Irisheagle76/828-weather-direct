@@ -5,6 +5,7 @@ const routes = {
   "alerts/latest": () => import("../lib/api-routes/alerts/latest.js"),
   "alerts/publish": () => import("../lib/api-routes/alerts/publish.js"),
   "drought-fire": () => import("../lib/api-routes/drought-fire.js"),
+  "rainfall-context": () => import("../lib/api-routes/rainfall-context.js"),
   "forecast/latest": () => import("../lib/api-routes/forecast/latest.js"),
   "forecast/automatic": () => import("../lib/api-routes/forecast/automatic.js"),
   "forecast/publish": () => import("../lib/api-routes/forecast/publish.js"),

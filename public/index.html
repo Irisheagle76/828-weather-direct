@@ -5,6 +5,7 @@
   <title>828 Weather Direct</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="/css/app-v2.css?v=20260728-alert-images" />
+  <link rel="stylesheet" href="/css/rainfall-context.css?v=20260808" />
   <style>
     :root {
       --ink: #142033;
@@ -4568,6 +4569,73 @@
           </div>
         </article>
       </section>
+
+      <section class="rainfall-home-card" aria-labelledby="rainfallHomeHeadline" aria-busy="true">
+        <div class="rainfall-home-head">
+          <div>
+            <div class="rainfall-home-kicker-row"><div class="kicker">Rainfall Context</div></div>
+            <h2 id="rainfallHomeHeadline">Loading Asheville's latest rainfall context.</h2>
+          </div>
+          <div class="rainfall-home-mark" aria-hidden="true">90d</div>
+        </div>
+
+        <p class="rainfall-home-summary" id="rainfallHomeSummary">
+          Comparing the latest 14, 30, and 90 complete days with Asheville's climate normal.
+        </p>
+
+        <div class="rainfall-home-signals" id="rainfallHomeSignals" aria-label="Rolling rainfall totals">
+          <div class="rainfall-home-signal" id="rainfallSignal14">
+            <strong id="rainfallObserved14">--</strong><span>14 days</span><small id="rainfallNormal14">Loading live data</small>
+          </div>
+          <div class="rainfall-home-signal" id="rainfallSignal30">
+            <strong id="rainfallObserved30">--</strong><span>30 days</span><small id="rainfallNormal30">Loading live data</small>
+          </div>
+          <div class="rainfall-home-signal" id="rainfallSignal90">
+            <strong id="rainfallObserved90">--</strong><span>90 days</span><small id="rainfallNormal90">Loading live data</small>
+          </div>
+        </div>
+
+        <div class="rainfall-home-charts">
+          <section class="rainfall-chart-panel rainfall-percent-panel" aria-labelledby="rainfallPercentTitle">
+            <h3 class="rainfall-chart-title" id="rainfallPercentTitle">Percent of normal <small>Dashed line = 100%</small></h3>
+            <div class="rainfall-percent-bars" id="rainfallPercentBars" role="img" aria-label="Rainfall percentages are loading">
+              <span class="rainfall-normal-guide" aria-hidden="true"></span>
+              <div class="rainfall-percent-row" id="rainfallPercentRow14"><b>14d</b><div class="rainfall-percent-track"><span class="rainfall-percent-fill" id="rainfallPercent14" style="width: 0">--</span></div></div>
+              <div class="rainfall-percent-row" id="rainfallPercentRow30"><b>30d</b><div class="rainfall-percent-track"><span class="rainfall-percent-fill" id="rainfallPercent30" style="width: 0">--</span></div></div>
+              <div class="rainfall-percent-row" id="rainfallPercentRow90"><b>90d</b><div class="rainfall-percent-track"><span class="rainfall-percent-fill" id="rainfallPercent90" style="width: 0">--</span></div></div>
+            </div>
+          </section>
+
+          <section class="rainfall-chart-panel rainfall-pace-panel" aria-labelledby="rainfallPaceTitle">
+            <h3 class="rainfall-chart-title" id="rainfallPaceTitle">
+              90-day rainfall pace
+              <span class="rainfall-pace-legend" aria-label="Chart legend"><span><i aria-hidden="true"></i>Observed</span><span class="normal"><i aria-hidden="true"></i>Normal</span></span>
+            </h3>
+            <div class="rainfall-pace-shell">
+              <div class="rainfall-pace-y-axis" id="rainfallPaceAxis" aria-hidden="true"><span>--</span><span>--</span><span>--</span><span>0&quot;</span></div>
+              <div class="rainfall-pace-plot-wrap">
+                <div class="rainfall-pace-plot">
+                  <svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-labelledby="rainfallPaceSvgTitle rainfallPaceSvgDesc">
+                    <title id="rainfallPaceSvgTitle">Observed cumulative rainfall compared with normal over 90 days</title>
+                    <desc id="rainfallPaceSvgDesc">Live cumulative rainfall is loading.</desc>
+                    <polyline class="rainfall-pace-normal" id="rainfallPaceNormal" points="0,100"></polyline>
+                    <polyline class="rainfall-pace-observed" id="rainfallPaceObserved" points="0,100"></polyline>
+                  </svg>
+                  <span class="rainfall-pace-end normal" id="rainfallPaceNormalEnd">--</span>
+                  <span class="rainfall-pace-end observed" id="rainfallPaceObservedEnd">--</span>
+                </div>
+                <div class="rainfall-pace-x-axis" aria-hidden="true"><span>90d</span><span>60d</span><span>30d</span><span>Now</span></div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="rainfall-home-momentum">
+          <span class="rainfall-home-arrow" id="rainfallHomeArrow" aria-hidden="true">&middot;</span>
+          <span id="rainfallHomeMomentum">Loading the latest rainfall trend.</span>
+        </div>
+        <div class="rainfall-home-meta"><span id="rainfallHomeUpdated">Last Updated: --/--/----</span></div>
+      </section>
     </div>
   </main>
 
@@ -5625,6 +5693,109 @@
         renderHomeWaterCard(await getWaterPageInputs());
       } catch (error) {
         console.warn("Homepage water module using fallback copy", error);
+      }
+    }
+
+    function rainfallWindow(data, days) {
+      return (Array.isArray(data?.windows) ? data.windows : []).find((item) => Number(item?.days) === days);
+    }
+
+    function rainfallInches(value) {
+      const amount = Number(value);
+      return Number.isFinite(amount) ? `${amount.toFixed(2)}\"` : "--";
+    }
+
+    function rainfallDate(value) {
+      const match = String(value || "").match(/^(\d{4})(\d{2})(\d{2})$/);
+      return match ? `${match[3]}/${match[2]}/${match[1]}` : "--/--/----";
+    }
+
+    function rainfallHeadline(w14, w90) {
+      if (w14.percentOfNormal >= 115 && w90.percentOfNormal < 100) return "Recent rain is helping, but the 90-day deficit remains.";
+      if (w90.percentOfNormal >= 110) return "Asheville's 90-day rainfall is running wetter than normal.";
+      if (w90.percentOfNormal <= 75) return "Asheville remains well behind its normal 90-day rainfall pace.";
+      if (w90.percentOfNormal < 100) return "Asheville remains a little behind its normal 90-day rainfall pace.";
+      return "Asheville's 90-day rainfall is running close to normal.";
+    }
+
+    function renderRainfallContext(data) {
+      const w14 = rainfallWindow(data, 14);
+      const w30 = rainfallWindow(data, 30);
+      const w90 = rainfallWindow(data, 90);
+      if (![w14, w30, w90].every((item) => Number.isFinite(Number(item?.percentOfNormal)))) {
+        throw new Error("Rainfall response is incomplete");
+      }
+
+      [w14, w30, w90].forEach((item) => {
+        const days = Number(item.days);
+        const percent = Math.round(Number(item.percentOfNormal));
+        updateText(`#rainfallObserved${days}`, rainfallInches(item.observed));
+        updateText(`#rainfallNormal${days}`, `${percent}% of ${rainfallInches(item.normal)} normal`);
+        document.querySelector(`#rainfallSignal${days}`)?.classList.toggle("dry", percent < 100);
+        document.querySelector(`#rainfallPercentRow${days}`)?.classList.toggle("dry", percent < 100);
+        const fill = document.querySelector(`#rainfallPercent${days}`);
+        if (fill) {
+          fill.textContent = `${percent}%`;
+          fill.style.width = `${Math.max(10, Math.min(100, percent / 1.6))}%`;
+        }
+      });
+
+      const pace = Array.isArray(data?.pace) ? data.pace : [];
+      const maxValue = Math.max(1, ...pace.flatMap((point) => [Number(point.observed) || 0, Number(point.normal) || 0]));
+      const axisMax = Math.ceil((maxValue * 1.08) / 2) * 2;
+      const pointsFor = (key) => pace.map((point) => {
+        const x = Math.max(0, Math.min(100, (Number(point.elapsedDays) / 90) * 100));
+        const y = Math.max(3, Math.min(100, 100 - (Number(point[key]) / axisMax) * 94));
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      }).join(" ");
+      document.querySelector("#rainfallPaceNormal")?.setAttribute("points", pointsFor("normal"));
+      document.querySelector("#rainfallPaceObserved")?.setAttribute("points", pointsFor("observed"));
+
+      const axisValues = [axisMax, axisMax * 2 / 3, axisMax / 3, 0];
+      document.querySelectorAll("#rainfallPaceAxis span").forEach((label, index) => {
+        label.textContent = `${axisValues[index].toFixed(axisValues[index] % 1 ? 1 : 0)}\"`;
+      });
+
+      const normalEnd = Number(w90.normal);
+      const observedEnd = Number(w90.observed);
+      updateText("#rainfallPaceNormalEnd", rainfallInches(normalEnd));
+      updateText("#rainfallPaceObservedEnd", rainfallInches(observedEnd));
+      const normalEndLabel = document.querySelector("#rainfallPaceNormalEnd");
+      const observedEndLabel = document.querySelector("#rainfallPaceObservedEnd");
+      const normalTop = Math.max(3, 100 - (normalEnd / axisMax) * 94);
+      const observedTop = Math.max(3, 100 - (observedEnd / axisMax) * 94);
+      if (normalEndLabel) normalEndLabel.style.top = `${normalTop}%`;
+      if (observedEndLabel) {
+        observedEndLabel.style.top = `${observedTop}%`;
+        observedEndLabel.style.right = Math.abs(normalTop - observedTop) < 8 ? "58px" : "5px";
+      }
+
+      const pct14 = Number(w14.percentOfNormal);
+      const pct30 = Number(w30.percentOfNormal);
+      const pct90 = Number(w90.percentOfNormal);
+      const balance90 = observedEnd - normalEnd;
+      const direction = pct14 > pct30 + 8 ? "improving" : pct14 < pct30 - 8 ? "slowing" : "holding steady";
+      const balanceText = Math.abs(balance90) < 0.05 ? "right at normal" : `${Math.abs(balance90).toFixed(1)}\" ${balance90 < 0 ? "below" : "above"} normal`;
+
+      updateText("#rainfallHomeHeadline", rainfallHeadline(w14, w90));
+      updateText("#rainfallHomeSummary", `The past 14 days are at ${Math.round(pct14)}% of normal, compared with ${Math.round(pct30)}% over 30 days and ${Math.round(pct90)}% over 90 days.`);
+      updateText("#rainfallHomeMomentum", `Short-term rainfall is ${direction}; the 90-day balance is ${balanceText}.`);
+      updateText("#rainfallHomeArrow", direction === "improving" ? "↗" : direction === "slowing" ? "↘" : "→");
+      updateText("#rainfallHomeUpdated", `Last Updated: ${rainfallDate(data.updatedDate)}`);
+      document.querySelector("#rainfallPercentBars")?.setAttribute("aria-label", `14 days is ${Math.round(pct14)} percent of normal, 30 days is ${Math.round(pct30)} percent, and 90 days is ${Math.round(pct90)} percent`);
+      updateText("#rainfallPaceSvgDesc", `Observed rainfall finishes at ${rainfallInches(observedEnd)} versus ${rainfallInches(normalEnd)} normal.`);
+      document.querySelector(".rainfall-home-card")?.setAttribute("aria-busy", "false");
+    }
+
+    async function hydrateRainfallContext() {
+      try {
+        renderRainfallContext(await fetchRouteJson("rainfall-context"));
+      } catch (error) {
+        console.warn("Rainfall context unavailable", error);
+        updateText("#rainfallHomeHeadline", "Live rainfall context is temporarily unavailable.");
+        updateText("#rainfallHomeSummary", "The next update will retry Asheville's observed rainfall and climate-normal comparison.");
+        updateText("#rainfallHomeMomentum", "Live totals could not be verified, so no sample values are being shown.");
+        document.querySelector(".rainfall-home-card")?.setAttribute("aria-busy", "false");
       }
     }
 
@@ -6722,6 +6893,7 @@
     loadAndRenderAlerts(activeAlerts);
     hydrateSubstackCard();
     hydrateDroughtFireCard();
+    hydrateRainfallContext();
     hydrateHomeHikingCard();
     hydrateHomeWaterCard();
     hydrateHomeForecastSignals();
