@@ -14,8 +14,9 @@ export async function render4DayForecast(container) {
 
   container.innerHTML = renderLoading();
 
-  const [manualForecast, weatherData] = await Promise.all([
+  const [manualForecast, modelForecast, weatherData] = await Promise.all([
     loadForecastOverrides(),
+    loadModelForecast(),
     loadWeatherFallback()
   ]);
 
@@ -24,7 +25,10 @@ export async function render4DayForecast(container) {
   const hourly = normalizeHourly(weatherData?.hourly || []);
   const days = buildForecastDays(hourly).map((day, index) => {
     const manual = getManualDay(day.key);
-    return manual ? buildManualDay(day, index, manual) : buildFallbackDay(day, index);
+    const model = modelForecast?.days?.[day.key];
+    if (manual) return buildManualDay(day, index, manual);
+    if (model) return buildModelDay(day, index, model);
+    return buildFallbackDay(day, index);
   });
 
   const board = buildBoard(forecastOverrides, days);
@@ -64,6 +68,18 @@ async function loadWeatherFallback() {
     return await getWeatherForUI(LOCATION);
   } catch (err) {
     console.warn("Automated fallback unavailable:", err);
+    return null;
+  }
+}
+
+async function loadModelForecast() {
+  try {
+    const res = await fetch("/api/router?route=forecast/model");
+    if (!res.ok) throw new Error(`model forecast ${res.status}`);
+    const forecast = await res.json();
+    return forecast?.days ? forecast : null;
+  } catch (err) {
+    console.warn("NWS model fill-in unavailable, using hourly fallback:", err);
     return null;
   }
 }
@@ -116,34 +132,42 @@ function buildForecastDays(hourly) {
 }
 
 function buildManualDay(day, index, manual) {
+  return buildPublishedDay(day, index, manual, "manual");
+}
+
+function buildModelDay(day, index, model) {
+  return buildPublishedDay(day, index, model, "model");
+}
+
+function buildPublishedDay(day, index, published, source) {
   const fallback = buildFallbackDay(day, index);
-  const timeline = normalizeTimeline(manual.timeline);
-  const tags = Array.isArray(manual.tags) ? manual.tags.filter(Boolean) : [];
-  const condition = manual.condition ? formatCategory(manual.condition) : formatCategory(manual.sky) || fallback.condition;
-  const icon = manual.icon || pickManualIcon(manual) || fallback.icon;
-  const feelScore = numberOrNull(manual.feelScore) ?? fallback.feelScore;
+  const timeline = normalizeTimeline(published.timeline);
+  const tags = Array.isArray(published.tags) ? published.tags.filter(Boolean) : [];
+  const condition = published.condition ? formatCategory(published.condition) : formatCategory(published.sky) || fallback.condition;
+  const icon = normalizeForecastIcon(published.icon) || pickManualIcon(published) || fallback.icon;
+  const feelScore = numberOrNull(published.feelScore) ?? fallback.feelScore;
 
   return {
     ...fallback,
-    source: "manual",
-    high: manual.high ?? fallback.high,
-    low: manual.low ?? fallback.low,
+    source,
+    high: published.high ?? fallback.high,
+    low: published.low ?? fallback.low,
     icon,
     condition,
     feelScore,
-    headline: manual.headline || fallback.headline,
-    narrative: manual.narrative || fallback.narrative,
+    headline: published.headline || fallback.headline,
+    narrative: published.narrative || fallback.narrative,
     timeline,
     tags,
-    mainIssue: manual.mainIssue || null,
-    bestWindow: manual.bestWindow || null,
-    confidence: manual.confidence ? normalizeConfidence(manual.confidence) : null,
-    localNote: manual.localNote || manual.localInsight || null,
-    wind: normalizeManualWind(manual.wind),
-    rainWindow: manual.rainWindow || null,
-    sky: manual.sky || null,
-    humidity: manual.humidity || null,
-    stormRisk: manual.stormRisk || "none"
+    mainIssue: published.mainIssue || null,
+    bestWindow: published.bestWindow || null,
+    confidence: published.confidence != null ? normalizeConfidence(published.confidence) : null,
+    localNote: published.localNote || published.localInsight || null,
+    wind: normalizeManualWind(published.wind),
+    rainWindow: published.rainWindow || null,
+    sky: published.sky || null,
+    humidity: published.humidity || null,
+    stormRisk: published.stormRisk || "none"
   };
 }
 
@@ -830,6 +854,23 @@ function pickManualIcon(day) {
   if (day.sky === "overcast" || day.sky === "mostly_cloudy") return "☁️";
   if (day.sky === "partly_cloudy") return "⛅";
   return "☀️";
+}
+
+function normalizeForecastIcon(icon) {
+  const value = String(icon || "").trim().toLowerCase();
+  const icons = {
+    sunny: "☀️",
+    "mostly-sunny": "🌤️",
+    "partly-cloudy": "⛅",
+    cloudy: "☁️",
+    overcast: "☁️",
+    rain: "🌧️",
+    showery: "🌦️",
+    thunderstorm: "⛈️",
+    stormy: "⛈️"
+  };
+
+  return icons[value] || (icon && /[☀🌤⛅☁🌦🌧⛈]/u.test(icon) ? icon : null);
 }
 
 function pickFallbackIcon(hours, rain) {
