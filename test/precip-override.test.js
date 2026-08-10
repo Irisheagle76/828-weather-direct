@@ -65,6 +65,59 @@ test("radar by itself does not claim rain is reaching the ground", () => {
   assert.equal(result.radarSupportedRain, false);
 });
 
+test("a daily accumulation change with a zero Tempest rate does not claim recent rain", () => {
+  const now = Date.parse("2026-08-10T23:30:00Z");
+  const storage = memoryStorage({ accumulation: 0 });
+
+  const result = getCurrentPrecipOverride({
+    now,
+    storage,
+    current: {
+      timestamp: now,
+      precipRate: 0,
+      precipAccumLocalDay: 0.09,
+      relative_humidity: 66
+    },
+    hourly: [{
+      timestamp: now,
+      precipAmount: 0,
+      precipProbability: 0.01,
+      weatherCode: 0
+    }],
+    radar: {
+      available: true,
+      ageMinutes: 3,
+      nearestEchoMiles: 37.5,
+      echoPixels: 5
+    }
+  });
+
+  assert.equal(result.activeRainNow, false);
+  assert.equal(result.recentRainOnly, false);
+  assert.equal(result.mode, "expired");
+  assert.equal(result.active, false);
+});
+
+test("an observed positive Tempest rate still supports the recent-rain handoff", () => {
+  const now = Date.parse("2026-08-10T23:30:00Z");
+  const storage = memoryStorage();
+
+  const raining = getCurrentPrecipOverride({
+    now,
+    storage,
+    current: { timestamp: now, precipRate: 0.2 }
+  });
+  assert.equal(raining.mode, "active");
+
+  const ended = getCurrentPrecipOverride({
+    now: now + 4 * 60 * 1000,
+    storage,
+    current: { timestamp: now + 4 * 60 * 1000, precipRate: 0 }
+  });
+  assert.equal(ended.mode, "recent");
+  assert.match(ended.headline, /rain has eased/i);
+});
+
 test("Tempest last-strike time supports lightning wording after the interval count resets", () => {
   const now = Date.parse("2026-07-11T13:30:00Z");
   const result = getCurrentPrecipOverride({

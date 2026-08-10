@@ -5,7 +5,7 @@ const RECENT_LIGHTNING_MAX_MINUTES = 15;
 const RADAR_MAX_AGE_MINUTES = 10;
 const RADAR_OVERHEAD_MILES = 8;
 const LOCAL_LIGHTNING_MAX_MILES = 20;
-const STORAGE_KEY = "avlweather.precipOverride.v1";
+const STORAGE_KEY = "avlweather.precipOverride.v2";
 
 function numberOrNull(value) {
   if (value === null || value === undefined || value === "") return null;
@@ -212,19 +212,11 @@ export function getCurrentPrecipOverride(context = {}) {
   const observationAge = Number.isFinite(rainRateObservedAt) ? now - rainRateObservedAt : Infinity;
   const observationFresh = observationAge >= -60 * 1000 && observationAge <= ACTIVE_OBSERVATION_MAX_MS;
 
-  const accumulation = numberOrNull(
-    current.precipAccumLocalDay ?? current.precip_accum_local_day ?? current.rainAccum ?? current.precipAccum
-  );
-  const previousAccumulation = numberOrNull(previous.accumulation);
-  const accumulationIncreased = observationFresh && Number.isFinite(accumulation) &&
-    Number.isFinite(previousAccumulation) && accumulation > previousAccumulation + 0.0001;
-
   let lastRainDetectedAt = timestampOrNull(previous.lastRainDetectedAt);
   if (observationFresh && rainRate > 0) lastRainDetectedAt = rainRateObservedAt;
-  else if (accumulationIncreased) lastRainDetectedAt = rainRateObservedAt;
   const activeRainNow = observationFresh && rainRate > 0;
   let dryObservationStartedAt = timestampOrNull(previous.dryObservationStartedAt);
-  if (activeRainNow || accumulationIncreased) {
+  if (activeRainNow) {
     dryObservationStartedAt = null;
   } else if (observationFresh && rainRate === 0 && !Number.isFinite(dryObservationStartedAt)) {
     dryObservationStartedAt = rainRateObservedAt;
@@ -315,7 +307,6 @@ export function getCurrentPrecipOverride(context = {}) {
   writeState(storage, {
     lastRainDetectedAt,
     dryObservationStartedAt,
-    accumulation: Number.isFinite(accumulation) ? accumulation : previousAccumulation,
     observedAt: rainRateObservedAt,
     lastLightningDetectedAt,
     lightningCount: recentLightningCount,
