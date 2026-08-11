@@ -4755,7 +4755,8 @@
       calculateComfort,
       FEELSCORE_CALIBRATION
     } from "./js/intel/comfort.js?v=20260807-humid-heat";
-    import { buildTomorrowSummary } from "./js/intel/tomorrow-summary.js?v=20260804-tim-voice";
+    import { buildTomorrowSummary } from "./js/intel/tomorrow-summary.js?v=20260811-impact-first";
+    import { mergePublishedTomorrowSummary } from "./js/intel/tomorrow-published.js?v=20260811-published-card";
     import { buildTemperaturePath } from "./js/intel/temperature-path.js?v=20260806-temp-path";
     import {
       cleanHikingText,
@@ -4794,6 +4795,8 @@
     let latestPrecipOverride = null;
     let latestSunriseAt = null;
     let latestSunsetAt = null;
+    let latestPublishedForecast = null;
+    let latestTomorrowRenderInputs = null;
     const STORM_NARRATIVE_MAX_MS = 10 * 60 * 1000;
     const STORM_NARRATIVE_STORAGE_KEY = "avlweather.stormNarrativeWindow";
     const STORM_LEVEL_RANK = { none: 0, watching: 1, developing: 2, strong: 3 };
@@ -5578,10 +5581,20 @@
     async function hydrateHomeForecastSignals() {
       try {
         const forecast = await fetchRouteJson("forecast/latest");
+        latestPublishedForecast = forecast;
         updateText("#homeForecastRainRisk", formatForecastSignal(forecast?.rainRisk));
         updateText("#homeForecastComfortTrend", formatForecastSignal(forecast?.comfortTrend));
         updateText("#homeForecastBestDay", formatForecastSignal(forecast?.bestOutdoorDay, "To be decided"));
         updateText("#homeForecastConfidence", formatPercent(forecast?.forecastConfidence));
+        if (latestTomorrowRenderInputs) {
+          renderTomorrowLive(
+            latestTomorrowRenderInputs.tomorrow,
+            latestTomorrowRenderInputs.hourly,
+            latestTomorrowRenderInputs.daily,
+            forecast
+          );
+        }
+        return forecast;
       } catch (error) {
         console.warn("Homepage forecast signals unavailable", error);
       }
@@ -6634,8 +6647,11 @@
       });
     }
 
-    function renderTomorrowLive(tomorrow, hourly = [], daily = []) {
-      const summary = summarizeTomorrow(hourly, daily, tomorrow);
+    function renderTomorrowLive(tomorrow, hourly = [], daily = [], publishedForecast = latestPublishedForecast) {
+      const summary = mergePublishedTomorrowSummary(
+        summarizeTomorrow(hourly, daily, tomorrow),
+        publishedForecast || {}
+      );
       if (!summary) return;
       const score = Math.round(Number(summary.score));
       if (Number.isFinite(score)) {
@@ -6690,6 +6706,7 @@
           latestPrecipOverride
         );
         renderNextSix(hourly);
+        latestTomorrowRenderInputs = { tomorrow: human?.tomorrow, hourly, daily };
         renderTomorrowLive(human?.tomorrow, hourly, daily);
       } catch (error) {
         console.warn("Live comfort modules using homepage fallbacks", error);

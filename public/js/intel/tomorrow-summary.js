@@ -28,6 +28,7 @@ export function buildTomorrowSummary(hours = [], day = null, fallback = {}, opti
   const eveningDew = average(values(evening, "dewpointF"));
   const activeWind = values(representative, "windSpeed");
   const cloudAvg = average(values(representative, "cloudCover"));
+  const apparentHigh = maximum(representative.map(heatIndexF).filter(Number.isFinite));
   const rainValues = values(rows, "precipProbability");
   const activeRainValues = values(representative, "precipProbability");
 
@@ -67,10 +68,10 @@ export function buildTomorrowSummary(hours = [], day = null, fallback = {}, opti
     high,
     low,
     rainChance,
-    headline: buildHeadline({ score, high, rainChance, humidity, wind, cloudAvg }),
+    headline: buildHeadline({ score, high, apparentHigh, rainChance, humidity, wind, cloudAvg }),
     narrative: [
       describeTemperature(low, high, { highDeparture, lowDeparture }),
-      describeHumidity(humidity),
+      describeHumidity(humidity, { high, apparentHigh }),
       describeWeather({ rainChance, cloudAvg, wind })
     ].filter(Boolean).join(" "),
     diagnostics: {
@@ -86,17 +87,25 @@ export function buildTomorrowSummary(hours = [], day = null, fallback = {}, opti
       normalLow: finite(normals?.low),
       highDeparture,
       lowDeparture,
+      apparentHigh,
       normalsPeriod: normals?.period || null
     }
   };
 }
 
-function buildHeadline({ score, high, rainChance, humidity, wind, cloudAvg }) {
+function buildHeadline({ score, high, apparentHigh, rainChance, humidity, wind, cloudAvg }) {
   if (Number.isFinite(rainChance) && rainChance >= 0.5) {
     return "Scattered showers may pop up at times tomorrow.";
   }
+  if ((Number.isFinite(apparentHigh) && apparentHigh >= 90) ||
+      (Number.isFinite(high) && high >= 85 && (humidity.muggy || humidity.noticeable))) {
+    return "Hot and humid tomorrow—take it easier during the afternoon.";
+  }
   if (Number.isFinite(high) && high >= 90) {
     return "The heat builds again tomorrow afternoon.";
+  }
+  if (Number.isFinite(high) && high >= 88) {
+    return "A hot afternoon is ahead tomorrow.";
   }
   if (humidity.drying) {
     return "A humid start, then some welcome relief by afternoon.";
@@ -109,6 +118,9 @@ function buildHeadline({ score, high, rainChance, humidity, wind, cloudAvg }) {
   if (Number.isFinite(high) && high >= 86) {
     return "Another warm afternoon is on the way.";
   }
+  if (Number.isFinite(high) && high >= 82 && humidity.noticeable) {
+    return "A warm and humid afternoon is ahead.";
+  }
   if (Number.isFinite(rainChance) && rainChance >= 0.25) {
     return "Not a washout, but keep an eye out for a passing shower.";
   }
@@ -118,7 +130,7 @@ function buildHeadline({ score, high, rainChance, humidity, wind, cloudAvg }) {
   if (Number.isFinite(score) && score >= 80) {
     return "A pretty comfortable day is ahead.";
   }
-  return "Not a bad day overall.";
+  return "No major weather disruptions stand out tomorrow.";
 }
 
 function describeTemperature(low, high, context = {}) {
@@ -142,8 +154,10 @@ function describeTemperature(low, high, context = {}) {
   return `${base}.`;
 }
 
-function describeHumidity(humidity) {
+function describeHumidity(humidity, context = {}) {
   const { morningDew, afternoonDew, eveningDew, drying, muggy, noticeable } = humidity;
+  const heatStress = (Number.isFinite(context.apparentHigh) && context.apparentHigh >= 90) ||
+    (Number.isFinite(context.high) && context.high >= 85 && (muggy || noticeable));
 
   if (drying) {
     const laterDew = Number.isFinite(eveningDew) && eveningDew < afternoonDew
@@ -152,10 +166,14 @@ function describeHumidity(humidity) {
     return `It starts humid, but drier air works in during the afternoon as dew points fall from around ${Math.round(morningDew)}° to ${Math.round(afternoonDew)}°${laterDew}.`;
   }
   if (muggy) {
-    return `It stays muggy through the afternoon with dew points near ${Math.round(afternoonDew)}°.`;
+    return heatStress
+      ? `It stays muggy through the afternoon with dew points near ${Math.round(afternoonDew)}°; plan a slower pace during the hottest part of the day.`
+      : `It stays muggy through the afternoon with dew points near ${Math.round(afternoonDew)}°.`;
   }
   if (noticeable) {
-    return `You will notice some humidity during the afternoon, with dew points near ${Math.round(afternoonDew)}°.`;
+    return heatStress
+      ? `You will notice the humidity during the afternoon, with dew points near ${Math.round(afternoonDew)}°; take it easier during the hottest part of the day.`
+      : `You will notice some humidity during the afternoon, with dew points near ${Math.round(afternoonDew)}°.`;
   }
   if (Number.isFinite(afternoonDew)) {
     return "Humidity should not be much of a factor.";
@@ -255,4 +273,28 @@ function meaningfulDeparture(value) {
 
 function departureDirection(value) {
   return value > 0 ? "above" : "below";
+}
+
+function heatIndexF(hour = {}) {
+  const temperature = finite(hour.temperatureF);
+  const humidity = finite(hour.relativeHumidity);
+  if (!Number.isFinite(temperature) || !Number.isFinite(humidity) || temperature < 80 || humidity < 40) {
+    return temperature;
+  }
+
+  const simple = 0.5 * (
+    temperature + 61 + ((temperature - 68) * 1.2) + (humidity * 0.094)
+  );
+  const adjustedTemperature = (simple + temperature) / 2;
+  if (adjustedTemperature < 80) return adjustedTemperature;
+
+  return -42.379 +
+    2.04901523 * temperature +
+    10.14333127 * humidity -
+    0.22475541 * temperature * humidity -
+    0.00683783 * temperature * temperature -
+    0.05481717 * humidity * humidity +
+    0.00122874 * temperature * temperature * humidity +
+    0.00085282 * temperature * humidity * humidity -
+    0.00000199 * temperature * temperature * humidity * humidity;
 }

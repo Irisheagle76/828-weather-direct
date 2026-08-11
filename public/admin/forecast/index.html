@@ -772,7 +772,7 @@ pre {
         </div>
       </div>
 
-      <div class="field-grid">
+      <div class="field-grid three">
         <div class="field">
           <label for="signalWeatherPattern">Weather Pattern</label>
           <input id="signalWeatherPattern" placeholder="Warm to unsettled, cooler late week" />
@@ -836,7 +836,7 @@ pre {
 
     <div class="group">
       <div class="group-title">Temperatures And Wind</div>
-      <div class="field-grid">
+      <div class="field-grid three">
         <div class="field">
           <label for="high">High</label>
           <input id="high" type="number" placeholder="78" />
@@ -844,6 +844,10 @@ pre {
         <div class="field">
           <label for="low">Low</label>
           <input id="low" type="number" placeholder="61" />
+        </div>
+        <div class="field">
+          <label for="rainChance">Rain Chance (%)</label>
+          <input id="rainChance" type="number" min="0" max="100" placeholder="30" />
         </div>
       </div>
 
@@ -1034,7 +1038,10 @@ pre {
             <span id="previewLow">--</span>
           </span>
         </div>
-        <div class="wind" id="previewWind">Wind: --</div>
+        <div>
+          <div class="wind" id="previewRainChance">Rain chance: --</div>
+          <div class="wind" id="previewWind">Wind: --</div>
+        </div>
       </div>
 
       <div class="headline-preview" id="previewHeadline">Forecast headline</div>
@@ -1082,6 +1089,7 @@ const FIELD_IDS = [
   "narrative",
   "high",
   "low",
+  "rainChance",
   "icon",
   "condition",
   "feelScore",
@@ -1486,6 +1494,7 @@ function emptyComposerDay(dateStr) {
     narrative: "",
     high: "",
     low: "",
+    rainChance: "",
     icon: "",
     condition: "",
     feelScore: "",
@@ -1592,6 +1601,7 @@ function clearActiveDay() {
     narrative: "",
     high: "",
     low: "",
+    rainChance: "",
     icon: "",
     condition: "",
     feelScore: "",
@@ -1671,6 +1681,7 @@ function normalizeDayForPublish(day) {
     narrative: emptyToNull(day.narrative),
     high: toNumberOrNull(day.high),
     low: toNumberOrNull(day.low),
+    rainChance: toNumberOrNull(day.rainChance),
     icon: emptyToNull(day.icon),
     condition: emptyToNull(day.condition),
     feelScore: toNumberOrNull(day.feelScore),
@@ -1784,6 +1795,9 @@ function updatePreview() {
   el("previewIcon").textContent = pickIcon(day.sky, day.stormRisk);
   el("previewHigh").textContent = day.high ? `${Math.round(Number(day.high))}°` : "--";
   el("previewLow").textContent = day.low ? `${Math.round(Number(day.low))}°` : "--";
+  el("previewRainChance").textContent = day.rainChance !== ""
+    ? `Rain chance: ${Math.round(Number(day.rainChance))}%`
+    : "Rain chance: model fallback";
   el("previewWind").textContent = formatWind(day);
   el("previewHeadline").textContent = day.headline.trim() || "Forecast headline";
   el("previewNarrative").textContent = day.narrative.trim() || "Your authored forecast narrative appears here.";
@@ -1989,6 +2003,7 @@ function composerDayFromPublished(dateStr, day = {}) {
     narrative: day.narrative || "",
     high: valueToInput(day.high),
     low: valueToInput(day.low),
+    rainChance: valueToInput(day.rainChance),
     icon: day.icon || "",
     condition: day.condition || "",
     feelScore: valueToInput(day.feelScore),

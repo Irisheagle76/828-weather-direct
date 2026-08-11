@@ -57,8 +57,27 @@ test("sustained afternoon dew points still produce an honestly muggy narrative",
 
   const summary = buildTomorrowSummary(hours, { tempMin: 71, tempMax: 87 });
 
-  assert.match(summary.headline, /Warm and muggy again/);
+  assert.match(summary.headline, /Hot and humid/);
+  assert.match(summary.headline, /take it easier/i);
   assert.match(summary.narrative, /stays muggy/i);
+});
+
+test("seasonably hot humid weather leads with practical heat guidance", () => {
+  const hours = hoursFrom(Array.from({ length: 24 }, (_, hour) => ({
+    temp: hour < 8 ? 68 : hour < 13 ? 80 : 88,
+    dew: 69,
+    rh: hour < 13 ? 78 : 55,
+    wind: 5,
+    cloud: 0.35,
+    rain: 0.18,
+    score: 58
+  })));
+
+  const summary = buildTomorrowSummary(hours, { tempMin: 68, tempMax: 89 });
+
+  assert.match(summary.headline, /take it easier/i);
+  assert.match(summary.narrative, /slower pace|take it easier/i);
+  assert.doesNotMatch(summary.headline, /not a bad day/i);
 });
 
 test("rain remains the lead when it is the clearest daytime disruption", () => {
