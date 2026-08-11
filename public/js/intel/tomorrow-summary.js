@@ -68,6 +68,7 @@ export function buildTomorrowSummary(hours = [], day = null, fallback = {}, opti
     high,
     low,
     rainChance,
+    icon: weatherEmoji({ rainChance, cloudAvg }),
     headline: buildHeadline({ score, high, apparentHigh, rainChance, humidity, wind, cloudAvg }),
     narrative: [
       describeTemperature(low, high, { highDeparture, lowDeparture }),
@@ -273,6 +274,14 @@ function meaningfulDeparture(value) {
 
 function departureDirection(value) {
   return value > 0 ? "above" : "below";
+}
+
+function weatherEmoji({ rainChance, cloudAvg }) {
+  if (Number.isFinite(rainChance) && rainChance >= 0.5) return "🌦️";
+  if (!Number.isFinite(cloudAvg)) return "🌤️";
+  if (cloudAvg < 0.25) return "☀️";
+  if (cloudAvg < 0.6) return "⛅";
+  return "☁️";
 }
 
 function heatIndexF(hour = {}) {

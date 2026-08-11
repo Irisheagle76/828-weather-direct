@@ -27,7 +27,8 @@ test("published tomorrow fields override the model summary by date", () => {
         high: 90,
         low: 68,
         rainChance: 30,
-        feelScore: null
+        feelScore: null,
+        sky: "partly_cloudy"
       }
     }
   };
@@ -40,6 +41,7 @@ test("published tomorrow fields override the model summary by date", () => {
   assert.equal(summary.score, 74);
   assert.equal(summary.headline, "Hot and humid—take it easy outside");
   assert.equal(summary.narrative, "Temperatures approach 90° with a muggy feel.");
+  assert.equal(summary.icon, "⛅");
   assert.equal(summary.diagnostics.publishedOverride, true);
 });
 
@@ -101,4 +103,18 @@ test("tomorrow uses the Asheville calendar across the spring DST transition", ()
   };
 
   assert.equal(mergePublishedTomorrowSummary(model, forecast, lateSaturday).high, 75);
+});
+
+test("an authored emoji wins over the published sky fallback", () => {
+  const forecast = {
+    days: {
+      "2026-08-12": {
+        date: "2026-08-12",
+        icon: "🥵",
+        sky: "partly_cloudy"
+      }
+    }
+  };
+
+  assert.equal(mergePublishedTomorrowSummary({ icon: "☀️" }, forecast, NOW).icon, "🥵");
 });

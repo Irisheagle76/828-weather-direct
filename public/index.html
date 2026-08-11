@@ -1675,6 +1675,31 @@
       letter-spacing: 0;
     }
 
+    .tomorrow-headline-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 8px 0 7px;
+    }
+
+    .tomorrow-weather-icon {
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      width: 52px;
+      height: 52px;
+      border: 1px solid rgba(245, 125, 35, 0.2);
+      border-radius: 16px;
+      background: rgba(255, 253, 248, 0.72);
+      font-size: 2rem;
+      line-height: 1;
+      box-shadow: 0 8px 20px rgba(15, 76, 196, 0.1);
+    }
+
+    .tomorrow-headline-row h3 {
+      margin: 0;
+    }
+
     .tomorrow-card p,
     .tomorrow-card li {
       color: var(--muted);
@@ -3183,6 +3208,18 @@
         font-size: 1.48rem;
       }
 
+      .tomorrow-headline-row {
+        align-items: flex-start;
+        gap: 9px;
+      }
+
+      .tomorrow-weather-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 13px;
+        font-size: 1.6rem;
+      }
+
       .tomorrow-signal-strip {
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 6px;
@@ -4282,7 +4319,10 @@
             <div class="kicker">Tomorrow</div>
             <div class="tomorrow-score" id="tomorrowScore">79</div>
           </div>
-          <h3 id="tomorrowHeadline">Tomorrow looks pleasant for comfort.</h3>
+          <div class="tomorrow-headline-row">
+            <span class="tomorrow-weather-icon" id="tomorrowIcon" aria-hidden="true">🌤️</span>
+            <h3 id="tomorrowHeadline">Tomorrow looks pleasant for comfort.</h3>
+          </div>
           <p id="tomorrowNarrative">
             Temperature, humidity, dew point, and wind will shape where tomorrow lands on the same FeelScore scale.
           </p>
@@ -4755,8 +4795,8 @@
       calculateComfort,
       FEELSCORE_CALIBRATION
     } from "./js/intel/comfort.js?v=20260807-humid-heat";
-    import { buildTomorrowSummary } from "./js/intel/tomorrow-summary.js?v=20260811-impact-first";
-    import { mergePublishedTomorrowSummary } from "./js/intel/tomorrow-published.js?v=20260811-published-card";
+    import { buildTomorrowSummary } from "./js/intel/tomorrow-summary.js?v=20260811-tomorrow-emoji";
+    import { mergePublishedTomorrowSummary } from "./js/intel/tomorrow-published.js?v=20260811-tomorrow-emoji";
     import { buildTemperaturePath } from "./js/intel/temperature-path.js?v=20260806-temp-path";
     import {
       cleanHikingText,
@@ -6660,6 +6700,7 @@
       updateText("#tomorrowHigh", Number.isFinite(summary.high) ? `${Math.round(summary.high)}°` : "--°");
       updateText("#tomorrowLow", Number.isFinite(summary.low) ? `${Math.round(summary.low)}°` : "--°");
       updateText("#tomorrowRain", Number.isFinite(summary.rainChance) ? formatPercent(summary.rainChance) : "--");
+      updateText("#tomorrowIcon", summary.icon || "🌤️");
       document.querySelector("#tomorrowHeadline").textContent = summary.headline;
       document.querySelector("#tomorrowNarrative").textContent = summary.narrative;
     }

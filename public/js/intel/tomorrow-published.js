@@ -32,6 +32,12 @@ export function mergePublishedTomorrowSummary(summary = {}, forecast = {}, now =
     applyText(merged, publishedFields, published, "narrative");
   }
 
+  const icon = publishedWeatherEmoji(published);
+  if (icon) {
+    merged.icon = icon;
+    publishedFields.push(published.icon ? "icon" : "sky");
+  }
+
   return {
     ...merged,
     diagnostics: {
@@ -62,6 +68,27 @@ function normalizeProbability(value) {
   const number = finite(value);
   if (!Number.isFinite(number) || number < 0 || number > 100) return null;
   return number > 1 ? number / 100 : number;
+}
+
+function publishedWeatherEmoji(day = {}) {
+  const authored = String(day.icon ?? "").trim();
+  if (authored) return authored;
+
+  const stormRisk = String(day.stormRisk ?? "").toLowerCase();
+  if (stormRisk === "numerous" || stormRisk === "scattered") return "⛈️";
+  if (stormRisk === "isolated") return "🌦️";
+
+  const sky = String(day.sky ?? "").toLowerCase().replace(/[\s-]+/g, "_");
+  return {
+    clear: "☀️",
+    sunny: "☀️",
+    mostly_sunny: "🌤️",
+    partly_cloudy: "⛅",
+    mostly_cloudy: "🌥️",
+    overcast: "☁️",
+    showery: "🌦️",
+    stormy: "⛈️"
+  }[sky] || null;
 }
 
 function easternDateKey(value) {
