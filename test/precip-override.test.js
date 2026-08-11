@@ -290,6 +290,34 @@ test("distant recent lightning is labeled storms nearby when the sky is not clea
   assert.match(result.headline, /storms are nearby, but not over Asheville/i);
 });
 
+test("distant lightning and a clearing sky do not imply rain occurred locally", () => {
+  const now = Date.parse("2026-08-11T20:02:00Z");
+  const result = getCurrentPrecipOverride({
+    now,
+    storage: memoryStorage({ dryObservationStartedAt: now - 8 * 60 * 1000 }),
+    current: {
+      timestamp: now,
+      precipRate: 0,
+      lightningStrikeDistance: 41,
+      lightningStrikeLastAt: now - 1 * 60 * 1000
+    },
+    radar: {
+      available: true,
+      ageMinutes: 3,
+      nearestEchoMiles: 24,
+      echoPixels: 200,
+      approaching: false
+    },
+    skyClearing: true
+  });
+
+  assert.equal(result.recentRainOnly, false);
+  assert.equal(result.clearingAfterStorm, false);
+  assert.equal(result.mode, "nearby");
+  assert.match(result.headline, /storms are nearby, but not over Asheville/i);
+  assert.doesNotMatch(result.summary, /rain has ended/i);
+});
+
 test("radar older than ten minutes cannot confirm a local thunderstorm", () => {
   const now = Date.parse("2026-08-04T20:02:00Z");
   const result = getCurrentPrecipOverride({

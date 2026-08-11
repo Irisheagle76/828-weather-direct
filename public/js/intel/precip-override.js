@@ -294,7 +294,7 @@ export function getCurrentPrecipOverride(context = {}) {
     minutesSinceRainDetected <= RECENT_RAIN_MAX_MINUTES;
   const forecastActive = !activeRainNow && !recentRainOnly && !radarSupportedRain && tempestUnavailable && strongForecastRain;
   const clearingAfterStorm = context.skyClearing === true && dryConfirmed && radar.approaching !== true &&
-    (recentRainOnly || (tempestLightning && !radarConfirmedThunderstorm));
+    recentRainOnly;
   const nearbyStormOnly = tempestLightning && !activeRainNow && !radarConfirmedThunderstorm && !clearingAfterStorm;
   const severity = getSeverity(rainRate ?? (forecastAmount * 25.4));
   const type = getType({
