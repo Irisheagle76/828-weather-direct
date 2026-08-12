@@ -121,8 +121,7 @@ function buildObservationFallbackNarrative(ctx, label) {
 // ALIGN + SPLIT
 // ============================================================
 
-function alignHourly(hourlyRaw = []) {
-  const now = Date.now();
+function alignHourly(hourlyRaw = [], now = Date.now()) {
 
   const sorted = hourlyRaw
     .map(h => ({ ...h, _ts: getTs(h) }))
@@ -377,6 +376,44 @@ function buildIntel(snapshot, score, trend, windImpact, maxGust, label, shortTer
 // BUILD PERIOD
 // ============================================================
 
+function buildFutureComfortOutlook(hours = [], scores = [], label = "today") {
+  if (label !== "today" || hours.length !== scores.length) return null;
+
+  const scoredHours = hours.map((hour, index) => ({
+    ...hour,
+    score: scores[index]
+  }));
+  const daytime = scoredHours.filter(hour => {
+    const localHour = new Date(hour._ts ?? hour.timestamp).getHours();
+    return localHour >= 10 && localHour < 20;
+  });
+
+  if (!daytime.length) return null;
+
+  const worst = daytime.reduce((lowest, hour) =>
+    hour.score < lowest.score ? hour : lowest
+  );
+  const currentScore = scoredHours[0]?.score;
+  const maxTemp = Math.max(...daytime.map(hour => hour.temperatureF).filter(Number.isFinite));
+  const maxDewPoint = Math.max(...daytime.map(hour => hour.dewpointF).filter(Number.isFinite));
+  const recovery = scoredHours.find(hour =>
+    (hour._ts ?? hour.timestamp) > (worst._ts ?? worst.timestamp) &&
+    hour.score >= worst.score + 15
+  );
+
+  if (!Number.isFinite(currentScore) || !Number.isFinite(worst.score)) return null;
+
+  return {
+    currentScore,
+    minScore: worst.score,
+    minScoreTiming: describeDaypart(worst._ts ?? worst.timestamp),
+    maxTemp: Number.isFinite(maxTemp) ? maxTemp : null,
+    maxDewPoint: Number.isFinite(maxDewPoint) ? maxDewPoint : null,
+    decline: currentScore - worst.score,
+    recoveryTiming: recovery ? describeDaypart(recovery._ts ?? recovery.timestamp) : null
+  };
+}
+
 function buildPeriod(hoursInput, label, periodContext = null) {
   if (!hoursInput?.length) return null;
 
@@ -391,6 +428,7 @@ function buildPeriod(hoursInput, label, periodContext = null) {
   if (!scores.length) return null;
 
   const score = Math.round(avg(scores));
+  const futureComfort = buildFutureComfortOutlook(hours, scores, label);
   // For the current-period headline, describe the hours immediately ahead.
   // Comparing "now" with the final hour near midnight can falsely claim
   // improvement when late-night cooling follows a worsening afternoon.
@@ -423,6 +461,7 @@ function buildPeriod(hoursInput, label, periodContext = null) {
     score,
     snapshot,
     trend,
+    futureComfort,
     intel,
     wind: {
       maxWind,
@@ -461,6 +500,95 @@ function buildBulletSentence(bullets = []) {
   );
 }
 
+function describeCurrentTemperature(temp) {
+  if (!Number.isFinite(temp)) return null;
+  if (temp <= 50) return "temperatures are cool";
+  if (temp <= 75) return "temperatures are mild";
+  if (temp <= 84) return "it is already warm";
+  return "it is already hot";
+}
+
+function describeCurrentHumidity(dewPoint) {
+  if (!Number.isFinite(dewPoint)) return null;
+  if (dewPoint < 60) return "the air is fairly comfortable";
+  if (dewPoint < 67) return "humidity is noticeable";
+  return "the air already feels muggy";
+}
+
+function formatTemperatureRange(temp) {
+  if (!Number.isFinite(temp)) return null;
+  const rounded = Math.round(temp);
+  if (rounded >= 90) return "the lower 90s";
+  if (rounded >= 87) return "the upper 80s";
+  if (rounded >= 83) return "the mid-80s";
+  if (rounded >= 80) return "the lower 80s";
+  return `about ${rounded}°`;
+}
+
+function buildFutureComfortNarrative(ctx, periodContext) {
+  const outlook = ctx?.futureComfort;
+  const snapshot = ctx?.snapshot;
+  if (!outlook || !snapshot || periodContext?.key !== "today") return null;
+
+  const precipSignal = getPrecipSignal(snapshot);
+  const meaningfulDrop = outlook.decline >= 10;
+  const uncomfortableNow = outlook.currentScore <= 54;
+  const uncomfortableLater = outlook.minScore <= 54;
+  if ((!meaningfulDrop && !uncomfortableNow) || !uncomfortableLater || precipSignal === "moderate" || precipSignal === "high") {
+    return null;
+  }
+
+  const currentConditions = [
+    describeCurrentTemperature(snapshot.temp),
+    describeCurrentHumidity(snapshot.dewPoint)
+  ].filter(Boolean);
+  const currentSentence = currentConditions.length
+    ? `Right now, ${joinCurrentConditions(currentConditions)}.`
+    : "Conditions are easier right now.";
+
+  const tempRange = formatTemperatureRange(outlook.maxTemp);
+  const hot = outlook.maxTemp >= 85;
+  const muggy = outlook.maxDewPoint >= 67;
+  let afternoonLead = "Comfort becomes more difficult this afternoon";
+  if (hot && muggy) afternoonLead = "Heat and humidity become the main story this afternoon";
+  else if (hot) afternoonLead = "Heat becomes the main story this afternoon";
+  else if (muggy) afternoonLead = "Humidity becomes more oppressive this afternoon";
+  if (uncomfortableNow) {
+    afternoonLead = afternoonLead
+      .replace("become the main story", "are the main story")
+      .replace("becomes more difficult", "is difficult")
+      .replace("becomes more oppressive", "is oppressive");
+  }
+
+  const weatherDetails = [];
+  if (tempRange) weatherDetails.push(`temperatures reaching ${tempRange}`);
+  if (Number.isFinite(outlook.maxDewPoint) && outlook.maxDewPoint >= 65) {
+    weatherDetails.push(`dew points near ${Math.round(outlook.maxDewPoint)}°`);
+  }
+  const detailSentence = weatherDetails.length
+    ? `${afternoonLead}, with ${joinClauses(weatherDetails)}.`
+    : `${afternoonLead}.`;
+
+  const recovery = outlook.recoveryTiming
+    ? ` before improving ${outlook.recoveryTiming}`
+    : "";
+  const scoreSentence = uncomfortableNow
+    ? `FEELSCORE is already around ${Math.round(outlook.currentScore)}, leaving extended time outside uncomfortable${recovery}.`
+    : `FEELSCORE falls to around ${Math.round(outlook.minScore)}, making extended time outside uncomfortable${recovery}.`;
+
+  return `${currentSentence} ${detailSentence} ${scoreSentence}`;
+}
+
+function joinCurrentConditions(conditions) {
+  if (conditions.length === 1) return conditions[0];
+  return `${conditions[0]}, while ${conditions[1]}`;
+}
+
+function joinClauses(clauses) {
+  if (clauses.length === 1) return clauses[0];
+  return `${clauses.slice(0, -1).join(", ")}, and ${clauses.at(-1)}`;
+}
+
 function buildFinalNarrative(ctx, label, periodContext = null) {
   if (!ctx) return fallback(periodContext?.fallbackLabel ?? label);
 
@@ -479,8 +607,13 @@ function buildFinalNarrative(ctx, label, periodContext = null) {
     narrativeObj?.notes ||
     buildBulletSentence(bullets);
 
+  const futureComfortNarrative = buildFutureComfortNarrative(ctx, periodContext);
+  if (futureComfortNarrative) narrative = futureComfortNarrative;
+
   // 🔥 APPLY TREND INTELLIGENCE
-  narrative = applyTrendFlavor(narrative, ctx.intel?.shortTerm, periodContext);
+  if (!futureComfortNarrative) {
+    narrative = applyTrendFlavor(narrative, ctx.intel?.shortTerm, periodContext);
+  }
 
   narrative = finalizeSentence(narrative);
 
@@ -627,9 +760,9 @@ export function buildHumanActionIntelFS(raw) {
 
   if (!rawHourly.length) return fallbackAll();
 
-  const now = Date.now();
+  const now = Number.isFinite(raw?.now) ? raw.now : Date.now();
 
-  const hourly = alignHourly(rawHourly);
+  const hourly = alignHourly(rawHourly, now);
   if (!hourly.length) return fallbackAll();
 
   const currentPeriod = buildCurrentPeriodContext(now);
