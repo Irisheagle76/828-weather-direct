@@ -351,6 +351,24 @@
       box-shadow: 0 14px 30px rgba(11, 30, 67, 0.08);
     }
 
+    .mountain-camera-card-wide {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
+      align-items: stretch;
+    }
+
+    .mountain-camera-card-wide .mountain-camera-media {
+      aspect-ratio: 16 / 8;
+    }
+
+    .mountain-camera-card-wide .mountain-camera-copy {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 24px;
+    }
+
     .mountain-camera-media {
       position: relative;
       display: block;
@@ -1133,6 +1151,19 @@
       .mountain-now-pill,
       .summit-index-updated {
         justify-self: start;
+      }
+
+      .mountain-camera-card-wide {
+        display: block;
+      }
+
+      .mountain-camera-card-wide .mountain-camera-media {
+        aspect-ratio: 16 / 9;
+      }
+
+      .mountain-camera-card-wide .mountain-camera-copy {
+        display: block;
+        padding: 16px;
       }
 
       .nav-links {
