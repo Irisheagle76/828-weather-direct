@@ -547,7 +547,7 @@ function buildFutureComfortNarrative(ctx, periodContext) {
     : "Conditions are easier right now.";
 
   const tempRange = formatTemperatureRange(outlook.maxTemp);
-  const hot = outlook.maxTemp >= 85;
+  const hot = outlook.maxTemp >= 84;
   const muggy = outlook.maxDewPoint >= 67;
   let afternoonLead = "Comfort becomes more difficult this afternoon";
   if (hot && muggy) afternoonLead = "Heat and humidity become the main story this afternoon";
@@ -586,6 +586,7 @@ function joinCurrentConditions(conditions) {
 
 function joinClauses(clauses) {
   if (clauses.length === 1) return clauses[0];
+  if (clauses.length === 2) return `${clauses[0]} and ${clauses[1]}`;
   return `${clauses.slice(0, -1).join(", ")}, and ${clauses.at(-1)}`;
 }
 

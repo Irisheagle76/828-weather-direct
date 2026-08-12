@@ -30,9 +30,9 @@ test("today narrative names an upcoming uncomfortable FEELSCORE window", () => {
     forecastHour(localTimestamp(2026, 8, 12, 12), 80, 67, 13),
     forecastHour(localTimestamp(2026, 8, 12, 13), 82, 69, 13),
     forecastHour(localTimestamp(2026, 8, 12, 14), 84, 69, 11),
-    forecastHour(localTimestamp(2026, 8, 12, 15), 86, 70, 10),
-    forecastHour(localTimestamp(2026, 8, 12, 16), 87, 69, 10),
-    forecastHour(localTimestamp(2026, 8, 12, 17), 85, 68, 10),
+    forecastHour(localTimestamp(2026, 8, 12, 15), 85, 70, 10),
+    forecastHour(localTimestamp(2026, 8, 12, 16), 84, 69, 10),
+    forecastHour(localTimestamp(2026, 8, 12, 17), 84, 68, 10),
     forecastHour(localTimestamp(2026, 8, 12, 18), 83, 68, 9),
     forecastHour(localTimestamp(2026, 8, 12, 19), 80, 67, 7),
     forecastHour(localTimestamp(2026, 8, 12, 20), 77, 65, 5),
@@ -46,8 +46,9 @@ test("today narrative names an upcoming uncomfortable FEELSCORE window", () => {
 
   assert.match(result.feelscore.narrative, /^Right now, temperatures are mild, while humidity is noticeable\./);
   assert.match(result.feelscore.narrative, /Heat and humidity become the main story this afternoon/);
-  assert.match(result.feelscore.narrative, /temperatures reaching the upper 80s/);
+  assert.match(result.feelscore.narrative, /temperatures reaching the mid-80s/);
   assert.match(result.feelscore.narrative, /dew points near 70°/);
+  assert.doesNotMatch(result.feelscore.narrative, /mid-80s, and dew points/);
   const projectedScore = result.feelscore.narrative.match(/FEELSCORE falls to around (\d+)/);
   assert.ok(projectedScore);
   assert.ok(Number(projectedScore[1]) <= 54);
