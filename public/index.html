@@ -4226,8 +4226,8 @@
           <div class="sky-home-photo">
             <iframe
               id="skyHomeStream"
-              src="https://www.youtube.com/embed/mmmo3Q5oevg?playsinline=1&rel=0&autoplay=1&mute=1"
-              title="Live East Asheville ENE sky camera"
+              src="https://www.youtube.com/embed/UxUU3Fc1vBw?playsinline=1&rel=0&autoplay=1&mute=1"
+              title="Live downtown Asheville western sky camera"
               loading="lazy"
               referrerpolicy="strict-origin-when-cross-origin"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -4242,7 +4242,7 @@
         <div class="sky-home-metrics">
           <div class="sky-home-metric">
             <strong id="skyHomeCloud">--</strong>
-            <span>Camera cloud cover</span>
+            <span>Western camera cloud cover</span>
           </div>
           <div class="sky-home-metric">
             <strong id="skyHomeLight">--</strong>
@@ -4810,9 +4810,10 @@
     import { buildSkyConditionRead } from "./js/intel/sky-read.js?v=20260705-directional-cameras";
     import {
       applyPrecipOverrideToNarrative,
-      getCurrentPrecipOverride
-    } from "./js/intel/precip-override.js?v=20260810-observed-rain-only";
-    import { buildDuskSkyFallback, findTodaySolarTimes, getSkyTimePhase } from "./js/intel/sky-time.js?v=20260629-shared-sunset";
+      getCurrentPrecipOverride,
+      getPrecipSkyLabel
+    } from "./js/intel/precip-override.js?v=20260811-shared-sky-label";
+    import { findTodaySolarTimes, getSkyTimePhase } from "./js/intel/sky-time.js?v=20260629-shared-sunset";
     import { loadAndRenderAlerts } from "./js/modules/renderAlerts.js?v=20260728-published-images";
     import { subscribeUserToPush } from "./js/notifications/subscribeClient.js?v=20260518-vapid-trim";
     import { getWaterPageInputs } from "./js/water/water-data.js?v=20260730-water-live2";
@@ -4837,38 +4838,6 @@
     let latestSunsetAt = null;
     let latestPublishedForecast = null;
     let latestTomorrowRenderInputs = null;
-    const STORM_NARRATIVE_MAX_MS = 10 * 60 * 1000;
-    const STORM_NARRATIVE_STORAGE_KEY = "avlweather.stormNarrativeWindow";
-    const STORM_LEVEL_RANK = { none: 0, watching: 1, developing: 2, strong: 3 };
-
-    function readStormNarrativeWindow() {
-      try {
-        const stored = JSON.parse(sessionStorage.getItem(STORM_NARRATIVE_STORAGE_KEY) || "null");
-        return {
-          startedAt: Number.isFinite(Number(stored?.startedAt)) ? Number(stored.startedAt) : null,
-          level: STORM_LEVEL_RANK[stored?.level] ? stored.level : "none"
-        };
-      } catch {
-        return { startedAt: null, level: "none" };
-      }
-    }
-
-    function saveStormNarrativeWindow(startedAt, level) {
-      try {
-        if (startedAt == null || level === "none") {
-          sessionStorage.removeItem(STORM_NARRATIVE_STORAGE_KEY);
-        } else {
-          sessionStorage.setItem(STORM_NARRATIVE_STORAGE_KEY, JSON.stringify({ startedAt, level }));
-        }
-      } catch {
-        // The in-memory timer still works when browser storage is unavailable.
-      }
-    }
-
-    const storedStormWindow = readStormNarrativeWindow();
-    let stormNarrativeStartedAt = storedStormWindow.startedAt;
-    let stormNarrativeLevel = storedStormWindow.level;
-
     function labelize(value) {
       if (!value) return "--";
       const labels = {
@@ -4938,7 +4907,7 @@
     }
 
     const SKY_STALE_MS = 20 * 60 * 1000;
-    const LIVE_THUMBNAIL_URL = "https://i.ytimg.com/vi/mmmo3Q5oevg/maxresdefault_live.jpg";
+    const LIVE_THUMBNAIL_URL = "https://i.ytimg.com/vi/UxUU3Fc1vBw/maxresdefault_live.jpg";
     const SKYCAM_RAW_BASE = "https://raw.githubusercontent.com/Irisheagle76/828-weather-direct/main/public/js/sky-cam";
     const RADAR_LOOP_URL = "https://radar.weather.gov/ridge/standard/KGSP_loop.gif";
     const MITCHELL_CAM_URL = "https://nchighpeaks.org/cam11/up/image.jpg";
@@ -6772,6 +6741,7 @@
         }
         const stormPayload = await stormPromise;
         let weatherContext = latestSkyWeatherContext;
+        let skyPrecipContext = null;
         // Refresh the precipitation decision with every sky update so active-rain
         // wording expires promptly when Tempest returns to zero.
         {
@@ -6781,14 +6751,15 @@
               .map(normalizeWeatherHour)
               .filter(Boolean)
               .sort((a, b) => a.timestamp - b.timestamp);
-            const currentHour = normalizeCurrentConditions(weather?.current || weather?.current_conditions || null);
-            latestPrecipOverride = getCurrentPrecipOverride({
-              current: weather?.current || weather?.current_conditions || null,
+            const current = weather?.current || weather?.current_conditions || null;
+            const currentHour = normalizeCurrentConditions(current);
+            skyPrecipContext = {
+              current,
               hourly,
               radar: stormPayload?.radar,
-              lightningCount: stormPayload?.weather?.lightningCount
-            });
-            weatherContext = buildSkyWeatherContext(closestCurrentForecastHour(hourly) || currentHour || hourly[0], weather?.current || weather?.current_conditions || null);
+              stormWeather: stormPayload?.weather || {}
+            };
+            weatherContext = buildSkyWeatherContext(closestCurrentForecastHour(hourly) || currentHour || hourly[0], current);
             latestSkyWeatherContext = weatherContext;
             const solarTimes = findTodaySolarTimes(Array.isArray(weather?.daily) ? weather.daily : []);
             latestSunriseAt = solarTimes.sunriseAt;
@@ -6800,6 +6771,25 @@
         const skyRead = buildSkyConditionRead({ camera: data, weatherContext });
         const skyIntel = skyRead.skyIntel;
         latestSkyIntel = skyIntel;
+        if (skyPrecipContext) {
+          const current = skyPrecipContext.current || {};
+          const stormWeather = skyPrecipContext.stormWeather || {};
+          const cameraCloud = Number(skyIntel?.displayCloud ?? skyIntel?.cloud);
+          const skyClearing = skyIntel?.sunlightLevel === "strong" ||
+            (Number.isFinite(cameraCloud) && cameraCloud <= 35 && skyIntel?.brightnessTrend !== "decreasing");
+          latestPrecipOverride = getCurrentPrecipOverride({
+            current,
+            hourly: skyPrecipContext.hourly,
+            radar: skyPrecipContext.radar,
+            lightningCount: Math.max(
+              Number(current.lightningStrikeCount ?? current.lightning_strike_count) || 0,
+              Number(stormWeather.lightningCount ?? stormWeather.lightning_strike_count) || 0
+            ),
+            lightningDistance: current.lightningStrikeDistance ?? current.lightning_strike_last_distance,
+            lightningObservedAt: current.lightningStrikeLastAt ?? current.lightning_strike_last_epoch ?? stormWeather.observedAt,
+            skyClearing
+          });
+        }
         const narrative = skyRead.narrative;
         const metrics = data?.metrics || {};
         const frameVersion = parseTimestamp(data?.timestamp) || Date.now();
@@ -6807,40 +6797,17 @@
         const useLiveThumbnail = metrics.source === "live-thumbnail" || skyStale;
         const skyTimePhase = currentSkyTimePhase();
         const daylightWindow = skyTimePhase === "day";
-        const duskWindow = skyTimePhase === "sunset" || skyTimePhase === "afterglow";
         const cameraNightSignal = (
           metrics.mode === "night" ||
           skyIntel?.atmosphericState === "night" ||
           narrative?.type === "night"
         );
         const nighttimeFallback = skyTimePhase === "night" ? nighttimeSkyFallback() : null;
-        const duskFallback = duskWindow
-          ? buildDuskSkyFallback({
-              cloudCover: weatherContext?.cloudCover,
-              cameraCloud: skyIntel?.displayCloud ?? skyIntel?.cloud ?? metrics.cloudCoverWest,
-              phase: skyTimePhase,
-              sunsetAt: latestSunsetAt,
-              precipActive: latestPrecipOverride?.mode === "active",
-              recentRain: latestPrecipOverride?.mode === "recent",
-              precipAmount: weatherContext?.precipAmount,
-              precipProbability: weatherContext?.precipProbability,
-              weatherCode: weatherContext?.weatherCode,
-              sunlightDetected: skyIntel?.sunlightDetected ?? metrics.sunlightDetected,
-              sunlightLevel: skyIntel?.sunlightLevel ?? metrics.sunlightLevel,
-              obscured: skyRead.obscured
-            })
-          : null;
         const daylightNightMismatch = daylightWindow && cameraNightSignal;
         const daylightFallback = daylightNightMismatch
           ? daylightSkyFallback(metrics, skyIntel)
           : null;
-        let skyNarrative = duskFallback
-          ? {
-              headline: duskFallback.headline,
-              detail: duskFallback.detail,
-              type: duskFallback.type
-            }
-          : nighttimeFallback
+        let skyNarrative = nighttimeFallback
           ? {
               headline: nighttimeFallback.headline,
               detail: nighttimeFallback.detail,
@@ -6853,78 +6820,25 @@
               type: "daylight-analysis"
             }
           : narrative;
-        let skyLabel = duskFallback
-          ? duskFallback.label
-          : nighttimeFallback
+        let skyLabel = nighttimeFallback
           ? nighttimeFallback.label
           : daylightNightMismatch
           ? daylightFallback.label
           : labelize(skyIntel?.atmosphericState);
-        const skyCloud = duskFallback
-          ? duskFallback.cloud
-          : nighttimeFallback
+        const skyCloud = nighttimeFallback
           ? nighttimeFallback.cloud
           : daylightNightMismatch
           ? daylightFallback.cloud
           : skyIntel?.cloud;
-        let skyConfidence = duskFallback
-          ? duskFallback.confidence
-          : nighttimeFallback
+        let skyConfidence = nighttimeFallback
           ? nighttimeFallback.confidence
           : daylightNightMismatch
           ? daylightFallback.confidence
           : skyIntel?.confidence;
 
-        const stormSignal = stormPayload?.signal;
-        const stormActive = !nighttimeFallback && stormSignal?.active && stormSignal.headline && stormSignal.detail;
-        const nextStormLevel = stormActive ? (stormSignal.level || "watching") : "none";
-        const currentRank = STORM_LEVEL_RANK[stormNarrativeLevel] || 0;
-        const nextRank = STORM_LEVEL_RANK[nextStormLevel] || 0;
-
-        if (!stormActive) {
-          stormNarrativeStartedAt = null;
-          stormNarrativeLevel = "none";
-          saveStormNarrativeWindow(null, "none");
-        } else if (stormNarrativeStartedAt == null || nextRank > currentRank) {
-          stormNarrativeStartedAt = Date.now();
-          stormNarrativeLevel = nextStormLevel;
-          saveStormNarrativeWindow(stormNarrativeStartedAt, stormNarrativeLevel);
-        } else {
-          stormNarrativeLevel = nextStormLevel;
-          saveStormNarrativeWindow(stormNarrativeStartedAt, stormNarrativeLevel);
-        }
-
-        const stormNarrativeWithinWindow = stormActive &&
-          stormNarrativeStartedAt != null &&
-          Date.now() - stormNarrativeStartedAt < STORM_NARRATIVE_MAX_MS;
-
-        if (stormNarrativeWithinWindow) {
-          skyNarrative = {
-            headline: stormSignal.headline,
-            detail: stormSignal.detail,
-            type: `storm-${stormSignal.level || "developing"}`
-          };
-          skyLabel = "Building West";
-          skyConfidence = Math.max(Number(skyConfidence) || 0, Number(stormSignal.confidence) || 0);
-          liveRadarSignalActive = true;
-          applyConditionalHomepageFeatures();
-        }
-
-        const precipNarrativeAllowed = latestPrecipOverride?.active &&
-          (latestPrecipOverride.mode === "active" || !stormNarrativeWithinWindow);
-        if (precipNarrativeAllowed) {
-          skyNarrative = {
-            headline: latestPrecipOverride.skyPhrase || latestPrecipOverride.headline,
-            detail: latestPrecipOverride.summary,
-            type: `precip-${latestPrecipOverride.mode}`
-          };
-          skyLabel = latestPrecipOverride.mode === "active"
-            ? latestPrecipOverride.type === "storm"
-              ? "Storm Now"
-              : latestPrecipOverride.type === "snow"
-                ? "Snow Now"
-                : "Rain Now"
-            : "Recent Rain";
+        if (latestPrecipOverride?.active && !nighttimeFallback) {
+          skyNarrative = applyPrecipOverrideToNarrative(skyNarrative, latestPrecipOverride);
+          skyLabel = getPrecipSkyLabel(latestPrecipOverride) || skyLabel;
           skyConfidence = latestPrecipOverride.confidence === "high"
             ? Math.max(Number(skyConfidence) || 0, 0.9)
             : Math.max(Number(skyConfidence) || 0, 0.7);
@@ -6933,13 +6847,13 @@
         }
 
         document.querySelector("#skyHomeLabel").textContent = skyLabel;
-        document.querySelector("#skyHomeCapture").textContent = "Live ENE stream";
+        document.querySelector("#skyHomeCapture").textContent = "Live western stream";
         document.querySelector("#skyHomeHeadline").textContent = skyNarrative?.headline || "Reading the Asheville sky.";
         document.querySelector("#skyHomeDetail").textContent = skyNarrative?.detail || "The camera snapshot adds visual context to the forecast.";
         setText("#heroSkyCondition", skyNarrative?.headline || skyLabel || "Current sky");
-        document.querySelector("#skyHomeCloud").textContent = nighttimeFallback ? "--" : duskFallback ? pct(skyCloud) : daylightNightMismatch ? pct(skyCloud) : skyRead.cloudMetric;
-        document.querySelector("#skyHomeLight").textContent = nighttimeFallback ? "Night" : duskFallback ? duskFallback.lightLabel : daylightNightMismatch ? (metrics.sunlightDetected ? labelize(metrics.sunlightLevel) : "Low") : skyRead.sunlightMetric;
-        document.querySelector("#skyHomeConfidence").textContent = nighttimeFallback ? "Low" : duskFallback ? pct(skyConfidence) : daylightNightMismatch ? pct(skyConfidence) : skyRead.confidenceMetric;
+        document.querySelector("#skyHomeCloud").textContent = nighttimeFallback ? "--" : daylightNightMismatch ? pct(skyCloud) : skyRead.cloudMetric;
+        document.querySelector("#skyHomeLight").textContent = nighttimeFallback ? "Night" : daylightNightMismatch ? (metrics.sunlightDetected ? labelize(metrics.sunlightLevel) : "Low") : skyRead.sunlightMetric;
+        document.querySelector("#skyHomeConfidence").textContent = nighttimeFallback ? "Low" : daylightNightMismatch ? pct(skyConfidence) : skyRead.confidenceMetric;
         renderCloudObservationChip();
       } catch (error) {
         console.warn("Sky module unavailable", error);

@@ -394,3 +394,17 @@ export function applyPrecipOverrideToNarrative(narrative = {}, precipOverride = 
     precipMode: precipOverride.mode
   };
 }
+
+export function getPrecipSkyLabel(precipOverride = null) {
+  if (!precipOverride?.active) return null;
+  if (precipOverride.mode === "clearing") return "Clearing After Storms";
+  if (precipOverride.mode === "nearby") return "Storms Nearby";
+  if (precipOverride.mode === "recent") return "Rain Easing";
+  return {
+    storm: "Thunderstorm",
+    snow: "Snow",
+    drizzle: "Light Rain",
+    showers: "Showers",
+    rain: "Rain"
+  }[precipOverride.type] || "Rain";
+}

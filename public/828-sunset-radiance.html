@@ -1581,7 +1581,7 @@
   <script type="module">
     import { buildSkyConditionRead, isObscuredSky } from "./js/intel/sky-read.js?v=20260705-directional-cameras";
     import { buildDuskSkyFallback, getSkyTimePhase } from "./js/intel/sky-time.js?v=20260629-shared-sunset";
-    import { applyPrecipOverrideToNarrative, getCurrentPrecipOverride } from "./js/intel/precip-override.js?v=20260804-observation-cadence";
+    import { applyPrecipOverrideToNarrative, getCurrentPrecipOverride, getPrecipSkyLabel } from "./js/intel/precip-override.js?v=20260811-shared-sky-label";
 
     const ASHEVILLE = {
       lat: 35.5951,
@@ -1882,20 +1882,6 @@
         lightningObservedAt: current.lightningStrikeLastAt ?? current.lightning_strike_last_epoch ?? stormWeather.observedAt,
         skyClearing
       });
-    }
-
-    function getPrecipSkyLabel(precipOverride) {
-      if (!precipOverride?.active) return null;
-      if (precipOverride.mode === "clearing") return "Clearing After Storms";
-      if (precipOverride.mode === "nearby") return "Storms Nearby";
-      if (precipOverride.mode === "recent") return "Rain Easing";
-      return {
-        storm: "Thunderstorm",
-        snow: "Snow",
-        drizzle: "Light Rain",
-        showers: "Showers",
-        rain: "Rain"
-      }[precipOverride.type] || "Rain";
     }
 
     function getRadiancePhase(daily) {

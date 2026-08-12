@@ -2,7 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   applyPrecipOverrideToNarrative,
-  getCurrentPrecipOverride
+  getCurrentPrecipOverride,
+  getPrecipSkyLabel
 } from "../public/js/intel/precip-override.js";
 
 function memoryStorage(initial = {}) {
@@ -354,4 +355,12 @@ test("lightning expires from the current observation after fifteen minutes", () 
   assert.equal(result.lightningActive, false);
   assert.equal(result.radarConfirmedThunderstorm, false);
   assert.equal(result.mode, "expired");
+});
+
+test("shared sky labels keep homepage and Sunset Snapshot terminology aligned", () => {
+  assert.equal(getPrecipSkyLabel({ active: true, mode: "nearby" }), "Storms Nearby");
+  assert.equal(getPrecipSkyLabel({ active: true, mode: "clearing" }), "Clearing After Storms");
+  assert.equal(getPrecipSkyLabel({ active: true, mode: "recent" }), "Rain Easing");
+  assert.equal(getPrecipSkyLabel({ active: true, mode: "active", type: "storm" }), "Thunderstorm");
+  assert.equal(getPrecipSkyLabel({ active: false, mode: "expired" }), null);
 });
