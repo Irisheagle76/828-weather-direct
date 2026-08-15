@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://basemaps.cartocdn.com" />
   <link rel="preconnect" href="https://mapservices.weather.noaa.gov" />
   <link rel="preconnect" href="https://cdn.star.nesdis.noaa.gov" />
+  <link rel="preconnect" href="https://www.meteo.psu.edu" />
   <link rel="preconnect" href="https://www.atms.unca.edu" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
@@ -1160,28 +1161,28 @@
 
         <article class="media-card media-card--wide">
           <div class="media-frame media-frame--wide">
-            <span class="media-badge">1-km visible satellite</span>
+            <span class="media-badge">High-resolution visible satellite</span>
             <img
-              id="csuVisibleImage"
-              src="https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061456.gif"
-              alt="Animated one-kilometer visible satellite imagery for the Southeast United States"
+              id="psuVisibleImage"
+              src="https://www.meteo.psu.edu/ewall/PSUGOES_OV/IMGv_0.jpg"
+              alt="Animated high-resolution visible satellite imagery for the eastern United States"
               loading="lazy"
             />
-            <div class="player-bar" aria-label="Southeast visible satellite animation controls">
-              <span id="csuFrameStatus" aria-live="polite">Connecting to the latest Colorado State frames…</span>
+            <div class="player-bar" aria-label="Eastern United States visible satellite animation controls">
+              <span id="psuFrameStatus" aria-live="polite">Loading the latest Penn State frames…</span>
               <div class="player-actions">
-                <button class="player-button" id="csuPlayButton" type="button" aria-pressed="false">Pause</button>
-                <button class="player-button" id="csuRefreshButton" type="button">Refresh frames</button>
+                <button class="player-button" id="psuPlayButton" type="button" aria-pressed="false">Pause</button>
+                <button class="player-button" id="psuRefreshButton" type="button">Refresh frames</button>
               </div>
             </div>
           </div>
           <div class="card-copy">
             <div class="card-topline">
               <div>
-                <h3>Southeast visible satellite loop</h3>
-                <p>A high-resolution daylight view of cloud structure across the Southeast, presented here in a responsive player using Colorado State's latest image sequence.</p>
+                <h3>Eastern U.S. visible satellite loop</h3>
+                <p>A high-resolution five-hour daylight view of cloud structure from the Plains to the Atlantic, presented here in a responsive player using Penn State's latest 60-frame sequence.</p>
               </div>
-              <a class="source-link" href="https://schumacher.atmos.colostate.edu/weather/VIS_anim.php?region=se" target="_blank" rel="noopener noreferrer">Open CSU viewer ↗</a>
+              <a class="source-link" href="https://www.meteo.psu.edu/ewall/PSUGOES_OV/loop60v.html" target="_blank" rel="noopener noreferrer">Open Penn State viewer ↗</a>
             </div>
           </div>
         </article>
@@ -1263,7 +1264,7 @@
       </div>
 
       <div class="footer-meta">
-        <div>Imagery and tools: NOAA/NWS, NOAA NESDIS/STAR, UNC Asheville Atmospheric Sciences, SSEC/McIDAS at the University of Wisconsin–Madison, and Colorado State University.</div>
+        <div>Imagery and tools: NOAA/NWS, NOAA NESDIS/STAR, UNC Asheville Atmospheric Sciences, SSEC/McIDAS at the University of Wisconsin–Madison, and Penn State Meteorology.</div>
         <div>Serving Asheville, Western North Carolina, and the greater 828 region.</div>
         <div>For general awareness only — not a substitute for official forecasts, warnings, or emergency guidance.</div>
       </div>
@@ -1353,88 +1354,61 @@
       updateTimestamp();
     }, 300000);
 
-    const csuImage = document.querySelector("#csuVisibleImage");
-    const csuFrameStatus = document.querySelector("#csuFrameStatus");
-    const csuPlayButton = document.querySelector("#csuPlayButton");
-    const csuRefreshButton = document.querySelector("#csuRefreshButton");
-    const CSU_PREVIEW_FRAMES = [
-      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061346.gif",
-      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061351.gif",
-      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061356.gif",
-      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061401.gif",
-      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061406.gif",
-      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061411.gif",
-      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061416.gif",
-      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061421.gif",
-      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061426.gif",
-      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061431.gif",
-      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061436.gif",
-      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061441.gif",
-      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061446.gif",
-      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061451.gif",
-      "https://schumacher.atmos.colostate.edu/weather/real_time/VIS_se/VIS_se_202608061456.gif"
-    ];
-    let csuFrames = [];
-    let csuFrameIndex = 0;
-    let csuTimer = null;
+    const psuImage = document.querySelector("#psuVisibleImage");
+    const psuFrameStatus = document.querySelector("#psuFrameStatus");
+    const psuPlayButton = document.querySelector("#psuPlayButton");
+    const psuRefreshButton = document.querySelector("#psuRefreshButton");
+    const PSU_FRAME_COUNT = 60;
+    const PSU_FRAME_ROOT = "https://www.meteo.psu.edu/ewall/PSUGOES_OV";
+    let psuFrames = [];
+    let psuFrameIndex = 0;
+    let psuTimer = null;
 
-    function showCsuFrame(index) {
-      if (!csuFrames.length) return;
-      csuFrameIndex = (index + csuFrames.length) % csuFrames.length;
-      csuImage.src = csuFrames[csuFrameIndex];
-      csuFrameStatus.textContent = `Southeast visible • frame ${csuFrameIndex + 1} of ${csuFrames.length}`;
+    function showPsuFrame(index) {
+      if (!psuFrames.length) return;
+      psuFrameIndex = (index + psuFrames.length) % psuFrames.length;
+      psuImage.src = psuFrames[psuFrameIndex];
+      psuFrameStatus.textContent = `Eastern U.S. visible • frame ${psuFrameIndex + 1} of ${psuFrames.length}`;
     }
 
-    function stopCsuAnimation() {
-      window.clearInterval(csuTimer);
-      csuTimer = null;
-      csuPlayButton.textContent = "Play";
-      csuPlayButton.setAttribute("aria-pressed", "true");
+    function stopPsuAnimation() {
+      window.clearInterval(psuTimer);
+      psuTimer = null;
+      psuPlayButton.textContent = "Play";
+      psuPlayButton.setAttribute("aria-pressed", "true");
     }
 
-    function startCsuAnimation() {
-      if (csuFrames.length < 2) return;
-      window.clearInterval(csuTimer);
-      csuPlayButton.textContent = "Pause";
-      csuPlayButton.setAttribute("aria-pressed", "false");
-      csuTimer = window.setInterval(() => showCsuFrame(csuFrameIndex + 1), 650);
+    function startPsuAnimation() {
+      if (psuFrames.length < 2) return;
+      window.clearInterval(psuTimer);
+      psuPlayButton.textContent = "Pause";
+      psuPlayButton.setAttribute("aria-pressed", "false");
+      psuTimer = window.setInterval(() => showPsuFrame(psuFrameIndex + 1), 650);
     }
 
-    async function loadCsuFrames() {
-      csuFrameStatus.textContent = "Connecting to the latest Colorado State frames…";
-      try {
-        if (window.location.protocol === "file:") {
-          csuFrames = CSU_PREVIEW_FRAMES;
-          showCsuFrame(csuFrames.length - 1);
-          window.setTimeout(startCsuAnimation, 800);
-          return;
-        }
-
-        const response = await fetch("/api/csu-visible", { cache: "no-store" });
-        if (!response.ok) throw new Error(`Satellite feed returned ${response.status}`);
-        const payload = await response.json();
-        if (!Array.isArray(payload.frames) || !payload.frames.length) throw new Error("No frames returned");
-
-        csuFrames = payload.frames;
-        csuFrames.forEach((url) => {
-          const preload = new Image();
-          preload.src = url;
-        });
-        showCsuFrame(csuFrames.length - 1);
-        window.setTimeout(startCsuAnimation, 800);
-      } catch (error) {
-        stopCsuAnimation();
-        csuFrameStatus.textContent = "Live frame service unavailable • open the CSU viewer";
-      }
+    function loadPsuFrames() {
+      stopPsuAnimation();
+      psuFrameStatus.textContent = "Loading the latest Penn State frames…";
+      const cacheKey = Date.now();
+      psuFrames = Array.from(
+        { length: PSU_FRAME_COUNT },
+        (_, index) => `${PSU_FRAME_ROOT}/IMGv_${PSU_FRAME_COUNT - index - 1}.jpg?v=${cacheKey}`
+      );
+      showPsuFrame(psuFrames.length - 1);
+      psuFrames.forEach((url) => {
+        const preload = new Image();
+        preload.src = url;
+      });
+      window.setTimeout(startPsuAnimation, 800);
     }
 
-    csuPlayButton.addEventListener("click", () => {
-      if (csuTimer) stopCsuAnimation();
-      else startCsuAnimation();
+    psuPlayButton.addEventListener("click", () => {
+      if (psuTimer) stopPsuAnimation();
+      else startPsuAnimation();
     });
 
-    csuRefreshButton.addEventListener("click", loadCsuFrames);
-    loadCsuFrames();
+    psuRefreshButton.addEventListener("click", loadPsuFrames);
+    loadPsuFrames();
   </script>
 </body>
 </html>
