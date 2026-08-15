@@ -990,8 +990,46 @@
       }
 
       .player-bar {
-        align-items: flex-start;
-        flex-direction: column;
+        right: 8px;
+        bottom: 8px;
+        left: 8px;
+        align-items: center;
+        flex-direction: row;
+        gap: 6px;
+        padding: 6px 7px;
+        border-radius: 8px;
+        font-size: 0.62rem;
+        line-height: 1.2;
+      }
+
+      .player-status-region,
+      .refresh-button-suffix {
+        display: none;
+      }
+
+      .player-actions {
+        flex: 0 0 auto;
+        gap: 4px;
+      }
+
+      .player-button {
+        min-height: 28px;
+        padding: 0 8px;
+        font-size: 0.64rem;
+      }
+
+      .media-frame--wide .media-badge {
+        top: 8px;
+        left: 8px;
+        gap: 5px;
+        padding: 5px 7px;
+        font-size: 0.58rem;
+      }
+
+      .media-frame--wide .media-badge::before {
+        width: 6px;
+        height: 6px;
+        box-shadow: 0 0 0 3px rgba(99, 214, 154, 0.16);
       }
 
       .guidance-strip {
@@ -1169,10 +1207,10 @@
               loading="lazy"
             />
             <div class="player-bar" aria-label="Eastern United States visible satellite animation controls">
-              <span id="psuFrameStatus" aria-live="polite">Loading the latest Penn State frames…</span>
+              <span id="psuFrameStatus" aria-live="polite"><span class="player-status-region">Eastern U.S. visible • </span><span id="psuFrameCounter">Loading frames…</span></span>
               <div class="player-actions">
                 <button class="player-button" id="psuPlayButton" type="button" aria-pressed="false">Pause</button>
-                <button class="player-button" id="psuRefreshButton" type="button">Refresh frames</button>
+                <button class="player-button" id="psuRefreshButton" type="button">Refresh<span class="refresh-button-suffix"> frames</span></button>
               </div>
             </div>
           </div>
@@ -1355,7 +1393,7 @@
     }, 300000);
 
     const psuImage = document.querySelector("#psuVisibleImage");
-    const psuFrameStatus = document.querySelector("#psuFrameStatus");
+    const psuFrameCounter = document.querySelector("#psuFrameCounter");
     const psuPlayButton = document.querySelector("#psuPlayButton");
     const psuRefreshButton = document.querySelector("#psuRefreshButton");
     const PSU_FRAME_COUNT = 60;
@@ -1368,7 +1406,7 @@
       if (!psuFrames.length) return;
       psuFrameIndex = (index + psuFrames.length) % psuFrames.length;
       psuImage.src = psuFrames[psuFrameIndex];
-      psuFrameStatus.textContent = `Eastern U.S. visible • frame ${psuFrameIndex + 1} of ${psuFrames.length}`;
+      psuFrameCounter.textContent = `frame ${psuFrameIndex + 1} of ${psuFrames.length}`;
     }
 
     function stopPsuAnimation() {
@@ -1388,7 +1426,7 @@
 
     function loadPsuFrames() {
       stopPsuAnimation();
-      psuFrameStatus.textContent = "Loading the latest Penn State frames…";
+      psuFrameCounter.textContent = "Loading frames…";
       const cacheKey = Date.now();
       psuFrames = Array.from(
         { length: PSU_FRAME_COUNT },
