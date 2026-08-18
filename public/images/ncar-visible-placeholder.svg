@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1000" role="img" aria-labelledby="title desc">
+  <title id="title">North Carolina visible satellite imagery</title>
+  <desc id="desc">Loading the latest daylight satellite image from NSF NCAR.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07162f"/>
+      <stop offset="1" stop-color="#123d72"/>
+    </linearGradient>
+    <pattern id="grid" width="54" height="54" patternUnits="userSpaceOnUse">
+      <path d="M54 0H0V54" fill="none" stroke="#fff" stroke-opacity=".055"/>
+    </pattern>
+  </defs>
+  <rect width="900" height="1000" fill="url(#sky)"/>
+  <rect width="900" height="1000" fill="url(#grid)"/>
+  <circle cx="450" cy="390" r="118" fill="none" stroke="#63d69a" stroke-opacity=".28" stroke-width="2"/>
+  <circle cx="450" cy="390" r="70" fill="none" stroke="#63d69a" stroke-opacity=".46" stroke-width="2"/>
+  <circle cx="450" cy="390" r="12" fill="#63d69a"/>
+  <text x="450" y="570" fill="#fffdf8" font-family="Arial, sans-serif" font-size="42" font-weight="700" text-anchor="middle">North Carolina Visible Satellite</text>
+  <text x="450" y="625" fill="#fff" fill-opacity=".72" font-family="Arial, sans-serif" font-size="24" text-anchor="middle">Loading the latest daylight image…</text>
+  <text x="450" y="820" fill="#fff" fill-opacity=".55" font-family="Arial, sans-serif" font-size="20" text-anchor="middle">New imagery is available from sunrise to sunset</text>
+</svg>
