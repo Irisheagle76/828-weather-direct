@@ -610,7 +610,62 @@
     }
 
     .media-card--ncar .media-frame {
+      display: block;
       min-height: 620px;
+    }
+
+    .ncar-zoom-viewport {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      outline: none;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    .ncar-zoom-viewport:focus-visible {
+      box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.9);
+    }
+
+    .ncar-zoom-viewport.is-dragging {
+      cursor: grabbing;
+    }
+
+    .ncar-zoom-viewport img {
+      width: 100%;
+      height: 100%;
+      max-height: none;
+      object-fit: contain;
+      pointer-events: none;
+      user-select: none;
+      transform-origin: center;
+      transition: transform 140ms ease-out;
+      will-change: transform;
+    }
+
+    .ncar-zoom-viewport.is-dragging img {
+      transition: none;
+    }
+
+    .ncar-zoom-hint {
+      position: absolute;
+      z-index: 2;
+      top: 54px;
+      left: 14px;
+      padding: 6px 9px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 8px;
+      color: rgba(255, 255, 255, 0.82);
+      background: rgba(8, 26, 60, 0.72);
+      font-size: 0.68rem;
+      font-weight: 850;
+      pointer-events: none;
+      backdrop-filter: blur(8px);
+      transition: opacity 180ms ease;
+    }
+
+    .ncar-zoom-viewport.has-interacted .ncar-zoom-hint {
+      opacity: 0;
     }
 
     .media-card--ncar .card-copy {
@@ -1072,6 +1127,21 @@
         font-size: 0.64rem;
       }
 
+      .media-card--ncar .player-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .media-card--ncar .player-actions {
+        justify-content: space-between;
+      }
+
+      .ncar-zoom-hint {
+        top: 46px;
+        left: 8px;
+        font-size: 0.6rem;
+      }
+
       .media-frame--wide .media-badge {
         top: 8px;
         left: 8px;
@@ -1254,16 +1324,29 @@
         <article class="media-card media-card--ncar">
           <div class="media-frame">
             <span class="media-badge">Visible satellite • daylight only</span>
-            <img
-              id="ncarVisibleImage"
-              src="/images/ncar-visible-placeholder.svg"
-              alt="Visible satellite imagery centered on North Carolina"
-              loading="lazy"
-              aria-busy="true"
-            />
-            <div class="player-bar" aria-label="North Carolina visible satellite status">
+            <div
+              class="ncar-zoom-viewport"
+              id="ncarZoomViewport"
+              role="group"
+              tabindex="0"
+              aria-label="Interactive North Carolina visible satellite image. Scroll or pinch to zoom, then drag to move around the image."
+            >
+              <img
+                id="ncarVisibleImage"
+                src="/images/ncar-visible-placeholder.svg"
+                alt="Visible satellite imagery centered on North Carolina"
+                loading="lazy"
+                draggable="false"
+                aria-busy="true"
+              />
+              <span class="ncar-zoom-hint" aria-hidden="true">Scroll or pinch to zoom • drag to move</span>
+            </div>
+            <div class="player-bar" role="group" aria-label="North Carolina visible satellite controls">
               <span id="ncarFrameStatus" aria-live="polite">Connecting to the latest NSF NCAR daylight image…</span>
               <div class="player-actions">
+                <button class="player-button" id="ncarZoomOutButton" type="button" aria-label="Zoom out">−</button>
+                <button class="player-button" id="ncarResetZoomButton" type="button" aria-label="Reset satellite image position and zoom"><span id="ncarZoomLevel">100%</span></button>
+                <button class="player-button" id="ncarZoomInButton" type="button" aria-label="Zoom in">+</button>
                 <button class="player-button" id="ncarRefreshButton" type="button">Refresh image</button>
               </div>
             </div>
@@ -1478,6 +1561,156 @@
     const ncarImage = document.querySelector("#ncarVisibleImage");
     const ncarFrameStatus = document.querySelector("#ncarFrameStatus");
     const ncarRefreshButton = document.querySelector("#ncarRefreshButton");
+    const ncarZoomViewport = document.querySelector("#ncarZoomViewport");
+    const ncarZoomOutButton = document.querySelector("#ncarZoomOutButton");
+    const ncarResetZoomButton = document.querySelector("#ncarResetZoomButton");
+    const ncarZoomInButton = document.querySelector("#ncarZoomInButton");
+    const ncarZoomLevel = document.querySelector("#ncarZoomLevel");
+    const NCAR_MIN_SCALE = 1;
+    const NCAR_MAX_SCALE = 5;
+    const ncarTransform = { scale: 1, x: 0, y: 0 };
+    const ncarPointers = new Map();
+    let ncarDragStart = null;
+    let ncarPinchStart = null;
+
+    function clampNcarTransform() {
+      const bounds = ncarZoomViewport.getBoundingClientRect();
+      const maxX = Math.max(0, (bounds.width * (ncarTransform.scale - 1)) / 2);
+      const maxY = Math.max(0, (bounds.height * (ncarTransform.scale - 1)) / 2);
+      ncarTransform.x = Math.max(-maxX, Math.min(maxX, ncarTransform.x));
+      ncarTransform.y = Math.max(-maxY, Math.min(maxY, ncarTransform.y));
+    }
+
+    function renderNcarTransform() {
+      clampNcarTransform();
+      ncarImage.style.transform = `translate3d(${ncarTransform.x}px, ${ncarTransform.y}px, 0) scale(${ncarTransform.scale})`;
+      ncarZoomLevel.textContent = `${Math.round(ncarTransform.scale * 100)}%`;
+      ncarResetZoomButton.disabled = ncarTransform.scale === 1 && ncarTransform.x === 0 && ncarTransform.y === 0;
+      ncarZoomOutButton.disabled = ncarTransform.scale <= NCAR_MIN_SCALE;
+      ncarZoomInButton.disabled = ncarTransform.scale >= NCAR_MAX_SCALE;
+    }
+
+    function setNcarZoom(nextScale, clientX, clientY) {
+      const bounds = ncarZoomViewport.getBoundingClientRect();
+      const scale = Math.max(NCAR_MIN_SCALE, Math.min(NCAR_MAX_SCALE, nextScale));
+      const ratio = scale / ncarTransform.scale;
+      const focusX = (clientX ?? bounds.left + bounds.width / 2) - bounds.left - bounds.width / 2;
+      const focusY = (clientY ?? bounds.top + bounds.height / 2) - bounds.top - bounds.height / 2;
+
+      ncarTransform.x = ratio * ncarTransform.x + (1 - ratio) * focusX;
+      ncarTransform.y = ratio * ncarTransform.y + (1 - ratio) * focusY;
+      ncarTransform.scale = scale;
+      ncarZoomViewport.classList.add("has-interacted");
+      renderNcarTransform();
+    }
+
+    function resetNcarZoom() {
+      ncarTransform.scale = 1;
+      ncarTransform.x = 0;
+      ncarTransform.y = 0;
+      renderNcarTransform();
+    }
+
+    function ncarPointerDistance(points) {
+      return Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+    }
+
+    function ncarPointerCenter(points) {
+      return { x: (points[0].x + points[1].x) / 2, y: (points[0].y + points[1].y) / 2 };
+    }
+
+    ncarZoomViewport.addEventListener("wheel", (event) => {
+      event.preventDefault();
+      setNcarZoom(ncarTransform.scale * Math.exp(-event.deltaY * 0.0015), event.clientX, event.clientY);
+    }, { passive: false });
+
+    ncarZoomViewport.addEventListener("dblclick", (event) => {
+      event.preventDefault();
+      setNcarZoom(ncarTransform.scale >= NCAR_MAX_SCALE ? 1 : ncarTransform.scale * 1.8, event.clientX, event.clientY);
+    });
+
+    ncarZoomViewport.addEventListener("pointerdown", (event) => {
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      ncarZoomViewport.setPointerCapture(event.pointerId);
+      ncarPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      ncarZoomViewport.classList.add("is-dragging", "has-interacted");
+
+      if (ncarPointers.size === 1) {
+        ncarDragStart = { x: event.clientX, y: event.clientY, panX: ncarTransform.x, panY: ncarTransform.y };
+      } else if (ncarPointers.size === 2) {
+        const points = [...ncarPointers.values()];
+        ncarPinchStart = {
+          distance: ncarPointerDistance(points),
+          center: ncarPointerCenter(points),
+          scale: ncarTransform.scale,
+          panX: ncarTransform.x,
+          panY: ncarTransform.y
+        };
+        ncarDragStart = null;
+      }
+    });
+
+    ncarZoomViewport.addEventListener("pointermove", (event) => {
+      if (!ncarPointers.has(event.pointerId)) return;
+      ncarPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+      if (ncarPointers.size === 2 && ncarPinchStart) {
+        const points = [...ncarPointers.values()];
+        const center = ncarPointerCenter(points);
+        const bounds = ncarZoomViewport.getBoundingClientRect();
+        const scale = Math.max(NCAR_MIN_SCALE, Math.min(NCAR_MAX_SCALE,
+          ncarPinchStart.scale * ncarPointerDistance(points) / ncarPinchStart.distance));
+        const ratio = scale / ncarPinchStart.scale;
+        const focusX = ncarPinchStart.center.x - bounds.left - bounds.width / 2;
+        const focusY = ncarPinchStart.center.y - bounds.top - bounds.height / 2;
+
+        ncarTransform.scale = scale;
+        ncarTransform.x = ratio * ncarPinchStart.panX + (1 - ratio) * focusX + center.x - ncarPinchStart.center.x;
+        ncarTransform.y = ratio * ncarPinchStart.panY + (1 - ratio) * focusY + center.y - ncarPinchStart.center.y;
+        renderNcarTransform();
+      } else if (ncarPointers.size === 1 && ncarDragStart && ncarTransform.scale > 1) {
+        ncarTransform.x = ncarDragStart.panX + event.clientX - ncarDragStart.x;
+        ncarTransform.y = ncarDragStart.panY + event.clientY - ncarDragStart.y;
+        renderNcarTransform();
+      }
+    });
+
+    function endNcarPointer(event) {
+      ncarPointers.delete(event.pointerId);
+      ncarPinchStart = null;
+
+      if (ncarPointers.size === 1) {
+        const point = [...ncarPointers.values()][0];
+        ncarDragStart = { x: point.x, y: point.y, panX: ncarTransform.x, panY: ncarTransform.y };
+      } else {
+        ncarDragStart = null;
+        ncarZoomViewport.classList.remove("is-dragging");
+      }
+    }
+
+    ncarZoomViewport.addEventListener("pointerup", endNcarPointer);
+    ncarZoomViewport.addEventListener("pointercancel", endNcarPointer);
+
+    ncarZoomViewport.addEventListener("keydown", (event) => {
+      const panStep = 40;
+      if (event.key === "+" || event.key === "=") setNcarZoom(ncarTransform.scale * 1.25);
+      else if (event.key === "-" || event.key === "_") setNcarZoom(ncarTransform.scale / 1.25);
+      else if (event.key === "0" || event.key === "Home") resetNcarZoom();
+      else if (event.key === "ArrowLeft") ncarTransform.x += panStep;
+      else if (event.key === "ArrowRight") ncarTransform.x -= panStep;
+      else if (event.key === "ArrowUp") ncarTransform.y += panStep;
+      else if (event.key === "ArrowDown") ncarTransform.y -= panStep;
+      else return;
+
+      event.preventDefault();
+      renderNcarTransform();
+    });
+
+    ncarZoomOutButton.addEventListener("click", () => setNcarZoom(ncarTransform.scale / 1.35));
+    ncarZoomInButton.addEventListener("click", () => setNcarZoom(ncarTransform.scale * 1.35));
+    ncarResetZoomButton.addEventListener("click", resetNcarZoom);
+    new ResizeObserver(renderNcarTransform).observe(ncarZoomViewport);
+    renderNcarTransform();
 
     async function loadNcarImage() {
       ncarFrameStatus.textContent = "Connecting to the latest NSF NCAR daylight image…";
@@ -1498,6 +1731,7 @@
         });
 
         ncarImage.src = payload.image;
+        resetNcarZoom();
         ncarImage.setAttribute("aria-busy", "false");
         const observed = payload.observedAt
           ? new Date(payload.observedAt).toLocaleString([], {
