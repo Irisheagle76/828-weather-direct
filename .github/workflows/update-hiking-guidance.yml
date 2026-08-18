@@ -2,11 +2,15 @@ name: Update Hiking Guidance
 
 on:
   schedule:
-    - cron: "15 * * * *"
+    - cron: "7 * * * *"
   workflow_dispatch:
 
 permissions:
   contents: write
+
+concurrency:
+  group: scheduled-data-refresh
+  cancel-in-progress: false
 
 jobs:
   refresh:
