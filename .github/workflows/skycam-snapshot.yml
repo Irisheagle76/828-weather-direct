@@ -13,7 +13,7 @@ env:
   SKYCAM_ALLOW_STALE_ON_ERROR: 1
 
 concurrency:
-  group: skycam-snapshot
+  group: scheduled-data-refresh
   cancel-in-progress: false
 
 jobs:
