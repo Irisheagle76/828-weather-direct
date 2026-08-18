@@ -4909,6 +4909,7 @@
     const SKY_STALE_MS = 20 * 60 * 1000;
     const LIVE_THUMBNAIL_URL = "https://i.ytimg.com/vi/UxUU3Fc1vBw/maxresdefault_live.jpg";
     const SKYCAM_RAW_BASE = "https://raw.githubusercontent.com/Irisheagle76/828-weather-direct/main/public/js/sky-cam";
+    const HIKING_GUIDANCE_RAW_URL = "https://raw.githubusercontent.com/Irisheagle76/828-weather-direct/main/public/data/hiking-guidance.json";
     const RADAR_LOOP_URL = "https://radar.weather.gov/ridge/standard/KGSP_loop.gif";
     const MITCHELL_CAM_URL = "https://nchighpeaks.org/cam11/up/image.jpg";
     const params = new URLSearchParams(window.location.search);
@@ -5653,7 +5654,8 @@
 
     async function hydrateHomeHikingCard() {
       try {
-        const res = await fetch(`data/hiking-guidance.json?t=${Date.now()}`);
+        const source = isProductionHost() ? HIKING_GUIDANCE_RAW_URL : "data/hiking-guidance.json";
+        const res = await fetch(`${source}?t=${Date.now()}`, { cache: "no-store" });
         if (!res.ok) throw new Error(`Hiking guidance failed: ${res.status}`);
         renderHomeHikingCard(await res.json());
       } catch (error) {

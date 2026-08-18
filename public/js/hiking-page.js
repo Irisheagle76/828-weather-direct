@@ -29,6 +29,7 @@ const els = {
     const GRASSLAND_CAM_URL = "https://cameraftpapi.drivehq.com/api/Camera/GetCameraThumbnail.ashx?parentID=361818469&shareID=17333090";
     const MAX_PATCH_CAM_URL = "https://assets2.webcam.io/w/9W1ZRz/latest.jpg";
     const FAIRVIEW_CAM_URL = "https://images.ambientweather.net/308398A68945/latest.jpg";
+    const HIKING_GUIDANCE_RAW_URL = "https://raw.githubusercontent.com/Irisheagle76/828-weather-direct/main/public/data/hiking-guidance.json";
     const NARRATIVE_PREVIEW_CHARS = 200;
     let isNarrativeExpanded = false;
     let fullNarrative = "";
@@ -345,7 +346,9 @@ const els = {
 
     async function loadHiking() {
       try {
-        const res = await fetch(`data/hiking-guidance.json?t=${Date.now()}`);
+        const productionHost = location.hostname === "avlweather.com" || location.hostname.endsWith(".vercel.app");
+        const source = productionHost ? HIKING_GUIDANCE_RAW_URL : "data/hiking-guidance.json";
+        const res = await fetch(`${source}?t=${Date.now()}`, { cache: "no-store" });
         if (!res.ok) throw new Error("Hiking data unavailable");
         render(await res.json());
       } catch (error) {

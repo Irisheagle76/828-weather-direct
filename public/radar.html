@@ -603,6 +603,48 @@
       grid-column: 1 / -1;
     }
 
+    .media-card--ncar {
+      display: grid;
+      grid-column: 1 / -1;
+      grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.7fr);
+    }
+
+    .media-card--ncar .media-frame {
+      min-height: 620px;
+    }
+
+    .media-card--ncar .card-copy {
+      display: flex;
+      align-items: center;
+      padding: clamp(28px, 5vw, 56px);
+    }
+
+    .media-card--ncar .card-topline {
+      display: grid;
+      gap: 24px;
+    }
+
+    .daylight-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-top: 20px;
+      padding: 13px 14px;
+      border-radius: 11px;
+      color: var(--blue-dark);
+      background: var(--blue-soft);
+      font-size: 0.82rem;
+      font-weight: 850;
+      line-height: 1.45;
+    }
+
+    .daylight-note::before {
+      content: "☀";
+      color: var(--orange);
+      font-size: 1.05rem;
+      line-height: 1.2;
+    }
+
     .media-frame {
       position: relative;
       display: grid;
@@ -920,6 +962,18 @@
       .media-frame {
         min-height: 340px;
       }
+
+      .media-card--ncar {
+        grid-template-columns: 1fr;
+      }
+
+      .media-card--ncar .media-frame {
+        min-height: min(112vw, 620px);
+      }
+
+      .media-card--ncar .card-copy {
+        padding: 24px;
+      }
     }
 
     @media (max-width: 600px) {
@@ -1153,7 +1207,7 @@
           <p class="section-kicker">Animated satellite &amp; regional imagery</p>
           <h2>See the bigger weather pattern.</h2>
         </div>
-        <p>Cloud texture, clearing lines, and upstream systems add the context radar alone cannot provide. Both views continue animating while this page is open.</p>
+        <p>Cloud texture, clearing lines, and upstream systems add the context radar alone cannot provide. These regional views bring the evolving cloud pattern into focus.</p>
       </div>
 
       <div class="imagery-grid">
@@ -1193,6 +1247,35 @@
                 <p>A seven-day satellite perspective for tracking cloud systems across North America and upstream of the southern Appalachians. McIDAS credit: Space Science and Engineering Center, University of Wisconsin–Madison.</p>
               </div>
               <a class="source-link" href="https://www.ssec.wisc.edu/mcidas/" target="_blank" rel="noopener noreferrer">SSEC / McIDAS ↗</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="media-card media-card--ncar">
+          <div class="media-frame">
+            <span class="media-badge">Visible satellite • daylight only</span>
+            <img
+              id="ncarVisibleImage"
+              src="/images/ncar-visible-placeholder.svg"
+              alt="Visible satellite imagery centered on North Carolina"
+              loading="lazy"
+              aria-busy="true"
+            />
+            <div class="player-bar" aria-label="North Carolina visible satellite status">
+              <span id="ncarFrameStatus" aria-live="polite">Connecting to the latest NSF NCAR daylight image…</span>
+              <div class="player-actions">
+                <button class="player-button" id="ncarRefreshButton" type="button">Refresh image</button>
+              </div>
+            </div>
+          </div>
+          <div class="card-copy">
+            <div class="card-topline">
+              <div>
+                <h3>North Carolina Visible Satellite</h3>
+                <p>A close-up daylight view centered on North Carolina for seeing fog, low clouds, clearing boundaries, and developing cloud fields across the state and nearby mountains.</p>
+                <div class="daylight-note">Visible satellite imagery depends on reflected sunlight. New imagery is available from sunrise to sunset; overnight, the final daylight image may remain on display.</div>
+              </div>
+              <a class="source-link" href="https://weather.rap.ucar.edu/satellite/displaySat.php?region=CLT&amp;itype=color" target="_blank" rel="noopener noreferrer">Open NSF NCAR viewer ↗</a>
             </div>
           </div>
         </article>
@@ -1302,7 +1385,7 @@
       </div>
 
       <div class="footer-meta">
-        <div>Imagery and tools: NOAA/NWS, NOAA NESDIS/STAR, UNC Asheville Atmospheric Sciences, SSEC/McIDAS at the University of Wisconsin–Madison, and Penn State Meteorology.</div>
+        <div>Imagery and tools: NOAA/NWS, NOAA NESDIS/STAR, NSF NCAR/UCAR, UNC Asheville Atmospheric Sciences, SSEC/McIDAS at the University of Wisconsin–Madison, and Penn State Meteorology.</div>
         <div>Serving Asheville, Western North Carolina, and the greater 828 region.</div>
         <div>For general awareness only — not a substitute for official forecasts, warnings, or emergency guidance.</div>
       </div>
@@ -1391,6 +1474,50 @@
       radarLayer.redraw();
       updateTimestamp();
     }, 300000);
+
+    const ncarImage = document.querySelector("#ncarVisibleImage");
+    const ncarFrameStatus = document.querySelector("#ncarFrameStatus");
+    const ncarRefreshButton = document.querySelector("#ncarRefreshButton");
+
+    async function loadNcarImage() {
+      ncarFrameStatus.textContent = "Connecting to the latest NSF NCAR daylight image…";
+      ncarImage.setAttribute("aria-busy", "true");
+
+      try {
+        const response = await fetch("/api/ncar-visible", { cache: "no-store" });
+        if (!response.ok) throw new Error(`Satellite feed returned ${response.status}`);
+
+        const payload = await response.json();
+        if (!payload.image) throw new Error("No image returned");
+
+        await new Promise((resolve, reject) => {
+          const preload = new Image();
+          preload.onload = resolve;
+          preload.onerror = reject;
+          preload.src = payload.image;
+        });
+
+        ncarImage.src = payload.image;
+        ncarImage.setAttribute("aria-busy", "false");
+        const observed = payload.observedAt
+          ? new Date(payload.observedAt).toLocaleString([], {
+              month: "short",
+              day: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+              timeZoneName: "short"
+            })
+          : "latest available";
+        ncarFrameStatus.textContent = `North Carolina visible satellite • ${observed}`;
+      } catch (error) {
+        ncarImage.setAttribute("aria-busy", "false");
+        ncarFrameStatus.textContent = "Visible satellite unavailable • open the NSF NCAR viewer";
+      }
+    }
+
+    ncarRefreshButton.addEventListener("click", loadNcarImage);
+    loadNcarImage();
+    window.setInterval(loadNcarImage, 300000);
 
     const psuImage = document.querySelector("#psuVisibleImage");
     const psuFrameCounter = document.querySelector("#psuFrameCounter");
