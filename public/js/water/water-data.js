@@ -400,7 +400,7 @@ export async function getWaterPageInputs() {
   let live = unavailablePayload();
 
   try {
-    const response = await fetch("/api/router?route=water/conditions&v=20260730-basin3", {
+    const response = await fetch("/api/router?route=water/conditions&v=20260818-usgs-modern1", {
       headers: { Accept: "application/json" }
     });
     if (!response.ok) throw new Error(`Water conditions returned ${response.status}`);

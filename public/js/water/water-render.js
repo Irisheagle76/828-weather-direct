@@ -1,4 +1,4 @@
-import { getWaterPageInputs } from "./water-data.js?v=20260730-water-live2";
+import { getWaterPageInputs } from "./water-data.js?v=20260818-usgs-modern1";
 import { buildWaterfallIndex } from "./waterfall-index.js?v=20260730-water-live2";
 import { ACTIVITY_LABELS, buildRiverIndex } from "./river-index.js?v=20260730-water-live2";
 

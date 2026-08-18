@@ -5,7 +5,8 @@ import {
   aggregateBasinRainfall,
   buildRainfallWindows,
   mrmsMillimetersToInches,
-  parseUSGSInstantaneousValues
+  parseUSGSContinuousValues,
+  parseUSGSObservationNormals
 } from "../lib/water/liveConditions.js";
 import { WATERFALL_BASINS } from "../lib/water/waterfallBasins.js";
 
@@ -71,20 +72,53 @@ test("every waterfall has a distributed upstream-basin footprint", () => {
 test("USGS parser chooses the latest reading and calculates a 12-hour trend", () => {
   const now = Date.parse("2026-07-30T20:00:00Z");
   const payload = {
-    value: {
-      timeSeries: [{
-        sourceInfo: { siteCode: [{ value: "12345678" }] },
-        variable: { variableCode: [{ value: "00060" }] },
-        values: [{
-          value: [
-            { value: "100", dateTime: "2026-07-30T08:00:00Z" },
-            { value: "150", dateTime: "2026-07-30T20:00:00Z" }
-          ]
-        }]
-      }]
-    }
+    features: [
+      {
+        properties: {
+          monitoring_location_id: "USGS-12345678",
+          parameter_code: "00060",
+          value: "100",
+          unit_of_measure: "ft^3/s",
+          time: "2026-07-30T08:00:00Z"
+        }
+      },
+      {
+        properties: {
+          monitoring_location_id: "USGS-12345678",
+          parameter_code: "00060",
+          value: "150",
+          unit_of_measure: "ft^3/s",
+          time: "2026-07-30T20:00:00Z"
+        }
+      }
+    ]
   };
-  const result = parseUSGSInstantaneousValues(payload, now);
+  const result = parseUSGSContinuousValues(payload, now);
   assert.equal(result["12345678"].dischargeCfs, 150);
   assert.equal(result["12345678"].trend12hPct, 50);
+});
+
+test("USGS observation normals choose the median of daily mean discharge", () => {
+  const result = parseUSGSObservationNormals({
+    features: [{
+      properties: {
+        monitoring_location_id: "USGS-12345678",
+        data: [
+          {
+            parameter_code: "00060",
+            parent_statistic_id: "00001",
+            values: [{ computation: "median", value: "110", sample_count: 15 }]
+          },
+          {
+            parameter_code: "00060",
+            parent_statistic_id: "00003",
+            values: [{ computation: "median", value: "125", sample_count: 80 }]
+          }
+        ]
+      }
+    }]
+  });
+
+  assert.equal(result["12345678"].normalMedianCfs, 125);
+  assert.equal(result["12345678"].normalSampleCount, 80);
 });
