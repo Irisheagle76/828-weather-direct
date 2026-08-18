@@ -1,5 +1,7 @@
 {
-  "ignoreCommand": "node scripts/vercel-ignore-build.mjs",
+  "git": {
+    "deploymentEnabled": false
+  },
   "functions": {
     "api/admin/page.js": {
       "includeFiles": "public/admin/**"
