@@ -1,6 +1,7 @@
 import { CAMERAS, SEASON_MILESTONE_PREVIEW } from "./config.js";
 import { leafDropRisk, ratingForScore, scoreFallHours, viewScore } from "./scoring.js";
 import { buildElevationAnalysis } from "./elevation.js";
+import { estimatePeakTiming } from "./peak-timing.js";
 
 const dayKey = (timestamp) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(timestamp));
 const hour = (timestamp) => Number(new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }).format(new Date(timestamp))) % 24;
@@ -35,6 +36,12 @@ export function buildFallIntelligence(payload, skyPayload = null) {
   const elevation = buildElevationAnalysis(destinations, { now, observations: payload.observations });
   const outlook = buildOutlook(asheville.hourly, asheville.daily);
   const bestOutlook = outlook.slice().sort((a, b) => b.score - a.score)[0];
+  const seasonYear = Number(payload.peakTiming?.seasonYear) || new Date(now).getFullYear();
+  const peakTiming = estimatePeakTiming({
+    seasonYear,
+    septemberMeanF: payload.peakTiming?.septemberMeanF,
+    source: payload.peakTiming?.source
+  });
 
   return {
     updated: payload.updated || new Date().toISOString(),
@@ -54,7 +61,7 @@ export function buildFallIntelligence(payload, skyPayload = null) {
       avoid: avoid ? { name: avoid.name, reason: avoidReason(avoid) } : null
     },
     elevation,
-    season: { elevationBands: buildSeasonProgress(elevation, SEASON_MILESTONE_PREVIEW) },
+    season: { elevationBands: buildSeasonProgress(elevation, SEASON_MILESTONE_PREVIEW), peakTiming },
     outlook,
     bestOutlook,
     leafDropWatch: outlook.slice().sort((a, b) => riskRank(b.leafDropRisk) - riskRank(a.leafDropRisk))[0],

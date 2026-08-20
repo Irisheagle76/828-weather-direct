@@ -13,6 +13,7 @@ export function renderFallExplorer(model) {
   setText("#photoRating", model.today.photoRating.toUpperCase());
   setText("#leafDrop", model.today.leafDropRisk.toUpperCase());
   setText("#todaySummary", model.today.summary);
+  renderPeakTiming(model.season.peakTiming);
 
   const recommendation = model.recommendations;
   $("#recommendations").innerHTML = [
@@ -82,6 +83,22 @@ function renderThreshold(threshold) {
       ? `Approximately ${threshold.range[0].toLocaleString()}–${threshold.range[1].toLocaleString()} ft`
       : "Not indicated in tonight's destination forecast";
   setText("#freezeThreshold", label);
+}
+function renderPeakTiming(peak) {
+  if (!peak) return;
+  setText("#peakMidpoint", peak.midpoint);
+  setText("#peakWindow", peak.planningWindow);
+  setText("#peakSeptember", `${peak.septemberMeanF.toFixed(1)}°F`);
+  setText("#peakInputLabel", peak.inputLabel);
+  setText("#peakScope", peak.model.elevationRange);
+  setText("#peakConfidence", peak.confidence);
+  const shift = peak.shiftDays > 0
+    ? `${peak.shiftDays.toFixed(1)} days later than the 64.7°F baseline`
+    : peak.shiftDays < 0
+      ? `${Math.abs(peak.shiftDays).toFixed(1)} days earlier than the 64.7°F baseline`
+      : "No shift from the 64.7°F baseline";
+  setText("#peakShift", shift);
+  setText("#peakCaveat", peak.caveat);
 }
 function renderObservationMethod(observations, calibration) {
   if (!observations || !Number.isFinite(observations.availableAnchors)) {
