@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Weather intelligence for experiencing fall in Asheville and Western North Carolina.">
+  <title>828 Fall Explorer | Asheville Fall Weather Intelligence</title>
+  <link rel="stylesheet" href="/css/brand-lockup.css?v=20260805-brand2">
+  <link rel="stylesheet" href="/css/fall.css?v=20260819-phase1">
+</head>
+<body class="is-loading">
+  <a class="skip-link" href="#main">Skip to fall conditions</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="site-brand-lockup" href="/" aria-label="828 Weather Direct home">
+        <div class="brand-title site-brand-title"><span class="site-brand-828">828</span> Weather Direct</div>
+        <div class="brand-sub site-brand-sub">Hyper-local Asheville forecast built by Tim Ballisty</div>
+      </a>
+      <nav class="nav-links" aria-label="Site navigation">
+        <a href="/">Home</a><a href="/forecast.html">Forecast</a><a href="/hiking.html">Hiking</a><a href="/water.html">Water</a><a href="/828-sunset-radiance.html">Sunset</a><a class="active" href="/fall.html" aria-current="page">Fall Explorer</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="fall-hero">
+      <div class="ridge ridge-back"></div><div class="ridge ridge-front"></div>
+      <div class="hero-inner">
+        <div class="season-tag"><span>Seasonal intelligence</span><i></i><span id="updated">Loading live forecast</span></div>
+        <h1><span aria-hidden="true">🍁</span> 828 Fall Explorer</h1>
+        <p class="hero-subtitle">Weather intelligence for experiencing fall in Western North Carolina</p>
+        <p class="hero-support">Not another foliage map. Find the best weather, views and timing for your fall adventure.</p>
+        <div class="story-nav" aria-label="Fall Explorer sections"><a href="#today">Today</a><span>→</span><a href="#where">Where</a><span>→</span><a href="#science">Why</a><span>→</span><a href="#season">Season</a><span>→</span><a href="#next">Next</a><span>→</span><a href="#live">Live</a></div>
+      </div>
+    </section>
+
+    <div class="data-notice" id="dataNotice" hidden></div>
+    <section class="section today-section" id="today">
+      <header class="section-heading"><div><div class="eyebrow">01 · The five-second read</div><h2>🍁 Today at a glance</h2></div><p>Is today worth it?</p></header>
+      <div class="metric-grid">
+        <article class="metric-card featured"><span>🍁 Fall day</span><strong id="fallRating">Loading</strong><small id="fallScore">-- / 100</small></article>
+        <article class="metric-card"><span>👀 Mountain views</span><strong id="viewsScore">-- / 100</strong><small>Forecast + live summit signal</small></article>
+        <article class="metric-card"><span>📸 Photography</span><strong id="photoRating">Loading</strong><small>Light, clouds and visibility</small></article>
+        <article class="metric-card"><span>🌬️ Leaf drop risk</span><strong id="leafDrop">Loading</strong><small>Wind, rain and hard freeze</small></article>
+      </div>
+      <div class="forecast-callout"><div class="callout-mark">828</div><p id="todaySummary">Reading today's visibility, wind, clouds and timing across Western North Carolina.</p></div>
+    </section>
+
+    <section class="section" id="where">
+      <header class="section-heading"><div><div class="eyebrow">02 · Make the call</div><h2>🏆 Where &amp; when</h2></div><p>Where should I go today, and when?</p></header>
+      <div class="recommendation-grid" id="recommendations" aria-live="polite"></div>
+    </section>
+
+    <section class="science-wrap" id="science">
+      <div class="section science-section">
+        <header class="science-heading"><div class="eyebrow">03 · Elevation intelligence</div><h2>🌡️ The science of the drop</h2><p>Watching autumn descend through Western North Carolina's elevation zones</p></header>
+        <div class="science-grid">
+          <div class="elevation-card"><div class="elevation-card-head"><div><span>Tonight's cold descent</span><h3>Forecast lows by elevation</h3></div><div class="thermometer" aria-hidden="true"><i></i></div></div><div class="elevation-bands" id="elevationBands"></div></div>
+          <aside class="threshold-card"><div class="threshold-icon">32°</div><div class="eyebrow">Estimated 32°F threshold</div><h3 id="freezeThreshold">Calculating tonight's elevation range</h3><p>This is a broad estimate from representative destination forecasts, checked against fresh local observations—not a precise contour or guarantee.</p><div class="cold-pool" id="coldPool" hidden><b>🏞️ Cold-air drainage possible</b><span>Sheltered valleys may cool faster than some mid-elevation slopes tonight.</span></div></aside>
+        </div>
+        <details class="science-details"><summary>Why this matters for fall color <span>+</span></summary><div><p>Repeated cool nights are part of the seasonal transition that accompanies fall color progression. Elevation strongly influences how quickly these colder conditions arrive across Western North Carolina.</p><p>Cool-night and frost signals describe <b>color-development weather</b>. Hard freezes, heavy rain and strong wind are tracked separately as <b>leaf-drop weather</b> because they can eventually increase damage and leaf loss.</p></div></details>
+      </div>
+    </section>
+
+    <section class="section season-section" id="season">
+      <header class="section-heading"><div><div class="eyebrow">04 · Season progress</div><h2>🍂 The cold descent</h2></div><p>First-freeze progress, from summit to valley</p></header>
+      <div class="season-layout"><div class="season-timeline" id="seasonTimeline"></div><aside class="method-note"><div class="eyebrow">Phase 1 tracker</div><h3>Built for seasonal memory</h3><p>The first-freeze archive is not populated yet. “Approaching” uses tonight's destination forecast; recorded 40°, 36°, 32° and 28° milestones can plug into the same elevation bands later.</p><span id="observationMethod">Forecast status ≠ observed milestone</span></aside></div>
+    </section>
+
+    <section class="next-wrap" id="next"><div class="section">
+      <header class="section-heading light"><div><div class="eyebrow">05 · Plan the week</div><h2>📅 What's next?</h2></div><p>Which day belongs to the Parkway?</p></header>
+      <div class="outlook-grid" id="outlookGrid"></div><div class="leaf-watch" id="leafDropWatch" hidden></div>
+    </div></section>
+
+    <section class="section live-section" id="live">
+      <header class="section-heading"><div><div class="eyebrow">06 · Ground truth</div><h2>📷 828 Fall Live</h2></div><p>See what the mountains actually look like right now.</p></header>
+      <div class="camera-grid" id="cameraGrid"></div>
+      <p class="camera-note">Camera availability and refresh timing are controlled by each source. Open any image for its full live reference.</p>
+    </section>
+  </main>
+
+  <footer><div><b>828 Weather Direct</b><p>Fall experience guidance—not a foliage percentage or peak-date forecast. Forecast data: NOAA/NWS.</p></div><div><a href="/">Home</a><a href="/hiking.html">Hiking guidance</a><a href="/forecast.html">4-day forecast</a></div></footer>
+  <script type="module" src="/js/fall/app.js?v=20260819-phase1"></script>
+</body>
+</html>
