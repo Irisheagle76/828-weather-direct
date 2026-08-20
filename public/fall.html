@@ -6,7 +6,7 @@
   <meta name="description" content="Weather intelligence for experiencing fall in Asheville and Western North Carolina.">
   <title>828 Fall Explorer | Asheville Fall Weather Intelligence</title>
   <link rel="stylesheet" href="/css/brand-lockup.css?v=20260805-brand2">
-  <link rel="stylesheet" href="/css/fall.css?v=20260819-phase1">
+  <link rel="stylesheet" href="/css/fall.css?v=20260820-peak1">
 </head>
 <body class="is-loading">
   <a class="skip-link" href="#main">Skip to fall conditions</a>
@@ -64,6 +64,18 @@
 
     <section class="section season-section" id="season">
       <header class="section-heading"><div><div class="eyebrow">04 · Season progress</div><h2>🍂 The cold descent</h2></div><p>First-freeze progress, from summit to valley</p></header>
+      <article class="peak-timing-card" aria-labelledby="peakTimingTitle">
+        <div class="peak-timing-lead">
+          <div><div class="eyebrow">Experimental peak-timing signal</div><h3 id="peakTimingTitle">Likely midpoint near <span id="peakMidpoint">Oct 17</span></h3></div>
+          <p>For the Boone–Grandfather reference area at 2,500–4,000 ft. Use the broader <strong id="peakWindow">Oct 14–Oct 20</strong> planning window and verify color with live cameras.</p>
+        </div>
+        <div class="peak-timing-metrics">
+          <div><span>September mean</span><strong id="peakSeptember">64.7°F</strong><small id="peakInputLabel">Long-term September baseline</small></div>
+          <div><span>Temperature effect</span><strong>1.90 days / °F</strong><small id="peakShift">No shift from the 64.7°F baseline</small></div>
+          <div><span>Calibrated elevation</span><strong id="peakScope">2,500–4,000 ft</strong><small id="peakConfidence">Historical baseline estimate</small></div>
+        </div>
+        <details class="peak-method"><summary>How this estimate is calculated <span>+</span></summary><div><p>The source analysis regressed 17 peak-color seasons against September daily mean temperature for 2008–2025, excluding hurricane-disrupted 2024. Its equation is October day = 1.9015 × September mean °F − 106.42, with R² = 0.62 and p &lt; .001.</p><p id="peakCaveat">A planning signal, not a predictive confidence interval. The relationship is sensitive to the unusually warm 2018 and 2019 seasons and does not quantify an elevation adjustment outside the calibrated band.</p><p>Rainfall and drought were not used to move the date because the source analysis found no significant timing relationship. They still matter for leaf loss, color quality and the day-to-day viewing experience.</p></div></details>
+      </article>
       <div class="season-layout"><div class="season-timeline" id="seasonTimeline"></div><aside class="method-note"><div class="eyebrow">Phase 1 tracker</div><h3>Built for seasonal memory</h3><p>The first-freeze archive is not populated yet. “Approaching” uses tonight's destination forecast; recorded 40°, 36°, 32° and 28° milestones can plug into the same elevation bands later.</p><span id="observationMethod">Forecast status ≠ observed milestone</span></aside></div>
     </section>
 
@@ -79,7 +91,7 @@
     </section>
   </main>
 
-  <footer><div><b>828 Weather Direct</b><p>Fall experience guidance—not a foliage percentage or peak-date forecast. Forecast data: NOAA/NWS.</p></div><div><a href="/">Home</a><a href="/hiking.html">Hiking guidance</a><a href="/forecast.html">4-day forecast</a></div></footer>
-  <script type="module" src="/js/fall/app.js?v=20260819-phase1"></script>
+  <footer><div><b>828 Weather Direct</b><p>Fall experience guidance with an experimental, elevation-limited peak-timing estimate—not a foliage percentage or guarantee. Forecast data: NOAA/NWS.</p></div><div><a href="/">Home</a><a href="/hiking.html">Hiking guidance</a><a href="/forecast.html">4-day forecast</a></div></footer>
+  <script type="module" src="/js/fall/app.js?v=20260820-peak1"></script>
 </body>
 </html>
