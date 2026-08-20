@@ -15,12 +15,16 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-latest
+    env:
+      WEATHERFLOW_API_KEY: ${{ secrets.WEATHERFLOW_API_KEY }}
+      WEATHER_UNDERGROUND_API_KEY: ${{ secrets.WEATHER_UNDERGROUND_API_KEY }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Refresh hiking guidance
         run: node scripts/update-hiking-guidance.mjs
@@ -36,3 +40,10 @@ jobs:
           git add public/hiking.html public/data/hiking-guidance.json
           git commit -m "Update hiking guidance"
           git push
+
+      - name: Record Fall Explorer shadow calibration
+        continue-on-error: true
+        run: |
+          curl --fail --silent --show-error --max-time 90 \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "https://avlweather.com/api/router?route=observations/sample"

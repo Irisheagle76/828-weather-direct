@@ -1,22 +1,28 @@
 ﻿import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { STATION_BY_ID, stationsForProvider } from "../lib/observations/registry.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outDir = path.join(root, "public", "data");
 const jsonPath = path.join(outDir, "hiking-guidance.json");
 const htmlPath = path.join(root, "public", "hiking.html");
-const weatherFlowKey = "6bff2f89-84ab-463c-886e-fc0f443da4cf";
-const weatherUndergroundKey = "e1f10a1e78da46f5b10a1e78da96f525";
+const weatherFlowKey = process.env.WEATHERFLOW_API_KEY || null;
+const weatherUndergroundKey = process.env.WEATHER_UNDERGROUND_API_KEY || process.env.WU_API_KEY || null;
 const lightningSignalMaxAgeMs = 3 * 60 * 60 * 1000;
 const observationMaxAgeMs = 3 * 60 * 60 * 1000;
 
-const tempestStations = [
-  { id: "144737", name: "Lower Asheville", role: "Asheville city weather station", elevationFt: 2137, url: "https://tempestwx.com/station/144737/grid", lat: 35.60675829810566, lon: -82.54793450070898 },
-  { id: "127602", name: "Mid Asheville", role: "north/east Asheville transition", elevationFt: 2316, url: "https://tempestwx.com/station/127602/grid", lat: 35.6154509046802, lon: -82.50548363971464 },
-  { id: "160562", name: "High Asheville East", role: "nearby ridge reading", elevationFt: 3363, url: "https://tempestwx.com/station/160562/grid", lat: 35.624525314972594, lon: -82.51184579162579 },
-  { id: "157700", name: "High Asheville North", role: "nearby ridge cross-check", elevationFt: 3371, url: "https://tempestwx.com/station/157700/grid", lat: 35.6422544091975, lon: -82.49614863661522 }
-];
+const tempestStations = stationsForProvider("tempest").map((station) => ({
+  id: station.providerStationId,
+  name: station.name,
+  role: station.role,
+  elevationFt: station.elevationFt,
+  url: station.url,
+  lat: station.latitude,
+  lon: station.longitude
+}));
+
+const ashevilleStationIds = new Set(["tempest-144737", "tempest-127602", "tempest-160562", "tempest-157700"]);
 
 const userAgent = "828 Weather Direct hiking guidance (+https://avlweather.com)";
 
@@ -240,6 +246,7 @@ async function readPrevious() {
 }
 
 async function fetchTempest(station) {
+  if (!weatherFlowKey) throw new Error("WEATHERFLOW_API_KEY is not configured");
   const params = new URLSearchParams({
     api_key: weatherFlowKey,
     station_id: station.id,
@@ -257,6 +264,11 @@ async function fetchTempest(station) {
   if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
   const data = await response.json();
   const c = data.current_conditions || {};
+  const observedAt = Number.isFinite(Number(c.time)) ? new Date(Number(c.time) * 1000) : null;
+  const ageMs = observedAt ? Date.now() - observedAt.getTime() : NaN;
+  if (!observedAt || !Number.isFinite(ageMs) || ageMs < -5 * 60 * 1000 || ageMs > observationMaxAgeMs) {
+    throw new Error(`Tempest ${station.id} observation is stale or missing`);
+  }
   return {
     source: "Tempest",
     id: `tempest-${station.id}`,
@@ -268,7 +280,7 @@ async function fetchTempest(station) {
     lat: station.lat,
     lon: station.lon,
     status: "live",
-    observedAt: c.time ? new Date(c.time * 1000).toISOString() : new Date().toISOString(),
+    observedAt: observedAt.toISOString(),
     conditions: c.conditions ?? "Unknown",
     temperatureF: n(c.air_temperature),
     feelsLikeF: n(c.feels_like),
@@ -292,22 +304,14 @@ async function fetchTempest(station) {
   };
 }
 
-async function fetchEconetStation({
-  stationId,
-  id,
-  name,
-  role,
-  elevationFt,
-  url,
-  source = `NC ECONet ${stationId}`
-}) {
+async function fetchEconetStation(station) {
   const response = await fetch("https://products.climate.ncsu.edu/oper/cardinal/scout/panels/php/ajax_currentConditions.php", {
     method: "POST",
     headers: {
       "content-type": "application/x-www-form-urlencoded",
       "user-agent": userAgent
     },
-    body: `station=${encodeURIComponent(stationId)}`
+    body: `station=${encodeURIComponent(station.providerStationId)}`
   });
   if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
   const data = await response.json();
@@ -315,19 +319,19 @@ async function fetchEconetStation({
   const observedAt = easternWallClockDate(latest.ob);
   const ageMs = easternWallClockAgeMs(latest.ob);
   if (!latest.ob || !observedAt || !Number.isFinite(ageMs) || ageMs < -5 * 60 * 1000 || ageMs > observationMaxAgeMs) {
-    throw new Error(`NC ECONet ${stationId} observation is stale or missing`);
+    throw new Error(`NC ECONet ${station.providerStationId} observation is stale or missing`);
   }
 
   return {
-    source,
-    id,
-    stationId,
-    name,
-    role,
-    elevationFt: elevationFt ?? n(data?.meta?.elev),
-    url,
-    lat: n(data?.meta?.lat),
-    lon: n(data?.meta?.lon),
+    source: `NC ECONet ${station.providerStationId}`,
+    id: station.id,
+    stationId: station.providerStationId,
+    name: station.name,
+    role: station.role,
+    elevationFt: n(data?.meta?.elev) ?? station.elevationFt,
+    url: station.url,
+    lat: station.latitude,
+    lon: station.longitude,
     status: "live",
     observedAt: observedAt.toISOString(),
     conditions: "Current conditions",
@@ -349,30 +353,17 @@ async function fetchEconetStation({
 }
 
 async function fetchMitchell() {
-  return fetchEconetStation({
-    stationId: "MITC",
-    id: "mount-mitchell",
-    name: "Mount Mitchell",
-    role: "WNC high-peak reading",
-    elevationFt: 6215,
-    url: "https://econet.climate.ncsu.edu/m/?id=MITC"
-  });
+  return fetchEconetStation(STATION_BY_ID.get("mount-mitchell"));
 }
 
 async function fetchFryingPan() {
-  return fetchEconetStation({
-    stationId: "FRYI",
-    id: "frying-pan-pisgah-ridgeline",
-    name: "Frying Pan / Pisgah Ridgeline",
-    role: "Pisgah ridgeline reading",
-    elevationFt: 5000,
-    url: "https://econet.climate.ncsu.edu/m/?id=FRYI"
-  });
+  return fetchEconetStation(STATION_BY_ID.get("frying-pan-pisgah-ridgeline"));
 }
 
-async function fetchMaxPatch() {
+async function fetchWeatherUndergroundStation(station) {
+  if (!weatherUndergroundKey) throw new Error("WEATHER_UNDERGROUND_API_KEY is not configured");
   const params = new URLSearchParams({
-    stationId: "KTNDELRI5",
+    stationId: station.stationId,
     format: "json",
     units: "e",
     numericPrecision: "decimal",
@@ -385,19 +376,24 @@ async function fetchMaxPatch() {
   const data = await response.json();
   const observation = data.observations?.[0];
   if (!observation) throw new Error("Weather Underground returned no current observation");
+  const observedAt = observation.obsTimeUtc ? new Date(observation.obsTimeUtc) : null;
+  const ageMs = observedAt ? Date.now() - observedAt.getTime() : NaN;
+  if (!observedAt || !Number.isFinite(ageMs) || ageMs < -5 * 60 * 1000 || ageMs > observationMaxAgeMs) {
+    throw new Error(`Weather Underground ${station.stationId} observation is stale or missing`);
+  }
   const imperial = observation.imperial || {};
   return {
     source: "Weather Underground",
-    id: "max-patch",
-    stationId: observation.stationID || "KTNDELRI5",
-    name: "Max Patch",
-    role: "high-elevation bald reading",
-    elevationFt: 4420,
-    url: "https://www.wunderground.com/dashboard/pws/KTNDELRI5",
+    id: station.id,
+    stationId: observation.stationID || station.stationId,
+    name: station.name,
+    role: station.role,
+    elevationFt: station.elevationFt,
+    url: station.url,
     lat: n(observation.lat),
     lon: n(observation.lon),
     status: "live",
-    observedAt: observation.obsTimeUtc || new Date().toISOString(),
+    observedAt: observedAt.toISOString(),
     conditions: "Current conditions",
     temperatureF: n(imperial.temp),
     feelsLikeF: n(imperial.heatIndex) ?? n(imperial.windChill) ?? n(imperial.temp),
@@ -414,6 +410,75 @@ async function fetchMaxPatch() {
     rainRateInHr: n(imperial.precipRate),
     pressureTrend: null
   };
+}
+
+async function fetchMaxPatch() {
+  return fetchWeatherUndergroundStation(weatherUndergroundConfig("max-patch"));
+}
+
+async function fetchBarnardsville() {
+  return fetchWeatherUndergroundStation(weatherUndergroundConfig("barnardsville-craggy-north-flank"));
+}
+
+async function fetchBurnsvilleHighRidge() {
+  return fetchWeatherUndergroundStation(weatherUndergroundConfig("burnsville-northern-high-country"));
+}
+
+async function fetchLaurelRidge() {
+  return fetchWeatherUndergroundStation(weatherUndergroundConfig("laurel-ridge-craggy-south-flank"));
+}
+
+async function fetchMountainAirComposite() {
+  const components = await Promise.all([
+    fetchWeatherUndergroundStation(weatherUndergroundConfig("mountain-air-runway-14")),
+    fetchWeatherUndergroundStation(weatherUndergroundConfig("mountain-air-runway-32"))
+  ]);
+  const observedTimes = components.map((component) => Date.parse(component.observedAt)).filter(Number.isFinite);
+  return {
+    source: "Weather Underground composite",
+    id: "mountain-air-ridge-composite",
+    stationId: "KNCBURNS29+KNCBURNS30",
+    componentStationIds: components.map((component) => component.stationId),
+    name: "Mountain Air Ridge Composite",
+    role: "regional exposed high-country cross-check",
+    elevationFt: Math.round(averageFinite(components.map((component) => component.elevationFt))),
+    url: "https://www.wunderground.com/dashboard/pws/KNCBURNS29",
+    lat: averageFinite(components.map((component) => component.lat)),
+    lon: averageFinite(components.map((component) => component.lon)),
+    status: "live",
+    observedAt: new Date(Math.min(...observedTimes)).toISOString(),
+    conditions: "Composite current conditions",
+    temperatureF: averageFinite(components.map((component) => component.temperatureF)),
+    feelsLikeF: averageFinite(components.map((component) => component.feelsLikeF)),
+    dewPointF: averageFinite(components.map((component) => component.dewPointF)),
+    humidityPct: averageFinite(components.map((component) => component.humidityPct)),
+    windMph: averageFinite(components.map((component) => component.windMph)),
+    gustMph: maxFinite(components.map((component) => component.gustMph)),
+    windDirection: null,
+    uv: averageFinite(components.map((component) => component.uv)),
+    solarWm2: averageFinite(components.map((component) => component.solarWm2)),
+    wbgtF: null,
+    wetBulbF: null,
+    rainTodayIn: averageFinite(components.map((component) => component.rainTodayIn)),
+    rainRateInHr: averageFinite(components.map((component) => component.rainRateInHr)),
+    pressureTrend: null
+  };
+}
+
+function averageFinite(values) {
+  const usable = values.filter(Number.isFinite);
+  return usable.length ? usable.reduce((sum, value) => sum + value, 0) / usable.length : null;
+}
+
+function maxFinite(values) {
+  const usable = values.filter(Number.isFinite);
+  return usable.length ? Math.max(...usable) : null;
+}
+
+function weatherUndergroundConfig(id) {
+  const station = STATION_BY_ID.get(id);
+  if (!station || station.provider !== "wunderground") throw new Error(`Weather Underground registry station not found: ${id}`);
+  return { id: station.id, stationId: station.providerStationId, name: station.name, role: station.role, elevationFt: station.elevationFt, url: station.url };
 }
 
 async function withFallback(fetcher, id, previousById) {
@@ -435,7 +500,7 @@ function spread(stations) {
 
 function analyze(stations) {
   const usable = stations.filter((s) => s.temperatureF != null);
-  const asheville = stations.filter((s) => s.id.startsWith("tempest-"));
+  const asheville = stations.filter((s) => ashevilleStationIds.has(s.id));
   const localTempSpread = spread(asheville);
   const highs = stations.filter((s) => s.id === "tempest-160562" || s.id === "tempest-157700");
   const highStationSpread = spread(highs);
@@ -784,6 +849,10 @@ const previousById = new Map((previous?.stations || []).map((s) => [s.id, s]));
 const stations = [
   ...(await Promise.all(tempestStations.map((station) => withFallback(() => fetchTempest(station), `tempest-${station.id}`, previousById)))),
   await withFallback(fetchMaxPatch, "max-patch", previousById),
+  await withFallback(fetchBarnardsville, "barnardsville-craggy-north-flank", previousById),
+  await withFallback(fetchBurnsvilleHighRidge, "burnsville-northern-high-country", previousById),
+  await withFallback(fetchLaurelRidge, "laurel-ridge-craggy-south-flank", previousById),
+  await withFallback(fetchMountainAirComposite, "mountain-air-ridge-composite", previousById),
   await withFallback(fetchFryingPan, "frying-pan-pisgah-ridgeline", previousById),
   await withFallback(fetchMitchell, "mount-mitchell", previousById)
 ];
