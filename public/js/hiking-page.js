@@ -185,16 +185,20 @@ const els = {
         })
         .join("");
       const labelLanes = [68, 104, 140, 176, 212, 248];
+      const leftLabelLanes = [132, 170, 208, 246, 284, 322];
       const laneEnds = labelLanes.map(() => -Infinity);
+      const leftLaneEnds = leftLabelLanes.map(() => -Infinity);
       const sites = points.map(({ station, x, y }) => {
         const labelLines = profileNameLines(station.name)
           .map((line, index) => `<tspan x="${x}" dy="${index === 0 ? 0 : 24}">${line}</tspan>`)
           .join("");
         const labelWidth = Math.max(34, labelLines.replace(/<[^>]+>/g, "").length * 7.2);
-        let lane = laneEnds.findIndex((end) => end < x - labelWidth / 2 - 8);
-        if (lane < 0) lane = laneEnds.indexOf(Math.min(...laneEnds));
-        const labelY = labelLanes[lane];
-        laneEnds[lane] = x + labelWidth / 2;
+        const isAxisZone = x < 330;
+        const activeLanes = isAxisZone ? leftLaneEnds : laneEnds;
+        let lane = activeLanes.findIndex((end) => end < x - labelWidth / 2 - 8);
+        if (lane < 0) lane = activeLanes.indexOf(Math.min(...activeLanes));
+        const labelY = (isAxisZone ? leftLabelLanes : labelLanes)[lane];
+        activeLanes[lane] = x + labelWidth / 2;
         const elevationY = labelY + 24;
         return `
           <g class="profile-site">
