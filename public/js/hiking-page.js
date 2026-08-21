@@ -8,6 +8,7 @@ const els = {
       localSpread: document.querySelector("#localSpread"),
       mitchellDrop: document.querySelector("#mitchellDrop"),
       fogRisk: document.querySelector("#fogRisk"),
+      inversionNotice: document.querySelector("#inversionNotice"),
       bestBet: document.querySelector("#bestBet"),
       useCare: document.querySelector("#useCare"),
       packMindset: document.querySelector("#packMindset"),
@@ -157,6 +158,46 @@ const els = {
       return labels[label] || [label];
     }
 
+    function temperatureClass(value) {
+      const temperature = Number(value);
+      if (!Number.isFinite(temperature)) return "temp-unknown";
+      if (temperature >= 80) return "temp-hot";
+      if (temperature >= 70) return "temp-warm";
+      if (temperature >= 60) return "temp-mild";
+      return "temp-cool";
+    }
+
+    function inversionSignal(stations = []) {
+      const ordered = stations
+        .filter((station) => Number.isFinite(Number(station.elevationFt)) && Number.isFinite(Number(station.temperatureF)))
+        .slice()
+        .sort((a, b) => Number(a.elevationFt) - Number(b.elevationFt));
+      let strongest = null;
+      for (let index = 1; index < ordered.length; index += 1) {
+        const lower = ordered[index - 1];
+        const upper = ordered[index];
+        const elevationGain = Number(upper.elevationFt) - Number(lower.elevationFt);
+        const temperatureRise = Number(upper.temperatureF) - Number(lower.temperatureF);
+        if (elevationGain < 300 || temperatureRise < 1.5) continue;
+        if (!strongest || temperatureRise / elevationGain > strongest.temperatureRise / strongest.elevationGain) {
+          strongest = { lower, upper, elevationGain, temperatureRise };
+        }
+      }
+      return strongest;
+    }
+
+    function renderInversionNotice(stations = []) {
+      if (!els.inversionNotice) return;
+      const signal = inversionSignal(stations);
+      if (!signal) {
+        els.inversionNotice.hidden = true;
+        els.inversionNotice.textContent = "";
+        return;
+      }
+      els.inversionNotice.hidden = false;
+      els.inversionNotice.innerHTML = `<strong>Possible inversion in progress</strong><span>${cleanText(signal.upper.name)} is about ${round(signal.temperatureRise)}°F warmer than ${cleanText(signal.lower.name)} despite sitting ${round(signal.elevationGain)} ft higher. Temperatures may vary sharply between sheltered valleys and exposed ridges.</span>`;
+    }
+
     function renderElevationProfile(stations = []) {
       const ordered = stations
         .slice()
@@ -208,7 +249,7 @@ const els = {
             <text class="profile-name" x="${x}" y="${labelY}" text-anchor="middle">${labelLines}</text>
             <text class="profile-elev" x="${x}" y="${elevationY}" text-anchor="middle">${station.elevationFt || "--"} ft</text>
             <circle class="profile-base-dot" cx="${x}" cy="${bottom}" r="5" />
-            <text class="profile-bottom-temp" x="${x}" y="${bottom + 48}" text-anchor="middle">${temp(station.temperatureF)}</text>
+            <text class="profile-bottom-temp ${temperatureClass(station.temperatureF)}" x="${x}" y="${bottom + 48}" text-anchor="middle">${temp(station.temperatureF)}</text>
           </g>
         `;
       }).join("");
@@ -363,6 +404,7 @@ const els = {
       els.updatedAt.textContent = formatUpdate(data?.generatedAt);
 
       renderElevationProfile(stations);
+      renderInversionNotice(stations);
       renderInsightSections(guidance);
       renderStations(stations);
     }
