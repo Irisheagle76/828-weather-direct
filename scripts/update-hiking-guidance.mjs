@@ -1,12 +1,13 @@
-﻿import fs from "node:fs/promises";
+import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { STATION_BY_ID, stationsForProvider } from "../lib/observations/registry.js";
+import { OBSERVATION_STATIONS, STATION_BY_ID, stationsForProvider } from "../lib/observations/registry.js";
+import { getElevationObservations } from "../lib/observations/service.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outDir = path.join(root, "public", "data");
 const jsonPath = path.join(outDir, "hiking-guidance.json");
-const htmlPath = path.join(root, "public", "hiking.html");
+// hiking.html is static presentation code; hiking-page.js reads this artifact.
 const weatherFlowKey = process.env.WEATHERFLOW_API_KEY || null;
 const weatherUndergroundKey = process.env.WEATHER_UNDERGROUND_API_KEY || process.env.WU_API_KEY || null;
 const lightningSignalMaxAgeMs = 3 * 60 * 60 * 1000;
@@ -652,10 +653,38 @@ function renderHtml(payload) {
     g.maxGust >= 20 ? "Wind matters on exposed terrain." : "Wind is light; sun exposure is the main watch item."
   ];
   const profileXs = sortedStations.map((_, index) => 145 + index * (810 / Math.max(1, sortedStations.length - 1)));
+  const profileLabelLines = (name) => ({
+    "High Asheville East": ["High Asheville", "East"],
+    "High Asheville North": ["High Asheville", "North"],
+    "Waynesville / Haywood Valley": ["Waynesville", "Valley"],
+    "Black Mountain / Swannanoa Valley": ["Black Mountain", "Valley"],
+    "Southern Haywood / Pisgah Approach West": ["Pisgah", "West"],
+    "Southern Haywood / Pisgah Approach East": ["Pisgah", "East"],
+    "Mount Mitchell East Slope / Alpine Village": ["Mitchell", "East Slope"],
+    "Western Pisgah High Shoulder": ["Western Pisgah", "Shoulder"],
+    "Barnardsville / Craggy North Flank": ["Craggy", "North"],
+    "Burnsville Northern High Country": ["Burnsville", "High Country"],
+    "Laurel Ridge / Craggy South Flank": ["Laurel Ridge", "Craggy"],
+    "Mountain Air Ridge Composite": ["Mountain Air", "Ridge"],
+    "Frying Pan / Pisgah Ridgeline": ["Frying Pan", "Pisgah"],
+    "Mount Mitchell": ["Mount", "Mitchell"]
+  }[name] || [name]);
+  const profileBottomName = (name) => ({
+    "Waynesville / Haywood Valley": "Waynesville",
+    "Black Mountain / Swannanoa Valley": "Black Mtn",
+    "Southern Haywood / Pisgah Approach West": "Pisgah W",
+    "Southern Haywood / Pisgah Approach East": "Pisgah E",
+    "Mount Mitchell East Slope / Alpine Village": "Mitchell E",
+    "Western Pisgah High Shoulder": "W Pisgah",
+    "Barnardsville / Craggy North Flank": "Craggy N",
+    "Burnsville Northern High Country": "Burnsville",
+    "Laurel Ridge / Craggy South Flank": "Laurel",
+    "Mountain Air Ridge Composite": "Mt Air",
+    "Frying Pan / Pisgah Ridgeline": "Frying Pan"
+  }[name] || name.replace(" Weather Tower", "").replace("Asheville ", ""));
   const profileStations = sortedStations.map((x, index) => {
     const y = Math.round(440 - ((x.elevationFt - 1000) / 6000) * 320);
-    const words = x.name.split(" ");
-    const nameLines = words.length > 2 ? [words.slice(0, -1).join(" "), words.slice(-1)[0]] : [x.name];
+    const nameLines = profileLabelLines(x.name);
     const zone = x.elevationFt >= 6000 ? "WNC high peak" : x.elevationFt >= 3200 ? "High Asheville ridge" : x.elevationFt >= 2300 ? "Mid Asheville" : "Lower Asheville";
     return { ...x, x: profileXs[index] ?? 900, y, nameLines, zone };
   });
@@ -673,10 +702,11 @@ function renderHtml(payload) {
     </section>
   ` : "";
   const elevationProfile = profileStations.map((x, index) => {
-    const labelY = Math.max(72, x.y - 74);
-    const bottomName = x.name.replace(" Weather Tower", "").replace("Asheville ", "");
+    const labelY = x.name === "Mount Mitchell" ? 28 : [72, 126, 180, 234][index % 4];
+    const bottomName = profileBottomName(x.name);
     return `<g class="profile-site">
       <line class="profile-stem" x1="${x.x}" y1="${x.y + 13}" x2="${x.x}" y2="450" />
+      <line class="profile-label-stem" x1="${x.x}" y1="${Math.max(46, labelY + 8)}" x2="${x.x}" y2="${Math.max(46, x.y - 15)}" />
       <circle class="profile-dot" cx="${x.x}" cy="${x.y}" r="10" />
       <text class="profile-label" x="${x.x}" y="${labelY}" text-anchor="middle">
         ${x.nameLines.map((line, i) => `<tspan x="${x.x}" dy="${i === 0 ? 0 : 20}">${esc(line)}</tspan>`).join("")}
@@ -846,16 +876,38 @@ function renderHtml(payload) {
 
 const previous = await readPrevious();
 const previousById = new Map((previous?.stations || []).map((s) => [s.id, s]));
-const stations = [
-  ...(await Promise.all(tempestStations.map((station) => withFallback(() => fetchTempest(station), `tempest-${station.id}`, previousById)))),
-  await withFallback(fetchMaxPatch, "max-patch", previousById),
-  await withFallback(fetchBarnardsville, "barnardsville-craggy-north-flank", previousById),
-  await withFallback(fetchBurnsvilleHighRidge, "burnsville-northern-high-country", previousById),
-  await withFallback(fetchLaurelRidge, "laurel-ridge-craggy-south-flank", previousById),
-  await withFallback(fetchMountainAirComposite, "mountain-air-ridge-composite", previousById),
-  await withFallback(fetchFryingPan, "frying-pan-pisgah-ridgeline", previousById),
-  await withFallback(fetchMitchell, "mount-mitchell", previousById)
-];
+if (!weatherFlowKey || !weatherUndergroundKey) {
+  throw new Error("Hiking refresh requires WEATHERFLOW_API_KEY and WEATHER_UNDERGROUND_API_KEY before writing a new artifact");
+}
+const observationPayload = await getElevationObservations({ force: true, fallbackUrl: null });
+const observationById = new Map(observationPayload.stations.map((station) => [station.id, station]));
+const failureById = new Map(observationPayload.quality.failures.map((failure) => [failure.id, failure]));
+const stations = OBSERVATION_STATIONS
+  .filter((station) => !station.componentOnly && station.provider !== "composite")
+  .map((definition) => {
+    const observation = observationById.get(definition.id);
+    if (observation) return { ...observation, error: failureById.get(definition.id)?.reason || null };
+    const failure = failureById.get(definition.id);
+    return {
+      id: definition.id,
+      stationId: definition.providerStationId,
+      provider: definition.provider,
+      source: definition.provider,
+      name: definition.name,
+      role: definition.role,
+      elevationFt: definition.elevationFt,
+      url: definition.url,
+      lat: definition.latitude,
+      lon: definition.longitude,
+      status: "unavailable",
+      error: failure?.reason || "No observation returned"
+    };
+  });
+const composites = observationPayload.stations.filter((station) => station.provider === "composite");
+stations.push(...composites);
+if (observationPayload.quality.status !== "fresh") {
+  throw new Error(`Hiking observation refresh is ${observationPayload.quality.status}: ${observationPayload.quality.failures.length} feed failures; refusing to write a partial artifact`);
+}
 const payload = {
   generatedAt: new Date().toISOString(),
   stations,
@@ -865,7 +917,3 @@ const payload = {
 await fs.mkdir(outDir, { recursive: true });
 await fs.writeFile(jsonPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
 console.log(`Updated ${path.relative(root, jsonPath)}; live hiking page reads this data client-side.`);
-
-
-
-
