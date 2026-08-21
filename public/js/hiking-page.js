@@ -136,41 +136,25 @@ const els = {
     function profileNameLines(name = "") {
       const label = String(name || "");
       const labels = {
-        "High Asheville East": ["High Asheville", "East"],
-        "High Asheville North": ["High Asheville", "North"],
-        "Waynesville / Haywood Valley": ["Waynesville", "Valley"],
-        "Black Mountain / Swannanoa Valley": ["Black Mountain", "Valley"],
-        "Southern Haywood / Pisgah Approach West": ["Pisgah", "West"],
-        "Southern Haywood / Pisgah Approach East": ["Pisgah", "East"],
-        "Mount Mitchell East Slope / Alpine Village": ["Mitchell", "East Slope"],
-        "Western Pisgah High Shoulder": ["Western Pisgah", "Shoulder"],
-        "Barnardsville / Craggy North Flank": ["Craggy", "North"],
-        "Burnsville Northern High Country": ["Burnsville", "High Country"],
-        "Laurel Ridge / Craggy South Flank": ["Laurel Ridge", "Craggy"],
-        "Mountain Air Ridge Composite": ["Mountain Air", "Ridge"],
-        "Frying Pan / Pisgah Ridgeline": ["Frying Pan", "Pisgah"],
-        "Mount Mitchell": ["Mount", "Mitchell"]
+        "Lower Asheville": ["Lower"],
+        "Mid Asheville": ["Mid"],
+        "High Asheville East": ["High E"],
+        "High Asheville North": ["High N"],
+        "Waynesville / Haywood Valley": ["Waynesville"],
+        "Black Mountain / Swannanoa Valley": ["Black Mtn"],
+        "Southern Haywood / Pisgah Approach West": ["Pisgah W"],
+        "Southern Haywood / Pisgah Approach East": ["Pisgah E"],
+        "Mount Mitchell East Slope / Alpine Village": ["Mitchell E"],
+        "Western Pisgah High Shoulder": ["W Pisgah"],
+        "Barnardsville / Craggy North Flank": ["Craggy N"],
+        "Max Patch": ["Max Patch"],
+        "Burnsville Northern High Country": ["Burnsville"],
+        "Laurel Ridge / Craggy South Flank": ["Laurel"],
+        "Mountain Air Ridge Composite": ["Mt Air"],
+        "Frying Pan / Pisgah Ridgeline": ["Frying Pan"],
+        "Mount Mitchell": ["Mitchell"]
       };
       return labels[label] || [label];
-    }
-
-    function profileBottomName(name = "") {
-      const labels = {
-        "Waynesville / Haywood Valley": "Waynesville",
-        "Black Mountain / Swannanoa Valley": "Black Mtn",
-        "Southern Haywood / Pisgah Approach West": "Pisgah W",
-        "Southern Haywood / Pisgah Approach East": "Pisgah E",
-        "Mount Mitchell East Slope / Alpine Village": "Mitchell E",
-        "Western Pisgah High Shoulder": "W Pisgah",
-        "Barnardsville / Craggy North Flank": "Craggy N",
-        "Burnsville Northern High Country": "Burnsville",
-        "Laurel Ridge / Craggy South Flank": "Laurel",
-        "Mountain Air Ridge Composite": "Mt Air",
-        "Frying Pan / Pisgah Ridgeline": "Frying Pan"
-      };
-      return labels[name] || String(name)
-        .replace(" Weather Tower", "")
-        .replace("Asheville ", "");
     }
 
     function renderElevationProfile(stations = []) {
@@ -200,14 +184,18 @@ const els = {
           return `<g><line class="profile-tick" x1="88" y1="${y}" x2="94" y2="${y}" /><text class="profile-tick-label" x="78" y="${y + 6}" text-anchor="end">${value.toLocaleString()}</text></g>`;
         })
         .join("");
-      const labelLanes = [72, 126, 180, 234];
-      const sites = points.map(({ station, x, y }, index) => {
-        const labelY = station.name === "Mount Mitchell" ? 28 : labelLanes[index % labelLanes.length];
+      const labelLanes = [68, 104, 140, 176, 212, 248];
+      const laneEnds = labelLanes.map(() => -Infinity);
+      const sites = points.map(({ station, x, y }) => {
         const labelLines = profileNameLines(station.name)
           .map((line, index) => `<tspan x="${x}" dy="${index === 0 ? 0 : 24}">${line}</tspan>`)
           .join("");
-        const elevationY = labelY + (profileNameLines(station.name).length > 1 ? 58 : 30);
-        const bottomName = profileBottomName(station.name);
+        const labelWidth = Math.max(34, labelLines.replace(/<[^>]+>/g, "").length * 7.2);
+        let lane = laneEnds.findIndex((end) => end < x - labelWidth / 2 - 8);
+        if (lane < 0) lane = laneEnds.indexOf(Math.min(...laneEnds));
+        const labelY = labelLanes[lane];
+        laneEnds[lane] = x + labelWidth / 2;
+        const elevationY = labelY + 24;
         return `
           <g class="profile-site">
             <line class="profile-stem" x1="${x}" y1="${y + 13}" x2="${x}" y2="${bottom}" />
@@ -216,8 +204,7 @@ const els = {
             <text class="profile-name" x="${x}" y="${labelY}" text-anchor="middle">${labelLines}</text>
             <text class="profile-elev" x="${x}" y="${elevationY}" text-anchor="middle">${station.elevationFt || "--"} ft</text>
             <circle class="profile-base-dot" cx="${x}" cy="${bottom}" r="5" />
-            <text class="profile-bottom-name" x="${x}" y="${bottom + 38}" text-anchor="middle">${bottomName}</text>
-            <text class="profile-bottom-temp" x="${x}" y="${bottom + 66}" text-anchor="middle">${temp(station.temperatureF)}</text>
+            <text class="profile-bottom-temp" x="${x}" y="${bottom + 48}" text-anchor="middle">${temp(station.temperatureF)}</text>
           </g>
         `;
       }).join("");

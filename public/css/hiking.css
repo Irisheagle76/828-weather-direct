@@ -870,11 +870,13 @@
 
     .profile-name,
     .profile-label {
-      font-size: 15px;
+      font-size: 12px;
+      letter-spacing: 0.01em;
     }
 
     .profile-elev {
       fill: #9ec1ff;
+      font-size: 14px;
     }
 
     .profile-area {
@@ -904,8 +906,7 @@
     }
 
     .profile-bottom-name {
-      font-size: 11px;
-      letter-spacing: 0;
+      display: none;
     }
 
     .profile-bottom-temp {
