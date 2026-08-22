@@ -4045,6 +4045,202 @@
         border-radius: 20px;
       }
     }
+    .pulse-shelf-header {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(15, 76, 196, 0.14);
+    }
+
+    .pulse-shelf-kicker {
+      margin-bottom: 7px;
+      color: var(--orange);
+      font-size: 0.74rem;
+      font-weight: 950;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .pulse-shelf-header h2 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(2rem, 5vw, 3.15rem);
+      line-height: 0.98;
+    }
+
+    .pulse-shelf-header p {
+      max-width: 650px;
+      margin: 9px 0 0;
+      color: var(--muted);
+      font-size: 0.96rem;
+      font-weight: 650;
+      line-height: 1.5;
+    }
+
+    .pulse-shelf-link {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 0 16px;
+      border-radius: 999px;
+      color: var(--white);
+      font-size: 0.86rem;
+      font-weight: 900;
+      background: var(--blue);
+      box-shadow: 0 10px 22px rgba(15, 76, 196, 0.2);
+    }
+
+    .pulse-shelf-link:hover,
+    .pulse-shelf-link:focus-visible {
+      background: var(--blue-dark);
+      transform: translateY(-1px);
+    }
+
+    .pulse-recent-feed {
+      position: relative;
+      z-index: 1;
+      margin-top: 24px;
+      padding-top: 22px;
+      border-top: 1px solid rgba(15, 76, 196, 0.14);
+    }
+
+    .pulse-recent-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 13px;
+    }
+
+    .pulse-recent-heading strong {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.22rem;
+    }
+
+    .pulse-recent-heading a {
+      color: var(--blue);
+      font-size: 0.8rem;
+      font-weight: 900;
+    }
+
+    .pulse-recent-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .pulse-recent-card {
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: rgba(255, 255, 255, 0.84);
+      box-shadow: 0 8px 22px rgba(11, 30, 67, 0.07);
+      transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .pulse-recent-card:hover,
+    .pulse-recent-card:focus-visible {
+      border-color: rgba(15, 76, 196, 0.42);
+      box-shadow: 0 12px 28px rgba(11, 30, 67, 0.12);
+      transform: translateY(-2px);
+    }
+
+    .pulse-recent-media {
+      overflow: hidden;
+      aspect-ratio: 16 / 8;
+      background: linear-gradient(135deg, #dbe8ff, #fff0d8);
+    }
+
+    .pulse-recent-media img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+
+    .pulse-recent-copy {
+      display: grid;
+      align-content: start;
+      gap: 7px;
+      padding: 13px;
+    }
+
+    .pulse-recent-time {
+      color: var(--orange);
+      font-size: 0.7rem;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .pulse-recent-copy strong {
+      display: -webkit-box;
+      overflow: hidden;
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.02rem;
+      line-height: 1.16;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+
+    .pulse-recent-copy span:last-child {
+      display: -webkit-box;
+      overflow: hidden;
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1.42;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 3;
+    }
+
+    .pulse-archive-cta {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-top: 18px;
+      padding: 15px 17px;
+      border: 1px solid rgba(15, 76, 196, 0.18);
+      border-radius: 15px;
+      color: var(--blue-dark);
+      background: linear-gradient(90deg, rgba(219, 232, 255, 0.76), rgba(255, 253, 248, 0.78));
+    }
+
+    .pulse-archive-cta span { display: grid; gap: 2px; }
+    .pulse-archive-cta strong { font-size: 0.94rem; }
+    .pulse-archive-cta small { color: var(--muted); font-size: 0.76rem; font-weight: 700; }
+    .pulse-archive-cta b { font-size: 1.35rem; }
+
+    @media (max-width: 760px) {
+      .pulse-shelf-header { display: grid; gap: 16px; }
+      .pulse-shelf-link { justify-self: start; }
+      .pulse-recent-grid {
+        display: flex;
+        overflow-x: auto;
+        margin-right: -18px;
+        padding: 2px 18px 10px 0;
+        scroll-snap-type: x proximity;
+      }
+      .pulse-recent-card { flex: 0 0 min(78vw, 270px); scroll-snap-align: start; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .pulse-shelf-link,
+      .pulse-recent-card { transition: none; }
+    }
   </style>
   <link rel="stylesheet" href="/css/brand-lockup.css?v=20260805-brand2" />
 </head>
@@ -4081,7 +4277,7 @@
         <a href="#now">Now</a>
         <a class="forecast-nav-link" href="/forecast.html">Tim's 4-Day Forecast</a>
         <a href="/radar.html">Radar &amp; Satellite</a>
-        <a href="#pulse-preview">Weather Pulse <span class="pulse-nav-badge" id="pulseNavBadge" hidden>New</span></a>
+        <a href="/pulse.html">Weather Pulse <span class="pulse-nav-badge" id="pulseNavBadge" hidden>New</span></a>
         <a href="/828-sunset-radiance.html">Sunset Radiance</a>
         <a href="/hiking.html">Hiking Guidance</a>
         <a href="/water.html">Water Conditions</a>
@@ -4373,7 +4569,15 @@
         </aside>
       </section>
 
-      <section class="pulse-card-lite" id="pulse-preview" aria-label="Weather Pulse" hidden>
+      <section class="pulse-card-lite" id="pulse-preview" aria-labelledby="pulseShelfTitle" hidden>
+        <div class="pulse-shelf-header">
+          <div>
+            <div class="pulse-shelf-kicker">From the weather desk</div>
+            <h2 id="pulseShelfTitle">Latest from Weather Pulse</h2>
+            <p>Timely local notes stay visible here, with the full archive one tap away.</p>
+          </div>
+          <a class="pulse-shelf-link" href="/pulse.html">Open the full Pulse <span aria-hidden="true">&rarr;</span></a>
+        </div>
         <div class="pulse-layout">
           <div>
             <div class="pulse-head"><span class="pulse-dot"></span>Live Weather Note</div>
@@ -4389,7 +4593,7 @@
               Pulse editorial, while the sky card stays observational.
             </p>
             <div class="pulse-actions">
-              <a href="pulse.html">Open Pulse</a>
+              <a href="pulse.html">Read this Pulse</a>
               <a href="828-sunset-radiance.html">Open Sunset Radiance</a>
             </div>
           </div>
@@ -4401,6 +4605,17 @@
             <figcaption class="pulse-media-label" id="pulseMediaLabel">Pulse image</figcaption>
           </figure>
         </div>
+        <div class="pulse-recent-feed" id="pulseRecentFeed" hidden>
+          <div class="pulse-recent-heading">
+            <strong>More recent posts</strong>
+            <a href="/pulse.html">See every update &rarr;</a>
+          </div>
+          <div class="pulse-recent-grid" id="pulseRecentGrid"></div>
+        </div>
+        <a class="pulse-archive-cta" href="/pulse.html">
+          <span><strong>Keep reading Weather Pulse</strong><small>Open the complete, full-size feed</small></span>
+          <b aria-hidden="true">&rarr;</b>
+        </a>
       </section>
 
       <section class="fold-tool-row" aria-label="Homepage tool row">
@@ -5932,6 +6147,35 @@
       return "What I'm watching in the weather right now.";
     }
 
+    function pulseArchiveHref(item = {}) {
+      return `/pulse.html${item.timestamp ? `#pulse-${encodeURIComponent(item.timestamp)}` : ""}`;
+    }
+
+    function renderRecentPulseShelf(items = []) {
+      const shelf = document.querySelector("#pulseRecentFeed");
+      const grid = document.querySelector("#pulseRecentGrid");
+      const recent = Array.isArray(items) ? items.slice(0, 3) : [];
+      if (!shelf || !grid) return;
+
+      shelf.hidden = recent.length === 0;
+      grid.innerHTML = recent.map((item) => {
+        const mediaUrl = item.mediaUrl || item.image || "/828-brand-card.png";
+        const thumbnail = pulseThumbnailUrl(mediaUrl, item.mediaType || "") || "/828-brand-card.png";
+        const text = pulseExcerpt(item.text || item.body || item.content || "");
+        const stamp = formatPulsePublished(pulseUpdatedAt(item));
+        return `
+          <a class="pulse-recent-card" href="${escapeAttr(pulseArchiveHref(item))}">
+            <span class="pulse-recent-media"><img src="${escapeAttr(thumbnail)}" alt="" loading="lazy" /></span>
+            <span class="pulse-recent-copy">
+              <span class="pulse-recent-time">${escapeAttr(stamp?.relative || "Recent")}</span>
+              <strong>${escapeAttr(pulseHeadline(item))}</strong>
+              <span>${escapeAttr(text || "Open this Weather Pulse update.")}</span>
+            </span>
+          </a>
+        `;
+      }).join("");
+    }
+
     function pulseUpdatedAt(pulse = {}) {
       return pulse.editedAt || pulse.timestamp || null;
     }
@@ -5957,7 +6201,12 @@
       if (!Number.isFinite(expiresAt)) return;
 
       pulseExpirationTimer = setTimeout(() => {
-        setPulsePlacementVisible(false);
+        const strip = document.querySelector("#pulseAlertStrip");
+        const navBadge = document.querySelector("#pulseNavBadge");
+        const freshBadge = document.querySelector("#pulseFreshBadge");
+        if (strip) strip.hidden = true;
+        if (navBadge) navBadge.hidden = true;
+        if (freshBadge) freshBadge.hidden = true;
         pulseExpirationTimer = null;
       }, Math.max(0, expiresAt - Date.now()));
     }
@@ -5996,7 +6245,7 @@
         document.querySelector("#pulseAlertSummary").textContent = text;
         document.querySelector("#pulseAlertFreshness").textContent = stamp ? `Updated ${stamp.relative.toLowerCase()}` : "Latest update";
         strip.classList.toggle("is-fresh", fresh);
-        strip.hidden = false;
+        strip.hidden = !fresh;
       }
 
       if (thumbnail && thumbnailImage) {
@@ -6051,7 +6300,7 @@
 
     function renderPulsePreview(pulse) {
       const updatedAt = pulseUpdatedAt(pulse);
-      if (!pulse || pulse.fallback || !isPulseFresh(updatedAt)) {
+      if (!pulse || pulse.fallback) {
         if (pulseExpirationTimer) clearTimeout(pulseExpirationTimer);
         pulseExpirationTimer = null;
         setPulsePlacementVisible(false);
@@ -6059,7 +6308,7 @@
       }
 
       setPulsePlacementVisible(true);
-      schedulePulseExpiration(updatedAt);
+      if (isPulseFresh(updatedAt)) schedulePulseExpiration(updatedAt);
 
       const text = pulseExcerpt(pulse.text || pulse.body || pulse.content || "");
       const mediaUrl = pulse.mediaUrl || pulse.image || "";
@@ -6076,6 +6325,7 @@
         document.querySelector("#pulsePreviewText").textContent = text;
       }
       renderPulseVisibility(pulse, text || "Open the latest note from the 828 Weather Direct weather desk.");
+      renderRecentPulseShelf(pulse.recent);
       document.querySelector("#pulseMediaSlot").innerHTML = `
         ${pulseMediaMarkup(mediaUrl, mediaType)}
         <figcaption class="pulse-media-label" id="pulseMediaLabel">${isVideo ? "Latest video" : "Latest pulse"}</figcaption>

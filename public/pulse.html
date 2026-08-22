@@ -2,132 +2,83 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>828 Weather Pulse Archive</title>
+  <title>828 Weather Pulse | Asheville Weather Notes</title>
+  <meta name="description" content="Tim Ballisty's latest Asheville and Western North Carolina weather notes, quick updates, and visual observations." />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="/css/app-v2.css?v=20260509-tempcompact" />
-  <style>
-    .pulse-archive {
-      max-width: 660px;
-      margin: 0 auto;
-      padding: 14px 12px 48px;
-    }
-
-    .pulse-archive-header {
-      margin: 8px 0 14px;
-    }
-
-    .pulse-archive-back {
-      color: #9ecbff;
-      font-size: 13px;
-      font-weight: 700;
-      text-decoration: none;
-    }
-
-    .pulse-archive-title {
-      margin: 10px 0 4px;
-      color: #f4f8ff;
-      font-size: 24px;
-      line-height: 1.1;
-    }
-
-    .pulse-archive-subtitle {
-      color: rgba(207, 226, 255, 0.72);
-      font-size: 13px;
-    }
-
-    .pulse-feed {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .pulse-feed-item {
-      scroll-margin-top: 14px;
-    }
-
-    .pulse-feed-meta {
-      color: rgba(207, 226, 255, 0.68);
-      font-size: 12px;
-      margin-bottom: 8px;
-    }
-
-    .pulse-feed-media {
-      overflow: hidden;
-      border-radius: 12px;
-      margin-bottom: 10px;
-      background: rgba(255,255,255,0.05);
-    }
-
-    .pulse-feed-media img,
-    .pulse-feed-media video {
-      width: 100%;
-      max-height: 440px;
-      display: block;
-      object-fit: cover;
-    }
-
-    .pulse-feed-text {
-      color: rgba(255,255,255,0.9);
-      font-size: 14px;
-      line-height: 1.55;
-      white-space: pre-wrap;
-    }
-
-    .pulse-feed-text p {
-      margin: 0 0 0.75em;
-    }
-
-    .pulse-feed-text p:last-child {
-      margin-bottom: 0;
-    }
-
-    .pulse-feed-text ul,
-    .pulse-feed-text ol {
-      margin: 0.45em 0 0.75em 1.25em;
-      padding: 0;
-    }
-
-    .pulse-feed-text a {
-      color: #9ecbff;
-      font-weight: 700;
-      text-decoration: underline;
-      text-underline-offset: 2px;
-    }
-  </style>
+  <meta property="og:title" content="828 Weather Pulse" />
+  <meta property="og:description" content="Quick, timely Asheville weather notes from 828 Weather Direct." />
+  <meta property="og:image" content="https://avlweather.com/828-brand-card.png" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://avlweather.com/pulse.html" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="stylesheet" href="/css/pulse-page.css?v=20260822" />
   <link rel="stylesheet" href="/css/brand-lockup.css?v=20260805-brand2" />
 </head>
 <body>
-  <header class="app-header">
-    <div class="header-inner">
-      <div class="forecast-header-row">
-        <a class="brand site-brand-lockup" href="/" aria-label="828 Weather Direct home">
-          <div class="brand-title site-brand-title"><span class="site-brand-828">828</span> Weather Direct</div>
-          <div class="brand-sub site-brand-sub">Hyper-local Asheville forecast built by Tim Ballisty</div>
-        </a>
-        <nav class="forecast-nav" aria-label="Primary navigation">
-          <a href="/">Home</a>
-          <a href="/forecast.html">Forecast</a>
-          <a href="/radar.html">Radar &amp; Satellite</a>
-          <a href="/hiking.html">Hiking</a>
-          <a href="/water.html">Water Conditions</a>
-          <a href="/i26-connector.html">I-26 Connector</a>
-          <a class="active" href="/pulse.html" aria-current="page">Weather Pulse</a>
-          <a href="/828-sunset-radiance.html">Sunset Radiance</a>
-        </nav>
-      </div>
+  <header class="pulse-site-header">
+    <div class="pulse-header-inner">
+      <a class="pulse-brand site-brand-lockup" href="/" aria-label="828 Weather Direct home">
+        <div class="site-brand-title"><span class="site-brand-828">828</span> Weather Direct</div>
+        <div class="site-brand-sub">Hyper-local Asheville forecast built by Tim Ballisty</div>
+      </a>
+      <nav class="pulse-nav" aria-label="Primary navigation">
+        <a href="/">Home</a>
+        <a href="/forecast.html">Forecast</a>
+        <a href="/radar.html">Radar &amp; Satellite</a>
+        <a href="/hiking.html">Hiking</a>
+        <a href="/water.html">Water Conditions</a>
+        <a class="active" href="/pulse.html" aria-current="page">Weather Pulse</a>
+        <a href="/828-sunset-radiance.html">Sunset Radiance</a>
+      </nav>
     </div>
   </header>
-  <main class="pulse-archive">
-    <header class="pulse-archive-header">
-      <a class="pulse-archive-back" href="/">Back to 828 Weather Direct</a>
-      <h1 class="pulse-archive-title">828 Weather Pulse</h1>
-      <div class="pulse-archive-subtitle">Recent quick hits, newest first.</div>
-    </header>
 
-    <section class="pulse-feed" id="pulse-feed">
-      <div class="content-card">Loading Pulse updates...</div>
+  <main class="pulse-page">
+    <section class="pulse-hero" aria-labelledby="pulse-page-title">
+      <div class="pulse-hero-copy">
+        <div class="pulse-kicker"><span class="pulse-live-dot" aria-hidden="true"></span> From the weather desk</div>
+        <h1 id="pulse-page-title">828 Weather <span>Pulse</span></h1>
+        <p>Timely Asheville weather notes, visual observations, and the local context that can disappear too quickly in a forecast app.</p>
+      </div>
+      <a class="pulse-home-button" href="/">Back to today&rsquo;s weather <span aria-hidden="true">&rarr;</span></a>
+    </section>
+
+    <div class="pulse-feed-heading">
+      <div>
+        <div class="pulse-section-label">Latest updates</div>
+        <h2>What Tim is watching</h2>
+      </div>
+      <p>Newest first. Every post stays here for a full, easy read.</p>
+    </div>
+
+    <section class="pulse-feed" id="pulse-feed" aria-live="polite" aria-busy="true">
+      <article class="pulse-feed-item pulse-loading-card">
+        <div class="pulse-loading-line short"></div>
+        <div class="pulse-loading-line"></div>
+        <div class="pulse-loading-line"></div>
+      </article>
     </section>
   </main>
+
+  <footer class="pulse-footer">
+    <div class="pulse-footer-inner">
+      <div>
+        <div class="pulse-footer-logo">828 Weather Direct</div>
+        <p>Hyper-local weather, sky context, and outdoor timing for Asheville and the greater 828 region.</p>
+      </div>
+      <nav class="pulse-footer-links" aria-label="Footer navigation">
+        <a href="/">Home</a>
+        <a href="/forecast.html">Forecast</a>
+        <a href="/radar.html">Radar &amp; Satellite</a>
+        <a href="/hiking.html">Hiking Guidance</a>
+        <a href="/water.html">Water Conditions</a>
+        <a href="/828-sunset-radiance.html">Sunset Radiance</a>
+        <a href="mailto:tballisty@gmail.com">Contact</a>
+      </nav>
+      <div class="pulse-footer-meta">For general awareness only &mdash; not a substitute for official forecasts or warnings.</div>
+      <div class="pulse-footer-meta">&copy; 2026 828 Weather Direct</div>
+    </div>
+  </footer>
 
   <script type="module">
     const feed = document.getElementById("pulse-feed");
@@ -145,14 +96,12 @@
     function sanitizePulseHtml(html) {
       const template = document.createElement("template");
       template.innerHTML = html || "";
-
       const allowedTags = new Set(["A", "B", "BR", "CODE", "EM", "I", "LI", "OL", "P", "STRONG", "U", "UL"]);
       const allowedProtocols = new Set(["http:", "https:", "mailto:", "tel:"]);
 
       function cleanNode(node) {
         for (const child of Array.from(node.childNodes)) {
           if (child.nodeType === Node.TEXT_NODE) continue;
-
           if (child.nodeType !== Node.ELEMENT_NODE || !allowedTags.has(child.tagName)) {
             cleanNode(child);
             child.replaceWith(...Array.from(child.childNodes));
@@ -160,31 +109,20 @@
           }
 
           const rawHref = child.tagName === "A" ? child.getAttribute("href") || "" : "";
-
-          for (const attr of Array.from(child.attributes)) {
-            child.removeAttribute(attr.name);
-          }
+          for (const attr of Array.from(child.attributes)) child.removeAttribute(attr.name);
 
           if (child.tagName === "A") {
-            let href = "";
-
             try {
               const url = new URL(rawHref, window.location.origin);
-              if (allowedProtocols.has(url.protocol)) href = url.href;
-            } catch {
-              href = "";
-            }
-
-            if (href) {
-              child.setAttribute("href", href);
+              if (!allowedProtocols.has(url.protocol)) throw new Error("Unsupported link");
+              child.setAttribute("href", url.href);
               child.setAttribute("target", "_blank");
               child.setAttribute("rel", "noopener noreferrer");
-            } else {
+            } catch {
               child.replaceWith(...Array.from(child.childNodes));
               continue;
             }
           }
-
           cleanNode(child);
         }
       }
@@ -194,57 +132,77 @@
     }
 
     function formatDate(timestamp) {
-      if (!timestamp) return "Recent";
-      return new Date(timestamp).toLocaleString("en-US", {
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit"
-      });
+      const date = new Date(timestamp);
+      if (!Number.isFinite(date.getTime())) return { short: "Recent", exact: "Recent Weather Pulse update" };
+      return {
+        short: date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "America/New_York" }),
+        exact: date.toLocaleString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/New_York" })
+      };
+    }
+
+    function pulseTitle(item, index) {
+      const candidate = String(item.headline || item.title || "").trim();
+      if (candidate && !/^(828\s+)?weather\s+pulse$/i.test(candidate)) return candidate;
+      return index === 0 ? "Latest from the weather desk" : "Weather Pulse update";
     }
 
     function mediaHtml(item) {
       const media = item.mediaUrl || item.image;
       if (!media) return "";
       const safeMedia = escapeHTML(media);
-      const isVideo = item.mediaType === "video" || media.endsWith(".mp4") || media.includes("/video/");
-
+      const isVideo = item.mediaType === "video" || /\.(mp4|mov|webm)(?:$|\?)/i.test(media) || media.includes("/video/");
       return `
         <div class="pulse-feed-media">
-          ${
-            isVideo
-              ? `<video controls playsinline preload="metadata"><source src="${safeMedia}" type="video/mp4" /></video>`
-              : `<img src="${safeMedia}" alt="" loading="lazy" />`
-          }
+          ${isVideo
+            ? `<video controls playsinline preload="metadata" aria-label="Weather Pulse video"><source src="${safeMedia}" type="video/mp4" /></video>`
+            : `<img src="${safeMedia}" alt="" loading="lazy" />`}
         </div>
       `;
     }
 
     function render(items) {
+      feed.setAttribute("aria-busy", "false");
       if (!items.length) {
-        feed.innerHTML = '<div class="content-card">No Pulse updates have been published yet.</div>';
+        feed.innerHTML = '<div class="pulse-empty"><strong>No Pulse updates yet.</strong><span>Check back soon for Tim&rsquo;s latest weather note.</span></div>';
         return;
       }
 
-      feed.innerHTML = items.map((item) => `
-        <article class="content-card pulse-feed-item" id="pulse-${escapeHTML(item.timestamp || "")}">
-          <div class="pulse-feed-meta">${escapeHTML(formatDate(item.timestamp))}</div>
-          ${mediaHtml(item)}
-          <div class="pulse-feed-text">${sanitizePulseHtml(item.text || item.body || item.content || "")}</div>
-        </article>
-      `).join("");
+      feed.innerHTML = items.map((item, index) => {
+        const date = formatDate(item.timestamp);
+        const id = `pulse-${item.timestamp || index + 1}`;
+        return `
+          <article class="pulse-feed-item${index === 0 ? " is-latest" : ""}" id="${escapeHTML(id)}">
+            <header class="pulse-item-header">
+              <div>
+                ${index === 0 ? '<div class="pulse-latest-label"><span aria-hidden="true"></span> Latest Pulse</div>' : ""}
+                <h3>${escapeHTML(pulseTitle(item, index))}</h3>
+              </div>
+              <a class="pulse-permalink" href="#${escapeHTML(id)}" aria-label="Link to this Weather Pulse update">${escapeHTML(date.short)}</a>
+            </header>
+            ${mediaHtml(item)}
+            <div class="pulse-feed-text">${sanitizePulseHtml(item.text || item.body || item.content || "")}</div>
+            <footer class="pulse-item-footer">
+              <time datetime="${escapeHTML(item.timestamp || "")}">${escapeHTML(date.exact)}</time>
+              <a href="/" class="pulse-item-home">Check current conditions <span aria-hidden="true">&rarr;</span></a>
+            </footer>
+          </article>
+        `;
+      }).join("");
 
       if (window.location.hash) {
-        document.querySelector(window.location.hash)?.scrollIntoView();
+        const target = document.getElementById(decodeURIComponent(window.location.hash.slice(1)));
+        target?.scrollIntoView({ block: "start" });
       }
     }
 
     try {
       const response = await fetch("/api/router?route=tidbits/pulse-feed");
+      if (!response.ok) throw new Error(`Pulse feed failed: ${response.status}`);
       const data = await response.json();
       render(Array.isArray(data.items) ? data.items : []);
     } catch {
-      feed.innerHTML = '<div class="content-card">Unable to load Pulse updates right now.</div>';
+      feed.setAttribute("aria-busy", "false");
+      feed.innerHTML = '<div class="pulse-empty"><strong>Pulse is briefly unavailable.</strong><span>Please try again in a moment.</span></div>';
     }
   </script>
 </body>
