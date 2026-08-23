@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="/css/app-v2.css?v=20260728-alert-images" />
   <link rel="stylesheet" href="/css/rainfall-context.css?v=20260808" />
+  <link rel="stylesheet" href="/css/visual-intelligence.css?v=20260822-comfort-curve" />
   <style>
     :root {
       --ink: #142033;
@@ -4401,6 +4402,9 @@
             </div>
           </aside>
         </div>
+        <div id="blueRidgeWeatherScene" class="weather-scene-host" aria-live="polite"></div>
+        <div id="weatherIngredients" class="weather-ingredients-host" aria-live="polite"></div>
+        <div id="comfortCurve" class="comfort-curve-host" aria-live="polite"></div>
       </section>
 
       <section class="sky-home-module" id="skyHomeModule" aria-label="Current Asheville sky conditions">
@@ -4420,6 +4424,9 @@
             </p>
           </div>
           <div class="sky-home-photo">
+            <div class="sky-home-direction" aria-label="Live Asheville camera facing west-northwest">
+              <span aria-hidden="true"></span>Asheville · WNW
+            </div>
             <iframe
               id="skyHomeStream"
               src="https://www.youtube.com/embed/UxUU3Fc1vBw?playsinline=1&rel=0&autoplay=1&mute=1"
@@ -4431,7 +4438,7 @@
             ></iframe>
             <div class="sky-home-badge">
               <span class="sky-home-pill" id="skyHomeLabel">Loading</span>
-              <span class="sky-home-pill blue" id="skyHomeCapture">Camera capture --</span>
+              <span class="sky-home-pill blue live" id="skyHomeCapture">Camera capture --</span>
             </div>
           </div>
         </div>
@@ -4493,6 +4500,7 @@
             </div>
             <div class="best-pill" id="nextSixBestScore">86</div>
           </div>
+          <div id="nextSixRibbon" class="feelscore-ribbon-host"></div>
           <div class="hour-row" id="nextSixHourRow">
             <div class="hour-card best"><b>11 AM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-mild"><em>Temp</em><strong>70°</strong></span><span class="hour-fs-value fs-great"><em>FeelScore</em> <strong>86</strong></span></div></div>
             <div class="hour-card"><b>12 PM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-mild"><em>Temp</em><strong>72°</strong></span><span class="hour-fs-value fs-great"><em>FeelScore</em> <strong>84</strong></span></div></div>
@@ -5010,6 +5018,13 @@
       calculateComfort,
       FEELSCORE_CALIBRATION
     } from "./js/intel/comfort.js?v=20260807-humid-heat";
+    import { renderComfortCurve } from "./js/visuals/comfort-curve.js?v=20260822";
+    import { renderWeatherIngredients } from "./js/visuals/weather-ingredients.js?v=20260822";
+    import {
+      getAdaptiveHourContext,
+      renderFeelscoreRibbon
+    } from "./js/visuals/feelscore-ribbon.js?v=20260822";
+    import { renderBlueRidgeWeatherScene } from "./js/visuals/blue-ridge-weather-scene.js?v=20260822";
     import { buildTomorrowSummary } from "./js/intel/tomorrow-summary.js?v=20260811-tomorrow-emoji";
     import { mergePublishedTomorrowSummary } from "./js/intel/tomorrow-published.js?v=20260811-tomorrow-emoji";
     import { buildTemperaturePath } from "./js/intel/temperature-path.js?v=20260806-temp-path";
@@ -5048,11 +5063,32 @@
     let latestSkyIntel = null;
     let latestObservationClouds = null;
     let latestSkyWeatherContext = null;
+    let latestVisualWeatherInputs = null;
+    let latestVisualCameraCloud = null;
     let latestPrecipOverride = null;
     let latestSunriseAt = null;
     let latestSunsetAt = null;
     let latestPublishedForecast = null;
     let latestTomorrowRenderInputs = null;
+
+    function renderVisualWeatherContext() {
+      if (!latestVisualWeatherInputs) return;
+      const { currentHour, forecastHour, daily } = latestVisualWeatherInputs;
+      const visualForecastHour = Number.isFinite(latestVisualCameraCloud)
+        ? { ...forecastHour, cloudCover: latestVisualCameraCloud }
+        : forecastHour;
+
+      renderWeatherIngredients("#weatherIngredients", {
+        currentHour,
+        forecastHour: visualForecastHour
+      });
+      renderBlueRidgeWeatherScene("#blueRidgeWeatherScene", {
+        currentHour,
+        forecastHour: visualForecastHour,
+        daily
+      });
+    }
+
     function labelize(value) {
       if (!value) return "--";
       const labels = {
@@ -6857,11 +6893,26 @@
       }
     }
 
-    function renderNextSix(hourly = []) {
+    function renderNextSix(hourly = [], currentHour = null) {
       const future = hourly
         .filter((hour) => hour.timestamp >= Date.now() - 30 * 60 * 1000 && Number.isFinite(hour.temperatureF))
         .slice(0, 6);
       if (!future.length) return;
+
+      const currentTimestamp = Number(currentHour?.timestamp);
+      if (Number.isFinite(currentTimestamp) && Math.abs(future[0].timestamp - currentTimestamp) < 20 * 60 * 1000) {
+        const forecastHour = future[0];
+        future[0] = {
+          ...forecastHour,
+          temperatureF: currentHour.temperatureF ?? forecastHour.temperatureF,
+          dewpointF: currentHour.dewpointF ?? forecastHour.dewpointF,
+          relativeHumidity: currentHour.relativeHumidity ?? forecastHour.relativeHumidity,
+          windSpeed: currentHour.windSpeed ?? forecastHour.windSpeed,
+          windGust: currentHour.windGust ?? forecastHour.windGust,
+          precipAmount: currentHour.precipAmount ?? forecastHour.precipAmount,
+          timestamp: forecastHour.timestamp
+        };
+      }
 
       const scored = future.map((hour) => ({
         hour,
@@ -6875,18 +6926,21 @@
       if (Number.isFinite(best)) {
         document.querySelector("#nextSixBestScore").textContent = best;
       }
+      renderFeelscoreRibbon("#nextSixRibbon", scored);
 
       document.querySelector("#nextSixHourRow").innerHTML = scored.map(({ hour, score }) => {
         const icon = weatherIcon(hour);
         const temp = Math.round(hour.temperatureF);
         const isBest = Number.isFinite(score) && score === best;
+        const context = getAdaptiveHourContext(hour);
         return `
-          <div class="hour-card ${isBest ? "best" : ""}">
+          <div class="hour-card ${isBest ? "best" : ""}" aria-label="${formatHour(hour.timestamp)}, ${temp} degrees, FeelScore ${Number.isFinite(score) ? score : "unavailable"}${context ? `, ${context.ariaLabel}` : ""}">
             <b>${formatHour(hour.timestamp)}</b>
             <span class="icon ${iconClass(icon)}" title="${icon}">${iconGlyph(icon)}</span>
             <div class="hour-values">
               <span class="hour-temp-value ${tempClass(temp)}"><em>Temp</em><strong>${temp}°</strong></span>
               <span class="hour-fs-value ${fsClass(score)}"><em>FeelScore</em> <strong>${Number.isFinite(score) ? score : "--"}</strong></span>
+              ${context ? `<span class="hour-context ${context.type}">${context.label}</span>` : ""}
             </div>
           </div>
         `;
@@ -6967,7 +7021,18 @@
           displayCurrentHour,
           latestPrecipOverride
         );
-        renderNextSix(hourly);
+        renderComfortCurve("#comfortCurve", {
+          hourly,
+          daily,
+          currentHour: displayCurrentHour || currentHour
+        });
+        latestVisualWeatherInputs = {
+          currentHour: displayCurrentHour || currentHour,
+          forecastHour: closestCurrentForecastHour(hourly),
+          daily
+        };
+        renderVisualWeatherContext();
+        renderNextSix(hourly, displayCurrentHour || currentHour);
         latestTomorrowRenderInputs = { tomorrow: human?.tomorrow, hourly, daily };
         renderTomorrowLive(human?.tomorrow, hourly, daily);
       } catch (error) {
@@ -7098,6 +7163,12 @@
           applyConditionalHomepageFeatures();
         }
 
+        const cameraCloud = Number(skyCloud);
+        latestVisualCameraCloud = !nighttimeFallback && Number.isFinite(cameraCloud)
+          ? clamp(cameraCloud <= 1 ? cameraCloud : cameraCloud / 100)
+          : null;
+        renderVisualWeatherContext();
+
         document.querySelector("#skyHomeLabel").textContent = skyLabel;
         document.querySelector("#skyHomeCapture").textContent = "Live western stream";
         document.querySelector("#skyHomeHeadline").textContent = skyNarrative?.headline || "Reading the Asheville sky.";
@@ -7133,7 +7204,6 @@
     setInterval(hydrateHomeHikingCard, 5 * 60 * 1000);
     setInterval(hydrateHomeWaterCard, 10 * 60 * 1000);
     setInterval(hydrateHomeForecastSignals, 10 * 60 * 1000);
-    setInterval(hydrateSkyModule, 60 * 1000);
     setInterval(() => loadAndRenderAlerts(activeAlerts), 60 * 1000);
 
     const radarThumbImage = document.querySelector("#radarThumbImage");

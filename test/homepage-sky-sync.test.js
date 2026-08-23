@@ -25,3 +25,11 @@ test("homepage Current Sky does not replace its camera narrative with the sunset
   assert.match(html, /let skyNarrative = nighttimeFallback/);
   assert.match(html, /: narrative;/);
 });
+
+test("homepage shares the live camera cloud signal without scheduling duplicate sky refreshes", async () => {
+  const html = await readFile(homepagePath, "utf8");
+
+  assert.match(html, /latestVisualCameraCloud/);
+  assert.match(html, /renderVisualWeatherContext\(\)/);
+  assert.equal((html.match(/setInterval\(hydrateSkyModule, 60 \* 1000\);/g) || []).length, 1);
+});
