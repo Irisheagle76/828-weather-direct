@@ -2,6 +2,7 @@ const ASHEVILLE_TIME_ZONE = "America/New_York";
 export const SUNSET_APPROACH_MS = 45 * 60 * 1000;
 export const SUNSET_GRACE_MS = 10 * 60 * 1000;
 export const AFTERGLOW_AFTER_SUNSET_MS = 60 * 60 * 1000;
+export const SUNSET_PROMOTION_LEAD_MS = 2 * 60 * 60 * 1000;
 
 function localDateKey(timestamp) {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -109,6 +110,33 @@ export function evaluateSunsetSky({
     cloud <= 0.55 && usefulLightSignal;
 
   return { cloud, wetSignal, usefulLightSignal, radianceVetted };
+}
+
+export function evaluateSunsetPromotion({
+  now = Date.now(),
+  sunsetAt = null,
+  confidence = null,
+  ...skyInputs
+} = {}) {
+  const current = timestamp(now);
+  const sunset = timestamp(sunsetAt);
+  const minutes = localMinutes(current ?? Date.now());
+  const timeEligible = Number.isFinite(current) && Number.isFinite(sunset)
+    ? current >= sunset - SUNSET_PROMOTION_LEAD_MS && current <= sunset + AFTERGLOW_AFTER_SUNSET_MS
+    : minutes >= 17 * 60 && minutes <= 21 * 60 + 15;
+  const sunsetSky = evaluateSunsetSky(skyInputs);
+  const cloudTextureEligible = Number.isFinite(sunsetSky.cloud) &&
+    sunsetSky.cloud >= 0.12 && sunsetSky.cloud <= 0.55;
+  const confidenceValue = Number(confidence);
+  const confidenceEligible = !Number.isFinite(confidenceValue) || confidenceValue >= 0.58;
+
+  return {
+    ...sunsetSky,
+    timeEligible,
+    cloudTextureEligible,
+    confidenceEligible,
+    active: timeEligible && sunsetSky.radianceVetted && cloudTextureEligible && confidenceEligible
+  };
 }
 
 export function buildDuskSkyFallback({

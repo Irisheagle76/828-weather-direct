@@ -1120,7 +1120,7 @@
       grid-template-columns: minmax(0, 1fr) auto;
       gap: 16px;
       align-items: center;
-      padding: 18px;
+      padding: 16px 18px;
       border-top: 1px solid rgba(255, 200, 115, 0.38);
       background:
         radial-gradient(circle at 88% 0%, rgba(245, 125, 35, 0.24), transparent 32%),
@@ -1136,8 +1136,8 @@
       margin: 0;
       color: var(--white);
       font-family: Georgia, "Times New Roman", serif;
-      font-size: clamp(1.8rem, 4vw, 2.7rem);
-      line-height: 0.98;
+      font-size: clamp(1.55rem, 3.2vw, 2.2rem);
+      line-height: 1.02;
       letter-spacing: 0;
     }
 
@@ -1149,25 +1149,22 @@
     }
 
     .radiance-score-pill {
-      display: grid;
-      place-items: center;
-      min-width: 88px;
-      min-height: 88px;
-      border-radius: 50%;
+      align-items: center;
+      display: inline-flex;
+      justify-content: center;
+      min-width: 118px;
+      min-height: 48px;
+      padding: 0 18px;
+      border-radius: 999px;
       color: var(--blue);
       background: linear-gradient(135deg, var(--gold), #fff3c2);
       box-shadow: 0 16px 34px rgba(0, 0, 0, 0.18);
-      font-size: 2rem;
+      font-size: 0.92rem;
       font-weight: 950;
+      letter-spacing: 0.06em;
       line-height: 1;
-    }
-
-    .radiance-score-pill span {
-      display: block;
-      color: rgba(8, 26, 60, 0.68);
-      font-size: 0.72rem;
-      letter-spacing: 0.08em;
       text-transform: uppercase;
+      white-space: nowrap;
     }
 
     .radar-home-card {
@@ -1874,9 +1871,9 @@
 
     .forecast-pair .forecast-invitation {
       grid-template-columns: auto minmax(0, 1fr);
-      grid-template-rows: auto minmax(0, 1fr) auto;
+      grid-template-rows: auto auto auto;
       align-items: start;
-      align-content: stretch;
+      align-content: start;
     }
 
     .forecast-pair .forecast-invitation-mark {
@@ -1884,7 +1881,8 @@
     }
 
     .forecast-pair .forecast-invitation h2 {
-      font-size: clamp(1.9rem, 3vw, 2.7rem);
+      font-size: clamp(1.75rem, 2.35vw, 2.2rem);
+      line-height: 1.02;
     }
 
     .forecast-signal-grid {
@@ -1892,14 +1890,14 @@
       align-self: center;
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
+      gap: 8px;
       width: 100%;
-      margin: 18px 0;
+      margin: 12px 0 4px;
     }
 
     .forecast-signal-card {
-      min-height: 82px;
-      padding: 13px 14px;
+      min-height: 64px;
+      padding: 10px 12px;
       border: 1px solid rgba(15, 76, 196, 0.13);
       border-radius: 14px;
       background: rgba(255, 253, 248, 0.78);
@@ -1916,7 +1914,7 @@
 
     .forecast-signal-card span {
       display: block;
-      margin-top: 8px;
+      margin-top: 5px;
       color: var(--muted);
       font-size: 0.67rem;
       font-weight: 950;
@@ -1936,7 +1934,27 @@
       grid-column: 1 / -1;
       align-self: end;
       justify-self: start;
-      margin-top: 18px;
+      margin-top: 10px;
+    }
+
+    @media (min-width: 1001px) {
+      .forecast-pair .forecast-signal-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .forecast-pair .forecast-signal-card {
+        min-height: 62px;
+        padding: 9px 10px;
+      }
+
+      .forecast-pair .forecast-signal-card strong {
+        font-size: clamp(1.15rem, 1.65vw, 1.45rem);
+      }
+
+      .forecast-pair .forecast-signal-card span {
+        font-size: 0.61rem;
+        letter-spacing: 0.055em;
+      }
     }
 
     .pulse-card-lite {
@@ -3671,6 +3689,88 @@
       font-size: 1rem;
     }
 
+    @media (min-width: 1001px) {
+      .now-panel {
+        gap: 12px;
+        padding: 26px 28px;
+      }
+
+      .now-temp {
+        font-size: 7rem;
+      }
+
+      .now-condition {
+        font-size: 1.75rem;
+      }
+
+      .now-panel .fs-headline {
+        margin-top: 8px;
+        font-size: 3rem;
+      }
+
+      .now-panel .fs-subhead {
+        margin-top: 8px;
+        font-size: 0.92rem;
+        line-height: 1.4;
+      }
+
+      .now-observation {
+        min-height: 68px;
+        padding: 10px;
+      }
+
+      .now-observation strong {
+        font-size: 1.7rem;
+      }
+
+      .feel-panel {
+        gap: 12px;
+        padding: 22px 24px;
+      }
+
+      .feel-panel .fs-row {
+        grid-template-columns: 145px minmax(0, 1fr);
+        gap: 18px;
+      }
+
+      .feel-panel .fs-score {
+        max-width: 145px;
+        font-size: 5rem;
+      }
+
+      .feel-panel .fs-bullets {
+        padding: 10px 12px;
+      }
+
+      .feel-panel .fs-bullets ul {
+        gap: 4px;
+        font-size: 0.82rem;
+      }
+
+      .feel-panel .fs-temp-markers {
+        gap: 4px;
+        grid-template-rows: auto repeat(3, auto) auto;
+        padding: 11px 12px;
+      }
+
+      .feel-panel .fs-temp-marker {
+        padding-bottom: 5px;
+      }
+
+      .feel-panel .fs-temp-marker span {
+        font-size: 0.7rem;
+      }
+
+      .feel-panel .fs-temp-marker b {
+        font-size: 2.25rem;
+      }
+
+      .feel-panel .fs-temp-context {
+        padding: 8px 10px;
+        font-size: 0.74rem;
+      }
+    }
+
     @media (max-width: 1000px) {
       .feelscore-inner {
         grid-template-columns: minmax(0, 1fr);
@@ -4402,9 +4502,17 @@
             </div>
           </aside>
         </div>
-        <div id="blueRidgeWeatherScene" class="weather-scene-host" aria-live="polite"></div>
-        <div id="weatherIngredients" class="weather-ingredients-host" aria-live="polite"></div>
-        <div id="comfortCurve" class="comfort-curve-host" aria-live="polite"></div>
+        <section class="visual-intelligence-cluster" aria-labelledby="visualIntelligenceTitle">
+          <header class="visual-intelligence-cluster-header">
+            <div>
+              <div class="visual-intelligence-cluster-kicker">FeelScore details</div>
+              <h2 id="visualIntelligenceTitle">Why it feels this way—and when it gets better.</h2>
+            </div>
+            <p>Current ingredients and the next 18-hour comfort trend, in one view.</p>
+          </header>
+          <div id="weatherIngredients" class="weather-ingredients-host" aria-live="polite"></div>
+          <div id="comfortCurve" class="comfort-curve-host" aria-live="polite"></div>
+        </section>
       </section>
 
       <section class="sky-home-module" id="skyHomeModule" aria-label="Current Asheville sky conditions">
@@ -4463,14 +4571,14 @@
         <div class="radiance-home-promo" id="radianceHomePromo" aria-label="Conditional Sunset Radiance promo">
           <div>
             <div class="kicker">Sunset Radiance</div>
-            <h3>Evening color becomes worth a closer look.</h3>
+            <h3>Sunset conditions are worth watching.</h3>
             <p>
-              After 3 PM, the homepage can elevate Sunset Radiance when clouds, sunlight, and timing
-              give the evening sky a real chance to perform.
+              The western camera and forecast currently show dry air, useful light, and enough cloud
+              texture near sunset to warrant a closer look.
             </p>
           </div>
           <a class="radiance-score-pill" href="828-sunset-radiance.html" aria-label="Open Sunset Radiance forecast">
-            <div>Watch<span>Live</span></div>
+            Watch live
           </a>
         </div>
       </section>
@@ -5024,7 +5132,6 @@
       getAdaptiveHourContext,
       renderFeelscoreRibbon
     } from "./js/visuals/feelscore-ribbon.js?v=20260822";
-    import { renderBlueRidgeWeatherScene } from "./js/visuals/blue-ridge-weather-scene.js?v=20260822";
     import { buildTomorrowSummary } from "./js/intel/tomorrow-summary.js?v=20260811-tomorrow-emoji";
     import { mergePublishedTomorrowSummary } from "./js/intel/tomorrow-published.js?v=20260811-tomorrow-emoji";
     import { buildTemperaturePath } from "./js/intel/temperature-path.js?v=20260806-temp-path";
@@ -5043,7 +5150,7 @@
       getCurrentPrecipOverride,
       getPrecipSkyLabel
     } from "./js/intel/precip-override.js?v=20260811-shared-sky-label";
-    import { findTodaySolarTimes, getSkyTimePhase } from "./js/intel/sky-time.js?v=20260629-shared-sunset";
+    import { evaluateSunsetPromotion, findTodaySolarTimes, getSkyTimePhase } from "./js/intel/sky-time.js?v=20260629-shared-sunset";
     import { loadAndRenderAlerts } from "./js/modules/renderAlerts.js?v=20260728-published-images";
     import { subscribeUserToPush } from "./js/notifications/subscribeClient.js?v=20260518-vapid-trim";
     import { getWaterPageInputs } from "./js/water/water-data.js?v=20260730-water-live2";
@@ -5073,7 +5180,7 @@
 
     function renderVisualWeatherContext() {
       if (!latestVisualWeatherInputs) return;
-      const { currentHour, forecastHour, daily } = latestVisualWeatherInputs;
+      const { currentHour, forecastHour } = latestVisualWeatherInputs;
       const visualForecastHour = Number.isFinite(latestVisualCameraCloud)
         ? { ...forecastHour, cloudCover: latestVisualCameraCloud }
         : forecastHour;
@@ -5081,11 +5188,6 @@
       renderWeatherIngredients("#weatherIngredients", {
         currentHour,
         forecastHour: visualForecastHour
-      });
-      renderBlueRidgeWeatherScene("#blueRidgeWeatherScene", {
-        currentHour,
-        forecastHour: visualForecastHour,
-        daily
       });
     }
 
@@ -5307,18 +5409,26 @@
       };
     }
 
-    function isSunsetRadianceWindow() {
-      const { hour, minute } = localTimeParts();
-      const minutes = hour * 60 + minute;
-      return minutes >= 15 * 60 && minutes <= 21 * 60 + 15;
-    }
-
     function applyConditionalHomepageFeatures() {
       const skyHomeModule = document.querySelector("#skyHomeModule");
       const radarHomeCard = document.querySelector("#radarHomeCard");
       const skyHomeFeature = document.querySelector("#skyHomeFeature");
       const skyHomeFeatureLabel = document.querySelector("#skyHomeFeatureLabel");
-      const radianceActive = (PREVIEW_RADIANCE_ACTIVE || localHour() >= 15) && isSunsetRadianceWindow();
+      const atmosphericState = String(latestSkyIntel?.atmosphericState || "");
+      const promotion = evaluateSunsetPromotion({
+        sunsetAt: latestSunsetAt,
+        cameraCloud: latestVisualCameraCloud,
+        forecastCloud: latestSkyWeatherContext?.cloudCover,
+        confidence: latestSkyIntel?.confidence,
+        obscured: atmosphericState === "fog" || atmosphericState === "low_cloud" || atmosphericState === "night",
+        precipActive: Boolean(latestPrecipOverride?.active),
+        precipAmount: latestSkyWeatherContext?.precipAmount,
+        precipProbability: latestSkyWeatherContext?.precipProbability,
+        weatherCode: latestSkyWeatherContext?.weatherCode,
+        sunlightDetected: latestSkyIntel?.sunlightDetected,
+        sunlightLevel: latestSkyIntel?.sunlightLevel
+      });
+      const radianceActive = PREVIEW_RADIANCE_ACTIVE || promotion.active;
       const radarActive = !PREVIEW_RADAR_OFF && (PREVIEW_RADAR_ACTIVE || liveRadarSignalActive);
 
       skyHomeModule?.classList.toggle("radiance-active", radianceActive);
@@ -7028,8 +7138,7 @@
         });
         latestVisualWeatherInputs = {
           currentHour: displayCurrentHour || currentHour,
-          forecastHour: closestCurrentForecastHour(hourly),
-          daily
+          forecastHour: closestCurrentForecastHour(hourly)
         };
         renderVisualWeatherContext();
         renderNextSix(hourly, displayCurrentHour || currentHour);
@@ -7178,6 +7287,7 @@
         document.querySelector("#skyHomeLight").textContent = nighttimeFallback ? "Night" : daylightNightMismatch ? (metrics.sunlightDetected ? labelize(metrics.sunlightLevel) : "Low") : skyRead.sunlightMetric;
         document.querySelector("#skyHomeConfidence").textContent = nighttimeFallback ? "Low" : daylightNightMismatch ? pct(skyConfidence) : skyRead.confidenceMetric;
         renderCloudObservationChip();
+        applyConditionalHomepageFeatures();
       } catch (error) {
         console.warn("Sky module unavailable", error);
       }

@@ -7,19 +7,73 @@
   --ingredient-accent: var(--blue, #0f4cc4);
 }
 
+.visual-intelligence-cluster {
+  background: rgba(255, 253, 248, 0.76);
+  border: 1px solid rgba(15, 76, 196, 0.2);
+  border-radius: 22px;
+  border-top: 4px solid #4c9ae8;
+  box-shadow: 0 18px 42px rgba(9, 37, 95, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  grid-column: 1 / -1;
+  margin: 22px 0 0;
+  min-width: 0;
+  padding: 1.05rem 1.1rem 1rem;
+}
+
+.visual-intelligence-cluster-header {
+  align-items: flex-end;
+  border-bottom: 1px solid rgba(20, 32, 51, 0.1);
+  display: flex;
+  gap: 1rem 2rem;
+  justify-content: space-between;
+  margin-bottom: 0.95rem;
+  padding: 0 0.15rem 0.9rem;
+}
+
+.visual-intelligence-cluster-kicker {
+  color: var(--blue, #0f4cc4);
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.visual-intelligence-cluster-header h2 {
+  color: var(--ink, #142033);
+  font-size: clamp(1.15rem, 2.4vw, 1.5rem);
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  margin: 0.18rem 0 0;
+}
+
+.visual-intelligence-cluster-header p {
+  color: var(--muted, #617085);
+  font-size: 0.76rem;
+  line-height: 1.4;
+  margin: 0 0 0.08rem;
+  max-width: 330px;
+  text-align: right;
+}
+
 .weather-ingredients-host {
   grid-column: 1 / -1;
   min-width: 0;
-  padding: 0 1.35rem 0.8rem;
+  padding: 0;
 }
 
 .weather-ingredients-host[hidden] { display: none; }
 
 .weather-ingredients {
-  background: rgba(9, 37, 95, 0.045);
-  border: 1px solid rgba(15, 76, 196, 0.12);
-  border-radius: 20px;
-  padding: 0.9rem 1rem 1rem;
+  background:
+    radial-gradient(circle at 4% 8%, rgba(110, 168, 255, 0.26), transparent 25%),
+    radial-gradient(circle at 92% 90%, rgba(247, 200, 115, 0.3), transparent 24%),
+    linear-gradient(118deg, #f2f7ff 0%, #eefaf5 52%, #fff9e9 100%);
+  border: 0;
+  border-top: 1px solid rgba(15, 76, 196, 0.12);
+  border-radius: 0;
+  margin: -0.1rem -1.1rem 0;
+  overflow: hidden;
+  padding: 1rem 1.25rem 1.15rem;
+  position: relative;
 }
 
 .weather-ingredients-header {
@@ -31,7 +85,7 @@
 }
 
 .weather-ingredients-header h2 {
-  color: var(--ink, #142033);
+  color: #09255f;
   font-size: 0.95rem;
   letter-spacing: 0.04em;
   margin: 0;
@@ -52,16 +106,23 @@
 
 .weather-ingredient {
   --ingredient-fill: var(--ingredient-accent);
-  background: rgba(255, 253, 248, 0.76);
-  border: 1px solid rgba(20, 32, 51, 0.08);
+  --ingredient-soft: rgba(110, 168, 255, 0.16);
+  background:
+    radial-gradient(circle at 100% 0%, var(--ingredient-soft), transparent 48%),
+    rgba(255, 255, 255, 0.72);
+  border: 1px solid color-mix(in srgb, var(--ingredient-fill) 22%, transparent);
+  border-top: 3px solid var(--ingredient-fill);
   border-radius: 14px;
+  box-shadow: 0 10px 24px rgba(9, 37, 95, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
   min-width: 0;
+  overflow: hidden;
   padding: 0.68rem 0.7rem 0.62rem;
+  position: relative;
 }
 
-.weather-ingredient.moisture { --ingredient-fill: #168aad; }
-.weather-ingredient.wind { --ingredient-fill: #617085; }
-.weather-ingredient.sky { --ingredient-fill: #6e83b7; }
+.weather-ingredient.moisture { --ingredient-fill: #168aad; --ingredient-soft: rgba(22, 138, 173, 0.16); }
+.weather-ingredient.wind { --ingredient-fill: #d69524; --ingredient-soft: rgba(247, 200, 115, 0.24); }
+.weather-ingredient.sky { --ingredient-fill: #6e83d7; --ingredient-soft: rgba(110, 131, 215, 0.18); }
 
 .weather-ingredient-top {
   align-items: center;
@@ -75,15 +136,22 @@
 }
 
 .weather-ingredient-icon {
+  align-items: center;
+  background: var(--ingredient-soft);
+  border: 1px solid color-mix(in srgb, var(--ingredient-fill) 20%, transparent);
+  border-radius: 50%;
   color: var(--ingredient-fill);
   display: inline-flex;
   flex: 0 0 auto;
+  height: 25px;
+  justify-content: center;
+  width: 25px;
 }
 
 .weather-ingredient-icon svg { height: 16px; width: 16px; }
 
 .weather-ingredient-value {
-  color: var(--ink, #142033);
+  color: var(--ingredient-fill);
   font-size: 1.2rem;
   font-weight: 850;
   line-height: 1;
@@ -99,15 +167,17 @@
 }
 
 .weather-ingredient-meter {
-  background: rgba(20, 32, 51, 0.08);
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(20, 32, 51, 0.06);
   border-radius: 999px;
-  height: 4px;
+  height: 6px;
   margin-top: 0.55rem;
   overflow: hidden;
 }
 
 .weather-ingredient-meter span {
-  background: var(--ingredient-fill);
+  background: linear-gradient(90deg, var(--ingredient-fill), color-mix(in srgb, var(--ingredient-fill) 62%, white));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--ingredient-fill) 35%, transparent);
   border-radius: inherit;
   display: block;
   height: 100%;
@@ -313,21 +383,56 @@
 .hour-card .hour-context.wind { color: #536b92; }
 
 .comfort-curve-host {
+  background:
+    radial-gradient(circle at 92% 12%, rgba(247, 200, 115, 0.48), transparent 24%),
+    radial-gradient(circle at 8% 92%, rgba(110, 168, 255, 0.32), transparent 30%),
+    linear-gradient(135deg, #edf5ff 0%, #e8f8ef 54%, #fff5d9 100%);
+  border-radius: 0 0 18px 18px;
+  border-top: 2px solid rgba(15, 76, 196, 0.24);
   grid-column: 1 / -1;
+  margin: 0 -1.1rem -1rem;
   min-width: 0;
-  padding: 0 1.35rem 1.35rem;
+  overflow: hidden;
+  padding: 1.2rem 1.25rem 1rem;
+  position: relative;
+}
+
+.comfort-curve-host::before,
+.comfort-curve-host::after {
+  border-radius: 50%;
+  content: "";
+  pointer-events: none;
+  position: absolute;
+}
+
+.comfort-curve-host::before {
+  background: rgba(15, 76, 196, 0.08);
+  height: 180px;
+  right: -65px;
+  top: -95px;
+  width: 180px;
+}
+
+.comfort-curve-host::after {
+  background: rgba(79, 166, 106, 0.1);
+  bottom: -80px;
+  height: 160px;
+  left: -50px;
+  width: 160px;
 }
 
 .comfort-curve-host[hidden] { display: none; }
 
 .comfort-curve-card {
-  background: rgba(255, 253, 248, 0.72);
-  border: 1px solid rgba(15, 76, 196, 0.13);
-  border-radius: 22px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
   color: var(--ink, #142033);
-  overflow: hidden;
-  padding: 1rem 1.05rem 0.8rem;
+  overflow: visible;
+  padding: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .comfort-curve-header {
@@ -335,17 +440,23 @@
   display: flex;
   gap: 1rem;
   justify-content: space-between;
+  padding: 0 0.1rem;
 }
 
 .comfort-curve-kicker {
-  color: var(--blue, #0f4cc4);
+  background: linear-gradient(90deg, #0f4cc4, #168aad);
+  border-radius: 999px;
+  color: #fff;
+  display: inline-flex;
   font-size: 0.7rem;
   font-weight: 800;
   letter-spacing: 0.12em;
+  padding: 0.34rem 0.58rem;
   text-transform: uppercase;
 }
 
 .comfort-curve-header h2 {
+  color: #09255f;
   font-size: clamp(1.2rem, 3vw, 1.65rem);
   letter-spacing: -0.03em;
   margin: 0.12rem 0 0;
@@ -359,13 +470,14 @@
 
 .comfort-curve-best {
   align-items: flex-end;
-  background: rgba(79, 166, 106, 0.12);
-  border: 1px solid rgba(79, 166, 106, 0.25);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(123, 211, 137, 0.36));
+  border: 1px solid rgba(39, 122, 68, 0.28);
   border-radius: 14px;
   display: flex;
   flex: 0 0 auto;
   flex-direction: column;
   padding: 0.55rem 0.7rem;
+  box-shadow: 0 10px 24px rgba(39, 122, 68, 0.12);
 }
 
 .comfort-curve-best span,
@@ -385,8 +497,14 @@
 }
 
 .comfort-curve-chart {
-  margin: 0.25rem -0.3rem 0;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(15, 76, 196, 0.14);
+  border-radius: 18px;
+  box-shadow: 0 16px 34px rgba(9, 37, 95, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  margin: 1rem auto 0;
+  max-width: 1040px;
   min-width: 0;
+  padding: 0.3rem;
 }
 
 .comfort-curve-svg {
@@ -397,15 +515,20 @@
 }
 
 .comfort-curve-zone { fill: var(--comfort-curve-grid); }
-.comfort-curve-zone.excellent { fill: rgba(79, 166, 106, 0.1); }
-.comfort-curve-zone.pleasant { fill: rgba(110, 168, 255, 0.075); }
-.comfort-curve-zone.fair { fill: rgba(247, 200, 115, 0.09); }
-.comfort-curve-zone.challenging { fill: rgba(245, 125, 35, 0.06); }
+.comfort-curve-zone.excellent { fill: rgba(79, 166, 106, 0.17); }
+.comfort-curve-zone.pleasant { fill: rgba(110, 168, 255, 0.13); }
+.comfort-curve-zone.fair { fill: rgba(247, 200, 115, 0.16); }
+.comfort-curve-zone.challenging { fill: rgba(245, 125, 35, 0.1); }
 .comfort-curve-night { fill: var(--comfort-curve-night); }
+.comfort-curve-frame {
+  fill: none;
+  stroke: rgba(15, 76, 196, 0.28);
+  stroke-width: 1;
+}
 
 .comfort-curve-zone-label {
-  fill: rgba(20, 32, 51, 0.48);
-  font-size: 11px;
+  fill: rgba(20, 32, 51, 0.42);
+  font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.08em;
 }
@@ -416,7 +539,8 @@
   stroke: url("#comfortCurveStroke");
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-width: 5;
+  filter: drop-shadow(0 3px 5px rgba(15, 76, 196, 0.2));
+  stroke-width: 6;
 }
 
 .comfort-curve-now-line {
@@ -426,7 +550,7 @@
 }
 
 .comfort-curve-now-dot { fill: var(--blue, #0f4cc4); stroke: #fff; stroke-width: 3; }
-.comfort-curve-now-label { fill: var(--blue-dark, #09255f); font-size: 12px; font-weight: 850; }
+.comfort-curve-now-label { fill: var(--blue-dark, #09255f); font-size: 12px; font-weight: 900; }
 .comfort-curve-best-halo { fill: rgba(79, 166, 106, 0.18); }
 .comfort-curve-best-dot { fill: #2e9952; stroke: #fff; stroke-width: 3; }
 .comfort-curve-best-star { fill: #277a44; font-size: 16px; font-weight: 900; }
@@ -440,7 +564,8 @@
   font-size: 0.68rem;
   gap: 0.45rem 0.85rem;
   justify-content: flex-end;
-  margin-top: -0.1rem;
+  margin: 0.15rem auto 0;
+  max-width: 1040px;
 }
 
 .comfort-curve-legend span { align-items: center; display: inline-flex; gap: 0.25rem; }
@@ -474,21 +599,41 @@
   .blue-ridge-scene { border-radius: 17px; min-height: 150px; }
   .blue-ridge-scene-svg { height: 150px; width: 130%; }
   .blue-ridge-scene-copy { padding: 0.82rem; }
-  .weather-ingredients-host { padding: 0 0.75rem 0.65rem; }
+  .visual-intelligence-cluster {
+    border-radius: 19px;
+    margin: 14px 0 0;
+    padding: 0.85rem 0.78rem 0.78rem;
+  }
+  .visual-intelligence-cluster-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.75rem;
+  }
+  .visual-intelligence-cluster-header p { max-width: none; text-align: left; }
+  .weather-ingredients-host { padding: 0; }
   .feelscore-ribbon-host { margin: 0.65rem 0 0.8rem; }
   .feelscore-ribbon-segment { padding-left: 0.1rem; padding-right: 0.1rem; }
   .feelscore-ribbon-segment b { font-size: 0.76rem; }
   .feelscore-ribbon-segment span { font-size: 0.52rem; }
-  .weather-ingredients { border-radius: 17px; padding: 0.78rem; }
+  .weather-ingredients {
+    border-radius: 0;
+    margin: 0 -0.78rem;
+    padding: 0.85rem 0.78rem 1rem;
+  }
   .weather-ingredients-header { align-items: flex-start; flex-direction: column; margin-bottom: 0.6rem; }
   .weather-ingredients-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .comfort-curve-host { padding: 0 0.75rem 0.75rem; }
-  .comfort-curve-card { border-radius: 17px; padding: 0.85rem 0.72rem 0.68rem; }
+  .comfort-curve-host {
+    margin: 0 -0.78rem -0.78rem;
+    padding: 1rem 0.78rem 0.8rem;
+  }
+  .comfort-curve-card { border-radius: 0; padding: 0; }
   .comfort-curve-header { gap: 0.65rem; }
   .comfort-curve-header p { font-size: 0.76rem; }
   .comfort-curve-best { padding: 0.45rem 0.55rem; }
   .comfort-curve-best strong { font-size: 0.88rem; }
-  .comfort-curve-chart { margin-left: -0.55rem; margin-right: -0.55rem; }
+  .comfort-curve-chart { border-radius: 14px; margin: 0.75rem 0 0; padding: 0.15rem; }
   .comfort-curve-legend { font-size: 0.62rem; justify-content: flex-start; }
 }
 

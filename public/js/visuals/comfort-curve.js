@@ -226,8 +226,19 @@ function chartMarkup(model) {
   const bestPoint = chartPoints[model.best?.pointIndex ?? 0];
   const currentPoint = chartPoints[model.currentIndex];
   const labelEvery = model.points.length > 14 ? 4 : 2;
+  const labelIndexes = [];
+  chartPoints.forEach((point, index) => {
+    const isCandidate = index === 0 || index === chartPoints.length - 1 || index % labelEvery === 0;
+    if (!isCandidate) return;
+    const previousIndex = labelIndexes.at(-1);
+    if (previousIndex != null && point.x - chartPoints[previousIndex].x < 70) {
+      if (index === chartPoints.length - 1 && labelIndexes.length > 1) labelIndexes[labelIndexes.length - 1] = index;
+      return;
+    }
+    labelIndexes.push(index);
+  });
   const timeLabels = chartPoints.map((point, index) => {
-    if (index !== 0 && index !== chartPoints.length - 1 && index % labelEvery !== 0) return "";
+    if (!labelIndexes.includes(index)) return "";
     return `<text class="comfort-curve-time" x="${point.x.toFixed(1)}" y="${height - 18}" text-anchor="middle">${formatHour(point.timestamp)}</text>`;
   }).join("");
 
@@ -251,14 +262,15 @@ function chartMarkup(model) {
       <rect class="comfort-curve-zone fair" x="${left}" y="${yFor(70)}" width="${plotWidth}" height="${yFor(55) - yFor(70)}" />
       <rect class="comfort-curve-zone challenging" x="${left}" y="${yFor(55)}" width="${plotWidth}" height="${yFor(30) - yFor(55)}" />
       ${nightBands(model.points, xFor, top, plotHeight)}
-      <text class="comfort-curve-zone-label" x="${left + 6}" y="${yFor(90) - 5}">EXCELLENT</text>
-      <text class="comfort-curve-zone-label" x="${left + 6}" y="${yFor(70) - 5}">PLEASANT</text>
-      <text class="comfort-curve-zone-label" x="${left + 6}" y="${yFor(55) - 5}">NOTICEABLE</text>
+      <rect class="comfort-curve-frame" x="${left}" y="${top}" width="${plotWidth}" height="${plotHeight}" rx="8" />
+      <text class="comfort-curve-zone-label" x="${left + plotWidth - 8}" y="${((yFor(100) + yFor(90)) / 2 + 4).toFixed(1)}" text-anchor="end">EXCELLENT</text>
+      <text class="comfort-curve-zone-label" x="${left + plotWidth - 8}" y="${((yFor(90) + yFor(70)) / 2 + 4).toFixed(1)}" text-anchor="end">PLEASANT</text>
+      <text class="comfort-curve-zone-label" x="${left + plotWidth - 8}" y="${((yFor(70) + yFor(55)) / 2 + 4).toFixed(1)}" text-anchor="end">NOTICEABLE</text>
       <path class="comfort-curve-area" d="${path} L ${chartPoints.at(-1).x.toFixed(1)} ${top + plotHeight} L ${chartPoints[0].x.toFixed(1)} ${top + plotHeight} Z" />
       <path class="comfort-curve-line" d="${path}" />
       <line class="comfort-curve-now-line" x1="${currentPoint.x.toFixed(1)}" x2="${currentPoint.x.toFixed(1)}" y1="${top}" y2="${top + plotHeight}" />
       <circle class="comfort-curve-now-dot" cx="${currentPoint.x.toFixed(1)}" cy="${currentPoint.y.toFixed(1)}" r="5" />
-      <text class="comfort-curve-now-label" x="${currentPoint.x.toFixed(1)}" y="${Math.max(top + 12, currentPoint.y - 12).toFixed(1)}" text-anchor="middle">NOW ${currentPoint.score}</text>
+      <text class="comfort-curve-now-label" x="${(currentPoint.x + 10).toFixed(1)}" y="${Math.max(top + 12, currentPoint.y - 12).toFixed(1)}" text-anchor="start">NOW · ${currentPoint.score}</text>
       ${model.best ? `
         <circle class="comfort-curve-best-halo" cx="${bestPoint.x.toFixed(1)}" cy="${bestPoint.y.toFixed(1)}" r="11" />
         <circle class="comfort-curve-best-dot" cx="${bestPoint.x.toFixed(1)}" cy="${bestPoint.y.toFixed(1)}" r="5" />

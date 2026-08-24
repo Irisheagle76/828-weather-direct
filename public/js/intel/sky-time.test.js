@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   buildDuskSkyFallback,
+  evaluateSunsetPromotion,
   evaluateSunsetSky,
   findTodaySolarTimes,
   getSkyTimePhase,
@@ -48,4 +49,23 @@ test("uses one radiance gate for homepage and Sunset Radiance", () => {
   assert.equal(evaluateSunsetSky({ ...inputs, forecastCloud: 0.72 }).radianceVetted, false);
   assert.equal(evaluateSunsetSky({ ...inputs, precipProbability: 0.45 }).radianceVetted, false);
   assert.equal(evaluateSunsetSky({ ...inputs, obscured: true }).radianceVetted, false);
+});
+
+test("sunset promotion requires timing, useful cloud texture, and vetted light", () => {
+  const sunsetAt = Date.parse("2026-08-24T00:10:00Z");
+  const favorable = {
+    now: sunsetAt - 90 * 60 * 1000,
+    sunsetAt,
+    cameraCloud: 0.32,
+    forecastCloud: 0.4,
+    precipProbability: 0.1,
+    sunlightDetected: true,
+    confidence: 0.78
+  };
+
+  assert.equal(evaluateSunsetPromotion(favorable).active, true);
+  assert.equal(evaluateSunsetPromotion({ ...favorable, now: sunsetAt - 3 * 60 * 60 * 1000 }).active, false);
+  assert.equal(evaluateSunsetPromotion({ ...favorable, cameraCloud: 0.05, forecastCloud: 0.05 }).active, false);
+  assert.equal(evaluateSunsetPromotion({ ...favorable, forecastCloud: 0.72 }).active, false);
+  assert.equal(evaluateSunsetPromotion({ ...favorable, precipProbability: 0.5 }).active, false);
 });

@@ -33,3 +33,19 @@ test("homepage shares the live camera cloud signal without scheduling duplicate 
   assert.match(html, /renderVisualWeatherContext\(\)/);
   assert.equal((html.match(/setInterval\(hydrateSkyModule, 60 \* 1000\);/g) || []).length, 1);
 });
+
+test("homepage keeps the data-driven mountain scene out of the live conditions hierarchy", async () => {
+  const html = await readFile(homepagePath, "utf8");
+
+  assert.doesNotMatch(html, /id="blueRidgeWeatherScene"/);
+  assert.doesNotMatch(html, /renderBlueRidgeWeatherScene/);
+  assert.match(html, /class="visual-intelligence-cluster"/);
+});
+
+test("homepage Sunset Radiance promotion is evidence-gated instead of clock-only", async () => {
+  const html = await readFile(homepagePath, "utf8");
+
+  assert.match(html, /evaluateSunsetPromotion/);
+  assert.doesNotMatch(html, /localHour\(\) >= 15/);
+  assert.match(html, />\s*Watch live\s*<\/a>/);
+});
