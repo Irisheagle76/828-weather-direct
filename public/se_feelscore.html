@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FEELSCORE — Southeast Pleasant Weather Forecast | 828 Weather Direct</title>
+  <meta name="description" content="See where the weather will feel most pleasant across the Southeast U.S. from noon to 3 PM local time." />
+  <meta property="og:title" content="FEELSCORE — Pleasant Weather Forecast" />
+  <meta property="og:description" content="Where will it feel best across the Southeast from noon to 3 PM local time?" />
+  <meta property="og:image" content="https://avlweather.com/828-brand-card.png" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://avlweather.com/se_feelscore.html" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="FEELSCORE — Pleasant Weather Forecast" />
+  <meta name="twitter:description" content="Where will it feel best across the Southeast from noon to 3 PM local time?" />
+  <meta name="twitter:image" content="https://avlweather.com/828-brand-card.png" />
+  <link rel="stylesheet" href="/css/app-v2.css?v=20260824-se-feelscore" />
+  <link rel="stylesheet" href="/css/brand-lockup.css?v=20260805-brand2" />
+  <link rel="stylesheet" href="/css/se-feelscore.css?v=20260824-1" />
+</head>
+<body class="se-feelscore-page">
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="forecast-header-row">
+        <a class="brand site-brand-lockup" href="/" aria-label="828 Weather Direct home">
+          <div class="brand-title site-brand-title"><span class="site-brand-828">828</span> Weather Direct</div>
+          <div class="brand-sub site-brand-sub">Hyper-local Asheville forecast built by Tim Ballisty</div>
+        </a>
+
+        <nav class="forecast-nav" aria-label="Primary navigation">
+          <a href="/">Home</a>
+          <a href="/forecast.html">Forecast</a>
+          <a href="/radar.html">Radar &amp; Satellite</a>
+          <a class="active" href="/se_feelscore.html" aria-current="page">FEELSCORE</a>
+          <a href="/hiking.html">Hiking</a>
+          <a href="/water.html">Water Conditions</a>
+          <a href="/i26-connector.html">I-26 Connector</a>
+          <a href="/pulse.html">Weather Pulse</a>
+          <a href="/828-sunset-radiance.html">Sunset Radiance</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="se-feelscore-main">
+    <section class="hero" aria-labelledby="feelscore-title">
+      <div>
+        <p class="eyebrow">828 Weather Direct presents</p>
+        <h1 id="feelscore-title">FEELSCORE</h1>
+        <p class="product-name">Pleasant Weather Forecast</p>
+        <p class="tagline">Where will it feel best?</p>
+      </div>
+      <div class="forecast-context" aria-label="Forecast period">
+        <strong id="forecast-day">Loading forecast date</strong>
+        <span>12–3 PM Local</span>
+        <small>FEELSCORE Summer Comfort Engine v1.6</small>
+      </div>
+    </section>
+
+    <section class="map-shell" aria-labelledby="map-title">
+      <div class="map-heading">
+        <div>
+          <p class="eyebrow">Southeast U.S.</p>
+          <h2 id="map-title">The pleasant-weather field</h2>
+        </div>
+        <div class="map-heading__tools">
+          <p id="data-status" class="data-status" role="status">Loading the latest NWS analysis…</p>
+          <button class="debug-toggle" id="debug-toggle" type="button" aria-pressed="false">Debug</button>
+        </div>
+      </div>
+
+      <div class="map-stage" id="map-stage">
+        <canvas id="feelscore-map" role="img" aria-label="FEELSCORE pleasant weather contour map of the Southeast United States"></canvas>
+        <div class="map-empty" id="map-empty">
+          <span class="map-empty__mark">FS</span>
+          <strong>Building the regional analysis</strong>
+          <span>The map will show only places that qualify as pleasant.</span>
+        </div>
+        <aside class="map-inspector" id="map-inspector" aria-live="polite" hidden></aside>
+      </div>
+
+      <div class="legend" aria-label="FEELSCORE legend">
+        <div><span style="--swatch:#49d6c7"></span>Goldilocks 🏆</div>
+        <div><span style="--swatch:#28a96b"></span>B.E.A. utiful 😎</div>
+        <div><span style="--swatch:#9bd85b"></span>Nice! 👍</div>
+        <div><span style="--swatch:#f2d357"></span>Fine, I guess 🤷🏻‍♀️</div>
+        <div><span style="--swatch:#ef8c38"></span>just alright 🫤</div>
+        <div class="legend__unshaded"><span></span>Unshaded — Does not qualify as pleasant</div>
+      </div>
+    </section>
+
+    <p class="method-note">Blank parts of the map are intentional: those locations do not meet the pleasantness threshold for the forecast window.</p>
+    <section class="qa-panel" id="qa-panel" hidden aria-labelledby="qa-title"></section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="footer-logo">828 Weather Direct</div>
+        <div class="footer-tagline">Hyper-local weather, sky context, and outdoor timing for Asheville and the greater 828 region.</div>
+      </div>
+
+      <div class="footer-links">
+        <a href="/">Home</a>
+        <a href="/forecast.html">Forecast</a>
+        <a href="/radar.html">Radar &amp; Satellite</a>
+        <a href="/se_feelscore.html">FEELSCORE</a>
+        <a href="/hiking.html">Hiking Guidance</a>
+        <a href="/water.html">Water Conditions</a>
+        <a href="/i26-connector.html">I-26 Connector</a>
+        <a href="/828-sunset-radiance.html">Sunset Radiance</a>
+        <a href="https://www.linkedin.com/in/timballisty">About</a>
+        <a href="mailto:tballisty@gmail.com">Contact</a>
+        <a href="https://ko-fi.com/irisheagle" target="_blank" rel="noopener noreferrer">Support</a>
+      </div>
+
+      <div class="footer-meta">
+        <div>Data: NOAA/NWS National Digital Forecast Database and U.S. Census geographic boundaries.</div>
+        <div>Serving Asheville, the greater 828 region, and the Southeast U.S.</div>
+        <div class="footer-disclaimer">For general awareness only—not a substitute for official forecasts, warnings, or outdoor-safety guidance.</div>
+      </div>
+
+      <div class="footer-bottom">&copy; 2026 828 Weather Direct</div>
+    </div>
+  </footer>
+
+  <script type="module" src="/js/se-feelscore-page.js?v=20260824-1"></script>
+</body>
+</html>
