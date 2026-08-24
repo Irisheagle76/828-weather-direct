@@ -33,6 +33,7 @@ body [data-site-header-inner] {
 
 body.se-feelscore-page [data-site-header-inner] {
   max-width: none !important;
+  display: block !important;
 }
 
 body.se-feelscore-page [data-site-header] .forecast-header-row {
