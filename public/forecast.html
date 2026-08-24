@@ -7,6 +7,8 @@
 
   <link rel="stylesheet" href="/css/app-v2.css?v=forecast-board-20260806" />
   <link rel="stylesheet" href="/css/brand-lockup.css?v=20260805-brand2" />
+  <link rel="stylesheet" href="/css/site-chrome.css?v=20260824-1" />
+  <script defer src="/js/site-chrome.js?v=20260824-1"></script>
 </head>
 
 <body class="forecast-refresh forecast-warm">
@@ -14,18 +16,18 @@
   <!-- =====================================
        HEADER (SHARED)
        ===================================== -->
-  <header class="app-header">
-    <div class="header-inner">
+  <header class="app-header" data-site-header>
+    <div class="header-inner" data-site-header-inner>
 
       <div class="forecast-header-row">
-        <a class="brand site-brand-lockup" href="/" aria-label="828 Weather Direct home">
+        <a class="brand site-brand-lockup" data-site-brand href="/" aria-label="828 Weather Direct home">
           <div class="brand-title site-brand-title"><span class="site-brand-828">828</span> Weather Direct</div>
           <div class="brand-sub site-brand-sub">
             Hyper-local Asheville forecast built by Tim Ballisty
           </div>
         </a>
 
-        <nav class="forecast-nav" aria-label="Primary navigation">
+        <nav class="forecast-nav" data-site-nav aria-label="Primary navigation">
           <a href="/">Home</a>
           <a class="active" href="/forecast.html" aria-current="page">Forecast</a>
           <a href="/radar.html">Radar &amp; Satellite</a>
@@ -114,7 +116,7 @@
   <!-- =====================================
        FOOTER (SHARED)
        ===================================== -->
-  <footer class="site-footer">
+  <footer class="site-footer" data-site-footer>
     <div class="footer-inner">
       <div class="footer-brand">
         <div class="footer-logo">828 Weather Direct</div>

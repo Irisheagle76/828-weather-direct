@@ -9,15 +9,17 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3ynHT9tUiN7ZBxiDHdIwAzJbDss0=" crossorigin="" />
   <link rel="stylesheet" href="/css/i26-connector.css?v=20260706-alert-map-contrast" />
   <link rel="stylesheet" href="/css/brand-lockup.css?v=20260805-brand2" />
+  <link rel="stylesheet" href="/css/site-chrome.css?v=20260824-1" />
+  <script defer src="/js/site-chrome.js?v=20260824-1"></script>
 </head>
 <body>
-  <header class="site-header">
-    <div class="header-inner">
-      <a class="brand site-brand-lockup" href="/" aria-label="828 Weather Direct home">
+  <header class="site-header" data-site-header>
+    <div class="header-inner" data-site-header-inner>
+      <a class="brand site-brand-lockup" data-site-brand href="/" aria-label="828 Weather Direct home">
         <strong class="site-brand-title"><span class="site-brand-828">828</span> Weather Direct</strong>
         <span class="site-brand-sub">Hyper-local Asheville forecast built by Tim Ballisty</span>
       </a>
-      <nav aria-label="Primary navigation">
+      <nav data-site-nav aria-label="Primary navigation">
         <a href="/">Home</a>
         <a href="/forecast.html">Forecast</a>
         <a href="/radar.html">Radar &amp; Satellite</a>
@@ -208,7 +210,7 @@
     </section>
   </main>
 
-  <footer>
+  <footer data-site-footer>
     <div><strong>828 Weather Direct</strong><span>Connector information for general awareness. Verify closures and travel decisions with NCDOT DriveNC.</span></div>
     <div><a href="/">Home</a><a href="/radar.html">Radar &amp; Satellite</a><a href="https://www.drivenc.gov/region/Asheville" target="_blank" rel="noopener noreferrer">DriveNC Asheville</a></div>
   </footer>
