@@ -5578,9 +5578,9 @@
       const remainingRain = remainderOfDayRainSummary(weather.hourly);
       return {
         tempF: current.temperatureF ?? current.tempF ?? toF(current.air_temperature) ?? firstHour.temperatureF,
-        dewF: current.dewpointF ?? current.dewPoint ?? firstHour.dewpointF ?? toF(current.dew_point),
+        dewF: current.dewpointF ?? current.dewPoint ?? toF(current.dew_point) ?? firstHour.dewpointF,
         humidity: current.relativeHumidity ?? current.relative_humidity ?? current.humidity ?? firstHour.relativeHumidity,
-        windMph: current.windSpeed ?? current.wind ?? firstHour.windSpeed ?? toMph(current.wind_avg),
+        windMph: current.windSpeed ?? current.wind ?? toMph(current.wind_avg) ?? firstHour.windSpeed,
         pressure: hpaToInHg(current.sea_level_pressure ?? current.pressure ?? current.pressure_msl ?? current.barometric_pressure),
         rainChance: remainingRain?.chance ?? firstHour.precipProbability ?? current.precipProbability,
         rainWindow: remainingRain?.window ?? null,
