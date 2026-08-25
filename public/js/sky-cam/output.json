@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-25T04:55:51.783706+00:00",
+  "timestamp": "2026-08-25T05:38:42.108483+00:00",
   "metrics": {
     "cloudCoverWest": null,
     "brightness": 0.04,
@@ -8,7 +8,7 @@
     "sunlightDetected": false,
     "sunlightStrength": 0.1,
     "sunlightLevel": "none",
-    "groundBrightness": 0.09,
+    "groundBrightness": 0.08,
     "groundContrast": 0.13,
     "softShadowSignal": true,
     "filteredSunshineSignal": false,
@@ -23,7 +23,7 @@
   },
   "trend": {
     "cloudTrend": "unknown",
-    "brightnessTrend": "decreasing",
+    "brightnessTrend": "steady",
     "overallTrend": "steady"
   }
 }
