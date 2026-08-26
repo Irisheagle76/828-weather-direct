@@ -68,6 +68,14 @@ nav::-webkit-scrollbar { display: none; }
 nav a { padding: 10px 12px; border-radius: 999px; color: #dce6f6; font-size: 0.88rem; font-weight: 800; }
 nav a:hover, nav a.active { color: var(--blue-dark); background: #ffcf8e; }
 main { overflow: hidden; }
+.featured-camera-section { padding: 34px max(16px, calc((100% - 1180px) / 2)) 40px; color: white; background: linear-gradient(135deg, #061e49, var(--blue-dark) 58%, #123b80); }
+.featured-camera-heading { display: flex; align-items: end; justify-content: space-between; gap: 32px; margin-bottom: 22px; }
+.featured-camera-heading h2 { margin: 8px 0 0; font: 700 clamp(2rem, 4vw, 3.6rem)/1 Georgia, serif; letter-spacing: -.025em; }
+.featured-camera-heading > p { max-width: 470px; margin: 0; color: #dce7f7; line-height: 1.55; }
+.featured-camera-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 18px; }
+.featured-camera-card { color: var(--ink); }
+.featured-camera-card .camera-view { height: auto; aspect-ratio: 16 / 9; }
+.featured-camera-card h3 { font-size: clamp(1.45rem, 2.2vw, 1.9rem); }
 .hero { color: white; background: linear-gradient(120deg, rgba(7, 31, 75, 0.98), rgba(13, 79, 199, 0.9)), radial-gradient(circle at 80% 20%, #f47b20, transparent 36%); }
 .hero-inner { width: min(1180px, calc(100% - 32px)); min-height: 490px; margin: auto; display: grid; grid-template-columns: 1.4fr 0.7fr; gap: 48px; align-items: center; padding: 70px 0; }
 .eyebrow, .kicker { color: var(--orange); font-size: 0.78rem; font-weight: 950; letter-spacing: 0.15em; text-transform: uppercase; }
@@ -194,10 +202,10 @@ h1 { max-width: 760px; margin: 15px 0; font: 700 clamp(3.5rem, 8vw, 7rem)/0.88 G
 .alert-timing dd { margin: 0; color: var(--orange); font-weight: 850; }
 .traffic-rotator-card .alert-timing dt,
 .traffic-rotator-card .alert-timing dd { color: #ffd092; }
-.camera-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.camera-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
 .camera-card, .camera-fallback { overflow: hidden; padding: 22px; }
-.camera-card { position: relative; padding-top: 0; }
-.camera-view { position: relative; height: 180px; margin: 0 -22px 18px; overflow: hidden; color: white; background: linear-gradient(135deg, var(--blue-dark), var(--blue)); }
+.camera-card { position: relative; display: flex; flex-direction: column; padding-top: 0; }
+.camera-view { position: relative; height: 180px; margin: 0 -22px 18px; display: block; flex: 0 0 auto; overflow: hidden; color: white; background: linear-gradient(135deg, var(--blue-dark), var(--blue)); }
 .camera-view img { width: 100%; height: 100%; display: block; object-fit: cover; transition: opacity .25s ease; }
 .camera-view img.is-refreshing { opacity: .72; }
 .camera-live-badge { position: absolute; top: 12px; left: 12px; display: inline-flex; align-items: center; gap: 6px; padding: 6px 9px; border-radius: 999px; color: white; background: rgba(8, 40, 95, .82); box-shadow: 0 3px 12px rgba(0,0,0,.22); backdrop-filter: blur(8px); font-size: .66rem; font-weight: 950; letter-spacing: .05em; text-transform: uppercase; }
@@ -281,6 +289,7 @@ footer a { font-weight: 900; }
 }
 
 @media (max-width: 680px) {
+  .featured-camera-heading { align-items: flex-start; flex-direction: column; gap: 12px; }
   .header-inner { padding: 14px 0; align-items: flex-start; flex-direction: column; }
   nav { width: 100%; overflow-x: auto; flex-wrap: nowrap; }
   nav a { white-space: nowrap; }

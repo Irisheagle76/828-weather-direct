@@ -7,7 +7,7 @@
   <title>I-26 Connector Center | 828 Weather Direct</title>
   <link rel="preconnect" href="https://unpkg.com" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3ynHT9tUiN7ZBxiDHdIwAzJbDss0=" crossorigin="" />
-  <link rel="stylesheet" href="/css/i26-connector.css?v=20260706-alert-map-contrast" />
+  <link rel="stylesheet" href="/css/i26-connector.css?v=20260826-featured-cameras" />
   <link rel="stylesheet" href="/css/brand-lockup.css?v=20260805-brand2" />
   <link rel="stylesheet" href="/css/site-chrome.css?v=20260824-2" />
   <script defer src="/js/site-chrome.js?v=20260824-1"></script>
@@ -33,6 +33,39 @@
   </header>
 
   <main>
+    <section class="featured-camera-section" aria-labelledby="featuredCamerasTitle">
+      <div class="featured-camera-heading">
+        <div>
+          <div class="eyebrow"><span></span> Live Connector construction</div>
+          <h2 id="featuredCamerasTitle">See the work zone right now</h2>
+        </div>
+        <p>Two main DriveNC views of active I-26 Connector construction. Images refresh about once per minute.</p>
+      </div>
+      <div class="featured-camera-grid">
+        <article class="camera-card featured-camera-card">
+          <a class="camera-view" href="https://www.drivenc.gov/map/Cctv/6092" target="_blank" rel="noopener noreferrer" aria-label="Open the I-40 near Mile 45 camera on DriveNC">
+            <img src="https://www.drivenc.gov/map/Cctv/6092" data-camera-image="https://www.drivenc.gov/map/Cctv/6092" alt="Near-live DriveNC view of I-40 construction near Mile 45" fetchpriority="high" />
+            <span class="camera-live-badge">Near live</span>
+          </a>
+          <div class="camera-route">I-40 &bull; Southbound</div>
+          <h3>I-40 near Mile 45</h3>
+          <p>West Asheville construction view along the Connector corridor.</p>
+          <div class="camera-meta"><span>Camera 6092</span><a href="https://www.drivenc.gov/map/Cctv/6092" target="_blank" rel="noopener noreferrer">Open on DriveNC</a></div>
+        </article>
+
+        <article class="camera-card featured-camera-card">
+          <a class="camera-view" href="https://www.drivenc.gov/map/Cctv/4228" target="_blank" rel="noopener noreferrer" aria-label="Open the I-240 East at I-26 camera on DriveNC">
+            <img src="https://www.drivenc.gov/map/Cctv/4228" data-camera-image="https://www.drivenc.gov/map/Cctv/4228" alt="Near-live DriveNC view of I-240 East construction at I-26" fetchpriority="high" />
+            <span class="camera-live-badge">Near live</span>
+          </a>
+          <div class="camera-route">I-240 &bull; Eastbound</div>
+          <h3>I-240 East at I-26</h3>
+          <p>Primary interchange view of active Connector construction.</p>
+          <div class="camera-meta"><span>Camera 4228</span><a href="https://www.drivenc.gov/map/Cctv/4228" target="_blank" rel="noopener noreferrer">Open on DriveNC</a></div>
+        </article>
+      </div>
+    </section>
+
     <section class="hero">
       <div class="hero-inner">
         <div class="hero-copy">
@@ -226,6 +259,6 @@
   </dialog>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script type="module" src="/js/i26-connector.js?v=20260730-image-lightbox"></script>
+  <script type="module" src="/js/i26-connector.js?v=20260826-featured-cameras"></script>
 </body>
 </html>

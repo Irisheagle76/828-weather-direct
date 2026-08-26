@@ -633,4 +633,5 @@ async function loadWeather() {
 
 initConnectorImageLightbox();
 initMap();
+startCameraRefresh();
 Promise.allSettled([loadEmailAlerts(), loadConnectorNews(), loadIncidents(), loadCameras(), loadWeather()]);
