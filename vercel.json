@@ -1,6 +1,6 @@
 {
   "git": {
-    "deploymentEnabled": false
+    "deploymentEnabled": true
   },
   "functions": {
     "api/admin/page.js": {
