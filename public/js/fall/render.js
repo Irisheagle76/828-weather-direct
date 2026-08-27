@@ -58,10 +58,10 @@ export function renderFallExplorer(model) {
   $("#cameraGrid").innerHTML = model.cameras.map((camera) => `
     <article class="camera-card">
       <a class="camera-media" href="${esc(camera.sourceUrl)}" target="_blank" rel="noopener noreferrer">
-        <img src="${esc(cacheBust(camera.imageUrl))}" alt="${esc(camera.alt)}" loading="lazy" data-camera-id="${esc(camera.id)}">
-        <span class="live-badge"><i></i> Live view</span>
+        ${cameraMedia(camera)}
+        <span class="live-badge"><i></i> ${camera.imageUrl ? "Live view" : "Live stream"}</span>
       </a>
-      <div class="camera-copy"><div><h3>${esc(camera.name)}</h3><p>${camera.elevationFeet.toLocaleString()} ft · ${esc(camera.region)}</p></div><small data-camera-status="${esc(camera.id)}">Live source · tap to open</small></div>
+      <div class="camera-copy"><div><h3>${esc(camera.name)}</h3><p>${camera.elevationFeet.toLocaleString()} ft · ${esc(camera.region)}</p></div><small data-camera-status="${esc(camera.id)}">${camera.imageUrl ? "Live source" : "Video source"} · tap to open</small></div>
     </article>`).join("");
   bindCameraStatus(model.cameras);
 }
@@ -128,4 +128,8 @@ function renderQualityNotice(quality = {}) {
 }
 function setText(selector, value) { const el = $(selector); if (el) el.textContent = value; }
 function cacheBust(url) { return `${url}${url.includes("?") ? "&" : "?"}fall=${Math.floor(Date.now() / 300000)}`; }
-function bindCameraStatus(cameras) { cameras.forEach((camera) => { const img = document.querySelector(`[data-camera-id="${camera.id}"]`); const status = document.querySelector(`[data-camera-status="${camera.id}"]`); img?.addEventListener("load", () => { status.textContent = `Checked ${new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(new Date())}`; }); img?.addEventListener("error", () => { status.textContent = "Image unavailable · open source"; }); }); }
+function cameraMedia(camera) {
+  if (camera.imageUrl) return `<img src="${esc(cacheBust(camera.imageUrl))}" alt="${esc(camera.alt)}" loading="lazy" data-camera-id="${esc(camera.id)}">`;
+  return `<div class="camera-placeholder" role="img" aria-label="${esc(camera.alt)}"><span aria-hidden="true">▶</span><b>Open live stream</b><small>Hosted by the camera provider</small></div>`;
+}
+function bindCameraStatus(cameras) { cameras.filter((camera) => camera.imageUrl).forEach((camera) => { const img = document.querySelector(`[data-camera-id="${camera.id}"]`); const status = document.querySelector(`[data-camera-status="${camera.id}"]`); img?.addEventListener("load", () => { status.textContent = `Checked ${new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(new Date())}`; }); img?.addEventListener("error", () => { status.textContent = "Image unavailable · open source"; }); }); }

@@ -13,7 +13,8 @@ export const CAMERAS = [
   { id: "mitchell", name: "Mount Mitchell", elevationFeet: 6684, imageUrl: "https://nchighpeaks.org/cam11/up/image.jpg", sourceUrl: "https://nchighpeaks.org/cam11/cam11view.php", refreshSeconds: 300, region: "Black Mountains", alt: "Live northeast view from the summit of Mount Mitchell" },
   { id: "pisgah", name: "Pisgah Inn", elevationFeet: 5000, imageUrl: "https://streamer5.brownrice.com/cam-images/pisgahinn1.jpg", sourceUrl: "https://streamer5.brownrice.com/cam-images/pisgahinn1.jpg", refreshSeconds: 300, region: "Southern Parkway", alt: "Live mountain view from Pisgah Inn" },
   { id: "grassland", name: "Grassland Mountain", elevationFeet: 4130, imageUrl: "https://cameraftpapi.drivehq.com/api/Camera/GetCameraThumbnail.ashx?parentID=361818469&shareID=17333090", sourceUrl: "https://www.weatherlink.com/embeddablePage/show/eb5b3cb48064488fbf13910524445c99/wide", refreshSeconds: 300, region: "Madison County", alt: "Live sky view from Grassland Mountain Observatory" },
-  { id: "max-patch", name: "Max Patch North", elevationFeet: 4420, imageUrl: "https://assets2.webcam.io/w/9W1ZRz/latest.jpg", sourceUrl: "https://www.wunderground.com/dashboard/pws/KTNDELRI5", refreshSeconds: 300, region: "Northwest High Country", alt: "Live high-country view north of Max Patch" }
+  { id: "max-patch", name: "Max Patch North", elevationFeet: 4420, imageUrl: "https://assets2.webcam.io/w/9W1ZRz/latest.jpg", sourceUrl: "https://www.wunderground.com/dashboard/pws/KTNDELRI5", refreshSeconds: 300, region: "Northwest High Country", alt: "Live high-country view north of Max Patch" },
+  { id: "the-swag", name: "The Swag", latitude: 35.57400686030403, longitude: -83.09374622213542, elevationFeet: 5000, imageUrl: null, sourceUrl: "https://www.theswag.com/grounds/property/live-feed/", refreshSeconds: null, region: "Cataloochee Divide", alt: "Live mountaintop view from The Swag near Waynesville" }
 ];
 
 export const ELEVATION_BANDS = [
