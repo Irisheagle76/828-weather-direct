@@ -61,7 +61,7 @@ export function renderFallExplorer(model) {
         ${cameraMedia(camera)}
         <span class="live-badge"><i></i> ${camera.imageUrl ? "Live view" : "Live stream"}</span>
       </a>
-      <div class="camera-copy"><div><h3>${esc(camera.name)}</h3><p>${camera.elevationFeet.toLocaleString()} ft · ${esc(camera.region)}</p></div><small data-camera-status="${esc(camera.id)}">${camera.imageUrl ? "Live source" : "Video source"} · tap to open</small></div>
+      <div class="camera-copy"><div><h3>${esc(camera.name)}</h3><p>${cameraElevation(camera)} · ${esc(camera.region)}</p></div><small>${cameraStatus(camera)}</small></div>
     </article>`).join("");
   bindCameraStatus(model.cameras);
 }
@@ -131,5 +131,18 @@ function cacheBust(url) { return `${url}${url.includes("?") ? "&" : "?"}fall=${M
 function cameraMedia(camera) {
   if (camera.imageUrl) return `<img src="${esc(cacheBust(camera.imageUrl))}" alt="${esc(camera.alt)}" loading="lazy" data-camera-id="${esc(camera.id)}">`;
   return `<div class="camera-placeholder" role="img" aria-label="${esc(camera.alt)}"><span aria-hidden="true">▶</span><b>Open live stream</b><small>Hosted by the camera provider</small></div>`;
+}
+function cameraElevation(camera) {
+  if (!Number.isFinite(camera.elevationFeet)) return "Elevation not listed";
+  return Number.isFinite(camera.elevationMeters)
+    ? `${camera.elevationFeet.toLocaleString()} ft / ${camera.elevationMeters.toLocaleString()} m above sea level`
+    : `${camera.elevationFeet.toLocaleString()} ft`;
+}
+function cameraStatus(camera) {
+  const sourceLabel = `${camera.imageUrl ? "Live source" : "Video source"} · tap to open`;
+  const status = `<span data-camera-status="${esc(camera.id)}">${sourceLabel}</span>`;
+  return camera.rawDataUrl
+    ? `${status}<br><a href="${esc(camera.rawDataUrl)}" target="_blank" rel="noopener noreferrer">Raw weather data</a>`
+    : status;
 }
 function bindCameraStatus(cameras) { cameras.filter((camera) => camera.imageUrl).forEach((camera) => { const img = document.querySelector(`[data-camera-id="${camera.id}"]`); const status = document.querySelector(`[data-camera-status="${camera.id}"]`); img?.addEventListener("load", () => { status.textContent = `Checked ${new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(new Date())}`; }); img?.addEventListener("error", () => { status.textContent = "Image unavailable · open source"; }); }); }
