@@ -215,7 +215,10 @@ export function buildSkyState({ camera = null, skyIntel = null, weatherContext =
   const obscured = skyIntel?.visualObscured === true && cameraVisual.length === 0;
   const fogState = reconcileFog(satelliteObservation, weatherContext, cameraVisual);
   const undercastRank = { none: 0, possible: 1, likely: 2, confirmed: 3 };
-  const undercastEvidence = visual.map((observation) => observation.undercast || "none");
+  // Satellite low-cloud hints are reconciled through fogState above. Keeping
+  // them out of this camera-only fallback prevents a rejected terrain-shaped
+  // convective signal from reappearing as generic "undercast" language.
+  const undercastEvidence = cameraVisual.map((observation) => observation.undercast || "none");
   const strongestUndercast = undercastEvidence.sort((a, b) => (undercastRank[b] || 0) - (undercastRank[a] || 0))[0] || "none";
   const undercast = strongestUndercast === "confirmed" && undercastEvidence.filter((value) => value !== "none").length < 2
     ? "likely"

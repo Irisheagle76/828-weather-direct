@@ -134,13 +134,14 @@ test("orographic convection aligned with mountain valleys is not called valley f
   const result = read([
     observation({ source: "downtown", ...convection }),
     observation({ source: "north", ...convection }),
-    satellite({
+    { ...satellite({
       valleyPattern: "likely", valleyFogScore: 0.68,
       broadDeck: "none", broadLowCloudScore: 0,
       trend: "expanding", confidence: 0.79
-    })
+    }), undercast: "possible" }
   ], { cloudCover: 0.55, humidity: 0.67, visibility: 10 });
   assert.equal(result.state.fogState.type, "none");
+  assert.equal(result.state.undercast, "none");
   assert.equal(result.state.dominantCloudType, "towering_cumulus");
   assert.match(result.narrative.detail, /towering|cumulus|cloud/i);
   assert.doesNotMatch(result.narrative.detail, /fog|low cloud deck/i);
