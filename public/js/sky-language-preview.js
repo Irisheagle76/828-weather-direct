@@ -1,5 +1,5 @@
-import { buildSkyState } from "./intel/sky-state.js";
-import { generateSkyLanguage } from "./intel/sky-language.js";
+import { buildSkyState } from "./intel/sky-state.js?v=20260829-sky-language-prod";
+import { generateSkyLanguage } from "./intel/sky-language.js?v=20260829-sky-language-prod";
 
 const PRESETS = {
   "fair-cumulus": { skyColor: "blue", coverage: 24, cloudType: "fair_weather_cumulus", typeConfidence: 90, texture: "puffy", arrangement: "scattered_patches", sunVisibility: "mostly_unobstructed", cameraQuality: "good", confidence: 88, trend: "little_change", eastCoverage: 24, westCoverage: 24, ridgeVisibility: "good", valleyVisibility: "good", undercast: "none" },
