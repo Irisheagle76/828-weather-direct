@@ -22,8 +22,8 @@ test("Sky Language Lab exposes the primary state controls and all three outputs"
 
 test("Sky Language Lab runs the actual shared state and language modules", async () => {
   const script = await readFile(scriptPath, "utf8");
-  assert.match(script, /import \{ buildSkyState \} from "\.\/intel\/sky-state\.js"/);
-  assert.match(script, /import \{ generateSkyLanguage \} from "\.\/intel\/sky-language\.js"/);
+  assert.match(script, /import \{ buildSkyState \} from "\.\/intel\/sky-state\.js(?:\?[^\"]+)?"/);
+  assert.match(script, /import \{ generateSkyLanguage \} from "\.\/intel\/sky-language\.js(?:\?[^\"]+)?"/);
   assert.match(script, /verbosity: "micro"/);
   assert.match(script, /verbosity: "short"/);
   assert.match(script, /verbosity: "narrative"/);
