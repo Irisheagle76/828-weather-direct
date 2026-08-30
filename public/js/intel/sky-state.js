@@ -140,9 +140,20 @@ function reconcileFog(satelliteObservation, weatherContext, cameraVisual) {
   const deckSupport = surfaceSupport || corroboration.cameraLowDeck;
   const valleyScore = finite(satellite.valleyFogScore) ?? 0;
   const deckScore = finite(satellite.broadLowCloudScore) ?? 0;
+  const clearValleyCameras = cameraVisual.filter((observation) =>
+    observation.valleyVisibility === "good" && observation.undercast === "none"
+  );
+  const clearValleyConsensus = cameraVisual.length >= 2 && clearValleyCameras.length === cameraVisual.length;
+  const convectiveCloudSignal = cameraVisual.some((observation) =>
+    (observation.texture || []).includes("towering")
+    || normalizeCloudTypes(observation).some(({ type }) => type === "towering_cumulus" || type === "cumulonimbus")
+  );
+  const clearValleyContradiction = clearValleyConsensus && !surfaceSupport && !corroboration.cameraLowDeck;
+  const contradictedValleySignal = clearValleyContradiction && (convectiveCloudSignal
+    || (satellite.trend === "dissipating" && valleyScore < 0.6));
   const preferValley = satellite.valleyPattern !== "none" && (satellite.broadDeck === "none" || valleyScore >= deckScore - 0.1);
   let type = "none", likelihood = "none";
-  if (preferValley) {
+  if (preferValley && !contradictedValleySignal) {
     type = "valley_fog";
     likelihood = satellite.valleyPattern === "likely" ? (valleySupport ? "confirmed" : "likely") : (valleySupport ? "likely" : "possible");
   } else if (satellite.broadDeck !== "none") {

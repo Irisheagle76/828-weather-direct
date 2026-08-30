@@ -1,4 +1,4 @@
-import { buildSkyState } from "./intel/sky-state.js?v=20260829-sky-language-prod";
+import { buildSkyState } from "./intel/sky-state.js?v=20260830-fog-clear-veto";
 import { generateSkyLanguage } from "./intel/sky-language.js?v=20260829-sky-language-prod";
 
 const PRESETS = {

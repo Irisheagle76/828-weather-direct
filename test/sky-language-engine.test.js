@@ -109,6 +109,43 @@ test("satellite-only possible valley signature stays cautious", () => {
   assert.match(result.short, /possible fog/i);
 });
 
+test("fresh clear-valley camera consensus retires a dissipating moderate satellite fog signal", () => {
+  const result = read([
+    observation({ source: "downtown", valleyVisibility: "good", ridgeVisibility: "good", undercast: "none" }),
+    observation({ source: "north", valleyVisibility: "good", ridgeVisibility: "good", undercast: "none" }),
+    satellite({
+      valleyPattern: "likely", valleyFogScore: 0.47,
+      broadDeck: "none", broadLowCloudScore: 0,
+      trend: "dissipating", confidence: 0.69
+    })
+  ], { cloudCover: 0.35, humidity: 0.67, visibility: 10 });
+  assert.equal(result.state.fogState.type, "none");
+  assert.equal(result.state.fogState.likelihood, "none");
+  assert.doesNotMatch(result.short, /fog|low overcast/i);
+  assert.doesNotMatch(result.narrative.detail, /fog|low cloud deck/i);
+});
+
+test("orographic convection aligned with mountain valleys is not called valley fog", () => {
+  const convection = {
+    valleyVisibility: "good", ridgeVisibility: "good", undercast: "none",
+    cloudTypes: [{ type: "towering_cumulus", confidence: 0.86 }],
+    texture: ["towering", "textured"]
+  };
+  const result = read([
+    observation({ source: "downtown", ...convection }),
+    observation({ source: "north", ...convection }),
+    satellite({
+      valleyPattern: "likely", valleyFogScore: 0.68,
+      broadDeck: "none", broadLowCloudScore: 0,
+      trend: "expanding", confidence: 0.79
+    })
+  ], { cloudCover: 0.55, humidity: 0.67, visibility: 10 });
+  assert.equal(result.state.fogState.type, "none");
+  assert.equal(result.state.dominantCloudType, "towering_cumulus");
+  assert.match(result.narrative.detail, /towering|cumulus|cloud/i);
+  assert.doesNotMatch(result.narrative.detail, /fog|low cloud deck/i);
+});
+
 test("broad satellite deck is distinguished from valley fog", () => {
   const result = read([
     observation({ coverageFraction: 0.97, texture: ["flat"], valleyVisibility: "poor", ridgeVisibility: "poor", sunVisibility: "mostly_hidden" }),
