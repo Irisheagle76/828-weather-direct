@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <title>Sky Language Lab · 828 Weather Direct</title>
+  <link rel="stylesheet" href="/css/sky-language-preview.css?v=20260828" />
+</head>
+<body>
+  <header class="lab-header">
+    <a class="brand" href="/" aria-label="828 Weather Direct home">
+      <span class="brand-mark">828</span>
+      <span>Weather Direct</span>
+    </a>
+    <a class="internal-badge" href="/admin/index.html">Internal preview · Admin home</a>
+  </header>
+
+  <main>
+    <section class="lab-hero">
+      <div>
+        <p class="eyebrow">Sky Language Engine</p>
+        <h1>Phrase Lab</h1>
+        <p class="hero-copy">Shape a hypothetical Asheville sky and review the exact language each public surface could use. Nothing on this page changes production weather data.</p>
+      </div>
+      <div class="hero-actions">
+        <label for="preset">Start with a scenario</label>
+        <div class="action-row">
+          <select id="preset">
+            <option value="fair-cumulus">Fair-weather cumulus</option>
+            <option value="clear">Clear blue sky</option>
+            <option value="cirrus">Thin cirrus</option>
+            <option value="cirrostratus">Filtered cirrostratus</option>
+            <option value="stratocumulus">Broken stratocumulus</option>
+            <option value="overcast">Gray overcast</option>
+            <option value="towering">Towering cumulus</option>
+            <option value="clearer-west">Cloudier east / clearer west</option>
+            <option value="cloudier-west">Cloudier west / clearer east</option>
+            <option value="undercast">Possible undercast</option>
+            <option value="valley-fog">Valley fog · dissipating</option>
+            <option value="low-overcast">Low overcast</option>
+            <option value="offline">Camera unavailable fallback</option>
+          </select>
+          <button id="newVariation" class="primary-button" type="button">New wording</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="lab-layout">
+      <aside class="control-panel" aria-labelledby="controlsTitle">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Inputs</p>
+            <h2 id="controlsTitle">Build the sky</h2>
+          </div>
+          <button id="resetPreset" class="text-button" type="button">Reset</button>
+        </div>
+
+        <div class="control-grid">
+          <label class="field">
+            <span>Sky color</span>
+            <select id="skyColor">
+              <option value="deep_blue">Deep blue</option>
+              <option value="blue" selected>Blue</option>
+              <option value="pale_blue">Pale blue</option>
+              <option value="hazy_blue">Hazy blue</option>
+              <option value="blue_gray">Blue-gray</option>
+              <option value="milky">Milky</option>
+              <option value="bright_gray">Bright gray</option>
+              <option value="gray">Gray</option>
+              <option value="dark_gray">Dark gray</option>
+            </select>
+          </label>
+
+          <label class="field range-field">
+            <span>Overall cloud cover <output id="coverageValue">24%</output></span>
+            <input id="coverage" type="range" min="0" max="100" value="24" />
+          </label>
+
+          <label class="field wide-field">
+            <span>Cloud type</span>
+            <select id="cloudType">
+              <option value="">Unspecified</option>
+              <option value="cirrus">Cirrus</option>
+              <option value="cirrostratus">Cirrostratus</option>
+              <option value="altocumulus">Altocumulus</option>
+              <option value="altostratus">Altostratus</option>
+              <option value="fair_weather_cumulus" selected>Fair-weather cumulus</option>
+              <option value="cumulus">Cumulus</option>
+              <option value="towering_cumulus">Towering cumulus</option>
+              <option value="stratocumulus">Stratocumulus</option>
+              <option value="stratus">Stratus</option>
+              <option value="cumulonimbus">Cumulonimbus</option>
+            </select>
+          </label>
+
+          <label class="field range-field">
+            <span>Cloud-type confidence <output id="typeConfidenceValue">90%</output></span>
+            <input id="typeConfidence" type="range" min="0" max="100" value="90" />
+          </label>
+
+          <label class="field">
+            <span>Texture</span>
+            <select id="texture">
+              <option value="">Unspecified</option>
+              <option value="wispy">Wispy</option>
+              <option value="thin">Thin</option>
+              <option value="rippled">Rippled</option>
+              <option value="patchy">Patchy</option>
+              <option value="broken">Broken</option>
+              <option value="puffy" selected>Puffy</option>
+              <option value="lumpy">Lumpy</option>
+              <option value="layered">Layered</option>
+              <option value="flat">Flat</option>
+              <option value="towering">Towering</option>
+              <option value="textured">Textured</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Arrangement</span>
+            <select id="arrangement">
+              <option value="">Unspecified</option>
+              <option value="scattered_patches" selected>Scattered patches</option>
+              <option value="thin_bands">Thin bands</option>
+              <option value="broad_sheet">Broad sheet</option>
+              <option value="broken_layers">Broken layers</option>
+              <option value="over_mountains">Over the mountains</option>
+              <option value="along_horizon">Along the horizon</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Sun visibility</span>
+            <select id="sunVisibility">
+              <option value="mostly_unobstructed" selected>Mostly unobstructed</option>
+              <option value="filtered">Filtered</option>
+              <option value="occasionally_filtered">Moving through clouds</option>
+              <option value="mostly_hidden">Mostly hidden</option>
+              <option value="obscured">Obscured</option>
+              <option value="uncertain">Uncertain</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Camera quality</span>
+            <select id="cameraQuality">
+              <option value="good" selected>Good</option>
+              <option value="usable">Usable</option>
+              <option value="stale">Stale</option>
+              <option value="offline">Offline</option>
+              <option value="night">Night</option>
+              <option value="obscured">Obscured</option>
+            </select>
+          </label>
+
+          <label class="field range-field">
+            <span>Observation confidence <output id="confidenceValue">88%</output></span>
+            <input id="confidence" type="range" min="0" max="100" value="88" />
+          </label>
+
+          <label class="field">
+            <span>Trend</span>
+            <select id="trend">
+              <option value="little_change" selected>Holding steady</option>
+              <option value="clearing">Clearing</option>
+              <option value="clouds_increasing">Clouds increasing</option>
+            </select>
+          </label>
+        </div>
+
+        <fieldset class="direction-controls">
+          <legend>Directional cloud cover</legend>
+          <label class="field range-field">
+            <span>East <output id="eastValue">24%</output></span>
+            <input id="eastCoverage" type="range" min="0" max="100" value="24" />
+          </label>
+          <label class="field range-field">
+            <span>West <output id="westValue">24%</output></span>
+            <input id="westCoverage" type="range" min="0" max="100" value="24" />
+          </label>
+        </fieldset>
+
+        <div class="control-grid compact">
+          <label class="field">
+            <span>Visible satellite valley signature</span>
+            <select id="satValleyPattern">
+              <option value="none" selected>None</option>
+              <option value="possible">Possible</option>
+              <option value="likely">Likely</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Visible satellite broad deck</span>
+            <select id="satBroadDeck">
+              <option value="none" selected>None</option>
+              <option value="possible">Possible</option>
+              <option value="likely">Likely</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Satellite trend</span>
+            <select id="satTrend">
+              <option value="unknown">Unknown</option>
+              <option value="little_change" selected>Holding steady</option>
+              <option value="dissipating">Dissipating</option>
+              <option value="expanding">Expanding</option>
+            </select>
+          </label>
+          <label class="field range-field">
+            <span>Surface humidity <output id="humidityValue">55%</output></span>
+            <input id="humidity" type="range" min="20" max="100" value="55" />
+          </label>
+          <label class="field">
+            <span>Ridge visibility</span>
+            <select id="ridgeVisibility">
+              <option value="good" selected>Good</option>
+              <option value="moderate">Moderate</option>
+              <option value="poor">Poor</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Valley visibility</span>
+            <select id="valleyVisibility">
+              <option value="good" selected>Good</option>
+              <option value="moderate">Moderate</option>
+              <option value="poor">Poor</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Undercast evidence</span>
+            <select id="undercast">
+              <option value="none" selected>None</option>
+              <option value="possible">Possible</option>
+              <option value="likely">Likely</option>
+              <option value="confirmed">Confirmed</option>
+            </select>
+          </label>
+        </div>
+        <p class="field-note">Satellite and surface controls simulate automatic evidence only. They do not override live conditions.</p>
+      </aside>
+
+      <section class="results" aria-live="polite">
+        <div class="result-card micro-card">
+          <div class="result-label"><span>Micro</span><small>Badge or tiny UI</small></div>
+          <p id="microOutput">Scattered puffy clouds</p>
+        </div>
+
+        <div class="result-card homepage-card">
+          <div class="result-label"><span>Homepage Sky Readout</span><small>Short observational language</small></div>
+          <div class="surface-chip" id="stateChip">Mostly clear</div>
+          <h2 id="shortOutput">Mostly blue with scattered puffy clouds</h2>
+          <p id="shortDetail">The view shows scattered puffy clouds against plenty of open sky.</p>
+        </div>
+
+        <div class="result-card radiance-card">
+          <div class="result-label"><span>Sunset Radiance</span><small>Observation + interpretation + expectation</small></div>
+          <h2 id="narrativeHeadline">Mostly blue with scattered puffy clouds</h2>
+          <p id="narrativeObservation"></p>
+          <p id="narrativeInterpretation"></p>
+          <p id="narrativeExpectation" class="expectation"></p>
+        </div>
+
+        <div class="gallery-card">
+          <div class="panel-heading gallery-heading">
+            <div>
+              <p class="eyebrow">Variation check</p>
+              <h2>Possible alternatives</h2>
+            </div>
+            <button id="refreshGallery" class="secondary-button" type="button">Generate six</button>
+          </div>
+          <div id="variationGallery" class="variation-list"></div>
+        </div>
+
+        <details class="state-card">
+          <summary>Inspect shared Sky State <span>Developer detail</span></summary>
+          <pre id="stateOutput"></pre>
+        </details>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="/js/sky-language-preview.js?v=20260828"></script>
+</body>
+</html>

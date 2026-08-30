@@ -1581,7 +1581,7 @@
   </div>
 
   <script type="module">
-    import { buildSkyConditionRead, isObscuredSky } from "./js/intel/sky-read.js?v=20260705-directional-cameras";
+    import { buildSkyConditionRead, isObscuredSky } from "./js/intel/sky-read.js?v=20260827-sky-language-engine";
     import { buildDuskSkyFallback, getSkyTimePhase } from "./js/intel/sky-time.js?v=20260629-shared-sunset";
     import { applyPrecipOverrideToNarrative, getCurrentPrecipOverride, getPrecipSkyLabel } from "./js/intel/precip-override.js?v=20260811-shared-sky-label";
 
@@ -1861,6 +1861,9 @@
         precipProbability: normalizePercentValue(pickNumber(currentHour, ["precipProbability", "precipitation_probability", "probabilityOfPrecipitation"])),
         solarRadiation: pickNumber(solarSource, ["solarRadiation", "solar_radiation", "solarWm2", "solar"]),
         uvIndex: pickNumber(solarSource, ["uvIndex", "uv_index", "uv"]),
+        temperature: pickNumber(currentHour, ["temperature", "temperatureF", "temp"]) ?? pickNumber(current, ["temperature", "temperatureF", "temp"]),
+        dewPoint: pickNumber(currentHour, ["dewPoint", "dewpoint", "dew_point"]) ?? pickNumber(current, ["dewPoint", "dewpoint", "dew_point"]),
+        visibility: pickNumber(currentHour, ["visibility", "visibilityMiles"]) ?? pickNumber(current, ["visibility", "visibilityMiles"]),
         weatherCode: pickNumber(currentHour, ["weatherCode", "weather_code"]) ?? pickNumber(current, ["weatherCode", "weather_code"])
       };
     }
@@ -2437,7 +2440,9 @@
       const skyRead = buildSkyConditionRead({
         camera: state.skyData,
         previous: state.skyIntel,
-        weatherContext: buildSkyWeatherContext()
+        weatherContext: buildSkyWeatherContext(),
+        verbosity: "narrative",
+        surface: "sunset-radiance"
       });
       state.skyIntel = skyRead.skyIntel;
       state.narrative = skyRead.narrative;
@@ -2555,7 +2560,9 @@
         const skyRead = buildSkyConditionRead({
           camera: data,
           previous: state.skyIntel,
-          weatherContext: buildSkyWeatherContext()
+          weatherContext: buildSkyWeatherContext(),
+          verbosity: "narrative",
+          surface: "sunset-radiance"
         });
         state.skyData = data;
         state.skyIntel = skyRead.skyIntel;

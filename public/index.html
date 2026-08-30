@@ -5148,7 +5148,7 @@
       homeHikingUseCare
     } from "./js/hiking-home-card.js?v=20260607-narrative";
     import { buildHumanActionIntelFS } from "./js/intel/human-action-feelscore.js?v=20260812-future-feelscore";
-    import { buildSkyConditionRead } from "./js/intel/sky-read.js?v=20260705-directional-cameras";
+    import { buildSkyConditionRead } from "./js/intel/sky-read.js?v=20260827-sky-language-engine";
     import {
       applyPrecipOverrideToNarrative,
       getCurrentPrecipOverride,
@@ -5459,6 +5459,9 @@
         precipAmount: Number(hour?.precipAmount ?? hour?.precipitation ?? hour?.rain ?? current?.precipAmount ?? current?.precipitation ?? current?.precipRate ?? 0) || 0,
         solarRadiation: Number(solarSource.solarRadiation ?? solarSource.solar_radiation ?? solarSource.solarWm2 ?? solarSource.solar),
         uvIndex: Number(solarSource.uvIndex ?? solarSource.uv_index ?? solarSource.uv),
+        temperature: Number(hour?.temperature ?? hour?.temperatureF ?? hour?.temp ?? current?.temperature ?? current?.temperatureF ?? current?.temp),
+        dewPoint: Number(hour?.dewPoint ?? hour?.dewpoint ?? hour?.dew_point ?? current?.dewPoint ?? current?.dewpoint ?? current?.dew_point),
+        visibility: Number(hour?.visibility ?? hour?.visibilityMiles ?? current?.visibility ?? current?.visibilityMiles),
         weatherCode: hour?.weatherCode ?? hour?.weather_code ?? current?.weatherCode ?? current?.weather_code ?? null
       };
     }
@@ -7198,7 +7201,7 @@
             console.warn("Sky module weather cross-check unavailable", weatherError);
           }
         }
-        const skyRead = buildSkyConditionRead({ camera: data, weatherContext });
+        const skyRead = buildSkyConditionRead({ camera: data, weatherContext, verbosity: "short", surface: "homepage" });
         const skyIntel = skyRead.skyIntel;
         latestSkyIntel = skyIntel;
         if (skyPrecipContext) {

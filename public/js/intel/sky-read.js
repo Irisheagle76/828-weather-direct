@@ -1,5 +1,7 @@
 import { computeSkyIntel } from "./sky-intel.js?v=20260701-blue-sky-fog-veto";
 import { generateSkyNarrative } from "./sky-narrative.js";
+import { buildSkyState } from "./sky-state.js";
+import { generateSkyLanguage } from "./sky-language.js";
 
 export function labelizeSkyState(value) {
   if (!value) return "Unknown";
@@ -75,26 +77,52 @@ export function buildSkyConditionRead({
   useLiveNarrative = false,
   liveNarrative = null,
   liveLabel = "Live Sky",
-  weatherContext = null
+  weatherContext = null,
+  verbosity = "short",
+  surface = "homepage"
 } = {}) {
-  const skyIntel = applyWeatherContext(computeSkyIntel({ camera, previous, weatherContext }), weatherContext);
-  const cameraNarrative = generateSkyNarrative(camera, skyIntel);
+  const computedSkyIntel = applyWeatherContext(computeSkyIntel({ camera, previous, weatherContext }), weatherContext);
+  const skyState = buildSkyState({ camera, skyIntel: computedSkyIntel, weatherContext });
+  const fogType = skyState?.fogState?.type;
+  const fogLikely = ["likely", "confirmed"].includes(skyState?.fogState?.likelihood);
+  const hasSharedCoverage = Number.isFinite(skyState?.cloudCoverageFraction);
+  const skyIntel = skyState && skyState.overall !== "unknown"
+    ? {
+        ...(computedSkyIntel || {}),
+        cloud: hasSharedCoverage ? skyState.cloudCoverageFraction * 100 : computedSkyIntel?.cloud ?? null,
+        displayCloud: hasSharedCoverage ? skyState.cloudCoverageFraction * 100 : computedSkyIntel?.displayCloud ?? null,
+        cloudCoverReliable: hasSharedCoverage,
+        cloudState: skyState.cloudCoverage,
+        atmosphericState: fogLikely ? (fogType === "valley_fog" ? "fog" : fogType === "low_overcast" ? "low_stratus" : skyState.overall) : skyState.overall,
+        sunlightDetected: skyState.sunVisibility === "mostly_unobstructed" || skyState.sunVisibility.includes("filtered"),
+        sunlightLevel: skyState.sunVisibility === "mostly_unobstructed" ? "strong" : skyState.sunVisibility.includes("filtered") ? "moderate" : "weak",
+        visualObscured: skyState.overall === "obscured" || (fogLikely && fogType === "low_overcast"),
+        confidence: skyState.confidence,
+        sharedSkyState: true
+      }
+    : computedSkyIntel;
+  const language = generateSkyLanguage(skyState, { verbosity, surface });
+  const legacyNarrative = generateSkyNarrative(camera, skyIntel);
+  const cameraNarrative = typeof language === "string"
+    ? {
+        headline: language,
+        detail: generateSkyLanguage(skyState, { verbosity: "narrative", surface: `${surface}-detail`, remember: false }).observation,
+        confidence: skyState.confidence >= 0.75 ? "high" : skyState.confidence >= 0.5 ? "medium" : "low",
+        type: skyState.overall
+      }
+    : language || legacyNarrative;
   const baseNarrative = useLiveNarrative && liveNarrative ? liveNarrative : cameraNarrative;
-  const directionalNarrative = camera?.directionalComparison?.narrative;
-  const narrative = directionalNarrative
-    ? typeof baseNarrative === "string"
-      ? `${baseNarrative} ${directionalNarrative}`
-      : { ...baseNarrative, detail: `${baseNarrative?.detail || ""} ${directionalNarrative}`.trim() }
-    : baseNarrative;
-  const label = useLiveNarrative ? liveLabel : labelizeSkyState(skyIntel?.atmosphericState);
+  const narrative = baseNarrative;
+  const label = useLiveNarrative ? liveLabel : labelizeSkyState(skyIntel?.atmosphericState || skyState?.overall);
 
   return {
     skyIntel,
+    skyState,
     narrative,
     label,
     obscured: isObscuredSky(skyIntel),
-    cloudMetric: skyCloudMetricLabel(skyIntel),
-    sunlightMetric: skySunlightMetricLabel(skyIntel),
-    confidenceMetric: formatSkyPercent(skyIntel?.confidence)
+    cloudMetric: skyCloudMetricLabel(skyIntel) === "--" ? formatSkyPercent(skyState?.cloudCoverageFraction) : skyCloudMetricLabel(skyIntel),
+    sunlightMetric: skyIntel ? skySunlightMetricLabel(skyIntel) : labelizeSkyState(skyState?.lightQuality),
+    confidenceMetric: formatSkyPercent(skyIntel?.confidence ?? skyState?.confidence)
   };
 }
