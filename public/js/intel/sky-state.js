@@ -119,6 +119,18 @@ function fogCorroboration(weatherContext, cameraVisual) {
     const coverage = fraction(observation.coverageFraction);
     return coverage != null && coverage >= 0.82 && (observation.texture || []).some((value) => value === "flat" || value === "layered");
   });
+  const drySurface =
+    (humidity != null && humidity <= 0.85) ||
+    (temperature != null && dewPoint != null && Math.abs(temperature - dewPoint) >= 6);
+  const clearOpenCamera = cameraVisual.some((observation) => {
+    const coverage = fraction(observation.coverageFraction);
+    const openSky = observation.skyColor === "blue" || observation.sunVisibility === "mostly_unobstructed";
+    return observation.valleyVisibility === "good" &&
+      observation.ridgeVisibility === "good" &&
+      observation.undercast === "none" &&
+      (coverage == null || coverage <= 0.5) &&
+      openSky;
+  });
   const evidence = [];
   if (saturated) evidence.push("high_surface_humidity");
   if (tightDewPointSpread) evidence.push("temperature_dewpoint_convergence");
@@ -127,7 +139,17 @@ function fogCorroboration(weatherContext, cameraVisual) {
   if (valleyObscured) evidence.push("camera_valley_obscuration");
   if (ridgeValleyContrast) evidence.push("camera_ridge_valley_contrast");
   if (cameraLowDeck) evidence.push("camera_low_cloud_deck");
-  return { evidence, saturated, fogCode, lowVisibility, valleyObscured, ridgeValleyContrast, cameraLowDeck };
+  return {
+    evidence,
+    saturated,
+    fogCode,
+    lowVisibility,
+    valleyObscured,
+    ridgeValleyContrast,
+    cameraLowDeck,
+    drySurface,
+    clearOpenCamera
+  };
 }
 
 function reconcileFog(satelliteObservation, weatherContext, cameraVisual) {
@@ -148,6 +170,18 @@ function reconcileFog(satelliteObservation, weatherContext, cameraVisual) {
     (observation.texture || []).includes("towering")
     || normalizeCloudTypes(observation).some(({ type }) => type === "towering_cumulus" || type === "cumulonimbus")
   );
+  const clearDryContradiction =
+    corroboration.drySurface &&
+    corroboration.clearOpenCamera &&
+    !surfaceSupport &&
+    !corroboration.cameraLowDeck;
+  if (clearDryContradiction) {
+    return {
+      ...empty,
+      trend: satellite.trend || "unknown",
+      evidence: ["clear_dry_camera_contradiction"]
+    };
+  }
   const clearValleyContradiction = clearValleyConsensus && !surfaceSupport && !corroboration.cameraLowDeck;
   const contradictedValleySignal = clearValleyContradiction && (convectiveCloudSignal
     || (satellite.trend === "dissipating" && valleyScore < 0.6));
@@ -155,10 +189,10 @@ function reconcileFog(satelliteObservation, weatherContext, cameraVisual) {
   let type = "none", likelihood = "none";
   if (preferValley && !contradictedValleySignal) {
     type = "valley_fog";
-    likelihood = satellite.valleyPattern === "likely" ? (valleySupport ? "confirmed" : "likely") : (valleySupport ? "likely" : "possible");
+    likelihood = satellite.valleyPattern === "likely" ? (valleySupport ? "confirmed" : "possible") : (valleySupport ? "likely" : "possible");
   } else if (satellite.broadDeck !== "none") {
     type = "low_overcast";
-    likelihood = satellite.broadDeck === "likely" ? (deckSupport ? "confirmed" : "likely") : (deckSupport ? "likely" : "possible");
+    likelihood = satellite.broadDeck === "likely" ? (deckSupport ? "confirmed" : "possible") : (deckSupport ? "likely" : "possible");
   }
   if (type === "none") return empty;
   const evidence = [type === "valley_fog" ? "visible_satellite_valley_signature" : "visible_satellite_broad_deck", ...corroboration.evidence];

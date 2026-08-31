@@ -50,11 +50,21 @@ test("a uniform reflective field is classified as a broad deck instead of valley
 });
 
 test("a weakening valley signature is marked as dissipating", () => {
-  const weak = frame(); paintLine(weak, VALLEY_MASK.frenchBroad, 90); paintLine(weak, VALLEY_MASK.swannanoa, 90);
+  const weak = frame(); paintLine(weak, VALLEY_MASK.frenchBroad, 75); paintLine(weak, VALLEY_MASK.swannanoa, 75);
   const latest = analyzeVisibleSatelliteFrame(weak, {
     observedAt: "2026-08-28T16:00:00.000Z", now: Date.parse("2026-08-28T16:05:00.000Z"),
     previous: { valleyFogScore: 1 }
   });
   assert.equal(latest.trend, "dissipating");
-  assert.notEqual(latest.valleyPattern, "none");
+  assert.equal(latest.valleyPattern, "possible");
+});
+
+test("a previous fog peak cannot keep a weaker current frame likely", () => {
+  const weak = frame(); paintLine(weak, VALLEY_MASK.frenchBroad, 75); paintLine(weak, VALLEY_MASK.swannanoa, 75);
+  const latest = analyzeVisibleSatelliteFrame(weak, {
+    observedAt: "2026-08-28T16:00:00.000Z", now: Date.parse("2026-08-28T16:05:00.000Z"),
+    previous: { valleyFogScore: 0.95 }
+  });
+  assert.ok(latest.valleyFogScore < 0.52);
+  assert.equal(latest.valleyPattern, "possible");
 });

@@ -103,10 +103,48 @@ test("visible satellite valley signature plus surface saturation confirms valley
   assert.match(result.narrative.observation, /French Broad and Swannanoa/i);
 });
 
-test("satellite-only possible valley signature stays cautious", () => {
+test("a possible satellite valley signature yields to a clear dry camera", () => {
   const result = read([observation(), satellite({ valleyPattern: "possible", valleyFogScore: 0.4, broadDeck: "none", broadLowCloudScore: 0.1 })], { cloudCover: 0.35, humidity: 0.65 });
+  assert.equal(result.state.fogState.likelihood, "none");
+  assert.doesNotMatch(result.short, /fog|low cloud/i);
+});
+
+test("satellite-only likely valley signature cannot become definitive fog", () => {
+  const result = read([
+    observation({ coverageFraction: 0.68, skyColor: "blue_gray", sunVisibility: "occasionally_filtered" }),
+    satellite({ valleyPattern: "likely", valleyFogScore: 0.7, broadDeck: "none", broadLowCloudScore: 0.1 })
+  ], { cloudCover: 0.65, humidity: 0.82, visibility: 10 });
+  assert.equal(result.state.fogState.type, "valley_fog");
   assert.equal(result.state.fogState.likelihood, "possible");
-  assert.match(result.short, /possible fog/i);
+  assert.notEqual(result.state.overall, "obscured");
+});
+
+test("a clear dry afternoon immediately retires a conflicting satellite fog signal", () => {
+  const result = read([
+    observation({
+      source: "downtown-west", coverageFraction: 0.18, skyColor: "blue",
+      sunVisibility: "mostly_unobstructed", ridgeVisibility: "good",
+      valleyVisibility: "good", undercast: "none"
+    }),
+    observation({
+      source: "north", coverageFraction: 1, skyColor: "blue_gray",
+      sunVisibility: "mostly_hidden", ridgeVisibility: "moderate",
+      valleyVisibility: "poor", undercast: "none"
+    }),
+    satellite({
+      valleyPattern: "likely", valleyFogScore: 0.68,
+      broadDeck: "none", broadLowCloudScore: 0.18,
+      trend: "little_change", confidence: 0.79
+    })
+  ], {
+    cloudCover: 0.13, humidity: 0.49, temperatureF: 85,
+    dewPointF: 64, visibility: 10, weatherCode: 0
+  });
+  assert.equal(result.state.fogState.type, "none");
+  assert.equal(result.state.fogState.likelihood, "none");
+  assert.deepEqual(result.state.fogState.evidence, ["clear_dry_camera_contradiction"]);
+  assert.doesNotMatch(result.short, /fog|low overcast|low cloud/i);
+  assert.doesNotMatch(result.narrative.detail, /fog|low cloud deck/i);
 });
 
 test("fresh clear-valley camera consensus retires a dissipating moderate satellite fog signal", () => {
