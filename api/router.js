@@ -11,6 +11,7 @@ const routes = {
   "forecast/model": () => import("../lib/api-routes/forecast/model.js"),
   "forecast/automatic": () => import("../lib/api-routes/forecast/automatic.js"),
   "forecast/publish": () => import("../lib/api-routes/forecast/publish.js"),
+  "hiking/current": () => import("../lib/api-routes/hiking/current.js"),
   "notifications/public-key": () => import("../lib/api-routes/notifications/public-key.js"),
   "notifications/status": () => import("../lib/api-routes/notifications/status.js"),
   "notifications/subscribe": () => import("../lib/api-routes/notifications/subscribe.js"),

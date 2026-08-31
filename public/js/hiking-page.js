@@ -30,7 +30,9 @@ const els = {
     const GRASSLAND_CAM_URL = "https://cameraftpapi.drivehq.com/api/Camera/GetCameraThumbnail.ashx?parentID=361818469&shareID=17333090";
     const MAX_PATCH_CAM_URL = "https://assets2.webcam.io/w/9W1ZRz/latest.jpg";
     const FAIRVIEW_CAM_URL = "https://images.ambientweather.net/308398A68945/latest.jpg";
+    const HIKING_GUIDANCE_LIVE_URL = "/api/router?route=hiking/current";
     const HIKING_GUIDANCE_RAW_URL = "https://raw.githubusercontent.com/Irisheagle76/828-weather-direct/main/public/data/hiking-guidance.json";
+    const HIKING_REFRESH_MS = 5 * 60 * 1000;
     const NARRATIVE_PREVIEW_CHARS = 200;
     let isNarrativeExpanded = false;
     let fullNarrative = "";
@@ -410,14 +412,31 @@ const els = {
     }
 
     async function loadHiking() {
+      const productionHost = location.hostname === "avlweather.com" || location.hostname.endsWith(".vercel.app");
+      const fallbackSource = productionHost ? HIKING_GUIDANCE_RAW_URL : "data/hiking-guidance.json";
+      const fetchGuidance = async (source, refreshKey) => {
+        const separator = source.includes("?") ? "&" : "?";
+        const res = await fetch(`${source}${separator}t=${refreshKey}`, { cache: "no-store" });
+        if (!res.ok) throw new Error(`Hiking data unavailable (${res.status})`);
+        return res.json();
+      };
+      const liveResult = fetchGuidance(HIKING_GUIDANCE_LIVE_URL, Math.floor(Date.now() / HIKING_REFRESH_MS))
+        .then((data) => ({ data, error: null }))
+        .catch((error) => ({ data: null, error }));
+      let renderedFallback = false;
+
       try {
-        const productionHost = location.hostname === "avlweather.com" || location.hostname.endsWith(".vercel.app");
-        const source = productionHost ? HIKING_GUIDANCE_RAW_URL : "data/hiking-guidance.json";
-        const res = await fetch(`${source}?t=${Date.now()}`, { cache: "no-store" });
-        if (!res.ok) throw new Error("Hiking data unavailable");
-        render(await res.json());
-      } catch (error) {
-        console.warn("Hiking guidance unavailable", error);
+        render(await fetchGuidance(fallbackSource, Date.now()));
+        renderedFallback = true;
+      } catch {
+        // The live response below can still populate the page.
+      }
+
+      const live = await liveResult;
+      if (live.data) {
+        render(live.data);
+      } else if (!renderedFallback) {
+        console.warn("Hiking guidance unavailable", live.error);
       }
     }
 
@@ -427,6 +446,7 @@ const els = {
     });
 
     await loadHiking();
+    window.setInterval(loadHiking, HIKING_REFRESH_MS);
     refreshMountainViews();
     window.setInterval(refreshMountainViews, 3 * 60 * 1000);
   

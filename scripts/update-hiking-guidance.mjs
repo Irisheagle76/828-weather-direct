@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { OBSERVATION_STATIONS, STATION_BY_ID, stationsForProvider } from "../lib/observations/registry.js";
 import { getElevationObservations } from "../lib/observations/service.js";
+import { analyzeHikingStations } from "../lib/hiking/guidance.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outDir = path.join(root, "public", "data");
@@ -911,7 +912,7 @@ if (observationPayload.quality.status !== "fresh") {
 const payload = {
   generatedAt: new Date().toISOString(),
   stations,
-  guidance: analyze(stations)
+  guidance: analyzeHikingStations(stations)
 };
 
 await fs.mkdir(outDir, { recursive: true });
