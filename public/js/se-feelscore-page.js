@@ -1,3 +1,5 @@
+import { buildCategoryLookup, sampleCategory } from './feelscore-map-field.js';
+
 const canvas = document.querySelector('#feelscore-map');
 const stage = document.querySelector('#map-stage');
 const inspector = document.querySelector('#map-inspector');
@@ -57,28 +59,7 @@ function traceGeometry(context, geometry, project) {
 }
 
 function fieldLookup() {
-  return new Map(dataset.points.map((point) => [`${point.lat.toFixed(2)},${point.lon.toFixed(2)}`, point.displayValue]));
-}
-
-function sampleField(lon, lat, lookup) {
-  const spacing = dataset.spacingDegrees;
-  const lon0 = Math.floor((lon - dataset.bbox.west) / spacing) * spacing + dataset.bbox.west;
-  const lat0 = Math.floor((lat - dataset.bbox.south) / spacing) * spacing + dataset.bbox.south;
-  const tx = (lon - lon0) / spacing;
-  const ty = (lat - lat0) / spacing;
-  const corners = [
-    [lat0, lon0, (1 - tx) * (1 - ty)], [lat0, lon0 + spacing, tx * (1 - ty)],
-    [lat0 + spacing, lon0, (1 - tx) * ty], [lat0 + spacing, lon0 + spacing, tx * ty],
-  ];
-  let value = 0;
-  let weight = 0;
-  for (const [cornerLat, cornerLon, cornerWeight] of corners) {
-    const candidate = lookup.get(`${cornerLat.toFixed(2)},${cornerLon.toFixed(2)}`);
-    if (candidate == null) continue;
-    value += candidate * cornerWeight;
-    weight += cornerWeight;
-  }
-  return weight >= 0.48 ? value / weight : null;
+  return buildCategoryLookup(dataset.points);
 }
 
 function contourLayer(width, height) {
@@ -93,9 +74,8 @@ function contourLayer(width, height) {
   for (let y = 0; y < layer.height; y += 1) {
     for (let x = 0; x < layer.width; x += 1) {
       const [lon, lat] = layerProjection.inverse(x, y);
-      const value = sampleField(lon, lat, lookup);
-      if (value == null || value < 0.5) continue;
-      const category = Math.max(1, Math.min(5, Math.floor(value + 0.5)));
+      const category = sampleCategory(lon, lat, lookup, dataset.spacingDegrees, dataset.bbox);
+      if (category == null || category === 0) continue;
       const color = COLORS[category];
       const offset = (y * layer.width + x) * 4;
       pixels.data[offset] = color[0]; pixels.data[offset + 1] = color[1]; pixels.data[offset + 2] = color[2];
@@ -127,7 +107,7 @@ function drawMap() {
   for (const feature of boundaries.features) traceGeometry(context, feature.geometry, project.point);
   context.fillStyle = '#182a3b'; context.fill('evenodd');
 
-  context.imageSmoothingEnabled = true;
+  context.imageSmoothingEnabled = false;
   context.drawImage(contourLayer(width, height), 0, 0, width, height);
   context.beginPath();
   for (const feature of boundaries.features) traceGeometry(context, feature.geometry, project.point);
