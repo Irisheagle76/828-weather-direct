@@ -147,6 +147,42 @@ test("a clear dry afternoon immediately retires a conflicting satellite fog sign
   assert.doesNotMatch(result.narrative.detail, /fog|low cloud deck/i);
 });
 
+test("missing visibility cannot fabricate fog against clear directional cameras", () => {
+  const result = read([
+    observation({
+      source: "downtown-west", coverageFraction: 0.08, skyColor: "blue",
+      sunVisibility: "mostly_unobstructed", ridgeVisibility: "good",
+      valleyVisibility: "moderate", undercast: "none",
+      directional: { west: { coverageFraction: 0 } }
+    }),
+    observation({
+      source: "north", coverageFraction: 1, skyColor: "blue",
+      sunVisibility: "mostly_unobstructed", ridgeVisibility: "good",
+      valleyVisibility: "good", undercast: "none",
+      cloudTypes: [{ type: "towering_cumulus", confidence: 0.72 }],
+      texture: ["towering", "textured"],
+      directional: {
+        east: { coverageFraction: 0 },
+        south: { coverageFraction: 0.02 },
+        west: { coverageFraction: 0.01 }
+      }
+    }),
+    satellite({
+      valleyPattern: "possible", valleyFogScore: 0.24,
+      broadDeck: "none", broadLowCloudScore: 0,
+      trend: "little_change", confidence: 0.59
+    })
+  ], {
+    cloudCover: 0, humidity: 0.48, temperature: 86.8,
+    dewPoint: 64.8, visibility: null, weatherCode: 0
+  });
+  assert.equal(result.state.fogState.type, "none");
+  assert.equal(result.state.fogState.likelihood, "none");
+  assert.deepEqual(result.state.fogState.evidence, ["clear_dry_camera_contradiction"]);
+  assert.doesNotMatch(result.short, /fog|low overcast|low cloud/i);
+  assert.doesNotMatch(result.narrative.detail, /fog|low cloud deck/i);
+});
+
 test("fresh clear-valley camera consensus retires a dissipating moderate satellite fog signal", () => {
   const result = read([
     observation({ source: "downtown", valleyVisibility: "good", ridgeVisibility: "good", undercast: "none" }),

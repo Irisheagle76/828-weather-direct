@@ -5,6 +5,7 @@ const CLOUD_TYPES = new Set([
 ]);
 
 function finite(value) {
+  if (value == null || value === "") return null;
   const number = Number(value);
   return Number.isFinite(number) ? number : null;
 }
@@ -124,11 +125,16 @@ function fogCorroboration(weatherContext, cameraVisual) {
     (temperature != null && dewPoint != null && Math.abs(temperature - dewPoint) >= 6);
   const clearOpenCamera = cameraVisual.some((observation) => {
     const coverage = fraction(observation.coverageFraction);
+    const directionalCoverage = Object.values(observation.directional || {})
+      .map((detail) => fraction(detail?.coverageFraction ?? detail?.cloudCover ?? detail?.coverage))
+      .filter((value) => value != null);
+    const directionalOpen = directionalCoverage.length >= 2 &&
+      directionalCoverage.every((value) => value <= 0.5);
     const openSky = observation.skyColor === "blue" || observation.sunVisibility === "mostly_unobstructed";
     return observation.valleyVisibility === "good" &&
       observation.ridgeVisibility === "good" &&
       observation.undercast === "none" &&
-      (coverage == null || coverage <= 0.5) &&
+      (coverage == null || coverage <= 0.5 || directionalOpen) &&
       openSky;
   });
   const evidence = [];
