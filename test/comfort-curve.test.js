@@ -44,6 +44,19 @@ test("comfort curve exposes current, trend, and a complete text equivalent", () 
   assert.match(model.accessibleSummary, /FeelScore 60/);
 });
 
+test("comfort curve text equivalent distinguishes challenging and harsh scores", () => {
+  const model = buildComfortCurveModel({
+    hourly: forecast([54, 40, 39, 30]),
+    now,
+    hours: 12,
+    score: (item) => item.testScore
+  });
+
+  assert.match(model.accessibleSummary, /FeelScore 54, Challenging/);
+  assert.match(model.accessibleSummary, /FeelScore 40, Challenging/);
+  assert.match(model.accessibleSummary, /FeelScore 39, Harsh/);
+});
+
 test("comfort curve prefers a nearby current observation over the overlapping forecast hour", () => {
   const currentHour = {
     timestamp: now + 7 * 60 * 1000,

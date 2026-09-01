@@ -519,6 +519,7 @@
 .comfort-curve-zone.pleasant { fill: rgba(110, 168, 255, 0.13); }
 .comfort-curve-zone.fair { fill: rgba(247, 200, 115, 0.16); }
 .comfort-curve-zone.challenging { fill: rgba(245, 125, 35, 0.1); }
+.comfort-curve-zone.harsh { fill: rgba(255, 107, 107, 0.12); }
 .comfort-curve-night { fill: var(--comfort-curve-night); }
 .comfort-curve-frame {
   fill: none;

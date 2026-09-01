@@ -76,7 +76,8 @@ function labelForScore(score) {
   if (score >= bands.ideal) return "Excellent";
   if (score >= bands.pleasant) return "Pleasant";
   if (score >= bands.noticeable) return "Noticeable";
-  return "Challenging";
+  if (score >= bands.challenging) return "Challenging";
+  return "Harsh";
 }
 
 function trendFor(points) {
@@ -260,12 +261,15 @@ function chartMarkup(model) {
       <rect class="comfort-curve-zone excellent" x="${left}" y="${yFor(100)}" width="${plotWidth}" height="${yFor(90) - yFor(100)}" />
       <rect class="comfort-curve-zone pleasant" x="${left}" y="${yFor(90)}" width="${plotWidth}" height="${yFor(70) - yFor(90)}" />
       <rect class="comfort-curve-zone fair" x="${left}" y="${yFor(70)}" width="${plotWidth}" height="${yFor(55) - yFor(70)}" />
-      <rect class="comfort-curve-zone challenging" x="${left}" y="${yFor(55)}" width="${plotWidth}" height="${yFor(30) - yFor(55)}" />
+      <rect class="comfort-curve-zone challenging" x="${left}" y="${yFor(55)}" width="${plotWidth}" height="${yFor(40) - yFor(55)}" />
+      <rect class="comfort-curve-zone harsh" x="${left}" y="${yFor(40)}" width="${plotWidth}" height="${yFor(30) - yFor(40)}" />
       ${nightBands(model.points, xFor, top, plotHeight)}
       <rect class="comfort-curve-frame" x="${left}" y="${top}" width="${plotWidth}" height="${plotHeight}" rx="8" />
       <text class="comfort-curve-zone-label" x="${left + plotWidth - 8}" y="${((yFor(100) + yFor(90)) / 2 + 4).toFixed(1)}" text-anchor="end">EXCELLENT</text>
       <text class="comfort-curve-zone-label" x="${left + plotWidth - 8}" y="${((yFor(90) + yFor(70)) / 2 + 4).toFixed(1)}" text-anchor="end">PLEASANT</text>
       <text class="comfort-curve-zone-label" x="${left + plotWidth - 8}" y="${((yFor(70) + yFor(55)) / 2 + 4).toFixed(1)}" text-anchor="end">NOTICEABLE</text>
+      <text class="comfort-curve-zone-label" x="${left + plotWidth - 8}" y="${((yFor(55) + yFor(40)) / 2 + 4).toFixed(1)}" text-anchor="end">CHALLENGING</text>
+      <text class="comfort-curve-zone-label" x="${left + plotWidth - 8}" y="${((yFor(40) + yFor(30)) / 2 + 4).toFixed(1)}" text-anchor="end">HARSH</text>
       <path class="comfort-curve-area" d="${path} L ${chartPoints.at(-1).x.toFixed(1)} ${top + plotHeight} L ${chartPoints[0].x.toFixed(1)} ${top + plotHeight} Z" />
       <path class="comfort-curve-line" d="${path}" />
       <line class="comfort-curve-now-line" x1="${currentPoint.x.toFixed(1)}" x2="${currentPoint.x.toFixed(1)}" y1="${top}" y2="${top + plotHeight}" />
