@@ -1,33 +1,43 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { buildCategoryLookup, sampleCategory } from '../public/js/feelscore-map-field.js';
+import { buildCategoryLookup, sampleContour, smoothContourOpacity } from '../public/js/feelscore-map-field.js';
 
-const bbox = { west: -84, east: -83.5, south: 35, north: 35.5 };
+const bbox = { west: -84, east: -83.25, south: 35, north: 35.75 };
 const spacing = 0.25;
 const points = [
   { lat: 35, lon: -84, finalCategory: 0 },
-  { lat: 35, lon: -83.75, finalCategory: 3 },
-  { lat: 35.25, lon: -84, finalCategory: 0 },
-  { lat: 35.25, lon: -83.75, finalCategory: 0 },
+  { lat: 35.25, lon: -83.75, finalCategory: 3 },
+  { lat: 35.25, lon: -83.5, finalCategory: 1 },
+  { lat: 35.5, lon: -83.75, finalCategory: 0 },
 ];
 const lookup = buildCategoryLookup(points);
 
-test('map sampling preserves the exact category at a forecast grid point', () => {
-  assert.equal(sampleCategory(-83.75, 35, lookup, spacing, bbox), 3);
+test('an isolated qualifying point keeps its own category color at its center', () => {
+  const field = sampleContour(-83.75, 35.25, lookup, spacing, bbox);
+  assert.ok(field);
+  assert.ok(field.mix[3] > field.mix[1]);
+  assert.equal(field.mix[2], 0);
+  assert.equal(smoothContourOpacity(field.strength), 1);
 });
 
-test('map sampling never invents an averaged category that is absent from its corners', () => {
-  const samples = [
-    sampleCategory(-83.79, 35.04, lookup, spacing, bbox),
-    sampleCategory(-83.87, 35.12, lookup, spacing, bbox),
-    sampleCategory(-83.99, 35.24, lookup, spacing, bbox),
-  ];
-  assert.ok(samples.every((category) => category === 0 || category === 3));
-  assert.ok(!samples.includes(1));
-  assert.ok(!samples.includes(2));
+test('contours feather outward instead of ending as hard grid cells', () => {
+  const center = sampleContour(-83.75, 35.25, lookup, spacing, bbox);
+  const edge = sampleContour(-83.75, 35.62, lookup, spacing, bbox);
+  assert.ok(center && edge);
+  assert.ok(smoothContourOpacity(edge.strength) < smoothContourOpacity(center.strength));
+  assert.ok(smoothContourOpacity(edge.strength) > 0);
 });
 
-test('map sampling favors the lower category on an exact boundary tie', () => {
-  assert.equal(sampleCategory(-83.875, 35, lookup, spacing, bbox), 0);
+test('neighboring qualifying categories blend only from categories that exist', () => {
+  const field = sampleContour(-83.625, 35.25, lookup, spacing, bbox);
+  assert.ok(field.mix[1] > 0);
+  assert.ok(field.mix[3] > 0);
+  assert.equal(field.mix[2], 0);
+  assert.equal(field.mix[4], 0);
+  assert.equal(field.mix[5], 0);
+});
+
+test('locations beyond the contour influence remain unshaded', () => {
+  assert.equal(sampleContour(-83.25, 35.75, lookup, spacing, bbox), null);
 });

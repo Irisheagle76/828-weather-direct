@@ -1,3 +1,11 @@
+export const CATEGORY_COLORS = {
+  1: [240, 138, 75],
+  2: [242, 201, 76],
+  3: [168, 214, 94],
+  4: [73, 198, 139],
+  5: [70, 211, 202],
+};
+
 function gridKey(lat, lon) {
   return `${lat.toFixed(2)},${lon.toFixed(2)}`;
 }
@@ -6,33 +14,39 @@ export function buildCategoryLookup(points) {
   return new Map(points.map((point) => [gridKey(point.lat, point.lon), point.finalCategory]));
 }
 
-export function sampleCategory(lon, lat, lookup, spacing, bbox) {
-  const lon0 = Math.floor((lon - bbox.west) / spacing) * spacing + bbox.west;
-  const lat0 = Math.floor((lat - bbox.south) / spacing) * spacing + bbox.south;
-  const tx = (lon - lon0) / spacing;
-  const ty = (lat - lat0) / spacing;
-  const corners = [
-    [lat0, lon0, (1 - tx) * (1 - ty)],
-    [lat0, lon0 + spacing, tx * (1 - ty)],
-    [lat0 + spacing, lon0, (1 - tx) * ty],
-    [lat0 + spacing, lon0 + spacing, tx * ty],
-  ];
-  const weightsByCategory = new Map();
+export function sampleContour(lon, lat, lookup, spacing, bbox) {
+  const centerX = Math.round((lon - bbox.west) / spacing);
+  const centerY = Math.round((lat - bbox.south) / spacing);
+  const categoryWeights = [0, 0, 0, 0, 0, 0];
+  const radius = 3;
+  const sigma = 0.65;
 
-  for (const [cornerLat, cornerLon, weight] of corners) {
-    if (weight <= 0) continue;
-    const category = lookup.get(gridKey(cornerLat, cornerLon));
-    if (!Number.isInteger(category) || category < 0 || category > 5) continue;
-    weightsByCategory.set(category, (weightsByCategory.get(category) || 0) + weight);
-  }
+  for (let yOffset = -radius; yOffset <= radius; yOffset += 1) {
+    for (let xOffset = -radius; xOffset <= radius; xOffset += 1) {
+      const gridLon = bbox.west + (centerX + xOffset) * spacing;
+      const gridLat = bbox.south + (centerY + yOffset) * spacing;
+      const category = lookup.get(gridKey(gridLat, gridLon));
+      if (!Number.isInteger(category) || category < 1 || category > 5) continue;
 
-  let selected = null;
-  let selectedWeight = -1;
-  for (const [category, weight] of weightsByCategory) {
-    if (weight > selectedWeight || (weight === selectedWeight && category < selected)) {
-      selected = category;
-      selectedWeight = weight;
+      const xDistance = (lon - gridLon) / spacing;
+      const yDistance = (lat - gridLat) / spacing;
+      const distanceSquared = xDistance ** 2 + yDistance ** 2;
+      if (distanceSquared > radius ** 2) continue;
+      const weight = Math.exp(-distanceSquared / (2 * sigma ** 2));
+      categoryWeights[category] += weight;
     }
   }
-  return selectedWeight >= 0.48 ? selected : null;
+
+  const totalWeight = categoryWeights.reduce((sum, weight) => sum + weight, 0);
+  if (totalWeight < 0.025) return null;
+
+  return {
+    strength: Math.min(1, totalWeight),
+    mix: categoryWeights.map((weight) => weight / totalWeight),
+  };
+}
+
+export function smoothContourOpacity(strength) {
+  const normalized = Math.max(0, Math.min(1, (strength - 0.04) / 0.28));
+  return normalized * normalized * (3 - 2 * normalized);
 }

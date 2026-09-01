@@ -1,4 +1,4 @@
-import { buildCategoryLookup, sampleCategory } from './feelscore-map-field.js';
+import { CATEGORY_COLORS, buildCategoryLookup, sampleContour, smoothContourOpacity } from './feelscore-map-field.js';
 
 const canvas = document.querySelector('#feelscore-map');
 const stage = document.querySelector('#map-stage');
@@ -9,7 +9,7 @@ const dayLabel = document.querySelector('#forecast-day');
 const debugToggle = document.querySelector('#debug-toggle');
 const qaPanel = document.querySelector('#qa-panel');
 
-const COLORS = { 1: [239, 140, 56], 2: [242, 211, 87], 3: [155, 216, 91], 4: [40, 169, 107], 5: [73, 214, 199] };
+const COLORS = CATEGORY_COLORS;
 const CATEGORY_LABELS = {
   0: 'Unshaded', 1: 'just alright 🫤', 2: 'Fine, I guess 🤷🏻‍♀️',
   3: 'Nice! 👍', 4: 'B.E.A. utiful 😎', 5: 'Goldilocks 🏆',
@@ -20,6 +20,12 @@ let boundaries;
 let selectedPoint;
 let debug = new URLSearchParams(location.search).get('debug') === '1';
 let renderFrame;
+
+for (const [category, color] of Object.entries(COLORS)) {
+  const cssColor = `rgb(${color.join(', ')})`;
+  document.documentElement.style.setProperty(`--fs-category-${category}`, cssColor);
+  document.querySelector(`.legend [data-category="${category}"]`)?.style.setProperty('--swatch', cssColor);
+}
 
 function formatDate(dateText) {
   const date = new Date(`${dateText}T12:00:00Z`);
@@ -63,7 +69,7 @@ function fieldLookup() {
 }
 
 function contourLayer(width, height) {
-  const scale = Math.min(1, 560 / width);
+  const scale = Math.min(1, 760 / width);
   const layer = document.createElement('canvas');
   layer.width = Math.max(280, Math.round(width * scale));
   layer.height = Math.max(220, Math.round(height * scale));
@@ -74,12 +80,14 @@ function contourLayer(width, height) {
   for (let y = 0; y < layer.height; y += 1) {
     for (let x = 0; x < layer.width; x += 1) {
       const [lon, lat] = layerProjection.inverse(x, y);
-      const category = sampleCategory(lon, lat, lookup, dataset.spacingDegrees, dataset.bbox);
-      if (category == null || category === 0) continue;
-      const color = COLORS[category];
+      const field = sampleContour(lon, lat, lookup, dataset.spacingDegrees, dataset.bbox);
+      if (!field) continue;
+      const color = [0, 1, 2].map((channel) => Math.round(
+        Object.entries(COLORS).reduce((sum, [category, rgb]) => sum + rgb[channel] * field.mix[category], 0),
+      ));
       const offset = (y * layer.width + x) * 4;
       pixels.data[offset] = color[0]; pixels.data[offset + 1] = color[1]; pixels.data[offset + 2] = color[2];
-      pixels.data[offset + 3] = category >= 4 ? 212 : 224;
+      pixels.data[offset + 3] = Math.round(232 * smoothContourOpacity(field.strength));
     }
   }
   context.putImageData(pixels, 0, 0);
@@ -107,7 +115,8 @@ function drawMap() {
   for (const feature of boundaries.features) traceGeometry(context, feature.geometry, project.point);
   context.fillStyle = '#182a3b'; context.fill('evenodd');
 
-  context.imageSmoothingEnabled = false;
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = 'high';
   context.drawImage(contourLayer(width, height), 0, 0, width, height);
   context.beginPath();
   for (const feature of boundaries.features) traceGeometry(context, feature.geometry, project.point);
