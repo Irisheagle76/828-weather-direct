@@ -271,6 +271,76 @@ test("repeated readouts vary without changing meteorological meaning", () => {
   for (const variant of variants) assert.doesNotMatch(variant, /overcast|mostly cloudy/i);
 });
 
+test("clear eastern camera evidence supports direct rising-sun language", () => {
+  const result = read([
+    observation({
+      directional: { east: { coverageFraction: 0.08 } },
+      sunVisibility: "mostly_unobstructed"
+    })
+  ], {
+    cloudCover: 0.1,
+    sunriseAt: NOW - 30 * 60_000,
+    sunsetAt: NOW + 10 * 60 * 60_000
+  });
+  assert.equal(result.state.solarRead.phase, "rising");
+  assert.equal(result.state.solarRead.direction, "east");
+  assert.equal(result.state.solarRead.directSunObserved, true);
+  assert.match(result.short, /morning sun rising|rising sun/i);
+  assert.match(result.narrative.interpretation, /rising sun/i);
+});
+
+test("filtered western camera evidence supports setting-sun language", () => {
+  const result = read([
+    observation({
+      coverageFraction: 0.48,
+      cloudTypes: [{ type: "cirrostratus", confidence: 0.86 }],
+      texture: ["thin"],
+      directional: { west: { coverageFraction: 0.52 } },
+      sunVisibility: "filtered"
+    })
+  ], {
+    cloudCover: 0.48,
+    sunriseAt: NOW - 12 * 60 * 60_000,
+    sunsetAt: NOW + 30 * 60_000
+  });
+  assert.equal(result.state.solarRead.phase, "setting");
+  assert.equal(result.state.solarRead.direction, "west");
+  assert.equal(result.state.solarRead.visibility, "filtered");
+  assert.equal(result.state.solarRead.directSunObserved, true);
+  assert.match(result.short, /setting sun filtering/i);
+  assert.match(result.narrative.interpretation, /setting sun is filtering/i);
+});
+
+test("solar language describes indirect light without publishing limitations", () => {
+  const result = read([
+    observation({
+      directional: { east: { coverageFraction: 0.2 } },
+      sunVisibility: "uncertain"
+    })
+  ], {
+    cloudCover: 0.2,
+    sunriseAt: NOW - 12 * 60 * 60_000,
+    sunsetAt: NOW + 30 * 60_000
+  });
+  assert.equal(result.state.solarRead.phase, "setting");
+  assert.equal(result.state.solarRead.directSunObserved, false);
+  assert.match(result.short, /evening light/i);
+  assert.doesNotMatch(result.narrative.detail, /cannot|unable|uncertain|outside.+frame|not visible/i);
+  assert.doesNotMatch(result.narrative.interpretation, /setting sun/i);
+});
+
+test("afterglow language refers to lingering western light rather than the solar disk", () => {
+  const result = read([observation({ directional: { west: { coverageFraction: 0.32 } }, sunVisibility: "uncertain" })], {
+    cloudCover: 0.32,
+    sunriseAt: NOW - 13 * 60 * 60_000,
+    sunsetAt: NOW - 30 * 60_000
+  });
+  assert.equal(result.state.solarRead.phase, "afterglow");
+  assert.equal(result.state.solarRead.directSunObserved, false);
+  assert.match(result.short, /last light|evening light/i);
+  assert.doesNotMatch(result.narrative.detail, /setting sun|sun is visible/i);
+});
+
 test("camera registry encodes North Asheville orientation and keeps East Asheville ready but disabled", () => {
   const north = CAMERA_REGISTRY.find((camera) => camera.id === "north-asheville-south");
   const east = CAMERA_REGISTRY.find((camera) => camera.id === "east-asheville-east");

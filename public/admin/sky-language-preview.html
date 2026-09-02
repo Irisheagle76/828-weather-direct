@@ -28,6 +28,11 @@
         <div class="action-row">
           <select id="preset">
             <option value="fair-cumulus">Fair-weather cumulus</option>
+            <option value="sunrise-clear">Clear sunrise</option>
+            <option value="sunrise-filtered">Filtered sunrise</option>
+            <option value="sunset-clear">Clear sunset</option>
+            <option value="sunset-filtered">Filtered sunset</option>
+            <option value="afterglow">Evening afterglow</option>
             <option value="clear">Clear blue sky</option>
             <option value="cirrus">Thin cirrus</option>
             <option value="cirrostratus">Filtered cirrostratus</option>
@@ -143,6 +148,20 @@
           </label>
 
           <label class="field">
+            <span>Solar phase</span>
+            <select id="solarPhase">
+              <option value="first_light">First light</option>
+              <option value="rising">Rising</option>
+              <option value="morning">Morning</option>
+              <option value="day" selected>Daytime</option>
+              <option value="lowering">Lowering</option>
+              <option value="setting">Setting</option>
+              <option value="afterglow">Afterglow</option>
+              <option value="night">Night</option>
+            </select>
+          </label>
+
+          <label class="field">
             <span>Camera quality</span>
             <select id="cameraQuality">
               <option value="good" selected>Good</option>
@@ -253,6 +272,12 @@
           <p id="shortDetail">The view shows scattered puffy clouds against plenty of open sky.</p>
         </div>
 
+        <div class="result-card solar-card">
+          <div class="result-label"><span>Solar Light Read</span><small>Camera-supported rising and setting light</small></div>
+          <div class="surface-chip" id="solarPhaseOutput">Daytime</div>
+          <h2 id="solarReadOutput">Sunlight is reaching the western horizon without much obstruction.</h2>
+        </div>
+
         <div class="result-card radiance-card">
           <div class="result-label"><span>Sunset Radiance</span><small>Observation + interpretation + expectation</small></div>
           <h2 id="narrativeHeadline">Mostly blue with scattered puffy clouds</h2>
@@ -280,6 +305,6 @@
     </div>
   </main>
 
-  <script type="module" src="/js/sky-language-preview.js?v=20260830-orographic-v2"></script>
+  <script type="module" src="/js/sky-language-preview.js?v=20260902-solar-language-v1"></script>
 </body>
 </html>

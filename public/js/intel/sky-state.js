@@ -16,6 +16,65 @@ function fraction(value) {
   return Math.max(0, Math.min(1, number > 1 ? number / 100 : number));
 }
 
+function timestamp(value) {
+  if (Number.isFinite(value)) return value < 1e12 ? value * 1000 : value;
+  const parsed = Date.parse(value || "");
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function solarPhase(now, sunriseAt, sunsetAt) {
+  const sunrise = timestamp(sunriseAt);
+  const sunset = timestamp(sunsetAt);
+  if (!Number.isFinite(sunrise) || !Number.isFinite(sunset)) return null;
+  const minute = 60 * 1000;
+  if (now < sunrise - 60 * minute) return "night";
+  if (now < sunrise) return "first_light";
+  if (now < sunrise + 90 * minute) return "rising";
+  if (now < sunrise + 3 * 60 * minute) return "morning";
+  if (now < sunset - 3 * 60 * minute) return "day";
+  if (now < sunset - 75 * minute) return "lowering";
+  if (now < sunset + 10 * minute) return "setting";
+  if (now < sunset + 60 * minute) return "afterglow";
+  return "night";
+}
+
+function buildSolarRead({ now, weatherContext, cameraVisual, directional, fallbackSunVisibility }) {
+  const phase = solarPhase(now, weatherContext?.sunriseAt ?? weatherContext?.sunrise, weatherContext?.sunsetAt ?? weatherContext?.sunset);
+  if (!phase) return null;
+  const direction = ["first_light", "rising", "morning"].includes(phase)
+    ? "east"
+    : ["lowering", "setting", "afterglow"].includes(phase) ? "west" : null;
+  const directionalSky = direction ? directional[direction] || null : null;
+  const candidates = direction
+    ? cameraVisual.filter((observation) => observation.directional?.[direction])
+      .sort((a, b) => (finite(b.qualityScore) ?? 0) - (finite(a.qualityScore) ?? 0))
+    : [];
+  const cameraObservation = candidates[0] || null;
+  const sunVisibility = cameraObservation?.sunVisibility || fallbackSunVisibility || "uncertain";
+  const visibility = sunVisibility === "mostly_unobstructed"
+    ? "visible"
+    : ["filtered", "occasionally_filtered"].includes(sunVisibility)
+      ? "filtered"
+      : ["mostly_hidden", "obscured"].includes(sunVisibility) ? "hidden" : "indeterminate";
+  const directSunObserved = Boolean(
+    cameraObservation &&
+    ["rising", "morning", "lowering", "setting"].includes(phase) &&
+    ["visible", "filtered"].includes(visibility)
+  );
+  const horizon = directionalSky?.coverageFraction == null
+    ? "unknown"
+    : directionalSky.coverageFraction < 0.35 ? "open" : directionalSky.coverageFraction < 0.75 ? "partly_open" : "blocked";
+  return {
+    phase,
+    direction,
+    visibility,
+    directSunObserved,
+    horizon,
+    directionalCloudFraction: directionalSky?.coverageFraction ?? null,
+    cameraSource: cameraObservation?.source || null
+  };
+}
+
 function coverageName(value) {
   if (value == null) return "unknown";
   if (value < 0.08) return "clear";
@@ -275,6 +334,7 @@ export function buildSkyState({ camera = null, skyIntel = null, weatherContext =
   const skyColor = bestVisual?.skyColor || (cloud != null && cloud > 0.88 ? "gray" : cloud != null && cloud < 0.35 ? "blue" : "blue_gray");
   const sunVisibility = bestVisual?.sunVisibility || (cloud == null ? "uncertain" : cloud < 0.3 ? "mostly_unobstructed" : cloud < 0.7 ? "occasionally_filtered" : "mostly_hidden");
   const west = directional.west;
+  const solarRead = buildSolarRead({ now, weatherContext, cameraVisual, directional, fallbackSunVisibility: sunVisibility });
 
   return {
     schemaVersion: 1,
@@ -289,6 +349,7 @@ export function buildSkyState({ camera = null, skyIntel = null, weatherContext =
     texture: textures,
     arrangement: bestVisual?.arrangement || null,
     sunVisibility,
+    solarRead,
     lightQuality: sunVisibility === "mostly_unobstructed" ? "crisp" : sunVisibility.includes("filtered") ? "filtered" : "muted",
     horizon: west ? (west.coverageFraction < 0.35 ? "clear_west" : west.coverageFraction > 0.75 ? "cloudy_west" : "partly_open_west") : "unknown",
     depth: textures.some((value) => ["textured", "puffy", "lumpy", "layered"].includes(value)) ? "good_texture" : cloud != null && cloud > 0.9 ? "flat" : "soft",

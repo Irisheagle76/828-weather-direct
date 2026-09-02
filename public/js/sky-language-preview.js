@@ -1,8 +1,13 @@
-import { buildSkyState } from "./intel/sky-state.js?v=20260901-null-visibility-v4";
-import { generateSkyLanguage } from "./intel/sky-language.js?v=20260829-sky-language-prod";
+import { buildSkyState } from "./intel/sky-state.js?v=20260902-solar-language-v1";
+import { generateSkyLanguage } from "./intel/sky-language.js?v=20260902-solar-language-v1";
 
 const PRESETS = {
   "fair-cumulus": { skyColor: "blue", coverage: 24, cloudType: "fair_weather_cumulus", typeConfidence: 90, texture: "puffy", arrangement: "scattered_patches", sunVisibility: "mostly_unobstructed", cameraQuality: "good", confidence: 88, trend: "little_change", eastCoverage: 24, westCoverage: 24, ridgeVisibility: "good", valleyVisibility: "good", undercast: "none" },
+  "sunrise-clear": { solarPhase: "rising", skyColor: "pale_blue", coverage: 10, cloudType: "cirrus", typeConfidence: 72, texture: "wispy", arrangement: "thin_bands", sunVisibility: "mostly_unobstructed", cameraQuality: "good", confidence: 90, trend: "little_change", eastCoverage: 8, westCoverage: 16, ridgeVisibility: "good", valleyVisibility: "good", undercast: "none" },
+  "sunrise-filtered": { solarPhase: "rising", skyColor: "milky", coverage: 52, cloudType: "cirrostratus", typeConfidence: 86, texture: "thin", arrangement: "broad_sheet", sunVisibility: "filtered", cameraQuality: "good", confidence: 86, trend: "little_change", eastCoverage: 58, westCoverage: 44, ridgeVisibility: "good", valleyVisibility: "good", undercast: "none" },
+  "sunset-clear": { solarPhase: "setting", skyColor: "pale_blue", coverage: 14, cloudType: "cirrus", typeConfidence: 70, texture: "wispy", arrangement: "thin_bands", sunVisibility: "mostly_unobstructed", cameraQuality: "good", confidence: 90, trend: "little_change", eastCoverage: 20, westCoverage: 10, ridgeVisibility: "good", valleyVisibility: "good", undercast: "none" },
+  "sunset-filtered": { solarPhase: "setting", skyColor: "milky", coverage: 48, cloudType: "altostratus", typeConfidence: 80, texture: "layered", arrangement: "broken_layers", sunVisibility: "filtered", cameraQuality: "good", confidence: 84, trend: "little_change", eastCoverage: 38, westCoverage: 56, ridgeVisibility: "good", valleyVisibility: "good", undercast: "none" },
+  afterglow: { solarPhase: "afterglow", skyColor: "hazy_blue", coverage: 34, cloudType: "cirrus", typeConfidence: 78, texture: "wispy", arrangement: "thin_bands", sunVisibility: "uncertain", cameraQuality: "good", confidence: 82, trend: "little_change", eastCoverage: 28, westCoverage: 38, ridgeVisibility: "good", valleyVisibility: "good", undercast: "none" },
   clear: { skyColor: "deep_blue", coverage: 2, cloudType: "", typeConfidence: 30, texture: "", arrangement: "", sunVisibility: "mostly_unobstructed", cameraQuality: "good", confidence: 94, trend: "little_change", eastCoverage: 3, westCoverage: 1, ridgeVisibility: "good", valleyVisibility: "good", undercast: "none" },
   cirrus: { skyColor: "blue", coverage: 22, cloudType: "cirrus", typeConfidence: 88, texture: "wispy", arrangement: "thin_bands", sunVisibility: "mostly_unobstructed", cameraQuality: "good", confidence: 87, trend: "little_change", eastCoverage: 24, westCoverage: 20, ridgeVisibility: "good", valleyVisibility: "good", undercast: "none" },
   cirrostratus: { skyColor: "milky", coverage: 56, cloudType: "cirrostratus", typeConfidence: 86, texture: "thin", arrangement: "broad_sheet", sunVisibility: "filtered", cameraQuality: "good", confidence: 84, trend: "clouds_increasing", eastCoverage: 48, westCoverage: 61, ridgeVisibility: "good", valleyVisibility: "good", undercast: "none" },
@@ -17,8 +22,8 @@ const PRESETS = {
   offline: { skyColor: "blue_gray", coverage: 58, cloudType: "", typeConfidence: 0, texture: "", arrangement: "", sunVisibility: "uncertain", cameraQuality: "offline", confidence: 0, trend: "little_change", eastCoverage: 58, westCoverage: 58, ridgeVisibility: "moderate", valleyVisibility: "moderate", undercast: "none" }
 };
 
-const SIMULATION_DEFAULTS = { satValleyPattern: "none", satBroadDeck: "none", satTrend: "little_change", humidity: 55 };
-const ids = ["skyColor", "coverage", "cloudType", "typeConfidence", "texture", "arrangement", "sunVisibility", "cameraQuality", "confidence", "trend", "eastCoverage", "westCoverage", "ridgeVisibility", "valleyVisibility", "undercast", "satValleyPattern", "satBroadDeck", "satTrend", "humidity"];
+const SIMULATION_DEFAULTS = { solarPhase: "day", satValleyPattern: "none", satBroadDeck: "none", satTrend: "little_change", humidity: 55 };
+const ids = ["skyColor", "coverage", "cloudType", "typeConfidence", "texture", "arrangement", "sunVisibility", "solarPhase", "cameraQuality", "confidence", "trend", "eastCoverage", "westCoverage", "ridgeVisibility", "valleyVisibility", "undercast", "satValleyPattern", "satBroadDeck", "satTrend", "humidity"];
 const elements = Object.fromEntries(ids.map((id) => [id, document.querySelector(`#${id}`)]));
 const outputs = {
   coverage: document.querySelector("#coverageValue"),
@@ -29,6 +34,22 @@ const outputs = {
   humidity: document.querySelector("#humidityValue")
 };
 let variation = 1;
+
+const SOLAR_TIMES = {
+  sunriseAt: Date.parse("2026-08-28T10:55:00.000Z"),
+  sunsetAt: Date.parse("2026-08-29T00:02:00.000Z")
+};
+
+const SOLAR_PHASE_TIMES = {
+  first_light: SOLAR_TIMES.sunriseAt - 30 * 60 * 1000,
+  rising: SOLAR_TIMES.sunriseAt + 30 * 60 * 1000,
+  morning: SOLAR_TIMES.sunriseAt + 2 * 60 * 60 * 1000,
+  day: SOLAR_TIMES.sunriseAt + 6 * 60 * 60 * 1000,
+  lowering: SOLAR_TIMES.sunsetAt - 2 * 60 * 60 * 1000,
+  setting: SOLAR_TIMES.sunsetAt - 30 * 60 * 1000,
+  afterglow: SOLAR_TIMES.sunsetAt + 30 * 60 * 1000,
+  night: SOLAR_TIMES.sunsetAt + 2 * 60 * 60 * 1000
+};
 
 function values() {
   return {
@@ -43,7 +64,8 @@ function values() {
 }
 
 function makeState(input) {
-  const timestamp = "2026-08-28T16:00:00.000Z";
+  const now = SOLAR_PHASE_TIMES[input.solarPhase] ?? SOLAR_PHASE_TIMES.day;
+  const timestamp = new Date(now).toISOString();
   const unavailable = ["offline", "night", "stale", "obscured"].includes(input.cameraQuality);
   const observation = {
     source: "preview-camera", timestamp,
@@ -82,8 +104,13 @@ function makeState(input) {
   const includeSatellite = input.satValleyPattern !== "none" || input.satBroadDeck !== "none";
   return buildSkyState({
     camera: { timestamp, observations: [observation, ...(includeSatellite ? [satelliteObservation] : [])], trend: { overallTrend: input.trend } },
-    weatherContext: { cloudCover: input.coverage / 100, humidity: input.humidity / 100 },
-    now: Date.parse(timestamp)
+    weatherContext: {
+      cloudCover: input.coverage / 100,
+      humidity: input.humidity / 100,
+      sunriseAt: SOLAR_TIMES.sunriseAt,
+      sunsetAt: SOLAR_TIMES.sunsetAt
+    },
+    now
   });
 }
 
@@ -114,6 +141,8 @@ function render({ refreshGallery = false } = {}) {
   document.querySelector("#stateChip").textContent = label(state.fogState?.likelihood !== "none" ? state.fogState.type : state.overall);
   document.querySelector("#shortOutput").textContent = short;
   document.querySelector("#shortDetail").textContent = narrative.observation;
+  document.querySelector("#solarPhaseOutput").textContent = label(state.solarRead?.phase || "unresolved");
+  document.querySelector("#solarReadOutput").textContent = narrative.interpretation;
   document.querySelector("#narrativeHeadline").textContent = narrative.headline;
   document.querySelector("#narrativeObservation").textContent = narrative.observation;
   document.querySelector("#narrativeInterpretation").textContent = narrative.interpretation;

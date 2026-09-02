@@ -51,6 +51,39 @@ function cloudDescription(state, seed, explicitAllowed) {
   return descriptions[state.cloudCoverage] || "clouds";
 }
 
+function solarHeadline(state, seed) {
+  const solar = state.solarRead;
+  if (!solar || ["day", "night"].includes(solar.phase)) return null;
+  const cloud = cloudDescription(state, `${seed}:solar`, true);
+  if (solar.phase === "first_light") {
+    return solar.visibility === "hidden"
+      ? `Soft morning light beneath ${cloud}`
+      : "First light spreading across the eastern sky";
+  }
+  if (solar.phase === "rising") {
+    if (solar.directSunObserved && solar.visibility === "visible") return "Morning sun rising above the eastern ridges";
+    if (solar.directSunObserved && solar.visibility === "filtered") return `Rising sun filtering through ${cloud}`;
+    return solar.visibility === "hidden" ? `Soft morning light beneath ${cloud}` : "Morning light spreading across the eastern sky";
+  }
+  if (solar.phase === "morning") {
+    if (solar.directSunObserved && solar.visibility === "visible") return "Morning sunlight reaching the Blue Ridge";
+    if (solar.directSunObserved && solar.visibility === "filtered") return `Morning sun filtering through ${cloud}`;
+    return "Morning light settling across the Asheville sky";
+  }
+  if (solar.phase === "lowering") {
+    if (solar.directSunObserved && solar.visibility === "visible") return "Late-day sun lowering toward the Blue Ridge";
+    if (solar.directSunObserved && solar.visibility === "filtered") return `Lowering sun filtering through ${cloud}`;
+    return "Late-day light spreading across the western sky";
+  }
+  if (solar.phase === "setting") {
+    if (solar.directSunObserved && solar.visibility === "visible") return "Setting sun lighting the western sky";
+    if (solar.directSunObserved && solar.visibility === "filtered") return `Setting sun filtering through ${cloud}`;
+    return solar.visibility === "hidden" ? `Evening light beneath ${cloud}` : "Evening light gathering along the western sky";
+  }
+  if (solar.phase === "afterglow") return "Last light lingering over the Blue Ridge";
+  return null;
+}
+
 function baseShort(state, seed) {
   const directional = directionalPhrase(state);
   const fog = state.fogState || {};
@@ -63,6 +96,8 @@ function baseShort(state, seed) {
   if (state.undercast === "confirmed" || state.undercast === "likely") return "Low clouds filling parts of the Asheville basin";
   if (state.undercast === "possible") return "Signs of low clouds pooling in the Asheville basin";
   if (state.overall === "obscured") return "Low cloud is obscuring the Asheville view";
+  const solar = solarHeadline(state, seed);
+  if (solar) return solar;
   if (directional) {
     const opening = state.skyColor === "blue" ? "Blue sky around Asheville" : "A mixed sky over Asheville";
     return `${opening}, ${directional}`;
@@ -75,6 +110,43 @@ function baseShort(state, seed) {
   if (state.overall === "mostly_cloudy") return `Mostly cloudy with ${state.lightQuality === "filtered" ? "soft filtered light" : "a few brighter openings"}`;
   if (state.overall === "overcast") return state.depth === "flat" ? "A flat gray overcast over Asheville" : "Gray and overcast with muted light";
   return "Current sky conditions are only partly resolved";
+}
+
+function solarLightSentence(state) {
+  const solar = state.solarRead;
+  if (!solar || ["day", "night"].includes(solar.phase)) return null;
+  const cloud = cloudDescription(state, `${state.timestamp}:solar-light`, true);
+  if (solar.phase === "first_light") {
+    return solar.visibility === "hidden"
+      ? "Soft morning light is spreading beneath the cloud cover."
+      : "The eastern sky is brightening above the ridges.";
+  }
+  if (solar.phase === "rising") {
+    if (solar.directSunObserved && solar.visibility === "visible") return "The rising sun is shining into the eastern sky.";
+    if (solar.directSunObserved && solar.visibility === "filtered") return `The rising sun is filtering through ${cloud}.`;
+    return solar.visibility === "hidden"
+      ? "Soft morning light is spreading beneath the cloud cover."
+      : "Morning light is spreading across the eastern sky.";
+  }
+  if (solar.phase === "morning") {
+    if (solar.directSunObserved && solar.visibility === "visible") return "Morning sunlight is reaching the ridges cleanly.";
+    if (solar.directSunObserved && solar.visibility === "filtered") return `Morning sunlight is filtering through ${cloud}.`;
+    return "Morning light is settling across the ridges and valleys.";
+  }
+  if (solar.phase === "lowering") {
+    if (solar.directSunObserved && solar.visibility === "visible") return "Late-day sunlight is reaching the western sky cleanly.";
+    if (solar.directSunObserved && solar.visibility === "filtered") return `The lowering sun is filtering through ${cloud}.`;
+    return "Late-day light is spreading across the western sky.";
+  }
+  if (solar.phase === "setting") {
+    if (solar.directSunObserved && solar.visibility === "visible") return "The setting sun is lighting an open western sky.";
+    if (solar.directSunObserved && solar.visibility === "filtered") return `The setting sun is filtering through ${cloud}.`;
+    return solar.visibility === "hidden"
+      ? "Evening light is settling beneath the cloud cover."
+      : "Evening light is gathering along the western horizon.";
+  }
+  if (solar.phase === "afterglow") return "The western sky is holding onto the last evening light.";
+  return null;
 }
 
 function observationSentence(state, seed) {
@@ -106,18 +178,32 @@ function lightSentence(state) {
   if (state.fogState?.type === "valley_fog" && state.fogState?.trend === "dissipating") return "The low cloud is thinning, so brighter openings should become more common as heating continues.";
   if (state.fogState?.type === "valley_fog" && ["likely", "confirmed"].includes(state.fogState?.likelihood)) return "The valley layer is muting the light locally while higher terrain may remain above it.";
   if (state.fogState?.type === "low_overcast" && ["likely", "confirmed"].includes(state.fogState?.likelihood)) return "The low deck is muting the daylight and limiting a clean view toward the western horizon.";
+  const solar = solarLightSentence(state);
+  if (solar) return solar;
   const phrases = {
     mostly_unobstructed: "Sunlight is reaching the western horizon without much obstruction.",
     filtered: "The sun is filtering through the cloud layer rather than disappearing behind it.",
     occasionally_filtered: "The sun is moving through thinner and thicker patches of cloud.",
     mostly_hidden: "The sun is mostly hidden behind the thicker cloud cover.",
-    obscured: "The current view cannot reliably resolve the sun or western horizon."
+    obscured: "Diffuse daylight is settling through the low cloud."
   };
-  return phrases[state.sunVisibility] || "Sun visibility remains uncertain from the available view.";
+  return phrases[state.sunVisibility] || "The sky is carrying soft, even light.";
 }
 
-function sunsetSentence(state) {
+function solarContextSentence(state) {
   const setup = state.sunsetStructure || {};
+  const solar = state.solarRead;
+  if (["first_light", "rising", "morning"].includes(solar?.phase)) {
+    if (solar.horizon === "blocked") return "The brighter morning light is staying diffuse beneath the eastern cloud cover.";
+    if (setup.textureAvailable) return "Cloud texture east of Asheville is giving the early light more definition.";
+    return "The open eastern sky is producing clean, simple morning light.";
+  }
+  if (solar?.phase === "setting") {
+    if (solar.horizon === "blocked") return "The remaining evening light is concentrated beneath the western cloud cover.";
+    if (setup.textureAvailable) return "Cloud texture near the western horizon is giving the evening light more definition.";
+    return "The open western horizon is producing clean, simple evening light.";
+  }
+  if (solar?.phase === "afterglow") return "The remaining light is concentrated along the western horizon.";
   if (!setup.lightCanReachHorizon || setup.westernHorizon === "blocked") return "That points to limited color potential unless openings develop closer to sunset.";
   if (setup.textureAvailable && setup.westernHorizon === "open") return "That is a good setup for some warmer color, especially just after sunset.";
   if (setup.textureAvailable) return "Some of those clouds may catch softer orange or pink light as the sun gets lower.";
@@ -134,8 +220,10 @@ export function generateSkyLanguage(state, { verbosity = "short", seed = null, s
     : state.fogState?.type === "low_overcast" && state.fogState?.likelihood !== "none" ? "Low overcast" : cloudDescription(state, languageSeed, true);
   else if (verbosity === "narrative") {
     const observation = observationSentence(state, languageSeed);
-    const detail = `${observation} ${lightSentence(state)} ${sunsetSentence(state)}`;
-    result = { headline: baseShort(state, `${languageSeed}:headline`), detail, observation, interpretation: lightSentence(state), sunsetExpectation: sunsetSentence(state) };
+    const interpretation = lightSentence(state);
+    const solarContext = solarContextSentence(state);
+    const detail = `${observation} ${interpretation} ${solarContext}`;
+    result = { headline: baseShort(state, `${languageSeed}:headline`), detail, observation, interpretation, solarContext, sunsetExpectation: solarContext };
   } else result = baseShort(state, languageSeed);
   const rendered = typeof result === "string" ? result : `${result.headline}|${result.detail}`;
   if (remember) recentBySurface.set(surface, [rendered, ...recent].slice(0, 4));

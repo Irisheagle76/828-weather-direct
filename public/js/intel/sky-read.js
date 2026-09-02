@@ -1,7 +1,7 @@
 import { computeSkyIntel } from "./sky-intel.js?v=20260701-blue-sky-fog-veto";
 import { generateSkyNarrative } from "./sky-narrative.js";
-import { buildSkyState } from "./sky-state.js?v=20260901-null-visibility-v4";
-import { generateSkyLanguage } from "./sky-language.js?v=20260829-sky-language-prod";
+import { buildSkyState } from "./sky-state.js?v=20260902-solar-language-v1";
+import { generateSkyLanguage } from "./sky-language.js?v=20260902-solar-language-v1";
 
 export function labelizeSkyState(value) {
   if (!value) return "Unknown";
