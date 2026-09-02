@@ -1,32 +1,29 @@
 {
-  "timestamp": "2026-08-31T15:21:45.915002+00:00",
+  "timestamp": "2026-09-02T21:40:33.483797+00:00",
   "metrics": {
     "cloudCoverWest": 2,
-    "brightness": 0.59,
-    "contrast": 0.18,
+    "brightness": 0.55,
+    "contrast": 0.1,
     "visibilityScore": 2,
     "sunlightDetected": true,
-    "sunlightStrength": 0.34,
+    "sunlightStrength": 0.39,
     "sunlightLevel": "strong",
-    "groundBrightness": 0.37,
-    "groundContrast": 0.3,
+    "groundBrightness": 0.46,
+    "groundContrast": 0.27,
     "softShadowSignal": false,
     "filteredSunshineSignal": false,
-    "skyBlueSignal": 1.23,
+    "skyBlueSignal": 2.12,
     "obscuredView": false,
     "precipVisible": false,
     "mode": "day",
-    "satelliteHighCloudSignal": false,
+    "satelliteHighCloudSignal": true,
     "satelliteCloudMotionSignal": true,
-    "satelliteCloudFraction": 0.16,
-    "satelliteMotion": 0.03
+    "satelliteCloudFraction": 0.18,
+    "satelliteMotion": 0.12
   },
   "trend": {
     "cloudTrend": "steady",
-    "brightnessTrend": "steady",
+    "brightnessTrend": "decreasing",
     "overallTrend": "steady"
-  },
-  "lastAttemptedCapture": "2026-09-02T18:53:46.796895+00:00",
-  "captureStatus": "stale",
-  "captureError": "Command '['/opt/hostedtoolcache/Python/3.12.14/x64/bin/python', '/home/runner/work/828-weather-direct/828-weather-direct/public/js/sky-cam/capture_frame.py']' returned non-zero exit status 1."
+  }
 }
