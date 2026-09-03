@@ -12,4 +12,12 @@ test("Sunset Radiance includes the Chamber camera as a visual Sky Read assistant
   assert.match(html, /Live Asheville Area Chamber of Commerce camera/);
   assert.match(html, /Primary visual cross-check/);
   assert.match(html, /Live Camera Desk/);
+  assert.match(html, /UNC Asheville Weather Tower/);
+  assert.match(html, /Looking back toward downtown Asheville/);
+  assert.match(html, /35\.62180° N, 82\.56606° W/);
+  assert.match(html, /2,357 ft/);
+  assert.match(html, /econet\.climate\.ncsu\.edu\/m\/\?id=UNCA/);
+  assert.match(html, /images\.ambientweather\.net\/308398A68945\/latest\.jpg/);
+  assert.match(html, /tempestwx\.com\/station\/91716/);
+  assert.match(html, /Fairview · North/);
 });

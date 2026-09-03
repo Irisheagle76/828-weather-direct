@@ -505,7 +505,7 @@
 
     .sky-context-grid {
       display: grid;
-      grid-template-columns: repeat(6, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 16px;
       margin-top: 20px;
     }
@@ -534,16 +534,7 @@
     }
 
     .context-card.primary-assistant {
-      grid-column: span 4;
-    }
-
-    .context-card.compact-camera {
-      grid-column: span 2;
-      align-self: start;
-    }
-
-    .context-card.half-camera {
-      grid-column: span 3;
+      grid-column: 1 / -1;
     }
 
     .context-card {
@@ -600,21 +591,46 @@
 
     .context-card.primary-assistant .context-media,
     .context-card.primary-assistant iframe {
-      min-height: 300px;
+      min-height: 380px;
     }
 
-    .context-media.unca-camera {
-      aspect-ratio: 1280 / 602;
-      min-height: 190px;
+    .context-card.primary-assistant .context-media {
+      aspect-ratio: 21 / 9;
+    }
+
+    .context-media.station-camera {
+      aspect-ratio: 16 / 9;
+      min-height: 0;
       overflow: hidden;
     }
 
-    .context-media.unca-camera img {
-      height: auto;
+    .context-media.station-camera img {
+      height: 100%;
       min-height: 0;
       max-height: none;
-      margin-top: -9.21875%;
-      object-fit: initial;
+      object-fit: cover;
+    }
+
+    .context-media.unca-camera img {
+      object-position: center 62%;
+    }
+
+    .station-details {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .station-details span {
+      padding: 5px 8px;
+      border: 1px solid rgba(15, 76, 196, 0.14);
+      border-radius: 999px;
+      color: #365174;
+      background: #f5f8fd;
+      font-size: 11px;
+      font-weight: 750;
+      line-height: 1.2;
     }
 
     .context-media::after {
@@ -1148,14 +1164,7 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
-      .context-card.primary-assistant {
-        grid-column: span 2;
-      }
-
-      .context-card.compact-camera,
-      .context-card.half-camera {
-        grid-column: auto;
-      }
+      .context-card.primary-assistant { grid-column: 1 / -1; }
     }
 
     @media (max-width: 680px) {
@@ -1223,6 +1232,10 @@
       .context-card.primary-assistant .context-media,
       .context-card.primary-assistant iframe {
         min-height: 210px;
+      }
+
+      .context-card.primary-assistant .context-media {
+        aspect-ratio: 16 / 9;
       }
 
       .camera-desk-heading {
@@ -1410,23 +1423,10 @@
 
         <div class="camera-desk-heading">
           <h3>Live Camera Desk</h3>
-          <p>Compare the western horizon, the Asheville valley, and clouds approaching from the east. The Chamber feed is the primary visual cross-check.</p>
+          <p>Start with the wide Chamber feed, then compare the paired UNC Asheville and Fairview views for cloud direction, visibility, and changing light.</p>
         </div>
 
         <div class="sky-context-grid" aria-label="Live Asheville camera views">
-          <article class="context-card compact-camera">
-            <button class="context-media unca-camera" type="button" data-lightbox-src="https://wlos.com/resources/ftptransfer/wlos/maps/Cam%20UNCA%20EcoNet.png" data-lightbox-title="UNCA EcoNet Backup Camera" data-lightbox-crop="unca">
-              <img id="uncaCameraImage" src="https://wlos.com/resources/ftptransfer/wlos/maps/Cam%20UNCA%20EcoNet.png" alt="UNC Asheville EcoNet weather station camera view" loading="lazy" />
-              <span class="context-label">
-                <span>Backup camera</span>
-                <strong>UNC Asheville EcoNet weather station</strong>
-              </span>
-            </button>
-            <div class="context-copy">
-              Backup view when the main western camera is stale or blocked.
-            </div>
-          </article>
-
           <article class="context-card primary-assistant">
             <div class="context-media videstra-live">
               <iframe
@@ -1443,7 +1443,43 @@
             </div>
           </article>
 
-          <article class="context-card half-camera">
+          <article class="context-card station-card">
+            <button class="context-media station-camera unca-camera" type="button" data-lightbox-src="https://wlos.com/resources/ftptransfer/wlos/maps/Cam%20UNCA%20EcoNet.png" data-lightbox-title="UNC Asheville Weather Tower" data-lightbox-crop="unca">
+              <img id="uncaCameraImage" src="https://wlos.com/resources/ftptransfer/wlos/maps/Cam%20UNCA%20EcoNet.png" alt="South-facing camera from the UNC Asheville Weather Tower looking toward downtown Asheville" loading="lazy" />
+              <span class="context-label">
+                <span>South-facing view</span>
+                <strong>UNC Asheville Weather Tower</strong>
+              </span>
+            </button>
+            <div class="context-copy">
+              <strong>UNC Asheville · South.</strong> Looking back toward downtown Asheville from the Lookout Observatory weather tower.
+              <div class="station-details" aria-label="UNC Asheville station details">
+                <span>2,357 ft</span>
+                <span>35.62180° N, 82.56606° W</span>
+              </div>
+              <a href="https://econet.climate.ncsu.edu/m/?id=UNCA" target="_blank" rel="noopener noreferrer">View EcoNet weather station</a> · <a href="https://www.atms.unca.edu/huang_wall.html" target="_blank" rel="noopener noreferrer">Weather Tower details</a>
+            </div>
+          </article>
+
+          <article class="context-card station-card">
+            <button class="context-media station-camera" type="button" data-lightbox-src="https://images.ambientweather.net/308398A68945/latest.jpg" data-lightbox-title="Fairview North-facing Camera">
+              <img id="fairviewCameraImage" src="https://images.ambientweather.net/308398A68945/latest.jpg" alt="North-facing weather camera in Fairview, southeast of Asheville" loading="lazy" />
+              <span class="context-label">
+                <span>North-facing view</span>
+                <strong>Fairview</strong>
+              </span>
+            </button>
+            <div class="context-copy">
+              <strong>Fairview · North.</strong> About 10 miles southeast of Asheville, looking north toward the city and surrounding mountains.
+              <div class="station-details" aria-label="Fairview station details">
+                <span>About 2,224 ft</span>
+                <span>10 mi southeast of Asheville</span>
+              </div>
+              <a href="https://tempestwx.com/station/91716/" target="_blank" rel="noopener noreferrer">View Tempest weather station</a>
+            </div>
+          </article>
+
+          <article class="context-card">
             <div class="context-media youtube-live">
               <iframe
                 src="https://www.youtube.com/embed/live_stream?channel=UCf88ZzHs8HzzRMMO7OGKmYA&playsinline=1&rel=0&autoplay=1&mute=1"
@@ -1459,7 +1495,7 @@
             </div>
           </article>
 
-          <article class="context-card half-camera">
+          <article class="context-card">
             <div class="context-media youtube-live">
               <iframe
                 src="https://www.youtube-nocookie.com/embed/UxUU3Fc1vBw"
@@ -1627,6 +1663,7 @@
     const LIVE_THUMBNAIL_URL = "https://i.ytimg.com/vi/UxUU3Fc1vBw/maxresdefault_live.jpg";
     const SKYCAM_RAW_BASE = "https://raw.githubusercontent.com/Irisheagle76/828-weather-direct/main/public/js/sky-cam";
     const UNCA_CAMERA_URL = "https://wlos.com/resources/ftptransfer/wlos/maps/Cam%20UNCA%20EcoNet.png";
+    const FAIRVIEW_CAMERA_URL = "https://images.ambientweather.net/308398A68945/latest.jpg";
 
     const state = {
       skyData: null,
@@ -1650,6 +1687,7 @@
       windowStatus: document.querySelector("#windowStatus"),
       skyImage: document.querySelector("#skyImage"),
       uncaCameraImage: document.querySelector("#uncaCameraImage"),
+      fairviewCameraImage: document.querySelector("#fairviewCameraImage"),
       mediaLightbox: document.querySelector("#mediaLightbox"),
       lightboxMedia: document.querySelector("#lightboxMedia"),
       lightboxImage: document.querySelector("#lightboxImage"),
@@ -2297,6 +2335,9 @@
     function refreshContextMedia() {
       if (els.uncaCameraImage) {
         els.uncaCameraImage.src = cacheBustedUrl(UNCA_CAMERA_URL);
+      }
+      if (els.fairviewCameraImage) {
+        els.fairviewCameraImage.src = cacheBustedUrl(FAIRVIEW_CAMERA_URL);
       }
     }
 
