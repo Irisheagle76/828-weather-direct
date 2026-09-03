@@ -1,32 +1,29 @@
 {
-  "timestamp": "2026-09-02T21:40:33.483797+00:00",
+  "timestamp": "2026-09-03T11:38:43.702489+00:00",
   "metrics": {
-    "cloudCoverWest": 2,
-    "brightness": 0.55,
-    "contrast": 0.1,
-    "visibilityScore": 2,
-    "sunlightDetected": true,
-    "sunlightStrength": 0.39,
-    "sunlightLevel": "strong",
-    "groundBrightness": 0.46,
-    "groundContrast": 0.27,
-    "softShadowSignal": false,
+    "cloudCoverWest": null,
+    "brightness": 0.04,
+    "contrast": 0.07,
+    "visibilityScore": null,
+    "sunlightDetected": false,
+    "sunlightStrength": 0.02,
+    "sunlightLevel": "none",
+    "groundBrightness": 0.03,
+    "groundContrast": 0.01,
+    "softShadowSignal": true,
     "filteredSunshineSignal": false,
-    "skyBlueSignal": 2.12,
-    "obscuredView": false,
+    "skyBlueSignal": null,
+    "obscuredView": true,
     "precipVisible": false,
-    "mode": "day",
-    "satelliteHighCloudSignal": true,
-    "satelliteCloudMotionSignal": true,
-    "satelliteCloudFraction": 0.18,
-    "satelliteMotion": 0.12
+    "mode": "night",
+    "satelliteHighCloudSignal": false,
+    "satelliteCloudMotionSignal": false,
+    "satelliteCloudFraction": 0.06,
+    "satelliteMotion": 0.0
   },
   "trend": {
-    "cloudTrend": "steady",
+    "cloudTrend": "unknown",
     "brightnessTrend": "decreasing",
     "overallTrend": "steady"
-  },
-  "lastAttemptedCapture": "2026-09-03T06:26:39.128577+00:00",
-  "captureStatus": "stale",
-  "captureError": "Command '['/opt/hostedtoolcache/Python/3.12.14/x64/bin/python', '/home/runner/work/828-weather-direct/828-weather-direct/public/js/sky-cam/capture_frame.py']' returned non-zero exit status 1."
+  }
 }
