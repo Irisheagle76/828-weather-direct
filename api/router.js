@@ -1,6 +1,7 @@
 const routes = {
   "admin/login": () => import("../lib/api-routes/admin/login.js"),
   "admin/logout": () => import("../lib/api-routes/admin/logout.js"),
+  "asheville-spread": () => import("../lib/api-routes/asheville-spread.js"),
   "alerts/clear": () => import("../lib/api-routes/alerts/clear.js"),
   "alerts/latest": () => import("../lib/api-routes/alerts/latest.js"),
   "alerts/publish": () => import("../lib/api-routes/alerts/publish.js"),

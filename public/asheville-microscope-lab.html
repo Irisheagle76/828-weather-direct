@@ -1,0 +1,876 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Experimental meteorological analysis of the Asheville neighborhood observation network.">
+  <meta name="theme-color" content="#061a3f">
+  <title>Asheville Micronet Lab | 828 Weather Direct</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://tile.openstreetmap.org">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3ynHT9tUiN7ZBxiDHdIwAzJbDss0=" crossorigin="">
+  <style>
+    :root {
+      --navy: #061a3f;
+      --blue: #1761d2;
+      --sky: #63b8ff;
+      --orange: #ff7b24;
+      --gold: #ffc457;
+      --mint: #55dfbd;
+      --ink: #0b1f43;
+      --muted: #59708f;
+      --paper: #f5f8fc;
+      --line: #d6e1ef;
+      --white: #fff;
+      --danger: #d94841;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--paper); }
+    button, select { font: inherit; }
+    /* Local Leaflet layout fallback if the CDN stylesheet is blocked or delayed. */
+    .leaflet-container { position: relative; overflow: hidden; outline-offset: 1px; }
+    .leaflet-pane, .leaflet-tile, .leaflet-marker-icon, .leaflet-marker-shadow, .leaflet-tile-container, .leaflet-pane > svg, .leaflet-pane > canvas { position: absolute; left: 0; top: 0; }
+    .leaflet-map-pane, .leaflet-control-container { position: absolute; left: 0; top: 0; }
+    .leaflet-container img.leaflet-tile { max-width: none !important; max-height: none !important; width: 256px; height: 256px; padding: 0; }
+    .leaflet-tile { visibility: hidden; }
+    .leaflet-tile-loaded { visibility: inherit; }
+    .leaflet-pane > svg path, .leaflet-tile-container { pointer-events: none; }
+    .leaflet-pane > svg path.leaflet-interactive { pointer-events: auto; }
+    .leaflet-zoom-animated { transform-origin: 0 0; }
+    .leaflet-pane { z-index: 400; }
+    .leaflet-tile-pane { z-index: 200; }
+    .leaflet-overlay-pane { z-index: 400; }
+    .leaflet-tooltip-pane { z-index: 650; }
+    .leaflet-popup-pane { z-index: 700; }
+    .leaflet-control { position: relative; z-index: 800; pointer-events: auto; }
+    .leaflet-top, .leaflet-bottom { position: absolute; z-index: 1000; pointer-events: none; }
+    .leaflet-top { top: 0; } .leaflet-right { right: 0; } .leaflet-bottom { bottom: 0; } .leaflet-left { left: 0; }
+    .leaflet-control-zoom { margin: 12px; }
+    .leaflet-control-zoom a { display: grid; width: 34px; height: 34px; place-items: center; color: var(--ink); background: #fff; font: 700 20px/1 sans-serif; text-decoration: none; }
+    .leaflet-control-zoom a + a { border-top: 1px solid var(--line); }
+    .leaflet-control-attribution { margin: 0; padding: 3px 7px; background: rgba(255,255,255,.86); }
+    .lab-shell { min-height: 100vh; }
+    .lab-topbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px clamp(18px,4vw,58px); color: #dceaff; background: #04132f; }
+    .lab-brand { color: #fff; font: 700 17px Georgia,"Times New Roman",serif; text-decoration: none; }
+    .lab-topbar nav { display: flex; align-items: center; gap: 18px; }
+    .lab-topbar a { color: #dceaff; text-decoration: none; }
+    .lab-status { color: var(--mint); font-size: 13px; font-weight: 700; }
+    .lab-hero { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(320px,.8fr); gap: 40px; padding: 54px clamp(22px,5vw,72px) 48px; color: #fff; background: radial-gradient(circle at 80% 15%, rgba(23,97,210,.42), transparent 34%), linear-gradient(135deg,#061a3f,#0d3775 66%,#18459b); }
+    .lab-kicker { color: var(--orange); font-size: 12px; font-weight: 900; letter-spacing: .18em; text-transform: uppercase; }
+    .lab-hero h1 { max-width: 850px; margin: 12px 0 16px; font: 400 clamp(43px,6vw,78px)/.97 Georgia,"Times New Roman",serif; }
+    .lab-hero p { max-width: 760px; margin: 0; color: #d6e5fb; font-size: clamp(17px,2vw,22px); line-height: 1.55; }
+    .lab-hero-meta { align-self: end; padding: 22px; border-left: 4px solid var(--orange); background: rgba(255,255,255,.08); }
+    .lab-hero-meta strong { display: block; margin-bottom: 8px; color: var(--gold); font-size: 27px; }
+    .lab-hero-meta span { color: #eaf2ff; line-height: 1.5; }
+    main { width: min(1500px,100%); margin: 0 auto; padding: 36px clamp(16px,4vw,54px) 70px; }
+    .lab-alert { display: none; margin-bottom: 24px; padding: 16px 18px; border-left: 4px solid var(--danger); color: #7c2525; background: #fff0ef; }
+    .lab-alert.show { display: block; }
+    .lab-insights { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; margin-top: -70px; position: relative; z-index: 2; }
+    .lab-insight { min-height: 174px; padding: 22px; border-top: 5px solid var(--accent,var(--orange)); background: #fff; box-shadow: 0 16px 38px rgba(8,35,78,.14); }
+    .lab-insight span { color: var(--accent,var(--orange)); font-size: 11px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
+    .lab-insight h2 { margin: 12px 0 8px; font: 400 25px/1.05 Georgia,"Times New Roman",serif; }
+    .lab-insight p { margin: 0; color: var(--muted); line-height: 1.45; }
+    .lab-insight:nth-child(2) { --accent: var(--blue); }
+    .lab-insight:nth-child(3) { --accent: #008c77; }
+    .lab-metrics { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); gap: 1px; margin: 34px 0 48px; overflow: hidden; border: 1px solid var(--line); background: var(--line); }
+    .lab-metric { min-height: 116px; padding: 17px; background: #fff; }
+    .lab-metric span { display: block; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+    .lab-metric strong { display: block; margin-top: 9px; font: 400 29px Georgia,"Times New Roman",serif; }
+    .lab-metric small { display: block; margin-top: 6px; color: var(--muted); line-height: 1.35; }
+    .lab-section { margin-top: 54px; }
+    .lab-section-head { display: flex; align-items: end; justify-content: space-between; gap: 28px; margin-bottom: 20px; }
+    .lab-section-head h2 { max-width: 850px; margin: 7px 0 0; font: 400 clamp(32px,4vw,50px)/1.02 Georgia,"Times New Roman",serif; }
+    .lab-section-head p { max-width: 550px; margin: 0; color: var(--muted); line-height: 1.5; }
+    .lab-control { display: grid; gap: 6px; min-width: 210px; color: var(--muted); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .lab-control select { min-height: 44px; padding: 8px 34px 8px 12px; border: 1px solid #b9c9dd; border-radius: 4px; color: var(--ink); background: #fff; text-transform: none; }
+    .lab-grid-2 { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; }
+    .consensus-layout { grid-template-columns: minmax(0,.84fr) minmax(520px,1.16fr); align-items: stretch; }
+    .lab-panel { min-width: 0; padding: clamp(18px,3vw,30px); border: 1px solid var(--line); background: #fff; }
+    .lab-panel.dark { color: #fff; border-color: transparent; background: linear-gradient(145deg,#071b43,#123a78); }
+    .lab-panel h3 { margin: 0 0 7px; font: 400 28px Georgia,"Times New Roman",serif; }
+    .lab-panel-sub { margin: 0 0 22px; color: var(--muted); line-height: 1.45; }
+    .lab-panel.dark .lab-panel-sub { color: #c8d9f4; }
+    .anomaly-list { display: grid; gap: 12px; }
+    .anomaly-row { display: grid; grid-template-columns: minmax(130px,1fr) minmax(150px,2fr) auto; align-items: center; gap: 14px; }
+    .anomaly-name { font-weight: 800; }
+    .anomaly-track { position: relative; height: 12px; background: #e8eef7; }
+    .anomaly-track::after { content: ""; position: absolute; left: 50%; top: -3px; width: 2px; height: 18px; background: #8194ad; }
+    .anomaly-fill { position: absolute; top: 1px; height: 10px; background: var(--fill,var(--blue)); }
+    .anomaly-value { min-width: 220px; text-align: right; font-weight: 900; white-space: nowrap; }
+    .anomaly-number { font-size: 1.08em; }
+    .anomaly-qualifier { margin-left: 5px; font-size: .72em; font-weight: 750; letter-spacing: -.01em; }
+    .consensus-card { position: relative; overflow: hidden; padding: clamp(24px,3vw,38px); color: #fff; border: 0; background: radial-gradient(circle at 92% 12%,rgba(85,223,189,.24),transparent 32%),linear-gradient(145deg,#061a3f,#123d82); box-shadow: 0 20px 46px rgba(7,31,71,.2); }
+    .consensus-card::after { content: ""; position: absolute; width: 260px; height: 260px; right: -110px; bottom: -150px; border: 1px solid rgba(255,255,255,.12); border-radius: 50%; box-shadow: 0 0 0 35px rgba(255,255,255,.025),0 0 0 70px rgba(255,255,255,.02); }
+    .consensus-card > * { position: relative; z-index: 1; }
+    .consensus-question { color: var(--mint); font-size: 12px; font-weight: 900; letter-spacing: .16em; text-transform: uppercase; }
+    .consensus-card h3 { max-width: 650px; margin: 10px 0 8px; color: #fff; font: 400 clamp(29px,3vw,42px)/1.03 Georgia,"Times New Roman",serif; }
+    .consensus-verdict { margin: 0; color: var(--gold); font-size: clamp(24px,2.5vw,34px); font-weight: 900; }
+    .consensus-summary { max-width: 720px; margin: 12px 0 24px; color: #d9e7fb; font-size: 17px; line-height: 1.5; }
+    .consensus-scale { margin: 4px 0 22px; }
+    .consensus-track { display: grid; grid-template-columns: repeat(4,1fr); gap: 4px; }
+    .consensus-step { position: relative; height: 13px; border-radius: 9px; background: rgba(255,255,255,.18); }
+    .consensus-step.active { background: linear-gradient(90deg,var(--mint),#93f1dc); box-shadow: 0 0 0 4px rgba(85,223,189,.12),0 0 22px rgba(85,223,189,.42); }
+    .consensus-step.active::after { content: ""; position: absolute; left: 50%; top: 50%; width: 19px; height: 19px; border: 4px solid #fff; border-radius: 50%; background: #0a3470; transform: translate(-50%,-50%); }
+    .consensus-labels { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-top: 10px; color: #b9cce8; font-size: 10px; font-weight: 900; line-height: 1.25; text-align: center; text-transform: uppercase; }
+    .consensus-labels .active { color: var(--mint); }
+    .consensus-facts { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 1px; margin: 24px 0; overflow: hidden; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.12); }
+    .consensus-fact { min-height: 96px; padding: 14px; background: rgba(4,20,50,.56); }
+    .consensus-fact span { display: block; color: #a9bfde; font-size: 10px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+    .consensus-fact strong { display: block; margin-top: 8px; color: #fff; font: 400 25px Georgia,"Times New Roman",serif; }
+    .event-layer { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: start; padding: 18px; border-left: 5px solid var(--orange); background: rgba(255,123,36,.13); }
+    .event-icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; color: #071a3f; background: var(--gold); font-size: 20px; font-weight: 900; }
+    .event-layer span { display: block; color: var(--gold); font-size: 11px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+    .event-layer strong { display: block; margin-top: 5px; color: #fff; font-size: 17px; line-height: 1.4; }
+    .consensus-index { margin: 14px 0 0; color: #9fb5d5; font-size: 11px; }
+    .terrain-layout { display: grid; grid-template-columns: minmax(0,.9fr) minmax(520px,1.1fr); gap: 20px; align-items: stretch; }
+    .terrain-exceptions { border-top: 5px solid var(--blue); }
+    .terrain-exceptions-note { margin: 0 0 22px; color: var(--muted); line-height: 1.5; }
+    .elevation-exception-list { display: grid; gap: 10px; }
+    .elevation-exception { --exception-color: var(--blue); --exception-tint: #edf4ff; padding: 13px 14px 12px; border-left: 4px solid var(--exception-color); border-radius: 0 8px 8px 0; background: linear-gradient(90deg,var(--exception-tint),#fff 72%); }
+    .elevation-exception.warm { --exception-color: var(--orange); --exception-tint: #fff2e9; }
+    .exception-top { display: grid; grid-template-columns: 30px minmax(0,1fr) auto; align-items: center; gap: 10px; }
+    .exception-rank { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; color: #fff; background: var(--exception-color); font-size: 12px; font-weight: 900; }
+    .exception-place strong { display: block; color: var(--ink); font-size: 15px; line-height: 1.18; }
+    .exception-place small { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }
+    .exception-result { padding: 7px 9px; border-radius: 999px; color: var(--exception-color); background: #fff; box-shadow: inset 0 0 0 1px color-mix(in srgb,var(--exception-color) 25%,transparent); font-size: 13px; font-weight: 900; white-space: nowrap; }
+    .exception-meter { height: 5px; margin: 10px 0 0 40px; overflow: hidden; border-radius: 5px; background: #dde7f3; }
+    .exception-meter i { display: block; width: var(--meter-width); height: 100%; border-radius: inherit; background: var(--exception-color); }
+    .residual-key { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 17px; padding-top: 13px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; font-weight: 800; }
+    .residual-key i { display: inline-block; width: 9px; height: 9px; margin-right: 6px; border-radius: 50%; vertical-align: middle; background: var(--key); }
+    .terrain-card { position: relative; overflow: hidden; padding: clamp(24px,3vw,38px); border: 1px solid #eed8c4; background: radial-gradient(circle at 90% 12%,rgba(255,196,87,.31),transparent 31%),linear-gradient(145deg,#fffaf2,#eef6ff); box-shadow: 0 18px 42px rgba(7,31,71,.13); }
+    .terrain-card::after { content: ""; position: absolute; inset: auto -5% -1px 35%; height: 38%; opacity: .15; background: linear-gradient(145deg,transparent 49%,#1761d2 50%) 0 100%/34% 100%,linear-gradient(215deg,transparent 49%,#ff7b24 50%) 100% 100%/42% 82%; background-repeat: no-repeat; }
+    .terrain-card > * { position: relative; z-index: 1; }
+    .terrain-answer { color: var(--orange); font-size: 12px; font-weight: 900; letter-spacing: .16em; text-transform: uppercase; }
+    .terrain-card h3 { margin: 10px 0 5px; color: var(--ink); font: 400 clamp(35px,4vw,53px)/1 Georgia,"Times New Roman",serif; }
+    .terrain-direction { margin: 0; color: var(--blue); font-size: clamp(21px,2.3vw,29px); font-weight: 900; }
+    .terrain-summary { max-width: 720px; margin: 15px 0 24px; color: #405a7c; font-size: 17px; line-height: 1.55; }
+    .terrain-strength-track { display: grid; grid-template-columns: repeat(4,1fr); gap: 4px; }
+    .terrain-strength-step { position: relative; height: 13px; border-radius: 9px; background: #d9e4f2; }
+    .terrain-strength-step.active { background: linear-gradient(90deg,var(--orange),var(--gold)); box-shadow: 0 0 0 4px rgba(255,123,36,.09),0 0 18px rgba(255,123,36,.28); }
+    .terrain-strength-step.active::after { content: ""; position: absolute; left: 50%; top: 50%; width: 18px; height: 18px; border: 4px solid #fff; border-radius: 50%; background: var(--orange); transform: translate(-50%,-50%); box-shadow: 0 3px 9px rgba(8,31,67,.25); }
+    .terrain-strength-labels { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin-top: 10px; color: #7186a2; font-size: 10px; font-weight: 900; line-height: 1.25; text-align: center; text-transform: uppercase; }
+    .terrain-strength-labels .active { color: #c95a0f; }
+    .terrain-facts { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 1px; margin: 24px 0; border: 1px solid #dbe5f1; background: #dbe5f1; }
+    .terrain-fact { min-height: 94px; padding: 14px; background: rgba(255,255,255,.88); }
+    .terrain-fact span { display: block; color: var(--muted); font-size: 10px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+    .terrain-fact strong { display: block; margin-top: 8px; color: var(--ink); font: 400 24px Georgia,"Times New Roman",serif; }
+    .terrain-takeaway { padding: 17px 18px; border-left: 5px solid var(--blue); color: #18365f; background: rgba(23,97,210,.09); font-size: 16px; font-weight: 800; line-height: 1.45; }
+    .analyst-details { margin-top: 18px; border: 1px solid var(--line); background: #fff; }
+    .analyst-details summary { cursor: pointer; padding: 17px 20px; color: var(--blue); font-weight: 900; }
+    .analyst-details[open] summary { border-bottom: 1px solid var(--line); }
+    .analyst-details .lab-panel { border: 0; }
+    .lab-chart-wrap { position: relative; min-height: 430px; }
+    .lab-chart { display: block; width: 100%; min-height: 430px; overflow: visible; }
+    .chart-grid { stroke: #d7e1ee; stroke-width: 1; }
+    .chart-axis { fill: #58708f; font-size: 12px; font-weight: 700; }
+    .chart-title { fill: #183052; font-size: 13px; font-weight: 900; letter-spacing: .06em; }
+    .chart-point { cursor: pointer; stroke: #fff; stroke-width: 3; filter: drop-shadow(0 5px 7px rgba(5,27,63,.22)); }
+    .chart-point:hover, .chart-point:focus { stroke: var(--orange); stroke-width: 5; }
+    .chart-trend { stroke: var(--orange); stroke-width: 4; }
+    .chart-label { fill: #10294f; font-size: 11px; font-weight: 900; }
+    .lab-chart-note { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); }
+    .lab-chart-note strong { color: var(--ink); }
+    .map-intro { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 16px; padding: 15px 17px; border: 1px solid var(--line); border-left: 5px solid var(--blue); background: #fff; }
+    .map-intro-copy { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 18px; color: var(--muted); font-size: 13px; line-height: 1.4; }
+    .map-intro-copy strong { color: var(--ink); font-size: 15px; }
+    .map-intro-copy span::before { content: "•"; margin-right: 18px; color: #9aabc0; }
+    .map-info-button { flex: 0 0 auto; min-height: 42px; padding: 9px 15px; border: 1px solid #9fb5d1; border-radius: 999px; color: var(--blue); background: #f7faff; font-weight: 900; cursor: pointer; }
+    .map-info-button:hover, .map-info-button:focus { color: #fff; border-color: var(--blue); background: var(--blue); }
+    .map-controls { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; }
+    .map-controls .lab-control { min-width: 190px; }
+    .map-story-grid { display: grid; grid-template-columns: minmax(0,1fr) 330px; min-height: 560px; overflow: hidden; border-radius: 10px; box-shadow: 0 18px 46px rgba(6,30,70,.18); }
+    .lab-map { position: relative; min-height: 560px; overflow: hidden; color: var(--ink); background: linear-gradient(145deg,#edf3e9,#f8f3e8 55%,#e8eef7); }
+    .lab-map::before { content: ""; position: absolute; inset: 0; opacity: .48; background: radial-gradient(ellipse at 20% 18%,rgba(159,184,143,.36),transparent 34%),radial-gradient(ellipse at 82% 72%,rgba(121,155,181,.22),transparent 38%); }
+    .lab-map > svg { position: absolute; inset: 24px; width: calc(100% - 48px); height: calc(100% - 48px); }
+    .map-land { fill: rgba(255,255,255,.42); stroke: rgba(69,103,93,.25); stroke-width: 2; }
+    .map-road { fill: none; stroke: #fff; stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; opacity: .9; }
+    .map-road-edge { fill: none; stroke: #b2a98f; stroke-width: 11; stroke-linecap: round; stroke-linejoin: round; opacity: .45; }
+    .map-road.minor { stroke-width: 4; opacity: .76; }
+    .map-road-edge.minor { stroke-width: 6; opacity: .3; }
+    .map-river { fill: none; stroke: #62aeda; stroke-width: 8; stroke-linecap: round; opacity: .72; }
+    .map-place-label { fill: #526b6a; font-size: 12px; font-weight: 900; letter-spacing: .08em; paint-order: stroke; stroke: rgba(255,255,255,.9); stroke-width: 4px; }
+    .map-route-label { fill: #746d5c; font-size: 10px; font-weight: 900; paint-order: stroke; stroke: #fff; stroke-width: 3px; }
+    .map-point { cursor: pointer; stroke: #fff; stroke-width: 3.5; filter: drop-shadow(0 3px 5px rgba(5,27,63,.28)); transition: r .18s ease,stroke-width .18s ease,filter .18s ease; }
+    .map-point:hover, .map-point:focus { stroke: var(--gold); stroke-width: 5; }
+    .map-station.selected .map-point { stroke: var(--gold); stroke-width: 5; filter: drop-shadow(0 0 10px rgba(255,196,87,.75)); }
+    .map-label { fill: #071a3f; font-size: 13px; font-weight: 900; paint-order: stroke; stroke: #fff; stroke-width: 5px; stroke-linejoin: round; }
+    .map-compass { position: absolute; top: 18px; right: 20px; z-index: 2; padding: 7px 9px; border-radius: 6px; color: var(--ink); background: rgba(255,255,255,.86); font-weight: 900; box-shadow: 0 4px 12px rgba(6,30,70,.12); }
+    .map-sidebar { display: flex; flex-direction: column; gap: 16px; padding: 24px; color: #fff; background: linear-gradient(165deg,#0a2859,#0c3978 58%,#32347e); }
+    .map-sidebar-kicker { color: var(--mint); font-size: 11px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
+    .map-sidebar h3 { margin: 7px 0 8px; color: #fff; font: 400 30px/1.03 Georgia,"Times New Roman",serif; }
+    .map-sidebar-copy { margin: 0; color: #cbdcf2; font-size: 14px; line-height: 1.45; }
+    .map-edge-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .map-edge-card { min-width: 0; padding: 13px; border: 1px solid rgba(255,255,255,.16); border-radius: 7px; color: #fff; background: rgba(255,255,255,.08); text-align: left; cursor: pointer; }
+    .map-edge-card:hover, .map-edge-card:focus { border-color: var(--gold); background: rgba(255,255,255,.13); }
+    .map-edge-card span { display: block; color: #a9bfdc; font-size: 9px; font-weight: 900; letter-spacing: .09em; text-transform: uppercase; }
+    .map-edge-card strong { display: block; margin-top: 5px; font-size: 13px; line-height: 1.2; }
+    .map-edge-card b { display: block; margin-top: 7px; color: var(--gold); font: 400 22px Georgia,"Times New Roman",serif; }
+    .lab-map-legend { padding: 13px; border: 1px solid rgba(255,255,255,.14); background: rgba(3,16,42,.42); }
+    .map-gradient { display: block; height: 9px; margin: 8px 0; background: linear-gradient(90deg,#2b6ce5,#8f73bc,#ff7b24); }
+    .map-scale { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; }
+    .lab-selection { margin-top: auto; padding: 16px; border-left: 4px solid var(--gold); color: #dceaff; background: rgba(3,16,42,.58); }
+    .lab-selection span { display: block; color: var(--mint); font-size: 9px; font-weight: 900; letter-spacing: .11em; text-transform: uppercase; }
+    .lab-selection strong { display: block; margin: 6px 0 8px; color: #fff; font-size: 18px; }
+    .lab-selection > div { display: flex; align-items: baseline; flex-wrap: wrap; gap: 7px; }
+    .map-selected-reading { color: var(--gold); font: 400 34px Georgia,"Times New Roman",serif; }
+    .map-selected-delta { color: #fff; font-size: 13px; font-weight: 800; }
+    .map-selected-meta { margin-top: 8px; color: #b9cce6; font-size: 12px; line-height: 1.45; }
+    .lab-map.leaflet-container { height: 560px; min-height: 0; background: #e8edf2; font-family: Arial,Helvetica,sans-serif; }
+    .lab-map.leaflet-container::before { display: none; }
+    .lab-map .leaflet-tile-pane { filter: saturate(.72) contrast(.96) brightness(1.02); }
+    .lab-map .leaflet-control-zoom { overflow: hidden; border: 0; border-radius: 8px; box-shadow: 0 4px 16px rgba(6,30,70,.2); }
+    .lab-map .leaflet-control-zoom a { color: var(--ink); }
+    .lab-map .leaflet-control-attribution { color: #54677f; background: rgba(255,255,255,.88); font-size: 10px; }
+    .lab-map .leaflet-tooltip { padding: 8px 10px; border: 0; border-radius: 6px; color: var(--ink); background: rgba(255,255,255,.97); box-shadow: 0 5px 18px rgba(6,30,70,.22); font-size: 12px; line-height: 1.35; }
+    .lab-map .leaflet-tooltip strong { display: block; font-size: 13px; }
+    .lab-map .leaflet-interactive:focus { outline: none; filter: drop-shadow(0 0 5px rgba(255,196,87,.95)); }
+    .lab-map .map-hit-target { cursor: pointer; }
+    .map-dialog { width: min(680px,calc(100% - 28px)); max-height: 90vh; padding: 0; overflow-y: auto; border: 0; border-radius: 14px; color: var(--ink); background: #fff; box-shadow: 0 28px 90px rgba(3,20,50,.38); }
+    .map-dialog::backdrop { background: rgba(3,18,43,.66); backdrop-filter: blur(3px); }
+    .map-dialog-head { display: flex; align-items: start; justify-content: space-between; gap: 20px; padding: 25px 27px 20px; color: #fff; background: linear-gradient(135deg,#071b43,#17438b); }
+    .map-dialog-head h3 { margin: 5px 0 0; font: 400 32px Georgia,"Times New Roman",serif; }
+    .map-dialog-close { width: 38px; height: 38px; border: 1px solid rgba(255,255,255,.35); border-radius: 50%; color: #fff; background: rgba(255,255,255,.08); font-size: 22px; cursor: pointer; }
+    .map-dialog-body { padding: 25px 27px 28px; }
+    .map-dialog-lead { margin: 0 0 22px; color: #405a7c; font-size: 17px; line-height: 1.55; }
+    .map-dialog-steps { display: grid; gap: 12px; }
+    .map-dialog-step { display: grid; grid-template-columns: 38px 1fr; gap: 13px; padding: 14px; border: 1px solid var(--line); background: #f8fbff; }
+    .map-dialog-step b { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; color: #fff; background: var(--blue); }
+    .map-dialog-step:nth-child(2) b { background: #6f63a7; }
+    .map-dialog-step:nth-child(3) b { background: var(--orange); }
+    .map-dialog-step strong { display: block; margin-bottom: 4px; }
+    .map-dialog-step span { color: var(--muted); line-height: 1.45; }
+    .map-dialog-note { margin: 19px 0 0; padding: 14px 16px; border-left: 4px solid var(--orange); color: #405a7c; background: #fff5ed; line-height: 1.5; }
+    .lab-pair-controls { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 14px; }
+    .pair-vs { padding-bottom: 14px; color: var(--orange); font-weight: 900; }
+    .pair-summary { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 1px; margin-top: 20px; background: var(--line); }
+    .pair-stat { min-height: 112px; padding: 15px 12px; background: #fff; }
+    .pair-stat span { display: block; color: var(--muted); font-size: 11px; font-weight: 800; text-transform: uppercase; }
+    .pair-stat strong { display: block; margin-top: 10px; font: 400 24px Georgia,"Times New Roman",serif; }
+    .lab-rain-grid { display: grid; grid-template-columns: 260px 1fr; gap: 30px; }
+    .rain-dial { display: grid; place-items: center; align-content: center; min-height: 240px; color: #fff; background: linear-gradient(145deg,#0d55ab,#082a64); }
+    .rain-dial strong { font: 400 62px Georgia,"Times New Roman",serif; }
+    .rain-dial span { color: #cde5ff; font-weight: 800; text-align: center; }
+    .rain-copy h3 { margin-top: 0; }
+    .rain-clusters { display: grid; gap: 10px; }
+    .rain-cluster { padding: 14px; border-left: 4px solid var(--sky); background: #edf6ff; }
+    .lab-table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; background: #fff; }
+    th, td { padding: 14px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; line-height: 1.4; }
+    th { color: var(--muted); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+    .ready-state { font-weight: 900; text-transform: capitalize; }
+    .ready-state.now { color: #007966; }
+    .ready-state.partial { color: #a95a00; }
+    .ready-state.history { color: #5b58a8; }
+    .qc-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; }
+    .qc-block { padding: 20px; border-top: 4px solid var(--blue); background: #fff; }
+    .qc-block strong { display: block; margin-bottom: 10px; font-size: 22px; }
+    .qc-block ul { margin: 0; padding-left: 19px; color: var(--muted); line-height: 1.55; }
+    .lab-footer { padding: 24px clamp(18px,4vw,58px); color: #c8d8ef; background: #04132f; }
+    .lab-footer strong { color: #fff; }
+    @media (max-width: 1000px) {
+      .lab-hero, .lab-grid-2, .consensus-layout, .terrain-layout { grid-template-columns: 1fr; }
+      .map-story-grid { grid-template-columns: 1fr; }
+      .map-sidebar { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .lab-selection { margin-top: 0; }
+      .lab-insights { grid-template-columns: 1fr; margin-top: 24px; }
+      .lab-metrics { grid-template-columns: repeat(3,1fr); }
+      .pair-summary { grid-template-columns: repeat(4,1fr); }
+      .qc-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 680px) {
+      .lab-topbar { align-items: flex-start; flex-direction: column; }
+      .lab-topbar nav { flex-wrap: wrap; }
+      .lab-hero { padding-top: 38px; }
+      .lab-metrics { grid-template-columns: repeat(2,1fr); }
+      .lab-section-head { align-items: flex-start; flex-direction: column; }
+      .lab-control { width: 100%; }
+      .anomaly-row { grid-template-columns: 1fr auto; }
+      .anomaly-track { grid-column: 1 / -1; grid-row: 2; }
+      .consensus-facts { grid-template-columns: repeat(2,1fr); }
+      .terrain-facts { grid-template-columns: 1fr; }
+      .exception-top { grid-template-columns: 30px minmax(0,1fr); }
+      .exception-result { grid-column: 2; justify-self: start; }
+      .lab-rain-grid { grid-template-columns: 1fr; }
+      .lab-pair-controls { grid-template-columns: 1fr; }
+      .pair-vs { padding: 0; }
+      .pair-summary { grid-template-columns: repeat(2,1fr); }
+      .lab-map, .lab-map.leaflet-container { height: 520px; min-height: 0; }
+      .map-intro { align-items: flex-start; flex-direction: column; }
+      .map-sidebar { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="lab-shell">
+    <header class="lab-topbar">
+      <a class="lab-brand" href="/">828 Weather Direct</a>
+      <nav aria-label="Lab navigation">
+        <span class="lab-status" id="lab-status">Loading micronet…</span>
+        <a href="/asheville-microscope.html">Return to Asheville Microscope</a>
+      </nav>
+    </header>
+
+    <section class="lab-hero">
+      <div>
+        <div class="lab-kicker">Experimental · not a public warning product</div>
+        <h1>Asheville Micronet Intelligence Lab</h1>
+        <p>What can nearly 30 observation points reveal when we compare them across Asheville and the surrounding mountain corridors?</p>
+      </div>
+      <div class="lab-hero-meta">
+        <strong id="hero-count">—</strong>
+        <span>Current observations are analyzed with robust statistics. Temporal diagnoses remain intentionally disabled until real history is retained.</span>
+      </div>
+    </section>
+
+    <main>
+      <div class="lab-alert" id="lab-alert" role="alert"></div>
+      <section class="lab-insights" id="insights" aria-label="Most interesting signals"></section>
+      <section class="lab-metrics" id="metric-strip" aria-label="Current differences across reporting stations"></section>
+
+      <section class="lab-section" aria-labelledby="anomaly-title">
+        <div class="lab-section-head">
+          <div><div class="lab-kicker">Neighborhood contrast</div><h2 id="anomaly-title">Which places stand out right now?</h2></div>
+          <label class="lab-control">Rank by
+            <select id="anomaly-metric">
+              <option value="temperature">Temperature</option>
+              <option value="dewPoint">Dew point</option>
+              <option value="wind">Wind</option>
+              <option value="gust">Gust</option>
+              <option value="rainfallRate">Rain rate</option>
+              <option value="rainfallToday">Rain today</option>
+              <option value="pressure">Pressure</option>
+              <option value="solar">Solar radiation</option>
+            </select>
+          </label>
+        </div>
+        <div class="lab-grid-2 consensus-layout">
+          <article class="lab-panel">
+            <h3 id="anomaly-heading">Cooler or warmer than most reporting places</h3>
+            <p class="lab-panel-sub" id="anomaly-explainer">The center line splits the current readings in half—half of reporting places are cooler and half are warmer. Longer bars show bigger differences.</p>
+            <div class="anomaly-list" id="anomaly-list"></div>
+          </article>
+          <article class="lab-panel consensus-card">
+            <div class="consensus-question">Does one Asheville temperature tell the whole story?</div>
+            <h3 id="consensus-category">Measuring neighborhood consensus…</h3>
+            <p class="consensus-verdict" id="consensus-verdict">—</p>
+            <p class="consensus-summary" id="consensus-summary"></p>
+            <div class="consensus-scale" aria-label="Neighborhood consensus category">
+              <div class="consensus-track" id="consensus-track"></div>
+              <div class="consensus-labels" id="consensus-labels"></div>
+            </div>
+            <div class="consensus-facts" id="consensus-facts"></div>
+            <div class="event-layer">
+              <div class="event-icon" aria-hidden="true">↯</div>
+              <div><span>What is shaping the pattern?</span><strong id="event-explanation"></strong></div>
+            </div>
+            <p class="consensus-index" id="consensus-index"></p>
+          </article>
+        </div>
+      </section>
+
+      <section class="lab-section" aria-labelledby="elevation-title">
+        <div class="lab-section-head">
+          <div><div class="lab-kicker">Elevation lens</div><h2 id="elevation-title">Does elevation explain Asheville’s temperatures today?</h2></div>
+          <p>A plain-language verdict comes first. The exceptions show where neighborhood setting is doing more work than elevation alone.</p>
+        </div>
+        <div class="terrain-layout">
+          <article class="lab-panel terrain-exceptions">
+            <h3>Elevation’s biggest surprises</h3>
+            <p class="terrain-exceptions-note">These neighborhoods are warmer or cooler than elevation alone would suggest. That makes them useful clues about shade, exposure and terrain—not bad-station verdicts.</p>
+            <div class="elevation-exception-list" id="elevation-exceptions"></div>
+            <div class="residual-key"><span><i style="--key:#1761d2"></i>Cooler than elevation suggests</span><span><i style="--key:#ff7b24"></i>Warmer than elevation suggests</span></div>
+          </article>
+          <article class="terrain-card">
+            <div class="terrain-answer">Today’s answer</div>
+            <h3 id="elevation-verdict">Calculating…</h3>
+            <p class="terrain-direction" id="elevation-direction"></p>
+            <p class="terrain-summary" id="elevation-summary"></p>
+            <div aria-label="Strength of the relationship between elevation and temperature">
+              <div class="terrain-strength-track" id="terrain-strength-track"></div>
+              <div class="terrain-strength-labels" id="terrain-strength-labels"></div>
+            </div>
+            <div class="terrain-facts" id="terrain-facts"></div>
+            <div class="terrain-takeaway" id="terrain-takeaway"></div>
+          </article>
+        </div>
+        <details class="analyst-details">
+          <summary>See the analyst scatterplot and robust trend line</summary>
+          <article class="lab-panel">
+            <div class="lab-chart-wrap"><svg class="lab-chart" id="elevation-chart" role="img" aria-label="Elevation versus temperature across reporting stations"></svg></div>
+            <div class="lab-chart-note" id="elevation-note"></div>
+          </article>
+        </details>
+      </section>
+
+      <section class="lab-section" aria-labelledby="map-title">
+        <div class="lab-section-head">
+          <div><div class="lab-kicker">Neighborhood weather map</div><h2 id="map-title">Where is the weather different right now?</h2><p id="map-scope-copy">Start with Asheville’s neighborhoods. Each dot is placed near its real location.</p></div>
+          <div class="map-controls">
+            <label class="lab-control">Area shown
+              <select id="map-scope">
+                <option value="core">Asheville neighborhoods</option>
+                <option value="metro">Greater Asheville</option>
+                <option value="regional">Mountain corridors</option>
+              </select>
+            </label>
+            <label class="lab-control">Weather layer
+              <select id="map-metric">
+                <option value="temperature">Temperature</option>
+                <option value="dewPoint">Dew point</option>
+                <option value="wind">Wind speed</option>
+                <option value="gust">Wind gust</option>
+                <option value="rainfallRate">Rain rate</option>
+                <option value="rainfallToday">Rain today</option>
+                <option value="pressure">Pressure</option>
+                <option value="solar">Solar radiation</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <div class="map-intro">
+          <div class="map-intro-copy"><strong id="map-location-count">Asheville at a glance</strong><span>Dots show observation locations</span><span>Color shows lower-to-higher readings</span></div>
+          <button class="map-info-button" id="map-info-open" type="button" aria-haspopup="dialog">ⓘ What am I looking at?</button>
+        </div>
+        <div class="map-story-grid">
+          <div class="lab-map" id="gradient-map" role="application" aria-label="Interactive map of Asheville-area weather observations"></div>
+          <aside class="map-sidebar" aria-label="Current map story">
+            <div>
+              <div class="map-sidebar-kicker">Current pattern</div>
+              <h3 id="map-story-title">Comparing Asheville’s stations…</h3>
+              <p class="map-sidebar-copy" id="map-story-copy"></p>
+            </div>
+            <div class="map-edge-grid" id="map-edge-grid"></div>
+            <div class="lab-map-legend" id="map-legend"></div>
+            <div class="lab-selection" id="map-selection" aria-live="polite">Select a station to inspect its local observation.</div>
+          </aside>
+        </div>
+      </section>
+
+      <dialog class="map-dialog" id="map-info-dialog" aria-labelledby="map-info-title">
+        <div class="map-dialog-head"><div><div class="lab-kicker">Map guide</div><h3 id="map-info-title">How to read this weather map</h3></div><button class="map-dialog-close" id="map-info-close" type="button" aria-label="Close map guide">×</button></div>
+        <div class="map-dialog-body">
+          <p class="map-dialog-lead">This interactive map places current observations in their real geographic context. It shows what is happening now—not a forecast.</p>
+          <div class="map-dialog-steps">
+            <div class="map-dialog-step"><b>1</b><div><strong>One dot equals one weather station</strong><span>Its position is based on the station’s approximate latitude and longitude.</span></div></div>
+            <div class="map-dialog-step"><b>2</b><div><strong>Use the map for geographic context</strong><span>The quiet gray basemap preserves roads, waterways and terrain while deliberately removing most labels. Pan or zoom when you need more detail.</span></div></div>
+            <div class="map-dialog-step"><b>3</b><div><strong>Color answers “lower or higher?”</strong><span>Blue dots are toward the lower end of the selected weather layer; orange dots are toward the higher end. The exact reading appears when you select a dot.</span></div></div>
+          </div>
+          <p class="map-dialog-note"><strong>Important:</strong> A different color does not automatically mean a faulty station. Elevation, shade, rain, wind exposure and neighborhood setting can all create real local differences.</p>
+        </div>
+      </dialog>
+
+      <section class="lab-section" aria-labelledby="pair-title">
+        <div class="lab-section-head">
+          <div><div class="lab-kicker">Pairwise microscope</div><h2 id="pair-title">Put any two stations side by side</h2></div>
+          <p>Distance, elevation, temperature, moisture, rain, pressure, and wind differences reveal gradients that a single Asheville observation cannot.</p>
+        </div>
+        <article class="lab-panel">
+          <div class="lab-pair-controls">
+            <label class="lab-control">Station one<select id="pair-one"></select></label>
+            <span class="pair-vs">versus</span>
+            <label class="lab-control">Station two<select id="pair-two"></select></label>
+          </div>
+          <div class="pair-summary" id="pair-summary" aria-live="polite"></div>
+        </article>
+      </section>
+
+      <section class="lab-section" aria-labelledby="rain-title">
+        <div class="lab-section-head">
+          <div><div class="lab-kicker">Rain localization experiment</div><h2 id="rain-title">Is rainfall coherent or hyperlocal?</h2></div>
+          <p>Wet stations within eight miles are grouped into provisional clusters. A single wet station remains low confidence.</p>
+        </div>
+        <article class="lab-panel lab-rain-grid">
+          <div class="rain-dial"><strong id="rain-count">—</strong><span id="rain-count-label">rate-reporting stations wet</span></div>
+          <div class="rain-copy"><h3 id="rain-headline">Evaluating rainfall…</h3><p class="lab-panel-sub" id="rain-copy"></p><div class="rain-clusters" id="rain-clusters"></div></div>
+        </article>
+      </section>
+
+      <section class="lab-section" aria-labelledby="readiness-title">
+        <div class="lab-section-head">
+          <div><div class="lab-kicker">Capability audit</div><h2 id="readiness-title">What works now—and what needs memory</h2></div>
+          <p>“Now” means one synchronized network snapshot is enough. “History” means no responsible automation should be attempted yet.</p>
+        </div>
+        <div class="lab-table-wrap">
+          <table>
+            <thead><tr><th>Analysis</th><th>Readiness</th><th>Operational value</th><th>Public value</th><th>Automate?</th><th>What is missing or available</th></tr></thead>
+            <tbody id="readiness-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="lab-section" aria-labelledby="qc-title">
+        <div class="lab-section-head">
+          <div><div class="lab-kicker">Trust before storytelling</div><h2 id="qc-title">Quality-control audit</h2></div>
+          <p>Current range and freshness screening is a good foundation. Network intelligence requires temporal and neighbor-aware safeguards next.</p>
+        </div>
+        <div class="qc-grid" id="qc-grid"></div>
+      </section>
+    </main>
+
+    <footer class="lab-footer"><strong>Asheville Micronet Intelligence Lab.</strong> Experimental analysis only; it does not alter the Asheville Microscope page and is not an NWS warning product.</footer>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script type="module">
+    import { analyzeMesonet } from "./js/asheville-microscope-lab-analysis.js?v=pressure-normalization-1";
+
+    const state = { payload: null, analysis: null, anomalyMetric: "temperature", mapMetric: "temperature", mapScope: "core", mapStationId: null, mapStats: null, map: null, mapLayer: null, mapMarkers: new Map() };
+    const $ = (id) => document.getElementById(id);
+    const metricOrder = ["temperature","dewPoint","wind","gust","rainfallRate","rainfallToday"];
+
+    function format(value, digits = 1) { return Number.isFinite(value) ? Number(value).toFixed(digits) : "—"; }
+    function signed(value, digits = 1) { return Number.isFinite(value) ? `${value > 0 ? "+" : ""}${Number(value).toFixed(digits)}` : "—"; }
+    function escapeHtml(value) { return String(value ?? "").replace(/[&<>'"]/g, (character) => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[character])); }
+    function colorFor(value, min, max) {
+      if (!Number.isFinite(value) || !Number.isFinite(min) || !Number.isFinite(max) || min === max) return "#7285a4";
+      const t = Math.max(0, Math.min(1, (value - min) / (max - min)));
+      if (t < .5) return mix("#2b6ce5", "#8f73bc", t * 2);
+      return mix("#8f73bc", "#ff7b24", (t - .5) * 2);
+    }
+    function mix(a, b, amount) {
+      const parse = (hex) => [1,3,5].map((index) => parseInt(hex.slice(index,index + 2),16));
+      const first = parse(a); const second = parse(b);
+      return `rgb(${first.map((value,index) => Math.round(value + (second[index] - value) * amount)).join(",")})`;
+    }
+
+    function renderHeader() {
+      const date = state.analysis.generatedAt ? new Date(state.analysis.generatedAt) : null;
+      const time = date && !Number.isNaN(date.valueOf()) ? date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : "unknown time";
+      $("lab-status").textContent = `${state.analysis.reportingCount} of ${state.analysis.stationCount} reporting · ${time}`;
+      $("hero-count").textContent = `${state.analysis.reportingCount} stations reporting`;
+    }
+
+    function renderInsights() {
+      $("insights").innerHTML = state.analysis.insights.map((insight, index) => `
+        <article class="lab-insight"><span>Signal ${index + 1} · ${escapeHtml(insight.confidence)} confidence</span><h2>${escapeHtml(insight.title)}</h2><p>${escapeHtml(insight.text)}</p></article>
+      `).join("");
+    }
+
+    function renderMetricStrip() {
+      $("metric-strip").innerHTML = metricOrder.map((key) => {
+        const metric = state.analysis.metrics[key]; const stats = state.analysis.statistics[key];
+        return `<div class="lab-metric"><span>${escapeHtml(metric.label)} spread</span><strong>${format(stats.spread)}${escapeHtml(metric.unit)}</strong><small>${stats.count} stations · typical ${format(stats.median)}${escapeHtml(metric.unit)}</small></div>`;
+      }).join("");
+    }
+
+    function anomalyLanguage(key, value, unit) {
+      const words = {
+        temperature: value < 0 ? "cooler" : "warmer",
+        dewPoint: value < 0 ? "lower" : "higher",
+        wind: value < 0 ? "calmer" : "windier",
+        gust: value < 0 ? "lower" : "stronger",
+        rainfallRate: value < 0 ? "drier" : "wetter",
+        rainfallToday: value < 0 ? "drier" : "wetter",
+        pressure: value < 0 ? "lower" : "higher",
+        solar: value < 0 ? "dimmer" : "brighter"
+      };
+      return {
+        magnitude: `${format(Math.abs(value))}${unit}`,
+        qualifier: `${words[key] || (value < 0 ? "lower" : "higher")} than typical`
+      };
+    }
+
+    function renderAnomalies() {
+      const key = state.anomalyMetric; const metric = state.analysis.metrics[key];
+      const rows = state.analysis.anomalies.filter((item) => item.metric === key).slice(0,7);
+      const extent = Math.max(1, ...rows.map((row) => Math.abs(row.anomaly)));
+      const copy = {
+        temperature: ["Cooler or warmer than most reporting places", "The center line splits the current readings in half—half of reporting places are cooler and half are warmer. Longer bars show bigger differences."],
+        dewPoint: ["Lower or higher moisture than most places", "The center line splits the current readings in half—half have a lower dew point and half have a higher one. Longer bars show bigger differences."],
+        wind: ["Calmer or windier than most places", "The center line splits the current readings in half—half are calmer and half are windier. Longer bars show bigger differences."],
+        gust: ["Lower or stronger gusts than most places", "The center line splits the current readings in half—half report lower gusts and half report stronger ones. Longer bars show bigger differences."],
+        rainfallRate: ["Drier or wetter than most places", "The center line splits the current readings in half—half report less rain and half report more. Longer bars show bigger differences."],
+        rainfallToday: ["Less or more rain than most places", "The center line splits the current readings in half—half report lower totals and half report higher ones. Longer bars show bigger differences."],
+        pressure: ["Lower or higher pressure than most places", "The center line splits the adjusted readings in half—half report lower pressure and half report higher pressure. Longer bars show bigger differences."],
+        solar: ["Dimming or brightening compared with most places", "The center line splits the current readings in half—half are dimmer and half are brighter. Longer bars show bigger differences."]
+      }[key];
+      $("anomaly-heading").textContent = copy[0];
+      $("anomaly-explainer").textContent = copy[1];
+      $("anomaly-list").innerHTML = rows.map((row) => {
+        const width = Math.min(50, Math.abs(row.anomaly) / extent * 50);
+        const left = row.anomaly >= 0 ? 50 : 50 - width;
+        const fill = row.anomaly >= 0 ? "#ff7b24" : "#1761d2";
+        const language = anomalyLanguage(key, row.anomaly, metric.unit);
+        return `<div class="anomaly-row"><div class="anomaly-name">${escapeHtml(row.name)}</div><div class="anomaly-track"><i class="anomaly-fill" style="left:${left}%;width:${width}%;--fill:${fill}"></i></div><div class="anomaly-value"><span class="anomaly-number">${escapeHtml(language.magnitude)}</span><span class="anomaly-qualifier">${escapeHtml(language.qualifier)}</span></div></div>`;
+      }).join("") || "<p>No usable observations for this metric.</p>";
+      renderConsensus();
+    }
+
+    function renderConsensus() {
+      const agreement = state.analysis.agreement;
+      const labels = ["One Asheville story","Mostly aligned","Location matters","Highly localized"];
+      $("consensus-category").textContent = agreement.publicCategory;
+      $("consensus-verdict").textContent = agreement.publicVerdict;
+      $("consensus-summary").innerHTML = `Most neighborhoods sit in a typical range of <strong>${format(agreement.typicalLow)}°–${format(agreement.typicalHigh)}°</strong>, centered near a typical reading of <strong>${format(agreement.temperatureMedian)}°</strong>. Local pockets expand the full range to <strong>${format(agreement.fullLow)}°–${format(agreement.fullHigh)}°</strong>.`;
+      $("consensus-track").innerHTML = labels.map((_, index) => `<i class="consensus-step${index === agreement.categoryIndex ? " active" : ""}"></i>`).join("");
+      $("consensus-labels").innerHTML = labels.map((label,index) => `<span class="${index === agreement.categoryIndex ? "active" : ""}">${escapeHtml(label)}</span>`).join("");
+      $("consensus-facts").innerHTML = `
+        <div class="consensus-fact"><span>Neighborhood consensus</span><strong>${escapeHtml(agreement.publicCategory)}</strong></div>
+        <div class="consensus-fact"><span>Local contrast</span><strong>${escapeHtml(agreement.localContrast)}</strong></div>
+        <div class="consensus-fact"><span>Most typical range</span><strong>${format(agreement.typicalLow)}°–${format(agreement.typicalHigh)}°</strong></div>
+        <div class="consensus-fact"><span>Full range</span><strong>${format(agreement.fullLow)}°–${format(agreement.fullHigh)}°</strong></div>`;
+      $("event-explanation").textContent = agreement.eventExplanation;
+      $("consensus-index").textContent = `Experimental consistency index ${agreement.score}/100 · based on ${agreement.basis}`;
+    }
+
+    function renderElevation() {
+      const analysis = state.analysis.elevation.temperature;
+      const strengthLabels = ["Little influence","Some influence","Clear influence","Dominant pattern"];
+      const r2 = Number.isFinite(analysis.r2) ? analysis.r2 : 0;
+      const strengthIndex = r2 < .1 ? 0 : r2 < .3 ? 1 : r2 < .55 ? 2 : 3;
+      const verdicts = ["Not much today","Some influence","A clear factor","A dominant pattern"];
+      const direction = analysis.slopePer1000Ft < -1.5 ? "Higher stations lean cooler." : analysis.slopePer1000Ft > 1.5 ? "Higher stations lean warmer." : "Temperature changes little with elevation.";
+      $("elevation-verdict").textContent = verdicts[strengthIndex];
+      $("elevation-direction").textContent = direction;
+      $("elevation-summary").innerHTML = `Higher and lower reporting locations differ by about <strong>${Math.abs(analysis.slopePer1000Ft).toFixed(1)}°F per 1,000 feet</strong>, but only <strong>${Math.round(r2 * 100)}%</strong> of the differences among stations line up with that simple elevation trend.`;
+      $("terrain-strength-track").innerHTML = strengthLabels.map((_,index) => `<i class="terrain-strength-step${index === strengthIndex ? " active" : ""}"></i>`).join("");
+      $("terrain-strength-labels").innerHTML = strengthLabels.map((label,index) => `<span class="${index === strengthIndex ? "active" : ""}">${escapeHtml(label)}</span>`).join("");
+      $("terrain-facts").innerHTML = `
+        <div class="terrain-fact"><span>Elevation tendency</span><strong>${signed(analysis.slopePer1000Ft,1)}° / 1,000 ft</strong></div>
+        <div class="terrain-fact"><span>Pattern alignment</span><strong>${Math.round(r2 * 100)}%</strong></div>
+        <div class="terrain-fact"><span>Stations compared</span><strong>${analysis.sampleCount}</strong></div>`;
+      $("terrain-takeaway").textContent = strengthIndex === 0
+        ? "Neighborhood setting, shade, exposure and terrain position are outweighing elevation alone in this snapshot."
+        : strengthIndex === 1
+          ? "Elevation is contributing, but neighborhood setting and exposure still explain much of the local variation."
+          : "Elevation is organizing a meaningful share of today’s temperature pattern, though local exceptions remain.";
+
+      const residuals = (analysis.points ?? []).map((point) => {
+        const expected = analysis.intercept + analysis.slopePer1000Ft * point.elevationFt / 1000;
+        return { ...point, residual: point.value - expected };
+      }).sort((a,b) => Math.abs(b.residual) - Math.abs(a.residual)).slice(0,7);
+      const residualExtent = Math.max(1,...residuals.map((point) => Math.abs(point.residual)));
+      $("elevation-exceptions").innerHTML = residuals.map((point,index) => {
+        const width = Math.max(12,Math.abs(point.residual) / residualExtent * 100);
+        const warm = point.residual >= 0;
+        return `<div class="elevation-exception${warm ? " warm" : ""}">
+          <div class="exception-top">
+            <span class="exception-rank">${index + 1}</span>
+            <div class="exception-place"><strong>${escapeHtml(point.name)}</strong><small>${format(point.value)}° observed · ${Math.round(point.elevationFt).toLocaleString()} ft</small></div>
+            <span class="exception-result">${format(Math.abs(point.residual))}° ${warm ? "warmer" : "cooler"}</span>
+          </div>
+          <div class="exception-meter"><i style="--meter-width:${width}%"></i></div>
+        </div>`;
+      }).join("");
+
+      const svg = $("elevation-chart");
+      const width = Math.max(660, svg.clientWidth || 900); const height = 430;
+      const margin = { top: 28, right: 34, bottom: 62, left: 72 };
+      const points = analysis.points ?? [];
+      if (!points.length) { svg.innerHTML = ""; return; }
+      const xs = points.map((point) => point.elevationFt); const ys = points.map((point) => point.value);
+      const xMin = Math.min(...xs) - 80; const xMax = Math.max(...xs) + 80; const yMin = Math.floor(Math.min(...ys) - 2); const yMax = Math.ceil(Math.max(...ys) + 2);
+      const x = (value) => margin.left + (value - xMin) / (xMax - xMin) * (width - margin.left - margin.right);
+      const y = (value) => height - margin.bottom - (value - yMin) / (yMax - yMin) * (height - margin.top - margin.bottom);
+      const xTicks = Array.from({length:5},(_,index) => xMin + index * (xMax - xMin) / 4);
+      const yTicks = Array.from({length:5},(_,index) => yMin + index * (yMax - yMin) / 4);
+      const lineStart = analysis.intercept + analysis.slopePer1000Ft * xMin / 1000;
+      const lineEnd = analysis.intercept + analysis.slopePer1000Ft * xMax / 1000;
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      svg.innerHTML = `
+        ${xTicks.map((tick) => `<line class="chart-grid" x1="${x(tick)}" x2="${x(tick)}" y1="${margin.top}" y2="${height-margin.bottom}"/><text class="chart-axis" x="${x(tick)}" y="${height-34}" text-anchor="middle">${Math.round(tick).toLocaleString()} ft</text>`).join("")}
+        ${yTicks.map((tick) => `<line class="chart-grid" x1="${margin.left}" x2="${width-margin.right}" y1="${y(tick)}" y2="${y(tick)}"/><text class="chart-axis" x="${margin.left-12}" y="${y(tick)+4}" text-anchor="end">${tick.toFixed(1)}°</text>`).join("")}
+        <text class="chart-title" x="${width/2}" y="${height-7}" text-anchor="middle">STATION ELEVATION ABOVE SEA LEVEL</text>
+        <text class="chart-title" transform="translate(18 ${height/2}) rotate(-90)" text-anchor="middle">OBSERVED TEMPERATURE (°F)</text>
+        <line class="chart-trend" x1="${x(xMin)}" y1="${y(lineStart)}" x2="${x(xMax)}" y2="${y(lineEnd)}"/>
+        ${points.map((point) => `<circle class="chart-point" tabindex="0" cx="${x(point.elevationFt)}" cy="${y(point.value)}" r="9" fill="${colorFor(point.value,yMin,yMax)}"><title>${escapeHtml(point.name)}: ${format(point.value)}°F at ${Math.round(point.elevationFt).toLocaleString()} ft</title></circle>`).join("")}
+      `;
+      $("elevation-note").innerHTML = `<span><strong>${escapeHtml(analysis.classification)}</strong> · robust gradient ${signed(analysis.slopePer1000Ft,2)}°F per 1,000 ft</span><span>R² ${format(analysis.r2,2)} · ${analysis.sampleCount} stations · exposure remains a major confounder</span>`;
+    }
+
+    function renderMap() {
+      const metricKey = state.mapMetric; const metric = state.analysis.metrics[metricKey];
+      const inScope = (station) => state.mapScope === "core"
+        ? station.scope === "core" || !station.scope
+        : state.mapScope === "metro"
+          ? station.scope !== "corridor"
+          : true;
+      const stations = state.payload.stations.filter((station) => inScope(station) && station.observation && station.quality?.usable !== false && Number.isFinite(station.observation?.[metric.field]) && Number.isFinite(station.location?.latitude) && Number.isFinite(station.location?.longitude));
+      if (!stations.length) { if (state.mapLayer) state.mapLayer.clearLayers(); $("map-story-title").textContent = "No usable observations in this view"; return; }
+      const orderedValues = stations.map((station) => station.observation[metric.field]).sort((a,b) => a - b);
+      const middle = Math.floor(orderedValues.length / 2);
+      const median = orderedValues.length % 2 ? orderedValues[middle] : (orderedValues[middle - 1] + orderedValues[middle]) / 2;
+      const minimumStation = stations.reduce((best,station) => station.observation[metric.field] < best.observation[metric.field] ? station : best);
+      const maximumStation = stations.reduce((best,station) => station.observation[metric.field] > best.observation[metric.field] ? station : best);
+      const stats = { min: orderedValues[0], max: orderedValues.at(-1), median, spread: orderedValues.at(-1) - orderedValues[0], minimumStation: { stationId: minimumStation.id, name: minimumStation.name, value: minimumStation.observation[metric.field] }, maximumStation: { stationId: maximumStation.id, name: maximumStation.name, value: maximumStation.observation[metric.field] } };
+      state.mapStats = stats;
+      const edgeIds = new Set([stats.minimumStation?.stationId,stats.maximumStation?.stationId]);
+      if (!window.L) { $("map-story-title").textContent = "The detailed basemap could not load"; $("map-story-copy").textContent = "Station data remains available in the panels below."; return; }
+      if (!state.map) {
+        state.map = window.L.map("gradient-map", { scrollWheelZoom: false, zoomControl: true, worldCopyJump: false });
+        const cleanBase = window.L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
+          maxZoom: 16,
+          attribution: 'Tiles &copy; Esri, HERE, Garmin, OpenStreetMap contributors and the GIS community'
+        }).addTo(state.map);
+        let tileErrors = 0;
+        cleanBase.on("tileerror", () => {
+          tileErrors += 1;
+          if (tileErrors !== 3 || state.fallbackBase) return;
+          state.map.removeLayer(cleanBase);
+          state.fallbackBase = window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 18,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          }).addTo(state.map);
+        });
+        state.mapLayer = window.L.layerGroup().addTo(state.map);
+      }
+      state.mapLayer.clearLayers();
+      state.mapMarkers.clear();
+      stations.forEach((station) => {
+        const value = station.observation[metric.field];
+        const selectStation = () => { selectMapStation(station,metricKey); state.mapMarkers.get(station.id)?.openTooltip(); };
+        const hitTarget = window.L.circleMarker([station.location.latitude,station.location.longitude], {
+          radius: 17, stroke: false, fill: true, fillColor: "#000", fillOpacity: .001, className: "map-hit-target"
+        });
+        hitTarget.on("add",() => {
+          const hitPath = hitTarget.getElement();
+          if (!hitPath) return;
+          hitPath.setAttribute("data-hit-station",station.id);
+          hitPath.setAttribute("aria-hidden","true");
+          hitPath.addEventListener("click",selectStation);
+        });
+        hitTarget.addTo(state.mapLayer);
+        const marker = window.L.circleMarker([station.location.latitude,station.location.longitude], {
+          radius: edgeIds.has(station.id) ? 9 : 7,
+          color: "#fff", weight: 3, fillColor: colorFor(value,stats.min,stats.max), fillOpacity: .96
+        });
+        marker.on("add",() => {
+          const path = marker.getElement();
+          if (!path) return;
+          path.setAttribute("data-map-station",station.id);
+          path.setAttribute("tabindex","0");
+          path.setAttribute("aria-label",`${station.name}: ${format(value)}${metric.unit}`);
+          path.addEventListener("click",selectStation);
+          path.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectMapStation(station,metricKey); marker.openTooltip(); } });
+        });
+        marker.addTo(state.mapLayer);
+        marker.bindTooltip(`<strong>${escapeHtml(shortName(station.name))}</strong>${format(value)}${escapeHtml(metric.unit)} · ${Math.round(station.elevationFt).toLocaleString()} ft`, { direction: "top", offset: [0,-8], opacity: .98 });
+        marker.on("click",selectStation);
+        hitTarget.on("click",selectStation);
+        hitTarget.on("mouseover",() => marker.openTooltip());
+        hitTarget.on("mouseout",() => { if (state.mapStationId !== station.id) marker.closeTooltip(); });
+        state.mapMarkers.set(station.id,marker);
+      });
+      const bounds = window.L.latLngBounds(stations.map((station) => [station.location.latitude,station.location.longitude]));
+      state.map.fitBounds(bounds,{ padding: window.innerWidth <= 680 ? [28,28] : [48,48], maxZoom: state.mapScope === "core" ? 12 : state.mapScope === "metro" ? 10 : 9 });
+      if (state.mapScope === "core" && state.map.getZoom() < 12) state.map.setZoom(12);
+      window.setTimeout(() => state.map.invalidateSize(),0);
+      const scopeNames = { core: "Asheville", metro: "Greater Asheville", regional: "the mountain region" };
+      const scopeDescriptions = { core: "Asheville’s neighborhood stations", metro: "Asheville plus Woodfin, Candler, Swannanoa and Arden", regional: "Asheville and all four mountain corridors" };
+      $("map-scope-copy").textContent = `${scopeDescriptions[state.mapScope]}. Pan or zoom for street and terrain context.`;
+      const scopeLabels = { core: "Asheville neighborhoods", metro: "Greater Asheville", regional: "Mountain corridors" };
+      $("map-location-count").textContent = `${stations.length} reporting locations · ${scopeLabels[state.mapScope]}`;
+      $("map-story-title").textContent = `${format(stats.spread)}${metric.unit} of contrast across ${scopeNames[state.mapScope]}`;
+      $("map-story-copy").textContent = `${stats.minimumStation.name} is at the lower edge and ${stats.maximumStation.name} is at the higher edge. Choose a dot for its exact reading and local setting.`;
+      $("map-edge-grid").innerHTML = `
+        <button type="button" class="map-edge-card" data-station="${escapeHtml(stats.minimumStation.stationId)}"><span>Lower edge</span><strong>${escapeHtml(stats.minimumStation.name)}</strong><b>${format(stats.minimumStation.value)}${escapeHtml(metric.unit)}</b></button>
+        <button type="button" class="map-edge-card" data-station="${escapeHtml(stats.maximumStation.stationId)}"><span>Higher edge</span><strong>${escapeHtml(stats.maximumStation.name)}</strong><b>${format(stats.maximumStation.value)}${escapeHtml(metric.unit)}</b></button>`;
+      $("map-legend").innerHTML = `<strong>${escapeHtml(metric.label)} from lower to higher in this view</strong><i class="map-gradient"></i><div class="map-scale"><span>Lower ${format(stats.min)}${escapeHtml(metric.unit)}</span><span>Middle ${format(stats.median)}</span><span>Higher ${format(stats.max)}${escapeHtml(metric.unit)}</span></div>`;
+      $("map-edge-grid").querySelectorAll("[data-station]").forEach((button) => button.addEventListener("click", () => {
+        const station = stations.find((item) => item.id === button.dataset.station);
+        selectMapStation(station,metricKey);
+        state.mapMarkers.get(button.dataset.station)?.openTooltip();
+      }));
+      const selected = stations.find((station) => station.id === state.mapStationId) ?? stations.find((station) => station.id === stats.minimumStation.stationId) ?? stations[0];
+      if (selected) { selectMapStation(selected,metricKey); state.mapMarkers.get(selected.id)?.openTooltip(); }
+    }
+
+    function selectMapStation(station, metricKey) {
+      if (!station) return;
+      const metric = state.analysis.metrics[metricKey]; const stats = state.mapStats ?? state.analysis.statistics[metricKey]; const value = station.observation[metric.field]; const delta = value - stats.median;
+      const comparisonTarget = { core: "the typical Asheville reading", metro: "the typical Greater Asheville reading", regional: "the typical reading across the mountain region" }[state.mapScope];
+      const directionWords = {
+        temperature: ["cooler","warmer"], dewPoint: ["lower","higher"], wind: ["lighter","stronger"], gust: ["lighter","stronger"],
+        rainfallRate: ["less","more"], rainfallToday: ["less","more"], pressure: ["lower","higher"], solar: ["lower","higher"]
+      }[metricKey] ?? ["lower","higher"];
+      const comparison = Math.abs(delta) < .05
+        ? `Right at ${comparisonTarget}`
+        : `${format(Math.abs(delta))}${escapeHtml(metric.unit)} ${directionWords[delta < 0 ? 0 : 1]} than ${comparisonTarget}`;
+      state.mapStationId = station.id;
+      state.mapMarkers.forEach((marker,id) => marker.setStyle({ radius: id === station.id ? 10 : 7, color: id === station.id ? "#ffc457" : "#fff", weight: id === station.id ? 5 : 3 }));
+      $("map-selection").innerHTML = `<span>Selected location</span><strong>${escapeHtml(station.name)}</strong><div><b class="map-selected-reading">${format(value)}${escapeHtml(metric.unit)}</b><b class="map-selected-delta">${comparison}</b></div><div class="map-selected-meta">${Math.round(station.elevationFt).toLocaleString()} ft · ${escapeHtml(station.exposure)}</div>`;
+    }
+
+    function shortName(name) { return name.replace("Near AC Reynolds Middle School","AC Reynolds").replace("Beaverdam / Country Club","Beaverdam").replace("Asheville Municipal Golf Course","AVL Golf").replace("Five Points Neighborhood","Five Points"); }
+
+    function renderPairSelectors() {
+      const stations = state.payload.stations.filter((station) => station.observation && station.quality?.usable !== false).sort((a,b) => a.name.localeCompare(b.name));
+      const options = stations.map((station) => `<option value="${escapeHtml(station.id)}">${escapeHtml(station.name)}</option>`).join("");
+      $("pair-one").innerHTML = options; $("pair-two").innerHTML = options;
+      $("pair-one").value = stations.find((station) => station.id === "huntington-chase")?.id ?? stations[0]?.id;
+      $("pair-two").value = stations.find((station) => station.id === "west-asheville")?.id ?? stations[1]?.id;
+      renderPair();
+    }
+
+    function renderPair() {
+      const firstId = $("pair-one").value; const secondId = $("pair-two").value;
+      const pair = state.analysis.pairs.find((item) => item.id === `${firstId}::${secondId}` || item.id === `${secondId}::${firstId}`);
+      if (!pair) { $("pair-summary").innerHTML = "<p>Choose two different reporting stations.</p>"; return; }
+      const reversed = pair.first.id !== firstId; const direction = reversed ? -1 : 1;
+      const cells = [
+        ["Distance",pair.distanceMiles," mi",2],
+        ["Elevation Δ",pair.elevationDifferenceFt * direction," ft",0],
+        ["Temperature Δ",pair.differences.temperature * direction,"°F",1],
+        ["Dew point Δ",pair.differences.dewPoint * direction,"°F",1],
+        ["Wind Δ",pair.differences.wind * direction," mph",1],
+        ["Adjusted pressure Δ",pair.differences.pressure * direction," mb",1],
+        ["Rain today Δ",pair.differences.rainfallToday * direction," in",2]
+      ];
+      $("pair-summary").innerHTML = cells.map(([label,value,unit,digits]) => `<div class="pair-stat"><span>${label}</span><strong>${label === "Distance" ? format(value,digits) : signed(value,digits)}${unit}</strong></div>`).join("");
+    }
+
+    function renderRain() {
+      const rain = state.analysis.rain;
+      $("rain-count").textContent = `${rain.wetStationCount}/${rain.rateReportingCount}`;
+      $("rain-headline").textContent = rain.wetStationCount === 0 ? "Reporting stations are uniformly dry right now." : rain.localized ? "Rainfall is spatially localized." : "Rainfall covers a broader part of the Asheville area.";
+      $("rain-copy").textContent = rain.wetStationCount === 0 ? "The clustering engine is standing by. It becomes more valuable once rolling totals and onset times are retained." : `${rain.clusters.length} provisional wet cluster${rain.clusters.length === 1 ? "" : "s"} detected. Single-station clusters are deliberately labeled low confidence.`;
+      $("rain-clusters").innerHTML = rain.clusters.map((cluster) => `<div class="rain-cluster"><strong>${cluster.stations.map(escapeHtml).join(", ")}</strong><br>${cluster.peakRateInHr.toFixed(2)} in/hr peak · ${cluster.confidence} confidence</div>`).join("") || `<div class="rain-cluster">No active wet cluster. ${escapeHtml(rain.limitation)}</div>`;
+    }
+
+    function renderReadiness() {
+      $("readiness-body").innerHTML = state.analysis.readiness.map((item) => `<tr><td><strong>${escapeHtml(item.name)}</strong></td><td><span class="ready-state ${escapeHtml(item.state)}">${escapeHtml(item.state)}</span></td><td>${escapeHtml(item.operational)}</td><td>${escapeHtml(item.publicValue)}</td><td>${escapeHtml(item.automation)}</td><td>${escapeHtml(item.note)}</td></tr>`).join("");
+    }
+
+    function renderQc() {
+      const qc = state.analysis.qc;
+      $("qc-grid").innerHTML = `
+        <article class="qc-block"><strong>Freshness</strong><ul><li>${qc.freshness.fresh ?? 0} fresh</li><li>${qc.freshness.delayed ?? 0} delayed</li><li>${qc.freshness.stale ?? 0} stale</li><li>${qc.freshness.unknown ?? 0} unavailable/unknown</li></ul></article>
+        <article class="qc-block"><strong>Pressure basis</strong><ul><li>${qc.pressure.reported} reported at sea level</li><li>${qc.pressure.elevationAdjusted} explicitly adjusted from station level</li><li>${qc.pressure.inferred} provider datums inferred</li><li>${qc.pressure.withheld} unresolved and withheld</li></ul></article>
+        <article class="qc-block"><strong>Unavailable now</strong><ul>${qc.unavailable.map((item) => `<li>${escapeHtml(item.name)} — ${escapeHtml(item.reason)}</li>`).join("") || "<li>None</li>"}</ul></article>
+        <article class="qc-block"><strong>Next QC layer</strong><ul>${qc.gaps.map((gap) => `<li>${escapeHtml(gap)}</li>`).join("")}</ul></article>`;
+    }
+
+    function renderAll() {
+      renderHeader(); renderInsights(); renderMetricStrip(); renderAnomalies(); renderElevation(); renderMap(); renderPairSelectors(); renderRain(); renderReadiness(); renderQc();
+    }
+
+    async function hydrate() {
+      try {
+        const response = await fetch("/api/router?route=asheville-spread", { cache: "no-store" });
+        if (!response.ok) throw new Error(`Observation API returned ${response.status}`);
+        state.payload = await response.json();
+        state.analysis = analyzeMesonet(state.payload);
+        $("lab-alert").classList.remove("show");
+        renderAll();
+      } catch (error) {
+        $("lab-status").textContent = "Live data unavailable";
+        $("lab-alert").textContent = `The lab could not load the micronet: ${error.message}`;
+        $("lab-alert").classList.add("show");
+      }
+    }
+
+    $("anomaly-metric").addEventListener("change", (event) => { state.anomalyMetric = event.target.value; renderAnomalies(); });
+    $("map-metric").addEventListener("change", (event) => { state.mapMetric = event.target.value; renderMap(); });
+    $("map-scope").addEventListener("change", (event) => { state.mapScope = event.target.value; state.mapStationId = null; renderMap(); });
+    $("map-info-open").addEventListener("click", () => $("map-info-dialog").showModal());
+    $("map-info-close").addEventListener("click", () => $("map-info-dialog").close());
+    $("map-info-dialog").addEventListener("click", (event) => { if (event.target === $("map-info-dialog")) $("map-info-dialog").close(); });
+    $("pair-one").addEventListener("change", renderPair);
+    $("pair-two").addEventListener("change", renderPair);
+    window.addEventListener("resize", () => { if (state.analysis) { renderElevation(); renderMap(); } });
+    hydrate();
+    setInterval(hydrate, 60_000);
+  </script>
+</body>
+</html>
