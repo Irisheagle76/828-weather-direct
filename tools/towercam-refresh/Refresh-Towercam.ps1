@@ -168,11 +168,13 @@ try {
     $signature = Get-Sha1Hex $signaturePayload
   } else {
     $refreshToken = Get-Setting "TOWERCAM_REFRESH_TOKEN" $dotEnv
-    if (-not (Test-UsableSetting $refreshToken) -and (Test-Path -LiteralPath $tokenFile)) {
-      $refreshToken = (Get-Content -LiteralPath $tokenFile -Raw).Trim()
+    if (Test-Path -LiteralPath $tokenFile) {
+      $fileToken = [System.IO.File]::ReadAllText($tokenFile).Trim()
+      if (Test-UsableSetting -Value $fileToken) { $refreshToken = $fileToken }
     }
-    if (-not (Test-UsableSetting $refreshToken)) {
-      throw "Cloudinary credentials are unavailable locally and $tokenFile does not contain a towercam refresh token."
+    if (-not (Test-UsableSetting -Value $refreshToken)) {
+      $tokenLength = if ($null -eq $refreshToken) { 0 } else { ([string]$refreshToken).Length }
+      throw "Cloudinary credentials are unavailable locally and $tokenFile does not contain a usable towercam refresh token (length: $tokenLength)."
     }
 
     $signedUpload = Invoke-RestMethod -Uri $SignerUrl -Method Post -Headers @{ Authorization = "Bearer $refreshToken" } -TimeoutSec 30
