@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /api/
+Disallow: /obs-overlay/
+Disallow: /828-forecast.html
+Disallow: /asheville-microscope-lab.html
+Disallow: /hiking-preview-v2.html
+Disallow: /home-sky-preview.html
+Disallow: /home-sky-preview-v2.html
+Disallow: /preview.html
+Disallow: /rainfall-trend-preview.html
+Disallow: /sky-preview.html
+Disallow: /static.html
+Disallow: /start_skycam.bat
+Disallow: /run_skycam.py
+
+Sitemap: https://avlweather.com/sitemap.xml

@@ -2,8 +2,38 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>828 Weather Direct</title>
+  <title>Asheville Weather &amp; Local Forecast | 828 Weather Direct</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Hyper-local Asheville weather, forecasts, radar, rainfall, mountain conditions and meteorologist analysis from 828 Weather Direct." />
+  <meta name="author" content="Tim Ballisty" />
+  <meta name="robots" content="index,follow,max-image-preview:large" />
+  <link rel="canonical" href="https://avlweather.com/" />
+  <link rel="icon" href="/images/828-brand-card.png" type="image/png" />
+  <meta property="og:title" content="Asheville Weather &amp; Local Forecast | 828 Weather Direct" />
+  <meta property="og:description" content="Hyper-local Asheville weather, forecasts, radar, rainfall, mountain conditions and meteorologist analysis." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://avlweather.com/" />
+  <meta property="og:image" content="https://avlweather.com/images/828-brand-card.png" />
+  <meta property="og:image:width" content="1024" />
+  <meta property="og:image:height" content="1024" />
+  <meta property="og:image:alt" content="828 Weather Direct brand mark" />
+  <meta property="og:site_name" content="828 Weather Direct" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Asheville Weather &amp; Local Forecast | 828 Weather Direct" />
+  <meta name="twitter:description" content="Hyper-local Asheville weather, forecasts, radar, rainfall, mountain conditions and meteorologist analysis." />
+  <meta name="twitter:image" content="https://avlweather.com/images/828-brand-card.png" />
+  <meta name="twitter:image:alt" content="828 Weather Direct brand mark" />
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@graph":[
+      {"@type":"WebSite","@id":"https://avlweather.com/#website","name":"828 Weather Direct","url":"https://avlweather.com/","description":"Hyper-local weather and forecasting for Asheville and Western North Carolina.","publisher":{"@id":"https://avlweather.com/#organization"}},
+      {"@type":"Organization","@id":"https://avlweather.com/#organization","name":"828 Weather Direct","url":"https://avlweather.com/","logo":{"@type":"ImageObject","url":"https://avlweather.com/images/828-brand-card.png","width":1024,"height":1024}},
+      {"@type":"Person","@id":"https://avlweather.com/about.html#tim-ballisty","name":"Tim Ballisty","jobTitle":"Meteorologist","url":"https://avlweather.com/about.html","sameAs":["https://www.linkedin.com/in/timballisty","https://timothyballisty.substack.com"]},
+      {"@type":"WebPage","@id":"https://avlweather.com/#webpage","name":"Asheville Weather & Local Forecast","url":"https://avlweather.com/","isPartOf":{"@id":"https://avlweather.com/#website"},"about":{"@type":"Place","name":"Asheville, North Carolina"},"author":{"@id":"https://avlweather.com/about.html#tim-ballisty"}}
+    ]
+  }
+  </script>
   <link rel="stylesheet" href="/css/app-v2.css?v=20260526-mb-hourly-backup" />
   <style>
     :root {
@@ -3285,7 +3315,7 @@
       </div>
       <div>
         <div class="home-splash-kicker">Asheville weather</div>
-        <h1 class="home-splash-title">828 Weather <span>Direct</span></h1>
+        <div class="home-splash-title">828 Weather <span>Direct</span></div>
         <p class="home-splash-copy">Bringing the latest local conditions into focus</p>
       </div>
       <div class="home-splash-progress" aria-hidden="true">
@@ -3308,8 +3338,12 @@
         <a href="#now">Now</a>
         <a class="forecast-nav-link" href="/forecast.html">Tim's 4-Day Forecast</a>
         <a href="#pulse-preview">Weather Pulse <span class="pulse-nav-badge" id="pulseNavBadge" hidden>New</span></a>
+        <a href="/radar.html">Radar &amp; Satellite</a>
+        <a href="/asheville-microscope.html">Neighborhood Microscope</a>
+        <a href="/828-sunset-radiance.html">Sunset Radiance</a>
         <a href="/hiking.html">Hiking Guidance</a>
         <a href="/water.html">Water Conditions</a>
+        <a href="/fall.html">Fall Explorer</a>
         <a href="/i26-connector.html">I-26 Connector</a>
       </nav>
 
@@ -3346,10 +3380,10 @@
     <div class="preview-stack">
       <div id="active-alerts" aria-live="polite"></div>
 
-      <section class="feelscore-mock" id="now" aria-label="FeelScore homepage anchor">
+      <section class="feelscore-mock" id="now" aria-label="Current conditions and FeelScore">
         <div class="feelscore-inner">
-          <div class="now-panel">
-            <div class="now-kicker">Now in Asheville</div>
+          <div class="now-panel" aria-label="Current Asheville conditions">
+            <h1 class="now-kicker">Asheville Weather</h1>
             <div class="now-temp-row">
               <div class="now-temp" id="heroCurrentTemp">--°</div>
               <div class="now-condition" id="heroSkyCondition">Reading the sky</div>
@@ -3597,7 +3631,7 @@
           </div>
           <figure class="pulse-media-preview" id="pulseMediaSlot">
             <button class="pulse-media-button" id="pulseMediaButton" type="button" aria-haspopup="dialog">
-              <img src="js/sky-cam/frame.jpg" alt="828 Weather Pulse preview image" />
+              <img src="js/sky-cam/frame.jpg" width="1280" height="720" alt="Current western sky camera view near Asheville, North Carolina" />
               <span class="pulse-media-enlarge">Tap to enlarge</span>
             </button>
             <figcaption class="pulse-media-label" id="pulseMediaLabel">Pulse image</figcaption>
@@ -3826,16 +3860,20 @@
       <div class="footer-links">
         <a href="/">Home</a>
         <a href="/forecast.html">Forecast</a>
+        <a href="/radar.html">Radar &amp; Satellite</a>
+        <a href="/asheville-microscope.html">Neighborhood Microscope</a>
         <a href="/hiking.html">Hiking Guidance</a>
         <a href="/water.html">Water Conditions</a>
+        <a href="/fall.html">Fall Explorer</a>
         <a href="/i26-connector.html">I-26 Connector</a>
         <a href="/828-sunset-radiance.html">Sunset Radiance</a>
-        <a href="https://www.linkedin.com/in/timballisty">About</a>
+        <a href="/about.html">About</a>
         <a href="mailto:tballisty@gmail.com">Contact</a>
         <a href="https://ko-fi.com/irisheagle" target="_blank" rel="noopener noreferrer">Support</a>
       </div>
 
       <div class="footer-meta">
+        <div>Forecasts and analysis by meteorologist <a href="/about.html">Tim Ballisty</a>.</div>
         <div>Data: Tempest, NOAA/NWS, Open-Meteo, and local sky-camera signals where available.</div>
         <div>Serving Asheville and the greater 828 region.</div>
         <div>For general awareness only - not a substitute for official forecasts, warnings, or trail advisories.</div>
@@ -3919,7 +3957,7 @@
         <p>Open the latest Pulse video or image at a larger size without leaving the homepage.</p>
       </div>
       <div class="preview-modal-body pulse-modal-body" id="pulseMediaModalBody">
-        <img class="radar-modal-image" src="js/sky-cam/frame.jpg" alt="Expanded Weather Pulse media" />
+        <img class="radar-modal-image" src="js/sky-cam/frame.jpg" width="1280" height="720" alt="Expanded western sky camera view near Asheville, North Carolina" />
       </div>
     </div>
   </div>
@@ -4898,7 +4936,7 @@
       if (!url) {
         return `
           <button class="pulse-media-button" type="button" aria-haspopup="dialog">
-            <img src="js/sky-cam/frame.jpg" alt="828 Weather Pulse preview image" />
+            <img src="js/sky-cam/frame.jpg" width="1280" height="720" alt="Current western sky camera view near Asheville, North Carolina" />
             <span class="pulse-media-enlarge">Tap to enlarge</span>
           </button>
         `;

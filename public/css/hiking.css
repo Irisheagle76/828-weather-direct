@@ -116,6 +116,7 @@
     .hiker-mark {
       position: relative;
       display: inline-flex;
+      margin: 0;
       align-items: center;
       gap: 12px;
       min-height: 46px;

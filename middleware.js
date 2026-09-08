@@ -1,4 +1,9 @@
 const ADMIN_COOKIE = "828_admin_session";
+const PERMANENT_REDIRECTS = new Map([
+  ["/index.html", "/"],
+  ["/sunset.html", "/828-sunset-radiance.html"],
+  ["/static.html", "/hiking.html"]
+]);
 const PROTECTED_API_PREFIXES = [
   "alerts/publish",
   "alerts/clear",
@@ -12,6 +17,11 @@ const PROTECTED_API_PREFIXES = [
 export function middleware(req) {
   const url = new URL(req.url);
   const pathname = url.pathname;
+
+  if (PERMANENT_REDIRECTS.has(pathname)) {
+    const redirectUrl = new URL(PERMANENT_REDIRECTS.get(pathname), url.origin);
+    return Response.redirect(redirectUrl, 308);
+  }
 
   const apiRoute = getApiRoute(url);
 
@@ -81,11 +91,12 @@ function jsonResponse(body, status) {
     status,
     headers: {
       "Content-Type": "application/json",
-      "Cache-Control": "no-store"
+      "Cache-Control": "no-store",
+      "X-Robots-Tag": "noindex, nofollow"
     }
   });
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/:path*"],
+  matcher: ["/admin/:path*", "/api/:path*", "/index.html", "/sunset.html", "/static.html"],
 };

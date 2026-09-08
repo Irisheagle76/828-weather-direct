@@ -3,4 +3,3 @@ node_modules
 .vercel
 vercel-dev*.log
 radar-preview*.png
-public/radar.html
