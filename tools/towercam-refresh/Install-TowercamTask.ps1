@@ -10,8 +10,8 @@ if (-not (Test-Path -LiteralPath $refreshScript)) {
   throw "Refresh script not found: $refreshScript"
 }
 
-$pwsh = (Get-Command pwsh.exe -ErrorAction Stop).Source
-$taskCommand = "`"$pwsh`" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File `"$refreshScript`""
+$powershell = (Get-Command powershell.exe -ErrorAction Stop).Source
+$taskCommand = "`"$powershell`" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File `"$refreshScript`""
 
 & schtasks.exe /Create /F /SC MINUTE /MO 15 /TN $TaskName /TR $taskCommand
 if ($LASTEXITCODE -ne 0) { throw "Task Scheduler could not create the task (exit code $LASTEXITCODE)." }
