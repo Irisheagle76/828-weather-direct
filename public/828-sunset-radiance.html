@@ -1472,15 +1472,15 @@
           </article>
 
           <article class="context-card station-card">
-            <button class="context-media station-camera unca-camera" type="button" data-lightbox-src="https://wlos.com/resources/ftptransfer/wlos/maps/Cam%20UNCA%20EcoNet.png" data-lightbox-title="UNC Asheville Weather Tower" data-lightbox-crop="unca">
-              <img id="uncaCameraImage" src="https://wlos.com/resources/ftptransfer/wlos/maps/Cam%20UNCA%20EcoNet.png" alt="South-facing camera from the UNC Asheville Weather Tower looking toward downtown Asheville" loading="lazy" />
+            <button class="context-media station-camera unca-camera" type="button" data-lightbox-src="https://res.cloudinary.com/dz45rrije/image/upload/f_auto,q_auto:good/avlweather_towercam_latest.jpg" data-lightbox-title="UNC Asheville Weather Tower">
+              <img id="uncaCameraImage" src="https://res.cloudinary.com/dz45rrije/image/upload/f_auto,q_auto:good/avlweather_towercam_latest.jpg" alt="Latest south-facing camera image from the UNC Asheville Weather Tower" loading="lazy" />
               <span class="context-label">
                 <span>South-facing view</span>
                 <strong>UNC Asheville Weather Tower</strong>
               </span>
             </button>
             <div class="context-copy">
-              <strong>UNC Asheville · South.</strong> Looking back toward downtown Asheville from the Lookout Observatory weather tower.
+              <strong>UNC Asheville · South.</strong> Looking back toward downtown Asheville from the Atmospheric Sciences tower, with the latest image refreshed about every 15 minutes.
               <div class="station-details" aria-label="UNC Asheville station details">
                 <span>2,357 ft</span>
                 <span>35.62180° N, 82.56606° W</span>
@@ -1694,7 +1694,8 @@
     const EAST_LIVE_PERMANENT_URL = "https://www.youtube.com/@tballisty/live";
     const EAST_LIVE_CHANNEL_EMBED_URL = "https://www.youtube.com/embed/live_stream?channel=UCf88ZzHs8HzzRMMO7OGKmYA&playsinline=1&rel=0&autoplay=1&mute=1&origin=https%3A%2F%2Favlweather.com";
     const SKYCAM_RAW_BASE = "https://raw.githubusercontent.com/Irisheagle76/828-weather-direct/main/public/js/sky-cam";
-    const UNCA_CAMERA_URL = "https://wlos.com/resources/ftptransfer/wlos/maps/Cam%20UNCA%20EcoNet.png";
+    const UNCA_CAMERA_URL = "https://res.cloudinary.com/dz45rrije/image/upload/f_auto,q_auto:good/avlweather_towercam_latest.jpg";
+    const UNCA_CACHE_BUCKET_MS = 15 * 60 * 1000;
     const FAIRVIEW_CAMERA_URL = "https://images.ambientweather.net/308398A68945/latest.jpg";
 
     const state = {
@@ -1823,6 +1824,11 @@
 
     function cacheBustedUrl(url) {
       return `${url}${url.includes("?") ? "&" : "?"}t=${encodeURIComponent(Date.now())}`;
+    }
+
+    function bucketedCacheUrl(url, bucketMs) {
+      const bucket = Math.floor(Date.now() / bucketMs);
+      return `${url}${url.includes("?") ? "&" : "?"}v=${encodeURIComponent(bucket)}`;
     }
 
     function eastLiveResolverUrl() {
@@ -2394,7 +2400,7 @@
 
     function refreshContextMedia() {
       if (els.uncaCameraImage) {
-        els.uncaCameraImage.src = cacheBustedUrl(UNCA_CAMERA_URL);
+        els.uncaCameraImage.src = bucketedCacheUrl(UNCA_CAMERA_URL, UNCA_CACHE_BUCKET_MS);
       }
       if (els.fairviewCameraImage) {
         els.fairviewCameraImage.src = cacheBustedUrl(FAIRVIEW_CAMERA_URL);
@@ -2411,7 +2417,9 @@
           const crop = button.dataset.lightboxCrop;
           els.lightboxTitle.textContent = title;
           els.lightboxMedia?.classList.toggle("cropped-unca", crop === "unca");
-          els.lightboxImage.src = cacheBustedUrl(src);
+          els.lightboxImage.src = src === UNCA_CAMERA_URL
+            ? bucketedCacheUrl(src, UNCA_CACHE_BUCKET_MS)
+            : cacheBustedUrl(src);
           els.lightboxImage.alt = title;
           if (typeof els.mediaLightbox.showModal === "function") {
             els.mediaLightbox.showModal();
