@@ -33,7 +33,7 @@ test("clear blue sky is not replaced by textured terrain in a deep camera crop",
 test("courthouse timestamp overlay cannot become mostly-cloudy coverage", () => {
   const image = frame(600, 300, (x, y) => {
     const inOverlay = x < 190 && y < 28;
-    if (inOverlay) return (x + y) % 8 < 4 ? [235, 235, 235] : [55, 55, 55];
+    if (inOverlay) return (x + y) % 8 < 4 ? [255, 255, 255] : [55, 55, 55];
     if (y < 80) return [115, 166, 224];
     return [55, 85, 48];
   });
