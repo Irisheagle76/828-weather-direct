@@ -61,7 +61,7 @@ export function buildFallIntelligence(payload, skyPayload = null) {
       avoid: avoid ? { name: avoid.name, reason: avoidReason(avoid) } : null
     },
     elevation,
-    season: { elevationBands: buildSeasonProgress(elevation, SEASON_MILESTONE_PREVIEW), peakTiming },
+    season: { elevationBands: buildSeasonProgress(elevation, payload.milestones?.bands || SEASON_MILESTONE_PREVIEW), peakTiming, milestones: payload.milestones || null },
     outlook,
     bestOutlook,
     leafDropWatch: outlook.slice().sort((a, b) => riskRank(b.leafDropRisk) - riskRank(a.leafDropRisk))[0],
@@ -136,11 +136,28 @@ function riskRank(risk) { return ({ Low: 0, Moderate: 1, High: 2, "Very High": 3
 function meanFinite(values) { const usable = values.filter(Number.isFinite); return usable.length ? usable.reduce((a, b) => a + b, 0) / usable.length : null; }
 function maxFinite(values) { const usable = values.filter(Number.isFinite); return usable.length ? Math.max(...usable) : null; }
 
-function buildSeasonProgress(elevation, milestones) {
+export function buildSeasonProgress(elevation, milestones) {
   return elevation.bands.map((band) => {
     const stored = milestones.find((item) => item.elevationBand === band.id);
-    const reached = stored?.first32;
+    const reached = [28, 32, 36, 40].find((threshold) => stored?.[`first${threshold}`]);
+    const event = reached ? stored[`first${reached}`] : null;
+    const date = typeof event === "string" ? event : event?.date || null;
     const approaching = !reached && Number.isFinite(band.temperatureF) && band.temperatureF <= 36;
-    return { ...band, status: reached ? "Reached" : approaching ? "Approaching" : "Not Yet", date: reached || null, provisional: true };
+    return {
+      ...band,
+      status: reached ? milestoneStatus(reached) : approaching ? "Approaching" : "Not Yet",
+      reached: Boolean(reached),
+      reachedThreshold: reached || null,
+      date,
+      milestones: stored || null,
+      provisional: !reached
+    };
   });
+}
+
+function milestoneStatus(threshold) {
+  if (threshold === 28) return "Hard Freeze";
+  if (threshold === 32) return "Freeze Reached";
+  if (threshold === 36) return "Frost Signal";
+  return "Cool-Night Signal";
 }

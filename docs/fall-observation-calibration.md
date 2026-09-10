@@ -6,10 +6,16 @@ The Fall Explorer uses NOAA/NWS forecast grids as its public forecast source. Lo
 
 - `GET /api/router?route=observations/elevation` returns the cached normalized network and station health.
 - `GET /api/router?route=observations/calibration` summarizes retained shadow samples when KV is configured.
-- `GET /api/router?route=observations/sample` records a protected sample and requires `Authorization: Bearer $CRON_SECRET`.
+- `GET /api/router?route=observations/sample` records a protected calibration sample and evaluates seasonal cold milestones; it requires `Authorization: Bearer $CRON_SECRET`.
 - `GET /api/router?route=fall` fetches NOAA guidance, consumes the live observation service, and records one shadow batch when it rebuilds its ten-minute cache.
 
-The hiking-guidance GitHub workflow also calls the protected sampler. GitHub scheduling is best-effort, so actual intervals can be longer than the requested 15 minutes.
+The hiking-guidance GitHub workflow calls the protected sampler hourly. GitHub scheduling is best-effort, so actual intervals can be longer than one hour.
+
+## Seasonal cold milestones
+
+From August through December, the protected sampler evaluates fresh, direct-live observations for the 2,000–3,000, 3,000–4,000, 4,000–5,000, 5,000–6,000, 6,000+ foot and Asheville valley bands. It stores the first confirmed ≤40°F, ≤36°F, ≤32°F and ≤28°F event for each band in KV without an expiration. The archive records its activation time; the initial 2026 archive is intentionally described as tracking from activation because no historical station replay is available. Future archives begin automatically with the first scheduled sample from August onward.
+
+A milestone requires either two independent eligible stations in the same band during one run or two consecutive qualifying samples from the same station, separated by at least 20 minutes and no more than three hours. Fallback observations, health-blocked readings, forecast-residual outliers and anchors with effective weight below 0.5 are excluded. Once recorded, a seasonal milestone is immutable; the archive retains its station, observation time, temperature and confirmation evidence.
 
 ## Required secrets
 

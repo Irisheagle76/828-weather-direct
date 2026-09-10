@@ -36,10 +36,10 @@ export function renderFallExplorer(model) {
   $("#coldPool").hidden = !model.elevation.coldPoolRisk;
 
   $("#seasonTimeline").innerHTML = model.season.elevationBands.map((band) => `
-    <div class="season-step ${band.status.toLowerCase().replace(/\s+/g, "-")}">
+    <div class="season-step ${band.reached ? "reached" : band.status.toLowerCase().replace(/\s+/g, "-")}">
       <div class="season-elevation">${esc(band.label)}</div>
       <div class="season-rail"><span></span></div>
-      <div><b>${band.status === "Reached" ? "●" : band.status === "Approaching" ? "◉" : "○"} ${esc(band.status)}</b><small>${band.date ? `First freeze · ${esc(band.date)}` : band.status === "Approaching" ? "Forecast nights near 32–36°F" : "First freeze not recorded"}</small></div>
+      <div><b>${band.reached ? "●" : band.status === "Approaching" ? "◉" : "○"} ${esc(band.status)}</b><small>${band.date ? `First confirmed since tracking began: ≤${band.reachedThreshold}°F · ${esc(formatMilestoneDate(band.date))}` : band.status === "Approaching" ? "Forecast nights near 32–36°F" : "No confirmed cold milestone yet"}</small></div>
     </div>`).join("");
 
   $("#outlookGrid").innerHTML = model.outlook.map((day) => `
@@ -127,6 +127,10 @@ function renderQualityNotice(quality = {}) {
   }
 }
 function setText(selector, value) { const el = $(selector); if (el) el.textContent = value; }
+function formatMilestoneDate(value) {
+  const date = new Date(`${value}T12:00:00Z`);
+  return Number.isFinite(date.getTime()) ? new Intl.DateTimeFormat("en-US", { timeZone: "UTC", month: "short", day: "numeric" }).format(date) : value;
+}
 function cacheBust(url) { return `${url}${url.includes("?") ? "&" : "?"}fall=${Math.floor(Date.now() / 300000)}`; }
 function cameraMedia(camera) {
   if (camera.imageUrl) return `<img src="${esc(cacheBust(camera.imageUrl))}" alt="${esc(camera.alt)}" loading="lazy" data-camera-id="${esc(camera.id)}">`;

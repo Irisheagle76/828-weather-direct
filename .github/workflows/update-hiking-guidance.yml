@@ -41,8 +41,7 @@ jobs:
           git commit -m "Update hiking guidance"
           git push
 
-      - name: Record Fall Explorer shadow calibration
-        continue-on-error: true
+      - name: Record Fall Explorer calibration and cold milestones
         run: |
           curl --fail --silent --show-error --max-time 90 \
             -H "Authorization: Bearer ${CRON_SECRET}" \
