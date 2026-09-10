@@ -22,14 +22,16 @@ const els = {
       pisgahInnImage: document.querySelector("#pisgahInnImage"),
       grasslandCamImage: document.querySelector("#grasslandCamImage"),
       maxPatchCamImage: document.querySelector("#maxPatchCamImage"),
-      fairviewCamImage: document.querySelector("#fairviewCamImage")
+      vilasCamImage: document.querySelector("#vilasCamImage"),
+      waynesvilleCamImage: document.querySelector("#waynesvilleCamImage")
     };
 
     const MITCHELL_CAM_URL = "https://nchighpeaks.org/cam11/up/image.jpg";
     const PISGAH_CAM_URL = "https://streamer5.brownrice.com/cam-images/pisgahinn1.jpg";
     const GRASSLAND_CAM_URL = "https://cameraftpapi.drivehq.com/api/Camera/GetCameraThumbnail.ashx?parentID=361818469&shareID=17333090";
     const MAX_PATCH_CAM_URL = "https://assets2.webcam.io/w/9W1ZRz/latest.jpg";
-    const FAIRVIEW_CAM_URL = "https://images.ambientweather.net/308398A68945/latest.jpg";
+    const VILAS_CAM_URL = "https://images.ambientweather.net/4CEBD6205A23/latest.jpg";
+    const WAYNESVILLE_CAM_URL = "https://images.ambientweather.net/083A8DFB4D15/latest.jpg";
     const HIKING_GUIDANCE_LIVE_URL = "/api/router?route=hiking/current";
     const HIKING_GUIDANCE_RAW_URL = "https://raw.githubusercontent.com/Irisheagle76/828-weather-direct/main/public/data/hiking-guidance.json";
     const HIKING_REFRESH_MS = 5 * 60 * 1000;
@@ -120,8 +122,11 @@ const els = {
       if (els.maxPatchCamImage) {
         els.maxPatchCamImage.src = `${MAX_PATCH_CAM_URL}?t=${Date.now()}`;
       }
-      if (els.fairviewCamImage) {
-        els.fairviewCamImage.src = `${FAIRVIEW_CAM_URL}?t=${Date.now()}`;
+      if (els.vilasCamImage) {
+        els.vilasCamImage.src = `${VILAS_CAM_URL}?t=${Date.now()}`;
+      }
+      if (els.waynesvilleCamImage) {
+        els.waynesvilleCamImage.src = `${WAYNESVILLE_CAM_URL}?t=${Date.now()}`;
       }
       if (els.mountainViewsUpdated) {
         els.mountainViewsUpdated.textContent = formatCameraRefresh();
