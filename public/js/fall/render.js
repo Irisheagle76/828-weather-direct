@@ -61,7 +61,7 @@ export function renderFallExplorer(model) {
         ${cameraMedia(camera)}
         <span class="live-badge"><i></i> ${camera.imageUrl ? "Live view" : "Live stream"}</span>
       </a>
-      <div class="camera-copy"><div><h3>${esc(camera.name)}</h3><p>${cameraElevation(camera)} · ${esc(camera.region)}</p></div><small>${cameraStatus(camera)}</small></div>
+      <div class="camera-copy"><div><h3>${esc(camera.name)}</h3><p>${cameraElevation(camera)} · ${esc(camera.region)}</p>${camera.sitingNote ? `<p class="camera-siting">${esc(camera.sitingNote)}</p>` : ""}</div><small>${cameraStatus(camera)}</small></div>
     </article>`).join("");
   bindCameraStatus(model.cameras);
 }
