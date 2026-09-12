@@ -1,5 +1,9 @@
 # Production deployment guard
 
+- Vercel project `828-weather-direct` has server-side `autoAssignCustomDomains=false`. Keep it disabled: production builds must remain staged until an explicit approved promotion. Do not enable automatic assignment to simplify a deployment.
+- Before promoting a staged build, fetch current `origin/main`, verify the candidate is built from it and contains rain fix `b0da55e7`, run the complete test suite, and verify the staged build. A recognized new release must be committed on current main and describe its intended changes. Do not promote data-only scheduled refreshes or older deployments; a rollback requires explicit user authorization.
+- This manual-release gate is not a source/permission lock: the Hobby plan cannot enforce Vercel Deployment Policies, and an owner can still explicitly promote, roll back, or change settings. Full deployment-source restrictions require user-approved Pro/Enterprise upgrade and platform policy configuration. Never claim those policies are enabled until verified.
+
 - Before any production deployment, fetch `origin/main` and verify the deployment candidate contains commit `f222a23d` (`Handle bright pixels in sky analysis`). Do not deploy an older commit unless the user explicitly requests a rollback.
 - Treat a replacement of the Sunset Radiance / Sky Snapshot logic as a recognized new update only when it is committed on top of `origin/main`, explains the intended behavior, and passes `test/current-sky-analysis.test.js` plus the shared sky-language tests.
 - Scheduled sky-camera, hiking, and FEELSCORE refreshes are data/content updates. They must build on the current `origin/main`, must not rewrite `lib/api-routes/sky/current.js` or the shared sky-state modules, and must not trigger a production deployment by themselves.
