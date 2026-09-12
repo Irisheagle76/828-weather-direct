@@ -5759,6 +5759,11 @@
     }
 
     function renderCloudObservationChip() {
+      if (latestPrecipOverride?.mode === "active" &&
+          (latestPrecipOverride.activeRainNow || latestPrecipOverride.radarSupportedRain)) {
+        setText("#obsClouds", getPrecipSkyLabel(latestPrecipOverride) || "Rain");
+        return;
+      }
       const cameraClouds = Number(latestSkyIntel?.cloud);
       const displayClouds = Number.isFinite(cameraClouds) ? cameraClouds : latestObservationClouds;
       setText("#obsClouds", `Clouds ${Number.isFinite(displayClouds) ? pct(displayClouds) : "--"}`);
