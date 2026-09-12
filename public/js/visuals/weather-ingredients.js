@@ -63,12 +63,14 @@ const ICONS = {
   sky: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 17h9a4 4 0 0 0 .2-8A5.5 5.5 0 0 0 7 10.5 3.3 3.3 0 0 0 8 17Z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5 5.5 3.5 4M9 3V1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`
 };
 
-export function buildWeatherIngredients({ currentHour = {}, forecastHour = {} } = {}) {
+export function buildWeatherIngredients({ currentHour = {}, forecastHour = {}, precipOverride = null } = {}) {
   const temperature = finite(currentHour.temperatureF ?? currentHour.temp ?? forecastHour.temperatureF);
   const dewPoint = finite(currentHour.dewpointF ?? currentHour.dewPoint ?? forecastHour.dewpointF);
   const wind = finite(currentHour.windSpeed ?? currentHour.wind ?? forecastHour.windSpeed);
   const gust = finite(currentHour.windGust ?? forecastHour.windGust);
   const cloud = cloudFraction(finite(forecastHour.cloudCover ?? currentHour.cloudCover));
+  const wetNow = precipOverride?.mode === "active" &&
+    (precipOverride.activeRainNow || precipOverride.radarSupportedRain);
 
   return [
     {
@@ -95,9 +97,9 @@ export function buildWeatherIngredients({ currentHour = {}, forecastHour = {} } 
     {
       key: "sky",
       label: "Sky cover",
-      value: Number.isFinite(cloud) ? `${Math.round(cloud * 100)}%` : "--",
-      interpretation: skyRead(cloud),
-      level: Number.isFinite(cloud) ? Math.round(cloud * 100) : 0
+      value: wetNow ? "Rain" : Number.isFinite(cloud) ? `${Math.round(cloud * 100)}%` : "--",
+      interpretation: wetNow ? "Wet-weather signal overrides the camera sky read" : skyRead(cloud),
+      level: !wetNow && Number.isFinite(cloud) ? Math.round(cloud * 100) : 0
     }
   ];
 }

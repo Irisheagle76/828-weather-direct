@@ -4,6 +4,12 @@ import { readFile } from "node:fs/promises";
 
 const homepagePath = new URL("../public/index.html", import.meta.url);
 
+test("sky refresh reapplies rain to the comfort narrative and weather ingredients", async () => {
+  const html = await readFile(homepagePath, "utf8");
+  assert.match(html, /forecastHour: visualForecastHour,\s*precipOverride: latestPrecipOverride/);
+  assert.match(html, /if \(latestFeelScoreRenderInputs\) \{\s*renderLiveFeelScore\(\.\.\.latestFeelScoreRenderInputs, latestPrecipOverride\)/);
+});
+
 test("homepage Current Sky uses the western camera shown by Sunset Radiance", async () => {
   const html = await readFile(homepagePath, "utf8");
 

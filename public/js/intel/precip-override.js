@@ -280,11 +280,12 @@ export function getCurrentPrecipOverride(context = {}) {
   // Tempest lightning is stronger evidence than the dry-transition timer.
   const radarConfirmedThunderstorm = radarOverhead && lightningLocal;
   const radarSupportedRain = !activeRainNow && radarOverhead && (
-    radarConfirmedThunderstorm || (!dryConfirmed && (
-      strongForecastRain ||
-      current.isRainingNow === true ||
-      Number(current.relative_humidity ?? current.relativeHumidity) >= 90
-    ))
+    // A zero interval at one gauge cannot veto continuing nearby echoes in
+    // saturated air. Require independent surface support, not radar alone.
+    radarConfirmedThunderstorm ||
+    (observationFresh && (current.isRainingNow === true ||
+      Number(current.relative_humidity ?? current.relativeHumidity) >= 90)) ||
+    (!dryConfirmed && strongForecastRain)
   );
   if (radarSupportedRain) lastRainDetectedAt = now;
   const minutesSinceRainDetected = Number.isFinite(lastRainDetectedAt)
@@ -388,7 +389,10 @@ export function applyPrecipOverrideToNarrative(narrative = {}, precipOverride = 
     detail: precipOverride.summary || narrative?.detail || "",
     bullets: [
       ...(precipOverride.bullets || []),
-      ...(Array.isArray(narrative?.bullets) ? narrative.bullets : [])
+      ...(Array.isArray(narrative?.bullets) ? narrative.bullets.filter((bullet) =>
+        !/showers? possible|rain chances|open.*sky|blue.*sky|sunny|sunshine/i.test(
+          typeof bullet === "string" ? bullet : bullet?.text || ""
+        )) : [])
     ].slice(0, 3),
     precipOverride: true,
     precipMode: precipOverride.mode

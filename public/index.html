@@ -5132,7 +5132,7 @@
       FEELSCORE_CALIBRATION
     } from "./js/intel/comfort.js?v=20260807-humid-heat";
     import { renderComfortCurve } from "./js/visuals/comfort-curve.js?v=20260901-comfort-labels";
-    import { renderWeatherIngredients } from "./js/visuals/weather-ingredients.js?v=20260822";
+    import { renderWeatherIngredients } from "./js/visuals/weather-ingredients.js?v=20260912-rain";
     import {
       getAdaptiveHourContext,
       renderFeelscoreRibbon
@@ -5154,7 +5154,7 @@
       applyPrecipOverrideToNarrative,
       getCurrentPrecipOverride,
       getPrecipSkyLabel
-    } from "./js/intel/precip-override.js?v=20260811-shared-sky-label";
+    } from "./js/intel/precip-override.js?v=20260912-rain";
     import { evaluateSunsetPromotion, findTodaySolarTimes, getSkyTimePhase } from "./js/intel/sky-time.js?v=20260629-shared-sunset";
     import { loadAndRenderAlerts } from "./js/modules/renderAlerts.js?v=20260728-published-images";
     import { subscribeUserToPush } from "./js/notifications/subscribeClient.js?v=20260518-vapid-trim";
@@ -5177,6 +5177,7 @@
     let latestSkyWeatherContext = null;
     let latestVisualWeatherInputs = null;
     let latestVisualCameraCloud = null;
+    let latestFeelScoreRenderInputs = null;
     let latestPrecipOverride = null;
     let latestSunriseAt = null;
     let latestSunsetAt = null;
@@ -5192,7 +5193,8 @@
 
       renderWeatherIngredients("#weatherIngredients", {
         currentHour,
-        forecastHour: visualForecastHour
+        forecastHour: visualForecastHour,
+        precipOverride: latestPrecipOverride
       });
     }
 
@@ -7133,14 +7135,14 @@
           tempest: weather?.current_conditions || null
         });
 
-        renderLiveFeelScore(
+        latestFeelScoreRenderInputs = [
           human?.feelscore,
           hourly,
           daily,
           currentHour,
-          displayCurrentHour,
-          latestPrecipOverride
-        );
+          displayCurrentHour
+        ];
+        renderLiveFeelScore(...latestFeelScoreRenderInputs, latestPrecipOverride);
         renderComfortCurve("#comfortCurve", {
           hourly,
           daily,
@@ -7289,6 +7291,9 @@
         renderVisualWeatherContext();
 
         document.querySelector("#skyHomeLabel").textContent = skyLabel;
+        if (latestFeelScoreRenderInputs) {
+          renderLiveFeelScore(...latestFeelScoreRenderInputs, latestPrecipOverride);
+        }
         document.querySelector("#skyHomeCapture").textContent = "Live western stream";
         document.querySelector("#skyHomeHeadline").textContent = skyNarrative?.headline || "Reading the Asheville sky.";
         document.querySelector("#skyHomeDetail").textContent = skyNarrative?.detail || "The camera snapshot adds visual context to the forecast.";

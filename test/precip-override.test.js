@@ -14,6 +14,34 @@ function memoryStorage(initial = {}) {
   };
 }
 
+test("September rainy state survives the zero-gauge timer and false camera clearing", () => {
+  const now = Date.parse("2026-09-12T18:49:00Z");
+  const result = getCurrentPrecipOverride({
+    now,
+    storage: memoryStorage({ dryObservationStartedAt: now - 20 * 60000 }),
+    current: { timestamp: now, precipRate: 0, relative_humidity: 90 },
+    radar: { available: true, ageMinutes: 2, nearestEchoMiles: 4.1, echoPixels: 3304 },
+    skyClearing: true
+  });
+  assert.equal(result.mode, "active");
+  assert.equal(result.radarSupportedRain, true);
+  const narrative = applyPrecipOverrideToNarrative({
+    headline: "Rain chances return", bullets: ["Showers possible this afternoon", "Muggy air"]
+  }, result);
+  assert.match(narrative.headline, /rain|showers/i);
+  assert.ok(!narrative.bullets.some(text => /showers possible/i.test(text)));
+});
+
+test("stale humid-air readings cannot prolong radar-supported surface rain", () => {
+  const now = Date.parse("2026-09-12T18:49:00Z");
+  const result = getCurrentPrecipOverride({
+    now, storage: memoryStorage({ dryObservationStartedAt: now - 20 * 60000 }),
+    current: { timestamp: now - 30 * 60000, precipRate: 0, relative_humidity: 90 },
+    radar: { available: true, ageMinutes: 2, nearestEchoMiles: 4.1, echoPixels: 3304 }
+  });
+  assert.equal(result.radarSupportedRain, false);
+});
+
 test("fresh overhead NOAA radar plus saturated air can acknowledge falling rain", () => {
   const now = Date.parse("2026-07-11T13:30:00Z");
   const result = getCurrentPrecipOverride({
@@ -137,7 +165,7 @@ test("Tempest last-strike time supports lightning wording after the interval cou
   assert.match(result.summary, /lightning within about 10 miles/i);
 });
 
-test("sustained fresh zero rain rates move from falling rain to eased rain", () => {
+test("fresh zero rain rates acknowledge easing once nearby radar clears", () => {
   const now = Date.parse("2026-07-11T13:30:00Z");
   const storage = memoryStorage();
   const radar = { available: true, ageMinutes: 2, nearestEchoMiles: 4, echoPixels: 500 };
@@ -154,7 +182,7 @@ test("sustained fresh zero rain rates move from falling rain to eased rain", () 
     now: now + 5 * 60 * 1000,
     storage,
     current: { timestamp: now + 5 * 60 * 1000, precipRate: 0, relative_humidity: 94 },
-    radar
+    radar: { ...radar, nearestEchoMiles: 30 }
   });
   assert.equal(ending.mode, "recent");
   assert.equal(ending.dryConfirmed, true);
@@ -175,7 +203,7 @@ test("normal FeelScore narrative resumes after the wet transition window", () =>
     now: now + 11 * 60 * 1000,
     storage,
     current: { timestamp: now + 11 * 60 * 1000, precipRate: 0, relative_humidity: 94 },
-    radar
+    radar: { ...radar, nearestEchoMiles: 30 }
   });
   assert.equal(ended.mode, "expired");
   assert.equal(ended.active, false);
@@ -236,7 +264,7 @@ test("overhead radar and recent Tempest lightning override a zero gauge rate and
   assert.doesNotMatch(narrative.detail, /fog/i);
 });
 
-test("distant lightning and a clearing camera produce clearing-after-storms copy", () => {
+test("distant lightning and a clearing camera produce clearing copy once radar leaves town", () => {
   const now = Date.parse("2026-08-04T20:02:00Z");
   const result = getCurrentPrecipOverride({
     now,
@@ -255,7 +283,7 @@ test("distant lightning and a clearing camera produce clearing-after-storms copy
     radar: {
       available: true,
       ageMinutes: 3,
-      nearestEchoMiles: 4.1,
+      nearestEchoMiles: 24.1,
       echoPixels: 5497,
       strongEchoPixels: 277,
       approaching: false
