@@ -8,6 +8,8 @@
   <meta name="robots" content="index,follow,max-image-preview:large">
   <meta name="theme-color" content="#071d49">
   <title>Asheville Neighborhood Weather | 828 Weather Direct</title>
+  <link rel="stylesheet" href="/css/site-chrome.css?v=20260908-global-nav">
+  <script defer src="/js/site-chrome.js?v=20260908-global-nav"></script>
   <link rel="canonical" href="https://avlweather.com/asheville-microscope.html">
   <link rel="icon" href="/images/828-brand-card.png" type="image/png">
   <meta property="og:title" content="Asheville Neighborhood Weather | 828 Weather Direct">
@@ -26,11 +28,20 @@
   </script>
   <style>
     html { background: #eef3f9; }
-    body { margin: 0; padding: 20px; background: #eef3f9; }
-    @media (max-width: 760px) { body { padding: 0; } }
+    body { margin: 0; padding: 0; background: #eef3f9; }
+    #avl-microscope-page { margin: 20px; }
+    @media (max-width: 760px) { #avl-microscope-page { margin: 0; } }
   </style>
 </head>
 <body>
+<header data-site-header>
+  <div data-site-header-inner>
+    <a data-site-brand href="/" aria-label="828 Weather Direct home"><span class="site-brand-title"><span class="site-brand-828">828</span> Weather Direct</span><span class="site-brand-sub">Hyper-local Asheville forecast built by Tim Ballisty</span></a>
+    <nav data-site-nav aria-label="Primary navigation">
+      <a href="/">Home</a><a href="/forecast.html">Forecast</a><a href="/radar.html">Radar &amp; Satellite</a><a href="/se_feelscore.html">FEELSCORE</a><a href="/asheville-microscope.html" aria-current="page" class="active">Microscope</a><a href="/hiking.html">Hiking</a><a href="/water.html">Water Conditions</a><a href="/i26-connector.html">I-26 Connector</a><a href="/pulse.html">Weather Pulse</a><a href="/fall.html">Fall Explorer</a><a href="/828-sunset-radiance.html">Sunset Radiance</a>
+    </nav>
+  </div>
+</header>
 <section id="avl-microscope-page" data-metric="temperature" aria-label="Asheville Under the Microscope">
   <style>
     #avl-microscope-page {
@@ -1248,9 +1259,7 @@
 
   <div class="avl-page-shell">
     <div class="avl-sitebar">
-      <a class="avl-brand" href="/" aria-label="828 Weather Direct home"><span class="avl-brand-mark">828</span><span>Weather Direct</span></a>
       <div class="avl-sitebar-status" id="avl-live-status" aria-live="polite"><span class="avl-live-dot"></span><strong>27 of 30 stations reporting</strong><span>· last update 10:02 AM</span></div>
-      <a class="avl-sitebar-home" href="/">Back to home</a>
     </div>
 
     <header class="avl-page-hero">
@@ -1451,7 +1460,7 @@
       </section>
     </main>
 
-    <footer class="avl-page-footer"><span><strong>Asheville Under the Microscope:</strong> local observations interpreted through terrain and exposure by meteorologist Tim Ballisty.</span><span>Current observations · September 5 · 10:02 AM</span></footer>
+    <div class="avl-page-footer"><span>Neighborhood observations interpreted by meteorologist Tim Ballisty.</span><span>Current observations · September 5 · 10:02 AM</span></div>
   </div>
 
   <script>
@@ -1904,5 +1913,6 @@
     })();
   </script>
 </section>
+<footer data-site-footer></footer>
 </body>
 </html>
