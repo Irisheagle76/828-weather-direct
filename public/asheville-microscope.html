@@ -29,7 +29,8 @@
   <style>
     html { background: #eef3f9; }
     body { margin: 0; padding: 0; background: #eef3f9; }
-    #avl-microscope-page { margin: 20px; }
+    #avl-microscope-page { max-width: 1440px; margin: 24px auto; }
+    @media (min-width: 761px) { #avl-microscope-page { width: calc(100% - 48px); } }
     @media (max-width: 760px) { #avl-microscope-page { margin: 0; } }
   </style>
 </head>
@@ -60,7 +61,6 @@
       --avl-page-soft-orange: #fff1e7;
       --avl-page-soft-teal: #e8f8f5;
       --avl-page-soft-violet: #f0edff;
-      width: auto;
       color: var(--avl-page-ink);
       color-scheme: light;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
