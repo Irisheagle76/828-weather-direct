@@ -1709,6 +1709,17 @@
         const elevationHigh = Math.max(...stations.map((station) => station.elevation));
         const elevationLow = Math.min(...stations.map((station) => station.elevation));
         const selected = stations.find((station) => station.code === selectedCode) || stations[0];
+        for (const [container, value] of [[root.querySelector('.avl-footprint-map'), `${selected.name} · ${selected.temperature.toFixed(1)}°F`], [root.querySelector('.avl-cross-section'), `${selected.name} · ${reading(selected, config.rangeUnit)} · ${selected.elevation.toLocaleString()} ft`]]) {
+          let feedback = container.querySelector('.avl-mobile-selection');
+          if (!feedback) {
+            feedback = document.createElement('div');
+            feedback.className = 'avl-mobile-selection';
+            feedback.setAttribute('role', 'status');
+            feedback.setAttribute('aria-live', 'polite');
+            container.append(feedback);
+          }
+          feedback.textContent = value;
+        }
 
         const footprint = root.querySelector('#avl-footprint-map');
         const latitudes = stations.map((station) => station.lat);
