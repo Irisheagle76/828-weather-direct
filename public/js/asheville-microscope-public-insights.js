@@ -83,7 +83,7 @@ export function renderPublicInsights(root, payload) {
     <div class="avl-public-kicker">Does one Asheville temperature tell the whole story?</div>
     <h2 id="avl-consensus-title">${categories[index]}</h2>
     <p class="avl-public-lead">${index === 0 && stats.spread >= 7 ? 'Most neighborhoods agree—but the warm and cool pockets still matter.' : ['Most neighborhoods are close in temperature right now.', 'Mostly—but not everywhere.', 'Your neighborhood makes a meaningful difference right now.', 'One reading misses substantial neighborhood differences.'][index]}</p>
-    <div class="avl-public-scale" aria-label="Current category: ${categories[index]}">${categories.map((label, position) => `<div class="${position === index ? 'active' : ''}"><span>${position === index ? '● ' : ''}${label}</span></div>`).join('')}</div>
+    <div class="avl-public-scale" aria-label="Current category: ${categories[index]}">${categories.map((label, position) => `<div class="${position === index ? 'active' : ''}"${position === index ? ' aria-current="true"' : ''}><small>${position === index ? '✓ Current pattern' : 'Other pattern'}</small><span>${label}</span></div>`).join('')}</div>
     <div class="avl-public-facts"><div><span>Middle half of neighborhoods</span><strong>${number(stats.q1)}°–${number(stats.q3)}°</strong></div><div><span>All reporting neighborhoods</span><strong>${number(stats.min)}°–${number(stats.max)}°</strong></div><div><span>Coolest-to-warmest gap</span><strong>${number(stats.spread)}°</strong></div></div>
     ${neighborhoodLineup(core, stats)}
     <div class="avl-public-explanation"><b>What else is in the picture?</b><p>${escape(explanation)}</p></div>

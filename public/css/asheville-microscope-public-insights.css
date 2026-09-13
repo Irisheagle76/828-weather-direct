@@ -10,7 +10,10 @@
 #avl-microscope-page .avl-public-scale div:nth-child(2){--category-color:#8ab9ff}
 #avl-microscope-page .avl-public-scale div:nth-child(3){--category-color:#c3a3ff}
 #avl-microscope-page .avl-public-scale div:nth-child(4){--category-color:#ffc16a}
-#avl-microscope-page .avl-public-scale div.active{border-color:var(--category-color);color:#fff;background:linear-gradient(#ffffff23,#ffffff0b);box-shadow:0 5px 18px #0003,inset 0 1px 0 #ffffff40}
+#avl-microscope-page .avl-public-scale div.active{border:2px solid var(--category-color);border-top:7px solid var(--category-color);color:#071e3d;background:linear-gradient(135deg,#fff,var(--category-color));box-shadow:0 8px 24px #0005,0 0 0 4px #ffffff18,inset 0 2px 0 #fff;transform:translateY(-4px)}
+#avl-microscope-page .avl-public-scale small{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;opacity:.65}
+#avl-microscope-page .avl-public-scale .active small{opacity:1;font-weight:900}
+#avl-microscope-page .avl-public-scale span{display:block;font-size:16px;line-height:1.3}
 #avl-microscope-page .avl-public-summary .avl-public-facts>div{background:linear-gradient(140deg,#239c9345,#ffffff08);border-top:3px solid #68e2cb;box-shadow:inset 0 1px 0 #ffffff25,0 8px 18px #0002}
 #avl-microscope-page .avl-public-summary .avl-public-facts>div:nth-child(2){background:linear-gradient(140deg,#8472cd45,#ffffff08);border-top-color:#c3a3ff}
 #avl-microscope-page .avl-public-summary .avl-public-facts>div:nth-child(3){background:linear-gradient(140deg,#c5873345,#ffffff08);border-top-color:#ffc16a}

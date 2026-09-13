@@ -49,7 +49,8 @@ test("shared navigation has the approved public links", async () => {
   for (const [label, href] of expectedLinks) {
     assert.match(script, new RegExp(`\\["${label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}", "${href.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"\\]`));
   }
-  assert.doesNotMatch(script, /microscope/i);
+  assert.match(script, /\["Microscope", "\/asheville-microscope\.html"\]/);
+  assert.doesNotMatch(script, /asheville-microscope-lab|micronet/i);
 });
 
 for (const page of publicPages) {
