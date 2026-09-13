@@ -1701,6 +1701,30 @@
       }
 
       function render() {
+        const regional = root.querySelector('.avl-regional-card');
+        let mobileCorridors = regional.querySelector('.avl-mobile-corridors');
+        if (!mobileCorridors) {
+          mobileCorridors = document.createElement('div');
+          mobileCorridors.className = 'avl-mobile-corridors';
+          regional.querySelector('.avl-corridor-compass').after(mobileCorridors);
+        }
+        mobileCorridors.replaceChildren();
+        for (const [direction, title] of [['north', '↑ North · Woodfin to Mars Hill'], ['east', '→ East · Swannanoa to Old Fort'], ['south', '↓ South · Arden to Hendersonville'], ['west', '← West · Candler to Waynesville']]) {
+          const panel = document.createElement('section');
+          panel.className = 'avl-mobile-route';
+          const heading = document.createElement('h3'); heading.textContent = title; panel.append(heading);
+          const nodes = [...regional.querySelectorAll(`.avl-corridor.${direction} .avl-corridor-place`)];
+          if (direction === 'west') nodes.reverse();
+          nodes.forEach(node => {
+            const row = document.createElement('div');
+            row.className = 'avl-mobile-route-stop' + (node.classList.contains('inner') ? ' anchor' : '');
+            const name = document.createElement('strong'); name.textContent = node.querySelector('strong').textContent;
+            const reading = document.createElement('b'); reading.textContent = node.querySelector('.avl-place-reading b').textContent;
+            const elevation = document.createElement('span'); elevation.textContent = node.querySelector('small').textContent + ' elevation';
+            row.append(name, reading, elevation); panel.append(row);
+          });
+          mobileCorridors.append(panel);
+        }
         const config = metrics[metric];
         const ordered = [...stations].sort((a, b) => a[metric] - b[metric]);
         const low = ordered[0];
