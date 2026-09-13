@@ -1721,7 +1721,9 @@
             const name = document.createElement('strong'); name.textContent = node.querySelector('strong').textContent;
             const reading = document.createElement('b'); reading.textContent = node.querySelector('.avl-place-reading b').textContent;
             const elevation = document.createElement('span'); elevation.textContent = node.querySelector('small').textContent + ' elevation';
-            row.append(name, reading, elevation); panel.append(row);
+            const area = document.createElement('small');
+            area.textContent = node.classList.contains('inner') ? 'Greater Asheville' : 'Surrounding region';
+            row.append(name, reading, elevation, area); panel.append(row);
           });
           mobileCorridors.append(panel);
         }
