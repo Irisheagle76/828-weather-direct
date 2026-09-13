@@ -1,0 +1,1871 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Live neighborhood weather observations across Asheville and the surrounding mountain corridors, interpreted through elevation and exposure.">
+  <meta name="author" content="Tim Ballisty">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <meta name="theme-color" content="#071d49">
+  <title>Asheville Neighborhood Weather | 828 Weather Direct</title>
+  <link rel="canonical" href="https://avlweather.com/asheville-microscope.html">
+  <link rel="icon" href="/images/828-brand-card.png" type="image/png">
+  <meta property="og:title" content="Asheville Neighborhood Weather | 828 Weather Direct">
+  <meta property="og:description" content="Neighborhood weather observations across Asheville, interpreted through elevation, exposure and mountain geography.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://avlweather.com/asheville-microscope.html">
+  <meta property="og:image" content="https://avlweather.com/images/828-brand-card.png">
+  <meta property="og:image:alt" content="828 Weather Direct brand mark">
+  <meta property="og:site_name" content="828 Weather Direct">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Asheville Neighborhood Weather | 828 Weather Direct">
+  <meta name="twitter:description" content="Neighborhood weather observations across Asheville, interpreted through elevation and mountain geography.">
+  <meta name="twitter:image" content="https://avlweather.com/images/828-brand-card.png">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebPage","name":"Asheville Neighborhood Weather","alternateName":"Asheville Under the Microscope","url":"https://avlweather.com/asheville-microscope.html","description":"Neighborhood weather observations across Asheville interpreted through elevation and exposure.","isPartOf":{"@type":"WebSite","name":"828 Weather Direct","url":"https://avlweather.com/"},"about":{"@type":"Place","name":"Asheville, North Carolina"},"author":{"@type":"Person","name":"Tim Ballisty","jobTitle":"Meteorologist","url":"https://avlweather.com/about.html"},"publisher":{"@type":"Organization","name":"828 Weather Direct","url":"https://avlweather.com/"}}
+  </script>
+  <style>
+    html { background: #eef3f9; }
+    body { margin: 0; padding: 20px; background: #eef3f9; }
+    @media (max-width: 760px) { body { padding: 0; } }
+  </style>
+</head>
+<body>
+<section id="avl-microscope-page" data-metric="temperature" aria-label="Asheville Under the Microscope">
+  <style>
+    #avl-microscope-page {
+      --avl-page-navy: #071d49;
+      --avl-page-blue: #1056cf;
+      --avl-page-orange: #f47b20;
+      --avl-page-teal: #009f98;
+      --avl-page-violet: #6852b8;
+      --avl-page-gold: #f2b640;
+      --avl-page-ink: #13213a;
+      --avl-page-muted: #607086;
+      --avl-page-paper: #fffdf8;
+      --avl-page-white: #ffffff;
+      --avl-page-line: #d9e3f0;
+      --avl-page-soft-blue: #edf4ff;
+      --avl-page-soft-orange: #fff1e7;
+      --avl-page-soft-teal: #e8f8f5;
+      --avl-page-soft-violet: #f0edff;
+      width: 100%;
+      color: var(--avl-page-ink);
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+
+    #avl-microscope-page * { box-sizing: border-box; }
+    #avl-microscope-page button { font: inherit; }
+    #avl-microscope-page i[data-lucide] { display: inline-grid; place-items: center; min-width: 1em; font-style: normal; }
+    #avl-microscope-page i[data-lucide="sparkles"]::before { content: '✦'; }
+    #avl-microscope-page i[data-lucide="mountain"]::before { content: '△'; }
+    #avl-microscope-page i[data-lucide="trees"]::before { content: '♣'; }
+    #avl-microscope-page i[data-lucide="map-pin"]::before { content: '⌖'; }
+    #avl-microscope-page i[data-lucide="cloud-rain"]::before { content: '☂'; }
+
+    #avl-microscope-page .avl-page-shell {
+      overflow: hidden;
+      border: 1px solid var(--avl-page-line);
+      border-radius: 26px;
+      background:
+        radial-gradient(circle at 3% 12%, rgba(16, 86, 207, .08), transparent 23%),
+        radial-gradient(circle at 97% 8%, rgba(244, 123, 32, .11), transparent 22%),
+        var(--avl-page-paper);
+      box-shadow: 0 28px 80px rgba(7, 29, 73, .17);
+    }
+
+    #avl-microscope-page .avl-sitebar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 14px 34px;
+      color: #dce8ff;
+      background: var(--avl-page-navy);
+      border-top: 5px solid var(--avl-page-orange);
+    }
+
+    #avl-microscope-page .avl-brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      color: #ffffff;
+      font-weight: 800;
+      letter-spacing: .03em;
+      text-decoration: none;
+    }
+
+    #avl-microscope-page .avl-brand-mark {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, var(--avl-page-orange), var(--avl-page-gold));
+      color: var(--avl-page-navy);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    #avl-microscope-page .avl-sitebar-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    #avl-microscope-page .avl-sitebar-home {
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    #avl-microscope-page .avl-sitebar-home:hover { color: #ffd29f; }
+
+    #avl-microscope-page .avl-live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4ed0a8;
+      box-shadow: 0 0 0 4px rgba(78, 208, 168, .16);
+    }
+
+    #avl-microscope-page .avl-page-hero {
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(260px, .55fr);
+      gap: 30px;
+      align-items: end;
+      padding: 54px 48px 48px;
+      color: #ffffff;
+      background:
+        radial-gradient(circle at 86% 22%, rgba(244, 123, 32, .42), transparent 28%),
+        radial-gradient(circle at 55% 90%, rgba(0, 159, 152, .24), transparent 34%),
+        linear-gradient(140deg, #071d49 0%, #0a347d 56%, #4f3c94 100%);
+    }
+
+    #avl-microscope-page .avl-page-hero::after {
+      content: '';
+      position: absolute;
+      inset: auto 0 0;
+      height: 115px;
+      background: linear-gradient(90deg, rgba(16, 86, 207, .6), rgba(0, 159, 152, .24), rgba(244, 123, 32, .5));
+      clip-path: polygon(0 76%, 9% 55%, 17% 70%, 28% 28%, 38% 68%, 50% 35%, 62% 72%, 73% 36%, 83% 65%, 92% 28%, 100% 58%, 100% 100%, 0 100%);
+      opacity: .36;
+      pointer-events: none;
+    }
+
+    #avl-microscope-page .avl-eyebrow,
+    #avl-microscope-page .avl-section-kicker {
+      color: var(--avl-page-orange);
+      font: 800 11px Arial, sans-serif;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+    }
+
+    #avl-microscope-page .avl-page-hero h1 {
+      position: relative;
+      z-index: 1;
+      max-width: 760px;
+      margin: 10px 0 12px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(42px, 6vw, 72px);
+      letter-spacing: -.045em;
+      line-height: .94;
+    }
+
+    #avl-microscope-page .avl-page-hero p {
+      position: relative;
+      z-index: 1;
+      max-width: 690px;
+      margin: 0;
+      color: #dbe8ff;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    #avl-microscope-page .avl-hero-reading {
+      position: relative;
+      z-index: 1;
+      padding: 22px;
+      border: 1px solid rgba(255, 255, 255, .2);
+      border-radius: 20px;
+      background: rgba(255, 255, 255, .1);
+      backdrop-filter: blur(8px);
+    }
+
+    #avl-microscope-page .avl-hero-reading span {
+      color: #ffd6b7;
+      font: 800 10px Arial, sans-serif;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    #avl-microscope-page .avl-hero-reading strong {
+      display: block;
+      margin: 5px 0 4px;
+      color: #ffffff;
+      font-size: clamp(48px, 7vw, 72px);
+      letter-spacing: -.06em;
+      line-height: .95;
+    }
+
+    #avl-microscope-page .avl-hero-reading small { color: #dbe8ff; }
+
+    #avl-microscope-page .avl-page-content { padding: 38px 48px 52px; }
+
+    #avl-microscope-page .avl-section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 18px;
+    }
+
+    #avl-microscope-page .avl-section-head h2 {
+      margin: 6px 0 0;
+      color: var(--avl-page-navy);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(28px, 4vw, 40px);
+      letter-spacing: -.03em;
+      line-height: 1;
+    }
+
+    #avl-microscope-page .avl-section-note {
+      max-width: 420px;
+      color: var(--avl-page-muted);
+      font-size: 12px;
+      line-height: 1.45;
+      text-align: right;
+    }
+
+    #avl-microscope-page .avl-briefing {
+      margin: -8px -12px 38px;
+      padding: 26px;
+      border: 1px solid #d7e4f4;
+      border-radius: 28px;
+      background:
+        radial-gradient(circle at 4% 0%, rgba(31, 91, 211, .10), transparent 31%),
+        radial-gradient(circle at 96% 12%, rgba(244, 123, 32, .10), transparent 29%),
+        linear-gradient(145deg, #f7faff, #fffaf4);
+      box-shadow: 0 20px 48px rgba(7, 29, 73, .12);
+    }
+
+    #avl-microscope-page .avl-briefing .avl-section-head { margin-bottom: 20px; }
+
+    #avl-microscope-page .avl-now-grid {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 0;
+    }
+
+    #avl-microscope-page .avl-now-story {
+      min-height: 142px;
+      padding: 22px;
+      border-radius: 18px;
+      box-shadow: 0 12px 28px rgba(7, 29, 73, .09);
+    }
+
+    #avl-microscope-page .avl-now-story.primary {
+      color: #ffffff;
+      background:
+        radial-gradient(circle at 90% 18%, rgba(242, 182, 64, .42), transparent 28%),
+        linear-gradient(140deg, var(--avl-page-blue), var(--avl-page-violet));
+    }
+
+    #avl-microscope-page .avl-now-story.terrain {
+      background: linear-gradient(145deg, var(--avl-page-soft-teal), #ffffff);
+      border-top: 5px solid var(--avl-page-teal);
+    }
+
+    #avl-microscope-page .avl-now-story.exposure {
+      background: linear-gradient(145deg, var(--avl-page-soft-orange), #ffffff);
+      border-top: 5px solid var(--avl-page-orange);
+    }
+
+    #avl-microscope-page .avl-now-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--avl-page-blue);
+      font: 800 10px Arial, sans-serif;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    #avl-microscope-page .primary .avl-now-label { color: #ffd6b7; }
+    #avl-microscope-page .terrain .avl-now-label { color: var(--avl-page-teal); }
+    #avl-microscope-page .exposure .avl-now-label { color: var(--avl-page-orange); }
+
+    #avl-microscope-page .avl-now-story strong {
+      display: block;
+      margin-top: 13px;
+      color: var(--avl-page-navy);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 21px;
+      line-height: 1.18;
+    }
+
+    #avl-microscope-page .primary strong { color: #ffffff; font-size: 25px; }
+
+    #avl-microscope-page .avl-now-story p {
+      margin: 8px 0 0;
+      color: var(--avl-page-muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    #avl-microscope-page .primary p { color: #dbe8ff; }
+
+    #avl-microscope-page .avl-footprint {
+      overflow: hidden;
+      margin-bottom: 36px;
+      border-radius: 24px;
+      color: #ffffff;
+      background:
+        radial-gradient(circle at 18% 15%, rgba(0, 159, 152, .28), transparent 28%),
+        radial-gradient(circle at 86% 78%, rgba(244, 123, 32, .32), transparent 31%),
+        linear-gradient(145deg, #061a42, #0b3573 58%, #403485);
+      box-shadow: 0 20px 48px rgba(7, 29, 73, .18);
+    }
+
+    #avl-microscope-page .avl-footprint-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(320px, .75fr);
+      justify-content: space-between;
+      gap: 24px;
+      align-items: end;
+      padding: 27px 30px 22px;
+    }
+
+    #avl-microscope-page .avl-footprint-head h2 {
+      margin: 6px 0 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1;
+    }
+
+    #avl-microscope-page .avl-footprint-head p {
+      max-width: 445px;
+      margin: 0;
+      color: #dbe8ff;
+      font-size: 13px;
+      line-height: 1.5;
+      text-align: left;
+    }
+
+    #avl-microscope-page .avl-footprint-head p strong { display: block; margin-bottom: 4px; color: #ffd6b7; font-size: 14px; }
+
+    #avl-microscope-page .avl-footprint-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.65fr) minmax(260px, .65fr);
+      min-height: 430px;
+      border-top: 1px solid rgba(255, 255, 255, .16);
+    }
+
+    #avl-microscope-page .avl-footprint-map {
+      position: relative;
+      min-height: 430px;
+      overflow: hidden;
+      background:
+        linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+      background-size: 54px 54px;
+    }
+
+    #avl-microscope-page .avl-footprint-map svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: .7;
+      pointer-events: none;
+    }
+
+    #avl-microscope-page .avl-contour {
+      fill: none;
+      stroke: rgba(255,255,255,.17);
+      stroke-width: 1.4;
+    }
+
+    #avl-microscope-page .avl-river-line {
+      fill: none;
+      stroke: #51d1c1;
+      stroke-width: 4;
+      opacity: .36;
+    }
+
+    #avl-microscope-page .avl-footprint-direction {
+      position: absolute;
+      z-index: 2;
+      padding: 6px 9px;
+      border-radius: 7px;
+      color: #ffffff;
+      background: rgba(7,29,73,.72);
+      box-shadow: 0 5px 14px rgba(0,0,0,.16);
+      font: 800 11px Arial, sans-serif;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    #avl-microscope-page .avl-footprint-direction.north { top: 15px; left: 50%; transform: translateX(-50%); }
+    #avl-microscope-page .avl-footprint-direction.west { left: 16px; top: 50%; transform: translateY(-50%); }
+    #avl-microscope-page .avl-footprint-direction.east { right: 16px; top: 50%; transform: translateY(-50%); }
+    #avl-microscope-page .avl-footprint-direction.south { bottom: 15px; left: 50%; transform: translateX(-50%); }
+
+    #avl-microscope-page .avl-footprint-station {
+      position: absolute;
+      z-index: 4;
+      display: grid;
+      place-items: center;
+      width: 37px;
+      height: 37px;
+      padding: 0;
+      transform: translate(-50%, -50%);
+      border: 3px solid rgba(255,255,255,.95);
+      border-radius: 50%;
+      color: #ffffff;
+      background: var(--map-color);
+      box-shadow: 0 7px 18px rgba(0,0,0,.34);
+      cursor: pointer;
+      font: 800 9px Arial, sans-serif;
+    }
+
+    #avl-microscope-page .avl-footprint-station[aria-pressed="true"] {
+      width: 51px;
+      height: 51px;
+      z-index: 7;
+      outline: 7px solid rgba(255, 255, 255, .18);
+    }
+
+    #avl-microscope-page .avl-map-label {
+      position: absolute;
+      z-index: 6;
+      transform: translate(-50%, 27px);
+      padding: 5px 8px;
+      border-radius: 7px;
+      color: var(--avl-page-navy);
+      background: #ffffff;
+      box-shadow: 0 5px 14px rgba(0,0,0,.24);
+      font-size: 9px;
+      font-weight: 800;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    #avl-microscope-page .avl-map-note {
+      position: static;
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: minmax(220px, .42fr) minmax(320px, 1fr);
+      column-gap: 24px;
+      align-items: center;
+      width: 100%;
+      padding: 13px 16px;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 13px;
+      color: #ffffff;
+      background: rgba(4,25,63,.88);
+      box-shadow: 0 12px 30px rgba(0,0,0,.25);
+      backdrop-filter: blur(8px);
+    }
+
+    #avl-microscope-page .avl-map-gradient {
+      display: block;
+      width: 100%;
+      height: 10px;
+      margin: 0 0 7px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #1d65dc, #7360b7, #f47b20);
+      box-shadow: 0 0 16px rgba(114,94,185,.38);
+    }
+
+    #avl-microscope-page .avl-map-note-title { grid-row: 1 / 3; }
+    #avl-microscope-page .avl-map-note-title span { display: block; color: #75dfc5; font: 800 9px Arial,sans-serif; letter-spacing: .13em; text-transform: uppercase; }
+    #avl-microscope-page .avl-map-note-title strong { display: block; margin-top: 3px; font-size: 14px; }
+    #avl-microscope-page .avl-map-scale { grid-column: 2; display: flex; justify-content: space-between; gap: 10px; color: #dbe8ff; font-size: 11px; font-weight: 700; }
+    #avl-microscope-page .avl-map-scale span:nth-child(2) { color: #c9bcff; }
+    #avl-microscope-page .avl-map-scale span:last-child { text-align: right; }
+    #avl-microscope-page .avl-map-scale b { color: #ffffff; font-size: 13px; }
+
+    #avl-microscope-page .avl-footprint-focus {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 30px;
+      background: rgba(255,255,255,.09);
+      border-left: 1px solid rgba(255,255,255,.16);
+      backdrop-filter: blur(9px);
+    }
+
+    #avl-microscope-page .avl-footprint-focus > span {
+      color: #75dfc5;
+      font: 800 9px Arial, sans-serif;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    #avl-microscope-page .avl-footprint-focus h3 {
+      margin: 8px 0 5px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 27px;
+      line-height: 1.05;
+    }
+
+    #avl-microscope-page .avl-footprint-focus p { margin: 0; color: #dbe8ff; font-size: 11px; line-height: 1.45; }
+    #avl-microscope-page .avl-footprint-reading { margin: 24px 0 8px; font-size: 54px; font-weight: 800; letter-spacing: -.06em; line-height: .9; }
+    #avl-microscope-page .avl-footprint-delta { color: #ffd6b7; font-size: 11px; font-weight: 800; }
+
+    #avl-microscope-page .avl-temp-ruler { position: relative; height: 12px; margin: 25px 0 9px; border-radius: 999px; background: linear-gradient(90deg, #2a74e6, #725eb9, #f2b640, #f47b20); }
+    #avl-microscope-page .avl-temp-ruler i { position: absolute; top: 50%; left: var(--selected-temp); width: 20px; height: 20px; transform: translate(-50%, -50%); border: 4px solid #ffffff; border-radius: 50%; background: var(--avl-page-navy); box-shadow: 0 3px 12px rgba(0,0,0,.35); }
+    #avl-microscope-page .avl-ruler-labels { display: flex; justify-content: space-between; color: #dbe8ff; font-size: 9px; font-weight: 800; }
+
+    #avl-microscope-page .avl-visual-clues { display: grid; gap: 10px; margin-top: 25px; }
+    #avl-microscope-page .avl-visual-clue { display: grid; grid-template-columns: 24px 1fr; gap: 10px; align-items: center; color: #dbe8ff; font-size: 10px; }
+    #avl-microscope-page .avl-visual-clue i { color: #ffd6b7; }
+
+    #avl-microscope-page .avl-lens {
+      overflow: hidden;
+      margin-bottom: 34px;
+      border: 1px solid var(--avl-page-line);
+      border-radius: 24px;
+      background: #ffffff;
+      box-shadow: 0 20px 48px rgba(7, 29, 73, .12);
+    }
+
+    #avl-microscope-page .avl-lens-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 25px 30px;
+      background: linear-gradient(90deg, var(--avl-page-soft-blue), var(--avl-page-soft-violet), var(--avl-page-soft-orange));
+      border-top: 6px solid transparent;
+      border-image: linear-gradient(90deg, var(--avl-page-blue), var(--avl-page-teal), var(--avl-page-gold), var(--avl-page-orange)) 1;
+    }
+
+    #avl-microscope-page .avl-lens-title strong {
+      display: block;
+      color: var(--avl-page-navy);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 28px;
+    }
+
+    #avl-microscope-page .avl-lens-title span { color: var(--avl-page-muted); font-size: 12px; }
+
+    #avl-microscope-page .avl-metric-tabs { display: flex; gap: 7px; }
+
+    #avl-microscope-page .avl-metric-tab {
+      min-height: 40px;
+      padding: 8px 14px;
+      border: 1px solid var(--avl-page-line);
+      border-radius: 999px;
+      background: #ffffff;
+      color: var(--avl-page-muted);
+      cursor: pointer;
+      font-weight: 750;
+    }
+
+    #avl-microscope-page .avl-metric-tab[aria-pressed="true"] {
+      border-color: var(--avl-active, var(--avl-page-blue));
+      background: var(--avl-active, var(--avl-page-blue));
+      color: #ffffff;
+      box-shadow: 0 8px 18px color-mix(in srgb, var(--avl-active, var(--avl-page-blue)) 24%, transparent);
+    }
+
+    #avl-microscope-page .avl-lens-summary {
+      display: grid;
+      grid-template-columns: 1fr minmax(190px, .72fr) 1fr;
+      min-height: 150px;
+      border-block: 1px solid var(--avl-page-line);
+    }
+
+    #avl-microscope-page .avl-extreme,
+    #avl-microscope-page .avl-gap {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 24px 30px;
+    }
+
+    #avl-microscope-page .avl-extreme.cool { background: linear-gradient(130deg, var(--avl-page-soft-blue), #ffffff); }
+    #avl-microscope-page .avl-extreme.warm { align-items: flex-end; background: linear-gradient(230deg, var(--avl-page-soft-orange), #ffffff); text-align: right; }
+
+    #avl-microscope-page .avl-extreme span,
+    #avl-microscope-page .avl-gap span {
+      color: var(--avl-page-muted);
+      font: 800 9px Arial, sans-serif;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    #avl-microscope-page .avl-extreme strong {
+      margin: 3px 0;
+      color: var(--avl-page-blue);
+      font-size: clamp(42px, 6vw, 64px);
+      letter-spacing: -.06em;
+      line-height: 1;
+    }
+
+    #avl-microscope-page .avl-extreme.warm strong { color: var(--avl-page-orange); }
+    #avl-microscope-page .avl-extreme b { color: var(--avl-page-ink); font-size: 13px; }
+
+    #avl-microscope-page .avl-gap {
+      align-items: center;
+      color: #ffffff;
+      background: linear-gradient(145deg, var(--avl-page-navy), var(--avl-page-violet));
+      text-align: center;
+    }
+
+    #avl-microscope-page .avl-gap span { color: #ffd6b7; }
+    #avl-microscope-page .avl-gap strong { margin: 5px 0 2px; font-size: 54px; letter-spacing: -.06em; line-height: 1; }
+    #avl-microscope-page .avl-gap small { color: #dbe8ff; font-size: 10px; }
+
+    #avl-microscope-page .avl-lens-body {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(280px, .8fr);
+    }
+
+    #avl-microscope-page .avl-cross-section {
+      display: flex;
+      flex-direction: column;
+      min-height: 575px;
+      padding: 30px;
+      background:
+        radial-gradient(circle at 7% 18%, rgba(16, 86, 207, .1), transparent 26%),
+        radial-gradient(circle at 95% 80%, rgba(244, 123, 32, .1), transparent 29%),
+        #fffdf8;
+    }
+
+    #avl-microscope-page .avl-chart-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    #avl-microscope-page .avl-chart-heading strong {
+      color: var(--avl-page-navy);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 24px;
+    }
+
+    #avl-microscope-page .avl-terrain-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 11px;
+      border-radius: 10px;
+      background: var(--avl-page-soft-teal);
+      color: var(--avl-page-teal);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    #avl-microscope-page .avl-axis-head {
+      display: grid;
+      grid-template-columns: 85px 1fr 85px;
+      gap: 10px;
+      align-items: center;
+      margin: 0 0 7px 70px;
+      color: var(--avl-page-muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    #avl-microscope-page .avl-axis-head span:nth-child(2) { color: var(--avl-page-navy); text-align: center; text-transform: uppercase; letter-spacing: .08em; }
+    #avl-microscope-page .avl-axis-head span:last-child { text-align: right; }
+
+    #avl-microscope-page .avl-plot-shell { display: grid; grid-template-columns: 110px minmax(0, 1fr); flex: 1; }
+
+    #avl-microscope-page .avl-y-axis {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 28px 7px 52px 0;
+      color: var(--avl-page-navy);
+      font-size: 18px;
+      font-weight: 800;
+      text-align: right;
+      white-space: nowrap;
+      position: relative;
+    }
+
+    #avl-microscope-page .avl-y-axis::before { content: ""; position: absolute; right: 4px; top: 28px; bottom: 52px; width: 3px; border-radius: 3px; background: #009e9a; opacity: .45; }
+    #avl-microscope-page .avl-y-axis span { position: relative; margin-right: 9px; padding: 6px 8px; border-radius: 8px; background: #e7f7f5; box-shadow: 0 2px 6px rgba(7,29,73,.05); }
+    #avl-microscope-page .avl-elevation-cue { margin: 10px 0 4px; color: var(--avl-page-navy); font-size: 15px; line-height: 1.5; }
+    #avl-microscope-page .avl-elevation-cue strong { color: #008b88; }
+
+    #avl-microscope-page .avl-plot {
+      position: relative;
+      min-height: 410px;
+      height: 100%;
+    }
+
+    #avl-microscope-page .avl-plot-field {
+      position: absolute;
+      inset: 18px 0 36px;
+      overflow: hidden;
+      border: 2px solid color-mix(in srgb, var(--avl-page-blue) 17%, var(--avl-page-line));
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 4% 18%, rgba(16, 86, 207, .22), transparent 34%),
+        radial-gradient(circle at 96% 82%, rgba(244, 123, 32, .24), transparent 34%),
+        linear-gradient(90deg, var(--avl-page-soft-blue), var(--avl-page-soft-violet), var(--avl-page-soft-orange)),
+        repeating-linear-gradient(0deg, transparent 0, transparent 65px, rgba(96, 112, 134, .18) 66px, transparent 67px);
+      box-shadow: inset 0 0 38px rgba(7, 29, 73, .06), 0 14px 30px rgba(7, 29, 73, .08);
+    }
+
+    #avl-microscope-page .avl-mountain-photo {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background-image: url(data:image/jpeg;base64,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);
+      background-position: center bottom;
+      background-size: cover;
+      background-repeat: no-repeat;
+      opacity: .24;
+      filter: saturate(.72) contrast(1.05);
+      pointer-events: none;
+    }
+
+    #avl-microscope-page .avl-plot-field::after {
+      content: '';
+      position: absolute;
+      inset: auto 0 0;
+      height: 7px;
+      background: linear-gradient(90deg, var(--avl-page-blue), var(--avl-page-violet), var(--avl-page-orange));
+    }
+
+    #avl-microscope-page .avl-level-label {
+      position: absolute;
+      z-index: 1;
+      padding: 5px 8px;
+      border-radius: 7px;
+      color: var(--avl-page-navy);
+      background: rgba(255,255,255,.76);
+      box-shadow: 0 4px 12px rgba(7,29,73,.08);
+      font: 800 12px Arial, sans-serif;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    #avl-microscope-page .avl-level-label.high { top: 27px; right: 12px; border-top: 3px solid #009e9a; }
+    #avl-microscope-page .avl-level-label.low { bottom: 47px; left: 12px; border-bottom: 3px solid #009e9a; }
+    #avl-microscope-page .avl-level-label.high::before { content: "↟ "; color: #008b88; }
+    #avl-microscope-page .avl-level-label.low::before { content: "▁ "; color: #008b88; }
+
+    #avl-microscope-page .avl-station {
+      position: absolute;
+      z-index: 2;
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      transform: translateX(-50%);
+      border: 3px solid #ffffff;
+      border-radius: 50%;
+      background: var(--station-color);
+      color: #ffffff;
+      box-shadow: 0 5px 13px rgba(7, 29, 73, .28);
+      cursor: pointer;
+      font: 800 9px Arial, sans-serif;
+      transition: transform .16s ease, box-shadow .16s ease;
+    }
+
+    #avl-microscope-page .avl-station:hover { transform: translateX(-50%) scale(1.12); box-shadow: 0 10px 24px rgba(7, 29, 73, .36); z-index: 5; }
+
+    #avl-microscope-page .avl-station[aria-pressed="true"] {
+      z-index: 6;
+      width: 44px;
+      height: 44px;
+      margin-top: -5px;
+      outline: 5px solid color-mix(in srgb, var(--avl-active, var(--avl-page-orange)) 30%, transparent);
+      box-shadow: 0 11px 26px rgba(7, 29, 73, .34);
+    }
+
+    #avl-microscope-page .avl-selected-reading {
+      position: absolute;
+      z-index: 7;
+      transform: translateX(-50%);
+      color: var(--avl-page-navy);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    #avl-microscope-page .avl-chart-key {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      margin: 5px 0 0 70px;
+      color: var(--avl-page-muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    #avl-microscope-page .avl-chart-key span { display: inline-flex; align-items: center; gap: 7px; }
+    #avl-microscope-page .avl-key-x { width: 20px; height: 4px; background: linear-gradient(90deg, var(--avl-page-blue), var(--avl-page-orange)); }
+    #avl-microscope-page .avl-key-y { width: 4px; height: 16px; background: var(--avl-page-navy); }
+
+    #avl-microscope-page .avl-profile {
+      padding: 30px;
+      color: var(--avl-page-ink);
+      background:
+        radial-gradient(circle at 100% 0, rgba(104, 82, 184, .16), transparent 34%),
+        linear-gradient(160deg, var(--avl-page-soft-blue), var(--avl-page-soft-teal));
+      border-left: 6px solid var(--avl-active, var(--avl-page-orange));
+    }
+
+    #avl-microscope-page .avl-profile-kicker { color: var(--avl-active, var(--avl-page-blue)); font: 800 10px Arial, sans-serif; letter-spacing: .13em; text-transform: uppercase; }
+    #avl-microscope-page .avl-profile h3 { margin: 8px 0 5px; color: var(--avl-page-navy); font-family: Georgia, "Times New Roman", serif; font-size: 28px; line-height: 1.05; }
+    #avl-microscope-page .avl-profile-meta { color: var(--avl-page-muted); font-size: 11px; line-height: 1.45; }
+
+    #avl-microscope-page .avl-profile-reading {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 15px;
+      margin: 22px 0 18px;
+      padding-block: 16px;
+      border-block: 1px solid var(--avl-page-line);
+    }
+
+    #avl-microscope-page .avl-profile-reading strong { color: var(--avl-page-navy); font-size: 48px; letter-spacing: -.06em; line-height: .9; }
+    #avl-microscope-page .avl-profile-reading span { max-width: 125px; color: var(--avl-page-muted); font-size: 10px; font-weight: 700; text-align: right; }
+
+    #avl-microscope-page .avl-profile-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    #avl-microscope-page .avl-profile-fact { padding: 11px; border-radius: 11px; background: rgba(255, 255, 255, .74); }
+    #avl-microscope-page .avl-profile-fact span { display: block; color: var(--avl-page-muted); font: 800 8px Arial, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    #avl-microscope-page .avl-profile-fact strong { display: block; margin-top: 4px; color: var(--avl-page-navy); font-size: 12px; }
+
+    #avl-microscope-page .avl-compare-note {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 13px;
+      background: linear-gradient(135deg, #ffffff, var(--avl-page-soft-orange));
+      color: var(--avl-page-orange);
+      box-shadow: 0 8px 20px rgba(7, 29, 73, .07);
+    }
+
+    #avl-microscope-page .avl-compare-note span { display: block; font: 800 9px Arial, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    #avl-microscope-page .avl-compare-note strong { display: block; margin-top: 5px; color: var(--avl-page-ink); font-size: 11px; line-height: 1.45; }
+
+    #avl-microscope-page .avl-event-layer {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: center;
+      margin-bottom: 36px;
+      padding: 22px 24px;
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 84% 20%, rgba(0, 159, 152, .22), transparent 28%),
+        linear-gradient(135deg, #082655, #0b4473);
+      color: #ffffff;
+      box-shadow: 0 16px 34px rgba(7, 29, 73, .16);
+    }
+
+    #avl-microscope-page .avl-event-icon { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; background: rgba(255, 255, 255, .12); color: #75dfc5; }
+    #avl-microscope-page .avl-event-copy span { color: #75dfc5; font: 800 9px Arial, sans-serif; letter-spacing: .13em; text-transform: uppercase; }
+    #avl-microscope-page .avl-event-copy strong { display: block; margin-top: 4px; font-family: Georgia, "Times New Roman", serif; font-size: 20px; }
+    #avl-microscope-page .avl-event-copy p { margin: 4px 0 0; color: #dbe8ff; font-size: 11px; line-height: 1.4; }
+    #avl-microscope-page .avl-event-status { padding: 9px 12px; border-radius: 999px; background: rgba(117, 223, 197, .14); color: #b8f3e5; font-size: 10px; font-weight: 800; white-space: nowrap; }
+
+    #avl-microscope-page .avl-regional-card {
+      overflow: hidden;
+      margin-bottom: 38px;
+      border-radius: 24px;
+      color: #ffffff;
+      background:
+        radial-gradient(circle at 50% 48%, rgba(0,159,152,.28), transparent 18%),
+        radial-gradient(circle at 15% 82%, rgba(244,123,32,.28), transparent 30%),
+        linear-gradient(145deg, #071d49, #123b7b 55%, #4a378e);
+      box-shadow: 0 20px 46px rgba(7,29,73,.18);
+    }
+
+    #avl-microscope-page .avl-regional-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 28px 30px 18px;
+      border-bottom: 1px solid rgba(255,255,255,.14);
+    }
+
+    #avl-microscope-page .avl-regional-head h2 {
+      margin: 6px 0 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(28px,4vw,40px);
+      line-height: 1;
+    }
+
+    #avl-microscope-page .avl-regional-head p {
+      max-width: 470px;
+      margin: 0;
+      padding: 14px 16px;
+      border-left: 4px solid var(--avl-page-orange);
+      border-radius: 10px;
+      color: #ffffff;
+      background: rgba(255,255,255,.1);
+      box-shadow: 0 8px 24px rgba(0,0,0,.15);
+      font-size: 14px;
+      font-weight: 650;
+      line-height: 1.5;
+      text-align: left;
+    }
+
+    #avl-microscope-page .avl-regional-head p strong { color: #ffd6b7; font-size: 16px; }
+
+    #avl-microscope-page .avl-corridor-compass {
+      position: relative;
+      min-height: 620px;
+      padding: 36px;
+      background:
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    #avl-microscope-page .avl-corridor-line {
+      position: absolute;
+      z-index: 1;
+      border-radius: 999px;
+      opacity: .8;
+    }
+
+    #avl-microscope-page .avl-corridor-line.vertical { left: calc(50% - 4px); top: 48px; bottom: 48px; width: 8px; background: linear-gradient(#75dfc5, rgba(255,255,255,.18) 48%, #f2b640); }
+    #avl-microscope-page .avl-corridor-line.horizontal { top: calc(50% - 4px); left: 54px; right: 54px; height: 8px; background: linear-gradient(90deg, #8b70d3, rgba(255,255,255,.18) 48%, #f47b20); }
+
+    #avl-microscope-page .avl-asheville-core {
+      position: absolute;
+      z-index: 6;
+      left: 50%;
+      top: 50%;
+      display: grid;
+      place-items: center;
+      width: 100px;
+      height: 100px;
+      padding: 12px;
+      transform: translate(-50%,-50%);
+      border: 5px solid rgba(255,255,255,.92);
+      border-radius: 50%;
+      color: var(--avl-page-navy);
+      background: radial-gradient(circle at 35% 25%, #ffffff, #dfeaff);
+      box-shadow: 0 0 0 8px rgba(255,255,255,.1), 0 14px 32px rgba(0,0,0,.3);
+      text-align: center;
+    }
+
+    #avl-microscope-page .avl-asheville-core > div {
+      display: flex;
+      width: 100%;
+      min-width: 0;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    #avl-microscope-page .avl-asheville-core strong { display: block; font-family: Georgia,"Times New Roman",serif; font-size: 19px; line-height: .95; }
+    #avl-microscope-page .avl-asheville-core span { display: block; width: 100%; margin-top: 6px; color: var(--avl-page-blue); font: 800 7px/1.35 Arial,sans-serif; letter-spacing: .09em; text-align: center; text-transform: uppercase; }
+
+    #avl-microscope-page .avl-regional-insight {
+      position: absolute;
+      z-index: 2;
+      width: min(255px, 28%);
+      padding: 12px 14px;
+      border-left: 3px solid var(--insight-color, #75dfc5);
+      border-radius: 10px;
+      color: #e8f2ff;
+      background: rgba(3,17,48,.42);
+      box-shadow: 0 10px 26px rgba(0,0,0,.16);
+      backdrop-filter: blur(6px);
+    }
+
+    #avl-microscope-page .avl-regional-insight span { display: block; margin-bottom: 4px; color: var(--insight-color, #75dfc5); font: 800 9px Arial,sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+    #avl-microscope-page .avl-regional-insight strong { display: block; font-size: 12px; line-height: 1.4; }
+    #avl-microscope-page .avl-regional-insight.north-read { top: 26px; left: 28px; --insight-color: #75dfc5; }
+    #avl-microscope-page .avl-regional-insight.east-read { top: 26px; right: 28px; --insight-color: #ffd6b7; }
+    #avl-microscope-page .avl-regional-insight.west-read { bottom: 26px; left: 28px; --insight-color: #c9bcff; }
+    #avl-microscope-page .avl-regional-insight.south-read { right: 28px; bottom: 26px; --insight-color: #f7ca70; }
+
+    #avl-microscope-page .avl-corridor {
+      position: absolute;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    #avl-microscope-page .avl-corridor.north { left: 50%; top: 35px; flex-direction: column-reverse; transform: translateX(-50%); }
+    #avl-microscope-page .avl-corridor.south { left: 50%; bottom: 35px; flex-direction: column; transform: translateX(-50%); }
+    #avl-microscope-page .avl-corridor.west { left: 34px; top: 50%; transform: translateY(-50%); }
+    #avl-microscope-page .avl-corridor.east { right: 34px; top: 50%; transform: translateY(-50%); }
+
+    #avl-microscope-page .avl-corridor-place {
+      position: relative;
+      z-index: 3;
+      display: grid;
+      place-items: center;
+      min-width: 102px;
+      min-height: 68px;
+      padding: 10px 13px;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 13px;
+      background: rgba(255,255,255,.1);
+      box-shadow: 0 8px 20px rgba(0,0,0,.14);
+      backdrop-filter: blur(7px);
+      text-align: center;
+      transform: translateZ(0);
+      transition: transform .18s ease, background .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+
+    #avl-microscope-page .avl-corridor-place:hover {
+      z-index: 12;
+      transform: scale(1.18);
+      border-color: rgba(255,255,255,.72);
+      background: rgba(255,255,255,.2);
+      box-shadow: 0 20px 42px rgba(0,0,0,.36), 0 0 0 5px rgba(255,255,255,.08);
+    }
+
+    #avl-microscope-page .avl-corridor-place.inner { border-color: rgba(117,223,197,.72); background: rgba(0,159,152,.24); }
+    #avl-microscope-page .avl-corridor-place strong { font-size: 13px; line-height: 1.1; }
+    #avl-microscope-page .avl-place-reading { display: flex; align-items: baseline; justify-content: center; gap: 5px; margin-top: 7px; white-space: nowrap; }
+    #avl-microscope-page .avl-place-reading b { color: #ffe0c8; font-size: 22px; line-height: 1; text-shadow: 0 2px 12px rgba(244,123,32,.42); }
+    #avl-microscope-page .avl-place-reading small { color: #ffffff; font-size: 11px; font-weight: 800; }
+    #avl-microscope-page .avl-corridor-place.inner .avl-place-reading b { color: #b8f3e5; text-shadow: 0 2px 10px rgba(0,159,152,.42); }
+
+    #avl-microscope-page .avl-corridor-label {
+      position: absolute;
+      z-index: 2;
+      color: #ffd6b7;
+      font: 800 9px Arial,sans-serif;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    #avl-microscope-page .avl-corridor-label.north { left: calc(50% + 84px); top: 56px; }
+    #avl-microscope-page .avl-corridor-label.south { left: calc(50% + 84px); bottom: 56px; }
+    #avl-microscope-page .avl-corridor-label.west { left: 55px; top: calc(50% + 52px); }
+    #avl-microscope-page .avl-corridor-label.east { right: 55px; top: calc(50% + 52px); }
+
+    #avl-microscope-page .avl-regional-card[data-emphasis="inner"] .avl-corridor-place:not(.inner) { opacity: .38; }
+    #avl-microscope-page .avl-regional-card[data-emphasis="inner"] .avl-corridor-line { opacity: .35; }
+    #avl-microscope-page .avl-regional-card[data-emphasis="corridors"] .avl-corridor-place.inner { box-shadow: 0 0 0 4px rgba(117,223,197,.16), 0 8px 20px rgba(0,0,0,.14); }
+
+    #avl-microscope-page .avl-regional-key { display: flex; justify-content: center; gap: 28px; padding: 19px 22px 24px; color: #ffffff; background: rgba(3,17,48,.18); font-size: 14px; font-weight: 700; }
+    #avl-microscope-page .avl-regional-key span { display: inline-flex; align-items: center; gap: 10px; }
+    #avl-microscope-page .avl-regional-key i { width: 16px; height: 16px; border-radius: 5px; background: rgba(255,255,255,.2); box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
+    #avl-microscope-page .avl-regional-key .inner { background: var(--avl-page-teal); }
+
+    #avl-microscope-page .avl-deeper-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 18px; margin-bottom: 36px; }
+
+    #avl-microscope-page .avl-context-panel {
+      padding: 26px;
+      border: 1px solid var(--avl-page-line);
+      border-radius: 20px;
+      background: #ffffff;
+      box-shadow: 0 14px 34px rgba(7, 29, 73, .08);
+    }
+
+    #avl-microscope-page .avl-context-panel h3 { margin: 7px 0 8px; color: var(--avl-page-navy); font-family: Georgia, "Times New Roman", serif; font-size: 26px; line-height: 1.08; }
+    #avl-microscope-page .avl-context-panel > p { margin: 0; color: var(--avl-page-muted); font-size: 12px; line-height: 1.5; }
+
+    #avl-microscope-page .avl-pair {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 13px;
+      align-items: center;
+      margin-top: 20px;
+    }
+
+    #avl-microscope-page .avl-pair-station { padding: 16px; border-radius: 14px; }
+    #avl-microscope-page .avl-pair-station.cool { background: var(--avl-page-soft-teal); }
+    #avl-microscope-page .avl-pair-station.warm { background: var(--avl-page-soft-orange); text-align: right; }
+    #avl-microscope-page .avl-pair-station span { color: var(--avl-page-muted); font-size: 10px; }
+    #avl-microscope-page .avl-pair-station strong { display: block; margin: 4px 0; color: var(--avl-page-navy); font-size: 30px; }
+    #avl-microscope-page .avl-pair-station b { display: block; color: var(--avl-page-ink); font-size: 11px; }
+    #avl-microscope-page .avl-pair-vs { color: var(--avl-page-violet); font-size: 11px; font-weight: 900; }
+
+    #avl-microscope-page .avl-pair-line {
+      position: relative;
+      grid-column: 1 / -1;
+      height: 44px;
+      margin: -5px 20px -8px;
+    }
+
+    #avl-microscope-page .avl-pair-line::before {
+      content: '';
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      top: 20px;
+      height: 7px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--avl-page-teal), var(--avl-page-violet), var(--avl-page-orange));
+    }
+
+    #avl-microscope-page .avl-pair-line i {
+      position: absolute;
+      top: 10px;
+      width: 27px;
+      height: 27px;
+      border: 5px solid #ffffff;
+      border-radius: 50%;
+      box-shadow: 0 3px 10px rgba(7,29,73,.2);
+    }
+
+    #avl-microscope-page .avl-pair-line i:first-child { left: 0; background: var(--avl-page-teal); }
+    #avl-microscope-page .avl-pair-line i:last-child { right: 0; background: var(--avl-page-orange); }
+
+    #avl-microscope-page .avl-evidence-list { display: grid; gap: 13px; margin-top: 20px; }
+    #avl-microscope-page .avl-evidence-row { display: grid; grid-template-columns: 92px minmax(0, 1fr) 58px; gap: 10px; align-items: center; font-size: 10px; font-weight: 800; }
+    #avl-microscope-page .avl-evidence-row > span { color: var(--avl-page-muted); }
+    #avl-microscope-page .avl-evidence-row > strong { color: var(--avl-page-navy); text-align: right; }
+    #avl-microscope-page .avl-evidence-track { height: 9px; overflow: hidden; border-radius: 999px; background: var(--avl-page-soft-blue); }
+    #avl-microscope-page .avl-evidence-track i { display: block; height: 100%; width: var(--evidence-width); border-radius: inherit; background: var(--evidence-color); }
+
+    #avl-microscope-page .avl-signals {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin: 14px 0 0;
+    }
+
+    #avl-microscope-page .avl-signal {
+      min-height: 128px;
+      padding: 19px 21px;
+      border-radius: 18px;
+      color: var(--avl-page-ink);
+      box-shadow: 0 12px 28px rgba(7, 29, 73, .08);
+    }
+
+    #avl-microscope-page .avl-signal.moisture { background: linear-gradient(145deg, var(--avl-page-soft-violet), #ffffff); border-top: 5px solid var(--avl-page-violet); }
+    #avl-microscope-page .avl-signal.wind { background: linear-gradient(145deg, var(--avl-page-soft-teal), #ffffff); border-top: 5px solid var(--avl-page-teal); }
+    #avl-microscope-page .avl-signal.rain { background: linear-gradient(145deg, var(--avl-page-soft-blue), #ffffff); border-top: 5px solid var(--avl-page-blue); }
+    #avl-microscope-page .avl-signal.sun { background: linear-gradient(145deg, #fff7dc, #ffffff); border-top: 5px solid var(--avl-page-gold); }
+    #avl-microscope-page .avl-signal span { color: var(--avl-page-muted); font: 800 9px Arial, sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+    #avl-microscope-page .avl-signal strong { display: block; margin: 8px 0 5px; color: var(--avl-page-navy); font-family: Georgia, "Times New Roman", serif; font-size: 19px; line-height: 1.15; }
+    #avl-microscope-page .avl-signal p { margin: 0; color: var(--avl-page-muted); font-size: 11px; line-height: 1.45; }
+
+    #avl-microscope-page .avl-network-footer {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 22px;
+      align-items: center;
+      padding: 24px 28px;
+      border-radius: 18px;
+      background: var(--avl-page-soft-blue);
+      border: 1px solid var(--avl-page-line);
+    }
+
+    #avl-microscope-page .avl-network-footer strong { display: block; color: var(--avl-page-navy); font-family: Georgia, "Times New Roman", serif; font-size: 20px; }
+    #avl-microscope-page .avl-network-footer p { margin: 5px 0 0; color: var(--avl-page-muted); font-size: 11px; line-height: 1.45; }
+    #avl-microscope-page .avl-network-counts { display: flex; gap: 9px; }
+    #avl-microscope-page .avl-network-count { min-width: 82px; padding: 11px; border-radius: 12px; background: #ffffff; text-align: center; }
+    #avl-microscope-page .avl-network-count b { display: block; color: var(--avl-page-navy); font-size: 22px; }
+    #avl-microscope-page .avl-network-count span { color: var(--avl-page-muted); font-size: 9px; font-weight: 800; text-transform: uppercase; }
+
+    #avl-microscope-page .avl-page-footer { display: flex; justify-content: space-between; gap: 20px; padding: 16px 34px; color: #cbd8ef; background: var(--avl-page-navy); font-size: 10px; }
+    #avl-microscope-page .avl-page-footer strong { color: #ffd6b7; }
+
+    @media (max-width: 900px) {
+      #avl-microscope-page .avl-page-hero { grid-template-columns: 1fr; }
+      #avl-microscope-page .avl-hero-reading { max-width: 340px; }
+      #avl-microscope-page .avl-now-grid { grid-template-columns: 1fr 1fr; }
+      #avl-microscope-page .avl-now-story.primary { grid-column: 1 / -1; }
+      #avl-microscope-page .avl-footprint-grid { grid-template-columns: 1fr; }
+      #avl-microscope-page .avl-footprint-focus { border-top: 1px solid rgba(255,255,255,.16); border-left: 0; }
+      #avl-microscope-page .avl-lens-head { align-items: flex-start; flex-direction: column; }
+      #avl-microscope-page .avl-lens-body { grid-template-columns: 1fr; }
+      #avl-microscope-page .avl-profile { border-top: 6px solid var(--avl-active, var(--avl-page-orange)); border-left: 0; }
+      #avl-microscope-page .avl-deeper-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 620px) {
+      #avl-microscope-page .avl-page-shell { border-radius: 18px; }
+      #avl-microscope-page .avl-sitebar { padding: 12px 18px; }
+      #avl-microscope-page .avl-sitebar-status span:last-child { display: none; }
+      #avl-microscope-page .avl-page-hero { padding: 38px 22px 34px; }
+      #avl-microscope-page .avl-page-content { padding: 28px 18px 34px; }
+      #avl-microscope-page .avl-briefing { margin: -4px -6px 30px; padding: 20px 14px; border-radius: 22px; }
+      #avl-microscope-page .avl-section-head { display: block; }
+      #avl-microscope-page .avl-section-note { margin-top: 8px; text-align: left; }
+      #avl-microscope-page .avl-now-grid,
+      #avl-microscope-page .avl-signals { grid-template-columns: 1fr; }
+      #avl-microscope-page .avl-now-story.primary { grid-column: auto; }
+      #avl-microscope-page .avl-footprint-head { display: block; padding: 23px 20px 17px; }
+      #avl-microscope-page .avl-footprint-head p { margin-top: 9px; text-align: left; }
+      #avl-microscope-page .avl-map-note { display: grid; grid-template-columns: 1fr; gap: 9px; margin-top: 15px; }
+      #avl-microscope-page .avl-map-note-title { grid-row: auto; }
+      #avl-microscope-page .avl-map-scale { grid-column: 1; }
+      #avl-microscope-page .avl-footprint-map { min-height: 360px; }
+      #avl-microscope-page .avl-footprint-focus { padding: 24px 20px; }
+      #avl-microscope-page .avl-metric-tabs { width: 100%; overflow-x: auto; }
+      #avl-microscope-page .avl-lens-head,
+      #avl-microscope-page .avl-cross-section,
+      #avl-microscope-page .avl-profile { padding: 22px 18px; }
+      #avl-microscope-page .avl-lens-summary { grid-template-columns: 1fr 1fr; }
+      #avl-microscope-page .avl-gap { grid-column: 1 / -1; grid-row: 1; min-height: 115px; }
+      #avl-microscope-page .avl-extreme { padding: 18px; }
+      #avl-microscope-page .avl-axis-head { grid-template-columns: 70px 1fr 70px; margin-left: 40px; }
+      #avl-microscope-page .avl-axis-head span:nth-child(2) { display: none; }
+      #avl-microscope-page .avl-axis-head span:last-child { grid-column: 3; }
+      #avl-microscope-page .avl-plot-shell { grid-template-columns: 82px minmax(0, 1fr); }
+      #avl-microscope-page .avl-y-axis { font-size: 13px; }
+      #avl-microscope-page .avl-y-axis span { padding: 5px 3px; }
+      #avl-microscope-page .avl-plot { height: 270px; }
+      #avl-microscope-page .avl-chart-key { margin-left: 40px; }
+      #avl-microscope-page .avl-event-layer { grid-template-columns: auto 1fr; }
+      #avl-microscope-page .avl-event-status { grid-column: 2; justify-self: start; }
+      #avl-microscope-page .avl-regional-head { display: block; padding: 23px 20px 17px; }
+      #avl-microscope-page .avl-regional-head p { margin-top: 9px; text-align: left; }
+      #avl-microscope-page .avl-corridor-compass { min-height: 760px; padding: 20px; }
+      #avl-microscope-page .avl-asheville-core { width: 86px; height: 86px; }
+      #avl-microscope-page .avl-corridor-place { min-width: 72px; padding: 8px; }
+      #avl-microscope-page .avl-place-reading { flex-direction: column; gap: 2px; }
+      #avl-microscope-page .avl-place-reading b { font-size: 18px; }
+      #avl-microscope-page .avl-regional-insight { display: none; }
+      #avl-microscope-page .avl-corridor.west { left: 10px; }
+      #avl-microscope-page .avl-corridor.east { right: 10px; }
+      #avl-microscope-page .avl-corridor-label { display: none; }
+      #avl-microscope-page .avl-pair { grid-template-columns: 1fr; }
+      #avl-microscope-page .avl-pair-vs { text-align: center; }
+      #avl-microscope-page .avl-pair-station.warm { text-align: left; }
+      #avl-microscope-page .avl-network-footer { grid-template-columns: 1fr; }
+      #avl-microscope-page .avl-network-counts { flex-wrap: wrap; }
+      #avl-microscope-page .avl-page-footer { align-items: flex-start; padding: 14px 18px; }
+      #avl-microscope-page .avl-page-footer span:last-child { text-align: right; }
+    }
+  </style>
+
+  <div class="avl-page-shell">
+    <div class="avl-sitebar">
+      <a class="avl-brand" href="/" aria-label="828 Weather Direct home"><span class="avl-brand-mark">828</span><span>Weather Direct</span></a>
+      <div class="avl-sitebar-status" id="avl-live-status" aria-live="polite"><span class="avl-live-dot"></span><strong>27 of 30 stations reporting</strong><span>· last update 10:02 AM</span></div>
+      <a class="avl-sitebar-home" href="/">Back to home</a>
+    </div>
+
+    <header class="avl-page-hero">
+      <div>
+        <div class="avl-eyebrow">Neighborhood observations · Asheville, North Carolina</div>
+        <h1>Asheville Under the Microscope</h1>
+        <p>One city, many microclimates. See how elevation, exposure, shade, and neighborhood geography are shaping the weather people are actually experiencing.</p>
+      </div>
+      <div class="avl-hero-reading">
+        <span>Right now across Asheville</span>
+        <strong>11.4°</strong>
+        <small>separates the coolest and warmest reporting neighborhoods</small>
+      </div>
+    </header>
+
+    <main class="avl-page-content">
+      <section class="avl-briefing" aria-labelledby="avl-now-title">
+        <div class="avl-section-head">
+          <div><div class="avl-section-kicker">Your six-signal briefing</div><h2 id="avl-now-title">Asheville right now</h2></div>
+          <div class="avl-section-note">Temperature, rain, terrain, exposure, moisture, and wind—screened for freshness and condensed into one quick read.</div>
+        </div>
+        <div class="avl-now-grid">
+          <article class="avl-now-story primary">
+            <div class="avl-now-label"><i data-lucide="sparkles" aria-hidden="true"></i>Lead story</div>
+            <strong>Sand Hill is 11.4° warmer than UNC Asheville.</strong>
+            <p>At 10:02 AM, Asheville ranges from 72.7° at the unobstructed UNC tower to 84.1° in the Sand Hill community.</p>
+          </article>
+          <article class="avl-now-story terrain">
+            <div class="avl-now-label"><i data-lucide="mountain" aria-hidden="true"></i>Terrain signal</div>
+            <strong>The three highest stations average 3.5° cooler.</strong>
+            <p>They average 75.7°, compared with 79.2° at the three lowest reporting elevations.</p>
+          </article>
+          <article class="avl-now-story exposure">
+            <div class="avl-now-label"><i data-lucide="trees" aria-hidden="true"></i>Exposure clue</div>
+            <strong>Nearly identical elevation. A 5.3° difference.</strong>
+            <p>Sand Hill and West Asheville are only one vertical foot apart, putting neighborhood exposure in sharp focus.</p>
+          </article>
+        </div>
+        <div class="avl-signals" aria-label="Additional current Asheville weather signals">
+          <article class="avl-signal rain"><span>Rain footprint</span><strong>No active rain signal across reporting stations.</strong><p>The precipitation layer is watching for localized wet pockets.</p></article>
+          <article class="avl-signal moisture"><span>Moisture pocket</span><strong>River Arts District has the highest core dew point.</strong><p>Its 75.9° dew point is 7.1° above the open UNC Asheville tower.</p></article>
+          <article class="avl-signal wind"><span>Wind exposure</span><strong>West Asheville owns the morning breeze.</strong><p>Its 4.7 mph sustained wind leads a core network where several sheltered stations remain calm.</p></article>
+        </div>
+      </section>
+
+      <section class="avl-footprint" aria-labelledby="avl-footprint-title">
+        <div class="avl-footprint-head">
+          <div><div class="avl-section-kicker">15 current neighborhood stations</div><h2 id="avl-footprint-title">Asheville temperatures, neighborhood by neighborhood.</h2></div>
+          <p><strong>Simplified neighborhood layout—not to scale</strong>Each circle represents a weather station in its general part of Asheville. Spacing is adjusted for readability; positions are not exact. Blue circles are cooler, orange circles are warmer. Select one for its reading and local setting.</p>
+          <div class="avl-map-note">
+            <div class="avl-map-note-title"><span>Temperature key</span><strong>Circle color = observed temperature</strong></div>
+            <i class="avl-map-gradient"></i>
+            <div class="avl-map-scale"><span><b>72.7°</b> coolest</span><span>78.4° midpoint</span><span>warmest <b>84.1°</b></span></div>
+          </div>
+        </div>
+        <div class="avl-footprint-grid">
+          <div class="avl-footprint-map" id="avl-footprint-map" aria-label="Relative geographic footprint of Asheville reporting stations">
+            <svg viewBox="0 0 800 430" preserveAspectRatio="none" aria-hidden="true">
+              <path class="avl-contour" d="M-30 71 C95 7 165 131 277 74 S481 18 603 76 S742 121 846 54"/>
+              <path class="avl-contour" d="M-50 111 C62 52 159 163 274 113 S475 57 595 117 S743 151 850 92"/>
+              <path class="avl-contour" d="M-44 164 C81 95 183 207 295 157 S493 110 612 169 S747 200 849 143"/>
+              <path class="avl-contour" d="M-39 218 C81 150 175 257 302 215 S496 163 627 221 S758 251 849 199"/>
+              <path class="avl-contour" d="M-45 276 C72 207 189 320 301 272 S507 221 623 281 S762 307 849 257"/>
+              <path class="avl-contour" d="M-32 337 C87 267 182 372 301 331 S505 278 631 340 S750 363 842 316"/>
+              <path class="avl-river-line" d="M430 -20 C400 68 474 105 430 175 S391 291 443 450"/>
+            </svg>
+            <span class="avl-footprint-direction north">N · North Asheville</span>
+            <span class="avl-footprint-direction west">W · West Asheville</span>
+            <span class="avl-footprint-direction east">E · East Asheville</span>
+            <span class="avl-footprint-direction south">S · South Asheville</span>
+          </div>
+          <aside class="avl-footprint-focus" aria-live="polite">
+            <span>Neighborhood in focus</span>
+            <h3 id="avl-footprint-name">West Asheville</h3>
+            <p id="avl-footprint-setting">Residential · 2,174 ft</p>
+            <div class="avl-footprint-reading" id="avl-footprint-reading">78.8°</div>
+            <div class="avl-footprint-delta" id="avl-footprint-delta">6.1° warmer than the coolest reporting neighborhood</div>
+            <div class="avl-temp-ruler" id="avl-temp-ruler"><i></i></div>
+            <div class="avl-ruler-labels"><span>72.7° cool edge</span><span>84.1° warm edge</span></div>
+            <div class="avl-visual-clues">
+              <div class="avl-visual-clue"><i data-lucide="mountain" aria-hidden="true"></i><span id="avl-footprint-elevation">2,174 ft above sea level</span></div>
+              <div class="avl-visual-clue"><i data-lucide="trees" aria-hidden="true"></i><span id="avl-footprint-exposure">Residential exposure</span></div>
+              <div class="avl-visual-clue"><i data-lucide="map-pin" aria-hidden="true"></i><span id="avl-footprint-area">West Asheville</span></div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="avl-lens" aria-labelledby="avl-lens-title">
+        <div class="avl-lens-head">
+          <div class="avl-lens-title"><strong id="avl-lens-title">The neighborhood cross-section</strong><span>Choose a weather signal, then select any station for its local context.</span></div>
+          <div class="avl-metric-tabs" role="group" aria-label="Weather signal">
+            <button type="button" class="avl-metric-tab" data-metric="temperature" aria-pressed="true">Temperature</button>
+            <button type="button" class="avl-metric-tab" data-metric="dewpoint" aria-pressed="false">Dew point</button>
+            <button type="button" class="avl-metric-tab" data-metric="wind" aria-pressed="false">Wind</button>
+          </div>
+        </div>
+
+        <div class="avl-lens-summary">
+          <div class="avl-extreme cool"><span id="avl-low-label">Coolest</span><strong id="avl-low-value">72.7°</strong><b id="avl-low-name">UNC Asheville</b></div>
+          <div class="avl-gap"><span id="avl-gap-label">Citywide gap</span><strong id="avl-gap-value">11.4°</strong><small>between reporting neighborhoods</small></div>
+          <div class="avl-extreme warm"><span id="avl-high-label">Warmest</span><strong id="avl-high-value">84.1°</strong><b id="avl-high-name">Sand Hill</b></div>
+        </div>
+
+        <div class="avl-lens-body">
+          <div class="avl-cross-section">
+            <div class="avl-chart-heading"><strong>Does higher ground feel different?</strong><span class="avl-terrain-badge"><i data-lucide="mountain" aria-hidden="true"></i>257 ft of reporting terrain</span></div>
+            <div class="avl-axis-head"><span id="avl-axis-low">72.7°F</span><span id="avl-axis-name">Observed temperature →</span><span id="avl-axis-high">84.1°F</span></div>
+            <div class="avl-plot-shell">
+              <div class="avl-y-axis" aria-hidden="true"><span>2,357 ft</span><span>2,229 ft</span><span>2,100 ft</span></div>
+              <div class="avl-plot" id="avl-page-plot" aria-label="Reporting stations plotted by selected weather signal and elevation">
+                <div class="avl-plot-field"><div class="avl-mountain-photo" aria-hidden="true"></div></div>
+                <span class="avl-level-label high">Higher ground</span>
+                <span class="avl-level-label low">Valley floor</span>
+              </div>
+            </div>
+            <p class="avl-elevation-cue"><strong>Compare vertically:</strong> higher bubbles sit at higher elevations. The feet labels show height above sea level; the terrain badge shows the total elevation difference—not a temperature effect.</p>
+            <div class="avl-chart-key"><span><i class="avl-key-x"></i>Left → right: selected signal</span><span><i class="avl-key-y"></i>Top → bottom: elevation</span></div>
+          </div>
+
+          <aside class="avl-profile" aria-label="Selected station profile" aria-live="polite">
+            <div class="avl-profile-kicker">Station microscope</div>
+            <h3 id="avl-profile-name">West Asheville</h3>
+            <div class="avl-profile-meta" id="avl-profile-meta">Residential · 2,174 ft · Weather Underground · fresh</div>
+            <div class="avl-profile-reading"><strong id="avl-profile-reading">78.8°F</strong><span id="avl-profile-delta">compared with the overall elevation pattern</span></div>
+            <div class="avl-profile-facts">
+              <div class="avl-profile-fact"><span>Dew point</span><strong id="avl-profile-dew">71.8°F</strong></div>
+              <div class="avl-profile-fact"><span>Wind</span><strong id="avl-profile-wind">4.7 mph</strong></div>
+              <div class="avl-profile-fact"><span>Solar</span><strong id="avl-profile-solar">116 W/m²</strong></div>
+              <div class="avl-profile-fact"><span>Elevation</span><strong id="avl-profile-elevation">2,174 ft</strong></div>
+            </div>
+            <div class="avl-compare-note"><span>Closest elevation match</span><strong id="avl-profile-compare">Only 1 ft separates this station from Sand Hill, but their temperatures differ by 5.3°.</strong></div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="avl-event-layer" aria-label="Event-aware precipitation layer" aria-live="polite">
+        <div class="avl-event-icon"><i data-lucide="cloud-rain" aria-hidden="true"></i></div>
+        <div class="avl-event-copy"><span>Event-aware layer</span><strong>A light rain signal has appeared south of Asheville.</strong><p>Hendersonville is reporting 0.01 in/hr and 0.01 in today while the other 24 rate-reporting stations remain dry.</p></div>
+        <div class="avl-event-status">1 of 25 wet</div>
+      </section>
+
+      <section class="avl-regional-card" id="avl-regional-card" data-emphasis="corridors" aria-labelledby="avl-regional-title">
+        <div class="avl-regional-head">
+          <div><div class="avl-section-kicker">Beyond Asheville</div><h2 id="avl-regional-title">Four ways weather enters the mountains.</h2></div>
+          <p><strong>11.4° regional spread:</strong> UNC Asheville is coolest at 72.7° while Sand Hill is warmest at 84.1°. The city itself owns both regional bookends right now.</p>
+        </div>
+        <div class="avl-corridor-compass" role="img" aria-label="Asheville at center, surrounded by Woodfin, Swannanoa, Arden, and Candler, then north, east, south, and west mountain corridors">
+          <div class="avl-corridor-line vertical"></div>
+          <div class="avl-corridor-line horizontal"></div>
+          <div class="avl-asheville-core"><div><strong>Asheville</strong><span>Neighborhood microscope</span></div></div>
+
+          <div class="avl-regional-insight north-read"><span>North read</span><strong>Weaverville is 4.3° warmer than Woodfin, despite only 18 feet of elevation difference.</strong></div>
+          <div class="avl-regional-insight east-read"><span>East read</span><strong>Old Fort is 7.1° warmer than Black Mountain while sitting 1,130 feet lower.</strong></div>
+          <div class="avl-regional-insight west-read"><span>West read</span><strong>Waynesville nearly matches Candler while sitting 611 feet higher; Canton is the cool pocket.</strong></div>
+          <div class="avl-regional-insight south-read"><span>South read</span><strong>Fletcher is 4.1° warmer than Arden, while Arden and Hendersonville are only 0.4° apart.</strong></div>
+
+          <div class="avl-corridor north">
+            <div class="avl-corridor-place inner"><strong>Woodfin</strong><span class="avl-place-reading"><b>77.4°</b><small>2,089 ft</small></span></div>
+            <div class="avl-corridor-place"><strong>Weaverville</strong><span class="avl-place-reading"><b>81.7°</b><small>2,107 ft</small></span></div>
+            <div class="avl-corridor-place"><strong>Mars Hill</strong><span class="avl-place-reading"><b>79.3°</b><small>2,329 ft</small></span></div>
+          </div>
+          <span class="avl-corridor-label north">North corridor</span>
+
+          <div class="avl-corridor east">
+            <div class="avl-corridor-place inner"><strong>Swannanoa</strong><span class="avl-place-reading"><b>77.4°</b><small>2,182 ft</small></span></div>
+            <div class="avl-corridor-place"><strong>Black Mountain</strong><span class="avl-place-reading"><b>75.7°</b><small>2,574 ft</small></span></div>
+            <div class="avl-corridor-place"><strong>Old Fort</strong><span class="avl-place-reading"><b>82.8°</b><small>1,444 ft</small></span></div>
+          </div>
+          <span class="avl-corridor-label east">East corridor</span>
+
+          <div class="avl-corridor south">
+            <div class="avl-corridor-place inner"><strong>Arden</strong><span class="avl-place-reading"><b>77.9°</b><small>2,295 ft</small></span></div>
+            <div class="avl-corridor-place"><strong>Fletcher</strong><span class="avl-place-reading"><b>82.0°</b><small>2,067 ft</small></span></div>
+            <div class="avl-corridor-place"><strong>Hendersonville</strong><span class="avl-place-reading"><b>78.3°</b><small>2,200 ft</small></span></div>
+          </div>
+          <span class="avl-corridor-label south">South corridor</span>
+
+          <div class="avl-corridor west">
+            <div class="avl-corridor-place"><strong>Waynesville</strong><span class="avl-place-reading"><b>79.7°</b><small>2,800 ft</small></span></div>
+            <div class="avl-corridor-place"><strong>Canton</strong><span class="avl-place-reading"><b>75.6°</b><small>2,585 ft</small></span></div>
+            <div class="avl-corridor-place inner"><strong>Candler</strong><span class="avl-place-reading"><b>80.1°</b><small>2,189 ft</small></span></div>
+          </div>
+          <span class="avl-corridor-label west">West corridor</span>
+        </div>
+        <div class="avl-regional-key"><span><i class="inner"></i>Greater Asheville anchor</span><span><i></i>Mountain corridor station</span></div>
+      </section>
+
+
+
+      <section class="avl-network-footer" aria-label="About these weather observations">
+        <div><strong>Local readings, with local context.</strong><p>Neighborhood weather stations complement official observations. Conditions can vary with elevation and surroundings, and a station’s reading may not match every nearby address.</p></div>
+        <div class="avl-network-counts">
+          <div class="avl-network-count"><b>30</b><span>Stations</span></div>
+          <div class="avl-network-count"><b>27</b><span>Reporting</span></div>
+          <div class="avl-network-count"><b>27</b><span>Fresh</span></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="avl-page-footer"><span><strong>Asheville Under the Microscope:</strong> local observations interpreted through terrain and exposure by meteorologist Tim Ballisty.</span><span>Current observations · September 5 · 10:02 AM</span></footer>
+  </div>
+
+  <script>
+    (() => {
+      const root = document.getElementById('avl-microscope-page');
+      let stations = [
+        { code: 'UN', name: 'UNC Asheville', area: 'Lookout Observatory', exposure: 'Fully unobstructed research tower', lat: 35.621802282303385, lon: -82.56608557099108, elevation: 2357, source: 'NC ECONet / UNC Asheville', temperature: 72.7, dewpoint: 68.8, wind: 2, solar: 411.5, freshness: 'fresh' },
+        { code: 'HC', name: 'Huntington Chase', area: 'Haw Creek', exposure: 'Residential with trees', lat: 35.615642, lon: -82.505577, elevation: 2331, source: 'Tempest', temperature: 77, dewpoint: 71.6, wind: 2.2, solar: 461, freshness: 'fresh' },
+        { code: 'GP', name: 'Grove Park', area: 'North Asheville', exposure: 'Partly exposed residential', lat: 35.62653, lon: -82.54562, elevation: 2266, source: 'Weather Underground', temperature: 77.4, dewpoint: 71.8, wind: 0, solar: 48.4, freshness: 'fresh' },
+        { code: 'AR', name: 'Near AC Reynolds Middle School', area: 'East Asheville', exposure: 'Heavily forested', lat: 35.554948, lon: -82.491854, elevation: 2245, source: 'Weather Underground', temperature: 80.6, dewpoint: 72.7, wind: 0, solar: 421.9, freshness: 'fresh' },
+        { code: 'GA', name: 'Grove Arcade', area: 'Downtown Asheville', exposure: 'Rooftop with little obstruction', lat: 35.595288, lon: -82.556713, elevation: 2240, source: 'NOAA / NCEI', temperature: 76.2, dewpoint: 72, wind: 0, solar: 454, freshness: 'fresh' },
+        { code: 'BC', name: 'Bent Creek', area: 'Bent Creek', exposure: 'Trees and grass', lat: 35.51094, lon: -82.6098, elevation: 2200, source: 'Weather Underground', temperature: 82.4, dewpoint: 72.1, wind: 1.8, solar: 434, freshness: 'fresh' },
+        { code: 'BP', name: 'Biltmore Park', area: 'South Asheville', exposure: 'Residential with grass', lat: 35.48901, lon: -82.55599, elevation: 2200, source: 'Weather Underground', temperature: 81.3, dewpoint: 72, wind: 1, solar: null, freshness: 'fresh' },
+        { code: 'SH', name: 'Sand Hill', area: 'Sand Hill community', exposure: 'Residential with trees', lat: 35.563883, lon: -82.654275, elevation: 2232, source: 'Weather Underground', temperature: 84.1, dewpoint: 73.5, wind: 1.7, solar: 421.7, freshness: 'fresh' },
+        { code: 'WA', name: 'West Asheville', area: 'West Asheville', exposure: 'Residential', lat: 35.584047, lon: -82.598074, elevation: 2174, source: 'Weather Underground', temperature: 78.8, dewpoint: 71.8, wind: 4.7, solar: 116.3, freshness: 'fresh' },
+        { code: 'BF', name: 'Biltmore Forest', area: 'Biltmore Forest', exposure: 'Heavily forested residential with grass', lat: 35.535242, lon: -82.541958, elevation: 2167, source: 'Weather Underground', temperature: 77.9, dewpoint: 73.4, wind: 0, solar: 11.3, freshness: 'fresh' },
+        { code: 'BD', name: 'Beaverdam / Country Club', area: 'North Asheville', exposure: 'Minimal obstruction', lat: 35.640983, lon: -82.54702, elevation: 2165, source: 'Weather Underground', temperature: 77.4, dewpoint: 72.1, wind: 1.1, solar: 460, freshness: 'fresh' },
+        { code: 'FP', name: 'Five Points Neighborhood', area: 'North Asheville', exposure: 'Trees and shrubbery', lat: 35.606835, lon: -82.557007, elevation: 2147, source: 'Weather Underground', temperature: 78.4, dewpoint: 73, wind: 0, solar: null, freshness: 'fresh' },
+        { code: 'BL', name: 'Biltmore Lake', area: 'Biltmore Lake', exposure: 'Residential, lakeside, and forested', lat: 35.532517, lon: -82.652317, elevation: 2107, source: 'Weather Underground', temperature: 78.1, dewpoint: 75.2, wind: 2.7, solar: 77.8, freshness: 'fresh' },
+        { code: 'EA', name: 'Asheville Municipal Golf Course', area: 'East Asheville', exposure: 'Residential with grass', lat: 35.58113, lon: -82.50498, elevation: 2106, source: 'Weather Underground', temperature: 76.6, dewpoint: 72, wind: 0, solar: null, freshness: 'fresh' },
+        { code: 'RD', name: 'River Arts District', area: 'River Arts District', exposure: 'Residential with trees and shrubs', lat: 35.58589, lon: -82.574944, elevation: 2100, source: 'Weather Underground', temperature: 82.9, dewpoint: 75.9, wind: 0, solar: 286.4, freshness: 'fresh' }
+      ];
+
+      const codeByStationId = {
+        'unc-asheville': 'UN',
+        'huntington-chase': 'HC',
+        'grove-park': 'GP',
+        'ac-reynolds-middle-school': 'AR',
+        'grove-arcade': 'GA',
+        'bent-creek': 'BC',
+        'biltmore-park': 'BP',
+        'sand-hill': 'SH',
+        'west-asheville': 'WA',
+        'biltmore-forest': 'BF',
+        'beaverdam-country-club': 'BD',
+        'five-points-neighborhood': 'FP',
+        'biltmore-lake': 'BL',
+        'east-asheville': 'EA',
+        'river-arts-district': 'RD'
+      };
+
+      const sourceLabels = {
+        tempest: 'Tempest',
+        wunderground: 'Weather Underground',
+        ncei: 'NOAA / NCEI',
+        econet: 'NC ECONet / UNC Asheville'
+      };
+
+      const round = (value, digits = 1) => Number(Number(value).toFixed(digits));
+      const average = (values) => values.reduce((sum, value) => sum + value, 0) / Math.max(1, values.length);
+      const usableTemperature = (station) => station?.quality?.usable && Number.isFinite(station?.observation?.temperatureF);
+      const temperatureOf = (station) => round(station.observation.temperatureF);
+      const hasActiveRain = (station) => Number(station?.observation?.precipitationRateInHr) > 0;
+      const stationByName = (items, name) => items.find((station) => station.name === name);
+      const formatSnapshotTime = (iso) => new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit'
+      }).format(new Date(iso));
+
+      function strongestElevationMatch(items) {
+        let best = null;
+        items.forEach((left, index) => items.slice(index + 1).forEach((right) => {
+          const elevationGap = Math.abs(left.elevationFt - right.elevationFt);
+          if (elevationGap > 10) return;
+          const temperatureGap = Math.abs(temperatureOf(left) - temperatureOf(right));
+          if (!best || temperatureGap > best.temperatureGap) best = { left, right, elevationGap, temperatureGap };
+        }));
+        return best;
+      }
+
+      function updateSnapshotNarrative(payload) {
+        const available = payload.stations.filter(usableTemperature);
+        const core = available.filter((station) => (station.scope || 'core') === 'core');
+        const sortedCore = [...core].sort((a, b) => temperatureOf(a) - temperatureOf(b));
+        const low = sortedCore[0];
+        const high = sortedCore.at(-1);
+        const spread = round(temperatureOf(high) - temperatureOf(low));
+        const midpoint = round((temperatureOf(high) + temperatureOf(low)) / 2);
+        const snapshotTime = formatSnapshotTime(payload.generatedAt);
+        const reportingCount = payload.stations.filter((station) => station.observation).length;
+        const freshCount = payload.stations.filter((station) => station.quality?.freshness === 'fresh').length;
+        const dryTerrainStations = core.filter((station) => !hasActiveRain(station));
+        const terrainStations = dryTerrainStations.length >= 6 ? dryTerrainStations : core;
+        const sortedElevation = [...terrainStations].sort((a, b) => b.elevationFt - a.elevationFt);
+        const highTerrainAverage = average(sortedElevation.slice(0, 3).map(temperatureOf));
+        const lowTerrainAverage = average(sortedElevation.slice(-3).map(temperatureOf));
+        const terrainDifference = round(Math.abs(lowTerrainAverage - highTerrainAverage));
+        const terrainDirection = highTerrainAverage <= lowTerrainAverage ? 'cooler' : 'warmer';
+        const matched = strongestElevationMatch(terrainStations);
+
+        const status = root.querySelector('#avl-live-status');
+        status.querySelector('strong').textContent = `${reportingCount} of ${payload.network.stationCount} stations reporting`;
+        status.querySelector('span:last-child').textContent = `· updated ${snapshotTime}`;
+        root.querySelector('.avl-hero-reading strong').textContent = `${spread}°`;
+
+        const stories = root.querySelectorAll('.avl-now-story');
+        stories[0].querySelector('strong').textContent = `${high.name} is ${spread}° warmer than ${low.name}.`;
+        stories[0].querySelector('p').textContent = `At ${snapshotTime}, Asheville ranges from ${temperatureOf(low)}° at ${low.name} to ${temperatureOf(high)}° at ${high.name}.`;
+        stories[1].querySelector('strong').textContent = `The three highest stations average ${terrainDifference}° ${terrainDirection}.`;
+        stories[1].querySelector('p').textContent = `They average ${round(highTerrainAverage)}°, compared with ${round(lowTerrainAverage)}° at the three lowest reporting elevations.${terrainStations.length < core.length ? ` ${core.length - terrainStations.length} rain-affected ${core.length - terrainStations.length === 1 ? 'station is' : 'stations are'} excluded from this terrain comparison.` : ''}`;
+        if (matched) {
+          const cooler = temperatureOf(matched.left) <= temperatureOf(matched.right) ? matched.left : matched.right;
+          const warmer = cooler === matched.left ? matched.right : matched.left;
+          stories[2].querySelector('strong').textContent = `Nearly identical elevation. A ${round(matched.temperatureGap)}° difference.`;
+          stories[2].querySelector('p').textContent = `${cooler.name} and ${warmer.name} are only ${matched.elevationGap} vertical ${matched.elevationGap === 1 ? 'foot' : 'feet'} apart, putting neighborhood exposure in sharp focus.`;
+
+        }
+
+        root.querySelector('.avl-footprint-head .avl-section-kicker').textContent = `${core.length} current neighborhood stations`;
+        const mapScale = root.querySelectorAll('.avl-map-scale span');
+        mapScale[0].textContent = `${temperatureOf(low)}° coolest`;
+        mapScale[1].textContent = `${midpoint}° midpoint`;
+        mapScale[2].textContent = `warmest ${temperatureOf(high)}°`;
+        const rulerLabels = root.querySelectorAll('.avl-ruler-labels span');
+        rulerLabels[0].textContent = `${temperatureOf(low)}° cool edge`;
+        rulerLabels[1].textContent = `${temperatureOf(high)}° warm edge`;
+
+        const rateReporting = payload.stations.filter((station) => Number.isFinite(station.observation?.precipitationRateInHr));
+        const wet = rateReporting.filter((station) => station.observation.precipitationRateInHr > 0);
+        const eventCopy = root.querySelector('.avl-event-copy');
+        const eventStatus = root.querySelector('.avl-event-status');
+        const eventLayer = root.querySelector('.avl-event-layer');
+        eventLayer.hidden = wet.length === 0;
+        root.querySelector('.avl-briefing').after(eventLayer);
+        if (wet.length) {
+          const wettest = [...wet].sort((a, b) => b.observation.precipitationRateInHr - a.observation.precipitationRateInHr)[0];
+          eventCopy.querySelector('strong').textContent = `A rain signal has appeared near ${wettest.name}.`;
+          eventCopy.querySelector('p').textContent = `${wettest.name} is reporting ${round(wettest.observation.precipitationRateInHr, 2)} in/hr and ${round(wettest.observation.precipitationTodayIn || 0, 2)} in today while ${rateReporting.length - wet.length} other rate-reporting stations remain dry.`;
+          const rainSignal = root.querySelector('.avl-signal.rain');
+          rainSignal.querySelector('strong').textContent = `${wettest.name} is the active rain pocket.`;
+          rainSignal.querySelector('p').textContent = `${wet.length} of ${rateReporting.length} locations reporting rainfall rate ${wet.length === 1 ? 'is' : 'are'} wet; ${wet.length === 1 ? 'that station’s temperature is' : 'their temperatures are'} treated as rain-influenced.`;
+        } else {
+          eventCopy.querySelector('strong').textContent = 'Rain mode is resting right now.';
+          eventCopy.querySelector('p').textContent = `All ${rateReporting.length} rate-reporting stations are dry. During an event, this layer expands to show onset, rates, neighborhood totals, and the wettest-to-driest footprint.`;
+          const rainSignal = root.querySelector('.avl-signal.rain');
+          rainSignal.querySelector('strong').textContent = 'No active rain pocket is reporting.';
+          rainSignal.querySelector('p').textContent = `All ${rateReporting.length} locations reporting rainfall rate are dry right now.`;
+        }
+        eventStatus.textContent = `${wet.length} of ${rateReporting.length} wet`;
+
+        const sortedRegional = [...available].sort((a, b) => temperatureOf(a) - temperatureOf(b));
+        const regionalLow = sortedRegional[0];
+        const regionalHigh = sortedRegional.at(-1);
+        const regionalSpread = round(temperatureOf(regionalHigh) - temperatureOf(regionalLow));
+        const rainAffectedBookends = [regionalLow, regionalHigh].filter(hasActiveRain);
+        root.querySelector('.avl-regional-head p').textContent = `${regionalSpread}° regional spread: ${regionalLow.name} is coolest at ${temperatureOf(regionalLow)}° while ${regionalHigh.name} is warmest at ${temperatureOf(regionalHigh)}°.`;
+
+
+
+        root.querySelectorAll('.avl-corridor-place').forEach((node) => {
+          const item = stationByName(available, node.querySelector('strong').textContent);
+          if (item) node.querySelector('.avl-place-reading b').textContent = `${temperatureOf(item)}°`;
+        });
+
+        const get = (name) => stationByName(available, name);
+        const woodfin = get('Woodfin');
+        const weaverville = get('Weaverville');
+        const marsHill = get('Mars Hill');
+        const swannanoa = get('Swannanoa');
+        const blackMountain = get('Black Mountain');
+        const oldFort = get('Old Fort');
+        const arden = get('Arden');
+        const fletcher = get('Fletcher');
+        const hendersonville = get('Hendersonville');
+        const candler = get('Candler');
+        const canton = get('Canton');
+        const waynesville = get('Waynesville');
+        const insights = root.querySelectorAll('.avl-regional-insight strong');
+        if (woodfin && weaverville && marsHill) {
+          const north = [woodfin, weaverville, marsHill].sort((a, b) => temperatureOf(a) - temperatureOf(b));
+          insights[0].textContent = `${north.at(-1).name} is ${round(temperatureOf(north.at(-1)) - temperatureOf(north[0]))}° warmer than ${north[0].name} across the north approach.`;
+        }
+        if (swannanoa && blackMountain && oldFort) insights[1].textContent = `Old Fort is ${round(temperatureOf(oldFort) - temperatureOf(blackMountain))}° warmer than Black Mountain while sitting 1,130 feet lower.`;
+        if (candler && canton && waynesville) insights[2].textContent = `Waynesville is ${round(Math.abs(temperatureOf(waynesville) - temperatureOf(candler)))}° from Candler while sitting 611 feet higher; Canton is ${round(temperatureOf(candler) - temperatureOf(canton))}° cooler than Candler.`;
+        if (arden && fletcher && hendersonville) insights[3].textContent = `Fletcher is ${round(temperatureOf(fletcher) - temperatureOf(arden))}° warmer than Arden; Arden and Hendersonville are ${round(Math.abs(temperatureOf(arden) - temperatureOf(hendersonville)))}° apart.`;
+
+        const moisture = [...core].sort((a, b) => a.observation.dewPointF - b.observation.dewPointF);
+        const wind = [...core].sort((a, b) => a.observation.windMph - b.observation.windMph);
+        const gust = available.filter((station) => Number.isFinite(station.observation?.windGustMph)).sort((a, b) => a.observation.windGustMph - b.observation.windGustMph);
+        const moistureSignal = root.querySelector('.avl-signal.moisture');
+        moistureSignal.querySelector('strong').textContent = `${moisture.at(-1).name} has the highest core dew point.`;
+        moistureSignal.querySelector('p').textContent = `Its ${round(moisture.at(-1).observation.dewPointF)}° dew point is ${round(moisture.at(-1).observation.dewPointF - moisture[0].observation.dewPointF)}° above ${moisture[0].name}.`;
+        const windSignal = root.querySelector('.avl-signal.wind');
+        windSignal.querySelector('strong').textContent = `${wind.at(-1).name} has the strongest sustained wind.`;
+        windSignal.querySelector('p').textContent = `${round(wind.at(-1).observation.windMph)} mph leads Asheville's reporting locations.${gust.length > 1 ? ` Gusts differ by ${round(gust.at(-1).observation.windGustMph - gust[0].observation.windGustMph)} mph across the wider area.` : ''}`;
+
+
+        const counts = root.querySelectorAll('.avl-network-count b');
+        counts[0].textContent = payload.network.stationCount;
+        counts[1].textContent = reportingCount;
+        counts[2].textContent = freshCount;
+        root.querySelector('.avl-page-footer span:last-child').textContent = `Current observations · ${new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', month: 'long', day: 'numeric' }).format(new Date(payload.generatedAt))} · ${snapshotTime}`;
+      }
+
+      async function hydrateLiveData() {
+        if (location.protocol === 'file:') return;
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 12000);
+        try {
+          const response = await fetch('/api/router?route=asheville-spread', { cache: 'no-store', signal: controller.signal });
+          if (!response.ok) throw new Error('Observation service unavailable');
+          const payload = await response.json();
+          const templates = new Map(stations.map((station) => [station.code, station]));
+          const currentCore = payload.stations
+            .filter((station) => (station.scope || 'core') === 'core' && usableTemperature(station) && codeByStationId[station.id])
+            .map((station) => {
+              const template = templates.get(codeByStationId[station.id]);
+              return {
+                ...template,
+                source: sourceLabels[station.provider] || station.provider,
+                temperature: round(station.observation.temperatureF),
+                dewpoint: round(station.observation.dewPointF),
+                wind: round(station.observation.windMph),
+                solar: Number.isFinite(station.observation.solarRadiationWm2) ? round(station.observation.solarRadiationWm2) : null,
+                freshness: station.quality.freshness
+              };
+            });
+          if (currentCore.length >= 2) stations = currentCore;
+          updateSnapshotNarrative(payload);
+          const { renderPublicInsights } = await import('./js/asheville-microscope-public-insights.js');
+          renderPublicInsights(root, payload);
+          render();
+        } catch (error) {
+          root.querySelector('#avl-live-status span:last-child').textContent = '· showing last available readings';
+        } finally {
+          clearTimeout(timeout);
+        }
+      }
+
+      const metrics = {
+        temperature: { low: 'Coolest', high: 'Warmest', axis: 'Observed temperature →', unit: '°', rangeUnit: '°F', start: 'var(--avl-page-blue)', end: 'var(--avl-page-orange)' },
+        dewpoint: { low: 'Driest air', high: 'Most humid', axis: 'Observed dew point →', unit: '°', rangeUnit: '°F', start: 'var(--avl-page-violet)', end: 'var(--avl-page-teal)' },
+        wind: { low: 'Calmest', high: 'Windiest', axis: 'Observed wind →', unit: '', rangeUnit: ' mph', start: 'var(--avl-page-teal)', end: 'var(--avl-page-gold)' }
+      };
+
+      let metric = 'temperature';
+      let selectedCode = 'WA';
+
+      function reading(station, unit) { return `${station[metric]}${unit}`; }
+
+      function regressionDelta(station) {
+        const elevationMean = stations.reduce((sum, item) => sum + item.elevation, 0) / stations.length;
+        const temperatureMean = stations.reduce((sum, item) => sum + item.temperature, 0) / stations.length;
+        const numerator = stations.reduce((sum, item) => sum + (item.elevation - elevationMean) * (item.temperature - temperatureMean), 0);
+        const denominator = stations.reduce((sum, item) => sum + (item.elevation - elevationMean) ** 2, 0);
+        const expected = temperatureMean + (denominator ? numerator / denominator : 0) * (station.elevation - elevationMean);
+        return Number((station.temperature - expected).toFixed(1));
+      }
+
+      function render() {
+        const config = metrics[metric];
+        const ordered = [...stations].sort((a, b) => a[metric] - b[metric]);
+        const low = ordered[0];
+        const high = ordered[ordered.length - 1];
+        const span = Number((high[metric] - low[metric]).toFixed(1));
+        const elevationHigh = Math.max(...stations.map((station) => station.elevation));
+        const elevationLow = Math.min(...stations.map((station) => station.elevation));
+        const selected = stations.find((station) => station.code === selectedCode) || stations[0];
+
+        const footprint = root.querySelector('#avl-footprint-map');
+        const latitudes = stations.map((station) => station.lat);
+        const longitudes = stations.map((station) => station.lon);
+        const minLat = Math.min(...latitudes);
+        const maxLat = Math.max(...latitudes);
+        const minLon = Math.min(...longitudes);
+        const maxLon = Math.max(...longitudes);
+        const temperatureLow = Math.min(...stations.map((station) => station.temperature));
+        const temperatureHigh = Math.max(...stations.map((station) => station.temperature));
+        const temperatureSpan = temperatureHigh - temperatureLow;
+
+        footprint.querySelectorAll('.avl-footprint-station, .avl-map-label').forEach((node) => node.remove());
+        stations.forEach((station) => {
+          const left = 8 + ((station.lon - minLon) / (maxLon - minLon)) * 84;
+          const top = 9 + ((maxLat - station.lat) / (maxLat - minLat)) * 78;
+          const warmth = temperatureSpan ? ((station.temperature - temperatureLow) / temperatureSpan) * 100 : 50;
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'avl-footprint-station';
+          button.style.left = `${left}%`;
+          button.style.top = `${top}%`;
+          button.style.setProperty('--map-color', `color-mix(in srgb, var(--avl-page-blue) ${Math.round(100 - warmth)}%, var(--avl-page-orange))`);
+          button.textContent = station.code;
+          button.setAttribute('aria-label', `${station.name}: ${station.temperature} degrees, ${station.elevation.toLocaleString()} feet`);
+          button.setAttribute('aria-pressed', String(station.code === selectedCode));
+          button.addEventListener('click', () => { selectedCode = station.code; render(); });
+          footprint.appendChild(button);
+
+          if (station.code === selectedCode) {
+            const label = document.createElement('span');
+            label.className = 'avl-map-label';
+            label.style.left = `${left}%`;
+            label.style.top = `${top}%`;
+            label.textContent = `${station.name} · ${station.temperature}°`;
+            footprint.appendChild(label);
+          }
+        });
+
+        const selectedWarmth = temperatureSpan ? ((selected.temperature - temperatureLow) / temperatureSpan) * 100 : 50;
+        root.querySelector('#avl-footprint-name').textContent = selected.name;
+        root.querySelector('#avl-footprint-setting').textContent = `${selected.exposure} · ${selected.elevation.toLocaleString()} ft`;
+        root.querySelector('#avl-footprint-reading').textContent = `${selected.temperature}°`;
+        root.querySelector('#avl-footprint-delta').textContent = `${(selected.temperature - temperatureLow).toFixed(1)}° warmer than the coolest reporting neighborhood`;
+        root.querySelector('#avl-temp-ruler').style.setProperty('--selected-temp', `${selectedWarmth}%`);
+        root.querySelector('#avl-footprint-elevation').textContent = `${selected.elevation.toLocaleString()} ft above sea level`;
+        root.querySelector('#avl-footprint-exposure').textContent = selected.exposure;
+        root.querySelector('#avl-footprint-area').textContent = selected.area;
+
+        root.dataset.metric = metric;
+        root.style.setProperty('--avl-active', config.end);
+        root.querySelector('#avl-low-label').textContent = config.low;
+        root.querySelector('#avl-high-label').textContent = config.high;
+        root.querySelector('#avl-low-value').textContent = reading(low, config.unit);
+        root.querySelector('#avl-high-value').textContent = reading(high, config.unit);
+        root.querySelector('#avl-low-name').textContent = low.name;
+        root.querySelector('#avl-high-name').textContent = high.name;
+        root.querySelector('#avl-gap-value').textContent = `${span}${config.unit}`;
+        root.querySelector('#avl-gap-label').textContent = `${config.low}-to-${config.high} gap`;
+        root.querySelector('#avl-axis-low').textContent = reading(low, config.rangeUnit);
+        root.querySelector('#avl-axis-high').textContent = reading(high, config.rangeUnit);
+        root.querySelector('#avl-axis-name').textContent = config.axis;
+
+        const plot = root.querySelector('#avl-page-plot');
+        plot.querySelectorAll('.avl-station, .avl-selected-reading').forEach((node) => node.remove());
+        const plotHeight = Math.max(410, plot.clientHeight || 410);
+        const plotTop = 34;
+        const plotBottom = 66;
+        const elevationTravel = plotHeight - plotTop - plotBottom;
+        ordered.forEach((station, index) => {
+          const xPercent = span === 0 ? 50 : ((station[metric] - low[metric]) / span) * 100;
+          const left = Math.max(2, Math.min(98, xPercent + ((index % 3) - 1) * 1.25));
+          const elevationPercent = (elevationHigh - station.elevation) / (elevationHigh - elevationLow);
+          const top = plotTop + elevationPercent * elevationTravel;
+          const dot = document.createElement('button');
+          dot.type = 'button';
+          dot.className = 'avl-station';
+          dot.style.left = `${left}%`;
+          dot.style.top = `${top}px`;
+          dot.style.setProperty('--station-color', `color-mix(in srgb, ${config.start} ${Math.round((1 - xPercent / 100) * 100)}%, ${config.end})`);
+          dot.textContent = station.code;
+          dot.setAttribute('aria-label', `${station.name}: ${reading(station, config.rangeUnit)}, ${station.elevation.toLocaleString()} feet`);
+          dot.setAttribute('aria-pressed', String(station.code === selectedCode));
+          dot.addEventListener('click', () => { selectedCode = station.code; render(); });
+          plot.appendChild(dot);
+
+          if (station.code === selectedCode) {
+            const label = document.createElement('span');
+            label.className = 'avl-selected-reading';
+            label.style.left = `${left}%`;
+            label.style.top = `${top + 47}px`;
+            label.textContent = reading(station, config.rangeUnit);
+            plot.appendChild(label);
+          }
+        });
+
+        const nearest = stations
+          .filter((station) => station.code !== selected.code)
+          .sort((a, b) => Math.abs(a.elevation - selected.elevation) - Math.abs(b.elevation - selected.elevation))[0];
+        const elevationDifference = Math.abs(nearest.elevation - selected.elevation);
+        const temperatureDifference = Math.abs(nearest.temperature - selected.temperature).toFixed(1);
+        const delta = regressionDelta(selected);
+
+        root.querySelector('#avl-profile-name').textContent = `${selected.name} · ${selected.area}`;
+        root.querySelector('#avl-profile-meta').textContent = `${selected.exposure} · ${selected.elevation.toLocaleString()} ft · ${selected.source} · ${selected.freshness}`;
+        root.querySelector('#avl-profile-reading').textContent = reading(selected, config.rangeUnit);
+        root.querySelector('#avl-profile-delta').textContent = metric === 'temperature'
+          ? `${delta > 0 ? '+' : ''}${delta}° compared with the overall elevation pattern`
+          : `${selected.elevation.toLocaleString()} ft station elevation`;
+        root.querySelector('#avl-profile-dew').textContent = `${selected.dewpoint}°F`;
+        root.querySelector('#avl-profile-wind').textContent = `${selected.wind} mph`;
+        root.querySelector('#avl-profile-solar').textContent = selected.solar == null ? 'Not reported' : `${Math.round(selected.solar)} W/m²`;
+        root.querySelector('#avl-profile-elevation').textContent = `${selected.elevation.toLocaleString()} ft`;
+        root.querySelector('#avl-profile-compare').textContent = `Only ${elevationDifference} ft separates this station from ${nearest.name}, but their temperatures differ by ${temperatureDifference}°.`;
+      }
+
+      root.querySelectorAll('.avl-metric-tab').forEach((button) => {
+        button.addEventListener('click', () => {
+          metric = button.dataset.metric;
+          root.querySelectorAll('.avl-metric-tab').forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
+          render();
+        });
+      });
+
+      const regionalDesign = { emphasis: 'corridors' };
+      const regionalCard = root.querySelector('#avl-regional-card');
+      function renderRegionalDesign() {
+        regionalCard.dataset.emphasis = regionalDesign.emphasis;
+      }
+      renderRegionalDesign();
+
+      if (globalThis.Tweak) {
+        const regionalTweak = new Tweak({ container: regionalCard, onChange: renderRegionalDesign });
+        regionalTweak.addSelect(regionalDesign, 'emphasis', {
+          label: 'Regional emphasis',
+          options: [
+            { label: 'Mountain corridors', value: 'corridors' },
+            { label: 'Greater Asheville ring', value: 'inner' }
+          ],
+          reference: 'regional.emphasis'
+        });
+      }
+
+      render();
+      hydrateLiveData();
+      if (location.protocol !== 'file:') {
+        let lastVisibleRefresh = Date.now();
+        const refreshIfVisible = () => {
+          if (document.hidden || Date.now() - lastVisibleRefresh < 300_000) return;
+          lastVisibleRefresh = Date.now();
+          hydrateLiveData();
+        };
+        setInterval(refreshIfVisible, 300_000);
+        document.addEventListener('visibilitychange', refreshIfVisible);
+      }
+    })();
+  </script>
+</section>
+</body>
+</html>

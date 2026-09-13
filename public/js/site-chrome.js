@@ -4,6 +4,7 @@ const SITE_LINKS = [
   ["Forecast", "/forecast.html"],
   ["Radar & Satellite", "/radar.html"],
   ["FEELSCORE", "/se_feelscore.html"],
+  ["Microscope", "/asheville-microscope.html"],
   ["Hiking", "/hiking.html"],
   ["Water Conditions", "/water.html"],
   ["I-26 Connector", "/i26-connector.html"],
