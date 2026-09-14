@@ -1,4 +1,5 @@
 import { CATEGORY_COLORS, buildCategoryLookup, sampleContour, smoothContourOpacity } from './feelscore-map-field.js';
+import { getForecastPeriod } from './se-feelscore-period.js?v=20260914-live';
 
 const canvas = document.querySelector('#feelscore-map');
 const stage = document.querySelector('#map-stage');
@@ -200,8 +201,8 @@ function nearestPoint(event) {
 }
 
 function updateDebugPanel() {
-  debugToggle.setAttribute('aria-pressed', String(debug)); qaPanel.hidden = !debug;
-  if (!debug) return;
+  debugToggle.setAttribute('aria-pressed', String(debug)); qaPanel.hidden = !debug || !dataset;
+  if (!debug || !dataset) return;
   const counts = dataset.analysis.categoryCounts;
   qaPanel.innerHTML = `<p class="eyebrow">Developer / QA mode</p><h2 id="qa-title">Analysis diagnostics</h2>
     <div class="qa-grid"><div><strong>${dataset.analysis.landPointCount.toLocaleString()}</strong><span>land points</span></div><div><strong>${dataset.analysis.missingPointCount.toLocaleString()}</strong><span>missing points</span></div><div><strong>${dataset.qa.suspiciousDiscontinuityCount.toLocaleString()}</strong><span>sharp adjacent jumps</span></div><div><strong>${Object.entries(counts).map(([key, value]) => `${key}:${value}`).join(' · ')}</strong><span>raw category counts</span></div></div>
@@ -227,21 +228,49 @@ window.addEventListener('resize', () => {
   clearTimeout(window.__feelscoreResize); window.__feelscoreResize = setTimeout(drawMap, 120);
 });
 
-Promise.all([
-  fetch('/data/feelscore-grid.json', { cache: 'no-cache' }).then((response) => { if (!response.ok) throw new Error(`Dataset unavailable (${response.status})`); return response.json(); }),
-  fetch('/data/southeast-states.geojson').then((response) => { if (!response.ok) throw new Error(`Boundaries unavailable (${response.status})`); return response.json(); }),
-]).then(([analysis, states]) => {
-  dataset = analysis; boundaries = states; empty.hidden = true; canvas.tabIndex = 0;
-  dayLabel.textContent = formatDate(dataset.forecastDate);
-  const generated = new Date(dataset.generatedAt);
-  status.textContent = `${dataset.analysis.landPointCount.toLocaleString()} land points · updated ${generated.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`;
-  updateDebugPanel(); drawMap();
-  const asheville = dataset.qa.anchorCities.find((city) => city.name.startsWith('Asheville'));
-  const initial = dataset.points.find((point) => asheville?.gridPoint?.[0] === point.lat && asheville?.gridPoint?.[1] === point.lon);
-  if (initial) showInspector(initial);
-}).catch((error) => {
-  status.textContent = 'Regional analysis temporarily unavailable';
-  empty.querySelector('strong').textContent = 'The latest analysis could not load';
-  empty.querySelector('span:last-child').textContent = 'Please try again shortly.';
-  console.error('FEELSCORE load failed:', error);
-});
+let loading = false;
+let refreshTimer;
+
+async function refreshForecast() {
+  if (loading) return;
+  loading = true;
+  const period = getForecastPeriod();
+  dayLabel.textContent = `${period.label} · ${formatDate(period.forecastDate)}`;
+  if (dataset?.forecastDate !== period.forecastDate) {
+    dataset = null; selectedPoint = null; inspector.hidden = true; empty.hidden = false; canvas.hidden = true;
+    qaPanel.hidden = true;
+    empty.querySelector('strong').textContent = `Loading ${period.label.toLowerCase()}'s analysis`;
+    status.textContent = 'Loading the latest NWS analysis…';
+  }
+  try {
+    const [analysis, states] = await Promise.all([
+      fetch(`/api/router?route=se-feelscore&date=${period.forecastDate}`, { cache: 'no-store' })
+        .then((response) => { if (!response.ok) throw new Error(`Dataset unavailable (${response.status})`); return response.json(); }),
+      boundaries || fetch('/data/southeast-states.geojson').then((response) => { if (!response.ok) throw new Error(`Boundaries unavailable (${response.status})`); return response.json(); }),
+    ]);
+    if (getForecastPeriod().forecastDate !== period.forecastDate) return;
+    if (analysis.forecastDate !== period.forecastDate) throw new Error('Wrong forecast date');
+    const unchanged = dataset?.generatedAt === analysis.generatedAt;
+    dataset = analysis; boundaries = states; empty.hidden = true; canvas.hidden = false; canvas.tabIndex = 0;
+    const generated = new Date(dataset.generatedAt);
+    status.textContent = `${dataset.analysis.landPointCount.toLocaleString()} land points · updated ${generated.toLocaleString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })} ET`;
+    if (unchanged) return;
+    updateDebugPanel(); drawMap();
+    const asheville = dataset.qa.anchorCities.find((city) => city.name.startsWith('Asheville'));
+    const initial = dataset.points.find((point) => asheville?.gridPoint?.[0] === point.lat && asheville?.gridPoint?.[1] === point.lon);
+    if (initial) showInspector(initial);
+  } catch (error) {
+    status.textContent = dataset ? 'Refresh failed — showing the last loaded analysis for this date' : 'Fresh regional analysis temporarily unavailable';
+    empty.querySelector('strong').textContent = 'The latest analysis could not load';
+    empty.querySelector('span:last-child').textContent = 'Please try again shortly.';
+    console.error('FEELSCORE load failed:', error);
+  } finally {
+    loading = false;
+    // Minute boundaries keep an open page in step with the 3 PM / midnight rollover.
+    clearTimeout(refreshTimer);
+    refreshTimer = setTimeout(refreshForecast, 60_000 - (Date.now() % 60_000) + 50);
+  }
+}
+
+document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshForecast(); });
+refreshForecast();

@@ -1,4 +1,5 @@
 const routes = {
+  "se-feelscore": () => import("../lib/api-routes/se-feelscore.js"),
   "asheville-spread": () => import("../lib/api-routes/asheville-spread.js"),
   "admin/login": () => import("../lib/api-routes/admin/login.js"),
   "admin/logout": () => import("../lib/api-routes/admin/logout.js"),

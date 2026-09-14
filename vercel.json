@@ -13,6 +13,10 @@
   ],
   "routes": [
     {
+      "src": "/data/feelscore-grid\\.json",
+      "dest": "/api/router?route=se-feelscore"
+    },
+    {
       "src": "/admin/?",
       "dest": "/api/admin/page?path=index.html"
     },
