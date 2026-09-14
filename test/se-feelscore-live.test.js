@@ -29,7 +29,7 @@ function fixture(date = '2026-09-14') {
 const now = new Date('2026-09-14T12:00:00Z');
 function response() {
   return { headers: {}, setHeader(key, value) { this.headers[key] = value; },
-    status(code) { this.code = code; return this; }, json(body) { this.body = body; return this; } };
+    status(code) { this.code = code; return this; }, end() { return this; }, json(body) { this.body = body; return this; } };
 }
 
 test('validation rejects stale, wrong-day, missing and incorrect local forecast hours', () => {
@@ -52,6 +52,8 @@ test('live API reads dated data, caches briefly, and switches at 3 PM', async ()
   assert.equal(first.code, 200); assert.equal(first.body.displayPeriod, 'Today');
   assert.equal(first.headers['Cache-Control'], 'no-store');
   await handler({ query: {} }, response()); assert.equal(calls.length, 1);
+  const unchanged = response(); await handler({ query: { since: first.body.generatedAt } }, unchanged);
+  assert.equal(unchanged.code, 204); assert.equal(unchanged.body, undefined);
   instant = new Date('2026-09-14T19:00:00Z');
   const next = response(); await handler({ query: { date: '2026-09-15' } }, next);
   assert.equal(next.code, 200); assert.equal(next.body.displayPeriod, 'Tomorrow');
@@ -72,4 +74,5 @@ test('page uses live dated API and refreshes an open or resumed page', async () 
   assert.doesNotMatch(source, /fetch\('\/data\/feelscore-grid.json/);
   assert.match(source, /setTimeout\(refreshForecast/);
   assert.match(source, /visibilitychange/);
+  assert.match(source, /crossedBoundary \? 0/);
 });

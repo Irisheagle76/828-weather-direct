@@ -4,7 +4,7 @@ The map uses `/api/router?route=se-feelscore&date=YYYY-MM-DD`, not a deployment-
 
 The requested date is today's Eastern calendar date before 15:00 and tomorrow's afterward. At Eastern midnight the same date becomes Today. Each map point still represents 12, 13, 14 and 15 hours in that point's local timezone. An open page refreshes on minute boundaries and when resumed.
 
-The handler retrieves `public/data/feelscore/YYYY-MM-DD.json` from the public repository's current main branch. It validates the requested date, generation age (maximum 36 hours), dense 0.25-degree grid, zero missing points, and each point's local date/hours. It caches validated data in memory for at most one minute and sends `Cache-Control: no-store`. A missing or invalid forecast returns 503, never a different date's map.
+The handler retrieves `public/data/feelscore/YYYY-MM-DD.json` from the public repository's current main branch. It validates the requested date, generation age (maximum 36 hours), dense 0.25-degree grid, zero missing points, and each point's local date/hours. It caches validated data in memory for at most one minute and sends `Cache-Control: no-store`. The client includes `since=generatedAt` on refreshes; an unchanged valid map returns 204 without redownloading the full grid. A missing or invalid forecast returns 503, never a different date's map. A request completing across a forecast boundary retries immediately.
 
 The existing Daily Southeast FEELSCORE automation must generate **both today and tomorrow** at 6 AM Eastern. The existing generator in `C:\Users\Tim\828-weather-direct\scripts\generate-feelscore.mjs` supports:
 

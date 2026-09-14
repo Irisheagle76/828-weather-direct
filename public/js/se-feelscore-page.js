@@ -243,12 +243,14 @@ async function refreshForecast() {
     status.textContent = 'Loading the latest NWS analysis…';
   }
   try {
+    const version = dataset ? `&since=${encodeURIComponent(dataset.generatedAt)}` : '';
     const [analysis, states] = await Promise.all([
-      fetch(`/api/router?route=se-feelscore&date=${period.forecastDate}`, { cache: 'no-store' })
-        .then((response) => { if (!response.ok) throw new Error(`Dataset unavailable (${response.status})`); return response.json(); }),
+      fetch(`/api/router?route=se-feelscore&date=${period.forecastDate}${version}`, { cache: 'no-store' })
+        .then((response) => { if (!response.ok) throw new Error(`Dataset unavailable (${response.status})`); return response.status === 204 ? null : response.json(); }),
       boundaries || fetch('/data/southeast-states.geojson').then((response) => { if (!response.ok) throw new Error(`Boundaries unavailable (${response.status})`); return response.json(); }),
     ]);
     if (getForecastPeriod().forecastDate !== period.forecastDate) return;
+    if (!analysis) return;
     if (analysis.forecastDate !== period.forecastDate) throw new Error('Wrong forecast date');
     const unchanged = dataset?.generatedAt === analysis.generatedAt;
     dataset = analysis; boundaries = states; empty.hidden = true; canvas.hidden = false; canvas.tabIndex = 0;
@@ -268,7 +270,9 @@ async function refreshForecast() {
     loading = false;
     // Minute boundaries keep an open page in step with the 3 PM / midnight rollover.
     clearTimeout(refreshTimer);
-    refreshTimer = setTimeout(refreshForecast, 60_000 - (Date.now() % 60_000) + 50);
+    const currentPeriod = getForecastPeriod();
+    const crossedBoundary = currentPeriod.forecastDate !== period.forecastDate || currentPeriod.label !== period.label;
+    refreshTimer = setTimeout(refreshForecast, crossedBoundary ? 0 : 60_000 - (Date.now() % 60_000) + 50);
   }
 }
 
