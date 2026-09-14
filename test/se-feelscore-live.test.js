@@ -76,3 +76,15 @@ test('page uses live dated API and refreshes an open or resumed page', async () 
   assert.match(source, /visibilitychange/);
   assert.match(source, /crossedBoundary \? 0/);
 });
+
+test('map loading graphic is accessible, respects reduced motion, and stops on errors', async () => {
+  const html = await readFile(new URL('../public/se_feelscore.html', import.meta.url), 'utf8');
+  const css = await readFile(new URL('../public/css/se-feelscore.css', import.meta.url), 'utf8');
+  const js = await readFile(new URL('../public/js/se-feelscore-page.js', import.meta.url), 'utf8');
+  assert.match(html, /id="map-empty"[^>]+role="status"/);
+  assert.match(html, /Building your FEELSCORE map/);
+  assert.match(css, /prefers-reduced-motion: reduce/);
+  assert.match(css, /data-state="error"/);
+  assert.match(js, /empty.dataset.state = 'error'/);
+  assert.match(js, /drawMap\(\); empty.hidden = true/);
+});

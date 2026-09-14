@@ -239,7 +239,9 @@ async function refreshForecast() {
   if (dataset?.forecastDate !== period.forecastDate) {
     dataset = null; selectedPoint = null; inspector.hidden = true; empty.hidden = false; canvas.hidden = true;
     qaPanel.hidden = true;
-    empty.querySelector('strong').textContent = `Loading ${period.label.toLowerCase()}'s analysis`;
+    empty.dataset.state = 'loading'; stage.setAttribute('aria-busy', 'true');
+    empty.querySelector('#map-loading-title').textContent = `Building ${period.label.toLowerCase()}'s FEELSCORE map…`;
+    empty.querySelector('#map-loading-detail').textContent = 'Loading forecast data and preparing the regional contours.';
     status.textContent = 'Loading the latest NWS analysis…';
   }
   try {
@@ -253,18 +255,19 @@ async function refreshForecast() {
     if (!analysis) return;
     if (analysis.forecastDate !== period.forecastDate) throw new Error('Wrong forecast date');
     const unchanged = dataset?.generatedAt === analysis.generatedAt;
-    dataset = analysis; boundaries = states; empty.hidden = true; canvas.hidden = false; canvas.tabIndex = 0;
+    dataset = analysis; boundaries = states; canvas.hidden = false; canvas.tabIndex = 0;
     const generated = new Date(dataset.generatedAt);
     status.textContent = `${dataset.analysis.landPointCount.toLocaleString()} land points · updated ${generated.toLocaleString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })} ET`;
     if (unchanged) return;
-    updateDebugPanel(); drawMap();
+    updateDebugPanel(); drawMap(); empty.hidden = true; stage.setAttribute('aria-busy', 'false');
     const asheville = dataset.qa.anchorCities.find((city) => city.name.startsWith('Asheville'));
     const initial = dataset.points.find((point) => asheville?.gridPoint?.[0] === point.lat && asheville?.gridPoint?.[1] === point.lon);
     if (initial) showInspector(initial);
   } catch (error) {
     status.textContent = dataset ? 'Refresh failed — showing the last loaded analysis for this date' : 'Fresh regional analysis temporarily unavailable';
-    empty.querySelector('strong').textContent = 'The latest analysis could not load';
-    empty.querySelector('span:last-child').textContent = 'Please try again shortly.';
+    empty.dataset.state = 'error'; stage.setAttribute('aria-busy', 'false');
+    empty.querySelector('#map-loading-title').textContent = 'The latest analysis could not load';
+    empty.querySelector('#map-loading-detail').textContent = 'Please try again shortly. We’ll retry automatically.';
     console.error('FEELSCORE load failed:', error);
   } finally {
     loading = false;

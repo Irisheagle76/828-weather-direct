@@ -16,7 +16,7 @@
   <meta name="twitter:image" content="https://avlweather.com/828-brand-card.png" />
   <link rel="stylesheet" href="/css/app-v2.css?v=20260824-se-feelscore" />
   <link rel="stylesheet" href="/css/brand-lockup.css?v=20260805-brand2" />
-  <link rel="stylesheet" href="/css/se-feelscore.css?v=20260914-live" />
+  <link rel="stylesheet" href="/css/se-feelscore.css?v=20260914-building" />
   <link rel="stylesheet" href="/css/site-chrome.css?v=20260908-global-nav" />
   <script defer src="/js/site-chrome.js?v=20260908-global-nav"></script>
 </head>
@@ -75,10 +75,26 @@
 
       <div class="map-stage" id="map-stage">
         <canvas id="feelscore-map" role="img" aria-label="FEELSCORE pleasant weather contour map of the Southeast United States"></canvas>
-        <div class="map-empty" id="map-empty">
-          <span class="map-empty__mark">FS</span>
-          <strong>Building the regional analysis</strong>
-          <span>The map will show only places that qualify as pleasant.</span>
+        <div class="map-empty" id="map-empty" data-state="loading" role="status" aria-live="polite">
+          <div class="map-build" aria-hidden="true">
+            <svg viewBox="0 0 240 120" focusable="false">
+              <defs><pattern id="build-grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="#294657" stroke-width="1" /></pattern></defs>
+              <rect x="1" y="1" width="238" height="118" rx="14" fill="#0c1d2b" stroke="#345165" />
+              <rect x="8" y="8" width="224" height="104" rx="10" fill="url(#build-grid)" />
+              <g class="map-build__contours">
+                <path d="M14 93C46 37 60 85 90 47S156 18 174 41 219 43 226 18V101H14Z" fill="#ef8c38" opacity=".55" />
+                <path d="M14 98C42 67 75 97 102 62S148 38 174 59 205 62 226 45V101H14Z" fill="#f2d357" opacity=".65" />
+                <path d="M14 101C65 66 90 106 129 75S188 90 226 60V101Z" fill="#9bd85b" opacity=".8" />
+                <path d="M46 101C79 82 107 115 146 91S200 101 226 82V101Z" fill="#49d6c7" opacity=".9" />
+              </g>
+              <path class="map-build__scan" d="M12 10V110" stroke="#91fff1" stroke-width="2" />
+              <g fill="#d9fff9"><circle cx="66" cy="62" r="3"/><circle cx="128" cy="52" r="3"/><circle cx="178" cy="79" r="3"/></g>
+            </svg>
+          </div>
+          <span class="map-empty__error" aria-hidden="true">!</span>
+          <strong id="map-loading-title">Building your FEELSCORE map…</strong>
+          <span id="map-loading-detail">Loading forecast data and preparing the regional contours.</span>
+          <div class="map-build-colors" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
         </div>
         <aside class="map-inspector" id="map-inspector" aria-live="polite" hidden></aside>
       </div>
@@ -128,6 +144,6 @@
     </div>
   </footer>
 
-  <script type="module" src="/js/se-feelscore-page.js?v=20260914-live"></script>
+  <script type="module" src="/js/se-feelscore-page.js?v=20260914-building"></script>
 </body>
 </html>
