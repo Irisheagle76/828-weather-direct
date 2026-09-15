@@ -108,7 +108,7 @@ export function renderPublicInsights(root, payload) {
   const options = choices.sort((a,b) => a.name.localeCompare(b.name)).map((station) => `<option value="${escape(station.id)}">${escape(station.name)}</option>`).join('');
   compare.innerHTML = `<div class="avl-public-kicker">Your neighborhood, side by side</div><h2>Compare two places</h2><div class="avl-public-selects"><label>First neighborhood<select id="avl-compare-one">${options}</select></label><label>Second neighborhood<select id="avl-compare-two">${options}</select></label></div><div class="avl-public-pair-results" aria-live="polite"></div>`;
   const one = compare.querySelector('#avl-compare-one'); const two = compare.querySelector('#avl-compare-two');
-  one.value = previousOne || core.find((station) => station.id === 'huntington-chase')?.id || core[0]?.id || '';
+  one.value = previousOne || core.find((station) => station.id === 'north-haw-creek')?.id || core[0]?.id || '';
   two.value = previousTwo || core.find((station) => station.id === 'west-asheville')?.id || core[1]?.id || '';
   function updatePair() {
     const first = core.find((station) => station.id === one.value); const second = core.find((station) => station.id === two.value);

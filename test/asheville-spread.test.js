@@ -40,7 +40,7 @@ test("station registry contains 30 unique physical stations and deduplicates Gro
 });
 
 test("residential coordinates are generalized in public metadata", () => {
-  const station = ASHEVILLE_STATIONS.find((item) => item.id === "huntington-chase");
+  const station = ASHEVILLE_STATIONS.find((item) => item.id === "north-haw-creek");
   const metadata = publicStationMetadata(station);
   assert.deepEqual(metadata.location, {
     latitude: 35.616,
