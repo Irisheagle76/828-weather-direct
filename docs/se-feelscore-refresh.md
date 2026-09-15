@@ -14,6 +14,8 @@ node scripts/generate-feelscore.mjs --date=YYYY-MM-DD --force --batch-size=100 -
 
 Run once for each date. Validate both outputs using `validateForecast` from `public/js/se-feelscore-period.js` and the existing engine tests. Commit only the dated JSON/CSV files on current main. Data-only commits do not deploy the website or change deployment guards. The live endpoint sees them without a website release.
 
+For scheduled operation, run `node scripts/refresh-publish-se-feelscore.mjs` as **one command** from the publication checkout. It creates an isolated checkout on current main, completes generation, validation, commit, push and live verification before returning. Do not break those phases into conversation steps or divert into unrelated preview work before publication finishes. Failed checkouts are preserved for recovery. Run at 6 AM and retry at 2 PM Eastern; afternoon retries generate only tomorrow because NWS may remove today's elapsed noon hours. `--plan` prints the selected dates without changing anything.
+
 Keep the last three Eastern calendar dates plus tomorrow; only prune older ISO-date-named JSON/CSV within this data directory after both replacement forecasts validate. Do not delete unrelated files. Git history preserves past published maps.
 
 If the desktop automation does not run, new forecasts will not be generated. The page reports unavailable data instead of hiding that failure. The generator's NWS download must never be run on page requests.
