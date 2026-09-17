@@ -273,6 +273,23 @@ select:focus {
   filter: drop-shadow(0 5px 12px rgba(0,0,0,0.45));
 }
 
+.preview-progression { display: flex; align-items: flex-start; gap: 8px; text-align: center; }
+.preview-phase { display: grid; justify-items: center; gap: 3px; width: 86px; }
+.preview-phase small { color: #ffb47f; font-size: 11px; font-weight: 850; text-transform: uppercase; }
+.preview-phase .icon { font-size: 38px; }
+.preview-phase strong { color: #fffdf8; font-size: 11px; line-height: 1.2; }
+.preview-arrow { padding-top: 24px; color: #ffb47f; font-weight: 900; }
+
+.weather-setup-note { margin: 2px 0 14px; color: #52627a; font-size: 0.88rem; line-height: 1.4; }
+.weather-setup-preview { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 14px 0; padding: 13px 0; border-top: 1px solid #dce5ed; border-bottom: 1px solid #dce5ed; }
+.setup-preview-label { min-width: 150px; color: #a64e17; font-size: 0.73rem; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; }
+.setup-preview-prompt { flex-basis: 100%; color: #617085; font-size: 0.79rem; }
+.weather-setup-preview .preview-phase { width: 96px; }
+.weather-setup-preview .preview-phase small,
+.weather-setup-preview .preview-arrow { color: #a64e17; }
+.weather-setup-preview .preview-phase strong { color: #142033; }
+.weather-setup-preview .icon { font-size: 32px; filter: none; }
+
 .temps {
   display: flex;
   align-items: flex-end;
@@ -811,30 +828,6 @@ pre {
     </div>
 
     <div class="group">
-      <div class="group-title">Daily Editorial Signals</div>
-      <div class="field-grid three">
-        <div class="field">
-          <label for="icon">Icon (emoji)</label>
-          <input id="icon" placeholder="⛅" />
-        </div>
-        <div class="field">
-          <label for="condition">Condition</label>
-          <input id="condition" placeholder="Mostly sunny" />
-        </div>
-        <div class="field">
-          <label for="feelScore">FeelScore</label>
-          <input id="feelScore" type="number" min="0" max="100" placeholder="82" />
-        </div>
-      </div>
-
-      <label for="mainIssue">Main Issue</label>
-      <input id="mainIssue" placeholder="Afternoon storm chance" />
-
-      <label for="bestWindow">Best Window</label>
-      <input id="bestWindow" placeholder="Morning through early afternoon" />
-    </div>
-
-    <div class="group">
       <div class="group-title">Temperatures And Wind</div>
       <div class="field-grid three">
         <div class="field">
@@ -900,19 +893,25 @@ pre {
     </div>
 
     <div class="group">
-      <div class="group-title">Weather Setup</div>
+      <div class="group-title">Weather Setup &amp; Day Evolution</div>
+      <p class="weather-setup-note">Choose how the weather begins and what changes. These choices set the public icons. Use Timeline for the details in words.</p>
       <div class="field-grid">
         <div class="field">
-          <label for="sky">Sky</label>
+          <label for="sky">Opening weather · first icon</label>
           <select id="sky">
             <option value="">Select</option>
-            <option value="clear">Clear</option>
-            <option value="mostly_sunny">Mostly sunny</option>
-            <option value="partly_cloudy">Partly cloudy</option>
-            <option value="mostly_cloudy">Mostly cloudy</option>
-            <option value="overcast">Overcast</option>
-            <option value="showery">Showery</option>
-            <option value="stormy">Stormy</option>
+            <option value="clear">☀️ Clear</option>
+            <option value="mostly_sunny">🌤️ Mostly sunny</option>
+            <option value="partly_cloudy">⛅ Partly cloudy</option>
+            <option value="mostly_cloudy">☁️ Mostly cloudy</option>
+            <option value="overcast">☁️ Overcast</option>
+            <option value="showery">🌦️ Showers</option>
+            <option value="rain">🌧️ Rain</option>
+            <option value="stormy">⛈️ Storms</option>
+            <option value="snow">🌨️ Snow</option>
+            <option value="sleet">🌨️ Sleet</option>
+            <option value="freezing_rain">🌧️ Freezing rain</option>
+            <option value="wintry_mix">🌨️ Wintry mix</option>
           </select>
         </div>
         <div class="field">
@@ -920,12 +919,50 @@ pre {
           <select id="evolution">
             <option value="">Select</option>
             <option value="steady">Little change</option>
-            <option value="building">Building clouds</option>
-            <option value="clearing">Clearing trend</option>
-            <option value="mixed">Back and forth</option>
+            <option value="building">Clouds build</option>
+            <option value="developing">Precipitation develops</option>
+            <option value="clearing">Skies clear</option>
+            <option value="tapering">Precipitation tapers</option>
+            <option value="changing_precip">Precipitation changes type</option>
+            <option value="mixed">Variable skies</option>
           </select>
         </div>
       </div>
+
+      <div class="field-grid">
+        <div class="field">
+          <label for="laterIcon">Later weather · second icon</label>
+          <select id="laterIcon">
+            <option value="">Use setup to suggest</option>
+            <option value="none">No second icon</option>
+            <option value="sunny">☀️ Sunny</option>
+            <option value="mostly-sunny">🌤️ Mostly sunny</option>
+            <option value="partly-cloudy">⛅ Partly cloudy</option>
+            <option value="cloudy">☁️ Cloudy</option>
+            <option value="overcast">☁️ Overcast</option>
+            <option value="showery">🌦️ Showers</option>
+            <option value="rain">🌧️ Rain</option>
+            <option value="thunderstorm">⛈️ Storms</option>
+            <option value="snow">🌨️ Snow</option>
+            <option value="sleet">🌨️ Sleet</option>
+            <option value="freezing-rain">🌧️ Freezing rain</option>
+            <option value="wintry-mix">🌨️ Wintry mix</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="laterTiming">Icon transition time</label>
+          <select id="laterTiming">
+            <option value="">Use Rain Start, or Later</option>
+            <option value="morning">Morning</option>
+            <option value="midday">Midday</option>
+            <option value="afternoon">Afternoon</option>
+            <option value="evening">Evening</option>
+            <option value="overnight">Overnight</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="weather-setup-preview" id="setupIconPreview" aria-live="polite"></div>
 
       <div class="field-grid">
         <div class="field">
@@ -971,6 +1008,21 @@ pre {
             <option value="evening">Evening</option>
             <option value="overnight">Overnight</option>
           </select>
+        </div>
+      </div>
+
+      <div class="field-grid three">
+        <div class="field">
+          <label for="feelScore">FeelScore</label>
+          <input id="feelScore" type="number" min="0" max="100" placeholder="82" />
+        </div>
+        <div class="field">
+          <label for="mainIssue">Main Issue</label>
+          <input id="mainIssue" placeholder="Afternoon storm chance" />
+        </div>
+        <div class="field">
+          <label for="bestWindow">Best Window</label>
+          <input id="bestWindow" placeholder="Morning through early afternoon" />
         </div>
       </div>
     </div>
@@ -1024,7 +1076,7 @@ pre {
     <article class="forecast-card">
       <div class="row-top">
         <div class="day" id="previewDay">Tomorrow</div>
-        <div class="icon" id="previewIcon">☀</div>
+        <div id="previewProgression"><div class="icon">☀</div></div>
       </div>
 
       <div class="row-main">
@@ -1082,7 +1134,9 @@ pre {
   </section>
 </main>
 
+<script src="../../js/modules/forecast-day-progression-core.js"></script>
 <script type="module">
+const { getDayProgression, skyIcon, skyCondition } = globalThis.ForecastDayProgression;
 const FIELD_IDS = [
   "confidence",
   "headline",
@@ -1090,8 +1144,8 @@ const FIELD_IDS = [
   "high",
   "low",
   "rainChance",
-  "icon",
-  "condition",
+  "laterIcon",
+  "laterTiming",
   "feelScore",
   "mainIssue",
   "bestWindow",
@@ -1227,10 +1281,12 @@ async function init() {
   bindEvents();
 
   const forecastDates = getForecastDates();
+  el("date").min = forecastDates[0];
+  el("date").max = forecastDates.at(-1);
   const firstDate = forecastDates.includes(state.activeDate)
     ? state.activeDate
     : forecastDates[0];
-  selectDate(firstDate);
+  selectDate(firstDate, { saveCurrent: false });
 }
 
 async function loadOptionalForecastEngine() {
@@ -1254,9 +1310,10 @@ function initDayStrip() {
     button.className = "day-pill";
     button.dataset.date = dateStr;
     button.innerHTML = `
-      <strong>${index === 0 ? "Tomorrow" : formatWeekday(dateStr)}</strong>
+      <strong>${index === 0 ? `Tomorrow · ${formatWeekday(dateStr)}` : dateFromInput(dateStr).toLocaleDateString([], { weekday: "long" })}</strong>
       <span>${formatShortDate(dateStr)}</span>
     `;
+    button.setAttribute("aria-pressed", String(dateStr === state.activeDate));
     button.addEventListener("click", () => selectDate(dateStr));
     strip.appendChild(button);
   });
@@ -1313,9 +1370,13 @@ function bindEvents() {
   el("date").addEventListener("change", () => {
     const dateStr = el("date").value;
     if (!dateStr) return;
+    if (!getForecastDates().includes(dateStr)) {
+      el("date").value = state.activeDate;
+      setStatus("Choose one of the four forecast dates shown above.");
+      return;
+    }
     ensureDay(dateStr);
     selectDate(dateStr);
-    initDayStrip();
   });
 
   el("generateBtn").addEventListener("click", generateDraft);
@@ -1434,9 +1495,9 @@ function updateSignalCustomVisibility() {
   });
 }
 
-function selectDate(dateStr) {
+function selectDate(dateStr, { saveCurrent = true } = {}) {
   if (!dateStr) return;
-  if (state.activeDate) saveFormToActiveDay();
+  if (saveCurrent && state.activeDate) saveFormToActiveDay();
 
   state.activeDate = dateStr;
   ensureDay(dateStr);
@@ -1444,7 +1505,9 @@ function selectDate(dateStr) {
   loadDayIntoForm(state.days[dateStr]);
 
   document.querySelectorAll(".day-pill").forEach(pill => {
-    pill.classList.toggle("active", pill.dataset.date === dateStr);
+    const active = pill.dataset.date === dateStr;
+    pill.classList.toggle("active", active);
+    pill.setAttribute("aria-pressed", String(active));
   });
 
   loadSystemGuidance(dateStr);
@@ -1497,6 +1560,9 @@ function emptyComposerDay(dateStr) {
     rainChance: "",
     icon: "",
     condition: "",
+    laterIcon: "",
+    laterCondition: "",
+    laterTiming: "",
     feelScore: "",
     mainIssue: "",
     bestWindow: "",
@@ -1541,7 +1607,11 @@ function loadDayIntoForm(day) {
     if (node.type === "checkbox") {
       node.checked = Boolean(day[id]);
     } else {
-      node.value = day[id] ?? "";
+      const value = id === "laterTiming" ? String(day[id] || "").toLowerCase() : day[id] ?? "";
+      if (id === "laterIcon" && value && !Array.from(node.options).some(option => option.value === value)) {
+        node.add(new Option(`Saved icon: ${value}`, value));
+      }
+      node.value = value;
     }
   });
   syncWindState();
@@ -1565,6 +1635,9 @@ function generateDraft() {
   if (day.evolution === "clearing") parts.push("Clouds should gradually break, allowing brighter conditions as the day goes on.");
   if (day.evolution === "mixed") parts.push("Expect a back-and-forth sky, with breaks of sun interrupted by passing cloud cover.");
   if (day.evolution === "steady") parts.push("Conditions stay fairly consistent without a major shift through the day.");
+  if (day.evolution === "developing") parts.push("Precipitation becomes more likely later in the day.");
+  if (day.evolution === "tapering") parts.push("Precipitation should taper as the day goes on.");
+  if (day.evolution === "changing_precip") parts.push("The precipitation type may change during the day; check the timeline for timing.");
 
   if (day.stormRisk && day.stormRisk !== "none") {
     const coverage = day.stormRisk === "numerous" ? "more widespread" : day.stormRisk;
@@ -1604,6 +1677,9 @@ function clearActiveDay() {
     rainChance: "",
     icon: "",
     condition: "",
+    laterIcon: "",
+    laterCondition: "",
+    laterTiming: "",
     feelScore: "",
     mainIssue: "",
     bestWindow: "",
@@ -1674,6 +1750,9 @@ function buildPublishedForecast() {
 
 function normalizeDayForPublish(day) {
   const tags = parseTags(day.signals);
+  const openingIcon = skyIcon(day.sky);
+  const openingCondition = skyCondition(day.sky);
+  const laterWeather = String(day.laterIcon || "").trim();
 
   return {
     date: day.date,
@@ -1682,8 +1761,11 @@ function normalizeDayForPublish(day) {
     high: toNumberOrNull(day.high),
     low: toNumberOrNull(day.low),
     rainChance: toNumberOrNull(day.rainChance),
-    icon: emptyToNull(day.icon),
-    condition: emptyToNull(day.condition),
+    icon: openingIcon || emptyToNull(day.icon),
+    condition: openingCondition || emptyToNull(day.condition),
+    laterIcon: emptyToNull(laterWeather),
+    laterCondition: null,
+    laterTiming: laterWeather === "none" ? null : emptyToNull(day.laterTiming),
     feelScore: toNumberOrNull(day.feelScore),
     mainIssue: emptyToNull(day.mainIssue),
     bestWindow: emptyToNull(day.bestWindow),
@@ -1788,11 +1870,34 @@ function signalDefaults() {
 }
 
 function updatePreview() {
-  const day = readForm();
+  const day = { ...state.days[state.activeDate], ...readForm() };
   const tags = parseTags(day.signals);
 
   el("previewDay").textContent = formatPreviewDay(day.date);
-  el("previewIcon").textContent = pickIcon(day.sky, day.stormRisk);
+  const publishedDay = normalizeDayForPublish(day);
+  const progression = getDayProgression(publishedDay, publishedDay.icon || "○", publishedDay.condition || "Choose opening weather");
+  const progressionMarkup = progression.later
+    ? `<div class="preview-progression" aria-label="${escapeHtml(`${progression.first.condition} early, then ${progression.later.condition} ${progression.later.timing.toLowerCase()}`)}">
+        <div class="preview-phase"><small>Early</small><span class="icon" aria-hidden="true">${escapeHtml(progression.first.icon)}</span><strong>${escapeHtml(progression.first.condition)}</strong></div>
+        <span class="preview-arrow" aria-hidden="true">→</span>
+        <div class="preview-phase"><small>${escapeHtml(progression.later.timing)}</small><span class="icon" aria-hidden="true">${escapeHtml(progression.later.icon)}</span><strong>${escapeHtml(progression.later.condition)}</strong></div>
+      </div>`
+    : `<div class="icon" aria-label="${escapeHtml(progression.first.condition)}">${escapeHtml(progression.first.icon)}</div>`;
+  el("previewProgression").innerHTML = progressionMarkup;
+  const setupPrompt = !day.sky
+    ? "Choose opening weather to set the first icon."
+    : day.evolution === "changing_precip" && !day.laterIcon
+      ? "Choose the later precipitation type to show the change."
+      : day.evolution === "building" && !progression.later
+        ? "Clouds building alone keep one icon. Choose later weather if the main conditions change."
+        : day.evolution === "developing" && !progression.later
+          ? "Set Rain Start or choose later weather to show when precipitation develops."
+          : day.evolution === "mixed" && !progression.later
+            ? "Variable skies stay on one icon; use Timeline for the back-and-forth."
+            : !progression.later && !day.evolution
+              ? "Choose Day Evolution or later weather to show a change."
+              : "";
+  el("setupIconPreview").innerHTML = `<span class="setup-preview-label">Public icon sequence</span>${progressionMarkup}${setupPrompt ? `<span class="setup-preview-prompt">${escapeHtml(setupPrompt)}</span>` : ""}`;
   el("previewHigh").textContent = day.high ? `${Math.round(Number(day.high))}°` : "--";
   el("previewLow").textContent = day.low ? `${Math.round(Number(day.low))}°` : "--";
   el("previewRainChance").textContent = day.rainChance !== ""
@@ -2006,6 +2111,9 @@ function composerDayFromPublished(dateStr, day = {}) {
     rainChance: valueToInput(day.rainChance),
     icon: day.icon || "",
     condition: day.condition || "",
+    laterIcon: day.laterIcon || "",
+    laterCondition: day.laterCondition || "",
+    laterTiming: day.laterTiming || "",
     feelScore: valueToInput(day.feelScore),
     mainIssue: day.mainIssue || "",
     bestWindow: day.bestWindow || "",
@@ -2053,6 +2161,9 @@ function hasPublishedContent(day = {}) {
     day.low,
     day.icon,
     day.condition,
+    day.laterIcon,
+    day.laterCondition,
+    day.laterTiming,
     day.feelScore,
     day.mainIssue,
     day.bestWindow,
@@ -2277,15 +2388,6 @@ function formatWindRange(min, max) {
   if (min && max && min !== max) return `${min}-${max} mph`;
   if (min || max) return `${min || max} mph`;
   return "";
-}
-
-function pickIcon(sky, stormRisk) {
-  if (stormRisk && stormRisk !== "none") return "⛈";
-  if (sky === "showery") return "🌦";
-  if (sky === "stormy") return "⛈";
-  if (sky === "overcast" || sky === "mostly_cloudy") return "☁";
-  if (sky === "partly_cloudy") return "⛅";
-  return "☀";
 }
 
 function confidenceLabel(value) {

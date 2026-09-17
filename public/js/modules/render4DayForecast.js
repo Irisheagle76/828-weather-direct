@@ -4,6 +4,7 @@
 
 import { getWeatherForUI } from "/js/adapters/weather-adapter.js";
 import { calculateComfort } from "/js/intel/comfort.js";
+import { getDayProgression, normalizeDayIcon } from "/js/modules/forecast-day-progression.js?v=forecast-setup-20260916";
 
 const LOCATION = { lat: 35.5951, lon: -82.5515 };
 
@@ -91,7 +92,10 @@ function getManualDay(dateKey) {
   const hasAuthoredForecast =
     hasText(day.headline) ||
     hasText(day.narrative) ||
+    hasText(day.icon) ||
     hasText(day.condition) ||
+    (hasText(day.laterIcon) && day.laterIcon !== "none") ||
+    hasText(day.laterCondition) ||
     hasText(day.mainIssue) ||
     hasText(day.bestWindow) ||
     hasText(day.localNote || day.localInsight) ||
@@ -144,7 +148,8 @@ function buildPublishedDay(day, index, published, source) {
   const timeline = normalizeTimeline(published.timeline);
   const tags = Array.isArray(published.tags) ? published.tags.filter(Boolean) : [];
   const condition = published.condition ? formatCategory(published.condition) : formatCategory(published.sky) || fallback.condition;
-  const icon = normalizeForecastIcon(published.icon) || pickManualIcon(published) || fallback.icon;
+  const icon = normalizeDayIcon(published.icon) || pickManualIcon(published) || fallback.icon;
+  const progression = getDayProgression(published, icon, condition);
   const feelScore = numberOrNull(published.feelScore) ?? fallback.feelScore;
 
   return {
@@ -154,6 +159,7 @@ function buildPublishedDay(day, index, published, source) {
     low: published.low ?? fallback.low,
     icon,
     condition,
+    progression,
     feelScore,
     headline: published.headline || fallback.headline,
     narrative: published.narrative || fallback.narrative,
@@ -671,11 +677,10 @@ function renderForecastCard(day) {
           <div class="forecast-card-day">${escapeHtml(formatDay(day.date, day.index))}</div>
           <div class="forecast-card-date">${escapeHtml(formatCardDate(day.date))}</div>
         </div>
-        <div class="forecast-condition">
-          <span>${escapeHtml(day.icon)}</span>
-          <strong>${escapeHtml(formatCategory(day.condition) || "Forecast")}</strong>
-        </div>
+        ${day.progression?.later ? "" : renderDayProgression(day)}
       </div>
+
+      ${day.progression?.later ? renderDayProgression(day) : ""}
 
       <div class="forecast-card-temps">
         <div class="forecast-temp-high"><span>High</span><strong>${escapeHtml(formatTemp(day.high))}</strong></div>
@@ -697,6 +702,30 @@ function renderForecastCard(day) {
       ${day.localNote ? `<div class="forecast-card-local"><span>Local note</span>${escapeHtml(day.localNote)}</div>` : ""}
     </article>
   `;
+}
+
+function renderDayProgression(day) {
+  const progression = day.progression;
+  if (!progression?.later) return `
+    <div class="forecast-condition">
+      <span>${escapeHtml(day.icon)}</span>
+      <strong>${escapeHtml(formatCategory(day.condition) || "Forecast")}</strong>
+    </div>`;
+
+  return `
+    <div class="forecast-day-progression" aria-label="${escapeHtml(`${progression.first.condition} early, then ${progression.later.condition} ${progression.later.timing.toLowerCase()}`)}">
+      <div class="forecast-phase">
+        <small>Early</small>
+        <span aria-hidden="true">${escapeHtml(progression.first.icon)}</span>
+        <strong>${escapeHtml(progression.first.condition)}</strong>
+      </div>
+      <span class="forecast-phase-arrow" aria-hidden="true">→</span>
+      <div class="forecast-phase">
+        <small>${escapeHtml(progression.later.timing)}</small>
+        <span aria-hidden="true">${escapeHtml(progression.later.icon)}</span>
+        <strong>${escapeHtml(progression.later.condition)}</strong>
+      </div>
+    </div>`;
 }
 
 function renderBoardChip(label, value, type) {
@@ -854,23 +883,6 @@ function pickManualIcon(day) {
   if (day.sky === "overcast" || day.sky === "mostly_cloudy") return "☁️";
   if (day.sky === "partly_cloudy") return "⛅";
   return "☀️";
-}
-
-function normalizeForecastIcon(icon) {
-  const value = String(icon || "").trim().toLowerCase();
-  const icons = {
-    sunny: "☀️",
-    "mostly-sunny": "🌤️",
-    "partly-cloudy": "⛅",
-    cloudy: "☁️",
-    overcast: "☁️",
-    rain: "🌧️",
-    showery: "🌦️",
-    thunderstorm: "⛈️",
-    stormy: "⛈️"
-  };
-
-  return icons[value] || (icon && /[☀🌤⛅☁🌦🌧⛈]/u.test(icon) ? icon : null);
 }
 
 function pickFallbackIcon(hours, rain) {

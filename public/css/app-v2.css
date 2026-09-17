@@ -7389,6 +7389,55 @@ body {
   font-weight: 850;
 }
 
+.forecast-refresh.forecast-warm .forecast-days .forecast-day-progression {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  margin-top: 9px;
+  padding: 7px 5px;
+  border: 1px solid rgba(245, 125, 35, 0.15);
+  border-radius: 11px;
+  background: rgba(255, 245, 232, 0.72);
+  text-align: center;
+}
+
+.forecast-refresh.forecast-warm .forecast-days .forecast-phase {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  min-width: 0;
+}
+
+.forecast-refresh.forecast-warm .forecast-days .forecast-phase small {
+  color: #a64e17;
+  font-size: 0.67rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.forecast-refresh.forecast-warm .forecast-days .forecast-phase span {
+  font-size: clamp(2.2rem, 3.3vw, 2.9rem);
+  line-height: 1;
+  filter: drop-shadow(0 5px 7px rgba(11, 30, 67, 0.14));
+}
+
+.forecast-refresh.forecast-warm .forecast-days .forecast-phase strong {
+  color: #344258;
+  font-size: 0.73rem;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.forecast-refresh.forecast-warm .forecast-days .forecast-phase-arrow {
+  padding-top: 12px;
+  color: #a64e17;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
 .forecast-refresh.forecast-warm .forecast-days .forecast-card-temps {
   margin-top: 16px;
 }
