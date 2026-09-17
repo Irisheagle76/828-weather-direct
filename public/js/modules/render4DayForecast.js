@@ -689,7 +689,7 @@ function renderForecastCard(day) {
       </div>
 
       <h3>${escapeHtml(day.headline || "Forecast update")}</h3>
-      <p>${escapeHtml(shortNarrative(day.narrative))}</p>
+      <p>${escapeHtml(day.narrative)}</p>
 
       <div class="forecast-card-chips">
         ${renderInfoChip("Wind", day.source === "manual" ? formatWind(day.wind) : null)}
@@ -1024,12 +1024,6 @@ function formatWindRange(min, max) {
 function formatPercent(value) {
   const n = numberOrNull(value);
   return n == null ? "TBD" : `${Math.round(n)}%`;
-}
-
-function shortNarrative(text) {
-  const value = String(text || "").trim();
-  if (value.length <= 180) return value;
-  return `${value.slice(0, 177).trim()}...`;
 }
 
 function formatCategory(value) {
