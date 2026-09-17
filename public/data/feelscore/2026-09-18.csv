@@ -507,7 +507,7 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 32,-83.75,America/New_York,GA,0,0,0|0|0|0,
 32,-83.5,America/New_York,GA,0,0,0|0|0|0,
 32,-83.25,America/New_York,GA,0,0,0|0|0|0,
-32,-83,America/New_York,GA,0,0,0|0|0|0,
+32,-83,America/New_York,GA,0,0,1|0|0|0,
 32,-82.75,America/New_York,GA,0,0,0|0|0|0,
 32,-82.5,America/New_York,GA,0,0,0|0|0|0,
 32,-82.25,America/New_York,GA,0,0,0|0|0|0,
@@ -548,8 +548,8 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 32.25,-84.25,America/New_York,GA,0,0,0|0|0|0,
 32.25,-84,America/New_York,GA,0,0,0|0|0|0,
 32.25,-83.75,America/New_York,GA,0,0,0|0|0|0,
-32.25,-83.5,America/New_York,GA,0,0,1|1|0|0,
-32.25,-83.25,America/New_York,GA,0,0,1|1|0|0,
+32.25,-83.5,America/New_York,GA,0,0,0|0|0|0,
+32.25,-83.25,America/New_York,GA,0,0,0|0|0|0,
 32.25,-83,America/New_York,GA,0,0,1|0|0|0,
 32.25,-82.75,America/New_York,GA,0,0,0|0|0|0,
 32.25,-82.5,America/New_York,GA,0,0,0|0|0|0,
@@ -578,22 +578,22 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 32.5,-87.75,America/Chicago,AL,0,0,0|0|0|0,
 32.5,-87.5,America/Chicago,AL,0,0,0|0|0|0,
 32.5,-87.25,America/Chicago,AL,0,0,0|0|0|0,
-32.5,-87,America/Chicago,AL,0,0,0|0|0|0,
-32.5,-86.75,America/Chicago,AL,0,0,0|0|0|0,
-32.5,-86.5,America/Chicago,AL,0,0,0|0|0|0,
-32.5,-86.25,America/Chicago,AL,0,0,0|0|0|0,
-32.5,-86,America/Chicago,AL,0,0,0|0|0|0,
-32.5,-85.75,America/Chicago,AL,0,0,0|0|0|0,
-32.5,-85.5,America/Chicago,AL,0,0,0|0|0|0,
-32.5,-85.25,America/Chicago,AL,0,0,0|0|0|0,
-32.5,-85,America/Chicago,GA,0,0,0|0|0|0,
+32.5,-87,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+32.5,-86.75,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+32.5,-86.5,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+32.5,-86.25,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+32.5,-86,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+32.5,-85.75,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+32.5,-85.5,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+32.5,-85.25,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+32.5,-85,America/Chicago,GA,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
 32.5,-84.75,America/New_York,GA,0,0,0|0|0|0,
 32.5,-84.5,America/New_York,GA,0,0,0|0|0|0,
 32.5,-84.25,America/New_York,GA,0,0,0|0|0|0,
 32.5,-84,America/New_York,GA,0,0,0|0|0|0,
 32.5,-83.75,America/New_York,GA,0,0,0|0|0|0,
 32.5,-83.5,America/New_York,GA,0,0,0|0|0|0,
-32.5,-83.25,America/New_York,GA,0,0,0|1|0|0,
+32.5,-83.25,America/New_York,GA,0,0,0|0|0|0,
 32.5,-83,America/New_York,GA,0,0,0|0|0|0,
 32.5,-82.75,America/New_York,GA,0,0,0|0|0|0,
 32.5,-82.5,America/New_York,GA,0,0,0|0|0|0,
@@ -621,16 +621,16 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 32.75,-88.25,America/Chicago,AL,0,0,0|0|0|0,
 32.75,-88,America/Chicago,AL,0,0,0|0|0|0,
 32.75,-87.75,America/Chicago,AL,0,0,0|0|0|0,
-32.75,-87.5,America/Chicago,AL,0,0,0|0|0|0,
-32.75,-87.25,America/Chicago,AL,0,0,0|0|0|0,
-32.75,-87,America/Chicago,AL,0,0,0|0|0|0,
-32.75,-86.75,America/Chicago,AL,0,0,0|0|0|0,
-32.75,-86.5,America/Chicago,AL,0,0,0|0|0|0,
-32.75,-86.25,America/Chicago,AL,0,0,0|0|0|0,
-32.75,-86,America/Chicago,AL,0,0,0|0|0|0,
-32.75,-85.75,America/Chicago,AL,0,0,0|0|0|0,
-32.75,-85.5,America/Chicago,AL,0,0,0|0|0|0,
-32.75,-85.25,America/Chicago,AL,0,0,0|0|0|0,
+32.75,-87.5,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+32.75,-87.25,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+32.75,-87,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+32.75,-86.75,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+32.75,-86.5,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+32.75,-86.25,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+32.75,-86,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+32.75,-85.75,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+32.75,-85.5,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+32.75,-85.25,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
 32.75,-85,America/New_York,GA,0,0,0|0|0|0,
 32.75,-84.75,America/New_York,GA,0,0,0|0|0|0,
 32.75,-84.5,America/New_York,GA,0,0,0|0|0|0,
@@ -666,18 +666,18 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 33,-88.75,America/Chicago,MS,0,0,0|0|0|0,
 33,-88.5,America/Chicago,MS,0,0,0|0|0|0,
 33,-88.25,America/Chicago,AL,0,0,0|0|0|0,
-33,-88,America/Chicago,AL,0,0,0|0|0|0,
-33,-87.75,America/Chicago,AL,0,0,0|0|0|0,
-33,-87.5,America/Chicago,AL,0,0,0|0|0|0,
-33,-87.25,America/Chicago,AL,0,0,0|0|0|0,
-33,-87,America/Chicago,AL,0,0,0|0|0|0,
-33,-86.75,America/Chicago,AL,0,0,0|0|0|0,
-33,-86.5,America/Chicago,AL,0,0,0|0|0|0,
-33,-86.25,America/Chicago,AL,0,0,0|0|0|0,
-33,-86,America/Chicago,AL,0,0,0|0|0|0,
-33,-85.75,America/Chicago,AL,0,0,0|0|0|0,
-33,-85.5,America/Chicago,AL,0,0,0|0|0|0,
-33,-85.25,America/Chicago,AL,0,0,0|0|0|0,
+33,-88,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33,-87.75,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33,-87.5,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33,-87.25,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33,-87,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33,-86.75,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33,-86.5,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33,-86.25,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33,-86,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33,-85.75,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33,-85.5,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33,-85.25,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
 33,-85,America/New_York,GA,0,0,0|0|0|0,
 33,-84.75,America/New_York,GA,0,0,0|0|0|0,
 33,-84.5,America/New_York,GA,0,0,0|0|0|0,
@@ -714,17 +714,17 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 33.25,-88.75,America/Chicago,MS,0,0,0|0|0|0,
 33.25,-88.5,America/Chicago,MS,0,0,0|0|0|0,
 33.25,-88.25,America/Chicago,AL,0,0,0|0|0|0,
-33.25,-88,America/Chicago,AL,0,0,0|0|0|0,
-33.25,-87.75,America/Chicago,AL,0,0,0|0|0|0,
-33.25,-87.5,America/Chicago,AL,0,0,0|0|0|0,
-33.25,-87.25,America/Chicago,AL,0,0,0|0|0|0,
-33.25,-87,America/Chicago,AL,0,0,0|0|0|0,
-33.25,-86.75,America/Chicago,AL,0,0,0|0|0|0,
-33.25,-86.5,America/Chicago,AL,0,0,0|0|0|0,
-33.25,-86.25,America/Chicago,AL,0,0,0|0|0|0,
-33.25,-86,America/Chicago,AL,0,0,0|0|0|0,
-33.25,-85.75,America/Chicago,AL,0,0,0|0|0|0,
-33.25,-85.5,America/Chicago,AL,0,0,0|0|0|0,
+33.25,-88,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.25,-87.75,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.25,-87.5,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.25,-87.25,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.25,-87,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.25,-86.75,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.25,-86.5,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.25,-86.25,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.25,-86,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.25,-85.75,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.25,-85.5,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
 33.25,-85.25,America/Chicago,GA,0,0,0|0|0|0,
 33.25,-85,America/New_York,GA,0,0,0|0|0|0,
 33.25,-84.75,America/New_York,GA,0,0,0|0|0|0,
@@ -763,18 +763,18 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 33.5,-89,America/Chicago,MS,0,0,0|0|0|0,
 33.5,-88.75,America/Chicago,MS,0,0,0|0|0|0,
 33.5,-88.5,America/Chicago,MS,0,0,0|0|0|0,
-33.5,-88.25,America/Chicago,AL,0,0,0|0|0|0,
-33.5,-88,America/Chicago,AL,0,0,0|0|0|0,
-33.5,-87.75,America/Chicago,AL,0,0,0|0|0|0,
-33.5,-87.5,America/Chicago,AL,0,0,0|0|0|0,
-33.5,-87.25,America/Chicago,AL,0,0,0|0|0|0,
-33.5,-87,America/Chicago,AL,0,0,0|0|0|0,
-33.5,-86.75,America/Chicago,AL,0,0,0|0|0|0,
-33.5,-86.5,America/Chicago,AL,0,0,0|0|0|0,
-33.5,-86.25,America/Chicago,AL,0,0,0|0|0|0,
-33.5,-86,America/Chicago,AL,0,0,0|0|0|0,
-33.5,-85.75,America/Chicago,AL,0,0,0|0|0|0,
-33.5,-85.5,America/Chicago,AL,0,0,0|0|0|0,
+33.5,-88.25,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.5,-88,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.5,-87.75,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.5,-87.5,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.5,-87.25,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.5,-87,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.5,-86.75,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.5,-86.5,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.5,-86.25,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.5,-86,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.5,-85.75,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.5,-85.5,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
 33.5,-85.25,America/New_York,GA,0,0,0|0|0|0,
 33.5,-85,America/New_York,GA,0,0,0|0|0|0,
 33.5,-84.75,America/New_York,GA,0,0,0|0|0|0,
@@ -814,17 +814,17 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 33.75,-88.75,America/Chicago,MS,0,0,0|0|0|0,
 33.75,-88.5,America/Chicago,MS,0,0,0|0|0|0,
 33.75,-88.25,America/Chicago,MS,0,0,0|0|0|0,
-33.75,-88,America/Chicago,AL,0,0,0|0|0|0,
-33.75,-87.75,America/Chicago,AL,0,0,0|0|0|0,
-33.75,-87.5,America/Chicago,AL,0,0,0|0|0|0,
-33.75,-87.25,America/Chicago,AL,0,0,0|0|0|0,
-33.75,-87,America/Chicago,AL,0,0,0|0|0|0,
-33.75,-86.75,America/Chicago,AL,0,0,0|0|0|0,
-33.75,-86.5,America/Chicago,AL,0,0,0|0|0|0,
-33.75,-86.25,America/Chicago,AL,0,0,0|0|0|0,
-33.75,-86,America/Chicago,AL,0,0,0|0|0|0,
-33.75,-85.75,America/Chicago,AL,0,0,0|0|0|0,
-33.75,-85.5,America/Chicago,AL,0,0,0|0|0|0,
+33.75,-88,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.75,-87.75,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.75,-87.5,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.75,-87.25,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.75,-87,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.75,-86.75,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.75,-86.5,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.75,-86.25,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.75,-86,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.75,-85.75,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+33.75,-85.5,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
 33.75,-85.25,America/New_York,GA,0,0,0|0|0|0,
 33.75,-85,America/New_York,GA,0,0,0|0|0|0,
 33.75,-84.75,America/New_York,GA,0,0,0|0|0|0,
@@ -865,17 +865,17 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 34,-88.75,America/Chicago,MS,0,0,0|0|0|0,
 34,-88.5,America/Chicago,MS,0,0,0|0|0|0,
 34,-88.25,America/Chicago,MS,0,0,0|0|0|0,
-34,-88,America/Chicago,AL,0,0,0|0|0|0,
-34,-87.75,America/Chicago,AL,0,0,0|0|0|0,
-34,-87.5,America/Chicago,AL,0,0,0|0|0|0,
-34,-87.25,America/Chicago,AL,0,0,0|0|0|0,
+34,-88,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+34,-87.75,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+34,-87.5,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+34,-87.25,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
 34,-87,America/Chicago,AL,0,0,0|0|0|0,
 34,-86.75,America/Chicago,AL,0,0,0|0|0|0,
-34,-86.5,America/Chicago,AL,0,0,0|0|0|0,
-34,-86.25,America/Chicago,AL,0,0,0|0|0|0,
-34,-86,America/Chicago,AL,0,0,0|0|0|0,
-34,-85.75,America/Chicago,AL,0,0,0|0|0|0,
-34,-85.5,America/Chicago,AL,0,0,0|0|0|0,
+34,-86.5,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+34,-86.25,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+34,-86,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+34,-85.75,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+34,-85.5,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
 34,-85.25,America/New_York,GA,0,0,0|0|0|0,
 34,-85,America/New_York,GA,0,0,0|0|0|0,
 34,-84.75,America/New_York,GA,0,0,0|0|0|0,
@@ -920,17 +920,17 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 34.25,-88.75,America/Chicago,MS,0,0,0|0|0|0,
 34.25,-88.5,America/Chicago,MS,0,0,0|0|0|0,
 34.25,-88.25,America/Chicago,MS,0,0,0|0|0|0,
-34.25,-88,America/Chicago,AL,0,0,0|0|0|0,
-34.25,-87.75,America/Chicago,AL,0,0,0|0|0|0,
-34.25,-87.5,America/Chicago,AL,0,0,0|0|0|0,
-34.25,-87.25,America/Chicago,AL,0,0,0|0|0|0,
+34.25,-88,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+34.25,-87.75,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+34.25,-87.5,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+34.25,-87.25,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
 34.25,-87,America/Chicago,AL,0,0,0|0|0|0,
 34.25,-86.75,America/Chicago,AL,0,0,0|0|0|0,
-34.25,-86.5,America/Chicago,AL,0,0,0|0|0|0,
+34.25,-86.5,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
 34.25,-86.25,America/Chicago,AL,0,0,0|0|0|0,
 34.25,-86,America/Chicago,AL,0,0,0|0|0|0,
-34.25,-85.75,America/Chicago,AL,0,0,0|0|0|0,
-34.25,-85.5,America/Chicago,AL,0,0,0|0|0|0,
+34.25,-85.75,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+34.25,-85.5,America/Chicago,AL,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
 34.25,-85.25,America/New_York,GA,0,0,0|0|0|0,
 34.25,-85,America/New_York,GA,0,0,0|0|0|0,
 34.25,-84.75,America/New_York,GA,0,0,0|0|0|0,
@@ -985,15 +985,15 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 34.5,-86.25,America/Chicago,AL,0,0,0|0|0|0,
 34.5,-86,America/Chicago,AL,0,0,0|0|0|0,
 34.5,-85.75,America/Chicago,AL,0,0,0|0|0|0,
-34.5,-85.5,America/New_York,GA,0,0,0|0|0|0,
+34.5,-85.5,America/New_York,GA,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
 34.5,-85.25,America/New_York,GA,0,0,0|0|0|0,
 34.5,-85,America/New_York,GA,0,0,0|0|0|0,
 34.5,-84.75,America/New_York,GA,0,0,0|0|0|0,
 34.5,-84.5,America/New_York,GA,0,0,0|0|0|0,
 34.5,-84.25,America/New_York,GA,0,0,0|0|0|0,
-34.5,-84,America/New_York,GA,0,0,0|0|0|0,
-34.5,-83.75,America/New_York,GA,0,0,0|0|0|0,slight chance · thunderstorms · none · none
-34.5,-83.5,America/New_York,GA,0,0,0|0|0|0,slight chance · thunderstorms · none · none
+34.5,-84,America/New_York,GA,0,0,0|0|0|0,slight chance · thunderstorms · none · none
+34.5,-83.75,America/New_York,GA,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+34.5,-83.5,America/New_York,GA,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
 34.5,-83.25,America/New_York,GA,0,0,0|0|0|0,
 34.5,-83,America/New_York,SC,0,0,0|0|0|0,
 34.5,-82.75,America/New_York,SC,0,0,0|0|0|0,
@@ -1048,25 +1048,25 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 34.75,-84.75,America/New_York,GA,0,0,0|0|0|0,
 34.75,-84.5,America/New_York,GA,0,0,0|0|0|0,
 34.75,-84.25,America/New_York,GA,0,0,0|0|0|0,
-34.75,-84,America/New_York,GA,0,0,0|0|0|0,
-34.75,-83.75,America/New_York,GA,0,0.13,0|0|0|0,slight chance · thunderstorms · none · none
-34.75,-83.5,America/New_York,GA,0,0.25,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
-34.75,-83.25,America/New_York,SC,0,0.13,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
+34.75,-84,America/New_York,GA,0,0,0|0|0|0,slight chance · thunderstorms · none · none
+34.75,-83.75,America/New_York,GA,0,0.19,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+34.75,-83.5,America/New_York,GA,0,0.38,0|0|0|0,chance · thunderstorms · none · none
+34.75,-83.25,America/New_York,SC,0,0.19,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
 34.75,-83,America/New_York,SC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
 34.75,-82.75,America/New_York,SC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
-34.75,-82.5,America/New_York,SC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+34.75,-82.5,America/New_York,SC,0,0,0|0|0|0,
 34.75,-82.25,America/New_York,SC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
 34.75,-82,America/New_York,SC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
 34.75,-81.75,America/New_York,SC,0,0,0|0|0|0,
 34.75,-81.5,America/New_York,SC,0,0,0|0|0|0,
-34.75,-81.25,America/New_York,SC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
-34.75,-81,America/New_York,SC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+34.75,-81.25,America/New_York,SC,0,0,0|0|0|0,
+34.75,-81,America/New_York,SC,0,0,0|0|0|0,
 34.75,-80.75,America/New_York,SC,0,0,0|0|0|0,
 34.75,-80.5,America/New_York,SC,0,0,0|0|0|0,
 34.75,-80.25,America/New_York,SC,0,0,0|0|0|0,
 34.75,-80,America/New_York,SC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
 34.75,-79.75,America/New_York,SC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
-34.75,-79.5,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
+34.75,-79.5,America/New_York,NC,0,0,0|0|0|0,
 34.75,-79.25,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
 34.75,-79,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
 34.75,-78.75,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
@@ -1109,29 +1109,29 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 35,-84.75,America/New_York,TN,0,0,0|0|0|0,
 35,-84.5,America/New_York,TN,0,0,2|2|0|0,
 35,-84.25,America/New_York,NC,0,0.13,0|0|0|0,
-35,-84,America/New_York,NC,0,0.31,0|0|0|0,
+35,-84,America/New_York,NC,0,0.25,0|0|0|0,
 35,-83.75,America/New_York,NC,0,0.5,0|0|0|0,chance · thunderstorms · none · none
-35,-83.5,America/New_York,NC,2,0.63,3|3|3|3,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-35,-83.25,America/New_York,NC,0,0.44,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-35,-83,America/New_York,SC,0,0.19,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-35,-82.75,America/New_York,SC,0,0.06,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-35,-82.5,America/New_York,SC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
+35,-83.5,America/New_York,NC,3,0.75,3|3|3|3,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
+35,-83.25,America/New_York,NC,0,0.38,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
+35,-83,America/New_York,SC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+35,-82.75,America/New_York,SC,0,0,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
+35,-82.5,America/New_York,SC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
 35,-82.25,America/New_York,SC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
 35,-82,America/New_York,SC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
-35,-81.75,America/New_York,SC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
-35,-81.5,America/New_York,SC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
-35,-81.25,America/New_York,SC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
-35,-81,America/New_York,SC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
-35,-80.75,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none
-35,-80.5,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+35,-81.75,America/New_York,SC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
+35,-81.5,America/New_York,SC,0,0,0|0|0|0,
+35,-81.25,America/New_York,SC,0,0,0|0|0|0,
+35,-81,America/New_York,SC,0,0,0|0|0|0,
+35,-80.75,America/New_York,NC,0,0,0|0|0|0,
+35,-80.5,America/New_York,NC,0,0,0|0|0|0,
 35,-80.25,America/New_York,NC,0,0,0|0|0|0,
-35,-80,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
+35,-80,America/New_York,NC,0,0,0|0|0|0,
 35,-79.75,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
-35,-79.5,America/New_York,NC,0,0,0|0|0|0,chance · rain showers · light · none / slight chance · thunderstorms · none · none
-35,-79.25,America/New_York,NC,0,0,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-35,-79,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
-35,-78.75,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
-35,-78.5,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
+35,-79.5,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
+35,-79.25,America/New_York,NC,0,0,0|0|0|0,
+35,-79,America/New_York,NC,0,0,0|0|0|0,
+35,-78.75,America/New_York,NC,0,0,0|0|0|0,
+35,-78.5,America/New_York,NC,0,0,0|0|0|0,
 35,-78.25,America/New_York,NC,0,0,0|0|0|0,
 35,-78,America/New_York,NC,0,0,0|0|0|0,
 35,-77.75,America/New_York,NC,0,0,0|0|0|0,
@@ -1170,28 +1170,28 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 35.25,-84.75,America/New_York,TN,0,0,0|0|0|0,
 35.25,-84.5,America/New_York,TN,0,0,0|0|0|0,
 35.25,-84.25,America/New_York,NC,0,0.25,0|0|0|0,
-35.25,-84,America/New_York,NC,2,0.69,2|2|2|2,
-35.25,-83.75,America/New_York,NC,1,0.81,2|2|1|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
-35.25,-83.5,America/New_York,NC,0,0.81,0|1|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
-35.25,-83.25,America/New_York,NC,1,0.81,0|1|1|1,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-35.25,-83,America/New_York,NC,1,0.5,1|1|1|1,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-35.25,-82.75,America/New_York,NC,0,0.13,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-35.25,-82.5,America/New_York,NC,0,0,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-35.25,-82.25,America/New_York,NC,0,0,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-35.25,-82,America/New_York,NC,0,0,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-35.25,-81.75,America/New_York,NC,0,0,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-35.25,-81.5,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none
-35.25,-81.25,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
-35.25,-81,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none
-35.25,-80.75,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none
-35.25,-80.5,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
-35.25,-80.25,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
-35.25,-80,America/New_York,NC,0,0,0|0|0|0,chance · rain showers · light · none
-35.25,-79.75,America/New_York,NC,0,0,0|0|0|0,chance · rain showers · light · none
-35.25,-79.5,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
-35.25,-79.25,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
-35.25,-79,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
-35.25,-78.75,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
+35.25,-84,America/New_York,NC,2,0.56,2|2|2|2,
+35.25,-83.75,America/New_York,NC,0,0.63,2|0|0|0,
+35.25,-83.5,America/New_York,NC,0,0.69,0|0|0|0,slight chance · thunderstorms · none · none
+35.25,-83.25,America/New_York,NC,0,0.5,0|0|1|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
+35.25,-83,America/New_York,NC,0,0.13,0|0|1|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+35.25,-82.75,America/New_York,NC,0,0,0|0|0|0,chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+35.25,-82.5,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+35.25,-82.25,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
+35.25,-82,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
+35.25,-81.75,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+35.25,-81.5,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
+35.25,-81.25,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
+35.25,-81,America/New_York,NC,0,0,0|0|0|0,
+35.25,-80.75,America/New_York,NC,0,0,0|0|0|0,
+35.25,-80.5,America/New_York,NC,0,0,0|0|0|0,
+35.25,-80.25,America/New_York,NC,0,0,0|0|0|0,
+35.25,-80,America/New_York,NC,0,0,0|0|0|0,
+35.25,-79.75,America/New_York,NC,0,0,0|0|0|0,
+35.25,-79.5,America/New_York,NC,0,0,0|0|0|0,
+35.25,-79.25,America/New_York,NC,0,0,0|0|0|0,
+35.25,-79,America/New_York,NC,0,0,0|0|0|0,
+35.25,-78.75,America/New_York,NC,0,0,0|0|0|0,
 35.25,-78.5,America/New_York,NC,0,0,0|0|0|0,
 35.25,-78.25,America/New_York,NC,0,0,0|0|0|0,
 35.25,-78,America/New_York,NC,0,0,0|0|0|0,
@@ -1231,29 +1231,29 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 35.5,-84.75,America/New_York,TN,0,0,0|0|0|0,
 35.5,-84.5,America/New_York,TN,0,0,0|0|0|0,
 35.5,-84.25,America/New_York,TN,0,0.13,0|0|0|0,
-35.5,-84,America/New_York,TN,0,0.44,0|0|0|0,
-35.5,-83.75,America/New_York,NC,1,0.63,1|1|1|1,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
-35.5,-83.5,America/New_York,NC,1,0.88,1|1|1|1,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
-35.5,-83.25,America/New_York,NC,2,1.06,2|2|3|3,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-35.5,-83,America/New_York,NC,0,0.56,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-35.5,-82.75,America/New_York,NC,0,0.19,0|0|1|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-35.5,-82.5,America/New_York,NC,0,0.38,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-35.5,-82.25,America/New_York,NC,0,0.38,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-35.5,-82,America/New_York,NC,0,0.13,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-35.5,-81.75,America/New_York,NC,0,0,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-35.5,-81.5,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
+35.5,-84,America/New_York,TN,0,0.38,0|0|0|0,
+35.5,-83.75,America/New_York,NC,1,0.5,1|1|1|1,
+35.5,-83.5,America/New_York,NC,1,0.75,2|1|1|1,slight chance · thunderstorms · none · none
+35.5,-83.25,America/New_York,NC,2,0.88,2|2|2|2,chance · thunderstorms · none · none / chance · thunderstorms · none · none
+35.5,-83,America/New_York,NC,0,0.38,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+35.5,-82.75,America/New_York,NC,0,0.13,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+35.5,-82.5,America/New_York,NC,0,0.38,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+35.5,-82.25,America/New_York,NC,0,0.38,0|0|0|0,slight chance · rain showers · light · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+35.5,-82,America/New_York,NC,0,0.13,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+35.5,-81.75,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+35.5,-81.5,America/New_York,NC,0,0,0|0|0|0,chance · thunderstorms · none · none
 35.5,-81.25,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none
 35.5,-81,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none
-35.5,-80.75,America/New_York,NC,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none
-35.5,-80.5,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none
-35.5,-80.25,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none
-35.5,-80,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
-35.5,-79.75,America/New_York,NC,0,0,0|0|0|0,
+35.5,-80.75,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+35.5,-80.5,America/New_York,NC,0,0,0|0|0|0,
+35.5,-80.25,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
+35.5,-80,America/New_York,NC,0,0,0|0|0|0,
+35.5,-79.75,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
 35.5,-79.5,America/New_York,NC,0,0,0|0|0|0,
 35.5,-79.25,America/New_York,NC,0,0,0|0|0|0,
 35.5,-79,America/New_York,NC,0,0,0|0|0|0,
-35.5,-78.75,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
-35.5,-78.5,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+35.5,-78.75,America/New_York,NC,0,0,0|0|0|0,
+35.5,-78.5,America/New_York,NC,0,0,0|0|0|0,
 35.5,-78.25,America/New_York,NC,0,0,0|0|0|0,
 35.5,-78,America/New_York,NC,0,0,0|0|0|0,
 35.5,-77.75,America/New_York,NC,0,0,0|0|0|0,
@@ -1297,26 +1297,26 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 35.75,-83.75,America/New_York,TN,0,0.19,0|0|0|0,slight chance · thunderstorms · none · none
 35.75,-83.5,America/New_York,TN,0,0.56,0|0|0|0,slight chance · thunderstorms · none · none
 35.75,-83.25,America/New_York,TN,2,0.81,2|2|2|2,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
-35.75,-83,America/New_York,NC,0,0.38,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-35.75,-82.75,America/New_York,NC,0,0.38,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-35.75,-82.5,America/New_York,NC,2,1,2|3|3|3,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-35.75,-82.25,America/New_York,NC,2,0.88,3|3|3|3,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+35.75,-83,America/New_York,NC,0,0.38,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
+35.75,-82.75,America/New_York,NC,0,0.38,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+35.75,-82.5,America/New_York,NC,2,1,2|2|3|2,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+35.75,-82.25,America/New_York,NC,2,0.88,3|3|3|3,chance · thunderstorms · none · none / chance · thunderstorms · none · none
 35.75,-82,America/New_York,NC,0,0.25,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
 35.75,-81.75,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
 35.75,-81.5,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
 35.75,-81.25,America/New_York,NC,0,0,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
 35.75,-81,America/New_York,NC,0,0,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-35.75,-80.75,America/New_York,NC,0,0,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-35.75,-80.5,America/New_York,NC,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none
-35.75,-80.25,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+35.75,-80.75,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+35.75,-80.5,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+35.75,-80.25,America/New_York,NC,0,0,0|0|0|0,
 35.75,-80,America/New_York,NC,0,0,0|0|0|0,
 35.75,-79.75,America/New_York,NC,0,0,0|0|0|0,
 35.75,-79.5,America/New_York,NC,0,0,0|0|0|0,
 35.75,-79.25,America/New_York,NC,0,0,0|0|0|0,
 35.75,-79,America/New_York,NC,0,0,0|0|0|0,
-35.75,-78.75,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
-35.75,-78.5,America/New_York,NC,0,0,0|0|0|0,chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
-35.75,-78.25,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
+35.75,-78.75,America/New_York,NC,0,0,0|0|0|0,
+35.75,-78.5,America/New_York,NC,0,0,0|0|0|0,
+35.75,-78.25,America/New_York,NC,0,0,0|0|0|0,
 35.75,-78,America/New_York,NC,0,0,0|0|0|0,
 35.75,-77.75,America/New_York,NC,0,0,0|0|0|0,
 35.75,-77.5,America/New_York,NC,0,0,0|0|0|0,
@@ -1361,23 +1361,23 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 36,-83,America/New_York,TN,0,0.13,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
 36,-82.75,America/New_York,NC,0,0.38,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
 36,-82.5,America/New_York,TN,2,0.88,2|2|2|2,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
-36,-82.25,America/New_York,NC,0,0.63,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
+36,-82.25,America/New_York,NC,0,0.63,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
 36,-82,America/New_York,NC,0,0.25,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
 36,-81.75,America/New_York,NC,0,0.38,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
 36,-81.5,America/New_York,NC,0,0.38,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
 36,-81.25,America/New_York,NC,0,0.13,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-36,-81,America/New_York,NC,0,0,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-36,-80.75,America/New_York,NC,0,0,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-36,-80.5,America/New_York,NC,0,0,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-36,-80.25,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
-36,-80,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
-36,-79.75,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
+36,-81,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
+36,-80.75,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
+36,-80.5,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+36,-80.25,America/New_York,NC,0,0,0|0|0|0,
+36,-80,America/New_York,NC,0,0,0|0|0|0,
+36,-79.75,America/New_York,NC,0,0,0|0|0|0,
 36,-79.5,America/New_York,NC,0,0,0|0|0|0,
 36,-79.25,America/New_York,NC,0,0,0|0|0|0,
 36,-79,America/New_York,NC,0,0,0|0|0|0,
 36,-78.75,America/New_York,NC,0,0,0|0|0|0,
-36,-78.5,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
-36,-78.25,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
+36,-78.5,America/New_York,NC,0,0,0|0|0|0,
+36,-78.25,America/New_York,NC,0,0,0|0|0|0,
 36,-78,America/New_York,NC,0,0,0|0|0|0,
 36,-77.75,America/New_York,NC,0,0,0|0|0|0,
 36,-77.5,America/New_York,NC,0,0,0|0|0|0,
@@ -1433,10 +1433,10 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 36.25,-79.5,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
 36.25,-79.25,America/New_York,NC,0,0,0|0|0|0,
 36.25,-79,America/New_York,NC,0,0,0|0|0|0,
-36.25,-78.75,America/New_York,NC,0,0,0|0|0|0,
+36.25,-78.75,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
 36.25,-78.5,America/New_York,NC,0,0,0|0|0|0,
-36.25,-78.25,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
-36.25,-78,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
+36.25,-78.25,America/New_York,NC,0,0,0|0|0|0,
+36.25,-78,America/New_York,NC,0,0,0|0|0|0,
 36.25,-77.75,America/New_York,NC,0,0,0|0|0|0,
 36.25,-77.5,America/New_York,NC,0,0,0|0|0|0,
 36.25,-77.25,America/New_York,NC,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none
@@ -1487,11 +1487,11 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 36.5,-79.75,America/New_York,NC,0,0,0|0|0|0,
 36.5,-79.5,America/New_York,NC,0,0,0|0|0|0,
 36.5,-79.25,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
-36.5,-79,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
-36.5,-78.75,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
+36.5,-79,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+36.5,-78.75,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
 36.5,-78.5,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none
-36.5,-78.25,America/New_York,NC,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none
-36.5,-78,America/New_York,NC,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none
+36.5,-78.25,America/New_York,NC,0,0,0|0|0|0,
+36.5,-78,America/New_York,NC,0,0,0|0|0|0,
 36.5,-77.75,America/New_York,NC,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none
 36.5,-77.5,America/New_York,NC,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none
 36.5,-77.25,America/New_York,NC,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none
@@ -1515,14 +1515,14 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 36.75,-85.75,America/Chicago,KY,0,0,0|0|0|0,
 36.75,-85.5,America/Chicago,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none
 36.75,-85.25,America/Chicago,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none
-36.75,-85,America/Kentucky/Monticello,KY,0,0,0|0|0|0,
-36.75,-84.75,America/Kentucky/Monticello,KY,0,0,0|0|0|0,
-36.75,-84.5,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none
-36.75,-84.25,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none
-36.75,-84,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none
-36.75,-83.75,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · rain showers · light · none
-36.75,-83.5,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · rain showers · light · none
-36.75,-83.25,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / slight chance · thunderstorms · none · none
+36.75,-85,America/Kentucky/Monticello,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none
+36.75,-84.75,America/Kentucky/Monticello,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+36.75,-84.5,America/New_York,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
+36.75,-84.25,America/New_York,KY,0,0,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
+36.75,-84,America/New_York,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
+36.75,-83.75,America/New_York,KY,0,0,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
+36.75,-83.5,America/New_York,KY,0,0,0|1|0|0,slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+36.75,-83.25,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
 36.75,-83,America/New_York,VA,0,0,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
 36.75,-82.75,America/New_York,VA,0,0,0|0|0|0,slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
 36.75,-82.5,America/New_York,VA,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
@@ -1569,14 +1569,14 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 37,-85.5,America/Chicago,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none
 37,-85.25,America/Chicago,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none
 37,-85,America/Chicago,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
-37,-84.75,America/Kentucky/Monticello,KY,0,0,0|0|0|0,
-37,-84.5,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none
-37,-84.25,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none
-37,-84,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none
-37,-83.75,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / chance · rain showers · light · none
-37,-83.5,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · thunderstorms · none · none
-37,-83.25,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · thunderstorms · none · none
-37,-83,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / slight chance · rain showers · light · none / chance · rain showers · light · none / chance · rain showers · light · none
+37,-84.75,America/Kentucky/Monticello,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37,-84.5,America/New_York,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37,-84.25,America/New_York,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37,-84,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37,-83.75,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37,-83.5,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37,-83.25,America/New_York,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37,-83,America/New_York,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
 37,-82.75,America/New_York,VA,0,0,0|0|0|0,chance · rain showers · light · none / slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
 37,-82.5,America/New_York,VA,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
 37,-82.25,America/New_York,VA,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
@@ -1617,18 +1617,18 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 37.25,-85.25,America/Chicago,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
 37.25,-85,America/New_York,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none
 37.25,-84.75,America/New_York,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none
-37.25,-84.5,America/New_York,KY,0,0,0|0|0|0,
-37.25,-84.25,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none
-37.25,-84,America/New_York,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none
-37.25,-83.75,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none
-37.25,-83.5,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none
-37.25,-83.25,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · rain showers · light · none / slight chance · thunderstorms · none · none
-37.25,-83,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / slight chance · rain showers · light · none / slight chance · thunderstorms · none · none / chance · rain showers · light · none
-37.25,-82.75,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · moderate · none / chance · rain showers · light · none / chance · rain showers · light · none / chance · rain showers · light · none
-37.25,-82.5,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none
+37.25,-84.5,America/New_York,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+37.25,-84.25,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37.25,-84,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37.25,-83.75,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37.25,-83.5,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37.25,-83.25,America/New_York,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37.25,-83,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37.25,-82.75,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37.25,-82.5,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · moderate · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
 37.25,-82.25,America/New_York,VA,0,0,0|0|0|0,chance · rain showers · light · none / slight chance · thunderstorms · none · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
-37.25,-82,America/New_York,VA,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
-37.25,-81.75,America/New_York,VA,0,0,0|0|0|0,chance · rain showers · light · none / slight chance · thunderstorms · none · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37.25,-82,America/New_York,VA,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37.25,-81.75,America/New_York,VA,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
 37.25,-81.5,America/New_York,VA,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
 37.25,-81.25,America/New_York,VA,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
 37.25,-81,America/New_York,VA,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
@@ -1666,19 +1666,19 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 37.5,-85,America/New_York,KY,0,0,0|0|0|0,
 37.5,-84.75,America/New_York,KY,0,0,0|0|0|0,
 37.5,-84.5,America/New_York,KY,0,0,0|0|0|0,
-37.5,-84.25,America/New_York,KY,0,0,0|0|0|0,
-37.5,-84,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none
-37.5,-83.75,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none
-37.5,-83.5,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · rain showers · light · none / chance · rain showers · light · none
-37.5,-83.25,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / slight chance · rain showers · light · none / chance · rain showers · light · none
-37.5,-83,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / slight chance · rain showers · light · none / slight chance · rain showers · light · none
-37.5,-82.75,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / slight chance · rain showers · light · none / slight chance · rain showers · light · none
-37.5,-82.5,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · rain showers · light · none / slight chance · thunderstorms · none · none
-37.5,-82.25,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / slight chance · rain showers · light · none / slight chance · rain showers · light · none
-37.5,-82,America/New_York,VA,0,0,0|0|0|0,chance · rain showers · light · none / slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
-37.5,-81.75,America/New_York,WV,0,0,0|0|0|0,slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
-37.5,-81.5,America/New_York,WV,0,0,0|0|0|0,chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
-37.5,-81.25,America/New_York,WV,0,0,1|1|0|0,chance · rain showers · light · none / slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37.5,-84.25,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37.5,-84,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37.5,-83.75,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37.5,-83.5,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37.5,-83.25,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37.5,-83,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37.5,-82.75,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37.5,-82.5,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37.5,-82.25,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37.5,-82,America/New_York,VA,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37.5,-81.75,America/New_York,WV,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37.5,-81.5,America/New_York,WV,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none / chance · thunderstorms · none · none / likely · rain showers · light · none
+37.5,-81.25,America/New_York,WV,0,0,1|1|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none / chance · thunderstorms · none · none / likely · rain showers · light · none
 37.5,-81,America/New_York,WV,0,0,0|0|0|0,chance · rain showers · light · none / slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
 37.5,-80.75,America/New_York,WV,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
 37.5,-80.5,America/New_York,WV,0,0,1|0|0|0,slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
@@ -1715,19 +1715,19 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 37.75,-84.75,America/New_York,KY,0,0,0|0|0|0,
 37.75,-84.5,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none
 37.75,-84.25,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none
-37.75,-84,America/New_York,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none
-37.75,-83.75,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · rain showers · light · none
-37.75,-83.5,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · rain showers · light · none
-37.75,-83.25,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · rain showers · light · none
-37.75,-83,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / slight chance · rain showers · light · none
-37.75,-82.75,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · rain showers · light · none / slight chance · rain showers · light · none
-37.75,-82.5,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · rain showers · light · none
-37.75,-82.25,America/New_York,WV,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · thunderstorms · none · none
-37.75,-82,America/New_York,WV,0,0,0|0|0|0,chance · rain showers · light · none / chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
-37.75,-81.75,America/New_York,WV,0,0,0|0|0|0,chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
-37.75,-81.5,America/New_York,WV,0,0,0|0|0|0,slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
-37.75,-81.25,America/New_York,WV,0,0,0|0|0|0,chance · rain showers · light · none / slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
-37.75,-81,America/New_York,WV,0,0.06,0|0|0|0,chance · rain showers · moderate · none / slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37.75,-84,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37.75,-83.75,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37.75,-83.5,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37.75,-83.25,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37.75,-83,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37.75,-82.75,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37.75,-82.5,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+37.75,-82.25,America/New_York,WV,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / likely · rain showers · light · none
+37.75,-82,America/New_York,WV,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / likely · rain showers · light · none
+37.75,-81.75,America/New_York,WV,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / likely · rain showers · light · none
+37.75,-81.5,America/New_York,WV,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none / chance · thunderstorms · none · none / likely · rain showers · light · none
+37.75,-81.25,America/New_York,WV,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none / chance · thunderstorms · none · none / likely · rain showers · light · none
+37.75,-81,America/New_York,WV,0,0.06,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none / chance · thunderstorms · none · none / likely · rain showers · light · none
 37.75,-80.75,America/New_York,WV,0,0.13,1|1|0|0,slight chance · rain showers · light · none / slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
 37.75,-80.5,America/New_York,WV,0,0.06,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
 37.75,-80.25,America/New_York,VA,0,0.13,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
@@ -1756,19 +1756,19 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 38,-84.75,America/New_York,KY,0,0,0|0|0|0,
 38,-84.5,America/New_York,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none
 38,-84.25,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
-38,-84,America/New_York,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none / chance · rain showers · light · none / chance · rain showers · light · none
-38,-83.75,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / slight chance · thunderstorms · none · none / chance · rain showers · light · none / chance · rain showers · light · none
-38,-83.5,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · rain showers · light · none / chance · rain showers · light · none
-38,-83.25,America/New_York,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / chance · rain showers · light · none
-38,-83,America/New_York,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none
-38,-82.75,America/New_York,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none
-38,-82.5,America/New_York,WV,0,0,0|0|0|0,
-38,-82.25,America/New_York,WV,0,0,0|0|0|0,
-38,-82,America/New_York,WV,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
-38,-81.75,America/New_York,WV,0,0,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-38,-81.5,America/New_York,WV,0,0,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-38,-81.25,America/New_York,WV,0,0,0|0|0|0,slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
-38,-81,America/New_York,WV,0,0.13,0|0|0|0,slight chance · rain showers · light · none / slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38,-84,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38,-83.75,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38,-83.5,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38,-83.25,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38,-83,America/New_York,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38,-82.75,America/New_York,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38,-82.5,America/New_York,WV,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38,-82.25,America/New_York,WV,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none / chance · thunderstorms · none · none / likely · rain showers · light · none
+38,-82,America/New_York,WV,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / likely · rain showers · light · none
+38,-81.75,America/New_York,WV,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / likely · rain showers · light · none
+38,-81.5,America/New_York,WV,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / likely · rain showers · light · none
+38,-81.25,America/New_York,WV,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none / chance · thunderstorms · none · none / likely · rain showers · light · none
+38,-81,America/New_York,WV,0,0.13,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
 38,-80.75,America/New_York,WV,1,0.25,1|1|1|1,slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
 38,-80.5,America/New_York,WV,0,0.19,1|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
 38,-80.25,America/New_York,WV,0,0.38,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
@@ -1798,23 +1798,23 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 38.25,-84.5,America/New_York,KY,0,0,0|0|0|0,chance · thunderstorms · none · none
 38.25,-84.25,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
 38.25,-84,America/New_York,KY,0,0,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
-38.25,-83.75,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · rain showers · light · none
-38.25,-83.5,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · rain showers · light · none / slight chance · thunderstorms · none · none
-38.25,-83.25,America/New_York,KY,0,0,0|0|0|0,
-38.25,-83,America/New_York,KY,0,0,0|0|0|0,
-38.25,-82.75,America/New_York,KY,0,0,0|0|0|0,
-38.25,-82.5,America/New_York,WV,0,0,0|0|0|0,
-38.25,-82.25,America/New_York,WV,0,0,0|0|0|0,
-38.25,-82,America/New_York,WV,0,0,0|0|0|0,slight chance · thunderstorms · none · none
-38.25,-81.75,America/New_York,WV,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none
-38.25,-81.5,America/New_York,WV,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none
-38.25,-81.25,America/New_York,WV,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · rain showers · light · none / chance · rain showers · light · none / chance · rain showers · light · none
-38.25,-81,America/New_York,WV,0,0.06,0|0|0|0,slight chance · rain showers · light · none / slight chance · rain showers · light · none / chance · rain showers · light · none / chance · rain showers · light · none
-38.25,-80.75,America/New_York,WV,0,0.13,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none
-38.25,-80.5,America/New_York,WV,0,0.19,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none
-38.25,-80.25,America/New_York,WV,1,0.44,2|1|1|1,slight chance · thunderstorms · none · none / chance · rain showers · light · none
-38.25,-80,America/New_York,WV,0,0.56,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none
-38.25,-79.75,America/New_York,VA,0,0.44,0|0|1|1,chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.25,-83.75,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.25,-83.5,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.25,-83.25,America/New_York,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.25,-83,America/New_York,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.25,-82.75,America/New_York,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.25,-82.5,America/New_York,WV,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.25,-82.25,America/New_York,WV,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.25,-82,America/New_York,WV,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.25,-81.75,America/New_York,WV,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.25,-81.5,America/New_York,WV,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.25,-81.25,America/New_York,WV,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.25,-81,America/New_York,WV,0,0.06,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.25,-80.75,America/New_York,WV,0,0.13,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.25,-80.5,America/New_York,WV,0,0.19,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.25,-80.25,America/New_York,WV,1,0.38,2|1|1|1,slight chance · thunderstorms · none · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.25,-80,America/New_York,WV,0,0.44,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.25,-79.75,America/New_York,VA,0,0.38,0|0|1|1,chance · thunderstorms · none · none / chance · thunderstorms · none · none
 38.25,-79.5,America/New_York,VA,0,0.44,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
 38.25,-79.25,America/New_York,VA,0,0.38,0|0|0|0,slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
 38.25,-79,America/New_York,VA,0,0.25,0|0|0|0,slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
@@ -1833,26 +1833,26 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 38.25,-75.25,America/New_York,MD,0,0,0|0|0|0,
 38.5,-85.25,America/New_York,KY,0,0,0|0|0|0,
 38.5,-85,America/New_York,KY,0,0,0|0|0|0,
-38.5,-84.75,America/New_York,KY,0,0,0|0|0|0,
+38.5,-84.75,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
 38.5,-84.5,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · thunderstorms · none · none / chance · thunderstorms · none · none
 38.5,-84.25,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
-38.5,-84,America/New_York,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none
-38.5,-83.75,America/New_York,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none
-38.5,-83.5,America/New_York,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none
-38.5,-83.25,America/New_York,KY,0,0,0|0|0|0,
-38.5,-83,America/New_York,KY,0,0,0|0|0|0,
-38.5,-82.75,America/New_York,KY,0,0,0|0|0|0,
-38.5,-82.25,America/New_York,WV,0,0,0|0|0|0,
-38.5,-82,America/New_York,WV,0,0,0|0|0|0,
-38.5,-81.75,America/New_York,WV,0,0,0|0|0|0,slight chance · thunderstorms · none · none
-38.5,-81.5,America/New_York,WV,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none
-38.5,-81.25,America/New_York,WV,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none
-38.5,-81,America/New_York,WV,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none
-38.5,-80.75,America/New_York,WV,0,0,0|0|0|0,chance · rain showers · light · none / slight chance · thunderstorms · none · none
-38.5,-80.5,America/New_York,WV,0,0.06,0|0|0|0,slight chance · rain showers · light · none / slight chance · rain showers · light · none / chance · rain showers · light · none
-38.5,-80.25,America/New_York,WV,0,0.25,0|0|0|0,slight chance · rain showers · light · none / slight chance · rain showers · light · none / slight chance · thunderstorms · none · none
-38.5,-80,America/New_York,WV,1,0.5,1|1|1|1,slight chance · rain showers · light · none / chance · rain showers · light · none
-38.5,-79.75,America/New_York,WV,1,0.88,1|1|1|1,chance · rain showers · light · none
+38.5,-84,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.5,-83.75,America/New_York,KY,0,0,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.5,-83.5,America/New_York,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.5,-83.25,America/New_York,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.5,-83,America/New_York,KY,0,0,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.5,-82.75,America/New_York,KY,0,0,0|0|0|0,chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.5,-82.25,America/New_York,WV,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.5,-82,America/New_York,WV,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.5,-81.75,America/New_York,WV,0,0,0|0|0|0,chance · rain showers · light · none / slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.5,-81.5,America/New_York,WV,0,0,0|0|0|0,chance · rain showers · light · none / slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.5,-81.25,America/New_York,WV,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.5,-81,America/New_York,WV,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.5,-80.75,America/New_York,WV,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.5,-80.5,America/New_York,WV,0,0.06,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
+38.5,-80.25,America/New_York,WV,0,0.13,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · thunderstorms · none · none / likely · rain showers · light · none
+38.5,-80,America/New_York,WV,0,0.25,1|1|1|1,slight chance · thunderstorms · none · none / chance · rain showers · light · none / likely · rain showers · light · none / likely · rain showers · light · none
+38.5,-79.75,America/New_York,WV,1,0.75,1|1|1|1,slight chance · thunderstorms · none · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
 38.5,-79.5,America/New_York,WV,2,1.19,2|2|2|2,chance · rain showers · light · none / slight chance · thunderstorms · none · none
 38.5,-79.25,America/New_York,WV,2,0.88,2|2|2|2,slight chance · rain showers · light · none / slight chance · rain showers · light · none / chance · rain showers · light · none / chance · rain showers · light · none
 38.5,-79,America/New_York,VA,0,0.31,0|0|0|0,slight chance · rain showers · light · none / slight chance · rain showers · light · none / chance · rain showers · light · none / chance · rain showers · light · none
@@ -1868,21 +1868,21 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 38.5,-76.25,America/New_York,MD,0,0,0|0|0|0,
 38.5,-76,America/New_York,MD,0,0,0|0|0|0,
 38.5,-75.75,America/New_York,MD,0,0,0|0|0|0,
-38.75,-85,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · thunderstorms · none · none
-38.75,-84.75,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · rain showers · light · none / slight chance · thunderstorms · none · none
-38.75,-84.5,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · rain showers · light · none / slight chance · thunderstorms · none · none
-38.75,-84.25,America/New_York,KY,0,0,0|0|0|0,slight chance · thunderstorms · none · none
-38.75,-84,America/New_York,KY,0,0,0|0|0|0,
-38.75,-82,America/New_York,WV,0,0,0|0|0|0,
-38.75,-81.75,America/New_York,WV,0,0,0|0|0|0,
-38.75,-81.5,America/New_York,WV,0,0,0|0|0|0,
-38.75,-81.25,America/New_York,WV,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
-38.75,-81,America/New_York,WV,0,0,0|0|0|0,slight chance · thunderstorms · none · none
-38.75,-80.75,America/New_York,WV,0,0,0|0|0|0,
-38.75,-80.5,America/New_York,WV,0,0,0|0|0|0,
-38.75,-80.25,America/New_York,WV,0,0.06,0|0|0|0,slight chance · rain showers · light · none / slight chance · thunderstorms · none · none
-38.75,-80,America/New_York,WV,0,0.38,0|1|1|0,slight chance · rain showers · light · none / slight chance · rain showers · light · none / chance · rain showers · light · none
-38.75,-79.75,America/New_York,WV,1,1,1|1|1|1,slight chance · rain showers · light · none / slight chance · rain showers · light · none / chance · rain showers · light · none
+38.75,-85,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+38.75,-84.75,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+38.75,-84.5,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · thunderstorms · none · none / chance · rain showers · light · none
+38.75,-84.25,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none / chance · rain showers · light · none / chance · rain showers · light · none
+38.75,-84,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none
+38.75,-82,America/New_York,WV,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+38.75,-81.75,America/New_York,WV,0,0,0|0|0|0,slight chance · rain showers · light · none / chance · rain showers · light · none / slight chance · thunderstorms · none · none
+38.75,-81.5,America/New_York,WV,0,0,0|0|0|0,slight chance · rain showers · light · none / chance · rain showers · light · none / slight chance · thunderstorms · none · none
+38.75,-81.25,America/New_York,WV,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none
+38.75,-81,America/New_York,WV,0,0,0|0|0|0,slight chance · rain showers · light · none / chance · rain showers · light · none / chance · rain showers · light · none
+38.75,-80.75,America/New_York,WV,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · rain showers · light · none / chance · rain showers · light · none / chance · rain showers · light · none
+38.75,-80.5,America/New_York,WV,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · rain showers · light · none / chance · rain showers · light · none / chance · rain showers · light · none
+38.75,-80.25,America/New_York,WV,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none / chance · rain showers · light · none / chance · rain showers · light · none
+38.75,-80,America/New_York,WV,0,0.25,0|1|1|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none / chance · rain showers · light · none / chance · rain showers · light · none
+38.75,-79.75,America/New_York,WV,1,0.94,1|1|1|1,slight chance · thunderstorms · none · none / chance · rain showers · light · none / chance · thunderstorms · none · none / chance · thunderstorms · none · none
 38.75,-79.5,America/New_York,WV,2,1.38,2|2|2|2,slight chance · rain showers · light · none / slight chance · rain showers · light · none / chance · rain showers · light · none / chance · rain showers · light · none
 38.75,-79.25,America/New_York,WV,0,0.94,0|0|2|2,slight chance · rain showers · light · none / slight chance · rain showers · light · none / chance · rain showers · light · none / chance · rain showers · light · none
 38.75,-79,America/New_York,VA,0,0.38,0|0|0|0,slight chance · rain showers · light · none / chance · rain showers · light · none / chance · rain showers · light · none
@@ -1898,20 +1898,20 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 38.75,-76.25,America/New_York,MD,0,0,0|0|0|0,
 38.75,-76,America/New_York,MD,0,0,0|0|0|0,
 38.75,-75.75,America/New_York,MD,0,0,0|0|0|1,
-39,-84.75,America/New_York,KY,0,0,0|0|0|0,chance · rain showers · light · none / slight chance · rain showers · light · none / slight chance · thunderstorms · none · none
-39,-84.5,America/New_York,KY,0,0,0|0|0|0,slight chance · rain showers · light · none
+39,-84.75,America/New_York,KY,0,0,0|0|0|0,
+39,-84.5,America/New_York,KY,0,0,0|0|0|0,
 39,-82,America/New_York,WV,0,0,0|0|0|0,
 39,-81.75,America/New_York,WV,0,0,0|0|0|0,
 39,-81.5,America/New_York,WV,0,0,0|0|0|0,
-39,-81.25,America/New_York,WV,0,0,0|0|0|0,
-39,-81,America/New_York,WV,0,0,0|0|0|0,
-39,-80.75,America/New_York,WV,0,0,0|0|0|0,
-39,-80.5,America/New_York,WV,0,0,0|0|0|0,
-39,-80.25,America/New_York,WV,0,0,0|0|0|0,
-39,-80,America/New_York,WV,0,0.19,0|0|0|0,slight chance · rain showers · light · none / slight chance · thunderstorms · none · none
-39,-79.75,America/New_York,WV,1,0.69,1|1|1|1,slight chance · rain showers · light · none / slight chance · rain showers · light · none / chance · rain showers · light · none
-39,-79.5,America/New_York,WV,1,1.19,1|1|1|0,slight chance · rain showers · light · none / chance · rain showers · light · none / chance · rain showers · light · none
-39,-79.25,America/New_York,WV,2,1.06,2|2|2|2,slight chance · rain showers · light · none / chance · rain showers · light · none / chance · rain showers · light · none
+39,-81.25,America/New_York,WV,0,0,0|0|0|0,slight chance · thunderstorms · none · none
+39,-81,America/New_York,WV,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+39,-80.75,America/New_York,WV,0,0,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none
+39,-80.5,America/New_York,WV,0,0,0|0|0|0,slight chance · thunderstorms · none · none / chance · rain showers · light · none / chance · rain showers · light · none
+39,-80.25,America/New_York,WV,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / chance · rain showers · light · none / chance · rain showers · light · none
+39,-80,America/New_York,WV,0,0.19,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / chance · rain showers · light · none / chance · rain showers · light · none
+39,-79.75,America/New_York,WV,1,0.63,1|1|1|1,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / chance · rain showers · light · none / chance · rain showers · light · none
+39,-79.5,America/New_York,WV,1,1.06,1|1|1|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none / chance · rain showers · light · none / chance · rain showers · light · none
+39,-79.25,America/New_York,WV,2,1,2|2|2|2,slight chance · rain showers · light · none / chance · rain showers · light · none / chance · rain showers · light · none
 39,-79,America/New_York,WV,0,0.75,0|0|0|0,chance · rain showers · light · none / chance · rain showers · light · none
 39,-78.75,America/New_York,WV,2,0.75,1|2|2|2,slight chance · thunderstorms · none · none
 39,-78.5,America/New_York,VA,0,0.5,0|0|0|0,
@@ -1928,13 +1928,13 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 39.25,-81.5,America/New_York,WV,0,0,0|0|0|0,
 39.25,-81.25,America/New_York,WV,0,0,0|0|0|0,
 39.25,-81,America/New_York,WV,0,0,0|0|0|0,
-39.25,-80.75,America/New_York,WV,0,0,0|0|0|0,
-39.25,-80.5,America/New_York,WV,0,0,0|0|0|0,
-39.25,-80.25,America/New_York,WV,0,0,0|0|0|0,
-39.25,-80,America/New_York,WV,0,0.19,0|0|0|0,
-39.25,-79.75,America/New_York,WV,0,0.69,0|1|0|1,
-39.25,-79.5,America/New_York,WV,1,1.31,1|1|1|1,slight chance · rain showers · light · none
-39.25,-79.25,America/New_York,WV,2,1.44,2|2|2|2,slight chance · thunderstorms · none · none
+39.25,-80.75,America/New_York,WV,0,0,0|0|0|0,slight chance · rain showers · light · none
+39.25,-80.5,America/New_York,WV,0,0,0|0|0|0,slight chance · rain showers · light · none / slight chance · rain showers · light · none / slight chance · rain showers · light · none
+39.25,-80.25,America/New_York,WV,0,0,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+39.25,-80,America/New_York,WV,0,0.13,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · thunderstorms · none · none
+39.25,-79.75,America/New_York,WV,0,0.38,0|0|0|0,slight chance · rain showers · light · none
+39.25,-79.5,America/New_York,WV,0,0.88,0|0|0|0,slight chance · thunderstorms · none · none / slight chance · rain showers · light · none
+39.25,-79.25,America/New_York,WV,2,1.25,2|2|2|2,slight chance · thunderstorms · none · none
 39.25,-79,America/New_York,WV,0,1.13,0|0|0|0,
 39.25,-78.75,America/New_York,WV,2,0.94,2|2|2|2,
 39.25,-78.5,America/New_York,WV,0,0.63,0|0|1|1,
@@ -1951,10 +1951,10 @@ lat,lon,timezone,state,finalCategory,displayValue,hourlyCategories,weather
 39.5,-80.75,America/New_York,WV,0,0,0|0|0|0,
 39.5,-80.5,America/New_York,WV,0,0,0|0|0|0,
 39.5,-80.25,America/New_York,WV,0,0,0|0|0|0,
-39.5,-80,America/New_York,WV,0,0.33,0|1|1|0,
-39.5,-79.75,America/New_York,WV,2,1.08,1|2|2|2,
-39.5,-79.5,America/New_York,WV,2,1.67,2|2|2|2,
-39.5,-79.25,America/New_York,MD,2,1.75,2|2|2|2,
+39.5,-80,America/New_York,WV,0,0.17,0|0|0|0,
+39.5,-79.75,America/New_York,WV,1,0.5,1|1|1|1,
+39.5,-79.5,America/New_York,WV,1,1,1|1|1|1,
+39.5,-79.25,America/New_York,MD,2,1.5,2|2|2|2,
 39.5,-79,America/New_York,MD,2,1.33,2|2|2|3,
 39.5,-78.75,America/New_York,WV,0,0.83,1|0|0|1,
 39.5,-78.5,America/New_York,WV,1,0.83,1|1|1|1,
