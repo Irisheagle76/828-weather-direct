@@ -94,7 +94,7 @@
       padding: 14px 34px;
       color: #dce8ff;
       background: var(--avl-page-navy);
-      border-top: 5px solid var(--avl-page-orange);
+      border-bottom: 1px solid rgba(255, 255, 255, .16);
     }
 
     #avl-microscope-page .avl-brand {
@@ -144,15 +144,21 @@
       box-shadow: 0 0 0 4px rgba(78, 208, 168, .16);
     }
 
+    #avl-microscope-page .avl-sitebar-status.is-stale .avl-live-dot {
+      background: #a8b6cc;
+      box-shadow: 0 0 0 4px rgba(168, 182, 204, .16);
+    }
+
     #avl-microscope-page .avl-page-hero {
       position: relative;
       overflow: hidden;
       display: grid;
-      grid-template-columns: minmax(0, 1.45fr) minmax(260px, .55fr);
-      gap: 30px;
-      align-items: end;
+      grid-template-columns: minmax(0, 1.2fr) minmax(300px, .8fr);
+      gap: clamp(30px, 5vw, 88px);
+      align-items: center;
       padding: 54px 48px 48px;
       color: #ffffff;
+      border-top: 5px solid var(--avl-page-orange);
       background:
         radial-gradient(circle at 86% 22%, rgba(244, 123, 32, .42), transparent 28%),
         radial-gradient(circle at 55% 90%, rgba(0, 159, 152, .24), transparent 34%),
@@ -170,6 +176,8 @@
       pointer-events: none;
     }
 
+    #avl-microscope-page .avl-page-hero > * { position: relative; z-index: 1; }
+
     #avl-microscope-page .avl-eyebrow,
     #avl-microscope-page .avl-section-kicker {
       color: var(--avl-page-orange);
@@ -184,7 +192,7 @@
       max-width: 760px;
       margin: 10px 0 12px;
       font-family: Georgia, "Times New Roman", serif;
-      font-size: clamp(42px, 6vw, 72px);
+      font-size: clamp(38px, 4vw, 58px);
       letter-spacing: -.045em;
       line-height: .94;
     }
@@ -202,30 +210,84 @@
     #avl-microscope-page .avl-hero-reading {
       position: relative;
       z-index: 1;
-      padding: 22px;
-      border: 1px solid rgba(255, 255, 255, .2);
-      border-radius: 20px;
-      background: rgba(255, 255, 255, .1);
-      backdrop-filter: blur(8px);
+      min-width: 0;
     }
 
     #avl-microscope-page .avl-hero-reading span {
-      color: #ffd6b7;
-      font: 800 10px Arial, sans-serif;
+      color: #8cf0dc;
+      font: 800 12px Arial, sans-serif;
       letter-spacing: .13em;
       text-transform: uppercase;
     }
 
     #avl-microscope-page .avl-hero-reading strong {
       display: block;
-      margin: 5px 0 4px;
+      margin: 10px 0 4px;
       color: #ffffff;
-      font-size: clamp(48px, 7vw, 72px);
-      letter-spacing: -.06em;
-      line-height: .95;
+      font-size: clamp(82px, 11vw, 164px);
+      letter-spacing: -.075em;
+      line-height: .88;
+      font-variant-numeric: tabular-nums;
     }
 
-    #avl-microscope-page .avl-hero-reading small { color: #dbe8ff; }
+    #avl-microscope-page .avl-hero-reading strong .avl-hero-unit {
+      color: #ffc16a;
+      font-size: .34em;
+      letter-spacing: -.03em;
+      vertical-align: .12em;
+    }
+
+    #avl-microscope-page .avl-hero-claim {
+      max-width: 590px;
+      color: #ffffff;
+      font-size: clamp(21px, 2.2vw, 29px);
+      font-weight: 800;
+      line-height: 1.18;
+    }
+
+    #avl-microscope-page .avl-hero-thermal-track {
+      position: relative;
+      max-width: 620px;
+      height: 8px;
+      margin-top: 26px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #83c9ff, #9a93dc 52%, #ffb461);
+      box-shadow: 0 0 18px rgba(123, 174, 255, .26);
+      transform-origin: left center;
+      animation: avl-hero-track-reveal 900ms ease-out both;
+    }
+
+    #avl-microscope-page .avl-hero-thermal-track::before,
+    #avl-microscope-page .avl-hero-thermal-track::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 14px;
+      height: 14px;
+      border: 3px solid #ffffff;
+      border-radius: 50%;
+      background: #83c9ff;
+      box-shadow: 0 2px 8px #071d49aa;
+      transform: translateY(-50%);
+    }
+
+    #avl-microscope-page .avl-hero-thermal-track::before { left: 0; }
+    #avl-microscope-page .avl-hero-thermal-track::after { right: 0; background: #ffb461; }
+    @keyframes avl-hero-track-reveal { from { opacity: 0; transform: scaleX(.05); } to { opacity: 1; transform: scaleX(1); } }
+    @media (prefers-reduced-motion: reduce) { #avl-microscope-page .avl-hero-thermal-track { animation: none; } }
+
+    #avl-microscope-page .avl-hero-endpoints {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 30px;
+      margin-top: 14px;
+    }
+
+    #avl-microscope-page .avl-hero-endpoints div { min-width: 0; flex: 1 1 170px; }
+    #avl-microscope-page .avl-hero-endpoints small { display: block; margin-bottom: 4px; color: #c8dcfa; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    #avl-microscope-page .avl-hero-endpoints b { display: block; color: #ffffff; font-size: 15px; line-height: 1.35; }
+    #avl-microscope-page .avl-hero-endpoints div:first-child b { color: #9ed3ff; }
+    #avl-microscope-page .avl-hero-endpoints div:last-child b { color: #ffd19c; }
 
     #avl-microscope-page .avl-page-content { padding: 38px 48px 52px; }
 
@@ -1189,7 +1251,7 @@
 
     @media (max-width: 900px) {
       #avl-microscope-page .avl-page-hero { grid-template-columns: 1fr; }
-      #avl-microscope-page .avl-hero-reading { max-width: 340px; }
+      #avl-microscope-page .avl-hero-reading { max-width: 720px; }
       #avl-microscope-page .avl-now-grid { grid-template-columns: 1fr 1fr; }
       #avl-microscope-page .avl-now-story.primary { grid-column: 1 / -1; }
       #avl-microscope-page .avl-footprint-grid { grid-template-columns: 1fr; }
@@ -1205,6 +1267,8 @@
       #avl-microscope-page .avl-sitebar { padding: 12px 18px; }
       #avl-microscope-page .avl-sitebar-status span:last-child { display: none; }
       #avl-microscope-page .avl-page-hero { padding: 38px 22px 34px; }
+      #avl-microscope-page .avl-hero-reading strong { font-size: clamp(76px, 20vw, 116px); }
+      #avl-microscope-page .avl-hero-endpoints { margin-top: 18px; }
       #avl-microscope-page .avl-page-content { padding: 28px 18px 34px; }
       #avl-microscope-page .avl-briefing { margin: -4px -6px 30px; padding: 20px 14px; border-radius: 22px; }
       #avl-microscope-page .avl-section-head { display: block; }
@@ -1258,22 +1322,26 @@
   </style>
 
   <div class="avl-page-shell">
-    <div class="avl-sitebar">
-      <div class="avl-sitebar-status" id="avl-live-status" aria-live="polite"><span class="avl-live-dot"></span><strong>27 of 30 stations reporting</strong><span>· last update 10:02 AM</span></div>
-    </div>
-
     <header class="avl-page-hero">
+      <div class="avl-hero-reading">
+        <span class="avl-hero-kicker">Archived example · September 5</span>
+        <strong>11.4<span class="avl-hero-unit">°F</span></strong>
+        <div class="avl-hero-claim">between the coolest and warmest reporting neighborhoods</div>
+        <div class="avl-hero-thermal-track" aria-hidden="true"></div>
+        <div class="avl-hero-endpoints">
+          <div><small>Coolest</small><b class="avl-hero-coolest">UNC Asheville · 72.7°F</b></div>
+          <div><small>Warmest</small><b class="avl-hero-warmest">Sand Hill · 84.1°F</b></div>
+        </div>
+      </div>
       <div>
         <div class="avl-eyebrow">Neighborhood observations · Asheville, North Carolina</div>
         <h1>Asheville Under the Microscope</h1>
         <p>One city, many microclimates. See how elevation, exposure, shade, and neighborhood geography are shaping the weather people are actually experiencing.</p>
       </div>
-      <div class="avl-hero-reading">
-        <span>Right now across Asheville</span>
-        <strong>11.4°</strong>
-        <small>separates the coolest and warmest reporting neighborhoods</small>
-      </div>
     </header>
+    <div class="avl-sitebar">
+      <div class="avl-sitebar-status is-stale" id="avl-live-status" aria-live="polite"><span class="avl-live-dot"></span><strong>Archived September 5 snapshot</strong><span>· live update pending</span></div>
+    </div>
 
     <main class="avl-page-content">
       <section class="avl-briefing" aria-labelledby="avl-now-title">
@@ -1460,7 +1528,7 @@
       </section>
     </main>
 
-    <div class="avl-page-footer"><span>Neighborhood observations interpreted by meteorologist Tim Ballisty.</span><span>Current observations · September 5 · 10:02 AM</span></div>
+    <div class="avl-page-footer"><span>Neighborhood observations interpreted by meteorologist Tim Ballisty.</span><span>Archived example · September 5 · 10:02 AM</span></div>
   </div>
 
   <script>
@@ -1551,9 +1619,13 @@
         const matched = strongestElevationMatch(terrainStations);
 
         const status = root.querySelector('#avl-live-status');
+        status.classList.remove('is-stale');
         status.querySelector('strong').textContent = `${reportingCount} of ${payload.network.stationCount} stations reporting`;
         status.querySelector('span:last-child').textContent = `· updated ${snapshotTime}`;
-        root.querySelector('.avl-hero-reading strong').textContent = `${spread}°`;
+        root.querySelector('.avl-hero-kicker').textContent = 'Right now across Asheville';
+        root.querySelector('.avl-hero-reading strong').firstChild.textContent = spread;
+        root.querySelector('.avl-hero-coolest').textContent = `${low.name} · ${temperatureOf(low)}°F`;
+        root.querySelector('.avl-hero-warmest').textContent = `${high.name} · ${temperatureOf(high)}°F`;
 
         const stories = root.querySelectorAll('.avl-now-story');
         stories[0].querySelector('strong').textContent = `${high.name} is ${spread}° warmer than ${low.name}.`;
@@ -1654,6 +1726,7 @@
         root.querySelector('.avl-page-footer span:last-child').textContent = `Current observations · ${new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', month: 'long', day: 'numeric' }).format(new Date(payload.generatedAt))} · ${snapshotTime}`;
       }
 
+      let lastSuccessfulSnapshotAt = null;
       async function hydrateLiveData() {
         if (location.protocol === 'file:') return;
         const controller = new AbortController();
@@ -1679,11 +1752,21 @@
             });
           if (currentCore.length >= 2) stations = currentCore;
           updateSnapshotNarrative(payload);
+          lastSuccessfulSnapshotAt = payload.generatedAt;
           const { renderPublicInsights } = await import('./js/asheville-microscope-public-insights.js');
           renderPublicInsights(root, payload);
           render();
         } catch (error) {
-          root.querySelector('#avl-live-status span:last-child').textContent = '· showing last available readings';
+          const status = root.querySelector('#avl-live-status');
+          status.classList.add('is-stale');
+          status.querySelector('strong').textContent = 'Live update unavailable';
+          status.querySelector('span:last-child').textContent = lastSuccessfulSnapshotAt
+            ? `· showing last successful update at ${formatSnapshotTime(lastSuccessfulSnapshotAt)}`
+            : '· showing archived September 5 example';
+          if (lastSuccessfulSnapshotAt) {
+            root.querySelector('.avl-hero-kicker').textContent = `Last update · ${formatSnapshotTime(lastSuccessfulSnapshotAt)}`;
+            root.querySelector('.avl-page-footer span:last-child').textContent = `Last successful update · ${formatSnapshotTime(lastSuccessfulSnapshotAt)}`;
+          }
         } finally {
           clearTimeout(timeout);
         }

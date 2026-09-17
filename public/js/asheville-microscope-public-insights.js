@@ -41,6 +41,20 @@ export function publicSummary(payload) {
   return { core, stats, index, dry, trend, elevationSpan };
 }
 
+export function summaryMeters(stats) {
+  if (![stats.min, stats.q1, stats.q3, stats.max, stats.spread].every(Number.isFinite)) return ['', '', ''];
+  const span = stats.max - stats.min;
+  const start = span > 0 ? (stats.q1 - stats.min) / span * 100 : 49;
+  const width = span > 0 ? Math.max(2, (stats.q3 - stats.q1) / span * 100) : 2;
+  const ceiling = Math.max(5, Math.ceil(stats.spread / 5) * 5);
+  const filled = Math.min(100, stats.spread / ceiling * 100);
+  return [
+    `<div class="avl-story-meter avl-middle-meter" aria-hidden="true" style="--meter-start:${start.toFixed(1)}%;--meter-width:${width.toFixed(1)}%"><i></i></div><small>Highlighted: the middle half</small>`,
+    `<div class="avl-story-meter avl-full-meter${span === 0 ? ' avl-flat-meter' : ''}" aria-hidden="true"><i></i></div><small>${span === 0 ? 'Same reading at every station' : 'Coolest to warmest reading'}</small>`,
+    `<div class="avl-story-meter avl-gap-meter" aria-hidden="true" style="--meter-fill:${filled.toFixed(1)}%"><i></i></div><small>0° <span>${ceiling}° scale</span></small>`
+  ];
+}
+
 export function neighborhoodLineup(core, stats) {
   if (!core.length || !Number.isFinite(stats.min)) return '';
   const span = stats.max - stats.min;
@@ -74,6 +88,7 @@ export function renderPublicInsights(root, payload) {
   }
   const rain = core.filter(wet);
   const gust = summarizeMetric(core, 'windGustMph');
+  const [middleMeter, fullMeter, gapMeter] = summaryMeters(stats);
   const explanation = rain.length
     ? `${rain.map((station) => station.name).join(', ')} ${rain.length === 1 ? 'reports' : 'report'} active rain. Rain may be contributing to local temperature differences; current readings alone cannot establish the cause.`
     : gust.spread >= 10
@@ -84,7 +99,7 @@ export function renderPublicInsights(root, payload) {
     <h2 id="avl-consensus-title">${categories[index]}</h2>
     <p class="avl-public-lead">${index === 0 && stats.spread >= 7 ? 'Most neighborhoods agree—but the warm and cool pockets still matter.' : ['Most neighborhoods are close in temperature right now.', 'Mostly—but not everywhere.', 'Your neighborhood makes a meaningful difference right now.', 'One reading misses substantial neighborhood differences.'][index]}</p>
     <div class="avl-public-scale" aria-label="Current category: ${categories[index]}">${categories.map((label, position) => `<div class="${position === index ? 'active' : ''}"${position === index ? ' aria-current="true"' : ''}><small>${position === index ? '✓ Current pattern' : 'Other pattern'}</small><span>${label}</span></div>`).join('')}</div>
-    <div class="avl-public-facts"><div><span>Middle half of neighborhoods</span><strong>${number(stats.q1)}°–${number(stats.q3)}°</strong></div><div><span>All reporting neighborhoods</span><strong>${number(stats.min)}°–${number(stats.max)}°</strong></div><div><span>Coolest-to-warmest gap</span><strong>${number(stats.spread)}°</strong></div></div>
+    <div class="avl-public-facts"><div><span>Middle half of neighborhoods</span><strong>${number(stats.q1)}°–${number(stats.q3)}°</strong>${middleMeter}</div><div><span>All reporting neighborhoods</span><strong>${number(stats.min)}°–${number(stats.max)}°</strong>${fullMeter}</div><div><span>Coolest-to-warmest gap</span><strong>${number(stats.spread)}°</strong>${gapMeter}</div></div>
     ${neighborhoodLineup(core, stats)}
     <div class="avl-public-explanation"><b>What else is in the picture?</b><p>${escape(explanation)}</p></div>
     <details><summary>How is this decided?</summary><p>This compares ${core.length} current Asheville neighborhood readings—not the surrounding corridors. The category uses the temperature range containing the middle half of those readings: up to 3°F, 5°F, 8°F, or above 8°F. The full range keeps unusually warm and cool locations visible. These categories describe current conditions—not forecasts or safety guidance.</p></details>`;

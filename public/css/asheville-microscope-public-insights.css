@@ -17,6 +17,18 @@
 #avl-microscope-page .avl-public-summary .avl-public-facts>div{background:linear-gradient(140deg,#239c9345,#ffffff08);border-top:3px solid #68e2cb;box-shadow:inset 0 1px 0 #ffffff25,0 8px 18px #0002}
 #avl-microscope-page .avl-public-summary .avl-public-facts>div:nth-child(2){background:linear-gradient(140deg,#8472cd45,#ffffff08);border-top-color:#c3a3ff}
 #avl-microscope-page .avl-public-summary .avl-public-facts>div:nth-child(3){background:linear-gradient(140deg,#c5873345,#ffffff08);border-top-color:#ffc16a}
+#avl-microscope-page .avl-story-meter{position:relative;height:14px;margin-top:18px;border-radius:999px;background:#ffffff26;box-shadow:inset 0 2px 5px #0005;overflow:hidden}
+#avl-microscope-page .avl-story-meter i{position:absolute;inset:2px auto 2px 0;display:block;border-radius:999px;transform:scaleX(1);transform-origin:left center;animation:avl-meter-reveal 850ms ease-out both}
+#avl-microscope-page .avl-middle-meter{background:linear-gradient(90deg,#3976c8aa,#7273bf88,#ed8b52aa)}
+#avl-microscope-page .avl-middle-meter i{left:var(--meter-start);width:var(--meter-width);background:#78f1d7;box-shadow:0 0 12px #78f1d7}
+#avl-microscope-page .avl-full-meter i{right:2px;width:auto;background:linear-gradient(90deg,#397ee9,#8c7bc6,#ff922e)}
+#avl-microscope-page .avl-flat-meter{background:#ffffff26}
+#avl-microscope-page .avl-flat-meter i{left:calc(50% - 5px);right:auto;width:10px;background:#78f1d7}
+#avl-microscope-page .avl-gap-meter i{width:var(--meter-fill);background:linear-gradient(90deg,#78e3d1,#ffc16a)}
+#avl-microscope-page .avl-public-facts small{display:block;margin-top:8px;color:#d0e1f2;font-size:12px;font-weight:700;line-height:1.35}
+#avl-microscope-page .avl-public-facts small span{display:inline;float:right;font-size:inherit;color:inherit}
+@keyframes avl-meter-reveal{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@media(prefers-reduced-motion:reduce){#avl-microscope-page .avl-story-meter i{animation:none}}
 #avl-microscope-page .avl-neighborhood-lineup{margin:26px 0;padding:22px;border-radius:18px;background:#061a37a0;border:1px solid #ffffff25;box-shadow:inset 0 2px 10px #0002}
 #avl-microscope-page .avl-lineup-heading{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:#fff;font-size:18px}
 #avl-microscope-page .avl-lineup-heading span{font-size:14px;color:#c8def1}
@@ -92,6 +104,10 @@
 #avl-microscope-page .avl-pair-metric-grid b{font-size:17px;color:#fff}
 #avl-microscope-page .avl-pair-graphic{display:block;width:100%;overflow:visible;margin:18px 0 8px}
 #avl-microscope-page .avl-pair-graphic text{font:700 15px Arial,sans-serif}
+#avl-microscope-page .avl-pair-graphic circle{transform-box:fill-box;transform-origin:center;animation:avl-marker-arrive 650ms cubic-bezier(.2,.8,.2,1) both}
+#avl-microscope-page .avl-pair-graphic circle:nth-of-type(2){animation-delay:120ms}
+@keyframes avl-marker-arrive{from{opacity:0;transform:scale(.25)}to{opacity:1;transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){#avl-microscope-page .avl-pair-graphic circle{animation:none}}
 #avl-microscope-page .avl-pair-color-key{display:flex;flex-wrap:wrap;gap:12px 28px}
 #avl-microscope-page .avl-pair-color-key span:first-child{color:#8bf3dd}
 #avl-microscope-page .avl-pair-color-key span:last-child{color:#ffd078}
