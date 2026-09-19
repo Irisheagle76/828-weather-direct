@@ -1,4 +1,5 @@
 import { execFile, spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { promisify } from 'node:util';
 import { mkdtemp, readFile, rmdir } from 'node:fs/promises';
 import os from 'node:os';
@@ -29,7 +30,12 @@ async function main() {
   const dates = refreshDates();
   if (process.argv.includes('--plan')) { console.log(JSON.stringify(dates)); return; }
   const repo = path.resolve(import.meta.dirname, '..');
-  const generatorRoot = 'C:/Users/Tim/828-weather-direct';
+  const repositoryGenerator = path.join(repo, 'scripts', 'generate-feelscore.mjs');
+  const legacyGeneratorRoot = 'C:/Users/Tim/828-weather-direct';
+  // GitHub Actions runs the tracked generator from this repository. Keep the
+  // legacy C-drive fallback so the established desktop recovery path remains
+  // usable until every local checkout has synchronized.
+  const generatorRoot = existsSync(repositoryGenerator) ? repo : legacyGeneratorRoot;
   const git = async (args, cwd = repo) => (await exec('git', args, { cwd, windowsHide: true })).stdout.trim();
   await git(['fetch', 'origin', '--prune']);
   const scratch = await mkdtemp(path.join(os.tmpdir(), '828-feelscore-publish-'));

@@ -3,3 +3,4 @@ vercel-dev*.log
 .env
 .env.*
 !.env.example
+.cache/

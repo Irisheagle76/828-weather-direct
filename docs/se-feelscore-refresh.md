@@ -6,15 +6,15 @@ The requested date is today's Eastern calendar date before 15:00 and tomorrow's 
 
 The handler retrieves `public/data/feelscore/YYYY-MM-DD.json` from the public repository's current main branch. It validates the requested date, generation age (maximum 36 hours), dense 0.25-degree grid, zero missing points, and each point's local date/hours. It caches validated data in memory for at most one minute and sends `Cache-Control: no-store`. The client includes `since=generatedAt` on refreshes; an unchanged valid map returns 204 without redownloading the full grid. A missing or invalid forecast returns 503, never a different date's map. A request completing across a forecast boundary retries immediately.
 
-The existing Daily Southeast FEELSCORE automation must generate **both today and tomorrow** at 6 AM Eastern. The existing generator in `C:\Users\Tim\828-weather-direct\scripts\generate-feelscore.mjs` supports:
+The GitHub Actions workflow `.github/workflows/publish-se-feelscore.yml` generates **both today and tomorrow** at 6:07 AM Eastern and refreshes tomorrow again at 2:07 PM Eastern. It uses an America/New_York schedule, runs the tracked generator, validates and publishes through the guarded script, and does not depend on Codex or a local computer. The generator supports:
 
 ```
-node scripts/generate-feelscore.mjs --date=YYYY-MM-DD --force --batch-size=100 --require-complete --dated --output-dir=C:/Users/Tim/828-weather-direct-feelscore-publish/public/data/feelscore
+node scripts/generate-feelscore.mjs --date=YYYY-MM-DD --force --batch-size=100 --require-complete --dated --output-dir=public/data/feelscore
 ```
 
 Run once for each date. Validate both outputs using `validateForecast` from `public/js/se-feelscore-period.js` and the existing engine tests. Commit only the dated JSON/CSV files on current main. Data-only commits do not deploy the website or change deployment guards. The live endpoint sees them without a website release.
 
-For scheduled operation, run `node scripts/refresh-publish-se-feelscore.mjs` as **one command** from the publication checkout. It creates an isolated checkout on current main, completes generation, validation, commit, push and live verification before returning. Do not break those phases into conversation steps or divert into unrelated preview work before publication finishes. Failed checkouts are preserved for recovery. Run at 6 AM and retry at 2 PM Eastern; afternoon retries generate only tomorrow because NWS may remove today's elapsed noon hours. `--plan` prints the selected dates without changing anything.
+For scheduled or manual operation, run `node scripts/refresh-publish-se-feelscore.mjs` as **one command**. It creates an isolated checkout on current main, completes generation, validation, commit, push and live verification before returning. Do not break those phases into conversation steps or divert into unrelated preview work before publication finishes. Failed checkouts are preserved for recovery. The 6:07 AM run generates today and tomorrow; the 2:07 PM recovery run generates only tomorrow because NWS may remove today's elapsed noon hours. `--plan` prints the selected dates without changing anything.
 
 Keep the last three Eastern calendar dates plus tomorrow; only prune older ISO-date-named JSON/CSV within this data directory after both replacement forecasts validate. Do not delete unrelated files. Git history preserves past published maps.
 
