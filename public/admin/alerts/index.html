@@ -454,14 +454,21 @@
       if (!result.pushed) {
         setStatus("Published to homepage.");
       } else if (result.pushResult?.skipped) {
-        setStatus("Published to homepage. Push skipped: VAPID keys are not configured.");
+        const reason = result.pushResult.reason === "subscription-store-unavailable"
+          ? "subscription storage is unavailable"
+          : "VAPID keys are not configured";
+        setStatus(`Published to homepage. Push skipped: ${reason}.`);
       } else if (result.pushResult?.sent > 0) {
-        const failed = result.pushResult.failed ? ` ${result.pushResult.failed} failed.` : "";
-        setStatus(`Published to homepage. Push sent to ${result.pushResult.sent} subscriber${result.pushResult.sent === 1 ? "" : "s"}.${failed}`);
+        const failed = result.pushResult.failed ? ` ${formatPushFailures(result.pushResult)}` : "";
+        setStatus(`Published to homepage. Push sent to ${result.pushResult.sent} subscription${result.pushResult.sent === 1 ? "" : "s"}.${failed}`);
       } else {
-        setStatus("Published to homepage. No push subscribers were found.");
+        const detail = result.pushResult?.failed
+          ? formatPushFailures(result.pushResult)
+          : "No push subscriptions were found.";
+        setStatus(`Published to homepage. ${detail}`);
       }
       await loadActiveAlerts();
+      await loadNotificationStatus();
     } catch (err) {
       console.error(err);
       setStatus("Publish failed.");
@@ -577,7 +584,8 @@
         const whitespace = config.publicKeyHasWhitespace || config.privateKeyHasWhitespace
           ? " Whitespace was detected in one or both VAPID env vars."
           : "";
-        pushDiagnostics.textContent = `${keyState}. Public key: ${config.hasPublicKey ? "present" : "missing"}. Private key: ${config.hasPrivateKey ? "present" : "missing"}.${whitespace}`;
+        const lastDelivery = formatLastDelivery(data.lastDelivery);
+        pushDiagnostics.textContent = `${keyState}. Public key: ${config.hasPublicKey ? "present" : "missing"}. Private key: ${config.hasPrivateKey ? "present" : "missing"}.${whitespace}${lastDelivery}`;
       }
     } catch {
       // Keep the default label when status is unavailable.
@@ -586,6 +594,27 @@
 
   function setStatus(message) {
     statusEl.textContent = message || "";
+  }
+
+  function formatPushFailures(result = {}) {
+    const failed = Number(result.failed) || 0;
+    const expired = Number(result.expired) || 0;
+    const removed = Number(result.expiredRemoved) || 0;
+    const parts = [`${failed} failed.`];
+    if (expired) parts.push(`${expired} expired; ${removed} removed.`);
+    if (result.cleanupFailed) parts.push("Expired-subscription cleanup needs attention.");
+    return parts.join(" ");
+  }
+
+  function formatLastDelivery(lastDelivery) {
+    if (!lastDelivery?.recordedAt) return " No delivery result has been recorded yet.";
+    const when = new Date(lastDelivery.recordedAt).toLocaleString();
+    const reasons = Object.entries(lastDelivery.failureReasons || {})
+      .filter(([, count]) => Number(count) > 0)
+      .map(([reason, count]) => `${reason}: ${count}`)
+      .join(", ");
+    const failureDetail = reasons ? ` Failure types: ${reasons}.` : "";
+    return ` Last send ${when}: ${lastDelivery.sent || 0} sent, ${lastDelivery.failed || 0} failed, ${lastDelivery.expiredRemoved || 0} expired removed.${failureDetail}`;
   }
 
   function formatType(type = "") {
