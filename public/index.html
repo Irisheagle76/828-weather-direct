@@ -953,6 +953,7 @@
     }
 
     .sky-home-copy {
+      container-type: inline-size;
       display: grid;
       align-content: center;
       gap: 13px;
@@ -983,8 +984,10 @@
       color: var(--ink);
       font-family: Georgia, "Times New Roman", serif;
       font-size: clamp(1.9rem, 4.7vw, 3.3rem);
+      font-size: clamp(1.9rem, 12cqw, 3.3rem);
       line-height: 0.98;
       letter-spacing: 0;
+      overflow-wrap: anywhere;
     }
 
     .sky-home-detail {
