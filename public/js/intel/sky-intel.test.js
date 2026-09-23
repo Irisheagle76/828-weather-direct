@@ -158,3 +158,82 @@ test("does not let Tempest solar override a flat gray low-visibility camera scen
   assert.equal(read.atmosphericState, "fog");
   assert.equal(read.visualObscured, true);
 });
+
+test("classifies an obscured western view as a rain shaft when fresh nearby radar echoes agree", () => {
+  const read = computeSkyIntel({
+    camera: cameraWith({
+      cloudCoverWest: 58,
+      brightness: 0.4,
+      contrast: 0.05,
+      visibilityScore: 1,
+      obscuredView: true,
+      sunlightDetected: false,
+      sunlightLevel: "weak",
+      groundBrightness: 0.14,
+      groundContrast: 0.06,
+      skyBlueSignal: 0.84
+    }),
+    weatherContext: {
+      radar: {
+        available: true,
+        ageMinutes: 4,
+        echoPixels: 700,
+        echoCoverage: 0.08,
+        nearWestEchoPixels: 90,
+        nearestEchoMiles: 12
+      }
+    }
+  });
+
+  assert.equal(read.atmosphericState, "rain_shaft");
+  assert.equal(read.radarRainShaftSignal, true);
+  assert.equal(read.visualObscured, true);
+});
+
+test("treats a smooth rusty sky as clear wildfire smoke when aerosol evidence agrees", () => {
+  const read = computeSkyIntel({
+    camera: cameraWith({
+      cloudCoverWest: 100,
+      brightness: 0.52,
+      contrast: 0.06,
+      visibilityScore: 3,
+      sunlightDetected: false,
+      sunlightLevel: "weak",
+      skyBlueSignal: 0.72,
+      warmHazeSignal: true,
+      satelliteCloudFraction: 0.08
+    }),
+    weatherContext: {
+      airQuality: {
+        pm25: 8.9,
+        pm10: 10.7,
+        usAqiPm25: 49,
+        aerosolOpticalDepth: 0.25,
+        dust: 1
+      }
+    }
+  });
+
+  assert.equal(read.atmosphericState, "clear_smoke");
+  assert.equal(read.cloudState, "mostly_clear");
+  assert.equal(read.displayCloud, 15);
+  assert.equal(read.observedCloud, 100);
+  assert.equal(read.aerosolDetected, true);
+});
+
+test("does not turn a warm overcast into clear smoke without open-sky corroboration", () => {
+  const read = computeSkyIntel({
+    camera: cameraWith({
+      cloudCoverWest: 100,
+      warmHazeSignal: true,
+      satelliteCloudFraction: 0.72,
+      satelliteHighCloudSignal: true
+    }),
+    weatherContext: {
+      airQuality: { pm25: 28, usAqiPm25: 78, aerosolOpticalDepth: 0.42 }
+    }
+  });
+
+  assert.notEqual(read.atmosphericState, "clear_smoke");
+  assert.equal(read.cloud, 100);
+});

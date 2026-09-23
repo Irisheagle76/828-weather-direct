@@ -31,7 +31,7 @@ The registry contains 30 unique physical stations: 18 Asheville core stations, 4
 
 | Station | Scope | Latitude | Longitude | Elev. | Provider / station ID | Exposure | Audit snapshot |
 |---|---|---:|---:|---:|---|---|---|
-| Huntington Chase | Core | 35.615642 | -82.505577 | 2,331 ft | Tempest 127602 | Residential, trees | Fresh |
+| North Haw Creek | Core | 35.615642 | -82.505577 | 2,331 ft | Tempest 127602 | Residential, trees | Fresh |
 | Biltmore Forest | Core | 35.535242 | -82.541958 | 2,167 ft | WU KNCBILTM2 | Heavily forested, grass | Fresh |
 | Five Points Neighborhood | Core | 35.606835 | -82.557007 | 2,147 ft | WU KNCASHEV275 | Trees, shrubbery | Fresh |
 | Grove Arcade | Core | 35.595288 | -82.556713 | 2,240 ft | NOAA/NCEI; aliases KNCASHEV475/C9566 | Rooftop, little obstruction | Fresh |

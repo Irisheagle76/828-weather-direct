@@ -24,7 +24,8 @@
   {"@context":"https://schema.org","@type":"WebPage","name":"Asheville Weather Forecast","url":"https://avlweather.com/forecast.html","description":"A four-day Asheville weather forecast with local meteorologist analysis.","isPartOf":{"@type":"WebSite","name":"828 Weather Direct","url":"https://avlweather.com/"},"about":{"@type":"Place","name":"Asheville, North Carolina"},"author":{"@type":"Person","name":"Tim Ballisty","jobTitle":"Meteorologist","url":"https://avlweather.com/about.html"},"publisher":{"@type":"Organization","name":"828 Weather Direct","url":"https://avlweather.com/"}}
   </script>
 
-  <link rel="stylesheet" href="/css/app-v2.css?v=forecast-splash-20260608" />
+  <link rel="stylesheet" href="/css/app-v2.css?v=forecast-board-20260806" />
+  <link rel="stylesheet" href="/css/brand-lockup.css?v=20260805-brand2" />
 </head>
 
 <body class="forecast-refresh forecast-warm">
@@ -36,9 +37,9 @@
     <div class="header-inner">
 
       <div class="forecast-header-row">
-        <a class="brand" href="/" aria-label="828 Weather Direct home">
-          <div class="brand-title">828 Weather Direct</div>
-          <div class="brand-sub">
+        <a class="brand site-brand-lockup" href="/" aria-label="828 Weather Direct home">
+          <div class="brand-title site-brand-title"><span class="site-brand-828">828</span> Weather Direct</div>
+          <div class="brand-sub site-brand-sub">
             Hyper-local Asheville forecast built by Tim Ballisty
           </div>
         </a>
@@ -171,13 +172,16 @@
        SCRIPT
        ===================================== -->
   <script type="module">
-    import { render4DayForecast } from '/js/modules/render4DayForecast.js?v=forecast-splash-20260608';
+    import { render4DayForecast } from '/js/modules/render4DayForecast.js?v=forecast-board-20260806';
 
     const root = document.getElementById('forecast-root');
+    const FORECAST_UPDATE_STORAGE_KEY = 'forecast:last-published';
+    const FORECAST_UPDATE_CHANNEL = 'forecast-updates';
+    let renderInFlight = null;
 
     async function init() {
       try {
-        await render4DayForecast(root);
+        await refreshForecastBoard();
       } catch (e) {
         console.error('Forecast load failed:', e);
         if (root) {
@@ -201,6 +205,37 @@
       document.addEventListener("DOMContentLoaded", init);
     } else {
       init();
+    }
+
+    async function refreshForecastBoard() {
+      if (!root) return;
+      if (!renderInFlight) {
+        renderInFlight = render4DayForecast(root).finally(() => {
+          renderInFlight = null;
+        });
+      }
+      return renderInFlight;
+    }
+
+    function refreshForecastBoardWhenVisible() {
+      if (document.visibilityState === 'visible') {
+        refreshForecastBoard();
+      }
+    }
+
+    window.addEventListener('focus', refreshForecastBoardWhenVisible);
+    document.addEventListener('visibilitychange', refreshForecastBoardWhenVisible);
+    window.addEventListener('storage', event => {
+      if (event.key === FORECAST_UPDATE_STORAGE_KEY) refreshForecastBoard();
+    });
+
+    try {
+      const channel = new BroadcastChannel(FORECAST_UPDATE_CHANNEL);
+      channel.addEventListener('message', event => {
+        if (event.data?.type === 'forecast-published') refreshForecastBoard();
+      });
+    } catch {
+      // Storage and focus events cover browsers without BroadcastChannel.
     }
   </script>
 

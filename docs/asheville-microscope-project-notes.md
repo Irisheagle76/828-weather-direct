@@ -75,7 +75,7 @@ The server-side pipeline is under `lib/asheville-spread/`:
 
 Provider roles currently include:
 
-- Tempest/WeatherFlow for Huntington Chase and any separately authorized Tempest station
+- Tempest/WeatherFlow for North Haw Creek and any separately authorized Tempest station
 - Weather Underground for most neighborhood and corridor stations
 - NOAA/NCEI for Grove Arcade
 - NC ECONet/UNC Asheville for the Lookout Observatory station

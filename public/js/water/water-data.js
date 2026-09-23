@@ -409,6 +409,7 @@ export async function fetchUSGSGaugeData(gaugeId) {
 }
 
 function numberOrNull(value) {
+  if (value === null || value === undefined || value === "") return null;
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
 }
@@ -425,29 +426,36 @@ function todayEasternParts() {
   };
 }
 
-function parseUSGSInstantaneousValues(payload) {
+export function parseUSGSLatestContinuous(payload) {
   const byGauge = {};
-  const series = payload?.value?.timeSeries || [];
-  series.forEach((item) => {
-    const gaugeId = item.sourceInfo?.siteCode?.[0]?.value;
-    const parameter = item.variable?.variableCode?.[0]?.value;
-    const reading = item.values?.[0]?.value?.[0];
-    if (!gaugeId || !parameter || !reading) return;
+  const features = Array.isArray(payload?.features) ? payload.features : [];
+  features.forEach((feature) => {
+    const reading = feature?.properties || {};
+    const gaugeId = String(reading.monitoring_location_id || "").replace(/^USGS-/, "");
+    const parameter = reading.parameter_code;
+    if (!gaugeId || !parameter || reading.value === null || reading.value === undefined) return;
     byGauge[gaugeId] ||= { gaugeId };
     byGauge[gaugeId].quality ||= {};
     const value = numberOrNull(reading.value);
-    if (parameter === "00060") byGauge[gaugeId].dischargeCfs = value;
+    if (parameter === "00060") {
+      byGauge[gaugeId].dischargeCfs = value;
+      byGauge[gaugeId].observedAt = reading.time || byGauge[gaugeId].observedAt;
+    }
     if (parameter === "00065") byGauge[gaugeId].gaugeHeightFt = value;
     if (parameter === "00010") {
-      byGauge[gaugeId].waterTempF = value !== null ? (value * 9) / 5 + 32 : null;
+      const unit = String(reading.unit_of_measure || "").toLowerCase();
+      byGauge[gaugeId].waterTempF = value !== null && (unit.includes("degc") || unit.includes("celsius"))
+        ? (value * 9) / 5 + 32
+        : value;
       byGauge[gaugeId].quality.waterTempF = byGauge[gaugeId].waterTempF;
     }
     if (parameter === "00095") byGauge[gaugeId].quality.specificConductance = value;
     if (parameter === "00300") byGauge[gaugeId].quality.dissolvedOxygen = value;
     if (parameter === "00400") byGauge[gaugeId].quality.ph = value;
     if (parameter === "63680" || parameter === "99133") byGauge[gaugeId].quality.turbidity = value;
-    byGauge[gaugeId].observedAt = reading.dateTime || byGauge[gaugeId].observedAt;
-    byGauge[gaugeId].quality.observedAt = reading.dateTime || byGauge[gaugeId].quality.observedAt;
+    if (!["00060", "00065"].includes(parameter)) {
+      byGauge[gaugeId].quality.observedAt = reading.time || byGauge[gaugeId].quality.observedAt;
+    }
   });
   return byGauge;
 }
@@ -471,64 +479,80 @@ function parseUSGSDailyMedianStats(text, month, day) {
   return byGauge;
 }
 
-async function fetchUSGSGaugeBundle(gaugeIds = []) {
+export async function fetchUSGSGaugeBundle(gaugeIds = []) {
   const uniqueIds = [...new Set(gaugeIds.filter(Boolean))];
   if (!uniqueIds.length) return {};
 
   const ids = uniqueIds.join(",");
   const { month, day } = todayEasternParts();
-  const ivUrl = `https://waterservices.usgs.gov/nwis/iv/?format=json&sites=${encodeURIComponent(ids)}&parameterCd=00060,00065,00010,00095,00300,00400,63680,99133&siteStatus=all`;
+  const currentUrl = "https://api.waterdata.usgs.gov/ogcapi/v0/collections/latest-continuous/items?f=json&limit=100";
   const statUrl = `https://waterservices.usgs.gov/nwis/stat/?format=rdb&sites=${encodeURIComponent(ids)}&statReportType=daily&statTypeCd=median&parameterCd=00060`;
+  const currentQuery = {
+    op: "and",
+    args: [
+      {
+        op: "in",
+        args: [
+          { property: "monitoring_location_id" },
+          uniqueIds.map((gaugeId) => `USGS-${gaugeId}`)
+        ]
+      },
+      {
+        op: "in",
+        args: [
+          { property: "parameter_code" },
+          ["00060", "00065", "00010", "00095", "00300", "00400", "63680", "99133"]
+        ]
+      }
+    ]
+  };
 
-  try {
-    const [ivResponse, statResponse] = await Promise.all([
-      fetch(ivUrl),
-      fetch(statUrl)
-    ]);
-    if (!ivResponse.ok || !statResponse.ok) throw new Error("USGS gauge request failed");
-    const [ivPayload, statText] = await Promise.all([
-      ivResponse.json(),
-      statResponse.text()
-    ]);
-    const currentByGauge = parseUSGSInstantaneousValues(ivPayload);
-    const normalByGauge = parseUSGSDailyMedianStats(statText, month, day);
-    return Object.fromEntries(uniqueIds.map((gaugeId) => {
-      const mock = MOCK_RIVER_GAUGES[gaugeId] || {};
-      const live = currentByGauge[gaugeId] || {};
-      const normal = normalByGauge[gaugeId] || {};
-      const dischargeCfs = live.dischargeCfs ?? mock.dischargeCfs ?? null;
-      const normalMedianCfs = normal.normalMedianCfs ?? mock.normalMedianCfs ?? null;
-      const percentNormal = dischargeCfs && normalMedianCfs
-        ? Math.round((dischargeCfs / normalMedianCfs) * 100)
-        : null;
-      return [gaugeId, {
-        gaugeId,
-        dischargeCfs,
-        gaugeHeightFt: live.gaugeHeightFt ?? mock.gaugeHeightFt ?? null,
-        waterTempF: live.waterTempF ?? mock.waterTempF ?? null,
-        quality: live.quality && Object.keys(live.quality).length ? live.quality : null,
-        normalMedianCfs,
-        percentNormal,
-        normalStartYear: normal.normalStartYear || null,
-        normalEndYear: normal.normalEndYear || null,
-        normalSampleCount: normal.normalSampleCount || null,
-        observedAt: live.observedAt || new Date().toISOString(),
-        source: "USGS instantaneous values and daily median statistics",
-        isLive: Boolean(live.dischargeCfs)
-      }];
-    }));
-  } catch {
-    return Object.fromEntries(uniqueIds.map((gaugeId) => [gaugeId, {
+  const [currentResult, statResult] = await Promise.allSettled([
+    fetch(currentUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/query-cql-json" },
+      body: JSON.stringify(currentQuery)
+    }).then((response) => {
+      if (!response.ok) throw new Error(`USGS current conditions request failed (${response.status})`);
+      return response.json();
+    }),
+    fetch(statUrl).then((response) => {
+      if (!response.ok) throw new Error(`USGS statistics request failed (${response.status})`);
+      return response.text();
+    })
+  ]);
+
+  const currentByGauge = currentResult.status === "fulfilled"
+    ? parseUSGSLatestContinuous(currentResult.value)
+    : {};
+  const normalByGauge = statResult.status === "fulfilled"
+    ? parseUSGSDailyMedianStats(statResult.value, month, day)
+    : {};
+
+  return Object.fromEntries(uniqueIds.map((gaugeId) => {
+    const live = currentByGauge[gaugeId] || {};
+    const normal = normalByGauge[gaugeId] || {};
+    const dischargeCfs = live.dischargeCfs ?? null;
+    const normalMedianCfs = normal.normalMedianCfs ?? null;
+    const percentNormal = dischargeCfs !== null && normalMedianCfs
+      ? Math.round((dischargeCfs / normalMedianCfs) * 100)
+      : null;
+    return [gaugeId, {
       gaugeId,
-      ...(MOCK_RIVER_GAUGES[gaugeId] || {}),
-      percentNormal: MOCK_RIVER_GAUGES[gaugeId]?.normalMedianCfs
-        ? Math.round((MOCK_RIVER_GAUGES[gaugeId].dischargeCfs / MOCK_RIVER_GAUGES[gaugeId].normalMedianCfs) * 100)
-        : null,
-      observedAt: new Date().toISOString(),
-      source: "Mock gauge estimate",
-      isLive: false
-    }]));
-  }
+      dischargeCfs,
+      gaugeHeightFt: live.gaugeHeightFt ?? null,
+      waterTempF: live.waterTempF ?? null,
+      quality: live.quality && Object.keys(live.quality).length ? live.quality : null,
+      normalMedianCfs,
+      percentNormal,
+      normalStartYear: normal.normalStartYear || null,
+      normalEndYear: normal.normalEndYear || null,
+      normalSampleCount: normal.normalSampleCount || null,
+      observedAt: live.observedAt || null,
+      source: "USGS latest continuous values and daily median statistics",
+      isLive: dischargeCfs !== null
+    }];
+  }));
 }
 
 export function normalizeGaugeData(raw) {

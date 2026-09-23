@@ -129,6 +129,42 @@ export function generateSkyNarrative(data, skyIntel = null) {
     ]), "medium", "deteriorating");
   }
 
+  if (state === "clear_smoke") {
+    return {
+      headline: "Clear skies are showing through likely wildfire smoke.",
+      detail: "Cloud cover is limited, while fine particles and aerosol haze are filtering the light and can deepen the red-orange color near sunset.",
+      confidence: "high",
+      type: "smoke"
+    };
+  }
+
+  if (state === "clear_dust") {
+    return {
+      headline: "Clear skies are showing through Saharan dust.",
+      detail: "Cloud cover is limited, but airborne desert dust is filtering the light and adding a warm, hazy cast to the sky.",
+      confidence: "high",
+      type: "dust"
+    };
+  }
+
+  if (state === "clear_haze") {
+    return {
+      headline: "The sky is clear beneath a layer of aerosol haze.",
+      detail: "Cloud cover is limited. Airborne particles are muting visibility and warming the color of the light.",
+      confidence: "medium",
+      type: "haze"
+    };
+  }
+
+  if (state === "rain_shaft") {
+    return {
+      headline: "A rain shaft is lowering visibility west of Asheville.",
+      detail: "Low clouds and rain are obscuring part of the view, matching fresh nearby radar echoes west of town.",
+      confidence: "high",
+      type: "rain"
+    };
+  }
+
   if (state === "fog") {
     return withCommon(chooseNarrative(data, state, transition, [
       {

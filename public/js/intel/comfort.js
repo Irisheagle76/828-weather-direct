@@ -1,6 +1,6 @@
 // /js/intel/comfort.js
 
-import { LOCATION } from "/js/config/location.js";
+import { LOCATION } from "../config/location.js";
 
 // ============================================================
 // UTILITIES

@@ -1,0 +1,7 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {normalizeIntervals,windowTotal,localMidnight,rainConfig} from '../tools/biltmore/rainfall.mjs';
+test('raw mm to inches, deduplication and null precipitation rejection',()=>{const row=Array(18).fill(null);row[0]=300;row[12]=25.4;row[17]=5;const bad=[...row];bad[0]=600;bad[12]=null;const ps=normalizeIntervals([row,row,bad]);assert.equal(ps.length,1);assert.equal(ps[0].inches,1);assert.deepEqual(windowTotal(ps,0,300000),{inches:1,coverage:1});});
+test('complete windows sum; gaps and partial boundary samples are not fabricated',()=>{const p=[{start:0,t:300000,inches:.1},{start:300000,t:600000,inches:0}];assert.equal(windowTotal(p,0,600000).inches,.1);assert.equal(windowTotal(p,0,900000).inches,null);assert.equal(windowTotal(p,150000,600000).inches,null);assert.equal(windowTotal([],0,600000).inches,null);});
+test('midnight is Eastern and handles DST boundary days',()=>{assert.equal(localMidnight(Date.parse('2026-09-14T14:00:00Z')),Date.parse('2026-09-14T04:00:00Z'));assert.equal(localMidnight(Date.parse('2026-03-08T16:00:00Z')),Date.parse('2026-03-08T05:00:00Z'));assert.equal(localMidnight(Date.parse('2026-11-01T16:00:00Z')),Date.parse('2026-11-01T04:00:00Z'));});
+test('local mode never silently falls back to personal token',()=>{assert.equal(rainConfig({TEMPEST_TOKEN:'test'}).demo,true);assert.equal(rainConfig({BILTMORE_TEMPEST_MODE:'local',TEMPEST_TOKEN:'test'}).token,null);});

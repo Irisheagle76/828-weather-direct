@@ -1,5 +1,8 @@
 const ACTIVE_OBSERVATION_MAX_MS = 5 * 60 * 1000;
 const RECENT_RAIN_MAX_MINUTES = 10;
+const RECENT_LIGHTNING_MAX_MINUTES = 30;
+const RADAR_MAX_AGE_MINUTES = 15;
+const RADAR_OVERHEAD_MILES = 8;
 const STORAGE_KEY = "avlweather.precipOverride.v1";
 
 function numberOrNull(value) {
@@ -82,13 +85,22 @@ function getType({ rate, precipType, weatherCode, lightning }) {
   return "rain";
 }
 
-function activeCopy(type, severity) {
+function lightningSentence(lightningCount, lightningDistance) {
+  const count = Math.max(0, Math.round(Number(lightningCount) || 0));
+  const distance = Number(lightningDistance);
+  const countPhrase = count === 1 ? "a lightning strike" : count > 1 ? `${count} lightning strikes` : "lightning";
+  const distancePhrase = Number.isFinite(distance) ? ` within about ${Math.round(distance)} miles` : " nearby";
+  return `Tempest has detected ${countPhrase}${distancePhrase}.`;
+}
+
+function activeCopy(type, severity, lightning = {}) {
   if (type === "storm") {
+    const lightningDetail = lightningSentence(lightning.count, lightning.distance);
     return {
-      headline: "Storms are active around Asheville.",
-      summary: "Rain and a thunderstorm signal are the main weather story right now. Keep an eye on the sky and radar before heading out.",
+      headline: "Rain and lightning are active around Asheville.",
+      summary: `Rain is falling in Asheville, and ${lightningDetail.charAt(0).toLowerCase()}${lightningDetail.slice(1)} Keep an eye on the sky and radar before heading out.`,
       skyPhrase: "Rain is falling under a stormy Asheville sky.",
-      bullets: ["Rain is falling now", "A thunderstorm signal is nearby"]
+      bullets: ["Rain is falling now", lightningDetail]
     };
   }
   if (type === "snow") {
@@ -156,6 +168,7 @@ export function getCurrentPrecipOverride(context = {}) {
   const currentHour = nearestCurrentHour(hourly, now);
   const storage = getStorage(context);
   const previous = readState(storage);
+  const radar = context.radar || {};
 
   const rainRate = numberOrNull(
     current.rainRate ?? current.precipRate ?? current.precip_rate ?? current.rain_rate
@@ -196,10 +209,39 @@ export function getCurrentPrecipOverride(context = {}) {
   const strongForecastRain = forecastFresh && forecastAmount >= 0.005 &&
     ((forecastProbability ?? 0) >= 0.6 || isRainCode(forecastCode) || isSnowCode(forecastCode));
   const tempestUnavailable = !Number.isFinite(rainRate) || !observationFresh;
-  const forecastActive = !activeRainNow && !recentRainOnly && tempestUnavailable && strongForecastRain;
+  const radarFresh = radar.available === true && Number(radar.ageMinutes) <= RADAR_MAX_AGE_MINUTES;
+  const radarOverhead = radarFresh && Number(radar.nearestEchoMiles) <= RADAR_OVERHEAD_MILES &&
+    (Number(radar.echoPixels) > 0 || Number(radar.echoCoverage) > 0);
+  const radarSupportedRain = !activeRainNow && !recentRainOnly && radarOverhead &&
+    (strongForecastRain || current.isRainingNow === true || Number(current.relative_humidity ?? current.relativeHumidity) >= 90);
+  const forecastActive = !activeRainNow && !recentRainOnly && !radarSupportedRain && tempestUnavailable && strongForecastRain;
 
-  const lightning = Number(current.lightningStrikeCount ?? current.lightning_strike_count ?? 0) > 0 ||
-    Number(forecastCode) >= 95;
+  const observedLightningCount = Math.max(0, Number(
+    context.lightningCount ?? current.lightningStrikeCount ?? current.lightning_strike_count ?? 0
+  ) || 0);
+  const lightningDistance = numberOrNull(
+    context.lightningDistance ?? current.lightningStrikeDistance ?? current.lightning_strike_last_distance
+  );
+  const lightningObservedAt = timestampOrNull(
+    context.lightningObservedAt ?? current.lightningStrikeLastAt ?? current.lightning_strike_last_epoch
+  );
+  let lastLightningDetectedAt = timestampOrNull(previous.lastLightningDetectedAt);
+  let recentLightningCount = Math.max(0, Number(previous.lightningCount) || 0);
+  let recentLightningDistance = numberOrNull(previous.lightningDistance);
+  if (observationFresh && observedLightningCount > 0) {
+    lastLightningDetectedAt = rainRateObservedAt;
+    recentLightningCount = observedLightningCount;
+    recentLightningDistance = lightningDistance;
+  } else if (Number.isFinite(lightningObservedAt) && now - lightningObservedAt >= -60 * 1000 &&
+    now - lightningObservedAt <= RECENT_LIGHTNING_MAX_MINUTES * 60 * 1000) {
+    lastLightningDetectedAt = lightningObservedAt;
+    recentLightningDistance = lightningDistance;
+  }
+  const minutesSinceLightning = Number.isFinite(lastLightningDetectedAt)
+    ? Math.max(0, (now - lastLightningDetectedAt) / 60000)
+    : null;
+  const tempestLightning = Number.isFinite(minutesSinceLightning) && minutesSinceLightning <= RECENT_LIGHTNING_MAX_MINUTES;
+  const lightning = tempestLightning || Number(forecastCode) >= 95;
   const severity = getSeverity(rainRate ?? (forecastAmount * 25.4));
   const type = getType({
     rate: rainRate ?? 0,
@@ -211,11 +253,16 @@ export function getCurrentPrecipOverride(context = {}) {
   writeState(storage, {
     lastRainDetectedAt,
     accumulation: Number.isFinite(accumulation) ? accumulation : previousAccumulation,
-    observedAt: rainRateObservedAt
+    observedAt: rainRateObservedAt,
+    lastLightningDetectedAt,
+    lightningCount: recentLightningCount,
+    lightningDistance: recentLightningDistance
   });
 
-  const mode = activeRainNow || forecastActive ? "active" : recentRainOnly ? "recent" : "expired";
-  const copy = mode === "active" ? activeCopy(type, severity) : mode === "recent" ? recentCopy() : {};
+  const mode = activeRainNow || radarSupportedRain || forecastActive ? "active" : recentRainOnly ? "recent" : "expired";
+  const copy = mode === "active"
+    ? activeCopy(type, severity, { count: recentLightningCount || observedLightningCount, distance: recentLightningDistance ?? lightningDistance })
+    : mode === "recent" ? recentCopy() : {};
   const result = {
     active: mode !== "expired",
     mode,
@@ -225,15 +272,22 @@ export function getCurrentPrecipOverride(context = {}) {
     summary: copy.summary ?? "",
     skyPhrase: copy.skyPhrase ?? "",
     bullets: copy.bullets ?? [],
-    confidence: activeRainNow ? "high" : mode === "recent" || forecastActive ? "medium" : "low",
+    confidence: activeRainNow ? "high" : mode === "recent" || radarSupportedRain || forecastActive ? "medium" : "low",
     rainRate,
     rainRateObservedAt,
     lastRainDetectedAt,
     minutesSinceRainDetected,
     activeRainNow,
+    radarSupportedRain,
+    radarFresh,
+    radarOverhead,
     recentRainOnly,
+    lightningActive: lightning,
+    lightningCount: recentLightningCount || observedLightningCount,
+    lightningDistance: recentLightningDistance ?? lightningDistance,
+    minutesSinceLightning,
     overrideExpired: mode === "expired",
-    source: activeRainNow || recentRainOnly ? "tempest" : forecastActive ? "current-hour" : null
+    source: activeRainNow || recentRainOnly ? "tempest" : radarSupportedRain ? "noaa-radar" : forecastActive ? "current-hour" : null
   };
 
   debugOverride(result);

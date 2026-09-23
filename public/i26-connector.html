@@ -26,13 +26,14 @@
   <link rel="preconnect" href="https://unpkg.com" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3ynHT9tUiN7ZBxiDHdIwAzJbDss0=" crossorigin="" />
   <link rel="stylesheet" href="/css/i26-connector.css?v=20260706-alert-map-contrast" />
+  <link rel="stylesheet" href="/css/brand-lockup.css?v=20260805-brand2" />
 </head>
 <body>
   <header class="site-header">
     <div class="header-inner">
-      <a class="brand" href="/">
-        <strong>828 Weather Direct</strong>
-        <span>Asheville conditions, translated for real life</span>
+      <a class="brand site-brand-lockup" href="/" aria-label="828 Weather Direct home">
+        <strong class="site-brand-title"><span class="site-brand-828">828</span> Weather Direct</strong>
+        <span class="site-brand-sub">Hyper-local Asheville forecast built by Tim Ballisty</span>
       </a>
       <nav aria-label="Primary navigation">
         <a href="/">Home</a>
@@ -229,7 +230,17 @@
     <div><a href="/">Home</a><a href="/forecast.html">Asheville forecast</a><a href="/radar.html">Asheville radar</a><a href="/about.html">About</a><a href="https://www.drivenc.gov/region/Asheville" target="_blank" rel="noopener noreferrer">DriveNC Asheville</a></div>
   </footer>
 
+  <dialog class="connector-image-lightbox" id="connectorImageLightbox" aria-labelledby="connectorImageLightboxTitle">
+    <div class="connector-image-lightbox-frame">
+      <div class="connector-image-lightbox-bar">
+        <span id="connectorImageLightboxTitle">Connector update image</span>
+        <button type="button" class="connector-image-lightbox-close" aria-label="Close enlarged image">Close</button>
+      </div>
+      <img id="connectorImageLightboxImage" src="" alt="" />
+    </div>
+  </dialog>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script type="module" src="/js/i26-connector.js?v=20260706-alert-map-contrast"></script>
+  <script type="module" src="/js/i26-connector.js?v=20260730-image-lightbox"></script>
 </body>
 </html>

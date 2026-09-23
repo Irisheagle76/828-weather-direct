@@ -11,9 +11,9 @@ import { harmonizePressureObservations, stationToElevationAdjustedPressureMb } f
 import { assessObservation } from "../lib/asheville-spread/quality.js";
 import { buildAshevilleSpread } from "../lib/asheville-spread/service.js";
 
-test("station registry contains 30 unique physical stations and deduplicates Grove Arcade", () => {
-  assert.equal(ASHEVILLE_STATIONS.length, 30);
-  assert.equal(new Set(ASHEVILLE_STATIONS.map((station) => station.id)).size, 30);
+test("station registry contains 28 unique active physical stations and deduplicates Grove Arcade", () => {
+  assert.equal(ASHEVILLE_STATIONS.length, 28);
+  assert.equal(new Set(ASHEVILLE_STATIONS.map((station) => station.id)).size, 28);
 
   const aliases = ASHEVILLE_STATIONS.flatMap((station) => station.aliases);
   assert.equal(new Set(aliases).size, aliases.length);
@@ -31,6 +31,28 @@ test("station registry contains 30 unique physical stations and deduplicates Gro
   assert.equal(unca.elevationFt, 2357);
   assert.equal(unca.latitude, 35.621802282303385);
 
+  const leicester = ASHEVILLE_STATIONS.find((station) => station.id === "leicester");
+  assert.deepEqual(leicester, {
+    id: "leicester",
+    name: "Leicester",
+    area: "Northwest Asheville / Leicester",
+    latitude: 35.650065,
+    longitude: -82.679968,
+    elevationFt: 2014,
+    exposure: "Rural residential, open field, few trees",
+    publicCoordinatePrecision: 3,
+    source: { provider: "wunderground", stationId: "KNCASHEV370" },
+    aliases: ["wunderground:KNCASHEV370"]
+  });
+  assert.deepEqual(publicStationMetadata(leicester).location, {
+    latitude: 35.65,
+    longitude: -82.68,
+    precision: "neighborhood"
+  });
+  for (const retiredId of ["biltmore-village", "asheville-high-school", "biltmore-estate"]) {
+    assert.equal(ASHEVILLE_STATIONS.some((station) => station.id === retiredId), false);
+  }
+
   assert.equal(ASHEVILLE_STATIONS.filter((station) => station.scope === "metro").length, 4);
   assert.equal(ASHEVILLE_STATIONS.filter((station) => station.scope === "corridor").length, 8);
   assert.deepEqual(
@@ -40,7 +62,9 @@ test("station registry contains 30 unique physical stations and deduplicates Gro
 });
 
 test("residential coordinates are generalized in public metadata", () => {
-  const station = ASHEVILLE_STATIONS.find((item) => item.id === "huntington-chase");
+  const station = ASHEVILLE_STATIONS.find((item) => item.id === "north-haw-creek");
+  assert.equal(station.name, "North Haw Creek");
+  assert.deepEqual(station.source, { provider: "tempest", stationId: "127602" });
   const metadata = publicStationMetadata(station);
   assert.deepEqual(metadata.location, {
     latitude: 35.616,

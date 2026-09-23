@@ -125,6 +125,8 @@
 
     #avl-microscope-page .avl-sitebar-home:hover { color: #ffd29f; }
 
+    #avl-microscope-page .avl-sitebar-links { display: flex; align-items: center; gap: 14px; }
+
     #avl-microscope-page .avl-live-dot {
       width: 8px;
       height: 8px;
@@ -132,6 +134,28 @@
       background: #4ed0a8;
       box-shadow: 0 0 0 4px rgba(78, 208, 168, .16);
     }
+
+    #avl-microscope-page .avl-terrain-callout {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      margin: 0 0 28px;
+      padding: 22px 24px;
+      border: 1px solid #bcd2ef;
+      border-left: 5px solid var(--avl-page-teal);
+      border-radius: 14px;
+      color: var(--avl-page-ink);
+      background: linear-gradient(110deg, var(--avl-page-soft-teal), var(--avl-page-soft-blue));
+      text-decoration: none;
+      box-shadow: 0 10px 26px rgba(7, 29, 73, .08);
+    }
+
+    #avl-microscope-page .avl-terrain-callout strong { display: block; margin-top: 4px; color: var(--avl-page-navy); font: 700 clamp(20px,2vw,27px) Georgia,serif; }
+    #avl-microscope-page .avl-terrain-callout > span { min-width: 0; }
+    #avl-microscope-page .avl-terrain-callout p { max-width: 760px; margin: 7px 0 0; color: var(--avl-page-muted); font-size: 14px; line-height: 1.55; }
+    #avl-microscope-page .avl-terrain-callout b { flex: 0 0 auto; padding: 11px 14px; border-radius: 999px; color: #fff; background: var(--avl-page-navy); font-size: 12px; }
+    #avl-microscope-page .avl-terrain-callout:hover b, #avl-microscope-page .avl-terrain-callout:focus-visible b { background: var(--avl-page-blue); }
 
     #avl-microscope-page .avl-page-hero {
       position: relative;
@@ -682,19 +706,25 @@
     #avl-microscope-page .avl-axis-head span:nth-child(2) { color: var(--avl-page-navy); text-align: center; text-transform: uppercase; letter-spacing: .08em; }
     #avl-microscope-page .avl-axis-head span:last-child { text-align: right; }
 
-    #avl-microscope-page .avl-plot-shell { display: grid; grid-template-columns: 64px minmax(0, 1fr); flex: 1; }
+    #avl-microscope-page .avl-plot-shell { display: grid; grid-template-columns: 110px minmax(0, 1fr); flex: 1; }
 
     #avl-microscope-page .avl-y-axis {
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       padding: 28px 7px 52px 0;
-      color: var(--avl-page-muted);
-      font-size: 13px;
+      color: var(--avl-page-navy);
+      font-size: 18px;
       font-weight: 800;
       text-align: right;
       white-space: nowrap;
+      position: relative;
     }
+
+    #avl-microscope-page .avl-y-axis::before { content: ""; position: absolute; right: 4px; top: 28px; bottom: 52px; width: 3px; border-radius: 3px; background: #009e9a; opacity: .45; }
+    #avl-microscope-page .avl-y-axis span { position: relative; margin-right: 9px; padding: 6px 8px; border-radius: 8px; background: #e7f7f5; box-shadow: 0 2px 6px rgba(7,29,73,.05); }
+    #avl-microscope-page .avl-elevation-cue { margin: 10px 0 4px; color: var(--avl-page-navy); font-size: 15px; line-height: 1.5; }
+    #avl-microscope-page .avl-elevation-cue strong { color: #008b88; }
 
     #avl-microscope-page .avl-plot {
       position: relative;
@@ -750,8 +780,10 @@
       text-transform: uppercase;
     }
 
-    #avl-microscope-page .avl-level-label.high { top: 27px; right: 12px; }
-    #avl-microscope-page .avl-level-label.low { bottom: 47px; left: 12px; }
+    #avl-microscope-page .avl-level-label.high { top: 27px; right: 12px; border-top: 3px solid #009e9a; }
+    #avl-microscope-page .avl-level-label.low { bottom: 47px; left: 12px; border-bottom: 3px solid #009e9a; }
+    #avl-microscope-page .avl-level-label.high::before { content: "↟ "; color: #008b88; }
+    #avl-microscope-page .avl-level-label.low::before { content: "▁ "; color: #008b88; }
 
     #avl-microscope-page .avl-station {
       position: absolute;
@@ -1184,7 +1216,9 @@
     @media (max-width: 620px) {
       #avl-microscope-page .avl-page-shell { border-radius: 18px; }
       #avl-microscope-page .avl-sitebar { padding: 12px 18px; }
-      #avl-microscope-page .avl-sitebar-status span:last-child { display: none; }
+      #avl-microscope-page .avl-sitebar-status { display: none; }
+      #avl-microscope-page .avl-sitebar-links { gap: 10px; }
+      #avl-microscope-page .avl-terrain-callout { align-items: flex-start; flex-direction: column; padding: 19px; }
       #avl-microscope-page .avl-page-hero { padding: 38px 22px 34px; }
       #avl-microscope-page .avl-page-content { padding: 28px 18px 34px; }
       #avl-microscope-page .avl-briefing { margin: -4px -6px 30px; padding: 20px 14px; border-radius: 22px; }
@@ -1210,7 +1244,9 @@
       #avl-microscope-page .avl-axis-head { grid-template-columns: 70px 1fr 70px; margin-left: 40px; }
       #avl-microscope-page .avl-axis-head span:nth-child(2) { display: none; }
       #avl-microscope-page .avl-axis-head span:last-child { grid-column: 3; }
-      #avl-microscope-page .avl-plot-shell { grid-template-columns: 36px minmax(0, 1fr); }
+      #avl-microscope-page .avl-plot-shell { grid-template-columns: 82px minmax(0, 1fr); }
+      #avl-microscope-page .avl-y-axis { font-size: 13px; }
+      #avl-microscope-page .avl-y-axis span { padding: 5px 3px; }
       #avl-microscope-page .avl-plot { height: 270px; }
       #avl-microscope-page .avl-chart-key { margin-left: 40px; }
       #avl-microscope-page .avl-event-layer { grid-template-columns: auto 1fr; }
@@ -1239,8 +1275,8 @@
   <div class="avl-page-shell">
     <div class="avl-sitebar">
       <a class="avl-brand" href="/" aria-label="828 Weather Direct home"><span class="avl-brand-mark">828</span><span>Weather Direct</span></a>
-      <div class="avl-sitebar-status" id="avl-live-status" aria-live="polite"><span class="avl-live-dot"></span><strong>27 of 30 stations reporting</strong><span>· saved snapshot 10:02 AM</span></div>
-      <a class="avl-sitebar-home" href="/">Back to home</a>
+      <div class="avl-sitebar-status" id="avl-live-status" aria-live="polite"><span class="avl-live-dot"></span><strong>Loading station network</strong><span>· current observations</span></div>
+      <nav class="avl-sitebar-links" aria-label="Microscope navigation"><a class="avl-sitebar-home" href="/asheville-microscope-terrain.html">Station Terrain</a><a class="avl-sitebar-home" href="/">Back to home</a></nav>
     </div>
 
     <header class="avl-page-hero">
@@ -1257,6 +1293,10 @@
     </header>
 
     <main class="avl-page-content">
+      <a class="avl-terrain-callout" href="/asheville-microscope-terrain.html">
+        <span><span class="avl-section-kicker">Interactive map view</span><strong>See these stations in Asheville’s 3D terrain.</strong><p>Rotate and tilt the mountains, switch between temperature, dew point, wind, and rainfall, and open any station for its current observation and local setting.</p></span>
+        <b>Explore Station Terrain &rarr;</b>
+      </a>
       <section class="avl-briefing" aria-labelledby="avl-now-title">
         <div class="avl-section-head">
           <div><div class="avl-section-kicker">Your six-signal briefing</div><h2 id="avl-now-title">Asheville right now</h2></div>
@@ -1289,7 +1329,7 @@
       <section class="avl-footprint" aria-labelledby="avl-footprint-title">
         <div class="avl-footprint-head">
           <div><div class="avl-section-kicker">15 current neighborhood stations</div><h2 id="avl-footprint-title">Asheville temperatures, neighborhood by neighborhood.</h2></div>
-          <p><strong>How to read this view</strong>Each circle is a weather station placed in its relative part of town—not at street-map scale. Blue circles are cooler, orange circles are warmer. Select one for its local setting.</p>
+          <p><strong>Simplified neighborhood layout—not to scale</strong>Each circle represents a weather station in its general part of Asheville. Spacing is adjusted for readability; positions are not exact. Blue circles are cooler, orange circles are warmer. Select one for its reading and local setting.</p>
           <div class="avl-map-note">
             <div class="avl-map-note-title"><span>Temperature key</span><strong>Circle color = observed temperature</strong></div>
             <i class="avl-map-gradient"></i>
@@ -1317,7 +1357,7 @@
             <h3 id="avl-footprint-name">West Asheville</h3>
             <p id="avl-footprint-setting">Residential · 2,174 ft</p>
             <div class="avl-footprint-reading" id="avl-footprint-reading">78.8°</div>
-            <div class="avl-footprint-delta" id="avl-footprint-delta">6.1° warmer than the network minimum</div>
+            <div class="avl-footprint-delta" id="avl-footprint-delta">6.1° warmer than the coolest reporting neighborhood</div>
             <div class="avl-temp-ruler" id="avl-temp-ruler"><i></i></div>
             <div class="avl-ruler-labels"><span>72.7° cool edge</span><span>84.1° warm edge</span></div>
             <div class="avl-visual-clues">
@@ -1357,6 +1397,7 @@
                 <span class="avl-level-label low">Valley floor</span>
               </div>
             </div>
+            <p class="avl-elevation-cue"><strong>Compare vertically:</strong> higher bubbles sit at higher elevations. The feet labels show height above sea level; the terrain badge shows the total elevation difference—not a temperature effect.</p>
             <div class="avl-chart-key"><span><i class="avl-key-x"></i>Left → right: selected signal</span><span><i class="avl-key-y"></i>Top → bottom: elevation</span></div>
           </div>
 
@@ -1364,7 +1405,7 @@
             <div class="avl-profile-kicker">Station microscope</div>
             <h3 id="avl-profile-name">West Asheville</h3>
             <div class="avl-profile-meta" id="avl-profile-meta">Residential · 2,174 ft · Weather Underground · fresh</div>
-            <div class="avl-profile-reading"><strong id="avl-profile-reading">78.8°F</strong><span id="avl-profile-delta">versus its elevation-adjusted baseline</span></div>
+            <div class="avl-profile-reading"><strong id="avl-profile-reading">78.8°F</strong><span id="avl-profile-delta">compared with the overall elevation pattern</span></div>
             <div class="avl-profile-facts">
               <div class="avl-profile-fact"><span>Dew point</span><strong id="avl-profile-dew">71.8°F</strong></div>
               <div class="avl-profile-fact"><span>Wind</span><strong id="avl-profile-wind">4.7 mph</strong></div>
@@ -1385,7 +1426,7 @@
       <section class="avl-regional-card" id="avl-regional-card" data-emphasis="corridors" aria-labelledby="avl-regional-title">
         <div class="avl-regional-head">
           <div><div class="avl-section-kicker">Beyond Asheville</div><h2 id="avl-regional-title">Four ways weather enters the mountains.</h2></div>
-          <p><strong>11.4° regional spread:</strong> UNC Asheville is coolest at 72.7° while Sand Hill is warmest at 84.1°. The city itself owns both regional bookends in this snapshot.</p>
+          <p><strong>11.4° regional spread:</strong> UNC Asheville is coolest at 72.7° while Sand Hill is warmest at 84.1°. The city itself owns both regional bookends right now.</p>
         </div>
         <div class="avl-corridor-compass" role="img" aria-label="Asheville at center, surrounded by Woodfin, Swannanoa, Arden, and Candler, then north, east, south, and west mountain corridors">
           <div class="avl-corridor-line vertical"></div>
@@ -1428,43 +1469,14 @@
         <div class="avl-regional-key"><span><i class="inner"></i>Greater Asheville anchor</span><span><i></i>Mountain corridor station</span></div>
       </section>
 
-      <section aria-labelledby="avl-why-title">
-        <div class="avl-section-head">
-          <div><div class="avl-section-kicker">Beyond the headline</div><h2 id="avl-why-title">Why one Asheville reading is not enough</h2></div>
-          <div class="avl-section-note">These are clues, not automatic causes. Sensor siting and exposure remain part of every interpretation.</div>
-        </div>
-        <div class="avl-deeper-grid">
-          <article class="avl-context-panel">
-            <div class="avl-section-kicker">Matched elevation comparison</div>
-            <h3>Same elevation, two different neighborhoods</h3>
-            <p>This pairing removes most of the elevation difference and puts local exposure in sharper focus.</p>
-            <div class="avl-pair">
-              <div class="avl-pair-station cool"><span>Residential · 2,174 ft</span><strong>78.8°</strong><b>West Asheville</b></div>
-              <div class="avl-pair-vs">5.3° apart</div>
-              <div class="avl-pair-station warm"><span>Trees and grass · 2,175 ft</span><strong>84.1°</strong><b>Sand Hill</b></div>
-              <div class="avl-pair-line" aria-hidden="true"><i></i><i></i></div>
-            </div>
-          </article>
 
-          <article class="avl-context-panel">
-            <div class="avl-section-kicker">Evidence behind the story</div>
-            <h3>The regional elevation contrast is vivid</h3>
-            <p>The wider network spans 1,356 vertical feet, but Asheville's neighborhood contrast is larger than any single corridor right now.</p>
-            <div class="avl-evidence-list">
-              <div class="avl-evidence-row"><span>Sand Hill · 2,175 ft</span><div class="avl-evidence-track"><i style="--evidence-width:100%;--evidence-color:var(--avl-page-orange)"></i></div><strong>84.1°</strong></div>
-              <div class="avl-evidence-row"><span>Asheville spread</span><div class="avl-evidence-track"><i style="--evidence-width:78%;--evidence-color:var(--avl-page-gold)"></i></div><strong>11.4°</strong></div>
-              <div class="avl-evidence-row"><span>UNC Asheville · 2,357 ft</span><div class="avl-evidence-track"><i style="--evidence-width:24%;--evidence-color:var(--avl-page-blue)"></i></div><strong>72.7°</strong></div>
-            </div>
-          </article>
-        </div>
-      </section>
 
-      <section class="avl-network-footer" aria-label="Network transparency">
-        <div><strong>A neighborhood network—with the caveats visible.</strong><p>Personal stations complement official observations. Freshness, source, elevation, and exposure travel with every reading so an outlier becomes context to investigate, not a fact to repeat blindly.</p></div>
+      <section class="avl-network-footer" aria-label="About these weather observations">
+        <div><strong>Local readings, with local context.</strong><p>Neighborhood weather stations complement official observations. Conditions can vary with elevation and surroundings, and a station’s reading may not match every nearby address.</p></div>
         <div class="avl-network-counts">
-          <div class="avl-network-count"><b>30</b><span>Cataloged</span></div>
-          <div class="avl-network-count"><b>27</b><span>Reporting</span></div>
-          <div class="avl-network-count"><b>27</b><span>Fresh</span></div>
+          <div class="avl-network-count"><b>—</b><span>Stations</span></div>
+          <div class="avl-network-count"><b>—</b><span>Reporting</span></div>
+          <div class="avl-network-count"><b>—</b><span>Fresh</span></div>
         </div>
       </section>
     </main>
@@ -1477,13 +1489,13 @@
       const root = document.getElementById('avl-microscope-page');
       let stations = [
         { code: 'UN', name: 'UNC Asheville', area: 'Lookout Observatory', exposure: 'Fully unobstructed research tower', lat: 35.621802282303385, lon: -82.56608557099108, elevation: 2357, source: 'NC ECONet / UNC Asheville', temperature: 72.7, dewpoint: 68.8, wind: 2, solar: 411.5, freshness: 'fresh' },
-        { code: 'HC', name: 'Huntington Chase', area: 'Haw Creek', exposure: 'Residential with trees', lat: 35.615642, lon: -82.505577, elevation: 2331, source: 'Tempest', temperature: 77, dewpoint: 71.6, wind: 2.2, solar: 461, freshness: 'fresh' },
+        { code: 'HC', name: 'North Haw Creek', area: 'Haw Creek', exposure: 'Residential with trees', lat: 35.615642, lon: -82.505577, elevation: 2331, source: 'Tempest', temperature: 77, dewpoint: 71.6, wind: 2.2, solar: 461, freshness: 'fresh' },
         { code: 'GP', name: 'Grove Park', area: 'North Asheville', exposure: 'Partly exposed residential', lat: 35.62653, lon: -82.54562, elevation: 2266, source: 'Weather Underground', temperature: 77.4, dewpoint: 71.8, wind: 0, solar: 48.4, freshness: 'fresh' },
         { code: 'AR', name: 'Near AC Reynolds Middle School', area: 'East Asheville', exposure: 'Heavily forested', lat: 35.554948, lon: -82.491854, elevation: 2245, source: 'Weather Underground', temperature: 80.6, dewpoint: 72.7, wind: 0, solar: 421.9, freshness: 'fresh' },
         { code: 'GA', name: 'Grove Arcade', area: 'Downtown Asheville', exposure: 'Rooftop with little obstruction', lat: 35.595288, lon: -82.556713, elevation: 2240, source: 'NOAA / NCEI', temperature: 76.2, dewpoint: 72, wind: 0, solar: 454, freshness: 'fresh' },
         { code: 'BC', name: 'Bent Creek', area: 'Bent Creek', exposure: 'Trees and grass', lat: 35.51094, lon: -82.6098, elevation: 2200, source: 'Weather Underground', temperature: 82.4, dewpoint: 72.1, wind: 1.8, solar: 434, freshness: 'fresh' },
         { code: 'BP', name: 'Biltmore Park', area: 'South Asheville', exposure: 'Residential with grass', lat: 35.48901, lon: -82.55599, elevation: 2200, source: 'Weather Underground', temperature: 81.3, dewpoint: 72, wind: 1, solar: null, freshness: 'fresh' },
-        { code: 'SH', name: 'Sand Hill', area: 'Sand Hill community', exposure: 'Trees and grass', lat: 35.55305, lon: -82.63504, elevation: 2175, source: 'Weather Underground', temperature: 84.1, dewpoint: 73.5, wind: 1.7, solar: 421.7, freshness: 'fresh' },
+        { code: 'SH', name: 'Sand Hill', area: 'Sand Hill community', exposure: 'Residential with trees', lat: 35.563883, lon: -82.654275, elevation: 2232, source: 'Weather Underground', temperature: 84.1, dewpoint: 73.5, wind: 1.7, solar: 421.7, freshness: 'fresh' },
         { code: 'WA', name: 'West Asheville', area: 'West Asheville', exposure: 'Residential', lat: 35.584047, lon: -82.598074, elevation: 2174, source: 'Weather Underground', temperature: 78.8, dewpoint: 71.8, wind: 4.7, solar: 116.3, freshness: 'fresh' },
         { code: 'BF', name: 'Biltmore Forest', area: 'Biltmore Forest', exposure: 'Heavily forested residential with grass', lat: 35.535242, lon: -82.541958, elevation: 2167, source: 'Weather Underground', temperature: 77.9, dewpoint: 73.4, wind: 0, solar: 11.3, freshness: 'fresh' },
         { code: 'BD', name: 'Beaverdam / Country Club', area: 'North Asheville', exposure: 'Minimal obstruction', lat: 35.640983, lon: -82.54702, elevation: 2165, source: 'Weather Underground', temperature: 77.4, dewpoint: 72.1, wind: 1.1, solar: 460, freshness: 'fresh' },
@@ -1495,7 +1507,7 @@
 
       const codeByStationId = {
         'unc-asheville': 'UN',
-        'huntington-chase': 'HC',
+        'north-haw-creek': 'HC',
         'grove-park': 'GP',
         'ac-reynolds-middle-school': 'AR',
         'grove-arcade': 'GA',
@@ -1561,7 +1573,7 @@
 
         const status = root.querySelector('#avl-live-status');
         status.querySelector('strong').textContent = `${reportingCount} of ${payload.network.stationCount} stations reporting`;
-        status.querySelector('span:last-child').textContent = `· live snapshot ${snapshotTime}`;
+        status.querySelector('span:last-child').textContent = `· updated ${snapshotTime}`;
         root.querySelector('.avl-hero-reading strong').textContent = `${spread}°`;
 
         const stories = root.querySelectorAll('.avl-now-story');
@@ -1575,14 +1587,6 @@
           stories[2].querySelector('strong').textContent = `Nearly identical elevation. A ${round(matched.temperatureGap)}° difference.`;
           stories[2].querySelector('p').textContent = `${cooler.name} and ${warmer.name} are only ${matched.elevationGap} vertical ${matched.elevationGap === 1 ? 'foot' : 'feet'} apart, putting neighborhood exposure in sharp focus.`;
 
-          const pairStations = root.querySelectorAll('.avl-pair-station');
-          const pairData = [[pairStations[0], cooler], [pairStations[1], warmer]];
-          pairData.forEach(([node, item]) => {
-            node.querySelector('span').textContent = `${item.exposure} · ${item.elevationFt.toLocaleString()} ft`;
-            node.querySelector('strong').textContent = `${temperatureOf(item)}°`;
-            node.querySelector('b').textContent = item.name;
-          });
-          root.querySelector('.avl-pair-vs').textContent = `${round(matched.temperatureGap)}° apart`;
         }
 
         root.querySelector('.avl-footprint-head .avl-section-kicker').textContent = `${core.length} current neighborhood stations`;
@@ -1598,19 +1602,22 @@
         const wet = rateReporting.filter((station) => station.observation.precipitationRateInHr > 0);
         const eventCopy = root.querySelector('.avl-event-copy');
         const eventStatus = root.querySelector('.avl-event-status');
+        const eventLayer = root.querySelector('.avl-event-layer');
+        eventLayer.hidden = wet.length === 0;
+        root.querySelector('.avl-briefing').after(eventLayer);
         if (wet.length) {
           const wettest = [...wet].sort((a, b) => b.observation.precipitationRateInHr - a.observation.precipitationRateInHr)[0];
           eventCopy.querySelector('strong').textContent = `A rain signal has appeared near ${wettest.name}.`;
           eventCopy.querySelector('p').textContent = `${wettest.name} is reporting ${round(wettest.observation.precipitationRateInHr, 2)} in/hr and ${round(wettest.observation.precipitationTodayIn || 0, 2)} in today while ${rateReporting.length - wet.length} other rate-reporting stations remain dry.`;
           const rainSignal = root.querySelector('.avl-signal.rain');
           rainSignal.querySelector('strong').textContent = `${wettest.name} is the active rain pocket.`;
-          rainSignal.querySelector('p').textContent = `${wet.length} of ${rateReporting.length} rate-reporting locations ${wet.length === 1 ? 'is' : 'are'} wet; ${wet.length === 1 ? 'that station’s temperature is' : 'their temperatures are'} treated as rain-influenced.`;
+          rainSignal.querySelector('p').textContent = `${wet.length} of ${rateReporting.length} locations reporting rainfall rate ${wet.length === 1 ? 'is' : 'are'} wet; ${wet.length === 1 ? 'that station’s temperature is' : 'their temperatures are'} treated as rain-influenced.`;
         } else {
           eventCopy.querySelector('strong').textContent = 'Rain mode is resting right now.';
           eventCopy.querySelector('p').textContent = `All ${rateReporting.length} rate-reporting stations are dry. During an event, this layer expands to show onset, rates, neighborhood totals, and the wettest-to-driest footprint.`;
           const rainSignal = root.querySelector('.avl-signal.rain');
           rainSignal.querySelector('strong').textContent = 'No active rain pocket is reporting.';
-          rainSignal.querySelector('p').textContent = `All ${rateReporting.length} rate-reporting locations are dry in this snapshot.`;
+          rainSignal.querySelector('p').textContent = `All ${rateReporting.length} locations reporting rainfall rate are dry right now.`;
         }
         eventStatus.textContent = `${wet.length} of ${rateReporting.length} wet`;
 
@@ -1621,17 +1628,7 @@
         const rainAffectedBookends = [regionalLow, regionalHigh].filter(hasActiveRain);
         root.querySelector('.avl-regional-head p').textContent = `${regionalSpread}° regional spread: ${regionalLow.name} is coolest at ${temperatureOf(regionalLow)}° while ${regionalHigh.name} is warmest at ${temperatureOf(regionalHigh)}°.`;
 
-        const regionalEvidence = root.querySelector('.avl-deeper-grid .avl-context-panel:nth-child(2)');
-        if (rainAffectedBookends.length) {
-          const names = rainAffectedBookends.map((station) => station.name).join(' and ');
-          regionalEvidence.querySelector('.avl-section-kicker').textContent = 'Event-aware evidence';
-          regionalEvidence.querySelector('h3').textContent = 'Rain is reshaping the regional temperature contrast';
-          regionalEvidence.querySelector('p').textContent = `${names} ${rainAffectedBookends.length === 1 ? 'is' : 'are'} reporting rain. ${rainAffectedBookends.length === 1 ? 'Its' : 'Their'} temperature ${rainAffectedBookends.length === 1 ? 'is' : 'readings are'} rain-influenced and should not be treated as evidence of an elevation-only pattern.`;
-        } else {
-          regionalEvidence.querySelector('.avl-section-kicker').textContent = 'Evidence behind the story';
-          regionalEvidence.querySelector('h3').textContent = 'The regional elevation contrast is vivid';
-          regionalEvidence.querySelector('p').textContent = `The wider network spans ${Math.max(...available.map((station) => station.elevationFt)) - Math.min(...available.map((station) => station.elevationFt))} vertical feet, but Asheville's neighborhood contrast is larger than any single corridor right now.`;
-        }
+
 
         root.querySelectorAll('.avl-corridor-place').forEach((node) => {
           const item = stationByName(available, node.querySelector('strong').textContent);
@@ -1670,12 +1667,6 @@
         windSignal.querySelector('strong').textContent = `${wind.at(-1).name} has the strongest sustained wind.`;
         windSignal.querySelector('p').textContent = `${round(wind.at(-1).observation.windMph)} mph leads Asheville's reporting locations.${gust.length > 1 ? ` Gusts differ by ${round(gust.at(-1).observation.windGustMph - gust[0].observation.windGustMph)} mph across the wider area.` : ''}`;
 
-        const evidence = root.querySelectorAll('.avl-evidence-row');
-        evidence[0].querySelector('span').textContent = `${regionalHigh.name} · ${regionalHigh.elevationFt.toLocaleString()} ft${hasActiveRain(regionalHigh) ? ' · rain signal' : ''}`;
-        evidence[0].querySelector('strong').textContent = `${temperatureOf(regionalHigh)}°`;
-        evidence[1].querySelector('strong').textContent = `${spread}°`;
-        evidence[2].querySelector('span').textContent = `${regionalLow.name} · ${regionalLow.elevationFt.toLocaleString()} ft${hasActiveRain(regionalLow) ? ' · rain signal' : ''}`;
-        evidence[2].querySelector('strong').textContent = `${temperatureOf(regionalLow)}°`;
 
         const counts = root.querySelectorAll('.avl-network-count b');
         counts[0].textContent = payload.network.stationCount;
@@ -1709,9 +1700,11 @@
             });
           if (currentCore.length >= 2) stations = currentCore;
           updateSnapshotNarrative(payload);
+          const { renderPublicInsights } = await import('./js/asheville-microscope-public-insights.js');
+          renderPublicInsights(root, payload);
           render();
         } catch (error) {
-          root.querySelector('#avl-live-status span:last-child').textContent = '· saved snapshot';
+          root.querySelector('#avl-live-status span:last-child').textContent = '· showing last available readings';
         } finally {
           clearTimeout(timeout);
         }
@@ -1789,7 +1782,7 @@
         root.querySelector('#avl-footprint-name').textContent = selected.name;
         root.querySelector('#avl-footprint-setting').textContent = `${selected.exposure} · ${selected.elevation.toLocaleString()} ft`;
         root.querySelector('#avl-footprint-reading').textContent = `${selected.temperature}°`;
-        root.querySelector('#avl-footprint-delta').textContent = `${(selected.temperature - temperatureLow).toFixed(1)}° warmer than the network minimum`;
+        root.querySelector('#avl-footprint-delta').textContent = `${(selected.temperature - temperatureLow).toFixed(1)}° warmer than the coolest reporting neighborhood`;
         root.querySelector('#avl-temp-ruler').style.setProperty('--selected-temp', `${selectedWarmth}%`);
         root.querySelector('#avl-footprint-elevation').textContent = `${selected.elevation.toLocaleString()} ft above sea level`;
         root.querySelector('#avl-footprint-exposure').textContent = selected.exposure;
@@ -1853,7 +1846,7 @@
         root.querySelector('#avl-profile-meta').textContent = `${selected.exposure} · ${selected.elevation.toLocaleString()} ft · ${selected.source} · ${selected.freshness}`;
         root.querySelector('#avl-profile-reading').textContent = reading(selected, config.rangeUnit);
         root.querySelector('#avl-profile-delta').textContent = metric === 'temperature'
-          ? `${delta > 0 ? '+' : ''}${delta}° versus its elevation-adjusted baseline`
+          ? `${delta > 0 ? '+' : ''}${delta}° compared with the overall elevation pattern`
           : `${selected.elevation.toLocaleString()} ft station elevation`;
         root.querySelector('#avl-profile-dew').textContent = `${selected.dewpoint}°F`;
         root.querySelector('#avl-profile-wind').textContent = `${selected.wind} mph`;
@@ -1891,7 +1884,16 @@
 
       render();
       hydrateLiveData();
-      if (location.protocol !== 'file:') setInterval(hydrateLiveData, 60_000);
+      if (location.protocol !== 'file:') {
+        let lastVisibleRefresh = Date.now();
+        const refreshIfVisible = () => {
+          if (document.hidden || Date.now() - lastVisibleRefresh < 300_000) return;
+          lastVisibleRefresh = Date.now();
+          hydrateLiveData();
+        };
+        setInterval(refreshIfVisible, 300_000);
+        document.addEventListener('visibilitychange', refreshIfVisible);
+      }
     })();
   </script>
 </section>

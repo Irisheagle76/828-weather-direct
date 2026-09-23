@@ -507,6 +507,8 @@
         </div>
         <div class="qc-grid" id="qc-grid"></div>
       </section>
+      <section id="avl-retired-comparisons" class="lab-section" aria-label="Former Microscope elevation comparisons"></section>
+      <style>#avl-retired-comparisons{padding:30px;background:white;margin:28px 0;border:1px solid #cddbf0}#avl-retired-comparisons .avl-deeper-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}#avl-retired-comparisons article{padding:24px;background:#f4f8ff;border-top:4px solid #1760ce}#avl-retired-comparisons .avl-public-exceptions>div{padding:14px;margin:12px 0;background:#e9f1ff;border-left:4px solid #1760ce}#avl-retired-comparisons .avl-public-exceptions .warm{background:#fff2e8;border-color:#ff7c20}#avl-retired-comparisons .avl-public-exceptions b,#avl-retired-comparisons .avl-public-exceptions strong,#avl-retired-comparisons .avl-public-exceptions span{display:block}#avl-retired-comparisons .avl-public-verdict{font-size:24px;color:#1760ce}@media(max-width:700px){#avl-retired-comparisons .avl-deeper-grid{grid-template-columns:1fr}}</style>
     </main>
 
     <footer class="lab-footer"><strong>Asheville Micronet Intelligence Lab.</strong> Experimental analysis only; it does not alter the Asheville Microscope page and is not an NWS warning product.</footer>
@@ -799,7 +801,7 @@
       const stations = state.payload.stations.filter((station) => station.observation && station.quality?.usable !== false).sort((a,b) => a.name.localeCompare(b.name));
       const options = stations.map((station) => `<option value="${escapeHtml(station.id)}">${escapeHtml(station.name)}</option>`).join("");
       $("pair-one").innerHTML = options; $("pair-two").innerHTML = options;
-      $("pair-one").value = stations.find((station) => station.id === "huntington-chase")?.id ?? stations[0]?.id;
+      $("pair-one").value = stations.find((station) => station.id === "north-haw-creek")?.id ?? stations[0]?.id;
       $("pair-two").value = stations.find((station) => station.id === "west-asheville")?.id ?? stations[1]?.id;
       renderPair();
     }
@@ -842,7 +844,9 @@
         <article class="qc-block"><strong>Next QC layer</strong><ul>${qc.gaps.map((gap) => `<li>${escapeHtml(gap)}</li>`).join("")}</ul></article>`;
     }
 
+    const { renderRetiredComparisons } = await import('./js/asheville-microscope-retired-comparisons.js');
     function renderAll() {
+      renderRetiredComparisons($("avl-retired-comparisons"), state.payload);
       renderHeader(); renderInsights(); renderMetricStrip(); renderAnomalies(); renderElevation(); renderMap(); renderPairSelectors(); renderRain(); renderReadiness(); renderQc();
     }
 

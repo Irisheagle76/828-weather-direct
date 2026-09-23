@@ -591,11 +591,10 @@
     }
 
     .context-media.unca-camera img {
-      height: auto;
-      min-height: 0;
-      max-height: none;
-      margin-top: -9.21875%;
-      object-fit: initial;
+      height: 100%;
+      min-height: 100%;
+      margin-top: 0;
+      object-fit: cover;
     }
 
     .context-media::after {
@@ -695,17 +694,6 @@
     .lightbox-media {
       overflow: hidden;
       background: #081426;
-    }
-
-    .lightbox-media.cropped-unca {
-      aspect-ratio: 1280 / 602;
-    }
-
-    .lightbox-media.cropped-unca img {
-      height: auto;
-      max-height: none;
-      margin-top: -9.21875%;
-      object-fit: initial;
     }
 
     .index-panel {
@@ -1263,6 +1251,7 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="/css/brand-lockup.css?v=20260805-brand2" />
 </head>
 <body>
   <div class="site-shell">
@@ -1270,8 +1259,8 @@
       <div class="mock-header-inner">
         <div class="mock-brand-row">
           <a href="/" aria-label="828 Weather Direct home">
-            <div class="mock-brand-title">828 Weather Direct</div>
-            <div class="mock-brand-sub">Hyper-local Asheville forecast built by Tim Ballisty</div>
+            <div class="mock-brand-title site-brand-title"><span class="site-brand-828">828</span> Weather Direct</div>
+            <div class="mock-brand-sub site-brand-sub">Hyper-local Asheville forecast built by Tim Ballisty</div>
           </a>
         </div>
 
@@ -1279,10 +1268,10 @@
           <a href="/">Now</a>
           <a href="/forecast.html">Tim's 4-Day Forecast</a>
           <a href="/#pulse-preview">Weather Pulse</a>
+          <a class="sunset-nav-link" href="/828-sunset-radiance.html" aria-current="page">Sunset Radiance</a>
           <a href="/hiking.html">Hiking Guidance</a>
           <a href="/water.html">Water Conditions</a>
           <a href="/i26-connector.html">I-26 Connector</a>
-          <a class="sunset-nav-link" href="/828-sunset-radiance.html" aria-current="page">Sunset Radiance</a>
         </nav>
       </div>
     </header>
@@ -1325,7 +1314,7 @@
         <div class="status-inner" aria-label="Sunset status">
           <div class="status-pill live" id="liveStatus">Live sky loading</div>
           <div class="status-pill" id="cloudStatus">Clouds --</div>
-          <div class="status-pill" id="directionStatus">WNW -- / ENE --</div>
+          <div class="status-pill" id="directionStatus">West -- / ENE --</div>
           <div class="status-pill" id="humidityStatus">Humidity --</div>
           <div class="status-pill" id="precipStatus">Rain chance --</div>
           <div class="status-pill" id="windowStatus">Radiance window --</div>
@@ -1343,7 +1332,7 @@
               <img
                 id="skyImage"
                 src="https://i.ytimg.com/vi/UxUU3Fc1vBw/maxresdefault_live.jpg"
-                alt="Current YouTube thumbnail from the downtown Asheville WNW sky camera"
+                alt="Current YouTube thumbnail from the rotating downtown Asheville western sky camera"
               />
               <div class="sky-caption">
                 <div class="sky-chip" id="skyChip">Loading</div>
@@ -1354,19 +1343,19 @@
             <div class="sky-meta" aria-label="Camera metrics">
               <div>
                 <b id="cloudMetric">--</b>
-                <span id="cloudMetricLabel">WNW downtown clouds</span>
+                <span id="cloudMetricLabel">Western sky clouds</span>
               </div>
               <div>
                 <b id="eneCloudMetric">--</b>
-                <span>ENE East Asheville clouds</span>
+                <span id="eneCloudMetricLabel">ENE East Asheville clouds</span>
               </div>
               <div>
                 <b id="lightMetric">--</b>
-                <span>Sunlight signal</span>
+                <span id="lightMetricLabel">Sunlight signal</span>
               </div>
               <div>
                 <b id="confidenceMetric">--</b>
-                <span>Sky read confidence</span>
+                <span id="confidenceMetricLabel">Sky read confidence</span>
                 <details class="sky-help">
                   <summary>What is this?</summary>
                   <p>
@@ -1402,15 +1391,15 @@
 
         <div class="sky-context-grid" aria-label="Backup sky and satellite context">
           <article class="context-card">
-            <button class="context-media unca-camera" type="button" data-lightbox-src="https://wlos.com/resources/ftptransfer/wlos/maps/Cam%20UNCA%20EcoNet.png" data-lightbox-title="UNCA EcoNet Backup Camera" data-lightbox-crop="unca">
-              <img id="uncaCameraImage" src="https://wlos.com/resources/ftptransfer/wlos/maps/Cam%20UNCA%20EcoNet.png" alt="UNC Asheville EcoNet weather station camera view" loading="lazy" />
+            <button class="context-media unca-camera" type="button" data-lightbox-src="https://res.cloudinary.com/dz45rrije/image/upload/f_auto,q_auto:good/avlweather_towercam_latest.jpg" data-lightbox-title="UNC Asheville Tower Camera">
+              <img id="uncaCameraImage" src="https://res.cloudinary.com/dz45rrije/image/upload/f_auto,q_auto:good/avlweather_towercam_latest.jpg" alt="Latest UNC Asheville Atmospheric Sciences tower camera view" loading="lazy" />
               <span class="context-label">
                 <span>Backup camera</span>
-                <strong>UNC Asheville EcoNet weather station</strong>
+                <strong>UNC Asheville tower camera</strong>
               </span>
             </button>
             <div class="context-copy">
-              Secondary sky reference when the main Asheville overlook camera is stale, delayed, or visually blocked.
+              Latest UNC Asheville Atmospheric Sciences tower image, refreshed about every 15 minutes.
             </div>
           </article>
 
@@ -1424,13 +1413,14 @@
             </button>
             <div class="context-copy">
               Click to enlarge the latest NOAA GOES-East Southeast GeoColor loop for upstream cloud breaks and clearing trends.
+              For higher-resolution North Carolina detail, <a href="https://weather.rap.ucar.edu/satellite/displaySat.php?region=CLT&amp;itype=color&amp;size=large&amp;endTime=-1&amp;duration=0" target="_blank" rel="noopener noreferrer">open the latest NSF NCAR/RAL CLT visible-color frame</a>.
             </div>
           </article>
 
           <article class="context-card">
             <div class="context-media youtube-live">
               <iframe
-                src="https://www.youtube.com/embed/adtYAF5iU64?playsinline=1&rel=0&autoplay=1&mute=1"
+                src="https://www.youtube.com/embed/DnZDmZx3wBE?playsinline=1&rel=0&autoplay=1&mute=1"
                 title="Live East Asheville ENE sky camera on YouTube"
                 loading="lazy"
                 referrerpolicy="strict-origin-when-cross-origin"
@@ -1454,7 +1444,7 @@
               ></iframe>
             </div>
             <div class="context-copy">
-              <strong>Downtown Asheville · WNW view.</strong> This live camera supplies the west-northwest side of the directional Sky Read. <a href="https://www.youtube.com/watch?v=UxUU3Fc1vBw" target="_blank" rel="noopener noreferrer">Open on YouTube</a>.
+              <strong>Downtown Asheville · Western sky.</strong> This live camera rotates across the west-southwest, west, and west-northwest sky for the directional Sky Read. <a href="https://www.youtube.com/watch?v=UxUU3Fc1vBw" target="_blank" rel="noopener noreferrer">Open on YouTube</a>.
             </div>
           </article>
         </div>
@@ -1585,8 +1575,8 @@
         <div class="footer-meta">
           <div>Forecast context by meteorologist <a href="/about.html">Tim Ballisty</a>.</div>
           <div>Sky image: YouTube live thumbnail snapshot analyzed by 828 Weather Direct, with UNCA EcoNet as a backup view.</div>
-          <div>Satellite loop: NOAA/NESDIS GOES-East Southeast GeoColor imagery.</div>
-          <div>Data: Tempest, NOAA/NWS, Open-Meteo, and local sky-camera signals where available.</div>
+          <div>Satellite loop: NOAA/NESDIS GOES-East Southeast GeoColor imagery; NSF NCAR/RAL CLT visible-color imagery is linked as a credited North Carolina cross-check.</div>
+          <div>Data: Tempest, NOAA/NWS, NOAA/NCEI Grove Arcade, Open-Meteo, and local sky-camera signals where available.</div>
           <div>For general awareness only - not a substitute for official forecasts, warnings, or trail advisories.</div>
         </div>
 
@@ -1596,9 +1586,9 @@
   </div>
 
   <script type="module">
-    import { buildSkyConditionRead, isObscuredSky } from "./js/intel/sky-read.js?v=20260705-directional-cameras";
+    import { buildSkyConditionRead, buildSkyObservationContext, isObscuredSky, isTransientValleyFog } from "./js/intel/sky-read.js?v=20260814-shared-sky-context";
     import { buildDuskSkyFallback, getSkyTimePhase } from "./js/intel/sky-time.js?v=20260629-shared-sunset";
-    import { getCurrentPrecipOverride } from "./js/intel/precip-override.js?v=20260628-precip-first";
+    import { applyPrecipOverrideToNarrative, getCurrentPrecipOverride } from "./js/intel/precip-override.js?v=20260804-observation-cadence";
 
     const ASHEVILLE = {
       lat: 35.5951,
@@ -1606,11 +1596,12 @@
       label: "Asheville, North Carolina",
       timeZone: "America/New_York"
     };
-    const SKY_REFRESH_MS = 5000;
+    const OBSERVATION_REFRESH_MS = 3 * 60 * 1000;
     const SKY_STALE_MS = 20 * 60 * 1000;
     const LIVE_THUMBNAIL_URL = "https://i.ytimg.com/vi/UxUU3Fc1vBw/maxresdefault_live.jpg";
     const SKYCAM_RAW_BASE = "https://raw.githubusercontent.com/Irisheagle76/828-weather-direct/main/public/js/sky-cam";
-    const UNCA_CAMERA_URL = "https://wlos.com/resources/ftptransfer/wlos/maps/Cam%20UNCA%20EcoNet.png";
+    const UNCA_CAMERA_URL = "https://res.cloudinary.com/dz45rrije/image/upload/f_auto,q_auto:good/avlweather_towercam_latest.jpg";
+    const UNCA_CACHE_BUCKET_MS = 15 * 60 * 1000;
     const SATELLITE_LOOP_URL = "https://cdn.star.nesdis.noaa.gov/WFO/gsp/GEOCOLOR/GOES19-GSP-GEOCOLOR-600x600.gif";
 
     const state = {
@@ -1618,6 +1609,7 @@
       skyIntel: null,
       narrative: null,
       weather: null,
+      storm: null,
       previousCamera: null,
       selectedPlan: "now"
     };
@@ -1646,8 +1638,11 @@
       cloudMetric: document.querySelector("#cloudMetric"),
       cloudMetricLabel: document.querySelector("#cloudMetricLabel"),
       eneCloudMetric: document.querySelector("#eneCloudMetric"),
+      eneCloudMetricLabel: document.querySelector("#eneCloudMetricLabel"),
       lightMetric: document.querySelector("#lightMetric"),
+      lightMetricLabel: document.querySelector("#lightMetricLabel"),
       confidenceMetric: document.querySelector("#confidenceMetric"),
+      confidenceMetricLabel: document.querySelector("#confidenceMetricLabel"),
       captureMetric: document.querySelector("#captureMetric"),
       captureMetricLabel: document.querySelector("#captureMetricLabel"),
       hero: document.querySelector(".hero"),
@@ -1737,6 +1732,11 @@
 
     function cacheBustedUrl(url) {
       return `${url}${url.includes("?") ? "&" : "?"}t=${encodeURIComponent(Date.now())}`;
+    }
+
+    function bucketedCacheUrl(url, bucketMs) {
+      const bucket = Math.floor(Date.now() / bucketMs);
+      return `${url}${url.includes("?") ? "&" : "?"}v=${encodeURIComponent(bucket)}`;
     }
 
     function isSkyDataStale(value) {
@@ -1864,19 +1864,53 @@
       return null;
     }
 
-    function buildSkyWeatherContext() {
+    function buildSkyWeatherContext(skyData = state.skyData) {
       const currentHour = getCurrentHour(state.weather);
       const current = state.weather?.current || state.weather?.current_conditions || null;
-      if (!currentHour && !current) return null;
-      const solarSource = current || currentHour || {};
+      return buildSkyObservationContext({
+        hour: currentHour,
+        current,
+        airQuality: state.weather?.airQuality || null,
+        radar: state.storm?.radar || null,
+        satellite: skyData?.satellite || null,
+        metar: skyData?.metar || null,
+        surfaceObservations: skyData?.surfaceObservations || null
+      });
+    }
+
+    function getSkyPrecipOverride() {
+      if (!state.weather) return null;
+      const current = state.weather.current || state.weather.current_conditions || {};
+      const stormWeather = state.storm?.weather || {};
+      const cameraCloud = Number(state.skyIntel?.displayCloud ?? state.skyIntel?.cloud);
+      const skyClearing = state.skyIntel?.sunlightLevel === "strong" ||
+        (Number.isFinite(cameraCloud) && cameraCloud <= 35 && state.skyIntel?.brightnessTrend !== "decreasing");
+      return getCurrentPrecipOverride({
+        current,
+        hourly: state.weather.hourly || [],
+        radar: state.storm?.radar || {},
+        lightningCount: Math.max(
+          Number(current.lightningStrikeCount ?? current.lightning_strike_count) || 0,
+          Number(stormWeather.lightningCount ?? stormWeather.lightning_strike_count) || 0
+        ),
+        lightningDistance: current.lightningStrikeDistance ?? current.lightning_strike_last_distance,
+        lightningObservedAt: current.lightningStrikeLastAt ?? current.lightning_strike_last_epoch ?? stormWeather.observedAt,
+        skyClearing
+      });
+    }
+
+    function getPrecipSkyLabel(precipOverride) {
+      if (!precipOverride?.active) return null;
+      if (precipOverride.mode === "clearing") return "Clearing After Storms";
+      if (precipOverride.mode === "nearby") return "Storms Nearby";
+      if (precipOverride.mode === "recent") return "Rain Easing";
       return {
-        cloudCover: normalizePercentValue(pickNumber(currentHour, ["cloudCover", "cloud_cover", "cloudcover"])),
-        humidity: normalizePercentValue(pickNumber(currentHour, ["relativeHumidity", "relative_humidity", "humidity"]) ?? pickNumber(current, ["relativeHumidity", "relative_humidity", "humidity"])),
-        precipProbability: normalizePercentValue(pickNumber(currentHour, ["precipProbability", "precipitation_probability", "probabilityOfPrecipitation"])),
-        solarRadiation: pickNumber(solarSource, ["solarRadiation", "solar_radiation", "solarWm2", "solar"]),
-        uvIndex: pickNumber(solarSource, ["uvIndex", "uv_index", "uv"]),
-        weatherCode: pickNumber(currentHour, ["weatherCode", "weather_code"]) ?? pickNumber(current, ["weatherCode", "weather_code"])
-      };
+        storm: "Thunderstorm",
+        snow: "Snow",
+        drizzle: "Light Rain",
+        showers: "Showers",
+        rain: "Rain"
+      }[precipOverride.type] || "Rain";
     }
 
     function getRadiancePhase(daily) {
@@ -1920,7 +1954,8 @@
     }
 
     function scoreCloudTexture(cameraCloud, forecastCloud, phase, skyIntel = null) {
-      if (isObscuredSky(skyIntel)) {
+      const transientValleyFog = isTransientValleyFog(skyIntel);
+      if (isObscuredSky(skyIntel) && !transientValleyFog) {
         return {
           score: 24,
           label: "Live view obscured",
@@ -1964,6 +1999,7 @@
       const humidity = pickNumber(hour, ["relativeHumidity", "relative_humidity", "humidity"]);
       const precip = pickNumber(hour, ["precipProbability", "precipitation_probability", "probabilityOfPrecipitation"]);
       const fog = isObscuredSky(skyIntel) || camera?.metrics?.visibilityScore === 0;
+      const transientValleyFog = isTransientValleyFog(skyIntel);
       const earlySetup = phase?.state === "setup" || phase?.state === "waiting";
       let score = 78;
       if (Number.isFinite(humidity)) {
@@ -1974,7 +2010,7 @@
         else score = 70;
       }
       if (Number.isFinite(precip)) score -= precip * 34;
-      if (fog) score -= 38;
+      if (fog) score -= transientValleyFog ? 6 : 38;
       return {
         score: clamp(score),
         label: Number.isFinite(humidity)
@@ -1982,8 +2018,10 @@
           : "Humidity pending",
         detail: earlySetup
           ? "This is still a forecast ingredient. The better question later today will be whether fog, haze, or rain is present near the actual window."
-          : fog
+          : fog && !transientValleyFog
           ? "Fog is the main limiter right now."
+          : transientValleyFog
+            ? "Shallow morning valley fog adds moisture, but it is localized and is not being treated as an evening low-cloud deck."
           : Number.isFinite(precip) && precip > 0.35
             ? "Rain chances are high enough to mute or interrupt color."
             : "Moisture does not look like the primary blocker."
@@ -2000,7 +2038,9 @@
       if (skyIntel?.atmosphericState === "overcast") score = 30;
       if (skyIntel?.atmosphericState === "fog") score = 18;
       if (skyIntel?.atmosphericState === "low_cloud") score = 22;
-      const obscured = isObscuredSky(skyIntel);
+      const transientValleyFog = isTransientValleyFog(skyIntel);
+      if (transientValleyFog) score = 66;
+      const obscured = isObscuredSky(skyIntel) && !transientValleyFog;
       if (m.sunlightDetected && !obscured) score += m.sunlightLevel === "strong" ? 10 : 5;
       if (Number.isFinite(m.skyBlueSignal) && m.skyBlueSignal > (obscured ? 1.2 : 1.05)) score += 8;
       return {
@@ -2054,16 +2094,13 @@
         timing.score * 0.14
       );
       const obscured = isObscuredSky(state.skyIntel);
-      if (obscured) score = Math.min(score, earlySetup ? 56 : 48);
+      const transientValleyFog = isTransientValleyFog(state.skyIntel);
+      if (obscured && !transientValleyFog) score = Math.min(score, earlySetup ? 56 : 48);
 
       const currentHour = getCurrentHour(state.weather);
-      const current = state.weather?.current || state.weather?.current_conditions || {};
       const precipAmount = pickNumber(currentHour, ["precipAmount", "precipitation", "rain"]);
       const weatherCode = pickNumber(currentHour, ["weatherCode", "weather_code"]);
-      const precipOverride = getCurrentPrecipOverride({
-        current,
-        hourly: state.weather?.hourly || []
-      });
+      const precipOverride = getSkyPrecipOverride();
       const sharedSunsetRead = buildDuskSkyFallback({
         cameraCloud: state.skyIntel?.displayCloud ?? state.skyIntel?.cloud,
         cloudCover: pickNumber(currentHour, ["cloudCover", "cloud_cover", "cloudcover"]),
@@ -2076,7 +2113,7 @@
         weatherCode,
         sunlightDetected: state.skyIntel?.sunlightDetected,
         sunlightLevel: state.skyIntel?.sunlightLevel,
-        obscured
+        obscured: obscured && !transientValleyFog
       });
       const gateCloud = sharedSunsetRead.cloud;
       const wetSignal = sharedSunsetRead.wetSignal;
@@ -2103,7 +2140,13 @@
         score,
         afterglowVetted,
         wetSignal,
-        title: sharedSunsetCaution ? sharedSunsetRead.headline
+        title: precipOverride?.mode === "clearing"
+          ? "Clearing is returning after the storms"
+          : precipOverride?.mode === "nearby"
+          ? "Storms remain nearby"
+          : precipOverride?.type === "storm" && precipOverride?.mode === "active"
+          ? "A thunderstorm is controlling the sunset setup"
+          : sharedSunsetCaution ? sharedSunsetRead.headline
           : phase.state === "closed" ? "Tonight's radiance window has closed"
           : obscured ? (earlySetup ? "Fog is muting the early setup" : "Fog is muting the sunset setup")
           : earlySetup ? "Early sunset setup"
@@ -2112,7 +2155,10 @@
           : score >= 65 ? "Worth watching"
           : score >= 45 ? "Mixed sunset setup"
           : "Low color potential",
-        detail: sharedSunsetCaution ? sharedSunsetRead.detail
+        detail: ["active", "clearing", "nearby"].includes(precipOverride?.mode) &&
+          (precipOverride?.type === "storm" || precipOverride?.mode !== "active")
+          ? precipOverride.summary
+          : sharedSunsetCaution ? sharedSunsetRead.detail
           : phase.state === "closed"
           ? "The useful sunset and twilight period has passed for Asheville. The sky snapshot remains here for context, and tomorrow's window will come back into focus after the next daylight cycle begins."
           : obscured
@@ -2205,13 +2251,32 @@
       const hasWNW = Number.isFinite(wnwCloud);
       const hasENE = Number.isFinite(eneCloud);
       els.cloudMetric.textContent = hasWNW ? pct(wnwCloud) : obscuredSky ? "Obscured" : pct(displayCloud);
-      els.cloudMetricLabel.textContent = hasWNW ? "WNW downtown clouds" : "Camera cloud cover";
+      els.cloudMetricLabel.textContent = hasWNW ? "Western sky clouds" : "Camera cloud cover";
       els.eneCloudMetric.textContent = hasENE ? pct(eneCloud) : "--";
-      els.directionStatus.textContent = `WNW ${hasWNW ? pct(wnwCloud) : "--"} / ENE ${hasENE ? pct(eneCloud) : "--"}`;
+      els.eneCloudMetricLabel.textContent = "ENE East Asheville clouds";
+      els.directionStatus.textContent = state.skyIntel?.skyRegime
+        ? state.skyIntel.fogFootprint || "Variable sky across Asheville"
+        : `West ${hasWNW ? pct(wnwCloud) : "--"} / ENE ${hasENE ? pct(eneCloud) : "--"}`;
       els.lightMetric.textContent = staleNightAnalysis
         ? "Bright"
         : state.skyIntel?.sunlightDetected ? labelize(state.skyIntel.sunlightLevel) : "Low";
+      els.lightMetricLabel.textContent = "Sunlight signal";
       els.confidenceMetric.textContent = pct(state.skyIntel?.confidence);
+      els.confidenceMetricLabel.textContent = "Sky read confidence";
+      els.captureMetric.textContent = "Current";
+      els.captureMetricLabel.textContent = "Western sky YouTube still";
+
+      if (Array.isArray(state.skyIntel?.metricTiles)) {
+        const byKey = Object.fromEntries(state.skyIntel.metricTiles.map((tile) => [tile.key, tile]));
+        const spatialTiles = [byKey.surface, byKey.above, byKey.sunlight, byKey.confidence, byKey.depth];
+        const values = [els.cloudMetric, els.eneCloudMetric, els.lightMetric, els.confidenceMetric, els.captureMetric];
+        const labels = [els.cloudMetricLabel, els.eneCloudMetricLabel, els.lightMetricLabel, els.confidenceMetricLabel, els.captureMetricLabel];
+        spatialTiles.forEach((tile, index) => {
+          if (!tile) return;
+          values[index].textContent = tile.value;
+          labels[index].textContent = tile.label;
+        });
+      }
 
       renderTimeline();
       renderDaylightGraphic();
@@ -2260,7 +2325,7 @@
 
     function refreshContextMedia() {
       if (els.uncaCameraImage) {
-        els.uncaCameraImage.src = cacheBustedUrl(UNCA_CAMERA_URL);
+        els.uncaCameraImage.src = bucketedCacheUrl(UNCA_CAMERA_URL, UNCA_CACHE_BUCKET_MS);
       }
       if (els.satelliteLoopImage) {
         els.satelliteLoopImage.src = cacheBustedUrl(SATELLITE_LOOP_URL);
@@ -2274,10 +2339,11 @@
         button.addEventListener("click", () => {
           const src = button.dataset.lightboxSrc;
           const title = button.dataset.lightboxTitle || "Sky media";
-          const crop = button.dataset.lightboxCrop;
           els.lightboxTitle.textContent = title;
-          els.lightboxMedia?.classList.toggle("cropped-unca", crop === "unca");
-          els.lightboxImage.src = cacheBustedUrl(src);
+          els.lightboxMedia?.classList.remove("cropped-unca");
+          els.lightboxImage.src = src === UNCA_CAMERA_URL
+            ? bucketedCacheUrl(src, UNCA_CACHE_BUCKET_MS)
+            : cacheBustedUrl(src);
           els.lightboxImage.alt = title;
           if (typeof els.mediaLightbox.showModal === "function") {
             els.mediaLightbox.showModal();
@@ -2429,16 +2495,18 @@
       });
       state.skyIntel = skyRead.skyIntel;
       state.narrative = skyRead.narrative;
-      const liveNarrative = staleNightAnalysis ? buildLiveViewNarrative() : skyRead.narrative;
-      const skyLabel = staleNightAnalysis ? "Live Sky" : skyRead.label;
+      const precipOverride = getSkyPrecipOverride();
+      const baseNarrative = staleNightAnalysis ? buildLiveViewNarrative() : skyRead.narrative;
+      const liveNarrative = applyPrecipOverrideToNarrative(baseNarrative, precipOverride);
+      const skyLabel = getPrecipSkyLabel(precipOverride) || (staleNightAnalysis ? "Live Sky" : skyRead.label);
 
       els.skyChip.textContent = skyLabel;
       els.heroSky.textContent = skyLabel;
       els.skyHeadline.textContent = liveNarrative?.headline || "Reading the western sky.";
       els.skyDetail.textContent = liveNarrative?.detail || "The camera snapshot will update automatically.";
-      els.liveStatus.textContent = `WNW thumbnail analyzed ${formatCaptureTime(state.skyData?.timestamp)}`;
+      els.liveStatus.textContent = `Western sky thumbnail analyzed ${formatCaptureTime(state.skyData?.timestamp)}`;
       els.captureMetric.textContent = "Current";
-      els.captureMetricLabel.textContent = "WNW YouTube still";
+      els.captureMetricLabel.textContent = "Western sky YouTube still";
       setSkyFrame(captureVersion, skyStale);
       renderRadiance();
     }
@@ -2541,7 +2609,7 @@
         const skyRead = buildSkyConditionRead({
           camera: data,
           previous: state.skyIntel,
-          weatherContext: buildSkyWeatherContext()
+          weatherContext: buildSkyWeatherContext(data)
         });
         state.skyData = data;
         state.skyIntel = skyRead.skyIntel;
@@ -2583,6 +2651,18 @@
             renderRadiance();
           }
         }
+      }
+    }
+
+    async function loadStorm() {
+      try {
+        const res = await fetch(`/api/router?route=storm/current&t=${encodeURIComponent(Date.now())}`);
+        if (!res.ok) throw new Error("Storm feed failed");
+        state.storm = await res.json();
+        if (state.skyData && state.weather) renderSky();
+        renderRadiance();
+      } catch (error) {
+        console.warn("Storm cross-check unavailable", error);
       }
     }
 
@@ -2637,10 +2717,11 @@
 
     setupLightbox();
     refreshContextMedia();
-    await Promise.all([loadSky(), loadWeather()]);
-    setInterval(loadSky, SKY_REFRESH_MS);
+    await Promise.all([loadSky(), loadWeather(), loadStorm()]);
+    setInterval(loadSky, OBSERVATION_REFRESH_MS);
     setInterval(refreshContextMedia, 5 * 60 * 1000);
-    setInterval(loadWeather, 10 * 60 * 1000);
+    setInterval(loadWeather, OBSERVATION_REFRESH_MS);
+    setInterval(loadStorm, OBSERVATION_REFRESH_MS);
   </script>
 </body>
 </html>

@@ -29,14 +29,15 @@
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
     crossorigin=""
   />
-  <link rel="stylesheet" href="css/water.css?v=20260621-water" />
+  <link rel="stylesheet" href="css/water.css?v=20260730-section-identity3" />
+  <link rel="stylesheet" href="/css/brand-lockup.css?v=20260805-brand2" />
 </head>
 <body>
   <header class="site-header">
     <div class="header-inner">
-      <a href="/water.html">
-        <div class="brand-title">828 Water Conditions</div>
-        <div class="brand-sub">Waterfalls, rivers, and outdoor water guidance for Asheville and WNC</div>
+      <a class="site-brand-lockup" href="/" aria-label="828 Weather Direct home">
+        <div class="brand-title site-brand-title"><span class="site-brand-828">828</span> Weather Direct</div>
+        <div class="brand-sub site-brand-sub">Hyper-local Asheville forecast built by Tim Ballisty</div>
       </a>
       <nav class="nav-links" aria-label="Site navigation">
         <a href="/">Home</a>
@@ -70,7 +71,7 @@
         <aside class="hero-side" aria-label="Quick water guidance">
           <div class="side-card">
             <b>Rainfall driven</b>
-            <span>First version estimates flows from recent rain, basin response, and known river character.</span>
+            <span>Each waterfall uses radar-estimated basin rainfall, antecedent wetness, and its own response speed.</span>
           </div>
           <div class="side-card">
             <b>Activity specific</b>
@@ -78,24 +79,39 @@
           </div>
           <div class="side-card">
             <b id="generatedAt">Building water read</b>
-            <span>Live gauge and rainfall integrations are scaffolded for the next step.</span>
+            <span id="dataStatus">Checking radar-estimated rainfall and live USGS gauges.</span>
           </div>
         </aside>
       </div>
     </section>
 
-    <section class="summary-grid" id="summaryGrid" aria-label="Top water summary">
-      <article class="summary-card">
-        <span>Loading</span>
-        <strong>Reading local water signals</strong>
-        <p>Waterfall and river recommendations will appear here.</p>
-      </article>
+    <section class="overview-section" aria-label="Top water summary">
+      <div class="section-head">
+        <div>
+          <div class="section-eyebrow">
+            <span class="section-number">01</span>
+            <span class="section-kicker">At a Glance</span>
+          </div>
+          <h2>Today’s water read</h2>
+          <p>The quickest answer for choosing a waterfall, river activity, or deciding when conditions deserve more caution.</p>
+        </div>
+      </div>
+      <div class="summary-grid" id="summaryGrid">
+        <article class="summary-card">
+          <span>Loading</span>
+          <strong>Reading local water signals</strong>
+          <p>Waterfall and river recommendations will appear here.</p>
+        </article>
+      </div>
     </section>
 
     <section class="visual-dashboard" id="visualDashboard" aria-label="Live water visuals and map">
       <div class="section-head">
         <div>
-          <div class="section-kicker">Look First</div>
+          <div class="section-eyebrow">
+            <span class="section-number">02</span>
+            <span class="section-kicker">Look First</span>
+          </div>
           <h2>Live water views and WNC map</h2>
           <p>
             Visual checks first, numbers second. Use the camera wall and map to orient before digging into the detailed cards.
@@ -111,7 +127,10 @@
     <section class="section-card" id="waterfall-flow" aria-label="Waterfall Flow Index">
       <div class="section-head">
         <div>
-          <div class="section-kicker">Waterfall Flow Index</div>
+          <div class="section-eyebrow">
+            <span class="section-number">03</span>
+            <span class="section-kicker">Waterfall Flow Index</span>
+          </div>
           <h2>Popular WNC waterfalls</h2>
           <p>
             A rainfall-based estimate of how full the falls should look today, with extra caution when recent rain can make rocks slick.
@@ -126,7 +145,11 @@
         <div class="explainer-grid">
           <article>
             <strong>Rain drives the score</strong>
-            <p>Recent rain, 3-day rain, 7-day rain, and 14-day wetness are weighted to estimate how full each waterfall should look.</p>
+            <p>Recent radar rain is sampled throughout the full upstream watershed, then combined with antecedent rainfall to estimate how full each waterfall should look.</p>
+          </article>
+          <article>
+            <strong>Basin rain, not one map point</strong>
+            <p>The recent signal is 85% basin-wide average and 15% wettest-quartile rain, so a localized mountain storm matters without one radar cell taking over.</p>
           </article>
           <article>
             <strong>Each basin responds differently</strong>
@@ -138,7 +161,7 @@
           </article>
           <article>
             <strong>Scores are guidance, not guarantees</strong>
-            <p>Use the index to decide what is worth checking, then confirm closures, trail conditions, and your own comfort level.</p>
+            <p>Radar and model estimates can miss localized downpours. Confirm cameras, closures, trail conditions, and your own comfort level.</p>
           </article>
         </div>
       </details>
@@ -148,7 +171,10 @@
     <section class="section-card" id="river-recreation" aria-label="River Recreation Index">
       <div class="section-head">
         <div>
-          <div class="section-kicker">River Recreation Index</div>
+          <div class="section-eyebrow">
+            <span class="section-number">04</span>
+            <span class="section-kicker">River Recreation Index</span>
+          </div>
           <h2>Activity-by-activity river guidance</h2>
           <p>
             High flow can be bad for tubing but useful for skilled paddlers. Each river is scored with its own character in mind.
@@ -161,7 +187,10 @@
     <section class="section-card webcam-section" id="live-webcams" aria-label="Live Water Webcams">
       <div class="section-head">
         <div>
-          <div class="section-kicker">Live Water Webcams</div>
+          <div class="section-eyebrow">
+            <span class="section-number">05</span>
+            <span class="section-kicker">Live Water Webcams</span>
+          </div>
           <h2>Visual checks before you drive</h2>
           <p>
             A small set of water-facing cameras and river visual references. Open the source for the live feed;
@@ -176,7 +205,10 @@
     <section class="section-card dark" id="rainfall-snapshot" aria-label="Recent Rainfall Snapshot">
       <div class="section-head">
         <div>
-          <div class="section-kicker">Recent Rainfall Snapshot</div>
+          <div class="section-eyebrow">
+            <span class="section-number">06</span>
+            <span class="section-kicker">Recent Rainfall Snapshot</span>
+          </div>
           <h2>Rain signal behind the read</h2>
           <p>
             Waterfalls and smaller creeks respond first to recent rain. Larger rivers carry more of the multi-day signal.
@@ -188,11 +220,17 @@
     </section>
 
     <section class="safety-card" id="safety-notes" aria-label="Safety Notes">
-      <h2>Safety Notes</h2>
-      <p>
-        Conditions can change quickly, especially after thunderstorms. Always check local closures, posted warnings,
-        and your own skill level before entering the water.
-      </p>
+      <div class="safety-heading">
+        <span class="safety-mark" aria-hidden="true">!</span>
+        <div>
+          <div class="section-kicker">Before You Go</div>
+          <h2>Safety Notes</h2>
+          <p>
+            Conditions can change quickly, especially after thunderstorms. Always check local closures, posted warnings,
+            and your own skill level before entering the water.
+          </p>
+        </div>
+      </div>
       <ul id="safetyList"></ul>
     </section>
   </main>
@@ -217,7 +255,8 @@
       </div>
 
       <div class="footer-meta">
-        <div>Data: mock rainfall and gauge estimates in this first version</div>
+        <div>Local weather context by meteorologist <a href="/about.html">Tim Ballisty</a>.</div>
+        <div>Data: NOAA MRMS QPE, Open-Meteo antecedent estimates, and USGS Water Data APIs</div>
         <div>Serving Asheville and the greater 828 region</div>
         <div class="footer-disclaimer">
           For general awareness only - not a substitute for official forecasts, warnings, closures, or river advisories.
@@ -235,6 +274,6 @@
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
     crossorigin=""
   ></script>
-  <script type="module" src="js/water/water-render.js?v=20260621-water"></script>
+  <script type="module" src="js/water/water-render.js?v=20260818-usgs-modern1"></script>
 </body>
 </html>

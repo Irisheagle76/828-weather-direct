@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Explore live Asheville neighborhood weather stations on a maneuverable three-dimensional terrain map with temperature, dew point, wind and rainfall observations.">
+  <meta name="author" content="Tim Ballisty">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <meta name="theme-color" content="#14251d">
+  <title>Asheville Station Terrain | 828 Weather Direct</title>
+  <link rel="canonical" href="https://avlweather.com/asheville-microscope-terrain.html">
+  <link rel="icon" href="/images/828-brand-card.png" type="image/png">
+  <meta property="og:title" content="Asheville Station Terrain | 828 Weather Direct">
+  <meta property="og:description" content="Explore live neighborhood weather observations across Asheville's mountain terrain.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://avlweather.com/asheville-microscope-terrain.html">
+  <meta property="og:image" content="https://avlweather.com/images/828-brand-card.png">
+  <meta property="og:image:alt" content="828 Weather Direct brand mark">
+  <meta property="og:site_name" content="828 Weather Direct">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Asheville Station Terrain | 828 Weather Direct">
+  <meta name="twitter:description" content="Explore live neighborhood weather observations across Asheville's mountain terrain.">
+  <meta name="twitter:image" content="https://avlweather.com/images/828-brand-card.png">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebPage","name":"Asheville Station Terrain","url":"https://avlweather.com/asheville-microscope-terrain.html","description":"A three-dimensional terrain map of live neighborhood weather observations across Asheville and nearby mountain corridors.","isPartOf":{"@type":"WebSite","name":"828 Weather Direct","url":"https://avlweather.com/"},"about":{"@type":"Place","name":"Asheville, North Carolina"},"author":{"@type":"Person","name":"Tim Ballisty","jobTitle":"Meteorologist","url":"https://avlweather.com/about.html"},"publisher":{"@type":"Organization","name":"828 Weather Direct","url":"https://avlweather.com/"}}
+  </script>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://tiles.openfreemap.org">
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css">
+  <style>
+    :root { color-scheme: dark; --ink: #f4f2e9; --muted: #b7c1b9; --panel: rgba(15,29,23,.92); --line: rgba(239,244,233,.2); --accent: #b8e39a; --warn: #ffd27d; --navy: #071d49; --blue: #1056cf; --orange: #f47b20; }
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body { margin: 0; color: var(--ink); background: #0d1914; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    a { color: inherit; }
+    button { font: inherit; }
+    .skip-link { position: absolute; left: -999px; top: 8px; z-index: 1000; padding: 11px 14px; color: #13213a; background: #fff; }
+    .skip-link:focus { left: 8px; }
+    .site-header { color: #13213a; background: #fff; border-top: 5px solid var(--orange); border-bottom: 1px solid #d9e3f0; }
+    .header-inner { width: min(1520px,calc(100% - 32px)); margin: auto; padding: 16px 0 14px; }
+    .header-brand-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+    .site-brand { display: flex; align-items: center; gap: 11px; color: var(--navy); text-decoration: none; }
+    .site-brand-mark { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; color: var(--navy); background: linear-gradient(145deg,var(--orange),#f2b640); font: 900 13px Georgia,serif; }
+    .site-brand strong { display: block; font-size: 1.05rem; letter-spacing: -.015em; }
+    .site-brand small { display: block; margin-top: 2px; color: #607086; font-size: .72rem; font-weight: 700; }
+    .site-nav { display: flex; align-items: center; gap: 7px; margin-top: 13px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .site-nav::-webkit-scrollbar { display: none; }
+    .site-nav a { flex: 0 0 auto; min-height: 34px; padding: 8px 11px; border-radius: 999px; color: #607086; font-size: .76rem; font-weight: 850; text-decoration: none; }
+    .site-nav a:hover, .site-nav a:focus-visible { color: var(--blue); background: #edf4ff; outline: none; }
+    .site-nav a.active { color: #fff; background: var(--blue); }
+    .page { width: min(1520px, calc(100% - 32px)); margin: 0 auto; padding: 18px 0 42px; }
+    .topbar, .intro, .toolbar, .map-footer { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+    .topbar { padding: 4px 0 18px; }
+    .product-name { display: flex; align-items: baseline; gap: 10px; }
+    .product-name span { color: var(--accent); font-size: .68rem; font-weight: 850; letter-spacing: .13em; text-transform: uppercase; }
+    .product-name strong { font-family: Georgia,"Times New Roman",serif; font-size: 1.08rem; font-weight: 400; }
+    .microscope-link { padding: 9px 13px; border: 1px solid var(--line); border-radius: 999px; color: var(--ink); font-size: .75rem; font-weight: 800; text-decoration: none; }
+    .microscope-link:hover, .microscope-link:focus-visible { color: #102018; border-color: var(--accent); background: var(--accent); outline: none; }
+    .intro { align-items: end; padding: clamp(22px,4vw,54px) 0 28px; border-top: 1px solid var(--line); }
+    .eyebrow { margin: 0 0 10px; color: var(--accent); font-size: .7rem; font-weight: 850; letter-spacing: .15em; text-transform: uppercase; }
+    h1 { max-width: 780px; margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp(2.5rem,6vw,5.8rem); font-weight: 400; letter-spacing: -.055em; line-height: .91; }
+    .intro-copy { max-width: 490px; margin: 0; color: var(--muted); font-size: clamp(.95rem,1.4vw,1.08rem); line-height: 1.6; }
+    .toolbar { flex-wrap: wrap; padding: 13px 14px; border: 1px solid var(--line); border-bottom: 0; background: #14251d; }
+    .metric-controls, .scope-controls { display: flex; flex-wrap: wrap; gap: 7px; }
+    .control-label { align-self: center; margin-right: 4px; color: var(--muted); font-size: .68rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+    .toolbar button { min-height: 38px; padding: 8px 13px; border: 1px solid rgba(255,255,255,.18); border-radius: 999px; color: #dce4de; background: rgba(255,255,255,.04); cursor: pointer; font-size: .78rem; font-weight: 750; }
+    .toolbar button:hover, .toolbar button:focus-visible { border-color: var(--accent); outline: none; }
+    .toolbar button[aria-pressed="true"] { color: #102018; border-color: var(--accent); background: var(--accent); }
+    .map-shell { position: relative; min-height: clamp(570px,72vh,850px); overflow: hidden; border: 1px solid var(--line); background: #263b30; box-shadow: 0 30px 80px rgba(0,0,0,.28); }
+    #terrain-map { position: absolute; inset: 0; }
+    .map-overlay { position: absolute; z-index: 3; top: 14px; left: 14px; width: min(350px,calc(100% - 104px)); padding: 13px 15px; border: 1px solid var(--line); border-radius: 3px; background: var(--panel); box-shadow: 0 12px 28px rgba(0,0,0,.24); backdrop-filter: blur(10px); pointer-events: none; }
+    .network-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .network-line span { color: var(--muted); font-size: .68rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+    .network-line strong { color: var(--accent); font-size: .82rem; text-align: right; }
+    .network-meta { margin: 7px 0 0; color: var(--muted); font-size: .72rem; line-height: 1.45; }
+    .notice { display: none; position: absolute; z-index: 5; left: 50%; top: 50%; width: min(520px,calc(100% - 36px)); margin: 0; padding: 18px; transform: translate(-50%,-50%); border: 1px solid rgba(255,155,130,.6); color: #ffe1d9; background: rgba(57,25,19,.94); box-shadow: 0 20px 60px rgba(0,0,0,.4); line-height: 1.55; }
+    .notice.show { display: block; }
+    .legend { position: absolute; z-index: 3; left: 14px; bottom: 14px; display: flex; flex-wrap: wrap; gap: 12px; max-width: calc(100% - 108px); padding: 9px 11px; border: 1px solid var(--line); border-radius: 3px; color: #e3e8e3; background: var(--panel); backdrop-filter: blur(10px); font-size: .69rem; pointer-events: none; }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .legend i { width: 10px; height: 10px; border: 2px solid #fff; border-radius: 50%; background: var(--accent); }
+    .legend i.delayed { background: var(--warn); }
+    .legend i.stale { opacity: .72; background: #a9b7c6; }
+    .legend i.incomplete { background: #20283a; }
+    .map-footer { align-items: flex-start; padding: 13px 2px 0; color: var(--muted); font-size: .72rem; line-height: 1.5; }
+    .map-footer p { max-width: 760px; margin: 0; }
+    .map-footer strong { color: #dfe7e0; }
+    .site-footer { padding: 42px 0 30px; color: rgba(255,253,248,.78); background: #06162d; }
+    .footer-inner { width: min(1520px,calc(100% - 32px)); margin: auto; display: grid; gap: 20px; font-size: .82rem; }
+    .footer-brand { display: grid; gap: 6px; }
+    .footer-logo { color: #fff; font-size: 1.25rem; font-weight: 950; }
+    .footer-tagline { max-width: 640px; color: rgba(255,253,248,.68); line-height: 1.5; }
+    .footer-links { display: flex; flex-wrap: wrap; gap: 14px; }
+    .footer-links a { color: rgba(255,253,248,.84); font-weight: 800; text-decoration: none; }
+    .footer-links a:hover, .footer-links a:focus-visible { color: #f2b640; }
+    .footer-meta { display: grid; gap: 5px; color: rgba(255,253,248,.58); line-height: 1.45; }
+    .footer-meta a { color: inherit; }
+    .footer-bottom { color: rgba(255,253,248,.52); }
+    .maplibregl-popup { max-width: min(360px,calc(100vw - 34px)) !important; }
+    .maplibregl-popup-content { overflow: hidden; padding: 0; border: 1px solid rgba(255,255,255,.25); border-radius: 4px; color: var(--ink); background: rgba(12,25,19,.97); box-shadow: 0 18px 55px rgba(0,0,0,.45); }
+    .maplibregl-popup-close-button { z-index: 2; width: 34px; height: 34px; color: #fff; font-size: 21px; }
+    .station-popup { min-width: 292px; }
+    .popup-head { padding: 16px 42px 13px 16px; border-bottom: 1px solid var(--line); }
+    .popup-provider { color: var(--accent); font-size: .64rem; font-weight: 850; letter-spacing: .11em; text-transform: uppercase; }
+    .popup-head h2 { margin: 5px 0 2px; font-family: Georgia, "Times New Roman", serif; font-size: 1.55rem; font-weight: 400; line-height: 1.05; }
+    .popup-head p { margin: 0; color: var(--muted); font-size: .75rem; }
+    .popup-reading { padding: 13px 16px; border-bottom: 1px solid var(--line); }
+    .popup-reading strong { display: block; font-family: Georgia, "Times New Roman", serif; font-size: 2.3rem; font-weight: 400; line-height: 1; }
+    .popup-reading span { color: var(--muted); font-size: .68rem; }
+    .popup-grid { display: grid; grid-template-columns: 1fr 1fr; }
+    .popup-fact { min-height: 58px; padding: 9px 12px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .popup-fact:nth-child(even) { border-right: 0; }
+    .popup-fact span { display: block; margin-bottom: 4px; color: var(--muted); font-size: .58rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .popup-fact strong { display: block; font-size: .74rem; line-height: 1.35; overflow-wrap: anywhere; }
+    .popup-quality { margin: 0; padding: 11px 13px; color: #dce5de; font-size: .7rem; line-height: 1.45; }
+    .popup-quality.stale, .popup-quality.incomplete { color: #ffd7a0; }
+    .popup-quality.unavailable { color: #ffc5b6; }
+    .maplibregl-ctrl-group { overflow: hidden; border: 1px solid rgba(255,255,255,.25); background: rgba(14,28,22,.92); }
+    .maplibregl-ctrl-group button { filter: invert(1); }
+    .maplibregl-ctrl-attrib { color: #222; }
+    @media (max-width: 820px) { .intro { display: block; } .intro-copy { margin-top: 20px; } .toolbar, .map-footer { align-items: flex-start; } .scope-controls { width: 100%; } .map-shell { min-height: 680px; } }
+    @media (max-width: 560px) {
+      .header-inner, .footer-inner { width: calc(100% - 24px); } .site-brand small { display: none; }
+      .page { width: calc(100% - 18px); padding-top: 9px; } .topbar { align-items: flex-start; padding-bottom: 10px; } .product-name { display: grid; gap: 3px; } .microscope-link { padding: 8px 10px; font-size: .68rem; }
+      .intro { padding: 26px 0 22px; } .toolbar { padding: 10px; } .metric-controls { display: grid; grid-template-columns: 1fr 1fr; width: 100%; } .metric-controls .control-label { grid-column: 1/-1; } .metric-controls button { width: 100%; }
+      .scope-controls { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; } .scope-controls button { flex: 0 0 auto; } .map-shell { min-height: 70vh; }
+      .map-overlay { top: 8px; left: 8px; width: calc(100% - 64px); padding: 10px 11px; } .network-line { display: block; } .network-line strong { display: block; margin-top: 3px; text-align: left; }
+      .legend { right: 8px; bottom: 8px; left: 8px; max-width: none; } .map-footer { display: block; } .map-footer p + p { margin-top: 8px; } .station-popup { min-width: min(292px,calc(100vw - 40px)); }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to station terrain</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="header-brand-row">
+        <a class="site-brand" href="/" aria-label="828 Weather Direct home"><span class="site-brand-mark">828</span><span><strong>828 Weather Direct</strong><small>Hyper-local Asheville weather by meteorologist Tim Ballisty</small></span></a>
+      </div>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a href="/">Home</a><a href="/forecast.html">Forecast</a><a href="/radar.html">Radar &amp; Satellite</a><a href="/asheville-microscope.html">Neighborhood Microscope</a><a class="active" href="/asheville-microscope-terrain.html" aria-current="page">Station Terrain</a><a href="/pulse.html">Weather Pulse</a><a href="/hiking.html">Hiking Guidance</a><a href="/water.html">Water Conditions</a><a href="/fall.html">Fall Explorer</a>
+      </nav>
+    </div>
+  </header>
+  <main class="page" id="main-content">
+    <header class="topbar">
+      <div class="product-name"><span>Asheville Microscope</span><strong>Station Terrain</strong></div>
+      <a class="microscope-link" href="/asheville-microscope.html">Open neighborhood analysis &rarr;</a>
+    </header>
+    <section class="intro" aria-labelledby="page-title">
+      <div><p class="eyebrow">Asheville Microscope / Station Terrain</p><h1 id="page-title">See the stations in the terrain.</h1></div>
+      <p class="intro-copy">Maneuver through Asheville’s terrain and inspect real normalized station observations. Dots show station locations only—there is no interpolation or thermal surface.</p>
+    </section>
+    <div class="toolbar" aria-label="Map controls">
+      <div class="metric-controls" role="group" aria-label="Observation shown on station dots">
+        <span class="control-label">Show</span>
+        <button type="button" data-metric="temperatureF" aria-pressed="true">Temperature</button>
+        <button type="button" data-metric="dewPointF" aria-pressed="false">Dew Point</button>
+        <button type="button" data-metric="windMph" aria-pressed="false">Wind</button>
+        <button type="button" data-metric="precipitationRateInHr" aria-pressed="false">Rainfall</button>
+      </div>
+      <div class="scope-controls" role="group" aria-label="Station area">
+        <span class="control-label">Area</span>
+        <button type="button" data-scope="core" aria-pressed="true">Asheville</button>
+        <button type="button" data-scope="metro" aria-pressed="false">Metro</button>
+        <button type="button" data-scope="corridor" aria-pressed="false">Corridors</button>
+        <button type="button" data-scope="all" aria-pressed="false">All</button>
+      </div>
+    </div>
+    <section class="map-shell" aria-label="Interactive three-dimensional Asheville station map">
+      <div id="terrain-map"></div>
+      <div class="map-overlay" aria-live="polite">
+        <div class="network-line"><span>Normalized network</span><strong id="network-status">Loading observations…</strong></div>
+        <p class="network-meta" id="network-meta">Drag to pan · scroll or pinch to zoom · right-drag or two-finger drag to rotate and tilt.</p>
+      </div>
+      <p class="notice" id="terrain-notice" role="alert"></p>
+      <div class="legend" aria-label="Station quality legend"><span><i></i>Fresh</span><span><i class="delayed"></i>Delayed</span><span><i class="stale"></i>Stale / unusable</span><span><i class="incomplete"></i>Incomplete</span></div>
+    </section>
+    <div class="map-footer">
+      <p><strong>Data path:</strong> existing 828 Asheville Spread endpoint. Provider requests, credentials, normalization, and quality checks remain server-side.</p>
+      <p><strong>Map:</strong> OpenFreeMap / OpenStreetMap · Mapterhorn terrain. Station dots are discrete observations, not an analyzed field.</p>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand"><div class="footer-logo">828 Weather Direct</div><div class="footer-tagline">Hyper-local weather, sky context, and outdoor timing for Asheville and the greater 828 region.</div></div>
+      <div class="footer-links"><a href="/">Home</a><a href="/forecast.html">Forecast</a><a href="/radar.html">Radar &amp; Satellite</a><a href="/asheville-microscope.html">Neighborhood Microscope</a><a href="/asheville-microscope-terrain.html" aria-current="page">Station Terrain</a><a href="/hiking.html">Hiking Guidance</a><a href="/water.html">Water Conditions</a><a href="/fall.html">Fall Explorer</a><a href="/i26-connector.html">I-26 Connector</a><a href="/828-sunset-radiance.html">Sunset Radiance</a><a href="/about.html">About</a><a href="mailto:tballisty@gmail.com">Contact</a><a href="https://ko-fi.com/irisheagle" target="_blank" rel="noopener noreferrer">Support</a></div>
+      <div class="footer-meta"><div>Forecasts and analysis by meteorologist <a href="/about.html">Tim Ballisty</a>.</div><div>Station observations complement official NOAA/NWS information and may vary with elevation and exposure.</div><div>For general awareness only—not a substitute for official forecasts, warnings, or trail advisories.</div></div>
+      <div class="footer-bottom">&copy; 2026 828 Weather Direct</div>
+    </div>
+  </footer>
+  <script type="module">
+    import * as maplibregl from "https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.mjs";
+    const API_URL = "/api/router?route=asheville-spread";
+    const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
+    const TERRAIN_TILEJSON_URL = "https://tiles.mapterhorn.com/tilejson.json";
+    const ASHEVILLE_VIEW = { center: [-82.5515, 35.5867], zoom: 11.1, pitch: 62, bearing: -18 };
+    const providerLabels = { tempest: "Tempest / WeatherFlow", wunderground: "Weather Underground", ncei: "NOAA / NCEI", econet: "NC ECONet", pwsweather: "PWSWeather", weatherlink: "WeatherLink" };
+    const metrics = {
+      temperatureF: { label: "Temperature", unit: "°F", digits: 1, stops: [35,"#315bff",55,"#00d9ff",72,"#bd45ff",86,"#ff2d95",100,"#ff304f"] },
+      dewPointF: { label: "Dew point", unit: "°F", digits: 1, stops: [20,"#965cff",40,"#315bff",55,"#00d9ff",68,"#ff45d4",78,"#ff305e"] },
+      windMph: { label: "Wind", unit: " mph", digits: 1, stops: [0,"#eefaff",5,"#00dcff",12,"#315bff",25,"#8d52ff",45,"#ff36b7"] },
+      precipitationRateInHr: { label: "Rainfall rate", unit: " in/hr", digits: 2, stops: [0,"#f4fbff",.01,"#00dcff",.1,"#1478ff",.5,"#633cff",2,"#ff2dce"] }
+    };
+    const state = { payload: null, metric: "temperatureF", scope: "core", mapLoaded: false, popup: null };
+    const map = new maplibregl.Map({ container: "terrain-map", style: MAP_STYLE_URL, ...ASHEVILLE_VIEW, minZoom: 8, maxZoom: 17, maxPitch: 85, antialias: true, attributionControl: false });
+    map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-right");
+    map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-right");
+    if (maplibregl.FullscreenControl) map.addControl(new maplibregl.FullscreenControl(), "top-right");
+
+    map.on("load", () => {
+      map.addSource("terrain-dem", { type: "raster-dem", url: TERRAIN_TILEJSON_URL, tileSize: 256 });
+      map.addSource("hillshade-dem", { type: "raster-dem", url: TERRAIN_TILEJSON_URL, tileSize: 256 });
+      map.addSource("relief-dem", { type: "raster-dem", url: TERRAIN_TILEJSON_URL, tileSize: 256 });
+      const firstLabel = map.getStyle().layers.find(layer => layer.type === "symbol")?.id;
+      const firstLine = map.getStyle().layers.find(layer => layer.type === "line")?.id || firstLabel;
+      map.addLayer({ id: "terrain-color-relief", type: "color-relief", source: "relief-dem", paint: {
+        "color-relief-opacity": .46,
+        "color-relief-color": ["interpolate",["linear"],["elevation"],300,"#2e6047",550,"#557851",750,"#7e8653",950,"#9b7f52",1250,"#a8664c",1700,"#9f4e48"]
+      } }, firstLine);
+      map.addLayer({ id: "terrain-hillshade", type: "hillshade", source: "hillshade-dem", paint: {
+        "hillshade-method": "standard", "hillshade-exaggeration": .58, "hillshade-illumination-altitude": 34,
+        "hillshade-shadow-color": "#142a20", "hillshade-highlight-color": "#f7e8bd", "hillshade-accent-color": "#574632"
+      } }, firstLine);
+      map.setTerrain({ source: "terrain-dem", exaggeration: 1.48 });
+      map.addSource("stations", { type: "geojson", data: emptyFeatureCollection() });
+      map.addLayer({ id: "station-halos", type: "circle", source: "stations", paint: {
+        "circle-radius": ["interpolate",["linear"],["zoom"],8,13,11,20,15,27], "circle-color": ["get","color"],
+        "circle-opacity": ["case",["==",["get","qualityState"],"stale"],.22,["==",["get","qualityState"],"unavailable"],.16,.38],
+        "circle-blur": .65, "circle-pitch-scale": "viewport"
+      }});
+      map.addLayer({ id: "station-dots", type: "circle", source: "stations", paint: {
+        "circle-radius": ["interpolate",["linear"],["zoom"],8,8,11,13,15,18], "circle-color": ["get","color"], "circle-opacity": ["get","opacity"],
+        "circle-stroke-color": ["case",["==",["get","qualityState"],"stale"],"#ffd27d","#fff9dc"], "circle-stroke-width": ["case",["==",["get","qualityState"],"incomplete"],4,3],
+        "circle-stroke-opacity": ["get","strokeOpacity"], "circle-pitch-scale": "viewport"
+      }});
+      map.addLayer({ id: "station-values", type: "symbol", source: "stations", minzoom: 10, layout: {
+        "text-field": ["get","shortValue"], "text-font": ["Noto Sans Bold"], "text-size": ["interpolate",["linear"],["zoom"],10,13,12,16,15,19],
+        "text-offset": [0,1.45], "text-anchor": "top", "text-allow-overlap": false, "text-padding": 3
+      }, paint: { "text-color": "#fff08a", "text-halo-color": "rgba(8,20,15,.96)", "text-halo-width": 2.6, "text-halo-blur": .35 }});
+      state.mapLoaded = true;
+      updateStationSource(true);
+    });
+    map.on("mouseenter", "station-dots", () => { map.getCanvas().style.cursor = "pointer"; });
+    map.on("mouseleave", "station-dots", () => { map.getCanvas().style.cursor = ""; });
+    map.on("click", "station-dots", event => {
+      const stationId = event.features?.[0]?.properties?.stationId;
+      const station = state.payload?.stations.find(item => item.id === stationId);
+      if (station) openStationPopup(station, event.lngLat);
+    });
+
+    document.querySelectorAll("[data-metric]").forEach(button => button.addEventListener("click", () => {
+      state.metric = button.dataset.metric;
+      document.querySelectorAll("[data-metric]").forEach(item => item.setAttribute("aria-pressed", String(item === button)));
+      closePopup(); updateStationSource(false);
+    }));
+    document.querySelectorAll("[data-scope]").forEach(button => button.addEventListener("click", () => {
+      state.scope = button.dataset.scope;
+      document.querySelectorAll("[data-scope]").forEach(item => item.setAttribute("aria-pressed", String(item === button)));
+      closePopup(); updateStationSource(true);
+    }));
+    loadObservations();
+
+    async function loadObservations() {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15_000);
+      try {
+        const response = await fetch(API_URL, { cache: "no-store", signal: controller.signal });
+        if (!response.ok) throw new Error(`normalized endpoint returned ${response.status}`);
+        const payload = await response.json();
+        if (!Array.isArray(payload?.stations) || !payload?.network) throw new Error("normalized endpoint returned an unexpected response");
+        state.payload = payload; updateNetworkSummary(); updateStationSource(true);
+      } catch (error) {
+        const detail = error.name === "AbortError" ? "Request timed out." : error.message;
+        showNotice(`Station observations are unavailable. No sample readings are being substituted. ${detail}`);
+        document.getElementById("network-status").textContent = "Unavailable";
+      } finally { clearTimeout(timeout); }
+    }
+    function updateNetworkSummary() {
+      const stations = state.payload.stations;
+      const fresh = stations.filter(station => station.quality?.freshness === "fresh" && station.quality?.usable !== false).length;
+      const delayed = stations.filter(station => station.quality?.freshness === "delayed" && station.quality?.usable !== false).length;
+      const stale = stations.filter(station => station.quality?.freshness === "stale" || station.quality?.usable === false).length;
+      document.getElementById("network-status").textContent = `${fresh} fresh${delayed ? ` · ${delayed} delayed` : ""}${stale ? ` · ${stale} flagged` : ""}`;
+      document.getElementById("network-meta").textContent = `${stations.filter(station => station.observation).length} of ${state.payload.network.stationCount} stations reporting · normalized ${formatTime(state.payload.generatedAt)}. Drag to pan; right-drag or two-finger drag to rotate and tilt.`;
+      document.getElementById("terrain-notice").classList.remove("show");
+    }
+    function updateStationSource(fitMap) {
+      if (!state.mapLoaded || !state.payload) return;
+      const visible = state.payload.stations.filter(scopeMatches);
+      map.getSource("stations").setData({ type: "FeatureCollection", features: visible.filter(hasCoordinates).map(stationFeature) });
+      if (fitMap && visible.some(hasCoordinates)) fitVisibleStations(visible.filter(hasCoordinates));
+    }
+    function stationFeature(station) {
+      const qualityState = stationQualityState(station);
+      const value = metricValue(station, state.metric);
+      return { type: "Feature", geometry: { type: "Point", coordinates: [station.location.longitude,station.location.latitude] }, properties: {
+        stationId: station.id, qualityState, color: colorFor(value,qualityState), opacity: qualityState === "stale" ? .66 : qualityState === "unavailable" ? .55 : .96,
+        strokeOpacity: qualityState === "unavailable" ? .72 : .98, shortValue: value == null ? "—" : formatMetric(value,state.metric)
+      }};
+    }
+    function openStationPopup(station, lngLat) {
+      closePopup();
+      const observation = station.observation;
+      const qualityState = stationQualityState(station);
+      const age = finite(station.quality?.ageMinutes);
+      const metric = metrics[state.metric];
+      const value = metricValue(station,state.metric);
+      const flags = station.quality?.flags?.length ? station.quality.flags.map(humanizeFlag).join(", ") : null;
+      const qualityCopy = qualityState === "unavailable" ? station.unavailableReason || "Observation unavailable."
+        : qualityState === "stale" ? "Stale or degraded; shown for transparency and not treated as a current usable reading."
+        : qualityState === "incomplete" ? `${metric.label} is unavailable for this station. Other reported fields remain visible.${flags ? ` Flags: ${flags}.` : ""}`
+        : `${capitalize(station.quality?.freshness || "unknown")} observation${flags ? ` · Flags: ${flags}` : ""}.`;
+      const html = `<article class="station-popup">
+        <header class="popup-head"><span class="popup-provider">${escapeHtml(providerLabels[station.provider] || station.provider || "Unknown provider")}</span><h2>${escapeHtml(station.name)}</h2><p>${escapeHtml(station.area)} · ${formatNumber(station.elevationFt,0)} ft</p></header>
+        <div class="popup-reading"><strong>${value == null ? "—" : escapeHtml(formatMetric(value,state.metric))}</strong><span>${escapeHtml(metric.label)}</span></div>
+        <div class="popup-grid">${popupFact("Temperature",formatObservation(observation?.temperatureF,"°F",1))}${popupFact("Dew point",formatObservation(observation?.dewPointF,"°F",1))}${popupFact("Wind",windSummary(observation))}${popupFact("Rain rate",formatObservation(observation?.precipitationRateInHr," in/hr",2))}${popupFact("Rain today",formatObservation(observation?.precipitationTodayIn," in",2))}${popupFact("Rain 24 hours",formatObservation(observation?.precipitation24HourIn," in",2))}${popupFact("Observed",station.observation?.observedAt ? formatTime(station.observation.observedAt,true) : "Timestamp unavailable")}${popupFact("Update age",age == null ? "Unavailable" : age < 1 ? "Less than 1 minute" : `${Math.round(age)} minutes`)}${popupFact("Elevation",`${formatNumber(station.elevationFt,0)} ft`)}${popupFact("Coordinates",`${station.location.latitude}, ${station.location.longitude} · ${station.location.precision}`)}${popupFact("Station",station.providerStationId || "Unavailable")}</div>
+        <p class="popup-quality ${qualityState}">${escapeHtml(qualityCopy)}</p></article>`;
+      state.popup = new maplibregl.Popup({ closeButton: true, closeOnClick: true, offset: 12, maxWidth: "360px" }).setLngLat(lngLat).setHTML(html).addTo(map);
+    }
+    function stationQualityState(station) {
+      if (!station.observation) return "unavailable";
+      if (station.quality?.freshness === "stale" || station.status === "degraded" || station.quality?.usable === false) return "stale";
+      if (metricValue(station,state.metric) == null) return "incomplete";
+      return station.quality?.freshness === "delayed" ? "delayed" : "fresh";
+    }
+    function metricValue(station, metric) { return finite(station.observation?.[metric]); }
+    function scopeMatches(station) { return state.scope === "all" || (station.scope || "core") === state.scope; }
+    function hasCoordinates(station) { return finite(station.location?.latitude) != null && finite(station.location?.longitude) != null; }
+    function emptyFeatureCollection() { return { type: "FeatureCollection", features: [] }; }
+    function colorFor(value, qualityState) {
+      if (qualityState === "unavailable" || qualityState === "incomplete" || value == null) return "#20283a";
+      if (qualityState === "stale") return "#a9b7c6";
+      const stops = metrics[state.metric].stops;
+      if (value <= stops[0]) return stops[1];
+      for (let index = 2; index < stops.length; index += 2) if (value <= stops[index]) return mixHex(stops[index - 1],stops[index + 1],(value - stops[index - 2]) / (stops[index] - stops[index - 2] || 1));
+      return stops.at(-1);
+    }
+    function fitVisibleStations(stations) {
+      if (state.scope === "core") { map.easeTo({ ...ASHEVILLE_VIEW, duration: 700 }); return; }
+      const bounds = new maplibregl.LngLatBounds();
+      stations.forEach(station => bounds.extend([station.location.longitude,station.location.latitude]));
+      map.fitBounds(bounds,{ padding: { top: 100, right: 70, bottom: 90, left: 70 }, pitch: state.scope === "all" ? 48 : 55, bearing: -18, maxZoom: 11.2, duration: 700 });
+    }
+    function closePopup() { if (state.popup) state.popup.remove(); state.popup = null; }
+    function showNotice(message) { const notice = document.getElementById("terrain-notice"); notice.textContent = message; notice.classList.add("show"); }
+    function finite(value) { return value == null || value === "" ? null : Number.isFinite(Number(value)) ? Number(value) : null; }
+    function formatMetric(value, metricName) { const metric = metrics[metricName]; return `${formatNumber(value,metric.digits)}${metric.unit}`; }
+    function formatObservation(value, unit, digits) { const number = finite(value); return number == null ? "Unavailable" : `${formatNumber(number,digits)}${unit}`; }
+    function formatNumber(value, digits) { const number = finite(value); return number == null ? "—" : number.toLocaleString("en-US",{ minimumFractionDigits: digits, maximumFractionDigits: digits }); }
+    function formatTime(value, withDate = false) { const date = new Date(value); if (!Number.isFinite(date.getTime())) return "Timestamp unavailable"; return new Intl.DateTimeFormat("en-US",withDate ? { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" } : { hour: "numeric", minute: "2-digit", timeZoneName: "short" }).format(date); }
+    function windSummary(observation) { const speed = finite(observation?.windMph); if (speed == null) return "Unavailable"; const direction = finite(observation?.windDirectionDeg); const gust = finite(observation?.windGustMph); return `${formatNumber(speed,1)} mph${direction == null ? "" : ` from ${Math.round(direction)}°`}${gust == null ? "" : ` · gust ${formatNumber(gust,1)}`}`; }
+    function popupFact(label, value) { return `<div class="popup-fact"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`; }
+    function humanizeFlag(flag) { return String(flag).replaceAll("_"," "); }
+    function capitalize(value) { return String(value).charAt(0).toUpperCase() + String(value).slice(1); }
+    function escapeHtml(value) { return String(value ?? "").replace(/[&<>'"]/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", "\"": "&quot;" }[character])); }
+    function mixHex(a, b, ratio) { const parse = hex => hex.match(/[a-f\d]{2}/gi).map(value => parseInt(value,16)); const start = parse(a); const end = parse(b); return `rgb(${start.map((value,index) => Math.round(value + (end[index] - value) * Math.max(0,Math.min(1,ratio)))).join(",")})`; }
+  </script>
+</body>
+</html>

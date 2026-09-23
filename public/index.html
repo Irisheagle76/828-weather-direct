@@ -400,7 +400,8 @@
     .pulse-nav-badge[hidden],
     .pulse-fresh-badge[hidden],
     .pulse-alert-strip[hidden],
-    .pulse-alert-thumbnail[hidden] {
+    .pulse-alert-thumbnail[hidden],
+    .pulse-card-lite[hidden] {
       display: none;
     }
 
@@ -570,6 +571,10 @@
       gap: 22px;
     }
 
+    #active-alerts:empty {
+      display: none;
+    }
+
     .feelscore-inner > *,
     .sky-home-grid > *,
     .content-grid > *,
@@ -684,6 +689,56 @@
 
     .feel-panel .fs-temp-markers {
       display: none;
+    }
+
+    @media (min-width: 561px) {
+      .feel-panel {
+        align-content: stretch;
+        grid-template-rows: auto auto auto minmax(0, 1fr);
+      }
+
+      .feel-panel .fs-temp-markers {
+        display: grid;
+        grid-template-rows: auto repeat(3, minmax(58px, 1fr)) auto;
+        margin-top: 2px;
+      }
+    }
+
+    .fs-temp-title {
+      color: rgba(255, 253, 248, 0.68);
+      font-size: 0.72rem;
+      font-weight: 950;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .fs-temp-mobile-toggle {
+      display: none;
+    }
+
+    .fs-temp-context {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-top: 2px;
+      padding: 11px 12px;
+      border: 1px solid rgba(255, 207, 99, 0.28);
+      border-radius: 11px;
+      color: rgba(255, 253, 248, 0.9);
+      background: rgba(255, 207, 99, 0.1);
+      font-size: 0.8rem;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+
+    .fs-temp-context:empty {
+      display: none;
+    }
+
+    .fs-temp-context-emoji {
+      flex: 0 0 auto;
+      font-size: 1.15rem;
+      line-height: 1;
     }
 
     .feel-panel .fs-bullets {
@@ -900,6 +955,7 @@
     }
 
     .sky-home-copy {
+      container-type: inline-size;
       display: grid;
       align-content: center;
       gap: 13px;
@@ -930,8 +986,10 @@
       color: var(--ink);
       font-family: Georgia, "Times New Roman", serif;
       font-size: clamp(1.9rem, 4.7vw, 3.3rem);
+      font-size: clamp(1.9rem, 12cqw, 3.3rem);
       line-height: 0.98;
       letter-spacing: 0;
+      overflow-wrap: anywhere;
     }
 
     .sky-home-detail {
@@ -1375,7 +1433,7 @@
 
     .hour-card {
       min-height: 116px;
-      padding: 12px 8px;
+      padding: 10px 7px;
       border: 1px solid rgba(120, 149, 181, 0.24);
       border-radius: 14px;
       background:
@@ -1404,7 +1462,7 @@
       justify-content: center;
       width: 34px;
       height: 30px;
-      margin: 9px auto 8px;
+      margin: 5px auto 3px;
       border-radius: 999px;
       font-size: 1.45rem;
       line-height: 1;
@@ -1456,6 +1514,7 @@
 
     .hour-values {
       display: grid;
+      justify-items: center;
       gap: 5px;
     }
 
@@ -1471,8 +1530,29 @@
       text-shadow: 0 1px 0 rgba(255, 255, 255, 0.9);
     }
 
-    .hour-temp-value {
+    .hour-card .hour-temp-value {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 5px;
       color: #f57d23;
+      font-size: 1rem;
+      line-height: 1;
+    }
+
+    .hour-card .hour-temp-value em {
+      color: var(--muted);
+      font-size: 0.58rem;
+      font-style: normal;
+      font-weight: 950;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .hour-card .hour-temp-value strong {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: clamp(1.5rem, 3vw, 1.72rem);
+      font-weight: 900;
+      letter-spacing: -0.035em;
     }
 
     .hour-card .temp-cool {
@@ -1497,21 +1577,29 @@
 
     .hour-card .hour-fs-value {
       color: #1462c8;
-      margin-top: 2px;
-      font-size: 1.12rem;
+      display: inline-flex;
+      width: fit-content;
+      min-height: 25px;
+      margin: 0 auto;
+      padding: 0 9px;
+      border: 1px solid currentColor;
+      border-radius: 999px;
+      background: rgba(20, 98, 200, 0.07);
+      font-size: 0.9rem;
       line-height: 1;
+      text-shadow: none;
     }
 
     .hour-card .hour-fs-value em {
       font-style: normal;
-      font-size: 0.74rem;
-      letter-spacing: 0.055em;
-      opacity: 0.94;
+      font-size: 0.58rem;
+      letter-spacing: 0.07em;
+      opacity: 0.9;
       text-transform: uppercase;
     }
 
     .hour-card .hour-fs-value strong {
-      font-size: 1.12em;
+      font-size: 1.05rem;
       font-weight: 950;
     }
 
@@ -1670,6 +1758,395 @@
       justify-content: flex-end;
       padding-top: 8px;
       border-top: 1px solid rgba(15, 76, 196, 0.12);
+    }
+
+    /* Rainfall context concept: uses the same visual language as Tomorrow. */
+    .rainfall-home-card {
+      position: relative;
+      overflow: hidden;
+      margin-top: 14px;
+      padding: clamp(18px, 2.5vw, 24px);
+      border: 1px solid rgba(15, 76, 196, 0.16);
+      border-top: 4px solid var(--orange);
+      border-right: 2px solid rgba(15, 76, 196, 0.35);
+      border-radius: 22px;
+      background:
+        radial-gradient(circle at 88% 10%, rgba(15, 76, 196, 0.18), transparent 30%),
+        radial-gradient(circle at 8% 88%, rgba(245, 125, 35, 0.12), transparent 30%),
+        linear-gradient(135deg, #fffdf8 0%, #fff5ec 46%, #eef5ff 100%);
+      box-shadow: var(--shadow);
+    }
+
+    .rainfall-home-card::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 7px;
+      background: linear-gradient(180deg, var(--orange), var(--blue));
+      opacity: 0.9;
+    }
+
+    .rainfall-home-card > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .rainfall-home-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .rainfall-home-kicker-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .rainfall-sample-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 0 8px;
+      border: 1px solid rgba(15, 76, 196, 0.14);
+      border-radius: 999px;
+      color: var(--blue-dark);
+      background: rgba(255, 253, 248, 0.72);
+      font-size: 0.67rem;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .rainfall-home-mark {
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      min-width: 64px;
+      min-height: 64px;
+      border-radius: 50%;
+      color: var(--white);
+      background: linear-gradient(135deg, var(--blue), #08318b);
+      font-size: 1.08rem;
+      font-weight: 950;
+      text-transform: uppercase;
+      box-shadow: 0 12px 24px rgba(15, 76, 196, 0.22);
+    }
+
+    .rainfall-home-card h2 {
+      max-width: 900px;
+      margin: 8px 0 7px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.8rem, 3.4vw, 2.7rem);
+      line-height: 1.04;
+      letter-spacing: 0;
+    }
+
+    .rainfall-home-summary {
+      max-width: 900px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
+
+    .rainfall-home-signals {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin: 13px 0 10px;
+    }
+
+    .rainfall-home-signal {
+      min-height: 72px;
+      padding: 10px 12px;
+      border: 1px solid rgba(15, 76, 196, 0.12);
+      border-radius: 14px;
+      background: rgba(255, 253, 248, 0.72);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+
+    .rainfall-home-signal strong {
+      display: block;
+      color: var(--blue);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.55rem, 3vw, 2rem);
+      line-height: 0.9;
+    }
+
+    .rainfall-home-signal.dry strong {
+      color: var(--orange);
+    }
+
+    .rainfall-home-signal span,
+    .rainfall-home-signal small {
+      display: block;
+      color: var(--muted);
+      font-weight: 850;
+    }
+
+    .rainfall-home-signal span {
+      margin-top: 6px;
+      font-size: 0.71rem;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .rainfall-home-signal small {
+      margin-top: 2px;
+      font-size: 0.74rem;
+    }
+
+    .rainfall-home-charts {
+      display: grid;
+      grid-template-columns: minmax(250px, 0.78fr) minmax(360px, 1.22fr);
+      gap: 10px;
+    }
+
+    .rainfall-chart-panel {
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid rgba(15, 76, 196, 0.1);
+      border-radius: 14px;
+    }
+
+    .rainfall-percent-panel {
+      background: rgba(15, 76, 196, 0.075);
+    }
+
+    .rainfall-pace-panel {
+      background: rgba(245, 125, 35, 0.075);
+    }
+
+    .rainfall-chart-title {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 5px 10px;
+      margin: 0 0 10px;
+      color: var(--blue-dark);
+      font-size: 0.88rem;
+      font-weight: 950;
+    }
+
+    .rainfall-chart-title small {
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+
+    .rainfall-percent-bars {
+      position: relative;
+      display: grid;
+      gap: 10px;
+    }
+
+    .rainfall-normal-guide {
+      position: absolute;
+      z-index: 2;
+      top: -4px;
+      bottom: -4px;
+      left: calc(45px + (100% - 45px) * 0.625);
+      width: 0;
+      border-left: 1px dashed rgba(20, 32, 51, 0.68);
+      pointer-events: none;
+    }
+
+    .rainfall-percent-row {
+      display: grid;
+      grid-template-columns: 37px minmax(0, 1fr);
+      gap: 8px;
+      align-items: center;
+    }
+
+    .rainfall-percent-row b {
+      color: var(--blue-dark);
+      font-size: 0.82rem;
+      font-weight: 950;
+    }
+
+    .rainfall-percent-track {
+      height: 28px;
+      overflow: hidden;
+      border-radius: 7px;
+      background: rgba(15, 76, 196, 0.14);
+    }
+
+    .rainfall-percent-fill {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      height: 100%;
+      padding-right: 7px;
+      color: var(--white);
+      background: var(--blue);
+      font-size: 0.76rem;
+      font-weight: 950;
+    }
+
+    .rainfall-percent-row.dry .rainfall-percent-fill {
+      color: var(--ink);
+      background: #ff9d58;
+    }
+
+    .rainfall-pace-legend {
+      display: inline-flex;
+      gap: 11px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+
+    .rainfall-pace-legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .rainfall-pace-legend i {
+      width: 14px;
+      height: 3px;
+      background: var(--blue);
+    }
+
+    .rainfall-pace-legend .normal i {
+      background: var(--orange);
+    }
+
+    .rainfall-pace-shell {
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr);
+      gap: 5px;
+    }
+
+    .rainfall-pace-y-axis {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 1px 0 17px;
+      color: var(--muted);
+      font-size: 0.69rem;
+      font-weight: 750;
+      text-align: right;
+    }
+
+    .rainfall-pace-plot-wrap {
+      min-width: 0;
+    }
+
+    .rainfall-pace-plot {
+      position: relative;
+      height: 142px;
+      border: 1px solid rgba(15, 76, 196, 0.12);
+      background:
+        linear-gradient(to bottom,
+          transparent 24.5%, rgba(15, 76, 196, 0.1) 25%, transparent 25.5%,
+          transparent 49.5%, rgba(15, 76, 196, 0.1) 50%, transparent 50.5%,
+          transparent 74.5%, rgba(15, 76, 196, 0.1) 75%, transparent 75.5%);
+    }
+
+    .rainfall-pace-plot svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    .rainfall-pace-observed,
+    .rainfall-pace-normal {
+      fill: none;
+      vector-effect: non-scaling-stroke;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .rainfall-pace-observed {
+      stroke: var(--blue);
+      stroke-width: 3;
+    }
+
+    .rainfall-pace-normal {
+      stroke: var(--orange);
+      stroke-width: 2;
+    }
+
+    .rainfall-pace-end {
+      position: absolute;
+      right: 5px;
+      padding: 1px 4px;
+      border-radius: 5px;
+      background: rgba(255, 253, 248, 0.86);
+      font-size: 0.69rem;
+      font-weight: 950;
+      transform: translateY(-50%);
+    }
+
+    .rainfall-pace-end.normal {
+      top: 10%;
+      color: var(--orange);
+    }
+
+    .rainfall-pace-end.observed {
+      top: 31.4%;
+      color: var(--blue);
+    }
+
+    .rainfall-pace-x-axis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.67rem;
+      font-weight: 750;
+    }
+
+    .rainfall-pace-x-axis span:nth-child(2),
+    .rainfall-pace-x-axis span:nth-child(3) {
+      text-align: center;
+    }
+
+    .rainfall-pace-x-axis span:last-child {
+      text-align: right;
+    }
+
+    .rainfall-home-momentum {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(15, 76, 196, 0.12);
+      color: var(--blue-dark);
+      font-size: 0.86rem;
+      font-weight: 900;
+    }
+
+    .rainfall-home-arrow {
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      color: var(--white);
+      background: var(--blue);
+      font-size: 1rem;
+    }
+
+    .rainfall-home-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 12px;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.73rem;
+      font-weight: 750;
     }
 
     .forecast-pair {
@@ -1939,6 +2416,10 @@
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 14px;
+    }
+
+    .fold-tool-row.single-feature-row {
+      grid-template-columns: minmax(0, 1fr);
     }
 
     .fold-tool-card {
@@ -2974,6 +3455,18 @@
         height: 86px;
       }
 
+      .mock-header:has(.pulse-alert-strip:not([hidden])) {
+        padding-bottom: 0;
+      }
+
+      .mock-header:has(.pulse-alert-strip:not([hidden])) .mock-header-inner {
+        padding-bottom: 0;
+      }
+
+      .mock-header:has(.pulse-alert-strip:not([hidden])) + .preview-page {
+        padding-top: 12px;
+      }
+
       .forecast-invitation {
         grid-template-columns: auto minmax(0, 1fr);
         gap: 12px;
@@ -3108,9 +3601,46 @@
         letter-spacing: 0.05em;
       }
 
+      .rainfall-home-mark {
+        min-width: 52px;
+        min-height: 52px;
+        font-size: 0.88rem;
+      }
+
+      .rainfall-home-card h2 {
+        font-size: 1.48rem;
+      }
+
+      .rainfall-home-signals {
+        gap: 6px;
+      }
+
+      .rainfall-home-signal {
+        min-height: 64px;
+        padding: 9px 8px;
+      }
+
+      .rainfall-home-signal strong {
+        font-size: 1.45rem;
+      }
+
+      .rainfall-home-signal span {
+        font-size: 0.61rem;
+        letter-spacing: 0.04em;
+      }
+
+      .rainfall-home-signal small {
+        font-size: 0.65rem;
+      }
+
+      .rainfall-home-charts {
+        grid-template-columns: 1fr;
+      }
+
       .sky-home-copy,
       .next-six,
       .tomorrow-card,
+      .rainfall-home-card,
       .pulse-card-lite,
       .fold-tool-card {
         padding: 18px;
@@ -3303,7 +3833,626 @@
         justify-self: start;
       }
     }
+
+    /* Distinct, compact cards for the homepage's current-weather reads. */
+    .feelscore-mock {
+      overflow: visible;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .feelscore-inner {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      padding: 0;
+    }
+
+    .now-panel,
+    .feel-panel {
+      position: relative;
+      overflow: hidden;
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .now-panel {
+      padding: clamp(22px, 4vw, 34px);
+      border: 1px solid rgba(255, 191, 118, 0.24);
+      border-top: 4px solid var(--orange);
+      background:
+        radial-gradient(circle at 92% 5%, rgba(245, 125, 35, 0.3), transparent 32%),
+        linear-gradient(140deg, #101b33, #12336f);
+    }
+
+    .now-panel::before,
+    .feel-panel::before,
+    .sky-home-module::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 7px;
+      pointer-events: none;
+    }
+
+    .now-panel::before {
+      background: linear-gradient(180deg, var(--orange), #ffcf99);
+    }
+
+    .feel-panel {
+      padding: clamp(20px, 3vw, 28px);
+      border: 1px solid rgba(123, 211, 137, 0.3);
+      border-top: 4px solid #55cf87;
+      background:
+        radial-gradient(circle at 88% 0%, rgba(123, 211, 137, 0.25), transparent 34%),
+        linear-gradient(145deg, #082f3e, #0a4a50 56%, #0c5960);
+    }
+
+    .feel-panel::before {
+      background: linear-gradient(180deg, #7bd389, #2aa6a2);
+    }
+
+    .sky-home-module {
+      position: relative;
+      border-color: rgba(15, 76, 196, 0.2);
+      border-top: 4px solid #4c9ae8;
+      background:
+        radial-gradient(circle at 92% 2%, rgba(76, 154, 232, 0.2), transparent 32%),
+        linear-gradient(135deg, #f8fcff, #eaf4ff);
+    }
+
+    .sky-home-module::before {
+      z-index: 3;
+      background: linear-gradient(180deg, #4c9ae8, #0f4cc4);
+    }
+
+    .sky-home-copy {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(230, 243, 255, 0.78));
+    }
+
+    .sky-home-metric {
+      background: rgba(248, 252, 255, 0.96);
+    }
+
+    .radar-home-card {
+      position: relative;
+      overflow: hidden;
+      padding: clamp(18px, 3vw, 24px);
+      border: 1px solid rgba(116, 58, 108, 0.22);
+      border-top: 4px solid #ef7b45;
+      border-radius: 22px;
+      background:
+        radial-gradient(circle at 92% 4%, rgba(116, 58, 108, 0.17), transparent 34%),
+        radial-gradient(circle at 4% 94%, rgba(239, 123, 69, 0.2), transparent 32%),
+        linear-gradient(135deg, #fffaf2, #fff0e3 52%, #f6edf7);
+      box-shadow: var(--shadow);
+    }
+
+    .radar-home-card::before {
+      content: "";
+      position: absolute;
+      z-index: 3;
+      inset: 0 auto 0 0;
+      width: 7px;
+      background: linear-gradient(180deg, #ef7b45, #743a6c);
+      pointer-events: none;
+    }
+
+    .radar-home-card .kicker {
+      color: #b44e28;
+    }
+
+    .radar-home-card .kicker::before {
+      background: #b44e28;
+    }
+
+    .radar-home-copy h3 {
+      color: #38203c;
+    }
+
+    .radar-home-copy a {
+      color: #fffdf8;
+      background: #743a6c;
+      box-shadow: 0 10px 20px rgba(116, 58, 108, 0.2);
+    }
+
+    .radar-home-copy a:hover,
+    .radar-home-copy a:focus-visible {
+      color: #fffdf8;
+      background: #5d2d57;
+      transform: translateY(-1px);
+    }
+
+    .next-six {
+      border-top: 4px solid #4fa66a;
+      border-radius: 22px;
+    }
+
+    .next-six::after {
+      content: "";
+      position: absolute;
+      z-index: 3;
+      inset: 0 auto 0 0;
+      width: 7px;
+      background: linear-gradient(180deg, #4fa66a, #0f4cc4);
+      pointer-events: none;
+    }
+
+    .pulse-card-lite {
+      position: relative;
+      overflow: hidden;
+      border-color: rgba(245, 125, 35, 0.24);
+      border-top: 4px solid var(--orange);
+      border-radius: 22px;
+      background:
+        radial-gradient(circle at 92% 4%, rgba(245, 125, 35, 0.12), transparent 30%),
+        linear-gradient(135deg, #fffdf8, #fff8ee 58%, #f2f6ff);
+    }
+
+    .pulse-card-lite::before {
+      content: "";
+      position: absolute;
+      z-index: 3;
+      inset: 0 auto 0 0;
+      width: 7px;
+      background: linear-gradient(180deg, var(--orange), #0f4cc4);
+      pointer-events: none;
+    }
+
+    @media (max-width: 1000px) {
+      .feelscore-inner {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 14px;
+      }
+
+      .feel-panel {
+        border-left: 1px solid rgba(123, 211, 137, 0.3);
+        border-top: 4px solid #55cf87;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .preview-stack {
+        gap: 16px;
+      }
+
+      .feelscore-inner {
+        gap: 16px;
+        padding: 0;
+      }
+
+      .now-panel,
+      .feel-panel {
+        border-radius: 20px;
+      }
+
+      .now-panel {
+        gap: 11px;
+        padding: 18px 17px 17px 21px;
+      }
+
+      .now-kicker {
+        font-size: 0.7rem;
+      }
+
+      .now-temp-row {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 13px;
+        align-items: end;
+      }
+
+      .now-temp {
+        font-size: clamp(3.8rem, 18vw, 4.7rem);
+      }
+
+      .now-condition {
+        padding-bottom: 3px;
+        font-size: clamp(1.05rem, 5.2vw, 1.35rem);
+      }
+
+      .now-panel .fs-headline {
+        margin-top: 3px;
+        font-size: clamp(1.55rem, 7vw, 1.86rem);
+        line-height: 1.02;
+      }
+
+      .now-panel .fs-subhead {
+        margin-top: 2px;
+        font-size: 0.86rem;
+        line-height: 1.42;
+      }
+
+      .now-observation-grid {
+        gap: 7px;
+      }
+
+      .now-observation {
+        min-height: 59px;
+        padding: 10px;
+        border-radius: 12px;
+      }
+
+      .now-observation strong {
+        font-size: 1.42rem;
+      }
+
+      .now-observation span {
+        margin-top: 5px;
+        font-size: 0.62rem;
+      }
+
+      .feel-panel {
+        gap: 12px;
+        padding: 16px 16px 16px 20px;
+      }
+
+      .fs-topline {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 8px;
+      }
+
+      .feelscore-mark {
+        min-height: 38px;
+        padding: 0 12px;
+        font-size: 0.9rem;
+      }
+
+      .feelscore-mark::before {
+        width: 10px;
+        height: 10px;
+      }
+
+      .fs-info-button {
+        margin-left: auto;
+        white-space: nowrap;
+      }
+
+      .fs-row {
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: center;
+        gap: 15px;
+      }
+
+      .fs-score {
+        width: 112px;
+        font-size: 3.5rem;
+      }
+
+      .feel-panel .fs-bullets {
+        padding: 11px 12px;
+      }
+
+      .feel-panel .fs-bullets ul {
+        gap: 5px;
+        font-size: 0.84rem;
+      }
+
+      .feel-panel .fs-temp-mobile-toggle {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        min-height: 56px;
+        padding: 9px 12px;
+        border: 1px solid rgba(255, 253, 248, 0.18);
+        border-radius: 14px;
+        color: var(--white);
+        background: rgba(255, 253, 248, 0.09);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .fs-temp-mobile-copy {
+        display: grid;
+        gap: 3px;
+        min-width: 0;
+      }
+
+      .fs-temp-mobile-label {
+        color: rgba(255, 253, 248, 0.68);
+        font-size: 0.61rem;
+        font-weight: 950;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+      }
+
+      .fs-temp-mobile-summary {
+        overflow: hidden;
+        color: var(--gold);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 0.94rem;
+        font-weight: 900;
+        line-height: 1.15;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .fs-temp-mobile-chevron {
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border: 1px solid rgba(123, 211, 137, 0.3);
+        border-radius: 50%;
+        color: var(--mint);
+        background: rgba(123, 211, 137, 0.1);
+        font-size: 1rem;
+        font-weight: 900;
+        transition: transform 180ms ease;
+      }
+
+      .feel-panel .fs-temp-markers {
+        display: none;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      .feel-panel.temp-path-open .fs-temp-mobile-toggle {
+        border-radius: 14px 14px 8px 8px;
+      }
+
+      .feel-panel.temp-path-open .fs-temp-mobile-chevron {
+        transform: rotate(180deg);
+      }
+
+      .feel-panel.temp-path-open .fs-temp-markers {
+        display: grid;
+      }
+
+      .feel-panel .fs-temp-title {
+        display: none;
+      }
+
+      .feel-panel .fs-temp-marker {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 4px;
+        min-width: 0;
+        padding: 8px 10px 11px;
+        border-bottom: 0;
+      }
+
+      .feel-panel .fs-temp-marker + .fs-temp-marker {
+        border-left: 1px solid rgba(255, 253, 248, 0.14);
+      }
+
+      .feel-panel .fs-temp-marker span {
+        overflow: hidden;
+        font-size: 0.58rem;
+        line-height: 1.2;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .feel-panel .fs-temp-marker b {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 1.35rem;
+        line-height: 1;
+        text-align: left;
+      }
+
+      .feel-panel .fs-temp-context {
+        grid-column: 1 / -1;
+        margin: 0 9px 9px;
+        padding: 8px 9px;
+        font-size: 0.7rem;
+      }
+
+      .feel-panel .fs-temp-context-emoji {
+        font-size: 1rem;
+      }
+
+      .sky-home-module {
+        border-radius: 20px;
+      }
+
+      .sky-home-copy {
+        gap: 9px;
+        padding: 16px 16px 15px 20px;
+      }
+
+      .sky-home-headline {
+        font-size: clamp(1.5rem, 7vw, 1.82rem);
+      }
+
+      .sky-home-detail {
+        font-size: 0.86rem;
+        line-height: 1.4;
+      }
+
+      .sky-home-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 7px;
+      }
+
+      .sky-home-link {
+        min-height: 36px;
+        padding: 0 10px;
+        font-size: 0.76rem;
+        text-align: center;
+      }
+
+      .sky-home-note {
+        display: none;
+      }
+
+      .sky-home-photo,
+      .sky-home-photo img,
+      .sky-home-photo iframe {
+        min-height: 165px;
+      }
+
+      .sky-home-badge {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        gap: 6px;
+      }
+
+      .sky-home-pill {
+        min-height: 28px;
+        padding: 0 8px;
+        font-size: 0.67rem;
+      }
+
+      .sky-home-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .sky-home-metric {
+        min-height: 62px;
+        padding: 10px 13px;
+      }
+
+      .sky-home-metric strong {
+        font-size: 1.18rem;
+      }
+
+      .sky-home-metric span {
+        margin-top: 4px;
+        font-size: 0.62rem;
+      }
+
+      .radar-home-card {
+        gap: 14px;
+        padding: 14px 14px 16px 18px;
+        border-radius: 20px;
+      }
+
+      .radar-thumb,
+      .radar-thumb img {
+        min-height: 168px;
+      }
+
+      .radar-home-copy {
+        gap: 7px;
+        padding: 2px 2px 0;
+      }
+
+      .radar-home-copy h3 {
+        font-size: clamp(1.6rem, 7.5vw, 1.95rem);
+      }
+
+      .radar-home-copy p {
+        font-size: 0.86rem;
+        line-height: 1.42;
+      }
+
+      .radar-home-copy a {
+        min-height: 36px;
+        font-size: 0.82rem;
+      }
+
+      .next-six,
+      .pulse-card-lite {
+        border-radius: 20px;
+      }
+    }
+
+    /* Compact FEELSCORE status and what-to-wear guidance. */
+    .feel-panel .fs-row {
+      grid-template-columns: minmax(145px, 190px) minmax(0, 1fr);
+      align-items: center;
+      gap: clamp(15px, 2.5vw, 24px);
+    }
+
+    .fs-score {
+      width: 100%;
+      max-width: 190px;
+    }
+
+    .fs-word-block {
+      display: grid;
+      justify-items: start;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .fs-word-line {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+    }
+
+    .fs-state-emoji {
+      display: inline-grid;
+      flex: 0 0 auto;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      border: 1px solid rgba(123, 211, 137, 0.34);
+      border-radius: 50%;
+      background: rgba(123, 211, 137, 0.12);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      font-size: 1.35rem;
+      line-height: 1;
+    }
+
+    .fs-word {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.6rem, 3.2vw, 2.35rem);
+      font-style: italic;
+      font-weight: 900;
+      letter-spacing: -0.025em;
+      line-height: 0.95;
+      text-shadow: 0 2px 14px rgba(123, 211, 137, 0.16);
+    }
+
+    .fs-wear-cue {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 34px;
+      max-width: 100%;
+      padding: 0 11px;
+      border: 1px solid rgba(255, 253, 248, 0.2);
+      border-radius: 999px;
+      color: rgba(255, 253, 248, 0.9);
+      background: rgba(255, 253, 248, 0.1);
+      font-size: 0.78rem;
+      font-weight: 850;
+      line-height: 1.1;
+    }
+
+    .fs-wear-emoji {
+      flex: 0 0 auto;
+      font-size: 1rem;
+    }
+
+    @media (max-width: 560px) {
+      .feel-panel .fs-row {
+        grid-template-columns: 112px minmax(0, 1fr);
+      }
+
+      .fs-word {
+        font-size: clamp(1.35rem, 6.5vw, 1.65rem);
+      }
+
+      .fs-word-block {
+        gap: 8px;
+      }
+
+      .fs-state-emoji {
+        width: 32px;
+        height: 32px;
+        font-size: 1.1rem;
+      }
+
+      .fs-wear-cue {
+        min-height: 31px;
+        padding: 0 9px;
+        font-size: 0.71rem;
+      }
+    }
   </style>
+  <link rel="stylesheet" href="/css/brand-lockup.css?v=20260805-brand2" />
 </head>
 <body class="splash-active">
   <div class="home-splash" id="homeSplash" role="status" aria-live="polite" aria-label="Loading 828 Weather Direct">
@@ -3328,8 +4477,8 @@
     <div class="mock-header-inner">
       <div class="mock-brand-row">
         <div>
-          <div class="mock-brand-title">828 Weather Direct</div>
-          <div class="mock-brand-sub">Hyper-local Asheville forecast built by Tim Ballisty</div>
+          <div class="mock-brand-title site-brand-title"><span class="site-brand-828">828</span> Weather Direct</div>
+          <div class="mock-brand-sub site-brand-sub">Hyper-local Asheville forecast built by Tim Ballisty</div>
         </div>
         <button class="mock-notify" id="enableNotificationsBtn" type="button">Enable Notifications</button>
       </div>
@@ -3340,6 +4489,7 @@
         <a href="#pulse-preview">Weather Pulse <span class="pulse-nav-badge" id="pulseNavBadge" hidden>New</span></a>
         <a href="/radar.html">Radar &amp; Satellite</a>
         <a href="/asheville-microscope.html">Neighborhood Microscope</a>
+        <a href="/asheville-microscope-terrain.html">Station Terrain</a>
         <a href="/828-sunset-radiance.html">Sunset Radiance</a>
         <a href="/hiking.html">Hiking Guidance</a>
         <a href="/water.html">Water Conditions</a>
@@ -3411,7 +4561,7 @@
               </div>
             </div>
           </div>
-          <aside class="feel-panel" aria-label="FeelScore supporting notes">
+          <aside class="feel-panel" aria-label="Current FeelScore">
             <div class="fs-topline">
               <div class="section-label feelscore-mark">FeelScore</div>
               <button class="fs-info-button" id="feelScoreInfoButton" type="button" aria-haspopup="dialog">
@@ -3420,7 +4570,16 @@
             </div>
             <div class="fs-row">
               <div class="fs-score" id="liveFeelScoreValue">--</div>
-              <div class="fs-word" id="liveFeelScoreLabel">Updating</div>
+              <div class="fs-word-block">
+                <div class="fs-word-line">
+                  <span class="fs-state-emoji" id="liveFeelScoreEmoji" aria-hidden="true">⏳</span>
+                  <div class="fs-word" id="liveFeelScoreLabel">Updating</div>
+                </div>
+                <div class="fs-wear-cue" id="liveFeelScoreWear" aria-label="What to wear: checking conditions">
+                  <span class="fs-wear-emoji" id="liveFeelScoreWearEmoji" aria-hidden="true">👕</span>
+                  <span id="liveFeelScoreWearText">Checking layers</span>
+                </div>
+              </div>
             </div>
             <div class="fs-bullets">
               <ul id="liveFeelScoreBullets">
@@ -3429,7 +4588,15 @@
                 <li>Local observations syncing</li>
               </ul>
             </div>
-            <div class="fs-temp-markers" aria-label="Important temperature markers">
+            <button class="fs-temp-mobile-toggle" id="liveTempMobileToggle" type="button" aria-expanded="false" aria-controls="liveTempMarkers">
+              <span class="fs-temp-mobile-copy">
+                <span class="fs-temp-mobile-label">Temperature path</span>
+                <span class="fs-temp-mobile-summary" id="liveTempMobileSummary">Tap to view temperatures</span>
+              </span>
+              <span class="fs-temp-mobile-chevron" aria-hidden="true">⌄</span>
+            </button>
+            <div class="fs-temp-markers" id="liveTempMarkers" aria-label="Important temperature markers">
+              <div class="fs-temp-title">Temperature path</div>
               <div class="fs-temp-marker">
                 <span id="liveTempMarkerOneLabel">Now</span>
                 <b id="liveTempMarkerOne">--</b>
@@ -3442,6 +4609,7 @@
                 <span id="liveTempMarkerThreeLabel">9 PM</span>
                 <b id="liveTempMarkerThree">--</b>
               </div>
+              <div class="fs-temp-context" id="liveTempContext" aria-live="polite"></div>
             </div>
           </aside>
         </div>
@@ -3466,8 +4634,8 @@
           <div class="sky-home-photo">
             <iframe
               id="skyHomeStream"
-              src="https://www.youtube.com/embed/adtYAF5iU64?playsinline=1&rel=0&autoplay=1&mute=1"
-              title="Live East Asheville ENE sky camera"
+              src="https://www.youtube.com/embed/UxUU3Fc1vBw?playsinline=1&rel=0&autoplay=1&mute=1"
+              title="Live downtown Asheville western sky camera"
               loading="lazy"
               referrerpolicy="strict-origin-when-cross-origin"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -3482,15 +4650,15 @@
         <div class="sky-home-metrics">
           <div class="sky-home-metric">
             <strong id="skyHomeCloud">--</strong>
-            <span>Camera cloud cover</span>
+            <span id="skyHomeCloudLabel">Camera cloud cover</span>
           </div>
           <div class="sky-home-metric">
             <strong id="skyHomeLight">--</strong>
-            <span>Sunlight signal</span>
+            <span id="skyHomeLightLabel">Sunlight signal</span>
           </div>
           <div class="sky-home-metric">
             <strong id="skyHomeConfidence">--</strong>
-            <span>Sky read confidence</span>
+            <span id="skyHomeConfidenceLabel">Sky read confidence</span>
           </div>
           <div class="sky-home-metric">
             <strong id="skyHomeFeature">Now</strong>
@@ -3510,20 +4678,21 @@
             <div>Watch<span>Live</span></div>
           </a>
         </div>
-        <div class="radar-home-card is-hidden" id="radarHomeCard">
-          <button class="radar-thumb" id="radarThumbButton" type="button" aria-haspopup="dialog">
-            <img id="radarThumbImage" src="https://radar.weather.gov/ridge/standard/KGSP_loop.gif" alt="KGSP radar loop preview" loading="lazy" />
-            <span class="radar-thumb-label">Tap to enlarge</span>
-          </button>
-          <div class="radar-home-copy">
-            <div class="kicker">Radar check</div>
-            <h3>Asheville radar animation</h3>
-            <p>
-              A compact KGSP radar loop can live with the sky snapshot as the quick reality check:
-              what the sky looks like, plus whether showers are actually moving toward Asheville.
-            </p>
-            <a href="https://radar.weather.gov/ridge/standard/KGSP_loop.gif" target="_blank" rel="noopener">Open radar source</a>
-          </div>
+      </section>
+
+      <section class="radar-home-card is-hidden" id="radarHomeCard" aria-label="Asheville radar check">
+        <button class="radar-thumb" id="radarThumbButton" type="button" aria-haspopup="dialog">
+          <img id="radarThumbImage" src="https://radar.weather.gov/ridge/standard/KGSP_loop.gif" alt="KGSP radar loop preview" loading="lazy" />
+          <span class="radar-thumb-label">Tap to enlarge</span>
+        </button>
+        <div class="radar-home-copy">
+          <div class="kicker">Radar check</div>
+          <h3>Asheville radar animation</h3>
+          <p>
+            Radar gets its own quick reality check: whether showers are nearby and how they are
+            moving toward Asheville.
+          </p>
+          <a href="/radar.html">Track rain on Asheville radar</a>
         </div>
       </section>
 
@@ -3537,12 +4706,12 @@
             <div class="best-pill" id="nextSixBestScore">86</div>
           </div>
           <div class="hour-row" id="nextSixHourRow">
-            <div class="hour-card best"><b>11 AM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-mild">70°</span><span class="hour-fs-value fs-great"><em>FeelScore</em> <strong>86</strong></span></div></div>
-            <div class="hour-card"><b>12 PM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-mild">72°</span><span class="hour-fs-value fs-great"><em>FeelScore</em> <strong>84</strong></span></div></div>
-            <div class="hour-card"><b>1 PM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-warm">73°</span><span class="hour-fs-value fs-great"><em>FeelScore</em> <strong>82</strong></span></div></div>
-            <div class="hour-card"><b>2 PM</b><span class="icon sky-rain">🌧</span><div class="hour-values"><span class="hour-temp-value temp-warm">74°</span><span class="hour-fs-value fs-good"><em>FeelScore</em> <strong>76</strong></span></div></div>
-            <div class="hour-card"><b>3 PM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-hot">75°</span><span class="hour-fs-value fs-good"><em>FeelScore</em> <strong>78</strong></span></div></div>
-            <div class="hour-card"><b>4 PM</b><span class="icon sky-partly">⛅</span><div class="hour-values"><span class="hour-temp-value temp-hot">75°</span><span class="hour-fs-value fs-good"><em>FeelScore</em> <strong>80</strong></span></div></div>
+            <div class="hour-card best"><b>11 AM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-mild"><em>Temp</em><strong>70°</strong></span><span class="hour-fs-value fs-great"><em>FeelScore</em> <strong>86</strong></span></div></div>
+            <div class="hour-card"><b>12 PM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-mild"><em>Temp</em><strong>72°</strong></span><span class="hour-fs-value fs-great"><em>FeelScore</em> <strong>84</strong></span></div></div>
+            <div class="hour-card"><b>1 PM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-warm"><em>Temp</em><strong>73°</strong></span><span class="hour-fs-value fs-great"><em>FeelScore</em> <strong>82</strong></span></div></div>
+            <div class="hour-card"><b>2 PM</b><span class="icon sky-rain">🌧</span><div class="hour-values"><span class="hour-temp-value temp-warm"><em>Temp</em><strong>74°</strong></span><span class="hour-fs-value fs-good"><em>FeelScore</em> <strong>76</strong></span></div></div>
+            <div class="hour-card"><b>3 PM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-hot"><em>Temp</em><strong>75°</strong></span><span class="hour-fs-value fs-good"><em>FeelScore</em> <strong>78</strong></span></div></div>
+            <div class="hour-card"><b>4 PM</b><span class="icon sky-partly">⛅</span><div class="hour-values"><span class="hour-temp-value temp-hot"><em>Temp</em><strong>75°</strong></span><span class="hour-fs-value fs-good"><em>FeelScore</em> <strong>80</strong></span></div></div>
           </div>
           <p class="editorial" id="nextSixEditorial">
             The Next 6 remains the practical timing strip. The Current Sky card above gives it a visual proof point:
@@ -3609,7 +4778,7 @@
         </aside>
       </section>
 
-      <section class="pulse-card-lite" id="pulse-preview" aria-label="Weather Pulse">
+      <section class="pulse-card-lite" id="pulse-preview" aria-label="Weather Pulse" hidden>
         <div class="pulse-layout">
           <div>
             <div class="pulse-head"><span class="pulse-dot"></span>Live Weather Note</div>
@@ -3639,7 +4808,7 @@
         </div>
       </section>
 
-      <section class="fold-tool-row" aria-label="Homepage tool row">
+      <section class="fold-tool-row single-feature-row" aria-label="Homepage tool row">
         <article class="fold-tool-card update substack-feature" id="latestSubstackCard">
           <a class="substack-thumb-card" id="substackThumbLink" href="https://timothyballisty.substack.com/p/the-story-of-ashevilles-wild-spring" target="_blank" rel="noopener noreferrer" aria-label="Open latest 828 Weather Update on Substack">
             <img
@@ -3665,7 +4834,7 @@
           </div>
         </article>
 
-        <article class="fold-tool-card fire">
+        <article class="fold-tool-card fire" hidden>
           <div class="fire-card-head">
             <div>
               <div class="kicker">Drought & Fire Threat</div>
@@ -3845,6 +5014,98 @@
           </div>
         </article>
       </section>
+
+      <section class="rainfall-home-card" aria-labelledby="rainfallHomeHeadline" aria-busy="true">
+        <div class="rainfall-home-head">
+          <div>
+            <div class="rainfall-home-kicker-row">
+              <div class="kicker">Rainfall Context</div>
+            </div>
+            <h2 id="rainfallHomeHeadline">Loading Asheville's latest rainfall context.</h2>
+          </div>
+          <div class="rainfall-home-mark" aria-hidden="true">90d</div>
+        </div>
+
+        <p class="rainfall-home-summary" id="rainfallHomeSummary">
+          Comparing the latest 14, 30, and 90 complete days with Asheville's climate normal.
+        </p>
+
+        <div class="rainfall-home-signals" id="rainfallHomeSignals" aria-label="Rolling rainfall totals">
+          <div class="rainfall-home-signal" id="rainfallSignal14">
+            <strong id="rainfallObserved14">--</strong>
+            <span>14 days</span>
+            <small id="rainfallNormal14">Loading live data</small>
+          </div>
+          <div class="rainfall-home-signal" id="rainfallSignal30">
+            <strong id="rainfallObserved30">--</strong>
+            <span>30 days</span>
+            <small id="rainfallNormal30">Loading live data</small>
+          </div>
+          <div class="rainfall-home-signal" id="rainfallSignal90">
+            <strong id="rainfallObserved90">--</strong>
+            <span>90 days</span>
+            <small id="rainfallNormal90">Loading live data</small>
+          </div>
+        </div>
+
+        <div class="rainfall-home-charts">
+          <section class="rainfall-chart-panel rainfall-percent-panel" aria-labelledby="rainfallPercentTitle">
+            <h3 class="rainfall-chart-title" id="rainfallPercentTitle">
+              Percent of normal
+              <small>Dashed line = 100%</small>
+            </h3>
+            <div class="rainfall-percent-bars" id="rainfallPercentBars" role="img" aria-label="Rainfall percentages are loading">
+              <span class="rainfall-normal-guide" aria-hidden="true"></span>
+              <div class="rainfall-percent-row" id="rainfallPercentRow14">
+                <b>14d</b>
+                <div class="rainfall-percent-track"><span class="rainfall-percent-fill" id="rainfallPercent14" style="width: 0">--</span></div>
+              </div>
+              <div class="rainfall-percent-row" id="rainfallPercentRow30">
+                <b>30d</b>
+                <div class="rainfall-percent-track"><span class="rainfall-percent-fill" id="rainfallPercent30" style="width: 0">--</span></div>
+              </div>
+              <div class="rainfall-percent-row" id="rainfallPercentRow90">
+                <b>90d</b>
+                <div class="rainfall-percent-track"><span class="rainfall-percent-fill" id="rainfallPercent90" style="width: 0">--</span></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="rainfall-chart-panel rainfall-pace-panel" aria-labelledby="rainfallPaceTitle">
+            <h3 class="rainfall-chart-title" id="rainfallPaceTitle">
+              90-day rainfall pace
+              <span class="rainfall-pace-legend" aria-label="Chart legend">
+                <span><i aria-hidden="true"></i>Observed</span>
+                <span class="normal"><i aria-hidden="true"></i>Normal</span>
+              </span>
+            </h3>
+            <div class="rainfall-pace-shell">
+              <div class="rainfall-pace-y-axis" id="rainfallPaceAxis" aria-hidden="true"><span>--</span><span>--</span><span>--</span><span>0&quot;</span></div>
+              <div class="rainfall-pace-plot-wrap">
+                <div class="rainfall-pace-plot">
+                  <svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-labelledby="rainfallPaceSvgTitle rainfallPaceSvgDesc">
+                    <title id="rainfallPaceSvgTitle">Observed cumulative rainfall compared with normal over 90 days</title>
+                    <desc id="rainfallPaceSvgDesc">Live cumulative rainfall is loading.</desc>
+                    <polyline class="rainfall-pace-normal" id="rainfallPaceNormal" points="0,100"></polyline>
+                    <polyline class="rainfall-pace-observed" id="rainfallPaceObserved" points="0,100"></polyline>
+                  </svg>
+                  <span class="rainfall-pace-end normal" id="rainfallPaceNormalEnd">--</span>
+                  <span class="rainfall-pace-end observed" id="rainfallPaceObservedEnd">--</span>
+                </div>
+                <div class="rainfall-pace-x-axis" aria-hidden="true"><span>90d</span><span>60d</span><span>30d</span><span>Now</span></div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="rainfall-home-momentum">
+          <span class="rainfall-home-arrow" id="rainfallHomeArrow" aria-hidden="true">&middot;</span>
+          <span id="rainfallHomeMomentum">Loading the latest rainfall trend.</span>
+        </div>
+        <div class="rainfall-home-meta">
+          <span id="rainfallHomeUpdated">Last Updated: --/--/----</span>
+        </div>
+      </section>
     </div>
   </main>
 
@@ -3862,6 +5123,7 @@
         <a href="/forecast.html">Forecast</a>
         <a href="/radar.html">Radar &amp; Satellite</a>
         <a href="/asheville-microscope.html">Neighborhood Microscope</a>
+        <a href="/asheville-microscope-terrain.html">Station Terrain</a>
         <a href="/hiking.html">Hiking Guidance</a>
         <a href="/water.html">Water Conditions</a>
         <a href="/fall.html">Fall Explorer</a>
@@ -3964,6 +5226,7 @@
 
   <script type="module">
     import { calculateComfort } from "./js/intel/comfort.js";
+    import { buildTemperaturePath } from "./js/intel/temperature-path.js?v=20260806-temp-path";
     import {
       cleanHikingText,
       homeHikingBestBet,
@@ -3973,17 +5236,18 @@
       homeHikingUseCare
     } from "./js/hiking-home-card.js?v=20260607-narrative";
     import { buildHumanActionIntelFS } from "./js/intel/human-action-feelscore.js?v=20260526-rain-window";
-    import { buildSkyConditionRead } from "./js/intel/sky-read.js?v=20260705-directional-cameras";
+    import { buildSkyConditionRead, buildSkyObservationContext } from "./js/intel/sky-read.js?v=20260814-shared-sky-context";
     import {
       applyPrecipOverrideToNarrative,
       getCurrentPrecipOverride
-    } from "./js/intel/precip-override.js?v=20260628-precip-first";
+    } from "./js/intel/precip-override.js?v=20260711-radar-lightning";
     import { buildDuskSkyFallback, findTodaySolarTimes, getSkyTimePhase } from "./js/intel/sky-time.js?v=20260629-shared-sunset";
     import { loadAndRenderAlerts } from "./js/modules/renderAlerts.js";
     import { subscribeUserToPush } from "./js/notifications/subscribeClient.js?v=20260518-vapid-trim";
     import { getWaterPageInputs } from "./js/water/water-data.js?v=20260621-water";
     import { buildRiverIndex } from "./js/water/river-index.js?v=20260621-water";
     import { buildWaterfallIndex } from "./js/water/waterfall-index.js?v=20260621-water";
+    import { isPulseFresh, pulseExpiresAt } from "./js/pulse-freshness.js?v=20260908-three-hour-shelf-life";
 
     function clamp(value, min = 0, max = 1) {
       return Math.min(max, Math.max(min, value));
@@ -4162,6 +5426,7 @@
       url: PULSE_FALLBACK.mediaUrl,
       mediaType: PULSE_FALLBACK.mediaType
     };
+    let pulseExpirationTimer = null;
 
     function localTimeParts() {
       const parts = new Intl.DateTimeFormat("en-US", {
@@ -4274,18 +5539,8 @@
       return n > 1 ? n / 100 : n;
     }
 
-    function buildSkyWeatherContext(hour = null, current = null) {
-      if (!hour && !current) return null;
-      const solarSource = current || hour || {};
-      return {
-        cloudCover: normalizeProbabilityValue(hour?.cloudCover ?? hour?.cloud_cover ?? hour?.cloudcover),
-        humidity: normalizeProbabilityValue(hour?.relativeHumidity ?? hour?.relative_humidity ?? hour?.humidity ?? current?.relativeHumidity ?? current?.relative_humidity ?? current?.humidity),
-        precipProbability: normalizeProbabilityValue(hour?.precipProbability ?? hour?.precipitation_probability),
-        precipAmount: Number(hour?.precipAmount ?? hour?.precipitation ?? hour?.rain ?? current?.precipAmount ?? current?.precipitation ?? current?.precipRate ?? 0) || 0,
-        solarRadiation: Number(solarSource.solarRadiation ?? solarSource.solar_radiation ?? solarSource.solarWm2 ?? solarSource.solar),
-        uvIndex: Number(solarSource.uvIndex ?? solarSource.uv_index ?? solarSource.uv),
-        weatherCode: hour?.weatherCode ?? hour?.weather_code ?? current?.weatherCode ?? current?.weather_code ?? null
-      };
+    function buildSkyWeatherContext(hour = null, current = null, airQuality = null, radar = null) {
+      return buildSkyObservationContext({ hour, current, airQuality, radar });
     }
 
     function closestCurrentForecastHour(hourly = [], now = Date.now()) {
@@ -4668,6 +5923,7 @@
     }
 
     const FORECAST_UPDATE_STORAGE_KEY = "forecast:last-published";
+    const FORECAST_UPDATE_CHANNEL = "forecast-updates";
 
     function refreshHomeForecastSignalsWhenVisible() {
       if (document.visibilityState === "visible") {
@@ -4682,6 +5938,17 @@
         hydrateHomeForecastSignals();
       }
     });
+
+    try {
+      const forecastUpdateChannel = new BroadcastChannel(FORECAST_UPDATE_CHANNEL);
+      forecastUpdateChannel.addEventListener("message", (event) => {
+        if (event.data?.type === "forecast-published") {
+          hydrateHomeForecastSignals();
+        }
+      });
+    } catch {
+      // Storage and focus events cover browsers without BroadcastChannel.
+    }
 
     function renderHomeHikingCard(data = {}) {
       const guidance = data?.guidance || {};
@@ -4761,6 +6028,124 @@
         renderHomeWaterCard(await getWaterPageInputs());
       } catch (error) {
         console.warn("Homepage water module using fallback copy", error);
+      }
+    }
+
+    function rainfallWindow(data, days) {
+      return (Array.isArray(data?.windows) ? data.windows : [])
+        .find((item) => Number(item?.days) === days);
+    }
+
+    function rainfallInches(value) {
+      const amount = Number(value);
+      return Number.isFinite(amount) ? `${amount.toFixed(2)}\"` : "--";
+    }
+
+    function rainfallDate(value) {
+      const match = String(value || "").match(/^(\d{4})(\d{2})(\d{2})$/);
+      return match ? `${match[3]}/${match[2]}/${match[1]}` : "--/--/----";
+    }
+
+    function rainfallHeadline(w14, w30, w90) {
+      if (w14.percentOfNormal >= 115 && w90.percentOfNormal < 100) {
+        return "Recent rain is helping, but the 90-day deficit remains.";
+      }
+      if (w90.percentOfNormal >= 110) return "Asheville's 90-day rainfall is running wetter than normal.";
+      if (w90.percentOfNormal <= 75) return "Asheville remains well behind its normal 90-day rainfall pace.";
+      if (w90.percentOfNormal < 100) return "Asheville remains a little behind its normal 90-day rainfall pace.";
+      return "Asheville's 90-day rainfall is running close to normal.";
+    }
+
+    function renderRainfallContext(data) {
+      const w14 = rainfallWindow(data, 14);
+      const w30 = rainfallWindow(data, 30);
+      const w90 = rainfallWindow(data, 90);
+      if (![w14, w30, w90].every((item) => Number.isFinite(Number(item?.percentOfNormal)))) {
+        throw new Error("Rainfall response is incomplete");
+      }
+
+      const windows = [w14, w30, w90];
+      windows.forEach((item) => {
+        const days = Number(item.days);
+        const percent = Math.round(Number(item.percentOfNormal));
+        updateText(`#rainfallObserved${days}`, rainfallInches(item.observed));
+        updateText(`#rainfallNormal${days}`, `${percent}% of ${rainfallInches(item.normal)} normal`);
+        const signal = document.querySelector(`#rainfallSignal${days}`);
+        const row = document.querySelector(`#rainfallPercentRow${days}`);
+        signal?.classList.toggle("dry", percent < 100);
+        row?.classList.toggle("dry", percent < 100);
+        const fill = document.querySelector(`#rainfallPercent${days}`);
+        if (fill) {
+          fill.textContent = `${percent}%`;
+          fill.style.width = `${Math.max(10, Math.min(100, percent / 1.6))}%`;
+        }
+      });
+
+      const pace = Array.isArray(data?.pace) ? data.pace : [];
+      const maxValue = Math.max(1, ...pace.flatMap((point) => [Number(point.observed) || 0, Number(point.normal) || 0]));
+      const axisMax = Math.ceil((maxValue * 1.08) / 2) * 2;
+      const pointsFor = (key) => pace.map((point) => {
+        const x = Math.max(0, Math.min(100, (Number(point.elapsedDays) / 90) * 100));
+        const y = Math.max(3, Math.min(100, 100 - (Number(point[key]) / axisMax) * 94));
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      }).join(" ");
+      const normalLine = document.querySelector("#rainfallPaceNormal");
+      const observedLine = document.querySelector("#rainfallPaceObserved");
+      if (normalLine) normalLine.setAttribute("points", pointsFor("normal"));
+      if (observedLine) observedLine.setAttribute("points", pointsFor("observed"));
+
+      const axisLabels = document.querySelectorAll("#rainfallPaceAxis span");
+      const axisValues = [axisMax, axisMax * 2 / 3, axisMax / 3, 0];
+      axisLabels.forEach((label, index) => {
+        label.textContent = `${axisValues[index].toFixed(axisValues[index] % 1 ? 1 : 0)}\"`;
+      });
+
+      const normalEnd = Number(w90.normal);
+      const observedEnd = Number(w90.observed);
+      updateText("#rainfallPaceNormalEnd", rainfallInches(normalEnd));
+      updateText("#rainfallPaceObservedEnd", rainfallInches(observedEnd));
+      const normalEndLabel = document.querySelector("#rainfallPaceNormalEnd");
+      const observedEndLabel = document.querySelector("#rainfallPaceObservedEnd");
+      const normalTop = Math.max(3, 100 - (normalEnd / axisMax) * 94);
+      const observedTop = Math.max(3, 100 - (observedEnd / axisMax) * 94);
+      if (normalEndLabel) normalEndLabel.style.top = `${normalTop}%`;
+      if (observedEndLabel) {
+        observedEndLabel.style.top = `${observedTop}%`;
+        observedEndLabel.style.right = Math.abs(normalTop - observedTop) < 8 ? "58px" : "5px";
+      }
+
+      const pct14 = Number(w14.percentOfNormal);
+      const pct30 = Number(w30.percentOfNormal);
+      const pct90 = Number(w90.percentOfNormal);
+      const balance90 = observedEnd - normalEnd;
+      const direction = pct14 > pct30 + 8 ? "improving" : pct14 < pct30 - 8 ? "slowing" : "holding steady";
+      const balanceText = Math.abs(balance90) < 0.05
+        ? "right at normal"
+        : `${Math.abs(balance90).toFixed(1)}\" ${balance90 < 0 ? "below" : "above"} normal`;
+
+      updateText("#rainfallHomeHeadline", rainfallHeadline(w14, w30, w90));
+      updateText(
+        "#rainfallHomeSummary",
+        `The past 14 days are at ${Math.round(pct14)}% of normal, compared with ${Math.round(pct30)}% over 30 days and ${Math.round(pct90)}% over 90 days.`
+      );
+      updateText("#rainfallHomeMomentum", `Short-term rainfall is ${direction}; the 90-day balance is ${balanceText}.`);
+      updateText("#rainfallHomeArrow", direction === "improving" ? "↗" : direction === "slowing" ? "↘" : "→");
+      updateText("#rainfallHomeUpdated", `Last Updated: ${rainfallDate(data.updatedDate)}`);
+      const bars = document.querySelector("#rainfallPercentBars");
+      if (bars) bars.setAttribute("aria-label", `14 days is ${Math.round(pct14)} percent of normal, 30 days is ${Math.round(pct30)} percent, and 90 days is ${Math.round(pct90)} percent`);
+      updateText("#rainfallPaceSvgDesc", `Observed rainfall finishes at ${rainfallInches(observedEnd)} versus ${rainfallInches(normalEnd)} normal.`);
+      document.querySelector(".rainfall-home-card")?.setAttribute("aria-busy", "false");
+    }
+
+    async function hydrateRainfallContext() {
+      try {
+        renderRainfallContext(await fetchRouteJson("rainfall-context"));
+      } catch (error) {
+        console.warn("Rainfall context unavailable", error);
+        updateText("#rainfallHomeHeadline", "Live rainfall context is temporarily unavailable.");
+        updateText("#rainfallHomeSummary", "The next update will retry Asheville's observed rainfall and climate-normal comparison.");
+        updateText("#rainfallHomeMomentum", "Live totals could not be verified, so no sample values are being shown.");
+        document.querySelector(".rainfall-home-card")?.setAttribute("aria-busy", "false");
       }
     }
 
@@ -4869,15 +6254,34 @@
       return "What I'm watching in the weather right now.";
     }
 
-    function isPulseFresh(value) {
-      const stamp = value ? new Date(value).getTime() : NaN;
-      if (!Number.isFinite(stamp)) return false;
-      const age = Date.now() - stamp;
-      return age >= -5 * 60 * 1000 && age <= 6 * 60 * 60 * 1000;
-    }
-
     function pulseUpdatedAt(pulse = {}) {
       return pulse.editedAt || pulse.timestamp || null;
+    }
+
+    function setPulsePlacementVisible(visible) {
+      const card = document.querySelector("#pulse-preview");
+      const strip = document.querySelector("#pulseAlertStrip");
+      const navBadge = document.querySelector("#pulseNavBadge");
+      const freshBadge = document.querySelector("#pulseFreshBadge");
+      const thumbnail = document.querySelector("#pulseAlertThumbnail");
+
+      if (card) card.hidden = !visible;
+      if (!visible && strip) strip.hidden = true;
+      if (!visible && navBadge) navBadge.hidden = true;
+      if (!visible && freshBadge) freshBadge.hidden = true;
+      if (!visible && thumbnail) thumbnail.hidden = true;
+    }
+
+    function schedulePulseExpiration(updatedAt) {
+      if (pulseExpirationTimer) clearTimeout(pulseExpirationTimer);
+
+      const expiresAt = pulseExpiresAt(updatedAt);
+      if (!Number.isFinite(expiresAt)) return;
+
+      pulseExpirationTimer = setTimeout(() => {
+        setPulsePlacementVisible(false);
+        pulseExpirationTimer = null;
+      }, Math.max(0, expiresAt - Date.now()));
     }
 
     function pulseThumbnailUrl(url = "", mediaType = "") {
@@ -4968,7 +6372,16 @@
     }
 
     function renderPulsePreview(pulse) {
-      if (!pulse || pulse.fallback) return;
+      const updatedAt = pulseUpdatedAt(pulse);
+      if (!pulse || pulse.fallback || !isPulseFresh(updatedAt)) {
+        if (pulseExpirationTimer) clearTimeout(pulseExpirationTimer);
+        pulseExpirationTimer = null;
+        setPulsePlacementVisible(false);
+        return;
+      }
+
+      setPulsePlacementVisible(true);
+      schedulePulseExpiration(updatedAt);
 
       const text = pulseExcerpt(pulse.text || pulse.body || pulse.content || "");
       const mediaUrl = pulse.mediaUrl || pulse.image || "";
@@ -4980,7 +6393,7 @@
       };
 
       document.querySelector("#pulsePreviewTitle").textContent = pulseHeadline(pulse);
-      renderPulsePublished(pulseUpdatedAt(pulse));
+      renderPulsePublished(updatedAt);
       if (text) {
         document.querySelector("#pulsePreviewText").textContent = text;
       }
@@ -5130,6 +6543,54 @@
       if (score >= 55) return "Noticeable";
       if (score >= 40) return "Challenging";
       return "Harsh";
+    }
+
+    function feelScoreStateEmoji(score, temperatureF = null) {
+      if (!Number.isFinite(score)) return "⏳";
+      if (score >= 90) return "😌";
+      if (score >= 80) return "😎";
+      if (score >= 70) return "🙂";
+      if (score >= 55) return "🤔";
+      if (score >= 40) return "😬";
+      if (Number.isFinite(temperatureF) && temperatureF >= 82) return "🥵";
+      if (Number.isFinite(temperatureF) && temperatureF <= 45) return "🥶";
+      return "😣";
+    }
+
+    function feelScoreWearCue(hour = {}, precipOverride = null, score = null) {
+      const temperatureF = Number(hour?.temperatureF);
+      const windMph = Number(hour?.windSpeed);
+      const rainChance = normalizeProbabilityValue(hour?.precipProbability);
+      const precipAmount = Number(hour?.precipAmount);
+      const uv = Number(hour?.uvIndex ?? hour?.uv ?? hour?.uv_index);
+      const rainMode = String(precipOverride?.mode || "").toLowerCase();
+      const rainNearby = precipOverride?.active && ["active", "nearby"].includes(rainMode);
+
+      if (rainNearby || precipAmount >= 0.005 || (Number.isFinite(rainChance) && rainChance >= 0.5)) {
+        return { emoji: "☔", text: "Take a rain layer" };
+      }
+      if (Number.isFinite(temperatureF) && temperatureF <= 40) {
+        return { emoji: "🧥", text: "Coat weather" };
+      }
+      if (Number.isFinite(temperatureF) && temperatureF <= 55) {
+        return { emoji: "🧥", text: "Bring a light jacket" };
+      }
+      if (Number.isFinite(windMph) && windMph >= 18 && Number.isFinite(temperatureF) && temperatureF < 68) {
+        return { emoji: "🧥", text: "Add a wind layer" };
+      }
+      if (Number.isFinite(temperatureF) && temperatureF >= 88) {
+        return { emoji: "👕", text: "Dress light" };
+      }
+      if (Number.isFinite(temperatureF) && temperatureF >= 78) {
+        return { emoji: "👕", text: "Light, breathable layers" };
+      }
+      if (Number.isFinite(uv) && uv >= 6) {
+        return { emoji: "🕶️", text: "Add sun protection" };
+      }
+      if (Number.isFinite(score) && score >= 80) {
+        return { emoji: "👕", text: "Easy everyday layers" };
+      }
+      return { emoji: "👕", text: "Comfortable layers" };
     }
 
     function tempClass(temp) {
@@ -5318,33 +6779,6 @@
       return bullets.slice(0, 3);
     }
 
-    function nearestHour(hourly = [], localHour, dayOffset = 0, maxDistanceHours = 2) {
-      return hourly
-        .filter((hour) => sameLocalDay(hour.timestamp, dayOffset) && Number.isFinite(hour.temperatureF))
-        .map((hour) => {
-          const d = new Date(hour.timestamp);
-          const hourNumber = Number(new Intl.DateTimeFormat("en-US", {
-            hour: "numeric",
-            hour12: false,
-            timeZone: "America/New_York"
-          }).format(d));
-          return { ...hour, distance: Math.abs(hourNumber - localHour) };
-        })
-        .filter((hour) => hour.distance <= maxDistanceHours)
-        .sort((a, b) => a.distance - b.distance)[0];
-    }
-
-    function todayDaily(daily = []) {
-      return daily.find((day) => {
-        const ts = day.timestamp ?? day.time ?? day.date;
-        return Number.isFinite(ts) ? sameLocalDay(ts, 0) : sameLocalDay(new Date(ts).getTime(), 0);
-      }) || daily[0] || null;
-    }
-
-    function tempHourFromValue(value) {
-      return Number.isFinite(value) ? { temperatureF: value } : null;
-    }
-
     function formatPercent(value) {
       const n = Number(value);
       if (!Number.isFinite(n)) return "--";
@@ -5368,24 +6802,35 @@
       const payloadScore = normalizeScore100(feelscore.score);
       const fallbackScore = nearTermFeelScore(hourly, currentHour);
       const score = Number.isFinite(payloadScore) ? payloadScore : fallbackScore;
+      const currentDisplayTemp = Number(displayCurrentHour?.temperatureF ?? liveHour?.temperatureF);
       const scoreEl = document.querySelector("#liveFeelScoreValue");
       if (Number.isFinite(score)) {
         scoreEl.textContent = score;
         scoreEl.style.setProperty("--fs-progress", `${Math.max(0, Math.min(100, score))}%`);
         document.querySelector("#liveFeelScoreLabel").textContent = scoreLabel(score);
+        document.querySelector("#liveFeelScoreEmoji").textContent = feelScoreStateEmoji(score, currentDisplayTemp);
         document.querySelector(".modal-score-pill").textContent = `Right now: ${score} - ${scoreLabel(score)}`;
       } else {
         scoreEl.textContent = "--";
         scoreEl.style.setProperty("--fs-progress", "0%");
         document.querySelector("#liveFeelScoreLabel").textContent = "Updating";
+        document.querySelector("#liveFeelScoreEmoji").textContent = "⏳";
         document.querySelector(".modal-score-pill").textContent = "Right now: updating";
       }
 
-      const currentDisplayTemp = Number(displayCurrentHour?.temperatureF ?? liveHour?.temperatureF);
       if (Number.isFinite(currentDisplayTemp)) {
         setText("#heroCurrentTemp", `${Math.round(currentDisplayTemp)}°`);
         setText("#heroFeelsLike", `${Math.round(currentDisplayTemp)}°`);
       }
+
+      const wearCue = feelScoreWearCue({
+        ...(liveHour || {}),
+        temperatureF: currentDisplayTemp
+      }, precipOverride, score);
+      setText("#liveFeelScoreWearEmoji", wearCue.emoji);
+      setText("#liveFeelScoreWearText", wearCue.text);
+      document.querySelector("#liveFeelScoreWear")
+        ?.setAttribute("aria-label", `What to wear: ${wearCue.text}`);
 
       document.querySelector("#liveFeelScoreHeadline").textContent =
         feelscore.headline || "Reading the current comfort signal.";
@@ -5416,25 +6861,51 @@
           .join("");
       }
 
-      const day = todayDaily(daily);
-      renderTempMarker(
-        document.querySelector("#liveTempMarkerOneLabel"),
-        document.querySelector("#liveTempMarkerOne"),
-        "Now",
+      const temperaturePath = buildTemperaturePath(
+        hourly,
+        daily,
         displayCurrentHour || liveHour || hourly[0]
       );
-      renderTempMarker(
-        document.querySelector("#liveTempMarkerTwoLabel"),
-        document.querySelector("#liveTempMarkerTwo"),
-        "Mid-afternoon",
-        nearestHour(hourly, 15, 0, 2) || tempHourFromValue(day?.tempMax)
-      );
-      renderTempMarker(
-        document.querySelector("#liveTempMarkerThreeLabel"),
-        document.querySelector("#liveTempMarkerThree"),
-        "9 PM",
-        nearestHour(hourly, 21, 0, 2)
-      );
+      const markerEls = [
+        ["#liveTempMarkerOneLabel", "#liveTempMarkerOne"],
+        ["#liveTempMarkerTwoLabel", "#liveTempMarkerTwo"],
+        ["#liveTempMarkerThreeLabel", "#liveTempMarkerThree"]
+      ];
+      markerEls.forEach(([labelSelector, valueSelector], index) => {
+        const slot = temperaturePath.slots[index];
+        if (!slot) return;
+        renderTempMarker(
+          document.querySelector(labelSelector),
+          document.querySelector(valueSelector),
+          slot.label,
+          slot.hour
+        );
+      });
+
+      const mobileSummaryEl = document.querySelector("#liveTempMobileSummary");
+      if (mobileSummaryEl) {
+        const mobileTemps = temperaturePath.slots
+          .map((slot) => Number(slot?.hour?.temperatureF))
+          .filter(Number.isFinite)
+          .map((temperature) => `${Math.round(temperature)}°`);
+        mobileSummaryEl.textContent = mobileTemps.length
+          ? `${mobileTemps.join(" → ")}${temperaturePath.callout?.emoji ? ` · ${temperaturePath.callout.emoji}` : ""}`
+          : "Tap to view temperatures";
+      }
+
+      const contextEl = document.querySelector("#liveTempContext");
+      if (contextEl) {
+        contextEl.replaceChildren();
+        if (temperaturePath.callout) {
+          const emoji = document.createElement("span");
+          emoji.className = "fs-temp-context-emoji";
+          emoji.setAttribute("aria-hidden", "true");
+          emoji.textContent = temperaturePath.callout.emoji;
+          const text = document.createElement("span");
+          text.textContent = temperaturePath.callout.text;
+          contextEl.append(emoji, text);
+        }
+      }
     }
 
     function renderNextSix(hourly = []) {
@@ -5465,7 +6936,7 @@
             <b>${formatHour(hour.timestamp)}</b>
             <span class="icon ${iconClass(icon)}" title="${icon}">${iconGlyph(icon)}</span>
             <div class="hour-values">
-              <span class="hour-temp-value ${tempClass(temp)}">${temp}°</span>
+              <span class="hour-temp-value ${tempClass(temp)}"><em>Temp</em><strong>${temp}°</strong></span>
               <span class="hour-fs-value ${fsClass(score)}"><em>FeelScore</em> <strong>${Number.isFinite(score) ? score : "--"}</strong></span>
             </div>
           </div>
@@ -5545,7 +7016,10 @@
 
     async function hydrateLiveComfortModules() {
       try {
-        const weather = await fetchRouteJson("weather&type=hourly&lat=35.5951&lon=-82.5515");
+        const [weather, stormPayload] = await Promise.all([
+          fetchRouteJson("weather&type=hourly&lat=35.5951&lon=-82.5515"),
+          fetchRouteJson("storm/current", { cacheBust: false }).catch(() => null)
+        ]);
         const hourly = (Array.isArray(weather?.hourly) ? weather.hourly : [])
           .map(normalizeWeatherHour)
           .filter(Boolean)
@@ -5559,9 +7033,11 @@
         const displayCurrentHour = observationTempHour(weather);
         latestPrecipOverride = getCurrentPrecipOverride({
           current,
-          hourly
+          hourly,
+          radar: stormPayload?.radar,
+          lightningCount: stormPayload?.weather?.lightningCount
         });
-        latestSkyWeatherContext = buildSkyWeatherContext(closestCurrentForecastHour(hourly) || currentHour || hourly[0], current);
+        latestSkyWeatherContext = buildSkyWeatherContext(closestCurrentForecastHour(hourly) || currentHour || hourly[0], current, weather?.airQuality, stormPayload?.radar);
         updateRadarHomeSignalFromWeather({ ...weather, hourly });
 
         const human = buildHumanActionIntelFS({
@@ -5602,6 +7078,7 @@
           console.warn("Scheduled sky analysis unavailable; using live analyzer", scheduledError);
           data = await fetchRouteJson("sky/current", { cacheBust: false });
         }
+        const stormPayload = await stormPromise;
         let weatherContext = latestSkyWeatherContext;
         // Refresh the precipitation decision with every sky update so active-rain
         // wording expires promptly when Tempest returns to zero.
@@ -5615,9 +7092,11 @@
             const currentHour = normalizeCurrentConditions(weather?.current || weather?.current_conditions || null);
             latestPrecipOverride = getCurrentPrecipOverride({
               current: weather?.current || weather?.current_conditions || null,
-              hourly
+              hourly,
+              radar: stormPayload?.radar,
+              lightningCount: stormPayload?.weather?.lightningCount
             });
-            weatherContext = buildSkyWeatherContext(closestCurrentForecastHour(hourly) || currentHour || hourly[0], weather?.current || weather?.current_conditions || null);
+            weatherContext = buildSkyWeatherContext(closestCurrentForecastHour(hourly) || currentHour || hourly[0], weather?.current || weather?.current_conditions || null, weather?.airQuality, stormPayload?.radar);
             latestSkyWeatherContext = weatherContext;
             const solarTimes = findTodaySolarTimes(Array.isArray(weather?.daily) ? weather.daily : []);
             latestSunriseAt = solarTimes.sunriseAt;
@@ -5625,6 +7104,9 @@
           } catch (weatherError) {
             console.warn("Sky module weather cross-check unavailable", weatherError);
           }
+        }
+        if (stormPayload?.radar) {
+          weatherContext = { ...(weatherContext || {}), radar: stormPayload.radar };
         }
         const skyRead = buildSkyConditionRead({ camera: data, weatherContext });
         const skyIntel = skyRead.skyIntel;
@@ -5688,7 +7170,7 @@
           ? nighttimeFallback.label
           : daylightNightMismatch
           ? daylightFallback.label
-          : labelize(skyIntel?.atmosphericState);
+          : skyRead.label;
         const skyCloud = duskFallback
           ? duskFallback.cloud
           : nighttimeFallback
@@ -5704,7 +7186,6 @@
           ? daylightFallback.confidence
           : skyIntel?.confidence;
 
-        const stormPayload = await stormPromise;
         const stormSignal = stormPayload?.signal;
         const stormActive = !nighttimeFallback && stormSignal?.active && stormSignal.headline && stormSignal.detail;
         const nextStormLevel = stormActive ? (stormSignal.level || "watching") : "none";
@@ -5770,6 +7251,21 @@
         document.querySelector("#skyHomeCloud").textContent = nighttimeFallback ? "--" : duskFallback ? pct(skyCloud) : daylightNightMismatch ? pct(skyCloud) : skyRead.cloudMetric;
         document.querySelector("#skyHomeLight").textContent = nighttimeFallback ? "Night" : duskFallback ? duskFallback.lightLabel : daylightNightMismatch ? (metrics.sunlightDetected ? labelize(metrics.sunlightLevel) : "Low") : skyRead.sunlightMetric;
         document.querySelector("#skyHomeConfidence").textContent = nighttimeFallback ? "Low" : duskFallback ? pct(skyConfidence) : daylightNightMismatch ? pct(skyConfidence) : skyRead.confidenceMetric;
+        document.querySelector("#skyHomeCloudLabel").textContent = "Camera cloud cover";
+        document.querySelector("#skyHomeLightLabel").textContent = "Sunlight signal";
+        document.querySelector("#skyHomeConfidenceLabel").textContent = "Sky read confidence";
+        applyConditionalHomepageFeatures();
+        if (!nighttimeFallback && !duskFallback && !daylightNightMismatch && skyRead.metricTiles) {
+          const byKey = Object.fromEntries(skyRead.metricTiles.map((tile) => [tile.key, tile]));
+          const homeTiles = [byKey.surface, byKey.above, byKey.depth, byKey.confidence];
+          const valueSelectors = ["#skyHomeCloud", "#skyHomeLight", "#skyHomeConfidence", "#skyHomeFeature"];
+          const labelSelectors = ["#skyHomeCloudLabel", "#skyHomeLightLabel", "#skyHomeConfidenceLabel", "#skyHomeFeatureLabel"];
+          homeTiles.forEach((tile, index) => {
+            if (!tile) return;
+            document.querySelector(valueSelectors[index]).textContent = tile.value;
+            document.querySelector(labelSelectors[index]).textContent = tile.label;
+          });
+        }
         renderCloudObservationChip();
       } catch (error) {
         console.warn("Sky module unavailable", error);
@@ -5780,7 +7276,7 @@
     const activeAlerts = document.querySelector("#active-alerts");
     loadAndRenderAlerts(activeAlerts);
     hydrateSubstackCard();
-    hydrateDroughtFireCard();
+    hydrateRainfallContext();
     hydrateHomeHikingCard();
     hydrateHomeWaterCard();
     hydrateHomeForecastSignals();
@@ -5817,6 +7313,8 @@
     const feelScoreModal = document.querySelector("#feelScoreModal");
     const feelScoreInfoButton = document.querySelector("#feelScoreInfoButton");
     const feelScoreModalClose = document.querySelector("#feelScoreModalClose");
+    const feelScorePanel = document.querySelector(".feel-panel");
+    const tempPathMobileToggle = document.querySelector("#liveTempMobileToggle");
     const radarModal = document.querySelector("#radarModal");
     const radarThumbButton = document.querySelector("#radarThumbButton");
     const radarModalClose = document.querySelector("#radarModalClose");
@@ -5857,6 +7355,10 @@
     feelScoreModalClose?.addEventListener("click", closeFeelScoreModal);
     feelScoreModal?.addEventListener("click", (event) => {
       if (event.target === feelScoreModal) closeFeelScoreModal();
+    });
+    tempPathMobileToggle?.addEventListener("click", () => {
+      const isOpen = feelScorePanel?.classList.toggle("temp-path-open");
+      tempPathMobileToggle.setAttribute("aria-expanded", String(Boolean(isOpen)));
     });
     radarThumbButton?.addEventListener("click", () => {
       if (radarModalImage) radarModalImage.src = cacheBustedUrl(RADAR_LOOP_URL);

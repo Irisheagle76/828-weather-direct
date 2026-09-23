@@ -76,6 +76,15 @@ def compute_metrics(sky_img, full_img):
 
     cloud_mask = (bright_low_saturation_mask | warm_gray_cloud_mask) & ~blue_sky_mask
     valid_sky_mask = blue_sky_mask | cloud_mask
+    warm_haze_mask = (
+        (r_float > g_float * 1.03) &
+        (r_float > b_float * 1.10) &
+        (hsv[:, :, 1] >= 20) &
+        (hsv[:, :, 1] <= 140) &
+        (hsv[:, :, 2] > 70)
+    )
+    warm_haze_share = float(np.mean(warm_haze_mask))
+    warm_haze_signal = warm_haze_share >= 0.28 and contrast <= 0.12
 
     valid_sky_pixels = np.sum(valid_sky_mask)
     if valid_sky_pixels > (valid_sky_mask.size * 0.25):
@@ -183,6 +192,8 @@ def compute_metrics(sky_img, full_img):
     "groundContrast": float(round(ground_contrast, 2)),
     "softShadowSignal": bool(soft_shadow_signal),
     "filteredSunshineSignal": bool(filtered_sunshine_signal),
+    "warmHazeSignal": bool(warm_haze_signal),
+    "warmHazeShare": float(round(warm_haze_share, 2)),
 
     "skyBlueSignal": float(sky_blue_signal) if sky_blue_signal is not None else None,
     "obscuredView": bool(obscured_view),

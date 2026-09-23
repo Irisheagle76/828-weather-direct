@@ -14,7 +14,7 @@ export function computeSkyIntel({ camera, previous = null, weatherContext = null
 
   const m = camera.metrics;
 
-  const cloud = m.cloudCoverWest ?? null;
+  const observedCloud = m.cloudCoverWest ?? null;
   const contrast = m.contrast ?? null;
   const groundContrast = m.groundContrast ?? null;
   const groundBrightness = m.groundBrightness ?? null;
@@ -37,9 +37,64 @@ export function computeSkyIntel({ camera, previous = null, weatherContext = null
 
   const skyBlueSignal = m.skyBlueSignal ?? null;
   const mode = m.mode;
+  const airQuality = weatherContext?.airQuality || {};
+  const pm25 = pickFiniteNumber(airQuality, ["pm25", "pm2_5"]);
+  const pm10 = pickFiniteNumber(airQuality, ["pm10"]);
+  const usAqiPm25 = pickFiniteNumber(airQuality, ["usAqiPm25", "us_aqi_pm2_5"]);
+  const aerosolOpticalDepth = pickFiniteNumber(airQuality, ["aerosolOpticalDepth", "aerosol_optical_depth"]);
+  const dust = pickFiniteNumber(airQuality, ["dust"]);
+  const dustSignal =
+    dust != null && dust >= 8 &&
+    ((aerosolOpticalDepth ?? 0) >= 0.12 || (pm10 ?? 0) >= 20);
+  const surfaceSmokeSignal = !dustSignal && (
+    (usAqiPm25 != null && usAqiPm25 >= 55) ||
+    (pm25 != null && pm25 >= 12 && (aerosolOpticalDepth ?? 0) >= 0.15)
+  );
+  // A transported smoke layer can be visually thick aloft while surface PM2.5
+  // and AQI remain modest. Require the camera's warm veil signal before using
+  // this lower-PM, elevated-AOD pathway.
+  const elevatedSmokeLayerSignal =
+    !dustSignal &&
+    m.warmHazeSignal === true &&
+    (pm25 ?? 0) >= 7 &&
+    (aerosolOpticalDepth ?? 0) >= 0.22;
+  const smokeSignal = surfaceSmokeSignal || elevatedSmokeLayerSignal;
+  const hazeSignal = !dustSignal && !smokeSignal && (aerosolOpticalDepth ?? 0) >= 0.3;
+  const aerosolType = dustSignal ? "dust" : smokeSignal ? "smoke" : hazeSignal ? "haze" : null;
+  const satelliteCloudFraction = pickFiniteNumber(m, ["satelliteCloudFraction"]);
+  const independentOpenSkySignal =
+    (satelliteCloudFraction != null && satelliteCloudFraction < 0.18) ||
+    m.buildingCloudStructureSignal === false;
+  const aerosolClearSkySignal = Boolean(
+    aerosolType &&
+    (
+      (observedCloud != null && observedCloud <= 35) ||
+      (m.warmHazeSignal === true && independentOpenSkySignal)
+    )
+  );
+  // Warm particulate haze is spectrally similar to the camera's warm-gray
+  // cloud mask. Preserve the raw observation, but do not count that smooth
+  // veil as cloud when independent aerosol and open-sky evidence agree.
+  const cloud = aerosolClearSkySignal
+    ? Math.min(Number.isFinite(observedCloud) ? observedCloud : 15, 15)
+    : observedCloud;
   const stationSolarRadiation = pickFiniteNumber(weatherContext, ["solarRadiation", "solar_radiation", "solarWm2", "solar"]);
   const stationUv = pickFiniteNumber(weatherContext, ["uvIndex", "uv_index", "uv"]);
   const stationLux = pickFiniteNumber(weatherContext, ["brightness", "illuminance", "lux"]);
+  const radar = weatherContext?.radar || {};
+  const radarAgeMinutes = pickFiniteNumber(radar, ["ageMinutes"]);
+  const radarEchoPixels = pickFiniteNumber(radar, ["echoPixels"]);
+  const radarEchoCoverage = pickFiniteNumber(radar, ["echoCoverage"]);
+  const radarNearWestEchoPixels = pickFiniteNumber(radar, ["nearWestEchoPixels"]);
+  const radarNearestEchoMiles = pickFiniteNumber(radar, ["nearestEchoMiles"]);
+  const freshRadarEcho = radar.available === true && radarAgeMinutes != null && radarAgeMinutes <= 15 && (
+    (radarEchoPixels ?? 0) >= 40 ||
+    (radarEchoCoverage ?? 0) >= 0.004
+  );
+  const nearbyWesternRain = freshRadarEcho && (
+    (radarNearWestEchoPixels ?? 0) >= 25 ||
+    (radarNearestEchoMiles ?? 999) <= 35
+  );
   const stationBrightSignal =
     (stationSolarRadiation != null && stationSolarRadiation >= 220) ||
     (stationUv != null && stationUv >= 2) ||
@@ -74,6 +129,30 @@ export function computeSkyIntel({ camera, previous = null, weatherContext = null
       sunlightDetected: false,
       sunlightLevel: "none",
       confidence: 0.4
+    };
+  }
+
+  if (aerosolClearSkySignal) {
+    return {
+      cloud,
+      observedCloud,
+      displayCloud: cloud,
+      cloudCoverReliable: true,
+      cloudState: "mostly_clear",
+      atmosphericState: aerosolType === "dust" ? "clear_dust" : aerosolType === "smoke" ? "clear_smoke" : "clear_haze",
+      transition: null,
+      sunlightDetected,
+      sunlightLevel,
+      confidence: 0.88,
+      visualObscured: false,
+      filteredSun: true,
+      aerosolDetected: true,
+      aerosolType,
+      airQuality: { pm25, pm10, usAqiPm25, aerosolOpticalDepth, dust },
+      stationLightSignal: stationBrightSignal ? "bright" : stationDaylightSignal ? "daylight" : "low",
+      softShadowSignal,
+      satelliteHighCloudSignal,
+      satelliteCloudMotionSignal
     };
   }
 
@@ -155,18 +234,25 @@ export function computeSkyIntel({ camera, previous = null, weatherContext = null
       (visibility === 1 && flatGrayView) ||
       (visibility === 2 && dimGrayView && (cloud == null || cloud <= 20)));
 
-  if (fogDetected || lowDeckDetected) {
+  // A camera-facing low-visibility curtain with fresh echoes immediately west
+  // of Asheville is a rain shaft/low-cloud scene, not valley fog. Radar is the
+  // deciding evidence because image softness alone cannot distinguish them.
+  const rainShaftDetected = nearbyWesternRain && (obscuredView || fogDetected || lowDeckDetected);
+
+  if (rainShaftDetected || fogDetected || lowDeckDetected) {
     return {
       cloud,
+      observedCloud,
       displayCloud: null,
       cloudCoverReliable: false,
       cloudState: "obscured",
-      atmosphericState: fogDetected ? "fog" : "low_cloud",
+      atmosphericState: rainShaftDetected ? "rain_shaft" : fogDetected ? "fog" : "low_cloud",
       transition: null,
       sunlightDetected: false,
       sunlightLevel: "low",
-      confidence: fogDetected ? 0.82 : 0.72,
+      confidence: rainShaftDetected ? 0.9 : fogDetected ? 0.82 : 0.72,
       visualObscured: true,
+      radarRainShaftSignal: rainShaftDetected,
       filteredSun: false,
       stationLightSignal: stationDaylightSignal ? "daylight" : "low",
       softShadowSignal,
@@ -274,6 +360,7 @@ export function computeSkyIntel({ camera, previous = null, weatherContext = null
 
   return {
     cloud,
+    observedCloud,
     displayCloud: cloudCoverUnreliable ? null : cloud,
     cloudCoverReliable: !cloudCoverUnreliable,
     cloudState,
@@ -286,6 +373,9 @@ export function computeSkyIntel({ camera, previous = null, weatherContext = null
     visibleStructureSignal: structureVisibilityCounterSignal,
     cloudMetricLabel: lowStratusDeck ? "Low stratus" : null,
     filteredSun,
+    aerosolDetected: Boolean(aerosolType),
+    aerosolType,
+    airQuality: { pm25, pm10, usAqiPm25, aerosolOpticalDepth, dust },
     stationLightSignal: stationBrightSignal ? "bright" : stationDaylightSignal ? "daylight" : "low",
     softShadowSignal,
     satelliteHighCloudSignal,
