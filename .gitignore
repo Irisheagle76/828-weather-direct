@@ -4,3 +4,5 @@ vercel-dev*.log
 .env.*
 !.env.example
 .cache/
+
+/node_modules/
