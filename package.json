@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "preview:mobile": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/mobile-preview/start-preview.ps1",
+    "test:mobile": "node --check public/mobile/mobile.js && node --test test/mobile-preview-cache.test.mjs test/comfort-time-buckets.test.mjs test/mobile-forecast-comfort-context.test.mjs test/mobile-regional-map.test.js",
     "test": "node --test test/**/*.test.js",
     "check": "node --check lib/forecast/config.js && node --check lib/forecast/store.js && node --check lib/forecast/sources.js && node --check lib/forecast/generate.js && node --check lib/forecast/validate.js && node --check lib/forecast/service.js && node --check lib/api-routes/forecast/automatic.js",
     "seo:sitemap": "node scripts/generate-sitemap.mjs",
