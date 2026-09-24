@@ -1,5 +1,6 @@
 const routes = {
   "se-feelscore": () => import("../lib/api-routes/se-feelscore.js"),
+  "mobile/feelscore-map": () => import("../lib/api-routes/mobile/feelscore-map.js"),
   "asheville-spread": () => import("../lib/api-routes/asheville-spread.js"),
   "admin/login": () => import("../lib/api-routes/admin/login.js"),
   "admin/logout": () => import("../lib/api-routes/admin/logout.js"),
@@ -33,6 +34,7 @@ const routes = {
   "substack-articles": () => import("../lib/api-routes/substack-articles.js"),
   "substack-og": () => import("../lib/api-routes/substack-og.js"),
   "tempest/device": () => import("../lib/api-routes/tempest/device.js"),
+  "tempest/temperature-comparison": () => import("../lib/api-routes/tempest/temperature-comparison.js"),
   "towercam/upload-signature": () => import("../lib/api-routes/towercam/upload-signature.js"),
   "tidbits/pulse-feed": () => import("../lib/api-routes/tidbits/pulse-feed.js"),
   "tidbits/pulse-latest": () => import("../lib/api-routes/tidbits/pulse-latest.js"),

@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#071a38" />
+  <meta name="description" content="828 Weather Direct mobile prototype for Asheville and Western North Carolina." />
+  <title>828 Weather Direct Mobile</title>
+  <link rel="stylesheet" href="./mobile.css" />
+</head>
+<body>
+  <a class="skip-link" href="#mainContent">Skip to weather</a>
+  <div class="app-shell">
+    <header class="app-header">
+      <a class="brand" href="#home" data-destination="home" aria-label="828 Weather Direct Home">
+        <span class="brand-828">828</span>
+        <span class="brand-copy"><strong>Weather Direct</strong><small>Asheville, North Carolina</small></span>
+      </a>
+      <div class="header-meta">
+        <span class="live-dot" aria-hidden="true"></span>
+        <span id="headerStatus">Updating</span>
+      </div>
+    </header>
+
+    <div class="preview-banner" id="previewBanner" hidden>
+      Preview states are on. Alert and Forecast Update examples are sample content.
+    </div>
+
+    <main id="mainContent" tabindex="-1">
+      <section class="screen is-active" id="screen-home" data-screen="home" aria-labelledby="todayLabel">
+        <div class="screen-intro home-intro">
+          <div>
+            <h1 class="eyebrow" id="todayLabel">Today in Asheville</h1>
+          </div>
+          <button class="icon-button" id="refreshButton" type="button" aria-label="Refresh weather data" title="Refresh weather data">
+            <span aria-hidden="true">↻</span>
+          </button>
+        </div>
+
+        <div class="priority-stack" id="homePriority" aria-live="polite">
+          <section class="priority-card alert-card" id="homeAlert" hidden></section>
+          <section class="priority-card update-card" id="homeForecastUpdate" hidden></section>
+        </div>
+
+        <section class="panel current-panel loading" id="currentCard" aria-labelledby="currentTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="kicker">Current Conditions</p>
+              <h2 id="currentTitle">Asheville</h2>
+            </div>
+            <span class="condition-icon" id="currentIcon" aria-hidden="true">•</span>
+          </div>
+          <div class="current-main">
+            <strong class="current-temp" id="currentTemp">--°</strong>
+            <div><span id="currentCondition">Loading conditions</span><small id="currentObserved">Current observation</small></div>
+          </div>
+          <dl class="metric-grid">
+            <div><dt>Feels like</dt><dd id="currentFeels">--°</dd></div>
+            <div><dt>Dew point</dt><dd id="currentDew">--°</dd></div>
+            <div class="pressure-metric"><dt>Pressure</dt><dd id="currentPressure">--<small id="currentPressureMb">-- mb</small></dd></div>
+            <div><dt>Wind</dt><dd id="currentWind">--</dd></div>
+            <div><dt>Gust</dt><dd id="currentGust">--</dd></div>
+          </dl>
+          <p class="temperature-comparison" id="currentComparison" aria-live="polite" hidden></p>
+        </section>
+
+        <button class="panel feelscore-panel loading panel-button" id="homeFeelScore" type="button" data-destination="feelscore" aria-label="Open FEELSCORE">
+          <span class="accent-rule" aria-hidden="true"></span>
+          <span class="panel-heading">
+            <span><span class="kicker">FEELSCORE</span><strong class="panel-title">How the weather actually feels</strong></span>
+            <span class="button-arrow" aria-hidden="true">→</span>
+          </span>
+          <span class="feelscore-main">
+            <span class="score-ring"><strong id="homeScore">--</strong><small>/100</small></span>
+            <span class="score-copy"><strong id="homeScoreLabel">Building the comfort read</strong><span id="homeScoreNarrative">Temperature, dew point, wind and weather are being weighed together.</span></span>
+            <span class="score-emoji" id="homeScoreEmoji" aria-hidden="true">•</span>
+          </span>
+          <span class="comfort-window" id="homeBestWindow">Best window is updating.</span>
+          <span class="comfort-curve" id="homeTrend" aria-label="Comfort Curve"></span>
+        </button>
+
+        <button class="panel pulse-preview panel-button" id="homePulse" type="button" data-destination="pulse" hidden>
+          <span class="panel-heading">
+            <span class="pulse-label"><span class="pulse-beacon" aria-hidden="true"></span><span class="kicker">Latest 828 Pulse</span></span>
+            <span class="button-arrow" aria-hidden="true">→</span>
+          </span>
+          <span class="pulse-preview-content">
+            <span class="pulse-preview-copy">
+              <span class="pulse-time" id="homePulseTime"></span>
+              <strong class="panel-title" id="homePulseTitle">Latest observation</strong>
+              <span class="body-copy" id="homePulseText"></span>
+            </span>
+            <img class="pulse-preview-thumbnail" id="homePulseThumbnail" alt="" loading="lazy" hidden />
+          </span>
+        </button>
+
+        <section class="panel" id="nextSixCard" aria-labelledby="nextSixTitle">
+          <div class="panel-heading">
+            <div><p class="kicker">Short Term</p><h2 id="nextSixTitle">Next 6 Hours</h2></div>
+            <span class="trend-chip" id="nextSixTrend">Updating</span>
+          </div>
+          <div class="hour-strip" id="nextSix"></div>
+        </section>
+
+        <section class="panel" id="forecastPreview" aria-labelledby="forecastPreviewTitle">
+          <div class="panel-heading">
+            <div><p class="kicker">Tim's Forecast</p><h2 id="forecastPreviewTitle">Four-day preview</h2></div>
+            <button class="text-button" type="button" data-destination="forecast">Full forecast</button>
+          </div>
+          <div class="forecast-mini-grid" id="homeForecastDays"></div>
+        </section>
+
+        <a class="panel editorial-card" id="homeArticle" href="https://timothyballisty.substack.com" target="_blank" rel="noopener noreferrer" hidden>
+          <img id="homeArticleImage" alt="" loading="lazy" />
+          <span class="editorial-body">
+            <span class="kicker" id="homeArticleKicker">Latest Outlook</span>
+            <strong class="panel-title" id="homeArticleTitle"></strong>
+            <span class="body-copy" id="homeArticleDescription"></span>
+            <span class="editorial-meta" id="homeArticleDate"></span>
+          </span>
+        </a>
+
+        <section class="context-grid" aria-label="Outdoor context">
+          <button class="context-card" type="button" data-more-view="hiking">
+            <span class="context-icon" aria-hidden="true">△</span>
+            <span><small>Hiking</small><strong id="homeHikingLabel">Trail read</strong><em id="homeHikingMeta">Open HikerScore</em></span>
+          </button>
+          <button class="context-card" type="button" data-more-view="sunset">
+            <span class="context-icon sun" aria-hidden="true">◒</span>
+            <span><small>Sunset Radiance</small><strong id="homeSunsetLabel">Sky context</strong><em id="homeSunsetMeta">Open tonight's read</em></span>
+          </button>
+        </section>
+      </section>
+
+      <section class="screen" id="screen-forecast" data-screen="forecast" aria-labelledby="forecastTitle" hidden>
+        <div class="screen-intro"><div><p class="eyebrow">Human forecast</p><h1 id="forecastTitle">The next four days</h1></div></div>
+        <section class="priority-card update-card" id="forecastUpdate" hidden></section>
+        <section class="forecast-hero panel" id="forecastHero">
+          <p class="kicker">Tim's Forecast Board</p>
+          <h2 id="forecastHeadline">Latest Asheville outlook</h2>
+          <p id="forecastSummary">Loading the human-written forecast.</p>
+          <div class="signal-chips" id="forecastSignals"></div>
+        </section>
+        <div class="forecast-list" id="forecastDays"></div>
+      </section>
+
+      <section class="screen" id="screen-feelscore" data-screen="feelscore" aria-labelledby="feelscoreTitle" hidden>
+        <div class="screen-intro"><div><p class="eyebrow">Comfort intelligence</p><h1 id="feelscoreTitle">FEELSCORE</h1></div></div>
+        <section class="panel feelscore-detail">
+          <div class="panel-heading"><div><p class="kicker">Asheville · FEELSCORE</p><h2>Comfort Timeline</h2></div></div>
+          <div class="segmented-control" role="group" aria-label="FEELSCORE day">
+            <button class="is-active" type="button" data-feelscore-day="today" aria-pressed="true">Today</button>
+            <button type="button" data-feelscore-day="tomorrow" aria-pressed="false">Tomorrow</button>
+          </div>
+          <div class="detail-score-row">
+            <div><span class="score-emoji" id="detailEmoji" aria-hidden="true">•</span><h2 id="detailLabel">Building the comfort read</h2><p id="detailNarrative"></p></div>
+          </div>
+          <div class="comfort-window" id="detailBestWindow" role="status"></div>
+          <div class="comfort-buckets" id="detailBuckets"></div>
+          <details class="feelscore-info" id="detailPassed" hidden><summary>Earlier windows today</summary><p id="detailPassedContent"></p></details>
+          <details class="feelscore-info"><summary>More info · Understanding FEELSCORE</summary><p>FEELSCORE combines temperature, moisture, wind and weather into a 0–100 comfort score. Higher scores mean greater weather comfort—not a safety rating or a promise that every activity will be suitable.</p><p>Each time window shows the lowest and highest available hourly scores, not an average. Windows use Eastern time and end at the stated time: 5–9 AM means 5 AM up to, but not including, 9 AM. Gaps between your four windows are intentional.</p><p>Best Window is the strongest continuous two-hour stretch within these windows, ranked by its lowest hourly score. It is a relative best, not necessarily comfortable. Today uses only upcoming hours; elapsed windows are tucked below. Missing guidance is never filled with current conditions.</p></details>
+        </section>
+        <section class="panel regional-panel">
+          <div class="panel-heading"><div><p class="kicker">Regional FEELSCORE</p><h2>Mountains &amp; Foothills</h2></div></div>
+          <p class="section-note">Eastern TN · Western NC · Upstate SC · Northeast GA</p>
+          <p class="regional-day" id="regionalDay">Today · noon–3 PM</p>
+          <canvas class="regional-canvas" id="regionalCanvas" aria-label="Geographic FEELSCORE category forecast for eastern Tennessee, western North Carolina, Upstate South Carolina and northeast Georgia" hidden></canvas>
+          <div class="regional-legend" aria-label="FEELSCORE category colors"><span style="--swatch:#f08a4b">just alright 🫤</span><span style="--swatch:#f2c94c">Fine, I guess 🤷🏻‍♀️</span><span style="--swatch:#a8d65e">Nice! 👍</span><span style="--swatch:#49c68b">B.E.A. utiful 😎</span><span style="--swatch:#46d3ca">Goldilocks 🏆</span></div>
+          <p class="regional-summary" id="regionalSummary">Open FEELSCORE to load the published regional forecast.</p>
+          <a class="product-link" href="https://avlweather.com/se_feelscore.html" target="_blank" rel="noopener noreferrer">View full Southeast map →</a>
+        </section>
+      </section>
+
+      <section class="screen" id="screen-pulse" data-screen="pulse" aria-labelledby="pulseTitle" hidden>
+        <div class="screen-intro"><div><p class="eyebrow"><span class="pulse-beacon" aria-hidden="true"></span> Meteorologist nowcast</p><h1 id="pulseTitle">828 Pulse</h1><p>What Tim is seeing right now, in chronological order.</p></div></div>
+        <div class="pulse-feed" id="pulseFeed"></div>
+      </section>
+
+      <section class="screen" id="screen-live" data-screen="live" aria-labelledby="liveTitle" hidden>
+        <div class="screen-intro"><div><p class="eyebrow">Asheville cameras</p><h1 id="liveTitle">Live Look</h1></div></div>
+        <div id="liveLookContent"></div>
+      </section>
+      <section class="screen" id="screen-more" data-screen="more" aria-labelledby="moreTitle" hidden>
+        <div class="screen-intro"><div><p class="eyebrow">828 products</p><h1 id="moreTitle">More</h1></div></div>
+        <div class="more-menu" id="moreMenu">
+          <button type="button" data-more-view="hiking"><span class="more-icon">△</span><span><strong>Hiking</strong><small>HikerScore and elevation-aware trail guidance</small></span><span>→</span></button>
+          <button type="button" data-more-view="sunset"><span class="more-icon sun">◒</span><span><strong>Sunset Radiance</strong><small>Tonight's sky, timing and viewing context</small></span><span>→</span></button>
+          <button type="button" data-more-view="update"><span class="more-icon update">W</span><span><strong>828 Weather Update</strong><small>Tim's medium- and longer-range outlooks</small></span><span>→</span></button>
+        </div>
+
+        <section class="more-detail" id="moreDetail" hidden>
+          <button class="back-button" id="moreBack" type="button">← All 828 products</button>
+          <div id="moreDetailContent"></div>
+        </section>
+
+        <section class="future-products panel">
+          <p class="kicker">Built to expand</p>
+          <p>Asheville Microscope, Fall Explorer, Undercast Alert and future 828 products can join this shelf later.</p>
+        </section>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Primary">
+      <button class="is-active" type="button" data-destination="home" aria-current="page"><span aria-hidden="true">⌂</span><strong>Home</strong></button>
+      <button type="button" data-destination="forecast"><span aria-hidden="true">▤</span><strong>Forecast</strong></button>
+      <button type="button" data-destination="feelscore"><span aria-hidden="true">◉</span><strong>FEELSCORE</strong></button>
+      <button type="button" data-destination="pulse"><span class="nav-pulse" aria-hidden="true">●</span><strong>Pulse</strong></button>
+      <button type="button" data-destination="live"><span aria-hidden="true">▣</span><strong>Live Look</strong></button>
+      <button type="button" data-destination="more"><span aria-hidden="true">•••</span><strong>More</strong></button>
+    </nav>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <script type="module" src="./mobile.js"></script>
+</body>
+</html>
