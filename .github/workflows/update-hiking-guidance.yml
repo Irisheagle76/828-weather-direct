@@ -17,6 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       WEATHERFLOW_API_KEY: ${{ secrets.WEATHERFLOW_API_KEY }}
+      JCC_TEMPEST_TOKEN: ${{ secrets.JCC_TEMPEST_TOKEN }}
       WEATHER_UNDERGROUND_API_KEY: ${{ secrets.WEATHER_UNDERGROUND_API_KEY }}
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
     steps:
