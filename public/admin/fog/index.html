@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fog Verification · 828 Weather</title><link rel="stylesheet" href="/admin/fog/style.css"></head>
+<body><main>
+<a href="/admin/index.html">← Admin</a><h1>Fog verification</h1>
+<p>Compare saved station scores with what you actually see one hour later. Each neighborhood is evaluated separately.</p>
+<p id="status" role="status">Loading verification records…</p>
+<section><h2>Record an observation</h2>
+<p>Record clear conditions as well as fog, regardless of the score. One observation verifies a point in time—not an entire night. A dark, blocked, rainy, or ambiguous camera view is <strong>uncertain</strong>.</p>
+<form id="observation">
+<div class="fields">
+<label>Neighborhood<select name="stationId" required><option value="127602">Haw Creek</option><option value="144737">North Downtown (JCC)</option></select></label>
+<label>Observation time <span id="zone"></span><input name="observedAt" type="datetime-local" required></label>
+<label>What did you see?<select name="outcome" required><option value="">Choose an outcome</option><option value="fog">Fog present</option><option value="no_fog">No fog observed</option><option value="uncertain">Uncertain / view obscured</option></select></label>
+<label>Evidence source<select name="source"><option value="direct">I observed the neighborhood directly</option><option value="webcam_review">I reviewed a webcam image</option></select></label>
+</div>
+<fieldset id="camera-fields" hidden><legend>Webcam-assisted review</legend>
+<p>These cameras are regional views, not dedicated station cameras. Only verify a neighborhood if you can identify it in the view. A current image cannot verify an earlier observation.</p>
+<div class="fields"><label>Camera<select name="cameraId"><option value="north-asheville-south">North Asheville · south-facing regional view</option><option value="downtown-asheville-west">Downtown Asheville · west-facing regional view</option></select></label>
+<label>Actual frame time (your device timezone)<input name="frameAt" type="datetime-local"></label></div>
+<p><a id="camera-link" target="_blank" rel="noopener noreferrer">Open camera image for review ↗</a></p>
+<p>Confirm the image timestamp at its source. If freshness or location cannot be established, do not label it as fog or no fog.</p>
+</fieldset>
+<label class="check"><input type="checkbox" name="locationConfirmed"> I could see the selected neighborhood at the recorded time.</label>
+<label>Notes / landmarks visible<textarea name="notes" maxlength="500" rows="3" placeholder="For webcam review, identify the neighborhood landmarks and visibility evidence."></textarea></label>
+<button type="submit">Save observation</button>
+<p>Saving the same station and minute updates that observation. Predictions remain unchanged. No fog report is inferred from an absence of reports.</p>
+</form></section>
+<section><h2>Learning progress</h2><p>The baseline triggers at a lower-bound index of 61. One earliest eligible case per neighborhood per noon-to-noon episode is counted, so repeated reports from one fog event do not dominate.</p><div id="reports" class="reports"></div>
+<p>Candidate thresholds use the earliest 70% of episodes for fitting and the later 30% for evaluation. Candidates are review-only; weights and homepage behavior are never changed here. Sparse or selective reporting can still bias these results.</p></section>
+<section><h2>Saved predictions</h2><p>A scheduled collector must be enabled after release to build a continuous archive. You can also save the current predictions now, for checking an hour later.</p><button id="sample" type="button">Save current predictions</button><div id="predictions"></div></section>
+<section><h2>Recent observations</h2><div id="labels"></div></section>
+</main><script type="module" src="/admin/fog/console.js"></script></body></html>
