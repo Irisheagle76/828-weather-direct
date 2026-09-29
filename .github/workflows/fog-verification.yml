@@ -1,0 +1,25 @@
+name: Collect fog verification predictions
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '3,18,33,48 * * * *'
+permissions:
+  contents: read
+concurrency:
+  group: fog-verification-collection
+  cancel-in-progress: false
+jobs:
+  collect:
+    # Enable only after the reviewed release is live and persistent storage works.
+    if: vars.FOG_VERIFICATION_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Archive current scores without committing or deploying
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          test -n "$CRON_SECRET"
+          curl --fail --silent --show-error --max-time 90 \
+            --request POST \
+            --header "Authorization: Bearer ${CRON_SECRET}" \
+            'https://avlweather.com/api/router?route=tempest/fog-verification&action=sample'
