@@ -1660,6 +1660,7 @@
   </div>
 
   <script type="module">
+    import { withStationSkyMeasurements, withStationContext } from "./js/intel/station-lightning.js";
     import { buildSkyConditionRead, isObscuredSky } from "./js/intel/sky-read.js?v=20260902-solar-language-v1";
     import { buildDuskSkyFallback, getSkyTimePhase } from "./js/intel/sky-time.js?v=20260629-shared-sunset";
     import { applyPrecipOverrideToNarrative, getCurrentPrecipOverride, getPrecipSkyLabel } from "./js/intel/precip-override.js?v=20260811-shared-sky-label";
@@ -1968,7 +1969,7 @@
       if (!currentHour && !current) return null;
       const solarSource = current || currentHour || {};
       const daily = getTodayDaily(state.weather);
-      return {
+      return withStationSkyMeasurements({
         cloudCover: normalizePercentValue(pickNumber(currentHour, ["cloudCover", "cloud_cover", "cloudcover"])),
         humidity: normalizePercentValue(pickNumber(currentHour, ["relativeHumidity", "relative_humidity", "humidity"]) ?? pickNumber(current, ["relativeHumidity", "relative_humidity", "humidity"])),
         precipProbability: normalizePercentValue(pickNumber(currentHour, ["precipProbability", "precipitation_probability", "probabilityOfPrecipitation"])),
@@ -1980,7 +1981,7 @@
         weatherCode: pickNumber(currentHour, ["weatherCode", "weather_code"]) ?? pickNumber(current, ["weatherCode", "weather_code"]),
         sunriseAt: daily?.sunrise ?? null,
         sunsetAt: daily?.sunset ?? null
-      };
+      }, current?.supplementalStation);
     }
 
     function getSkyPrecipOverride() {
@@ -2552,7 +2553,7 @@
       state.narrative = skyRead.narrative;
       const precipOverride = getSkyPrecipOverride();
       const baseNarrative = staleNightAnalysis ? buildLiveViewNarrative() : skyRead.narrative;
-      const liveNarrative = applyPrecipOverrideToNarrative(baseNarrative, precipOverride);
+      const liveNarrative = withStationContext(applyPrecipOverrideToNarrative(baseNarrative, precipOverride), buildSkyWeatherContext()?.supplementalStation);
       const skyLabel = getPrecipSkyLabel(precipOverride) || (staleNightAnalysis ? "Live Sky" : skyRead.label);
 
       els.skyChip.textContent = skyLabel;

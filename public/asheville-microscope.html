@@ -901,23 +901,22 @@
     #avl-microscope-page .avl-profile h3 { margin: 8px 0 5px; color: var(--avl-page-navy); font-family: Georgia, "Times New Roman", serif; font-size: 28px; line-height: 1.05; }
     #avl-microscope-page .avl-profile-meta { color: var(--avl-page-muted); font-size: 11px; line-height: 1.45; }
 
-    #avl-microscope-page .avl-profile-reading {
-      display: flex;
-      align-items: end;
-      justify-content: space-between;
-      gap: 15px;
-      margin: 22px 0 18px;
-      padding-block: 16px;
-      border-block: 1px solid var(--avl-page-line);
-    }
-
-    #avl-microscope-page .avl-profile-reading strong { color: var(--avl-page-navy); font-size: 48px; letter-spacing: -.06em; line-height: .9; }
-    #avl-microscope-page .avl-profile-reading span { max-width: 125px; color: var(--avl-page-muted); font-size: 10px; font-weight: 700; text-align: right; }
-
+    #avl-microscope-page .avl-profile-fact small { display: block; margin-top: 6px; font-size: 11px; line-height: 1.45; color: var(--avl-page-muted); }
     #avl-microscope-page .avl-profile-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
-    #avl-microscope-page .avl-profile-fact { padding: 11px; border-radius: 11px; background: rgba(255, 255, 255, .74); }
+    #avl-microscope-page .avl-profile-fact { padding: 12px; border: 1px solid rgba(7, 29, 73, .05); border-radius: 13px; background: rgba(255, 255, 255, .78); box-shadow: 0 5px 14px rgba(7, 29, 73, .04); }
     #avl-microscope-page .avl-profile-fact span { display: block; color: var(--avl-page-muted); font: 800 8px Arial, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
-    #avl-microscope-page .avl-profile-fact strong { display: block; margin-top: 4px; color: var(--avl-page-navy); font-size: 12px; }
+    #avl-microscope-page .avl-profile-fact strong { display: block; margin-top: 5px; color: var(--avl-page-navy); font-size: 14px; line-height: 1.15; }
+    #avl-microscope-page .avl-profile-fact.is-conditions { grid-column: 1 / -1; padding: 16px; overflow: hidden; background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(220,249,244,.88)); border-color: rgba(19, 163, 151, .22); box-shadow: 0 12px 28px rgba(7, 29, 73, .09); }
+    #avl-microscope-page .avl-profile-condition-row { display: grid; grid-template-columns: minmax(0, 1fr) 88px; align-items: end; gap: 9px; margin-top: 4px; }
+    #avl-microscope-page .avl-profile-fact.is-conditions .avl-profile-temp { margin: 0; font-size: clamp(40px, 3.3vw, 46px); letter-spacing: -.055em; line-height: .92; }
+    #avl-microscope-page .avl-profile-dewpoint { min-width: 0; padding: 9px 10px; border-radius: 11px; color: #063f4d; background: linear-gradient(135deg, #bdf3e6, #dff8f4); border: 1px solid rgba(19, 163, 151, .22); }
+    #avl-microscope-page .avl-profile-dewpoint span { color: #16746f; }
+    #avl-microscope-page .avl-profile-dewpoint strong { color: #063f4d; font-size: 20px; }
+    #avl-microscope-page .avl-profile-humidity { padding-top: 7px; border-top: 1px solid rgba(19, 163, 151, .18); }
+    #avl-microscope-page .avl-profile-insight { margin-top: 12px; padding: 14px; border-radius: 13px; color: var(--avl-page-navy); background: linear-gradient(135deg, rgba(255,255,255,.94), var(--avl-page-soft-orange)); box-shadow: 0 9px 22px rgba(7, 29, 73, .07); }
+    #avl-microscope-page .avl-profile-insight span { display: block; color: var(--avl-page-orange); font: 800 8px Arial, sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+    #avl-microscope-page .avl-profile-insight strong { display: block; margin-top: 6px; font: 700 13px/1.4 Arial, sans-serif; }
+    #avl-microscope-page .avl-profile-insight p { margin: 6px 0 0; color: var(--avl-page-muted); font-size: 11px; line-height: 1.45; }
 
     #avl-microscope-page .avl-compare-note {
       margin-top: 14px;
@@ -1452,14 +1451,8 @@
             <div class="avl-profile-kicker">Station microscope</div>
             <h3 id="avl-profile-name">West Asheville</h3>
             <div class="avl-profile-meta" id="avl-profile-meta">Residential · 2,174 ft · Weather Underground · fresh</div>
-            <div class="avl-profile-reading"><strong id="avl-profile-reading">78.8°F</strong><span id="avl-profile-delta">compared with the overall elevation pattern</span></div>
-            <div class="avl-profile-facts">
-              <div class="avl-profile-fact"><span>Dew point</span><strong id="avl-profile-dew">71.8°F</strong></div>
-              <div class="avl-profile-fact"><span>Wind</span><strong id="avl-profile-wind">4.7 mph</strong></div>
-              <div class="avl-profile-fact"><span>Solar</span><strong id="avl-profile-solar">116 W/m²</strong></div>
-              <div class="avl-profile-fact"><span>Elevation</span><strong id="avl-profile-elevation">2,174 ft</strong></div>
-            </div>
-            <div class="avl-compare-note"><span>Closest elevation match</span><strong id="avl-profile-compare">Only 1 ft separates this station from Sand Hill, but their temperatures differ by 5.3°.</strong></div>
+            <div class="avl-profile-facts" id="avl-profile-observations"></div>
+            <div class="avl-profile-insight" id="avl-profile-insight"></div>
           </aside>
         </div>
       </section>
@@ -1515,9 +1508,6 @@
         </div>
         <div class="avl-regional-key"><span><i class="inner"></i>Greater Asheville anchor</span><span><i></i>Mountain corridor station</span></div>
       </section>
-
-
-
       <section class="avl-network-footer" aria-label="About these weather observations">
         <div><strong>Local readings, with local context.</strong><p>Neighborhood weather stations complement official observations. Conditions can vary with elevation and surroundings, and a station’s reading may not match every nearby address.</p></div>
         <div class="avl-network-counts">
@@ -1531,7 +1521,8 @@
     <div class="avl-page-footer"><span>Neighborhood observations interpreted by meteorologist Tim Ballisty.</span><span>Archived example · September 5 · 10:02 AM</span></div>
   </div>
 
-  <script>
+  <script type="module">
+    import { stationProfileCards } from "./js/station-profile.js";
     (() => {
       const root = document.getElementById('avl-microscope-page');
       let stations = [
@@ -1553,6 +1544,7 @@
       ];
 
       const codeByStationId = {
+        'north-downtown': 'ND',
         'unc-asheville': 'UN',
         'north-haw-creek': 'HC',
         'grove-park': 'GP',
@@ -1700,13 +1692,19 @@
         const canton = get('Canton');
         const waynesville = get('Waynesville');
         const insights = root.querySelectorAll('.avl-regional-insight strong');
+        const temperatureComparison = (station, reference) => {
+          const difference = round(temperatureOf(station) - temperatureOf(reference));
+          return difference === 0
+            ? `the same temperature as ${reference.name}`
+            : `${Math.abs(difference)}° ${difference < 0 ? 'cooler' : 'warmer'} than ${reference.name}`;
+        };
         if (woodfin && weaverville && marsHill) {
           const north = [woodfin, weaverville, marsHill].sort((a, b) => temperatureOf(a) - temperatureOf(b));
-          insights[0].textContent = `${north.at(-1).name} is ${round(temperatureOf(north.at(-1)) - temperatureOf(north[0]))}° warmer than ${north[0].name} across the north approach.`;
+          insights[0].textContent = `${north.at(-1).name} is ${temperatureComparison(north.at(-1), north[0])} across the north approach.`;
         }
-        if (swannanoa && blackMountain && oldFort) insights[1].textContent = `Old Fort is ${round(temperatureOf(oldFort) - temperatureOf(blackMountain))}° warmer than Black Mountain while sitting 1,130 feet lower.`;
-        if (candler && canton && waynesville) insights[2].textContent = `Waynesville is ${round(Math.abs(temperatureOf(waynesville) - temperatureOf(candler)))}° from Candler while sitting 611 feet higher; Canton is ${round(temperatureOf(candler) - temperatureOf(canton))}° cooler than Candler.`;
-        if (arden && fletcher && hendersonville) insights[3].textContent = `Fletcher is ${round(temperatureOf(fletcher) - temperatureOf(arden))}° warmer than Arden; Arden and Hendersonville are ${round(Math.abs(temperatureOf(arden) - temperatureOf(hendersonville)))}° apart.`;
+        if (swannanoa && blackMountain && oldFort) insights[1].textContent = `Old Fort is ${temperatureComparison(oldFort, blackMountain)} while sitting 1,130 feet lower.`;
+        if (candler && canton && waynesville) insights[2].textContent = `Waynesville is ${temperatureComparison(waynesville, candler)} while sitting 611 feet higher; Canton is ${temperatureComparison(canton, candler)}.`;
+        if (arden && fletcher && hendersonville) insights[3].textContent = `Fletcher is ${temperatureComparison(fletcher, arden)}; Arden is ${temperatureComparison(arden, hendersonville)}.`;
 
         const moisture = [...core].sort((a, b) => a.observation.dewPointF - b.observation.dewPointF);
         const wind = [...core].sort((a, b) => a.observation.windMph - b.observation.windMph);
@@ -1739,9 +1737,12 @@
           const currentCore = payload.stations
             .filter((station) => (station.scope || 'core') === 'core' && usableTemperature(station) && codeByStationId[station.id])
             .map((station) => {
-              const template = templates.get(codeByStationId[station.id]);
+              const template = templates.get(codeByStationId[station.id]) || {};
+              const metadata = { code: codeByStationId[station.id], name: station.name, area: station.area, exposure: station.exposure, lat: station.location.latitude, lon: station.location.longitude, elevation: station.elevationFt };
               return {
                 ...template,
+                ...metadata,
+                observation: station.observation,
                 source: sourceLabels[station.provider] || station.provider,
                 temperature: round(station.observation.temperatureF),
                 dewpoint: round(station.observation.dewPointF),
@@ -1941,17 +1942,47 @@
         const temperatureDifference = Math.abs(nearest.temperature - selected.temperature).toFixed(1);
         const delta = regressionDelta(selected);
 
-        root.querySelector('#avl-profile-name').textContent = `${selected.name} · ${selected.area}`;
+        root.querySelector('#avl-profile-name').textContent = selected.name;
         root.querySelector('#avl-profile-meta').textContent = `${selected.exposure} · ${selected.elevation.toLocaleString()} ft · ${selected.source} · ${selected.freshness}`;
-        root.querySelector('#avl-profile-reading').textContent = reading(selected, config.rangeUnit);
-        root.querySelector('#avl-profile-delta').textContent = metric === 'temperature'
-          ? `${delta > 0 ? '+' : ''}${delta}° compared with the overall elevation pattern`
-          : `${selected.elevation.toLocaleString()} ft station elevation`;
-        root.querySelector('#avl-profile-dew').textContent = `${selected.dewpoint}°F`;
-        root.querySelector('#avl-profile-wind').textContent = `${selected.wind} mph`;
-        root.querySelector('#avl-profile-solar').textContent = selected.solar == null ? 'Not reported' : `${Math.round(selected.solar)} W/m²`;
-        root.querySelector('#avl-profile-elevation').textContent = `${selected.elevation.toLocaleString()} ft`;
-        root.querySelector('#avl-profile-compare').textContent = `Only ${elevationDifference} ft separates this station from ${nearest.name}, but their temperatures differ by ${temperatureDifference}°.`;
+        const observations = root.querySelector('#avl-profile-observations');
+        observations.replaceChildren();
+        const observation = selected.observation || { temperatureF: selected.temperature, dewPointF: selected.dewpoint, windMph: selected.wind };
+        for (const card of stationProfileCards(observation)) {
+          const fact = document.createElement('div'); fact.className = 'avl-profile-fact';
+          if (card.kind === 'conditions') fact.classList.add('is-conditions');
+          const title = document.createElement('span'); title.textContent = card.label;
+          const value = document.createElement('strong'); value.textContent = card.value;
+          if (card.kind === 'conditions') {
+            value.className = 'avl-profile-temp';
+            const row = document.createElement('div'); row.className = 'avl-profile-condition-row';
+            const dewPoint = document.createElement('div'); dewPoint.className = 'avl-profile-dewpoint';
+            const dewLabel = document.createElement('span'); dewLabel.textContent = 'Dew point';
+            const dewValue = document.createElement('strong'); dewValue.textContent = card.dewPoint;
+            dewPoint.append(dewLabel, dewValue);
+            row.append(value, dewPoint);
+            const humidity = document.createElement('small'); humidity.className = 'avl-profile-humidity'; humidity.textContent = `Relative humidity ${card.humidity}`;
+            fact.append(title, row, humidity);
+          } else {
+            fact.append(title, value);
+          }
+          if (card.detail) {
+            const detail = document.createElement('small'); detail.textContent = card.detail;
+            fact.append(detail);
+          }
+          observations.append(fact);
+        }
+
+        const patternDirection = delta > 0 ? 'warmer' : delta < 0 ? 'cooler' : 'right on';
+        const patternText = patternDirection === 'right on'
+          ? 'This reading is right on the overall elevation pattern.'
+          : `${Math.abs(delta).toFixed(1)}° ${patternDirection} than the overall elevation pattern.`;
+        const insight = root.querySelector('#avl-profile-insight');
+        insight.replaceChildren();
+        const insightLabel = document.createElement('span'); insightLabel.textContent = 'Local context';
+        const insightLead = document.createElement('strong'); insightLead.textContent = patternText;
+        const insightDetail = document.createElement('p');
+        insightDetail.textContent = `${nearest.name} is the closest elevation match—${elevationDifference.toLocaleString()} ft apart, with a ${temperatureDifference}° temperature difference.`;
+        insight.append(insightLabel, insightLead, insightDetail);
       }
 
       root.querySelectorAll('.avl-metric-tab').forEach((button) => {
@@ -1986,11 +2017,11 @@
       if (location.protocol !== 'file:') {
         let lastVisibleRefresh = Date.now();
         const refreshIfVisible = () => {
-          if (document.hidden || Date.now() - lastVisibleRefresh < 300_000) return;
+          if (document.hidden || Date.now() - lastVisibleRefresh < 60_000) return;
           lastVisibleRefresh = Date.now();
           hydrateLiveData();
         };
-        setInterval(refreshIfVisible, 300_000);
+        setInterval(refreshIfVisible, 60_000);
         document.addEventListener('visibilitychange', refreshIfVisible);
       }
     })();

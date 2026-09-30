@@ -145,7 +145,7 @@ const els = {
       const label = String(name || "");
       const labels = {
         "Lower Asheville": ["Lower"],
-        "JCC / Downtown Asheville": ["JCC", "Downtown"],
+        "North Downtown": ["North", "Downtown"],
         "Mid Asheville": ["Mid"],
         "High Asheville East": ["High E"],
         "High Asheville North": ["High N"],

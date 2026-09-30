@@ -30,8 +30,10 @@ function satellite(overrides = {}) {
   });
 }
 
-function read(observations, weatherContext = null) {
-  const state = buildSkyState({ camera: { timestamp: new Date(NOW).toISOString(), observations }, weatherContext, now: NOW });
+function read(observations, weatherContext = null, now = NOW) {
+  observations = observations.map((sample) => sample.timestamp === new Date(NOW).toISOString()
+    ? { ...sample, timestamp: new Date(now).toISOString() } : sample);
+  const state = buildSkyState({ camera: { timestamp: new Date(now).toISOString(), observations }, weatherContext, now });
   return {
     state,
     short: generateSkyLanguage(state, { verbosity: "short", seed: "test", remember: false }),
@@ -96,7 +98,7 @@ test("confirmed undercast is downgraded without corroboration and retained with 
 });
 
 test("visible satellite valley signature plus surface saturation confirms valley fog", () => {
-  const result = read([observation({ valleyVisibility: "poor" }), satellite({ trend: "dissipating" })], { cloudCover: 0.65, humidity: 0.96 });
+  const result = read([observation({ valleyVisibility: "poor" }), satellite({ trend: "dissipating" })], { cloudCover: 0.65, humidity: 0.96 }, Date.parse("2026-08-27T13:00:00Z"));
   assert.equal(result.state.fogState.type, "valley_fog");
   assert.equal(result.state.fogState.likelihood, "confirmed");
   assert.match(result.short, /valley fog.+thinning/i);
@@ -113,10 +115,38 @@ test("satellite-only likely valley signature cannot become definitive fog", () =
   const result = read([
     observation({ coverageFraction: 0.68, skyColor: "blue_gray", sunVisibility: "occasionally_filtered" }),
     satellite({ valleyPattern: "likely", valleyFogScore: 0.7, broadDeck: "none", broadLowCloudScore: 0.1 })
-  ], { cloudCover: 0.65, humidity: 0.82, visibility: 10 });
+  ], { cloudCover: 0.65, humidity: 0.82, visibility: 10 }, Date.parse("2026-08-27T13:00:00Z"));
   assert.equal(result.state.fogState.type, "valley_fog");
   assert.equal(result.state.fogState.likelihood, "possible");
   assert.notEqual(result.state.overall, "obscured");
+});
+
+for (const [season, before, cutoff] of [
+  ["daylight time", "2026-08-27T13:59:00Z", "2026-08-27T14:00:00Z"],
+  ["standard time", "2026-01-27T14:59:00Z", "2026-01-27T15:00:00Z"]
+]) test(`inferred valley fog ends at 10 a.m. Asheville ${season}`, () => {
+  const samples = [
+    observation({ coverageFraction: 0.68, skyColor: "blue_gray", sunVisibility: "occasionally_filtered" }),
+    satellite({ broadDeck: "none", broadLowCloudScore: 0.1 })
+  ];
+  const weather = { cloudCover: 0.65, humidity: 0.82, visibility: 10 };
+  assert.match(read(samples, weather, Date.parse(before)).short, /possible fog/i);
+  for (const now of [Date.parse(cutoff), Date.parse(cutoff) + 4 * 60 * 60_000]) {
+    const result = read(samples, weather, now);
+    assert.equal(result.state.fogState.type, "none");
+    assert.equal(result.state.undercast, "none");
+    assert.doesNotMatch(result.short, /fog/i);
+    assert.doesNotMatch(result.narrative.detail, /fog/i);
+    assert.doesNotMatch(generateSkyLanguage(result.state, { verbosity: "micro" }), /fog/i);
+  }
+});
+
+test("surface-observed fog remains reportable after the morning cutoff", () => {
+  const result = read([observation({ valleyVisibility: "poor" }), satellite()], {
+    humidity: 0.98, visibility: 1, weatherCode: 45
+  });
+  assert.equal(result.state.fogState.type, "valley_fog");
+  assert.match(result.short, /fog/i);
 });
 
 test("a clear dry afternoon immediately retires a conflicting satellite fog signal", () => {

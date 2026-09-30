@@ -4349,6 +4349,7 @@
   <link rel="stylesheet" href="/css/brand-lockup.css?v=20260805-brand2" />
   <link rel="stylesheet" href="/css/site-chrome.css?v=20260908-global-nav" />
   <script defer src="/js/site-chrome.js?v=20260908-global-nav"></script>
+<link rel="stylesheet" href="/css/fog-index.css">
 </head>
 <body class="splash-active">
   <div class="home-splash" id="homeSplash" role="status" aria-live="polite" aria-label="Loading 828 Weather Direct">
@@ -4456,6 +4457,8 @@
                 <small class="rain-window" id="heroRainWindow" hidden></small>
               </div>
             </div>
+            <section data-fog-index aria-label="Neighborhood fog potential"></section>
+            <p class="fs-subhead" id="northDowntownContext" hidden></p>
           </div>
           <aside class="feel-panel" aria-label="Current FeelScore">
             <div class="fs-topline">
@@ -5153,6 +5156,7 @@
     } from "./js/hiking-home-card.js?v=20260607-narrative";
     import { buildHumanActionIntelFS } from "./js/intel/human-action-feelscore.js?v=20260812-future-feelscore";
     import { buildSkyConditionRead } from "./js/intel/sky-read.js?v=20260902-solar-language-v1";
+    import { rememberStationObservation, stationWeatherSummary, withStationContext } from "./js/intel/station-lightning.js";
     import {
       applyPrecipOverrideToNarrative,
       getCurrentPrecipOverride,
@@ -5455,18 +5459,33 @@
       return n > 1 ? n / 100 : n;
     }
 
+    let latestNorthDowntownObservation = null;
+    function renderNorthDowntownContext(station = latestNorthDowntownObservation) {
+      latestNorthDowntownObservation = rememberStationObservation(station);
+      const node = document.querySelector('#northDowntownContext');
+      const text = stationWeatherSummary(latestNorthDowntownObservation, Date.now(), { surface: 'current' });
+      node.textContent = text;
+      node.hidden = !text;
+    }
+    setInterval(() => renderNorthDowntownContext(), 30_000);
+
     function buildSkyWeatherContext(hour = null, current = null) {
+      renderNorthDowntownContext(current?.supplementalStation);
       if (!hour && !current) return null;
       const solarSource = current || hour || {};
+      const supplementalStation = rememberStationObservation(current?.supplementalStation);
+      const fresh = supplementalStation && Date.now() - supplementalStation.timestamp <= 180_000 && supplementalStation.timestamp <= Date.now() + 60_000;
+      const local = fresh ? supplementalStation : null;
       return {
+        supplementalStation: local,
         cloudCover: normalizeProbabilityValue(hour?.cloudCover ?? hour?.cloud_cover ?? hour?.cloudcover),
-        humidity: normalizeProbabilityValue(hour?.relativeHumidity ?? hour?.relative_humidity ?? hour?.humidity ?? current?.relativeHumidity ?? current?.relative_humidity ?? current?.humidity),
+        humidity: normalizeProbabilityValue(local?.relative_humidity ?? hour?.relativeHumidity ?? hour?.relative_humidity ?? hour?.humidity ?? current?.relativeHumidity ?? current?.relative_humidity ?? current?.humidity),
         precipProbability: normalizeProbabilityValue(hour?.precipProbability ?? hour?.precipitation_probability),
         precipAmount: Number(hour?.precipAmount ?? hour?.precipitation ?? hour?.rain ?? current?.precipAmount ?? current?.precipitation ?? current?.precipRate ?? 0) || 0,
-        solarRadiation: Number(solarSource.solarRadiation ?? solarSource.solar_radiation ?? solarSource.solarWm2 ?? solarSource.solar),
-        uvIndex: Number(solarSource.uvIndex ?? solarSource.uv_index ?? solarSource.uv),
-        temperature: Number(hour?.temperature ?? hour?.temperatureF ?? hour?.temp ?? current?.temperature ?? current?.temperatureF ?? current?.temp),
-        dewPoint: Number(hour?.dewPoint ?? hour?.dewpoint ?? hour?.dew_point ?? current?.dewPoint ?? current?.dewpoint ?? current?.dew_point),
+        solarRadiation: Number(local?.solar_radiation ?? solarSource.solarRadiation ?? solarSource.solar_radiation ?? solarSource.solarWm2 ?? solarSource.solar),
+        uvIndex: Number(local?.uv ?? solarSource.uvIndex ?? solarSource.uv_index ?? solarSource.uv),
+        temperature: Number(Number.isFinite(local?.air_temperature) ? local.air_temperature * 1.8 + 32 : hour?.temperature ?? hour?.temperatureF ?? hour?.temp ?? current?.temperature ?? current?.temperatureF ?? current?.temp),
+        dewPoint: Number(Number.isFinite(local?.dew_point) ? local.dew_point * 1.8 + 32 : hour?.dewPoint ?? hour?.dewpoint ?? hour?.dew_point ?? current?.dewPoint ?? current?.dewpoint ?? current?.dew_point),
         visibility: Number(hour?.visibility ?? hour?.visibilityMiles ?? current?.visibility ?? current?.visibilityMiles),
         weatherCode: hour?.weatherCode ?? hour?.weather_code ?? current?.weatherCode ?? current?.weather_code ?? null,
         sunriseAt: latestSunriseAt,
@@ -7298,6 +7317,7 @@
           : null;
         renderVisualWeatherContext();
 
+        skyNarrative = withStationContext(skyNarrative, weatherContext?.supplementalStation);
         document.querySelector("#skyHomeLabel").textContent = skyLabel;
         if (latestFeelScoreRenderInputs) {
           renderLiveFeelScore(...latestFeelScoreRenderInputs, latestPrecipOverride);
@@ -7463,5 +7483,6 @@
     }
 
   </script>
+<script type="module" src="/js/fog-index.js"></script>
 </body>
 </html>

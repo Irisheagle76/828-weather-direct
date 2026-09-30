@@ -217,7 +217,7 @@ function fogCorroboration(weatherContext, cameraVisual) {
   };
 }
 
-function reconcileFog(satelliteObservation, weatherContext, cameraVisual) {
+function reconcileFog(satelliteObservation, weatherContext, cameraVisual, now) {
   const satellite = satelliteObservation?.satelliteLowCloud;
   const empty = { type: "none", likelihood: "none", confidence: 0, trend: "unknown", evidence: [] };
   if (!satellite || satellite.quality !== "good") return empty;
@@ -253,6 +253,13 @@ function reconcileFog(satelliteObservation, weatherContext, cameraVisual) {
   const preferValley = satellite.valleyPattern !== "none" && (satellite.broadDeck === "none" || valleyScore >= deckScore - 0.1);
   let type = "none", likelihood = "none";
   if (preferValley && !contradictedValleySignal) {
+    const localHour = Number(new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/New_York", hour: "numeric", hourCycle: "h23"
+    }).format(new Date(now)));
+    // Morning valley patterns can also be ordinary clouds. After 10 a.m.,
+    // require surface fog evidence instead of carrying that inference all day.
+    const observedFog = corroboration.fogCode || (corroboration.saturated && corroboration.lowVisibility);
+    if (localHour >= 10 && !observedFog) return { ...empty, evidence: ["morning_valley_fog_window_ended"] };
     type = "valley_fog";
     likelihood = satellite.valleyPattern === "likely" ? (valleySupport ? "confirmed" : "possible") : (valleySupport ? "likely" : "possible");
   } else if (satellite.broadDeck !== "none") {
@@ -312,7 +319,7 @@ export function buildSkyState({ camera = null, skyIntel = null, weatherContext =
   const textures = [...new Set(cameraVisual.flatMap((observation) => observation.texture || []))];
   const bestVisual = [...cameraVisual].sort((a, b) => (finite(b.qualityScore) ?? 0) - (finite(a.qualityScore) ?? 0))[0];
   const obscured = skyIntel?.visualObscured === true && cameraVisual.length === 0;
-  const fogState = reconcileFog(satelliteObservation, weatherContext, cameraVisual);
+  const fogState = reconcileFog(satelliteObservation, weatherContext, cameraVisual, now);
   const undercastRank = { none: 0, possible: 1, likely: 2, confirmed: 3 };
   // Satellite low-cloud hints are reconciled through fogState above. Keeping
   // them out of this camera-only fallback prevents a rejected terrain-shaped
