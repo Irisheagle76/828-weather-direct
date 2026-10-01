@@ -2289,7 +2289,7 @@
       const read = buildAtmosphereNow(current?.supplementalStation, { daylight: getTodayDaily(state.weather)?.sunset ? isCurrentDaylight() : null });
       document.querySelector('#atmosphereSummary').textContent = read.summary;
       document.querySelector('#atmosphereSource').textContent = read.available
-        ? `North Downtown station · observed ${formatCaptureTime(read.timestamp)} · local surface measurements`
+        ? `North Downtown station · observed ${formatCaptureTime(new Date(read.timestamp).toISOString())} · local surface measurements`
         : 'North Downtown station · fresh observations unavailable';
       document.querySelector('#atmosphereCards').replaceChildren(...read.cards.map(card => {
         const article = document.createElement('article');
