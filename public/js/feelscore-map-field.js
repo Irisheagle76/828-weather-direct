@@ -6,6 +6,28 @@ export const CATEGORY_COLORS = {
   5: [70, 211, 202],
 };
 
+// Keep raster sampling and clipping in the display map's coordinate system,
+// including its padding, even when the contour canvas is downsampled.
+export function mapProjection(bbox, width, height, layerWidth = width, layerHeight = height) {
+  const padding = width < 680 ? 10 : 24;
+  const scaleX = layerWidth / width;
+  const scaleY = layerHeight / height;
+  return {
+    point(lon, lat) {
+      return [
+        (padding + ((lon - bbox.west) / (bbox.east - bbox.west)) * (width - padding * 2)) * scaleX,
+        (padding + ((bbox.north - lat) / (bbox.north - bbox.south)) * (height - padding * 2)) * scaleY,
+      ];
+    },
+    inverse(x, y) {
+      return [
+        bbox.west + ((x / scaleX - padding) / (width - padding * 2)) * (bbox.east - bbox.west),
+        bbox.north - ((y / scaleY - padding) / (height - padding * 2)) * (bbox.north - bbox.south),
+      ];
+    },
+  };
+}
+
 function gridKey(lat, lon) {
   return `${lat.toFixed(2)},${lon.toFixed(2)}`;
 }

@@ -1,4 +1,4 @@
-import { CATEGORY_COLORS, buildCategoryLookup, sampleContour, smoothContourOpacity } from './feelscore-map-field.js';
+import { CATEGORY_COLORS, mapProjection, buildCategoryLookup, sampleContour, smoothContourOpacity } from './feelscore-map-field.js';
 import { getForecastPeriod } from './se-feelscore-period.js?v=20260914-live';
 
 const canvas = document.querySelector('#feelscore-map');
@@ -34,22 +34,7 @@ function formatDate(dateText) {
 }
 
 function projection(width, height) {
-  const { bbox } = dataset;
-  const padding = width < 680 ? 10 : 24;
-  return {
-    point(lon, lat) {
-      return [
-        padding + ((lon - bbox.west) / (bbox.east - bbox.west)) * (width - padding * 2),
-        padding + ((bbox.north - lat) / (bbox.north - bbox.south)) * (height - padding * 2),
-      ];
-    },
-    inverse(x, y) {
-      return [
-        bbox.west + ((x - padding) / (width - padding * 2)) * (bbox.east - bbox.west),
-        bbox.north - ((y - padding) / (height - padding * 2)) * (bbox.north - bbox.south),
-      ];
-    },
-  };
+  return mapProjection(dataset.bbox, width, height);
 }
 
 function traceRing(context, ring, project) {
@@ -77,7 +62,7 @@ function contourLayer(width, height) {
   const context = layer.getContext('2d');
   const pixels = context.createImageData(layer.width, layer.height);
   const lookup = fieldLookup();
-  const layerProjection = projection(layer.width, layer.height);
+  const layerProjection = mapProjection(dataset.bbox, width, height, layer.width, layer.height);
   for (let y = 0; y < layer.height; y += 1) {
     for (let x = 0; x < layer.width; x += 1) {
       const [lon, lat] = layerProjection.inverse(x, y);

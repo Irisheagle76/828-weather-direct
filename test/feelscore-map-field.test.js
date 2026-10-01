@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { buildCategoryLookup, sampleContour, smoothContourOpacity } from '../public/js/feelscore-map-field.js';
+import { buildCategoryLookup, mapProjection, sampleContour, smoothContourOpacity } from '../public/js/feelscore-map-field.js';
 
 const bbox = { west: -84, east: -83.25, south: 35, north: 35.75 };
 const spacing = 0.25;
@@ -12,6 +12,27 @@ const points = [
   { lat: 35.5, lon: -83.75, finalCategory: 0 },
 ];
 const lookup = buildCategoryLookup(points);
+
+for (const [width, height] of [[1622, 862], [1178, 626], [680, 390], [390, 488], [260, 430]]) {
+  test(`contours, boundaries and hit testing align at ${width}x${height}`, () => {
+    const scale = Math.min(1, 760 / width);
+    const layerWidth = Math.max(280, Math.round(width * scale));
+    const layerHeight = Math.max(220, Math.round(height * scale));
+    const display = mapProjection(bbox, width, height);
+    const raster = mapProjection(bbox, width, height, layerWidth, layerHeight);
+    for (const [lon, lat] of [[bbox.west, bbox.north], [bbox.east, bbox.south], [-83.75, 35.25]]) {
+      const [x, y] = display.point(lon, lat);
+      const [rx, ry] = raster.point(lon, lat);
+      assert.ok(Math.abs(rx * width / layerWidth - x) < 1e-9);
+      assert.ok(Math.abs(ry * height / layerHeight - y) < 1e-9);
+      const sampled = raster.inverse(x * layerWidth / width, y * layerHeight / height);
+      const selected = display.inverse(x, y);
+      assert.ok(Math.abs(sampled[0] - lon) < 1e-9);
+      assert.ok(Math.abs(sampled[1] - lat) < 1e-9);
+      assert.deepEqual(sampled, selected);
+    }
+  });
+}
 
 test('an isolated qualifying point keeps its own category color at its center', () => {
   const field = sampleContour(-83.75, 35.25, lookup, spacing, bbox);
