@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>828 Sunset Radiance</title>
+  <title>Asheville Sky &amp; Sunset | 828 Weather</title>
+  <meta name="description" content="Read Asheville's sky now with local weather observations and live cameras, then plan the evening with Sunset Radiance." />
   <style>
     :root {
       --ink: #142033;
@@ -45,10 +46,17 @@
       background: linear-gradient(90deg, rgba(219, 232, 255, 0.28), rgba(247, 200, 115, 0.38));
     }
 
-    body.radiance-closed .sky-frame img,
-    body.radiance-closed .sky-frame iframe {
-      filter: saturate(0.82) brightness(0.82);
-    }
+    .atmosphere-now { margin-top: 28px; padding: 24px; background: var(--white); border: 1px solid var(--line); border-radius: 20px; }
+    .atmosphere-now h3 { margin: 0 0 10px; font-size: 24px; }
+    .atmosphere-now p { color: var(--muted); line-height: 1.6; }
+    .atmosphere-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+    .atmosphere-card { padding: 16px; background: #edf3f8; border-radius: 12px; }
+    .atmosphere-card h4 { margin: 0 0 12px; font-size: 14px; }
+    .atmosphere-card b { display: block; font-size: 21px; }
+    .atmosphere-card p { font-size: 14px; margin-bottom: 0; }
+    body.sunset-focus .index-panel { outline: 3px solid var(--sunset); outline-offset: 4px; }
+    body.sunset-focus #sunsetHeroStat { order: -3; }
+    @media (max-width: 480px) { .atmosphere-now { padding: 16px; } .atmosphere-grid { grid-template-columns: 1fr; } }
 
     body.radiance-closed .sky-chip {
       background: rgba(20, 32, 51, 0.86);
@@ -638,7 +646,7 @@
     }
 
     .context-media.unca-camera img {
-      object-position: center 62%;
+      object-position: center top;
     }
 
     .station-details {
@@ -1335,7 +1343,7 @@
           <a href="/i26-connector.html">I-26 Connector</a>
           <a href="/pulse.html">Weather Pulse</a>
           <a href="/fall.html">Fall Explorer</a>
-          <a class="active sunset-nav-link" href="/828-sunset-radiance.html" aria-current="page">Sunset Radiance</a>
+          <a class="active sunset-nav-link" href="/828-sunset-radiance.html" aria-current="page">Sky &amp; Sunset</a>
         </nav>
       </div>
     </header>
@@ -1344,25 +1352,26 @@
       <div class="hero-inner">
         <div class="hero-copy">
           <div class="eyebrow">828 Weather Update</div>
-          <h1>828 Sunset Radiance</h1>
+          <h1>Asheville Sky &amp; Sunset</h1>
           <p>
-            A near-live read on Asheville's western sky, blending the sky camera,
-            cloud texture, moisture, and evening timing into one sunset index.
+            Read the sky now with local observations and camera views across Asheville.
+            Follow Sunset Radiance as the evening light approaches.
           </p>
           <div class="hero-actions">
-            <a class="button primary" href="#snapshot">See the sky</a>
+            <a class="button primary" id="primarySkyAction" href="#snapshot">See Sky Now</a>
+            <a class="button secondary" href="#atmosphere">Atmosphere Now</a>
             <a class="button secondary" href="#timing">Plan sunset</a>
           </div>
         </div>
 
-        <div class="hero-strip" aria-label="Sunset highlights">
-          <div class="stat">
+        <div class="hero-strip" aria-label="Sky and sunset highlights">
+          <div class="stat" style="order: -2">
+            <b id="heroSky">Loading</b>
+            <span>Sky Now · current camera and weather read</span>
+          </div>
+          <div class="stat" id="sunsetHeroStat">
             <b id="heroScore">--</b>
             <span>Overall Sunset Radiance Index for the Asheville sky</span>
-          </div>
-          <div class="stat">
-            <b id="heroSky">Loading</b>
-            <span>Near-live sky condition from the western camera view</span>
           </div>
           <div class="stat">
             <b id="heroSunset">--</b>
@@ -1386,7 +1395,7 @@
 
       <section class="section">
         <div class="section-heading">
-          <h2>Sky Snapshot</h2>
+          <h2>Sky Now</h2>
         </div>
 
         <div class="radiance-layout">
@@ -1434,9 +1443,9 @@
             </div>
           </article>
 
-          <aside class="index-panel" aria-live="polite">
+          <aside class="index-panel" id="sunset-radiance" aria-live="polite">
             <div class="index-top">
-              <div class="index-label">Overall sunset index</div>
+              <div class="index-label">Sunset Radiance · evening outlook</div>
               <div class="index-score"><b id="indexScore">--</b><span>/100</span></div>
               <div class="index-title" id="indexTitle">Building the radiance read.</div>
               <p class="index-detail" id="indexDetail">
@@ -1448,6 +1457,14 @@
             </div>
           </aside>
         </div>
+
+        <section class="atmosphere-now" id="atmosphere" aria-labelledby="atmosphereTitle">
+          <h3 id="atmosphereTitle">Atmosphere Now</h3>
+          <p id="atmosphereSummary" aria-live="polite">Waiting for fresh local observations.</p>
+          <p id="atmosphereSource">North Downtown station · checking observation time</p>
+          <div class="atmosphere-grid" id="atmosphereCards"></div>
+          <p>These measurements describe conditions at North Downtown. Camera analysis includes the western downtown view and, when available, a North Asheville view looking south-southeast toward downtown. The North Asheville image is used for analysis only and is not displayed here. Cloud height, winds aloft, and storm movement need additional observations.</p>
+        </section>
 
         <div class="camera-desk-heading">
           <h3>Live Camera Desk</h3>
@@ -1497,10 +1514,10 @@
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowfullscreen
               ></iframe>
-              <a id="eastLiveFallback" class="youtube-live-fallback" href="https://youtu.be/epr3iOfv9FM" target="_blank" rel="noopener noreferrer">Open live feed</a>
+              <a id="eastLiveFallback" class="youtube-live-fallback" href="https://www.youtube.com/@tballisty/live" target="_blank" rel="noopener noreferrer">Open live feed</a>
             </div>
             <div class="context-copy">
-              <strong>East Asheville · ENE.</strong> Directional cross-check for clouds east of the city. <a href="https://youtu.be/epr3iOfv9FM" target="_blank" rel="noopener noreferrer">Open on YouTube</a>.
+              <strong>East Asheville · ENE.</strong> Directional cross-check for clouds east of the city. <a href="https://www.youtube.com/@tballisty/live" target="_blank" rel="noopener noreferrer">Open on YouTube</a>.
             </div>
           </article>
 
@@ -1641,7 +1658,7 @@
           <a href="/radar.html">Radar &amp; Satellite</a>
           <a href="/hiking.html">Hiking Guidance</a>
           <a href="/water.html">Water Conditions</a>
-          <a href="/828-sunset-radiance.html">Sunset Radiance</a>
+          <a href="/828-sunset-radiance.html">Sky &amp; Sunset</a>
           <a href="https://www.linkedin.com/in/timballisty">About</a>
           <a href="mailto:tballisty@gmail.com">Contact</a>
           <a href="https://ko-fi.com/irisheagle" target="_blank" rel="noopener noreferrer">Support</a>
@@ -1660,6 +1677,7 @@
   </div>
 
   <script type="module">
+    import { buildAtmosphereNow } from "./js/intel/atmosphere-now.js";
     import { withStationSkyMeasurements, withStationContext } from "./js/intel/station-lightning.js";
     import { buildSkyConditionRead, isObscuredSky } from "./js/intel/sky-read.js?v=20260902-solar-language-v1";
     import { buildDuskSkyFallback, getSkyTimePhase } from "./js/intel/sky-time.js?v=20260629-shared-sunset";
@@ -1674,7 +1692,7 @@
     const OBSERVATION_REFRESH_MS = 3 * 60 * 1000;
     const SKY_STALE_MS = 20 * 60 * 1000;
     const LIVE_THUMBNAIL_URL = "https://i.ytimg.com/vi/UxUU3Fc1vBw/maxresdefault_live.jpg";
-    const EAST_LIVE_PERMANENT_URL = "https://www.youtube.com/watch?v=epr3iOfv9FM";
+    const EAST_LIVE_PERMANENT_URL = "https://www.youtube.com/@tballisty/live";
     const EAST_LIVE_CHANNEL_EMBED_URL = "https://www.youtube.com/embed/epr3iOfv9FM?playsinline=1&rel=0&autoplay=1&mute=1&origin=https%3A%2F%2Favlweather.com";
     const SKYCAM_RAW_BASE = "https://raw.githubusercontent.com/Irisheagle76/828-weather-direct/main/public/js/sky-cam";
     const UNCA_CAMERA_URL = "https://res.cloudinary.com/dz45rrije/image/upload/f_auto,q_auto:good/avlweather_towercam_latest.jpg";
@@ -1829,7 +1847,7 @@
           els.eastLiveIframe.src = EAST_LIVE_CHANNEL_EMBED_URL;
         }
         if (els.eastLiveFallback) {
-          els.eastLiveFallback.href = data?.watchUrl || data?.permanentUrl || EAST_LIVE_PERMANENT_URL;
+          els.eastLiveFallback.href = EAST_LIVE_PERMANENT_URL;
         }
       } catch (error) {
         console.warn("East Asheville live resolver unavailable", error);
@@ -2266,7 +2284,27 @@
       };
     }
 
+    function renderAtmosphere() {
+      const current = state.weather?.current || state.weather?.current_conditions;
+      const read = buildAtmosphereNow(current?.supplementalStation, { daylight: getTodayDaily(state.weather)?.sunset ? isCurrentDaylight() : null });
+      document.querySelector('#atmosphereSummary').textContent = read.summary;
+      document.querySelector('#atmosphereSource').textContent = read.available
+        ? `North Downtown station · observed ${formatCaptureTime(read.timestamp)} · local surface measurements`
+        : 'North Downtown station · fresh observations unavailable';
+      document.querySelector('#atmosphereCards').replaceChildren(...read.cards.map(card => {
+        const article = document.createElement('article');
+        article.className = 'atmosphere-card';
+        for (const [tag, value] of [['h4', card.title], ['b', card.value], ['p', card.detail]]) {
+          const element = document.createElement(tag);
+          element.textContent = value;
+          article.append(element);
+        }
+        return article;
+      }));
+    }
+
     function renderRadiance() {
+      renderAtmosphere();
       const radiance = buildRadiance();
       const sunsetHour = getSunsetHour(state.weather);
       const currentHour = getCurrentHour(state.weather);
@@ -2278,6 +2316,11 @@
       const skyStale = isSkyDataStale(state.skyData?.timestamp);
       const staleNightAnalysis = skyStale && state.skyData?.metrics?.mode === "night" && isCurrentDaylight();
       document.body.classList.toggle("radiance-closed", isClosed);
+      const sunsetFocus = !isClosed && !isEarlySetup;
+      document.body.classList.toggle('sunset-focus', sunsetFocus);
+      const primaryAction = document.querySelector('#primarySkyAction');
+      primaryAction.textContent = sunsetFocus ? 'See Sunset Radiance' : 'See Sky Now';
+      primaryAction.href = sunsetFocus ? '#sunset-radiance' : '#snapshot';
 
       els.heroScore.textContent = isClosed ? "Closed" : Number.isFinite(radiance.score) ? `${radiance.score}` : "--";
       els.indexScore.textContent = isClosed ? "Closed" : Number.isFinite(radiance.score) ? radiance.score : "--";
@@ -2321,18 +2364,18 @@
       els.windowTitle.textContent = isClosed ? "Window closed" : daily?.sunset ? `Sunset ${formatTime(daily.sunset)}` : "Sunset pending";
       els.windowCopy.textContent = isClosed ? "The evening radiance window has passed. Check back tomorrow as the next sunset setup develops." : radiance.factors[3].detail;
 
-      const wnwCloud = Number(state.skyData?.metrics?.cloudCoverWest);
-      const eneCloud = Number(state.skyData?.metrics?.cloudCoverENE);
-      const hasWNW = Number.isFinite(wnwCloud);
-      const hasENE = Number.isFinite(eneCloud);
-      els.cloudMetric.textContent = hasWNW ? pct(wnwCloud) : obscuredSky ? "Obscured" : pct(displayCloud);
+      const wnwCloud = state.skyData?.metrics?.cloudCoverWest;
+      const eneCloud = state.skyData?.metrics?.cloudCoverENE;
+      const hasWNW = !skyStale && Number.isFinite(wnwCloud);
+      const hasENE = !skyStale && Number.isFinite(eneCloud);
+      els.cloudMetric.textContent = skyStale ? "--" : hasWNW ? pct(wnwCloud) : obscuredSky ? "Obscured" : pct(displayCloud);
       els.cloudMetricLabel.textContent = hasWNW ? "Western sky clouds" : "Camera cloud cover";
       els.eneCloudMetric.textContent = hasENE ? pct(eneCloud) : "--";
       els.directionStatus.textContent = `West ${hasWNW ? pct(wnwCloud) : "--"} / ENE ${hasENE ? pct(eneCloud) : "--"}`;
-      els.lightMetric.textContent = staleNightAnalysis
-        ? "Bright"
+      els.lightMetric.textContent = skyStale
+        ? "--"
         : state.skyIntel?.sunlightDetected ? labelize(state.skyIntel.sunlightLevel) : "Low";
-      els.confidenceMetric.textContent = pct(state.skyIntel?.confidence);
+      els.confidenceMetric.textContent = skyStale ? "--" : pct(state.skyIntel?.confidence);
 
       renderTimeline();
       renderDaylightGraphic();
@@ -2477,6 +2520,10 @@
     }
 
     function buildLiveViewNarrative() {
+      if (isSkyDataStale(state.skyData?.timestamp)) return {
+        headline: "Current camera analysis is unavailable.",
+        detail: "The displayed image can be checked visually, but an older analysis cannot establish the sky now. Fresh station observations appear below when available."
+      };
       const currentHour = getCurrentHour(state.weather);
       const cloud = pickNumber(currentHour, ["cloudCover", "cloud_cover", "cloudcover"]);
       const humidity = pickNumber(currentHour, ["relativeHumidity", "relative_humidity", "humidity"]);
@@ -2552,16 +2599,16 @@
       state.skyIntel = skyRead.skyIntel;
       state.narrative = skyRead.narrative;
       const precipOverride = getSkyPrecipOverride();
-      const baseNarrative = staleNightAnalysis ? buildLiveViewNarrative() : skyRead.narrative;
+      const baseNarrative = skyStale ? buildLiveViewNarrative() : skyRead.narrative;
       const liveNarrative = withStationContext(applyPrecipOverrideToNarrative(baseNarrative, precipOverride), buildSkyWeatherContext()?.supplementalStation);
-      const skyLabel = getPrecipSkyLabel(precipOverride) || (staleNightAnalysis ? "Live Sky" : skyRead.label);
+      const skyLabel = getPrecipSkyLabel(precipOverride) || (skyStale ? "Analysis delayed" : skyRead.label);
 
       els.skyChip.textContent = skyLabel;
       els.heroSky.textContent = skyLabel;
       els.skyHeadline.textContent = liveNarrative?.headline || "Reading the western sky.";
       els.skyDetail.textContent = liveNarrative?.detail || "The camera snapshot will update automatically.";
       els.liveStatus.textContent = `Western sky thumbnail analyzed ${formatCaptureTime(state.skyData?.timestamp)}`;
-      els.captureMetric.textContent = "Current";
+      els.captureMetric.textContent = skyStale ? "Analysis delayed" : "Current";
       els.captureMetricLabel.textContent = "Western sky YouTube still";
       setSkyFrame(captureVersion, skyStale);
       renderRadiance();
@@ -2773,6 +2820,8 @@
       });
     });
 
+    renderAtmosphere();
+    setInterval(renderAtmosphere, 30_000);
     setupLightbox();
     refreshContextMedia();
     await Promise.all([resolveEastLivePlayer(), loadSky(), loadWeather(), loadStorm()]);

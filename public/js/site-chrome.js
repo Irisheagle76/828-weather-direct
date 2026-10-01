@@ -10,7 +10,7 @@ const SITE_LINKS = [
   ["I-26 Connector", "/i26-connector.html"],
   ["Weather Pulse", "/pulse.html"],
   ["Fall Explorer", "/fall.html"],
-  ["Sunset Radiance", "/828-sunset-radiance.html"],
+  ["Sky & Sunset", "/828-sunset-radiance.html"],
 ];
 
 const currentPath = window.location.pathname.replace(/\/$/, "") || "/";
