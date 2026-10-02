@@ -56,10 +56,10 @@ test('capture manifest must match the frame hash and source', async () => {
   await assert.rejects(fetchCameraFrame(camera, { fetchImpl, now }), /verified/);
 });
 
-test('night exposure cannot stand in for daylight and original UNCA timestamps are retained', () => {
+test('night exposure cannot stand in for daylight and UNCA uses its current university source', () => {
   assert.ok(solarElevation(Date.parse('2026-10-02T10:00:00Z')) < -3);
   assert.ok(solarElevation(now) > 40);
   assert.ok(solarElevation(Date.parse('2026-06-21T23:00:00Z')) > 0);
   assert.ok(solarElevation(Date.parse('2026-12-21T23:00:00Z')) < -3);
-  assert.match(CAMERA_REGISTRY.find(c => c.id === 'unca-south').snapshotUrl, /upload\/avlweather/);
+  assert.match(CAMERA_REGISTRY.find(c => c.id === 'unca-south').snapshotUrl, /www\.atms\.unca\.edu\/currwx\/towercam\.jpg/);
 });

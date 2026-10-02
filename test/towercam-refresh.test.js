@@ -7,8 +7,8 @@ const page = await readFile(new URL("../public/828-sunset-radiance.html", import
 const refreshScript = await readFile(new URL("../tools/towercam-refresh/Refresh-Towercam.ps1", import.meta.url), "utf8");
 const signerRoute = await readFile(new URL("../lib/api-routes/towercam/upload-signature.js", import.meta.url), "utf8");
 
-test("Sunset Radiance uses the stable Cloudinary towercam asset", () => {
-  assert.match(page, /avlweather_towercam_latest\.jpg/);
+test("Sunset Radiance uses the university towercam without the local mirror", () => {
+  assert.match(page, /www\.atms\.unca\.edu\/currwx\/towercam\.jpg/);
   assert.match(page, /UNCA_CACHE_BUCKET_MS = 15 \* 60 \* 1000/);
   assert.match(page, /bucketedCacheUrl\(UNCA_CAMERA_URL, UNCA_CACHE_BUCKET_MS\)/);
   assert.doesNotMatch(page, /wlos\.com\/resources\/ftptransfer\/wlos\/maps\/Cam%20UNCA%20EcoNet\.png/);
