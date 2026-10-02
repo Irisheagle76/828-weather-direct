@@ -19,7 +19,10 @@ test("Sunset Radiance includes the Chamber camera as a visual Sky Read assistant
   assert.match(html, /35\.62180° N, 82\.56606° W/);
   assert.match(html, /2,357 ft/);
   assert.match(html, /econet\.climate\.ncsu\.edu\/m\/\?id=UNCA/);
-  assert.doesNotMatch(html, /Fairview/i);
+  assert.match(html, /Fairview toward Swannanoa/);
+  assert.match(html, /images\.ambientweather\.net\/308398A68945\/latest.jpg/);
+  assert.match(html, /KNCFAIRV101/);
+  assert.match(html, /2,435 ft/);
 
   const chamberIndex = html.indexOf("Live Asheville Area Chamber of Commerce camera");
   const courthouseIndex = html.indexOf("Live Buncombe County Courthouse camera on YouTube");

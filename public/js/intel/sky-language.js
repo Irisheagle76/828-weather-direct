@@ -162,6 +162,11 @@ function observationSentence(state, seed) {
   if (state.undercast === "confirmed") return "A low cloud layer is filling the Asheville basin while higher ridges remain above it.";
   if (state.undercast === "likely") return "Low clouds appear to be pooling in parts of the Asheville basin below the higher ridges.";
   if (state.undercast === "possible") return "There are some signs of low clouds pooling in the Asheville basin, though the view is not definitive yet.";
+  const views = (state.cameraViews || []).filter(view => view.scope === 'local' && view.direction && view.status === 'current' && Number.isFinite(view.coverageFraction)).sort((a, b) => a.coverageFraction - b.coverageFraction);
+  const clearer = views[0], cloudier = views.at(-1);
+  if (views.length > 1 && cloudier.coverageFraction - clearer.coverageFraction >= .3) {
+    return `The views differ: ${cloudier.label}, looking ${cloudier.direction}, shows more cloud cover than ${clearer.label}, looking ${clearer.direction}.`;
+  }
   if (directional) return `The view includes ${cloud}, ${directional}.`;
   const arrangements = {
     clear: "The sky is broadly open over Asheville.",
@@ -222,7 +227,8 @@ export function generateSkyLanguage(state, { verbosity = "short", seed = null, s
     const observation = observationSentence(state, languageSeed);
     const interpretation = lightSentence(state);
     const solarContext = solarContextSentence(state);
-    const detail = `${observation} ${interpretation} ${solarContext}`;
+    const regional = (state.regionalViews || []).map((view) => `${view.label}, looking ${view.direction}: ${view.coverage === 'clear' ? 'mostly blue sky, though thin high clouds may be missed' : String(view.coverage).replaceAll('_', ' ') + ' cloud cover in that view'}.`).join(' ');
+    const detail = `${observation} ${interpretation} ${solarContext}${regional ? ` ${regional}` : ''}`;
     result = { headline: baseShort(state, `${languageSeed}:headline`), detail, observation, interpretation, solarContext, sunsetExpectation: solarContext };
   } else result = baseShort(state, languageSeed);
   const rendered = typeof result === "string" ? result : `${result.headline}|${result.detail}`;

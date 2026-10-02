@@ -276,7 +276,7 @@ function reconcileDirectional(observations) {
   const buckets = {};
   for (const observation of observations) {
     for (const [direction, detail] of Object.entries(observation.directional || {})) {
-      if (!detail || !["east", "south", "west", "overhead"].includes(direction)) continue;
+      if (!detail || !["north", "northeast", "east-northeast", "east", "southeast", "south-southeast", "south", "southwest", "west", "northwest", "overhead"].includes(direction)) continue;
       const coverage = fraction(detail.coverageFraction ?? detail.cloudCover ?? detail.coverage);
       if (coverage == null) continue;
       const weight = (finite(observation.qualityScore) ?? 0.5) * (finite(observation.confidence) ?? 0.5);
@@ -301,7 +301,17 @@ export function buildSkyState({ camera = null, skyIntel = null, weatherContext =
   const allObservations = [...supplied, ...(fallback ? [fallback] : [])];
   const visual = allObservations.filter((observation) => usableObservation(observation, now));
   const satelliteObservation = visual.find((observation) => observation.kind === "satellite") || null;
-  const cameraVisual = visual.filter((observation) => observation.kind !== "satellite");
+  // Nearby valleys provide regional context, not an overhead measurement for downtown.
+  const cameraVisual = visual.filter((observation) => observation.kind !== "satellite" && observation.scope !== "regional");
+  const cameraViews = (camera?.cameraRegistry || allObservations.filter((o) => o.kind !== "satellite").map((o) => ({ id: o.source, name: o.label, orientation: o.orientation, scope: o.scope }))).map((source) => {
+    const observation = allObservations.find((o) => o.source === source.id);
+    const usable = usableObservation(observation, now);
+    return { source: source.id, label: source.name || source.id, direction: source.orientation?.center || null,
+      scope: source.scope || "local", status: usable ? "current" : observation?.quality === "good" ? "stale" : observation?.quality || "offline",
+      timestamp: observation?.timestamp || null, timestampBasis: observation?.timestampBasis || "source",
+      coverage: usable ? observation.coverage || coverageName(observation.coverageFraction) : null,
+      coverageFraction: usable ? observation.coverageFraction : null };
+  });
   const weather = weatherObservation(weatherContext);
   const inputs = [...cameraVisual, ...(weather ? [weather] : [])];
   const weighted = inputs.map((observation) => ({
@@ -361,6 +371,8 @@ export function buildSkyState({ camera = null, skyIntel = null, weatherContext =
     horizon: west ? (west.coverageFraction < 0.35 ? "clear_west" : west.coverageFraction > 0.75 ? "cloudy_west" : "partly_open_west") : "unknown",
     depth: textures.some((value) => ["textured", "puffy", "lumpy", "layered"].includes(value)) ? "good_texture" : cloud != null && cloud > 0.9 ? "flat" : "soft",
     directional,
+    cameraViews,
+    regionalViews: cameraViews.filter((view) => view.scope === "regional" && view.status === "current"),
     ridgeVisibility: bestVisual?.ridgeVisibility || "unknown",
     valleyVisibility: bestVisual?.valleyVisibility || "unknown",
     undercast: reconciledUndercast,

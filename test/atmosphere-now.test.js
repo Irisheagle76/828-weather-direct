@@ -28,11 +28,26 @@ test('rain freshness is independent; lightning takes summary priority', () => {
 });
 test('nighttime solar reading cannot become a cloud inference', () => {
   const read = buildAtmosphereNow(station, { now, daylight: false });
-  assert.equal(read.cards[1].value, '0 W/m²');
+  assert.equal(read.cards[1].value, 'Nighttime');
+  assert.equal(read.cards[1].meter, null);
   assert.match(read.cards[1].detail, /does not indicate cloud/);
 });
 test('North Asheville uses the supplied analysis view without invented side bearings', () => {
   const camera = CAMERA_REGISTRY.find(c => c.id === 'north-asheville-south');
   assert.match(camera.snapshotUrl, /1ceufgi3xpyusiox5/);
   assert.deepEqual(camera.orientation, { center: 'south-southeast' });
+});
+
+
+test('daylight uses plain-language bands and missing data has no meter', () => {
+  for (const [solar_radiation, expected] of [[0,'Low daylight'],[100,'Gentle daylight'],[300,'Bright daylight'],[600,'Strong daylight']]) {
+    const card = buildAtmosphereNow({...station, solar_radiation}, {now, daylight:true}).cards[1];
+    assert.equal(card.value, expected);
+    assert.ok(card.meter.value >= 1 && card.meter.value <= 4);
+  }
+  const missing = buildAtmosphereNow({timestamp:now}, {now,daylight:true});
+  assert.equal(missing.cards[1].value, 'Unavailable');
+  assert.equal(missing.cards[1].meter, null);
+  const stale = buildAtmosphereNow({...station,timestamp:now-200000}, {now});
+  assert.ok(stale.cards.every(card => card.meter === null));
 });

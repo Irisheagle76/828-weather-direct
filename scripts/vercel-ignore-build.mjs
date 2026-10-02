@@ -28,7 +28,8 @@ const message = getCommitMessage();
 const changedFiles = getChangedFiles();
 const skycamOnly = changedFiles.length > 0 && changedFiles.every((file) => (
   file === "public/js/sky-cam/frame.jpg" ||
-  file === "public/js/sky-cam/output.json"
+  file === "public/js/sky-cam/output.json" ||
+  file.startsWith("public/sky-camera-observations/")
 ));
 
 if (autoRefreshMessages.some((prefix) => message.startsWith(prefix)) && skycamOnly) {
