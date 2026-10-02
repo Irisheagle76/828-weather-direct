@@ -33,3 +33,5 @@ Before release, follow AGENTS.md's main/commit/test/staging/promotion gates. Inc
 
 ## UNC source repair
 The October 2 follow-up replaces the stalled Cloudinary mirror with https://www.atms.unca.edu/currwx/towercam.jpg for both display and analysis. The university source is current, while the former mirror depended on a Windows refresh task absent from this machine. The top-aligned display crop and stale-image exclusions remain in place. No local task or Cloudinary upload is required for this camera now.
+
+Release verification after resuming October 2: the staged API successfully reads the university source with quality good and a current source timestamp. Rebuild the UNC camera repair on current main to include intervening scheduled data updates before promotion.
