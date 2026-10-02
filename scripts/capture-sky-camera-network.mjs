@@ -19,7 +19,9 @@ await Promise.all(['east-asheville-east', 'chamber-southwest'].map(async (source
   try {
     let buffer, observedAt, videoId, timestampBasis = 'received';
     if (source === 'east-asheville-east') {
-      const live = extractLiveVideo(await (await get('https://www.youtube.com/@tballisty/live')).text());
+      const html = await (await get('https://www.youtube.com/@tballisty/live')).text();
+      const live = extractLiveVideo(html);
+      if (!live) console.log('YouTube source diagnostics', JSON.stringify({bytes:html.length, player:html.includes('ytInitialPlayerResponse'), liveNow:html.includes('\"isLiveNow\":true'), matches:html.match(/.{0,25}(?:isLiveNow|liveBroadcastDetails|LOGIN_REQUIRED|videoId|channelId|canonical).{0,150}/g)?.slice(0,12)}));
       if (!live) throw new Error('Current live broadcast could not be verified');
       videoId = live.videoId;
       const response = await get(`https://i.ytimg.com/vi/${videoId}/maxresdefault_live.jpg?t=${Date.now()}`);
