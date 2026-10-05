@@ -1349,6 +1349,88 @@
         display: grid;
       }
     }
+    /* Phone layouts keep observations visible and give the sky narrative its own space. */
+    @media (max-width: 900px) {
+      .hero-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .window-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .radiance-layout > *, .timeline > * { min-width: 0; }
+      .section-heading, .daylight-top { display: block; }
+      .section-heading p, .daylight-top p { margin-top: 12px; max-width: none; }
+    }
+
+    @media (max-width: 680px) {
+      .hero { min-height: 0; }
+      .hero-inner { padding: 32px 0 24px; }
+      h1 { font-size: clamp(38px, 10vw, 54px); line-height: 1.04; }
+      .eyebrow { font-size: 11px; margin-bottom: 16px; }
+      .hero-copy p { font-size: 16px; line-height: 1.55; margin-top: 16px; }
+      .hero-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+      .hero-actions .primary { grid-column: 1 / -1; }
+      .hero-actions .button { padding: 10px 8px; font-size: 14px; }
+      .hero-strip { margin-top: 24px; gap: 12px; }
+      .stat { padding: 14px 0 0; }
+      .stat b { font-size: 18px; line-height: 1.2; overflow-wrap: anywhere; }
+      .stat span { font-size: 12px; line-height: 1.4; }
+      .section { padding: 32px 0; }
+      .section-heading { margin-bottom: 18px; }
+      .section-heading h2 { font-size: clamp(30px, 8vw, 40px); line-height: 1.08; }
+      .status-inner { gap: 8px; scrollbar-width: thin; padding-bottom: 10px; }
+      .status-inner::-webkit-scrollbar { display: block; height: 3px; }
+      .status-pill { font-size: 12px; }
+      .sky-frame, .sky-frame img, .sky-frame iframe { min-height: 0; }
+      .sky-frame img, .sky-frame iframe { aspect-ratio: 16 / 9; }
+      .sky-frame::after { display: none; }
+      .sky-caption { position: relative; inset: auto; padding: 20px 16px; background: #102650; }
+      .sky-caption h2 { font-size: 28px; line-height: 1.12; }
+      .sky-caption p { font-size: 15px; line-height: 1.65; color: #dce7f6; }
+      .sky-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .sky-meta > div { min-height: 0; padding: 14px; }
+      .sky-meta > div:last-child { grid-column: 1 / -1; }
+      .sky-meta b { font-size: 20px; }
+      .sky-meta span { letter-spacing: .04em; line-height: 1.4; }
+      .sky-help summary { min-height: 44px; }
+      .index-panel { padding: 22px 18px; }
+      .atmosphere-now { padding: 16px; margin-top: 22px; border-radius: 16px; }
+      .atmosphere-now > p { font-size: 14px; }
+      .atmosphere-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; overflow: visible; padding-bottom: 0; scroll-snap-type: none; }
+      .atmosphere-card { padding: 14px; border-radius: 12px; }
+      .atmosphere-card h4 { line-height: 1.4; margin-bottom: 8px; }
+      .atmosphere-card b { font-size: 18px; line-height: 1.3; }
+      .atmosphere-card p { font-size: 14px; line-height: 1.55; }
+      .atmosphere-grid > article:last-child { grid-column: 1 / -1; }
+      .camera-coverage { grid-template-columns: 1fr; gap: 8px; }
+      .camera-view { padding: 14px; }
+      .camera-desk-heading { margin-top: 30px; }
+      .camera-desk-heading h3 { font-size: 30px; line-height: 1.1; }
+      .context-card { border-radius: 12px; }
+      .context-media, .context-media.youtube-live, .context-media.videstra-live,
+      .context-card.primary-assistant .context-media { min-height: 0; aspect-ratio: 16 / 9; }
+      .context-media img, .context-media iframe, .context-card.primary-assistant iframe { min-height: 0; height: 100%; aspect-ratio: 16 / 9; }
+      .context-label { left: 12px; right: 12px; bottom: 12px; }
+      .context-label strong { font-size: 18px; }
+      .context-label span { font-size: 10px; letter-spacing: .04em; }
+      .context-copy { padding: 14px; font-size: 14px; line-height: 1.6; }
+      .station-details span { overflow-wrap: anywhere; }
+      .window-grid { gap: 12px; }
+      #signals .window-card { min-height: 0; padding: 16px; }
+      .window-card h3 { font-size: 19px; line-height: 1.3; }
+      .daylight-top { padding: 20px 16px 8px; }
+      .daylight-top h3 { font-size: 30px; line-height: 1.1; }
+      .daylight-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .daylight-stats > div { min-height: 0; padding: 14px; }
+      .daylight-stats > div:last-child { grid-column: 1 / -1; }
+      .daylight-stats b { font-size: 18px; }
+      .daylight-stats span { line-height: 1.4; }
+      .lightbox-close { width: 44px; height: 44px; flex-shrink: 0; }
+    }
+
+    @media (max-width: 420px) {
+      .atmosphere-grid, .window-grid { grid-template-columns: 1fr; }
+      .atmosphere-grid > article:last-child { grid-column: auto; }
+      .atmosphere-card { padding: 16px; }
+      .atmosphere-card h4 { margin-bottom: 6px; }
+      .atmosphere-card p { margin-bottom: 0; }
+    }
   </style>
   <link rel="stylesheet" href="/css/brand-lockup.css?v=20260805-brand2" />
   <link rel="stylesheet" href="/css/site-chrome.css?v=20260908-global-nav" />
