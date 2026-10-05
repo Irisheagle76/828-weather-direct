@@ -55,9 +55,9 @@ test("after-dark forecasts render unavailable daylight guidance instead of faili
 });
 test("seasonal input requires this year and a completed September", () => {
  const env={FALL_SEPTEMBER_MEAN_F:"66.7",FALL_SEPTEMBER_MEAN_YEAR:"2026",FALL_SEPTEMBER_MEAN_SOURCE:"Verified reference"};
- assert.equal(seasonalPeakTimingInput(at("2026-10-05T12:00:00Z"),env).septemberMeanF,66.7);
- for(const now of ["2026-09-30T12:00:00Z","2027-10-05T12:00:00Z"]) assert.equal(seasonalPeakTimingInput(at(now),env).septemberMeanF,null);
- assert.equal(seasonalPeakTimingInput(at("2026-10-05T12:00:00Z"),{FALL_SEPTEMBER_MEAN_F:"66.7"}).septemberMeanF,null);
+ assert.equal(seasonalPeakTimingInput(at("2026-10-05T12:00:00Z"),env,{}).septemberMeanF,66.7);
+ for(const now of ["2026-09-30T12:00:00Z","2027-10-05T12:00:00Z"]) assert.equal(seasonalPeakTimingInput(at(now),env,{}).septemberMeanF,null);
+ assert.equal(seasonalPeakTimingInput(at("2026-10-05T12:00:00Z"),{FALL_SEPTEMBER_MEAN_F:"66.7"},{}).septemberMeanF,null);
 });
 test("baseline headline clearly distinguishes seasonal temperature adjustment", () => {
  assert.equal(estimatePeakTiming().headline,"Historical midpoint near");
@@ -78,3 +78,4 @@ test("a few minutes before sunset do not outrank a usable earlier viewing hour",
   assert.ok(result.end - result.start >= 30 * 60000);
   assert.ok(result.start < at("2026-10-05T19:00:00-04:00"));
 });
+

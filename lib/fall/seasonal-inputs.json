@@ -1,0 +1,16 @@
+{
+  "2026": {
+    "septemberMeanF": 66.6,
+    "source": "Neufeld's Vilas Ambient Weather station · September 2026 (author-reported)",
+    "sourceUrl": "https://fallcolorguy.org/previous-reports/f/september-weather-and-leaf-color-summary-for-the-boone-area",
+    "publishedDate": "2026-10-03",
+    "reviewedDate": "2026-10-05",
+    "coverage": { "start": "2026-09-01", "end": "2026-09-30" },
+    "station": { "location": "Vilas, NC", "network": "Ambient Weather personal station", "owner": "Howard Neufeld", "stationId": null },
+    "method": "Average of daily (high + low) / 2 across September; continuity with historical research confirmed by project owner on 2026-10-05",
+    "verification": "Published completed monthly summary; not independently recalculated from raw daily records",
+    "rawDailyRecords": null,
+    "qualityFlags": null,
+    "observationDayConvention": null
+  }
+}
