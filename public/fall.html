@@ -6,7 +6,7 @@
   <meta name="description" content="Weather intelligence for experiencing fall in Asheville and Western North Carolina.">
   <title>828 Fall Explorer | Asheville Fall Weather Intelligence</title>
   <link rel="stylesheet" href="/css/brand-lockup.css?v=20260805-brand2">
-  <link rel="stylesheet" href="/css/fall.css?v=20261005-fall-maintenance">
+  <link rel="stylesheet" href="/css/fall.css?v=20261005-neufeld-credit">
   <link rel="stylesheet" href="/css/site-chrome.css?v=20260908-global-nav">
   <script defer src="/js/site-chrome.js?v=20260908-global-nav"></script>
 </head>
@@ -78,6 +78,7 @@
           <div><span>Temperature effect</span><strong>1.90 days / °F</strong><small id="peakShift">No shift from the 64.7°F baseline</small></div>
           <div><span>Calibrated elevation</span><strong id="peakScope">2,500–4,000 ft</strong><small id="peakConfidence">Historical baseline estimate</small></div>
         </div>
+        <aside class="peak-credit" aria-label="Research credit"><span class="peak-credit-leaf" aria-hidden="true"></span><div><span class="peak-credit-label">Research &amp; seasonal insight</span><p>Peak-timing research and September temperature data courtesy of <a href="https://fallcolorguy.org/about-fall-color-guy" target="_blank" rel="noopener noreferrer">Dr. Howard Neufeld, the Fall Color Guy</a>.</p><p class="peak-credit-note">The experimental calculation shown here applies his published research.</p></div></aside>
         <details class="peak-method"><summary>How this estimate is calculated <span>+</span></summary><div><p>The source analysis regressed 17 peak-color seasons against September daily mean temperature for 2008–2025, excluding hurricane-disrupted 2024. Its equation is October day = 1.9015 × September mean °F − 106.42, with R² = 0.62 and p &lt; .001.</p><p id="peakCaveat">A planning signal, not a predictive confidence interval. The relationship is sensitive to the unusually warm 2018 and 2019 seasons and does not quantify an elevation adjustment outside the calibrated band.</p><p>Rainfall and drought were not used to move the date because the source analysis found no significant timing relationship. They still matter for leaf loss, color quality and the day-to-day viewing experience.</p></div></details>
       </article>
       <div class="season-layout"><div class="season-timeline" id="seasonTimeline"></div><aside class="method-note"><div class="eyebrow">Observed milestone archive</div><h3>Built for seasonal memory</h3><p>From its activation date, the archive preserves the first confirmed ≤40°, ≤36°, ≤32° and ≤28°F observation in each elevation band. Confirmation requires two consecutive hourly samples or two independent stations. “Approaching” remains forecast-only.</p><span id="observationMethod">Forecast status ≠ observed milestone</span></aside></div>
@@ -96,6 +97,6 @@
   </main>
 
   <footer data-site-footer><div><b>828 Weather Direct</b><p>Fall experience guidance with an experimental, elevation-limited peak-timing estimate—not a foliage percentage or guarantee. Forecast data: NOAA/NWS.</p></div><div><a href="/">Home</a><a href="/hiking.html">Hiking guidance</a><a href="/forecast.html">4-day forecast</a></div></footer>
-  <script type="module" src="/js/fall/app.js?v=20261005-fall-maintenance"></script>
+  <script type="module" src="/js/fall/app.js?v=20261005-neufeld-credit"></script>
 </body>
 </html>
