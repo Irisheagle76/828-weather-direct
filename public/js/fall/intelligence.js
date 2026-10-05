@@ -107,7 +107,8 @@ export function findBestWindow(hours, now = Date.now()) {
     .filter(h => h.interval && h.interval.end > now)
     .sort((a, b) => a.timestamp - b.timestamp);
   if (!candidates.length) return { label: solarHours.length ? "Daylight window has passed" : "Daylight timing unavailable", photoLabel, cloud: null, available: false };
-  const ranked = candidates.map(h => {
+  const substantial = candidates.filter(h => h.interval.end - Math.max(now, h.interval.start) >= 30 * 60000);
+  const ranked = (substantial.length ? substantial : candidates).map(h => {
     const localHour = hour(h.timestamp);
     const cloud = Number(h.cloudCover) || 0;
     const lightBonus = localHour >= 16 ? 16 : localHour >= 13 ? 9 : 2;

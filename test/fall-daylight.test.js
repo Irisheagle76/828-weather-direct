@@ -69,3 +69,12 @@ test("Pisgah uses the verified official hosted-stream page", () => {
  assert.equal(camera.imageUrl,null);
  assert.equal(camera.sourceUrl,"https://www.pisgahinn.com/live-video-camera/");
 });
+
+test("a few minutes before sunset do not outrank a usable earlier viewing hour", () => {
+  const hours = hoursFor("2026-10-05", "-04:00", "19:07:00");
+  hours.forEach(h => { h.cloudCover = .5; });
+  hours.find(h => h.timestamp === at("2026-10-05T19:00:00-04:00")).cloudCover = 0;
+  const result = findBestWindow(hours, at("2026-10-05T12:00:00-04:00"));
+  assert.ok(result.end - result.start >= 30 * 60000);
+  assert.ok(result.start < at("2026-10-05T19:00:00-04:00"));
+});
