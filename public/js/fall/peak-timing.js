@@ -28,6 +28,10 @@ export function estimatePeakTiming({ seasonYear = new Date().getFullYear(), sept
     septemberMeanF: Math.round(effectiveMeanF * 10) / 10,
     inputType: hasSeasonInput ? "seasonal" : "climatology",
     inputLabel: hasSeasonInput ? (source || "Supplied September mean") : "Long-term September baseline",
+    headline: hasSeasonInput ? "Temperature-adjusted midpoint near" : "Historical midpoint near",
+    seasonalNote: hasSeasonInput
+      ? "Uses this season's supplied September mean. Warm October nights and local color reports may still change the timing."
+      : "This season's September warmth has not been incorporated. A later peak is possible if warm nights persist; verify current color with live cameras.",
     confidence: hasSeasonInput ? "Experimental temperature-adjusted estimate" : "Historical baseline estimate",
     model: MODEL,
     caveat: "A planning signal, not a predictive confidence interval. The relationship is sensitive to the unusually warm 2018 and 2019 seasons and does not quantify an elevation adjustment outside the calibrated band."

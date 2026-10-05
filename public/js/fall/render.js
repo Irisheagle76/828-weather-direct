@@ -8,8 +8,8 @@ export function renderFallExplorer(model) {
   renderQualityNotice(model.quality);
   renderObservationMethod(model.quality?.observations, model.quality?.calibration);
   setText("#fallRating", model.today.rating.toUpperCase());
-  setText("#fallScore", `${model.today.score} / 100`);
-  setText("#viewsScore", `${model.today.viewsScore} / 100`);
+  setText("#fallScore", `${model.today.score ?? "--"} / 100`);
+  setText("#viewsScore", `${model.today.viewsScore ?? "--"} / 100`);
   setText("#photoRating", model.today.photoRating.toUpperCase());
   setText("#leafDrop", model.today.leafDropRisk.toUpperCase());
   setText("#todaySummary", model.today.summary);
@@ -73,8 +73,8 @@ export function renderFailure() {
 }
 
 function recommendationCard(icon, kicker, title, meta, copy, kind = "") { return `<article class="recommendation-card ${kind}"><div class="recommendation-icon">${icon}</div><div class="eyebrow">${esc(kicker)}</div><h3>${esc(title)}</h3><div class="recommendation-meta">${meta}</div><p>${esc(copy)}</p></article>`; }
-function stars(score) { const count = Math.max(1, Math.min(5, Math.round(score / 20))); return `<span aria-label="${count} out of 5 stars">${"★".repeat(count)}${"☆".repeat(5 - count)}</span>`; }
-function ratingForView(score) { return score >= 85 ? "Excellent" : score >= 72 ? "Very good" : score >= 58 ? "Good" : score >= 42 ? "Mixed" : "Poor"; }
+function stars(score) { if (!Number.isFinite(score)) return "Daylight score unavailable"; const count = Math.max(1, Math.min(5, Math.round(score / 20))); return `<span aria-label="${count} out of 5 stars">${"★".repeat(count)}${"☆".repeat(5 - count)}</span>`; }
+function ratingForView(score) { if (!Number.isFinite(score)) return "Unavailable"; return score >= 85 ? "Excellent" : score >= 72 ? "Very good" : score >= 58 ? "Good" : score >= 42 ? "Mixed" : "Poor"; }
 function statusClass(status) { return status.toLowerCase().replace(/\s+/g, "-"); }
 function renderThreshold(threshold) {
   const label = threshold?.ambiguous
@@ -86,6 +86,8 @@ function renderThreshold(threshold) {
 }
 function renderPeakTiming(peak) {
   if (!peak) return;
+  setText("#peakHeadline", peak.headline);
+  setText("#peakSeasonalNote", peak.seasonalNote);
   setText("#peakMidpoint", peak.midpoint);
   setText("#peakWindow", peak.planningWindow);
   setText("#peakSeptember", `${peak.septemberMeanF.toFixed(1)}°F`);

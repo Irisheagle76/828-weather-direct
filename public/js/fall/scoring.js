@@ -1,3 +1,4 @@
+import { daylightInterval, hasSolarTimes } from "./daylight.js";
 const clamp = (value, min = 0, max = 100) => Math.max(min, Math.min(max, value));
 const mean = (values) => {
   const usable = values.filter(Number.isFinite);
@@ -23,13 +24,12 @@ export function ratingForScore(score) {
 }
 
 export function scoreFallHours(hours = []) {
-  const daylight = hours.filter((hour) => {
-    const localHour = easternHour(hour.timestamp);
-    return localHour >= 8 && localHour <= 19;
-  });
-  const sample = daylight.length ? daylight : hours;
-  const usable = sample.filter((hour) => Number.isFinite(hour.temperatureF) && Number.isFinite(hour.cloudCover) && Number.isFinite(hour.windSpeed));
-  const minimumHours = daylight.length ? 1 : 3;
+  const solarAvailable = hours.some(hasSolarTimes);
+  const daylight = hours.filter((hour) => solarAvailable
+    ? Boolean(daylightInterval(hour))
+    : easternHour(hour.timestamp) >= 8 && easternHour(hour.timestamp) < 17);
+  const usable = daylight.filter((hour) => Number.isFinite(hour.temperatureF) && Number.isFinite(hour.cloudCover) && Number.isFinite(hour.windSpeed));
+  const minimumHours = 1;
   if (usable.length < minimumHours) return unavailableScore(usable.length);
   const pop = mean(usable.map((h) => h.precipProbability)) ?? 0;
   const rain = usable.reduce((sum, h) => sum + (Number(h.precipAmount ?? h.precipitation) || 0), 0);

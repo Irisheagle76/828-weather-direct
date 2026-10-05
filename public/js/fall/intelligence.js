@@ -1,3 +1,4 @@
+import { daylightInterval, hasSolarTimes } from "./daylight.js";
 import { CAMERAS, SEASON_MILESTONE_PREVIEW } from "./config.js";
 import { leafDropRisk, ratingForScore, scoreFallHours, viewScore } from "./scoring.js";
 import { buildElevationAnalysis } from "./elevation.js";
@@ -7,13 +8,12 @@ const dayKey = (timestamp) => new Intl.DateTimeFormat("en-CA", { timeZone: "Amer
 const hour = (timestamp) => Number(new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }).format(new Date(timestamp))) % 24;
 const formatTime = (timestamp) => new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit" }).format(new Date(timestamp));
 
-export function buildFallIntelligence(payload, skyPayload = null) {
+export function buildFallIntelligence(payload, skyPayload = null, { now = Date.now() } = {}) {
   const destinations = (payload.destinations || [])
     .map((site) => ({ ...site, hourly: site.hourly || [], daily: site.daily || [] }))
     .filter((site) => site.dataQuality?.available !== false && site.hourly.length);
   if (!destinations.length) throw new Error("No usable NOAA/NWS destination forecasts");
   const asheville = destinations.find((site) => site.id === "asheville") || destinations[0] || { hourly: [], daily: [] };
-  const now = Date.now();
   const todayKey = dayKey(now);
   const todayHours = asheville.hourly.filter((h) => dayKey(h.timestamp) === todayKey);
   const liveScores = Object.fromEntries((skyPayload?.sites || []).map((site) => [site.id, site.scores?.summitView]));
@@ -28,8 +28,7 @@ export function buildFallIntelligence(payload, skyPayload = null) {
     const views = viewScore(hours, liveScores[skyId]);
     return { ...site, hours, fall, views, combined: fall.available && Number.isFinite(views) ? Math.round(fall.score * 0.62 + views * 0.38) : null };
   }).filter((site) => Number.isFinite(site.combined)).sort((a, b) => b.combined - a.combined);
-  if (!ranked.length || !todayBase.available) throw new Error("Insufficient NOAA/NWS hours for today's Fall Explorer score");
-  const best = ranked[0] || asheville;
+  const best = ranked[0] || { ...asheville, hours: todayHours };
   const worst = ranked[ranked.length - 1];
   const avoid = worst && best && best.combined - worst.combined >= 12 ? worst : null;
   const bestWindow = findBestWindow(best.hours || todayHours, now);
@@ -55,7 +54,7 @@ export function buildFallIntelligence(payload, skyPayload = null) {
       summary: buildTodaySummary(best, bestWindow, viewsScore, leafDrop.category)
     },
     recommendations: {
-      bestBet: { name: best.name || "Asheville area", score: best.combined || todayBase.score, window: bestWindow.label, reason: recommendationReason(best) },
+      bestBet: { name: best.name || "Asheville area", score: best.combined ?? todayBase.score, window: bestWindow.label, reason: recommendationReason(best) },
       photoWindow: { label: bestWindow.photoLabel, reason: photoReason(bestWindow, viewsScore) },
       bestViews: { name: (ranked.slice().sort((a, b) => b.views - a.views)[0] || best).name, score: maxFinite([...ranked.map((site) => site.views), viewsScore]) },
       avoid: avoid ? { name: avoid.name, reason: avoidReason(avoid) } : null
@@ -96,29 +95,40 @@ function buildOutlook(hours, daily) {
   }).filter((day) => Number.isFinite(day.score));
 }
 
-function findBestWindow(hours, now = Date.now()) {
-  const candidates = hours.filter((h) => h.timestamp >= now - 30 * 60 * 1000 && hour(h.timestamp) >= 8 && hour(h.timestamp) <= 19);
-  if (!candidates.length) return { label: "Daylight window has passed", photoLabel: "Next daylight window", cloud: null };
-  const ranked = candidates.map((h) => {
+export function findBestWindow(hours, now = Date.now()) {
+  const solarHours = hours.filter(hasSolarTimes);
+  const sunset = solarHours.length ? Math.max(...solarHours.map(h => h.sunset)) : null;
+  const photoStart = sunset ? Math.max(now, sunset - 45 * 60000) : null;
+  const photoEnd = sunset ? sunset + 15 * 60000 : null;
+  const photoLabel = photoEnd > now
+    ? `${formatTime(photoStart)}–${formatTime(photoEnd)} (sunset / twilight)`
+    : solarHours.length ? "Sunset photo window has passed" : "Daylight timing unavailable";
+  const candidates = hours.map(h => ({ ...h, interval: daylightInterval(h) }))
+    .filter(h => h.interval && h.interval.end > now)
+    .sort((a, b) => a.timestamp - b.timestamp);
+  if (!candidates.length) return { label: solarHours.length ? "Daylight window has passed" : "Daylight timing unavailable", photoLabel, cloud: null, available: false };
+  const ranked = candidates.map(h => {
     const localHour = hour(h.timestamp);
     const cloud = Number(h.cloudCover) || 0;
     const lightBonus = localHour >= 16 ? 16 : localHour >= 13 ? 9 : 2;
     const score = 100 - cloud * 58 - (Number(h.precipProbability) || 0) * 50 - Math.max(0, (Number(h.windGust) || 0) - 18) * 2 + lightBonus;
-    return { ...h, localHour, score };
+    return { ...h, score };
   }).sort((a, b) => b.score - a.score);
-  const start = ranked[0];
-  const end = candidates.find((h) => h.timestamp >= start.timestamp + 3 * 3600000) || start;
-  const sunset = Math.max(...hours.map((h) => Number(h.sunset) || 0));
-  return {
-    label: `${formatTime(start.timestamp)}–${formatTime(end.timestamp + 3600000)}`,
-    photoLabel: sunset > Date.now() ? `${formatTime(sunset - 45 * 60000)}–${formatTime(sunset + 15 * 60000)}` : `${formatTime(start.timestamp)}–${formatTime(start.timestamp + 90 * 60000)}`,
-    cloud: start.cloudCover
-  };
+  const selected = ranked[0];
+  const start = Math.max(now, selected.interval.start);
+  let end = selected.interval.end;
+  for (const candidate of candidates) {
+    if (candidate.interval.start < end) continue;
+    if (candidate.interval.start > end || end >= start + 4 * 3600000) break;
+    end = Math.min(candidate.interval.end, start + 4 * 3600000);
+  }
+  return { label: `${formatTime(start)}–${formatTime(end)}`, photoLabel, cloud: selected.cloudCover, available: true, start, end };
 }
 
 function buildTodaySummary(best, window, views, drop) {
   const viewPhrase = views >= 80 ? "excellent mountain visibility" : views >= 65 ? "useful breaks for mountain views" : "changeable mountain visibility";
   const windPhrase = drop === "Low" ? "winds look manageable" : `${drop.toLowerCase()} leaf-drop risk favors sheltered stops`;
+  if (!window.available) return `Daylight guidance: ${window.label}. Recheck the next daylight forecast and live cameras before planning a color-viewing trip.`;
   return `Best overall viewing today: ${best.name || "the Asheville area"}, especially ${window.label}. Expect ${viewPhrase}; ${windPhrase}.`;
 }
 
@@ -128,7 +138,7 @@ function recommendationReason(site) {
   if ((m.clouds || 0) <= 0.35) return "Drier air, more sunshine and the strongest mountain-view signal in the destination set.";
   return "The best balance of cloud breaks, comfortable temperatures and manageable ridge wind.";
 }
-function photoReason(window, views) { return `${views >= 75 ? "Good ridge definition" : "The best available visibility"} and ${window.cloud <= 0.6 ? "some texture around low-angle light" : "a chance for cloud breaks near low-angle light"}.`; }
+function photoReason(window, views) { if (window.cloud === null) return "Recheck the next daylight forecast; the sunset window includes up to 15 minutes of twilight."; return `${views >= 75 ? "Good ridge definition" : "The best available visibility"} and ${window.cloud <= 0.6 ? "some texture around low-angle light" : "a chance for cloud breaks near low-angle light"}.`; }
 function avoidReason(site) { const m = site.fall?.metrics || {}; return (m.gust || 0) >= 28 ? "Exposed-ridge gusts make this a weaker choice today." : (m.clouds || 0) >= 0.78 ? "Summit cloud and limited visibility make this a weaker choice." : "This location has the weakest weather-and-view combination in today's set."; }
 function weatherIcon(metrics, drop) { if (drop === "High" || drop === "Very High") return "💨"; if (metrics.pop >= 0.55) return "🌧️"; if (metrics.clouds <= 0.25) return "☀️"; return metrics.clouds <= 0.65 ? "🌤️" : "☁️"; }
 function dayDetails(m, drop) { return [m.pop < 0.25 ? "Mostly dry" : m.pop < 0.55 ? "Spotty rain chance" : "Rain may interrupt", m.clouds < 0.4 ? "Clearer views" : "More clouds", drop === "Low" ? "Light leaf stress" : `${drop} leaf-drop risk`]; }
