@@ -273,6 +273,7 @@
             <option value="weather-alert">Weather alert</option>
             <option value="timing-change">Timing change</option>
             <option value="storms">Storms</option>
+            <option value="tropics">Tropics</option>
             <option value="heavy-rain">Heavy rain</option>
             <option value="snow-ice">Snow / ice</option>
             <option value="fog">Fog</option>
@@ -331,12 +332,14 @@
 
         <label>
           Link target
-          <select id="url">
+          <input id="url" type="text" value="/" list="linkTargets" placeholder="https://example.com or /forecast.html" aria-describedby="linkHelp" />
+          <datalist id="linkTargets">
             <option value="/">Home</option>
             <option value="/forecast.html">4-day Forecast</option>
             <option value="/pulse.html">Weather Pulse</option>
             <option value="/i26-connector.html">I-26 Connector</option>
-          </select>
+          </datalist>
+          <span class="image-help" id="linkHelp">Enter any website URL (https:// or http://) or a page path on this site.</span>
         </label>
 
         <label>
@@ -437,6 +440,18 @@
     }
     if (imageUploading) {
       setStatus("Wait for the image upload to finish.");
+      return;
+    }
+    const link = payload.url.trim() || "/";
+    try {
+      const parsed = new URL(link, window.location.origin);
+      if (!/^https?:$/.test(parsed.protocol) || (!link.startsWith("/") && !/^https?:\/\//i.test(link))) {
+        throw new Error("Invalid link");
+      }
+      payload.url = link;
+    } catch {
+      setStatus("Enter a valid https:// or http:// link, or a site path starting with /.");
+      fields.url.focus();
       return;
     }
 
