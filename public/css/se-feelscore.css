@@ -177,6 +177,23 @@ h1 { margin: 0; font-size: clamp(3.2rem, 9vw, 6.6rem); line-height: 0.86; letter
 .legend__unshaded span { border: 1px dashed #718098; background: transparent; }
 
 .method-note { max-width: 760px; margin: 1rem auto 0; color: var(--muted); text-align: center; font-size: 0.82rem; }
+.city-ranking { margin-top: 2rem; padding: 1.5rem; border: 1px solid var(--line); border-radius: 22px; background: var(--panel); }
+.city-ranking__heading { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.city-ranking h2 { margin: 0; font-size: 1.5rem; }
+.city-ranking__period { color: var(--blue); font-size: .85rem; }
+.city-ranking__note, #ranking-status { color: var(--muted); font-size: .85rem; line-height: 1.6; }
+.city-ranking__list { margin: 1.25rem 0 0; padding: 0; list-style: none; }
+.city-ranking__row { display: grid; grid-template-columns: 2rem minmax(0, 1fr) 5rem 12rem; align-items: center; gap: 1rem; padding: 1rem .5rem; border-top: 1px solid var(--line); }
+.city-ranking__rank { color: var(--muted); font-variant-numeric: tabular-nums; }
+.city-ranking__name { font-size: 1rem; }
+.city-ranking__score { font-size: 1.65rem; font-weight: 800; white-space: nowrap; }
+.city-ranking__score small { color: var(--muted); font-size: .8rem; font-weight: 400; }
+.city-ranking__badge { justify-self: end; padding: .4rem .7rem; border: 1px solid currentColor; border-radius: 999px; font-size: .8rem; font-weight: 700; }
+@media (max-width: 600px) {
+  .city-ranking { padding: 1rem; }
+  .city-ranking__row { grid-template-columns: 1.3rem minmax(0, 1fr) 3.8rem; gap: .4rem .65rem; }
+  .city-ranking__badge { grid-column: 2 / 4; justify-self: start; }
+}
 .qa-panel { margin-top: 1.5rem; padding: 1.25rem; border: 1px solid rgba(99,183,239,.25); border-radius: 18px; background: rgba(17,29,48,.82); color: #d7dfec; }
 .qa-panel h2 { margin: 0 0 1rem; }
 .qa-panel p { color: var(--muted); font-size: .82rem; line-height: 1.5; }

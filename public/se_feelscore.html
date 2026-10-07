@@ -16,7 +16,7 @@
   <meta name="twitter:image" content="https://avlweather.com/828-brand-card.png" />
   <link rel="stylesheet" href="/css/app-v2.css?v=20260824-se-feelscore" />
   <link rel="stylesheet" href="/css/brand-lockup.css?v=20260805-brand2" />
-  <link rel="stylesheet" href="/css/se-feelscore.css?v=20260914-building" />
+  <link rel="stylesheet" href="/css/se-feelscore.css?v=20261007-ranking" />
   <link rel="stylesheet" href="/css/site-chrome.css?v=20260908-global-nav" />
   <script defer src="/js/site-chrome.js?v=20260908-global-nav"></script>
 </head>
@@ -110,6 +110,15 @@
     </section>
 
     <p class="method-note">Blank parts of the map are intentional: those locations do not meet the pleasantness threshold for the forecast window.</p>
+    <section class="city-ranking" aria-labelledby="ranking-title">
+      <div class="city-ranking__heading">
+        <div><p class="eyebrow">Find your pleasant place</p><h2 id="ranking-title">Top 10 FEELSCORE cities</h2></div>
+        <span class="city-ranking__period" id="ranking-period">12–3 PM local</span>
+      </div>
+      <p class="city-ranking__note">Highest scores among the forecast’s 13 featured Southeast cities. FEELSCORE runs from 0 to 5; tied cities share a rank and appear alphabetically. A 0 is unshaded and does not qualify as pleasant.</p>
+      <p id="ranking-status" role="status">Loading city rankings…</p>
+      <ol id="city-ranking-list" class="city-ranking__list" aria-label="Cities ranked by FEELSCORE" hidden></ol>
+    </section>
     <section class="qa-panel" id="qa-panel" hidden aria-labelledby="qa-title"></section>
   </main>
 
@@ -144,6 +153,6 @@
     </div>
   </footer>
 
-  <script type="module" src="/js/se-feelscore-page.js?v=20260914-building"></script>
+  <script type="module" src="/js/se-feelscore-page.js?v=20261007-ranking"></script>
 </body>
 </html>

@@ -1,5 +1,6 @@
 import { CATEGORY_COLORS, mapProjection, buildCategoryLookup, sampleContour, smoothContourOpacity } from './feelscore-map-field.js';
 import { getForecastPeriod } from './se-feelscore-period.js?v=20260914-live';
+import { rankCities } from './feelscore-ranking.js';
 
 const canvas = document.querySelector('#feelscore-map');
 const stage = document.querySelector('#map-stage');
@@ -9,6 +10,21 @@ const empty = document.querySelector('#map-empty');
 const dayLabel = document.querySelector('#forecast-day');
 const debugToggle = document.querySelector('#debug-toggle');
 const qaPanel = document.querySelector('#qa-panel');
+const rankingList = document.querySelector('#city-ranking-list');
+const rankingStatus = document.querySelector('#ranking-status');
+
+function updateCityRanking(message) {
+  const cities = dataset ? rankCities(dataset.qa.anchorCities) : [];
+  rankingList.innerHTML = cities.map((city) => `<li value="${city.rank}" class="city-ranking__row">
+    <span class="city-ranking__rank" aria-hidden="true">${city.rank}</span>
+    <strong class="city-ranking__name">${escapeHtml(city.name)}</strong>
+    <span class="city-ranking__score category-${city.finalCategory}" aria-label="FEELSCORE ${city.finalCategory} out of 5">${city.finalCategory}<small> / 5</small></span>
+    <span class="city-ranking__badge category-${city.finalCategory}">${CATEGORY_LABELS[city.finalCategory]}</span>
+  </li>`).join('');
+  rankingList.hidden = !cities.length;
+  rankingStatus.textContent = message || (cities.length ? '' : 'City scores are unavailable for this forecast.');
+  rankingStatus.hidden = !rankingStatus.textContent;
+}
 
 const COLORS = CATEGORY_COLORS;
 const CATEGORY_LABELS = {
@@ -221,8 +237,10 @@ async function refreshForecast() {
   loading = true;
   const period = getForecastPeriod();
   dayLabel.textContent = `${period.label} · ${formatDate(period.forecastDate)}`;
+  document.querySelector('#ranking-period').textContent = `${period.label} · ${formatDate(period.forecastDate)} · 12–3 PM local`;
   if (dataset?.forecastDate !== period.forecastDate) {
     dataset = null; selectedPoint = null; inspector.hidden = true; empty.hidden = false; canvas.hidden = true;
+    updateCityRanking('Loading city rankings…');
     qaPanel.hidden = true;
     empty.dataset.state = 'loading'; stage.setAttribute('aria-busy', 'true');
     empty.querySelector('#map-loading-title').textContent = `Building ${period.label.toLowerCase()}'s FEELSCORE map…`;
@@ -243,12 +261,14 @@ async function refreshForecast() {
     dataset = analysis; boundaries = states; canvas.hidden = false; canvas.tabIndex = 0;
     const generated = new Date(dataset.generatedAt);
     status.textContent = `${dataset.analysis.landPointCount.toLocaleString()} land points · updated ${generated.toLocaleString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })} ET`;
+    updateCityRanking();
     if (unchanged) return;
     updateDebugPanel(); drawMap(); empty.hidden = true; stage.setAttribute('aria-busy', 'false');
     const asheville = dataset.qa.anchorCities.find((city) => city.name.startsWith('Asheville'));
     const initial = dataset.points.find((point) => asheville?.gridPoint?.[0] === point.lat && asheville?.gridPoint?.[1] === point.lon);
     if (initial) showInspector(initial);
   } catch (error) {
+    updateCityRanking(dataset ? 'Refresh failed — rankings show the last loaded forecast for this date.' : 'City rankings are temporarily unavailable. We’ll retry automatically.');
     status.textContent = dataset ? 'Refresh failed — showing the last loaded analysis for this date' : 'Fresh regional analysis temporarily unavailable';
     empty.dataset.state = 'error'; stage.setAttribute('aria-busy', 'false');
     empty.querySelector('#map-loading-title').textContent = 'The latest analysis could not load';
