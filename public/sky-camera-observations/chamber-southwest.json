@@ -1,6 +1,6 @@
 {
   "source": "chamber-southwest",
   "status": "unavailable",
-  "attemptedAt": "2026-10-06T23:53:10.403Z",
-  "reason": "Command failed: ffmpeg -hide_banner -loglevel error -rw_timeout 20000000 -live_start_index -1 -i https://svrhearst.videstra.live/hls_output/674b5cf0-55b3-49e2-a8da-bb57ce2ece92_8UIJMXTyGjrwwXziaJUoFLf9hWifZbKVtWF5D__kswZPhLz4beUpNJK7w4Fgl8eu/index.m3u8 -frames:v 1 -vf scale=1280:-2 -f image2pipe -vcodec mjpeg pipe:1\n[in#0 @ 0x558fe6bd7e40] Error opening input: Invalid data found when processing input\nError opening input file https://svrhearst.videstra.live/hls_output/674b5cf0-55b3-49e2-a8da-bb57ce2ece92_8UIJMXTyGjrwwXziaJUoFLf9hWifZbKVtWF5D__kswZPhLz4beUpNJK7w4Fgl8eu/index.m3u8.\nError opening input files: Invalid data found when processing input\n"
+  "attemptedAt": "2026-10-07T04:23:14.468Z",
+  "reason": "Command failed: ffmpeg -hide_banner -loglevel error -rw_timeout 20000000 -live_start_index -1 -i https://svrhearst.videstra.live/hls_output/674b5cf0-55b3-49e2-a8da-bb57ce2ece92_8UIJMXTyGjrwwXziaJUoFLf9hWifZbKVtWF5D__kswZPhLz4beUpNJK7w4Fgl8eu/index.m3u8 -frames:v 1 -vf scale=1280:-2 -f image2pipe -vcodec mjpeg pipe:1\n[in#0 @ 0x55715e06ce40] Error opening input: Server returned 404 Not Found\nError opening input file https://svrhearst.videstra.live/hls_output/674b5cf0-55b3-49e2-a8da-bb57ce2ece92_8UIJMXTyGjrwwXziaJUoFLf9hWifZbKVtWF5D__kswZPhLz4beUpNJK7w4Fgl8eu/index.m3u8.\nError opening input files: Server returned 404 Not Found\n"
 }
