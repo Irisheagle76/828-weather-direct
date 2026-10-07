@@ -1,6 +1,8 @@
 {
   "source": "chamber-southwest",
-  "status": "unavailable",
-  "attemptedAt": "2026-10-07T04:23:14.468Z",
-  "reason": "Command failed: ffmpeg -hide_banner -loglevel error -rw_timeout 20000000 -live_start_index -1 -i https://svrhearst.videstra.live/hls_output/674b5cf0-55b3-49e2-a8da-bb57ce2ece92_8UIJMXTyGjrwwXziaJUoFLf9hWifZbKVtWF5D__kswZPhLz4beUpNJK7w4Fgl8eu/index.m3u8 -frames:v 1 -vf scale=1280:-2 -f image2pipe -vcodec mjpeg pipe:1\n[in#0 @ 0x55715e06ce40] Error opening input: Server returned 404 Not Found\nError opening input file https://svrhearst.videstra.live/hls_output/674b5cf0-55b3-49e2-a8da-bb57ce2ece92_8UIJMXTyGjrwwXziaJUoFLf9hWifZbKVtWF5D__kswZPhLz4beUpNJK7w4Fgl8eu/index.m3u8.\nError opening input files: Server returned 404 Not Found\n"
+  "status": "ok",
+  "observedAt": "2026-10-07T11:16:13.809Z",
+  "timestampBasis": "received",
+  "attemptedAt": "2026-10-07T11:16:13.809Z",
+  "sha256": "2c543b04c130295f726824c84725bb9969ed50dc64c73d19cb4eb48080f22032"
 }
