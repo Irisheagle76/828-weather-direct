@@ -1,0 +1,15 @@
+#storm-headquarters[hidden] { display: none; }
+.storm-hq-card { padding: clamp(22px, 4vw, 42px); border: 1px solid #ccd8eb; border-top: 5px solid #f57d23; border-radius: 20px; background: #fffdf8; color: #12233e; box-shadow: 0 12px 32px #12233e0c; }
+.storm-hq-kicker { color: #0f4cc4; font: 800 12px/1.4 sans-serif; letter-spacing: .12em; }
+.storm-hq-card h2 { margin: 12px 0; font: bold clamp(30px, 5vw, 48px)/1.1 Georgia, serif; }
+.storm-hq-time { color: #52627a; font-size: 13px; }
+.storm-hq-body { white-space: pre-wrap; overflow-wrap: anywhere; max-width: 85ch; font-size: clamp(16px, 2vw, 18px); line-height: 1.7; margin: 24px 0; }
+.storm-hq-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 14px; }
+.storm-hq-gallery button { min-width: 0; padding: 0; border: 1px solid #ccd8eb; border-radius: 12px; overflow: hidden; background: #eef2f7; color: #0f4cc4; cursor: zoom-in; }
+.storm-hq-gallery img { display: block; width: 100%; height: 190px; object-fit: contain; }
+.storm-hq-gallery span { display: block; padding: 10px; background: white; font-size: 12px; }
+.storm-hq-gallery button:focus-visible, .storm-hq-dialog button:focus-visible { outline: 3px solid #f57d23; outline-offset: 3px; }
+.storm-hq-dialog { max-width: 95vw; max-height: 94dvh; padding: 14px; border: 0; border-radius: 12px; background: #fffdf8; }
+.storm-hq-dialog::backdrop { background: #07152bdd; }
+.storm-hq-dialog button { display: block; margin: 0 0 10px auto; padding: 8px 16px; cursor: pointer; }
+.storm-hq-dialog img { display: block; max-width: 90vw; max-height: 80dvh; object-fit: contain; }

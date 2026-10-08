@@ -722,6 +722,14 @@
         </div>
       </div>
 
+      <div class="field">
+        <label><input type="checkbox" id="hq-enabled" /> Pin as Tracking Isaias headquarters</label>
+        <p>Stays at the top of the homepage until you edit this post, uncheck this box, and publish the update. Regular Pulses do not remove it.</p>
+        <label for="hq-images">Headquarters images (up to 12)</label>
+        <input type="file" id="hq-images" accept="image/*" multiple style="display:block" />
+        <p>New images replace the gallery. Leave empty to keep the existing gallery.</p>
+        <div id="hq-gallery-preview" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+      </div>
       <div class="field publish-row">
         <button class="primary" id="publish">
           <span>Publish Pulse</span>
@@ -784,6 +792,28 @@
   const publishedListRefresh = document.getElementById('published-list-refresh');
   const publishedItems = document.getElementById('published-items');
 
+  let headquartersGallery = [];
+  const hqEnabled = document.getElementById("hq-enabled");
+  const hqImages = document.getElementById("hq-images");
+  const hqGalleryPreview = document.getElementById("hq-gallery-preview");
+  function previewHeadquartersGallery(urls) {
+    hqGalleryPreview.replaceChildren();
+    for (const url of urls) {
+      const img = document.createElement("img");
+      img.src = url;
+      img.alt = "Headquarters image preview";
+      img.style.cssText = "width:120px;height:90px;object-fit:contain;background:#eef2f7";
+      hqGalleryPreview.append(img);
+    }
+  }
+  hqImages.addEventListener("change", () => {
+    const files = [...hqImages.files];
+    if (files.length > 12) { hqImages.value = ""; setStatus("Choose up to 12 images", "error"); return; }
+    const urls = files.map(file => URL.createObjectURL(file));
+    previewHeadquartersGallery(urls);
+    hqGalleryPreview.querySelectorAll("img").forEach(img => img.onload = () => URL.revokeObjectURL(img.src));
+  });
+  hqEnabled.addEventListener("change", scheduleDraftSave);
   const DRAFT_KEY = '828_pulse_draft_v1';
 
   let currentMediaUrl = "";
@@ -1189,6 +1219,10 @@
   }
 
   function setEditingPulse(pulse) {
+    hqEnabled.checked = pulse.headquarters === true;
+    headquartersGallery = pulse.gallery || [];
+    hqImages.value = "";
+    previewHeadquartersGallery(headquartersGallery);
     editingTimestamp = Number(pulse.timestamp) || null;
     editor.innerHTML = pulse.text || pulse.body || pulse.content || "";
     currentFile = null;
@@ -1208,6 +1242,10 @@
   }
 
   function clearEditingPulse({ clearEditor = false } = {}) {
+    hqEnabled.checked = false;
+    headquartersGallery = [];
+    hqImages.value = "";
+    previewHeadquartersGallery([]);
     editingTimestamp = null;
     editBanner.style.display = "none";
     publishButtonLabel().textContent = "Publish Pulse";
@@ -1520,6 +1558,8 @@ function updateTimestamp() {
   // -----------------------------
   function saveDraft() {
     const draft = {
+      headquarters: hqEnabled.checked,
+      gallery: headquartersGallery,
       html: editor.innerHTML,
       mediaType: currentMediaType,
       mediaUrl: currentMediaUrl,
@@ -1558,6 +1598,9 @@ function updateTimestamp() {
     if (!raw) return;
     try {
       const draft = JSON.parse(raw);
+      hqEnabled.checked = draft.headquarters === true;
+      headquartersGallery = draft.gallery || [];
+      previewHeadquartersGallery(headquartersGallery);
       editor.innerHTML = draft.html || "";
       currentMediaType = draft.mediaType || null;
       currentMediaUrl = draft.mediaUrl || "";
@@ -1619,11 +1662,22 @@ function updateTimestamp() {
         setStatus("Publishing...", "busy");
       }
 
+      if (hqEnabled.checked && hqImages.files.length) {
+        const nextGallery = [];
+        for (const file of hqImages.files) {
+          setStatus("Uploading headquarters images...", "busy");
+          const uploaded = await uploadPulseMedia(file);
+          nextGallery.push(uploaded.mediaUrl);
+        }
+        headquartersGallery = nextGallery;
+      }
       const res = await fetch("/api/router?route=tidbits/pulse-write", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: "Weather Pulse",
+          title: hqEnabled.checked ? "Tracking Isaias" : "Weather Pulse",
+          headquarters: hqEnabled.checked,
+          gallery: headquartersGallery,
           text: html,
           mediaUrl,
           mediaType,
