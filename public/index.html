@@ -1967,6 +1967,14 @@
       box-shadow: var(--shadow);
     }
 
+    .pulse-media-preview[hidden] { display: none; }
+    .pulse-rich-text { font-size: 1rem; line-height: 1.7; overflow-wrap: anywhere; }
+    .pulse-rich-text p, .pulse-rich-text div, .pulse-rich-text ul, .pulse-rich-text ol { margin: 0 0 1em; }
+    .pulse-rich-text a { color: var(--blue); text-decoration: underline; text-underline-offset: .18em; }
+    .pulse-rich-text strong, .pulse-rich-text b { font-weight: 700; }
+    .pulse-rich-text em, .pulse-rich-text i { font-style: italic; }
+    .pulse-rich-text ul, .pulse-rich-text ol { padding-left: 1.5em; }
+    .pulse-layout:has(.pulse-media-preview[hidden]) { grid-template-columns: minmax(0, 1fr); }
     .pulse-layout {
       display: grid;
       grid-template-columns: minmax(0, 0.95fr) minmax(360px, 0.62fr);
@@ -4715,23 +4723,13 @@
               <b class="pulse-fresh-badge" id="pulseFreshBadge" hidden>Fresh Update</b>
             </time>
             <h2 id="pulsePreviewTitle">What I'm watching in the weather right now.</h2>
-            <p id="pulsePreviewText">
-              The Pulse module can reference the same sky signal when it matters: “The camera view backs up the forecast:
-              clouds are in control, but there is enough filtered light to keep things from feeling gloomy.” This keeps
-              Pulse editorial, while the sky card stays observational.
-            </p>
+            <div id="pulsePreviewText" class="pulse-rich-text"></div>
             <div class="pulse-actions">
               <a href="pulse.html">Read this Pulse</a>
               <a href="828-sunset-radiance.html">Open Sunset Radiance</a>
             </div>
           </div>
-          <figure class="pulse-media-preview" id="pulseMediaSlot">
-            <button class="pulse-media-button" id="pulseMediaButton" type="button" aria-haspopup="dialog">
-              <img src="js/sky-cam/frame.jpg" alt="828 Weather Pulse preview image" />
-              <span class="pulse-media-enlarge">Tap to enlarge</span>
-            </button>
-            <figcaption class="pulse-media-label" id="pulseMediaLabel">Pulse image</figcaption>
-          </figure>
+          <figure class="pulse-media-preview" id="pulseMediaSlot" hidden></figure>
         </div>
         <div class="pulse-recent-feed" id="pulseRecentFeed" hidden>
           <div class="pulse-recent-heading">
@@ -5129,12 +5127,14 @@
         <p>Open the latest Pulse video or image at a larger size without leaving the homepage.</p>
       </div>
       <div class="preview-modal-body pulse-modal-body" id="pulseMediaModalBody">
-        <img class="radar-modal-image" src="js/sky-cam/frame.jpg" alt="Expanded Weather Pulse media" />
+
       </div>
     </div>
   </div>
 
   <script type="module">
+    import { sanitizeEditorialHtml } from "./js/intel/editorial-html.js";
+    import { getPulseMedia } from "./js/intel/pulse-media.js";
     import {
       calculateComfort,
       FEELSCORE_CALIBRATION
@@ -6346,7 +6346,7 @@
 
       shelf.hidden = recent.length === 0;
       grid.innerHTML = recent.map((item) => {
-        const mediaUrl = item.mediaUrl || item.image || "/828-brand-card.png";
+        const mediaUrl = getPulseMedia(item).url || "/828-brand-card.png";
         const thumbnail = pulseThumbnailUrl(mediaUrl, item.mediaType || "") || "/828-brand-card.png";
         const text = pulseExcerpt(item.text || item.body || item.content || "");
         const stamp = formatPulsePublished(pulseUpdatedAt(item));
@@ -6425,7 +6425,7 @@
       const updatedAt = pulseUpdatedAt(pulse);
       const stamp = formatPulsePublished(updatedAt);
       const fresh = isPulseFresh(updatedAt);
-      const thumbnailUrl = pulseThumbnailUrl(pulse.mediaUrl || pulse.image || "", pulse.mediaType || "");
+      const thumbnailUrl = pulseThumbnailUrl(getPulseMedia(pulse).url, getPulseMedia(pulse).mediaType || "");
 
       if (strip) {
         document.querySelector("#pulseAlertTitle").textContent = pulseHeadline(pulse);
@@ -6451,14 +6451,7 @@
     }
 
     function pulseMediaMarkup(url, mediaType) {
-      if (!url) {
-        return `
-          <button class="pulse-media-button" type="button" aria-haspopup="dialog">
-            <img src="js/sky-cam/frame.jpg" alt="828 Weather Pulse preview image" />
-            <span class="pulse-media-enlarge">Tap to enlarge</span>
-          </button>
-        `;
-      }
+      if (!url) return "";
 
       const safeUrl = escapeAttr(url);
       const isVideo =
@@ -6498,21 +6491,21 @@
       if (isPulseFresh(updatedAt)) schedulePulseExpiration(updatedAt);
 
       const text = pulseExcerpt(pulse.text || pulse.body || pulse.content || "");
-      const mediaUrl = pulse.mediaUrl || pulse.image || "";
-      const mediaType = pulse.mediaType || "";
+      const publishedMedia = getPulseMedia(pulse);
+      const mediaUrl = publishedMedia.url;
+      const mediaType = publishedMedia.mediaType || "";
       const isVideo = mediaType === "video" || mediaUrl.endsWith(".mp4") || mediaUrl.includes("/video/");
       currentPulseMedia = {
-        url: mediaUrl || "js/sky-cam/frame.jpg",
+        url: mediaUrl,
         mediaType: isVideo ? "video" : "image"
       };
 
       document.querySelector("#pulsePreviewTitle").textContent = pulseHeadline(pulse);
       renderPulsePublished(updatedAt);
-      if (text) {
-        document.querySelector("#pulsePreviewText").textContent = text;
-      }
+      document.querySelector("#pulsePreviewText").innerHTML = sanitizeEditorialHtml(pulse.text || pulse.body || pulse.content || "");
       renderPulseVisibility(pulse, text || "Open the latest note from the 828 Weather Direct weather desk.");
       renderRecentPulseShelf(pulse.recent);
+      document.querySelector("#pulseMediaSlot").hidden = !mediaUrl;
       document.querySelector("#pulseMediaSlot").innerHTML = `
         ${pulseMediaMarkup(mediaUrl, mediaType)}
         <figcaption class="pulse-media-label" id="pulseMediaLabel">${isVideo ? "Latest video" : "Latest pulse"}</figcaption>
@@ -7403,8 +7396,8 @@
       }
     }
     function openPulseMediaModal() {
-      if (!pulseMediaModal || !pulseMediaModalBody) return;
-      const safeUrl = escapeAttr(currentPulseMedia.url || "js/sky-cam/frame.jpg");
+      if (!pulseMediaModal || !pulseMediaModalBody || !currentPulseMedia.url) return;
+      const safeUrl = escapeAttr(currentPulseMedia.url);
       const isVideo = currentPulseMedia.mediaType === "video" || safeUrl.endsWith(".mp4") || safeUrl.includes("/video/");
       pulseMediaModalBody.innerHTML = isVideo
         ? `
