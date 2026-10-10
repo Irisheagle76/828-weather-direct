@@ -1969,11 +1969,6 @@
 
     .pulse-media-preview[hidden] { display: none; }
     .pulse-rich-text { font-size: 1rem; line-height: 1.7; overflow-wrap: anywhere; }
-    .pulse-rich-text p, .pulse-rich-text div, .pulse-rich-text ul, .pulse-rich-text ol { margin: 0 0 1em; }
-    .pulse-rich-text a { color: var(--blue); text-decoration: underline; text-underline-offset: .18em; }
-    .pulse-rich-text strong, .pulse-rich-text b { font-weight: 700; }
-    .pulse-rich-text em, .pulse-rich-text i { font-style: italic; }
-    .pulse-rich-text ul, .pulse-rich-text ol { padding-left: 1.5em; }
     .pulse-layout:has(.pulse-media-preview[hidden]) { grid-template-columns: minmax(0, 1fr); }
     .pulse-layout {
       display: grid;
@@ -4359,6 +4354,7 @@
   <script defer src="/js/site-chrome.js?v=20260908-global-nav"></script>
 <link rel="stylesheet" href="/css/fog-index.css">
   <link rel="stylesheet" href="/css/storm-headquarters.css" />
+  <link rel="stylesheet" href="/css/editorial-rich-text.css" />
 </head>
 <body class="splash-active">
   <div class="home-splash" id="homeSplash" role="status" aria-live="polite" aria-label="Loading 828 Weather Direct">
@@ -4433,7 +4429,7 @@
 
   <main class="preview-page">
     <div class="preview-stack">
-      <section id="storm-headquarters" hidden aria-label="Tracking Isaias"></section>
+      <section id="storm-headquarters" hidden aria-label="Weather event headquarters"></section>
       <div id="active-alerts" aria-live="polite"></div>
 
       <section class="feelscore-mock" id="now" aria-label="Current conditions and FeelScore">
@@ -4723,7 +4719,7 @@
               <b class="pulse-fresh-badge" id="pulseFreshBadge" hidden>Fresh Update</b>
             </time>
             <h2 id="pulsePreviewTitle">What I'm watching in the weather right now.</h2>
-            <div id="pulsePreviewText" class="pulse-rich-text"></div>
+            <div id="pulsePreviewText" class="pulse-rich-text editorial-rich-text"></div>
             <div class="pulse-actions">
               <a href="pulse.html">Read this Pulse</a>
               <a href="828-sunset-radiance.html">Open Sunset Radiance</a>
@@ -5133,6 +5129,7 @@
   </div>
 
   <script type="module">
+    import { renderHeadquarters } from "./js/storm-headquarters.js";
     import { sanitizeEditorialHtml } from "./js/intel/editorial-html.js";
     import { getPulseMedia } from "./js/intel/pulse-media.js";
     import {
@@ -6479,6 +6476,7 @@
     }
 
     function renderPulsePreview(pulse) {
+      renderHeadquarters(document.querySelector("#storm-headquarters"), pulse?.headquartersPost || null);
       const updatedAt = pulseUpdatedAt(pulse);
       if (!pulse || pulse.fallback) {
         if (pulseExpirationTimer) clearTimeout(pulseExpirationTimer);
@@ -7478,7 +7476,7 @@
     }
 
   </script>
-<script type="module" src="/js/storm-headquarters.js"></script>
+
 <script type="module" src="/js/fog-index.js"></script>
 </body>
 </html>

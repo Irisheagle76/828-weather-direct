@@ -182,18 +182,6 @@ a { color: inherit; text-decoration: none; }
   line-height: 1.72;
   white-space: pre-wrap;
 }
-.pulse-feed-text p { margin: 0 0 1em; }
-.pulse-feed-text p:last-child { margin-bottom: 0; }
-.pulse-feed-text ul,
-.pulse-feed-text ol { margin: 0.55em 0 1em 1.35em; padding: 0; }
-.pulse-feed-text li + li { margin-top: 0.32em; }
-.pulse-feed-text a {
-  color: var(--blue);
-  font-weight: 750;
-  text-decoration: underline;
-  text-decoration-color: rgba(15, 76, 196, 0.38);
-  text-underline-offset: 3px;
-}
 .pulse-item-footer {
   display: flex;
   align-items: center;

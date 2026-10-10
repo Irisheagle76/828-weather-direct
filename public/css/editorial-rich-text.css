@@ -1,0 +1,9 @@
+.editorial-rich-text { overflow-wrap: anywhere; }
+.editorial-rich-text p, .editorial-rich-text div, .editorial-rich-text ul, .editorial-rich-text ol, .editorial-rich-text blockquote { margin: 0 0 1em; }
+.editorial-rich-text > :last-child { margin-bottom: 0; }
+.editorial-rich-text a { color: var(--blue, #0f4cc4); text-decoration: underline; text-underline-offset: .18em; }
+.editorial-rich-text a:focus-visible { outline: 3px solid #f57d23; outline-offset: 3px; }
+.editorial-rich-text strong, .editorial-rich-text b { font-weight: 700; }
+.editorial-rich-text em, .editorial-rich-text i { font-style: italic; }
+.editorial-rich-text ul, .editorial-rich-text ol { padding-left: 1.5em; }
+.editorial-rich-text li + li { margin-top: .32em; }

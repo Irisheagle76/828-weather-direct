@@ -652,6 +652,8 @@
       }
     }
   </style>
+<link rel="stylesheet" href="/css/storm-headquarters.css" />
+<link rel="stylesheet" href="/css/editorial-rich-text.css" />
 </head>
 
 <body>
@@ -723,9 +725,18 @@
       </div>
 
       <div class="field">
-        <label><input type="checkbox" id="hq-enabled" /> Pin as Tracking Isaias headquarters</label>
-        <p>Stays at the top of the homepage until you edit this post, uncheck this box, and publish the update. Regular Pulses do not remove it.</p>
-        <label for="hq-images">Headquarters images (up to 12)</label>
+        <label for="publication-type">Publish to</label>
+        <select id="publication-type"><option value="pulse">Regular Pulse</option><option value="event">Event Headquarters</option></select>
+        <div id="event-controls" hidden>
+          <label for="event-title">Event title</label>
+          <input id="event-title" type="text" maxlength="120" placeholder="Tracking Isaias, Winter Storm Update, Flood Watch…" />
+          <label><input type="checkbox" id="hq-enabled" checked /> Show event headquarters at the top of the homepage</label>
+          <p>Event updates stay separate from regular Pulses. Rename this title for your next major weather event. Uncheck visibility to end tracking while keeping the post in the archive.</p>
+        </div>
+        <p id="current-event-status">Checking current event…</p>
+        <button type="button" id="edit-current-event" hidden>Edit current event headquarters</button>
+
+        <label for="hq-images">Post images (up to 12)</label>
         <input type="file" id="hq-images" accept="image/*" multiple style="display:block" />
         <p>New images replace the gallery. Leave empty to keep the existing gallery.</p>
         <div id="hq-gallery-preview" style="display:flex;gap:8px;flex-wrap:wrap"></div>
@@ -765,7 +776,8 @@
     </div>
   </div>
 
-<script>
+<script type="module">
+import { renderHeadquarters } from "/js/storm-headquarters.js";
   const editor = document.getElementById('editor');
   const toolbar = document.getElementById('toolbar');
   const preview = document.getElementById('preview-content');
@@ -793,6 +805,17 @@
   const publishedItems = document.getElementById('published-items');
 
   let headquartersGallery = [];
+  let currentEvent = null;
+  const publicationType = document.getElementById('publication-type');
+  const eventTitle = document.getElementById('event-title');
+  function updatePublicationControls() {
+    const event = publicationType.value === 'event';
+    document.getElementById('event-controls').hidden = !event;
+    publishButtonLabel().textContent = event ? (editingTimestamp ? 'Update Event Headquarters' : 'Publish Event Headquarters') : (editingTimestamp ? 'Update Pulse' : 'Publish Pulse');
+  }
+  publicationType.addEventListener('change', () => { updatePublicationControls(); updatePreview(); scheduleDraftSave(); });
+  eventTitle.addEventListener('input', () => { updatePreview(); scheduleDraftSave(); });
+  document.getElementById('edit-current-event').addEventListener('click', () => { if (currentEvent) setEditingPulse(currentEvent); });
   const hqEnabled = document.getElementById("hq-enabled");
   const hqImages = document.getElementById("hq-images");
   const hqGalleryPreview = document.getElementById("hq-gallery-preview");
@@ -1219,7 +1242,9 @@
   }
 
   function setEditingPulse(pulse) {
-    hqEnabled.checked = pulse.headquarters === true;
+    publicationType.value = pulse.headquarters ? 'event' : 'pulse';
+    eventTitle.value = pulse.headquarters ? pulse.title || '' : '';
+    hqEnabled.checked = pulse.headquartersActive !== false;
     headquartersGallery = pulse.gallery || [];
     hqImages.value = "";
     previewHeadquartersGallery(headquartersGallery);
@@ -1232,7 +1257,7 @@
     mediaFilename.textContent = currentMediaUrl ? `Using published ${currentMediaType || "media"}` : "";
     editBannerText.textContent = `Editing Pulse from ${formatPublishedTime(editingTimestamp)}`;
     editBanner.style.display = "flex";
-    publishButtonLabel().textContent = "Update Pulse";
+    updatePublicationControls();
     clearDraft();
     renderMediaLibrary();
     renderPublishedPulses();
@@ -1242,13 +1267,15 @@
   }
 
   function clearEditingPulse({ clearEditor = false } = {}) {
-    hqEnabled.checked = false;
+    publicationType.value = 'pulse';
+    eventTitle.value = '';
+    hqEnabled.checked = true;
     headquartersGallery = [];
     hqImages.value = "";
     previewHeadquartersGallery([]);
     editingTimestamp = null;
     editBanner.style.display = "none";
-    publishButtonLabel().textContent = "Publish Pulse";
+    updatePublicationControls();
     if (clearEditor) {
       editor.innerHTML = "";
       currentMediaUrl = "";
@@ -1296,6 +1323,9 @@
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Unable to load published updates");
 
+      currentEvent = data.headquartersPost || null;
+      document.getElementById('current-event-status').textContent = currentEvent ? 'Current event: ' + currentEvent.title : 'No event headquarters is currently visible.';
+      document.getElementById('edit-current-event').hidden = !currentEvent;
       publishedPulses = Array.isArray(data.items) ? data.items.filter((item) => item && item.timestamp) : [];
       renderPublishedPulses();
       publishedListStatus.textContent = publishedPulses.length
@@ -1525,6 +1555,11 @@ function updateTimestamp() {
 
   function updatePreview() {
     const html = editor.innerHTML.trim();
+    if (publicationType.value === 'event') {
+      previewHint.style.display = 'none';
+      renderHeadquarters(preview, {title: eventTitle.value.trim() || 'Weather Event Headquarters', text: html, gallery: headquartersGallery, mediaUrl: currentMediaUrl, mediaType: currentMediaType, timestamp: Date.now()});
+      return;
+    }
     const hasContent = html.length > 0;
     const url = currentMediaUrl || "/828-brand-card.png";
     const type = currentMediaType || "image";
@@ -1558,7 +1593,9 @@ function updateTimestamp() {
   // -----------------------------
   function saveDraft() {
     const draft = {
-      headquarters: hqEnabled.checked,
+      headquarters: publicationType.value === 'event',
+      headquartersActive: hqEnabled.checked,
+      eventTitle: eventTitle.value,
       gallery: headquartersGallery,
       html: editor.innerHTML,
       mediaType: currentMediaType,
@@ -1598,7 +1635,10 @@ function updateTimestamp() {
     if (!raw) return;
     try {
       const draft = JSON.parse(raw);
-      hqEnabled.checked = draft.headquarters === true;
+      publicationType.value = draft.headquarters ? 'event' : 'pulse';
+      eventTitle.value = draft.eventTitle || (draft.headquarters ? 'Tracking Isaias' : '');
+      hqEnabled.checked = draft.headquartersActive !== false;
+      updatePublicationControls();
       headquartersGallery = draft.gallery || [];
       previewHeadquartersGallery(headquartersGallery);
       editor.innerHTML = draft.html || "";
@@ -1635,6 +1675,7 @@ function updateTimestamp() {
   publishBtn.addEventListener("click", async () => {
     const html = editor.innerHTML.trim();
     if (!html) return;
+    if (publicationType.value === 'event' && !eventTitle.value.trim()) { setStatus('Enter an event title before publishing', 'error'); eventTitle.focus(); return; }
 
     publishBtn.disabled = true;
     setStatus("Preparing...", "busy");
@@ -1662,7 +1703,7 @@ function updateTimestamp() {
         setStatus("Publishing...", "busy");
       }
 
-      if (hqEnabled.checked && hqImages.files.length) {
+      if (hqImages.files.length) {
         const nextGallery = [];
         for (const file of hqImages.files) {
           setStatus("Uploading headquarters images...", "busy");
@@ -1675,8 +1716,9 @@ function updateTimestamp() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: hqEnabled.checked ? "Tracking Isaias" : "Weather Pulse",
-          headquarters: hqEnabled.checked,
+          title: publicationType.value === "event" ? eventTitle.value.trim() : "Weather Pulse",
+          headquarters: publicationType.value === "event",
+          headquartersActive: hqEnabled.checked,
           gallery: headquartersGallery,
           text: html,
           mediaUrl,
@@ -1721,6 +1763,7 @@ function updateTimestamp() {
   function init() {
     editor.innerHTML = "";
     updatePreview();
+    updatePublicationControls();
     checkForDraft();
     loadRecentMedia();
     loadPublishedPulses();

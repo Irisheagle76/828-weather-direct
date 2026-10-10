@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="/css/brand-lockup.css?v=20260805-brand2" />
   <link rel="stylesheet" href="/css/site-chrome.css?v=20260908-global-nav" />
   <script defer src="/js/site-chrome.js?v=20260908-global-nav"></script>
+  <link rel="stylesheet" href="/css/editorial-rich-text.css" />
 </head>
 <body>
   <header class="pulse-site-header" data-site-header>
@@ -149,7 +150,7 @@
               <a class="pulse-permalink" href="#${escapeHTML(id)}" aria-label="Link to this Weather Pulse update">${escapeHTML(date.short)}</a>
             </header>
             ${mediaHtml(item)}
-            <div class="pulse-feed-text">${sanitizePulseHtml(item.text || item.body || item.content || "")}</div>
+            <div class="pulse-feed-text editorial-rich-text">${sanitizePulseHtml(item.text || item.body || item.content || "")}</div>
             <footer class="pulse-item-footer">
               <time datetime="${escapeHTML(item.timestamp || "")}">${escapeHTML(date.exact)}</time>
               <a href="/" class="pulse-item-home">Check current conditions <span aria-hidden="true">&rarr;</span></a>
