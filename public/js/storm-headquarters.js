@@ -1,3 +1,5 @@
+import { sanitizeEditorialHtml } from './intel/editorial-html.js';
+
 export function renderHeadquarters(container, post) {
   container.replaceChildren();
   container.hidden = !post;
@@ -15,13 +17,7 @@ export function renderHeadquarters(container, post) {
   time.textContent = Number.isFinite(date.getTime()) ? `Tim’s latest thoughts • Updated ${date.toLocaleString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' })}` : 'Tim’s latest thoughts';
   const body = document.createElement('div');
   body.className = 'storm-hq-body';
-  // Render editorial content as text, retaining paragraph and list breaks.
-  const source = document.createElement('template');
-  source.innerHTML = post.text || '';
-  source.content.querySelectorAll('script,style,iframe').forEach(node => node.remove());
-  source.content.querySelectorAll('br').forEach(node => node.replaceWith('\n'));
-  source.content.querySelectorAll('p,div,li').forEach(node => node.append('\n\n'));
-  body.textContent = source.content.textContent.trim();
+  body.innerHTML = sanitizeEditorialHtml(post.text || '');
   card.append(kicker, title, time, body);
   const gallery = document.createElement('div');
   gallery.className = 'storm-hq-gallery';

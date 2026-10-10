@@ -4,6 +4,13 @@
 .storm-hq-card h2 { margin: 12px 0; font: bold clamp(30px, 5vw, 48px)/1.1 Georgia, serif; }
 .storm-hq-time { color: #52627a; font-size: 13px; }
 .storm-hq-body { white-space: pre-wrap; overflow-wrap: anywhere; max-width: 85ch; font-size: clamp(16px, 2vw, 18px); line-height: 1.7; margin: 24px 0; }
+.storm-hq-body p, .storm-hq-body ul, .storm-hq-body ol, .storm-hq-body blockquote { margin: 0 0 1em; }
+.storm-hq-body > :last-child { margin-bottom: 0; }
+.storm-hq-body a { color: #0f4cc4; text-decoration: underline; text-underline-offset: .18em; }
+.storm-hq-body a:focus-visible { outline: 3px solid #f57d23; outline-offset: 3px; }
+.storm-hq-body strong, .storm-hq-body b { font-weight: 700; }
+.storm-hq-body em, .storm-hq-body i { font-style: italic; }
+.storm-hq-body ul, .storm-hq-body ol { padding-left: 1.5em; }
 .storm-hq-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 14px; }
 .storm-hq-gallery button { min-width: 0; padding: 0; border: 1px solid #ccd8eb; border-radius: 12px; overflow: hidden; background: #eef2f7; color: #0f4cc4; cursor: zoom-in; }
 .storm-hq-gallery img { display: block; width: 100%; height: 190px; object-fit: contain; }
