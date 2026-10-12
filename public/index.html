@@ -5129,6 +5129,7 @@
   </div>
 
   <script type="module">
+    import { homepageEditorialMode } from "./js/intel/homepage-editorial.js";
     import { renderHeadquarters } from "./js/storm-headquarters.js";
     import { sanitizeEditorialHtml } from "./js/intel/editorial-html.js";
     import { getPulseMedia } from "./js/intel/pulse-media.js";
@@ -5326,17 +5327,7 @@
       },
       narrative: { headline: "Severe drought stress ongoing" }
     };
-    const PULSE_FALLBACK = {
-      title: "Weather Pulse",
-      text: "A beautiful, stunning day over Asheville and all of western North Carolina. Enjoy!!",
-      mediaUrl: "https://res.cloudinary.com/dz45rrije/video/upload/v1780603868/zo3zjlcb0klnrcvmwgw0.mp4",
-      mediaType: "video",
-      timestamp: 1780603869803
-    };
-    let currentPulseMedia = {
-      url: PULSE_FALLBACK.mediaUrl,
-      mediaType: PULSE_FALLBACK.mediaType
-    };
+    let currentPulseMedia = { url: "", mediaType: null };
     let pulseExpirationTimer = null;
 
     function localTimeParts() {
@@ -6476,9 +6467,10 @@
     }
 
     function renderPulsePreview(pulse) {
-      renderHeadquarters(document.querySelector("#storm-headquarters"), pulse?.headquartersPost || null);
+      const editorialMode = homepageEditorialMode(pulse);
+      renderHeadquarters(document.querySelector("#storm-headquarters"), editorialMode === 'event' ? pulse.headquartersPost : null);
       const updatedAt = pulseUpdatedAt(pulse);
-      if (!pulse || pulse.fallback) {
+      if (editorialMode !== 'pulse') {
         if (pulseExpirationTimer) clearTimeout(pulseExpirationTimer);
         pulseExpirationTimer = null;
         setPulsePlacementVisible(false);
@@ -6511,7 +6503,7 @@
     }
 
     async function hydratePulsePreview() {
-      renderPulsePreview(PULSE_FALLBACK);
+      renderPulsePreview({ fallback: true });
 
       try {
         renderPulsePreview(await fetchRouteJson("tidbits/pulse-feed"));

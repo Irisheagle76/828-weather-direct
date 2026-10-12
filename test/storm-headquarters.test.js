@@ -49,6 +49,9 @@ test('headquarters persists across ordinary Pulses, edits its gallery, and can b
     store.set('pulse:latest', regularLatest);
     await publish({ ...pinned, headquartersActive: false });
     assert.equal(store.has('pulse:headquarters'), false, 'visibility can end without converting event to regular Pulse');
+    assert.ok(store.get('pulse:event-ended-at') > 0);
+    await feed({ method: 'GET' }, { status() { return this; }, json(value) { payload = value; } });
+    assert.equal(payload.eventEndedAt, store.get('pulse:event-ended-at'));
     assert.ok(store.get('pulse:history').some(item => item.headquarters && item.headquartersActive === false));
     await publish({ ...pinned, headquarters: false });
     assert.equal(store.has('pulse:headquarters'), false);
