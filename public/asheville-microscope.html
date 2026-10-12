@@ -1460,7 +1460,7 @@
                 <span class="avl-level-label low">Valley floor</span>
               </div>
             </div>
-            <p class="avl-elevation-cue"><strong>Compare vertically:</strong> higher bubbles sit at higher elevations. The feet labels show height above sea level; the terrain badge shows the total elevation difference—not a temperature effect.</p>
+            <p class="avl-elevation-cue"><strong>Read from highest to lowest:</strong> each station has an evenly spaced row so nearby elevations stay readable. Row spacing is not proportional to feet; labels show actual elevation above sea level. Left to right shows the selected weather signal.</p>
             <div class="avl-chart-key"><span><i class="avl-key-x"></i>Left → right: selected signal</span><span><i class="avl-key-y"></i>Top → bottom: elevation</span></div>
           </div>
 
@@ -1924,15 +1924,31 @@
 
         const plot = root.querySelector('#avl-page-plot');
         plot.querySelectorAll('.avl-station, .avl-selected-reading').forEach((node) => node.remove());
-        const plotHeight = Math.max(410, plot.clientHeight || 410);
         const plotTop = 34;
         const plotBottom = 66;
-        const elevationTravel = plotHeight - plotTop - plotBottom;
+        const elevationOrder = [...stations].sort((a, b) => b.elevation - a.elevation || a.code.localeCompare(b.code));
+        const plotHeight = 500;
+        const rowGap = (plotHeight - plotTop - plotBottom) / Math.max(1, elevationOrder.length - 1);
+        plot.style.height = `${plotHeight}px`;
+        const elevationRows = new Map(elevationOrder.map((station, index) => [station.code, plotTop + index * rowGap]));
+        const elevationAxis = root.querySelector('.avl-y-axis');
+        elevationAxis.replaceChildren();
+        const tickInterval = Math.max(1, Math.ceil((elevationOrder.length - 1) / 5));
+        for (const [elevationIndex, station] of elevationOrder.entries()) {
+          if (elevationIndex % tickInterval !== 0 && elevationIndex !== elevationOrder.length - 1) continue;
+          const tick = document.createElement('span');
+          tick.textContent = `${station.elevation.toLocaleString()} ft`;
+          tick.style.position = 'absolute';
+          tick.style.right = '0';
+          tick.style.top = `${elevationRows.get(station.code)}px`;
+          tick.style.fontSize = '12px';
+          elevationAxis.appendChild(tick);
+        }
+        root.querySelector('.avl-terrain-badge').textContent = `${(elevationHigh - elevationLow).toLocaleString()} ft of reporting terrain`;
         ordered.forEach((station, index) => {
           const xPercent = span === 0 ? 50 : ((station[metric] - low[metric]) / span) * 100;
           const left = Math.max(2, Math.min(98, xPercent + ((index % 3) - 1) * 1.25));
-          const elevationPercent = (elevationHigh - station.elevation) / (elevationHigh - elevationLow);
-          const top = plotTop + elevationPercent * elevationTravel;
+          const top = elevationRows.get(station.code);
           const dot = document.createElement('button');
           dot.type = 'button';
           dot.className = 'avl-station';
