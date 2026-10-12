@@ -83,22 +83,34 @@ const els = {
 
     function labelFromScore(score) {
       if (!Number.isFinite(score)) return "Loading";
-      if (score >= 86) return "Great";
+      if (score >= 84) return "Great";
       if (score >= 70) return "Good";
-      if (score >= 56) return "Mixed";
+      if (score >= 55) return "Mixed";
       return "Use care";
     }
 
     function formatUpdate(value) {
       const ts = new Date(value).getTime();
       if (!Number.isFinite(ts)) return "Latest hiking data";
-      return `Updated ${new Date(ts).toLocaleString([], {
+      return `Report generated ${new Date(ts).toLocaleString([], {
         month: "short",
         day: "numeric",
         hour: "numeric",
         minute: "2-digit",
-        timeZone: "America/New_York"
+        timeZone: "America/New_York",
+        timeZoneName: "short"
       })}`;
+    }
+
+    function observationTime(value) {
+      const ts = Date.parse(value);
+      if (!Number.isFinite(ts)) return "Observation time unavailable";
+      const age = Math.max(0, Math.floor((Date.now() - ts) / 60000));
+      const time = new Date(ts).toLocaleString("en-US", {
+        month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
+        timeZone: "America/New_York", timeZoneName: "short"
+      });
+      return `Observed ${time} · ${age < 1 ? "less than a minute" : `${age} min`} ago`;
     }
 
     function formatCameraRefresh() {
@@ -293,6 +305,7 @@ const els = {
               <div>
                 <strong>${station.name}</strong>
                 <span>${station.elevationFt || "--"} ft &middot; ${station.source || "Station"}</span>
+                <span>${observationTime(station.observedAt)}${station.retrievalMode?.includes("fallback") ? " · fallback reading" : ""}</span>
               </div>
               <div class="station-temp">${temp(station.temperatureF)}</div>
             </div>
@@ -308,18 +321,18 @@ const els = {
     }
 
     function formatDegrees(value) {
-      return Number.isFinite(Number(value)) ? `${round(Number(value))}\u00b0F` : "--";
+      return value != null && Number.isFinite(Number(value)) ? `${round(Number(value))}\u00b0F` : "--";
     }
 
     function formatMph(value) {
-      return Number.isFinite(Number(value)) ? `${round(Number(value))} mph` : "--";
+      return value != null && Number.isFinite(Number(value)) ? `${round(Number(value))} mph` : "--";
     }
 
     function renderInsightSections(guidance = {}) {
       const comparisons = [
         {
           title: "Mountain vs Asheville",
-          body: `Mount Mitchell is about ${formatDegrees(guidance.mitchellDrop)} cooler than the Asheville-area readings.`
+          body: guidance.mitchellDrop == null ? "Mount Mitchell observation is unavailable; check the summit camera and forecast separately." : `Mount Mitchell is about ${formatDegrees(guidance.mitchellDrop)} cooler than the Asheville-area readings.`
         },
         {
           title: "Ridge vs Valley",
@@ -358,9 +371,9 @@ const els = {
           body: "Cooling from Asheville-area readings to Mount Mitchell."
         },
         {
-          label: "Fog risk",
+          label: "Moisture signal",
           value: guidance.fogRisk || "--",
-          body: "Based on the tightest temperature/dew point spread."
+          body: "Based on the tightest temperature/dew point spread; does not confirm fog."
         },
         {
           label: "Highest UV",
@@ -393,6 +406,32 @@ const els = {
     function render(data) {
       const guidance = data?.guidance || {};
       const stations = data?.stations || [];
+      let reportTime = document.querySelector("#hikingReportTime");
+      if (!reportTime) {
+        reportTime = document.createElement("p");
+        reportTime.id = "hikingReportTime";
+        reportTime.className = "station-updated";
+        els.hikerHeadline.before(reportTime);
+      }
+      reportTime.textContent = `${formatUpdate(data?.generatedAt)} · refreshes every 5 minutes. Score: ${guidance.scoreScope || "trail conditions"}; mountain exposure is checked separately.`;
+      const reportAge = Date.now() - Date.parse(data?.generatedAt);
+      if (!Number.isFinite(reportAge) || reportAge > 15 * 60 * 1000) {
+        els.hikerScore.textContent = "--";
+        els.hikerLabel.textContent = "Needs update";
+        els.hikerHeadline.textContent = "Station report needs an update. Check the latest mountain views.";
+        renderNarrative("These station readings are older than 15 minutes or their report time is unavailable. A current hiking score cannot be shown.");
+        els.bestBet.textContent = "Current trail assessment unavailable";
+        els.localSpread.textContent = "--";
+        els.mitchellDrop.textContent = "--";
+        els.fogRisk.textContent = "Unknown";
+        els.packMindset.textContent = "Check current mountain conditions and pack normal hiking essentials.";
+        els.comparisonGrid.innerHTML = "";
+        els.hikerDataGrid.innerHTML = "";
+        els.useCare.textContent = "Check observation times and current conditions before choosing a route.";
+        els.updatedAt.textContent = formatUpdate(data?.generatedAt);
+        renderStations(stations);
+        return;
+      }
       const score = scoreFromGuidance(guidance);
 
       els.hikerScore.textContent = score;
@@ -400,10 +439,12 @@ const els = {
       els.hikerHeadline.textContent = cleanText(guidance.bestWindow || "Trail conditions are updating.");
       renderNarrative(guidance.hikerNarrative);
       els.localSpread.textContent = `${round(guidance.localTempSpread)}\u00b0`;
-      els.mitchellDrop.textContent = `${round(guidance.mitchellDrop)}\u00b0`;
+      els.mitchellDrop.textContent = guidance.mitchellDrop == null ? "--" : `${round(guidance.mitchellDrop)}\u00b0`;
       els.fogRisk.textContent = guidance.fogRisk || "--";
       els.bestBet.textContent = cleanText(guidance.overall || "Most nearby trails should feel comfortable.");
-      els.useCare.textContent = guidance.fogRisk === "Elevated"
+      els.useCare.textContent = guidance.routeWarnings?.length
+        ? guidance.routeWarnings.join(" ")
+        : guidance.fogRisk === "Elevated"
         ? "Watch for damp leaves, sheltered low cloud, and slick shaded stretches."
         : "Typical mountain exposure: changing clouds, damp pockets, and breezy gaps.";
       els.packMindset.textContent = Number(guidance.mitchellDrop) >= 10

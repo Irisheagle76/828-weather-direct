@@ -180,6 +180,14 @@
       letter-spacing: 0;
     }
 
+    #hikingReportTime {
+      color: #e4edf9;
+      font-size: 0.9rem;
+      font-weight: 500;
+      line-height: 1.5;
+      margin: 0.75rem 0 1rem;
+    }
+
     .hero-narrative-wrap {
       max-width: 760px;
       margin: 16px 0 0;
