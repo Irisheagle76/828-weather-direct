@@ -226,11 +226,11 @@ function describeComfortSetup(intel, category, isGoldilocks, dayType) {
   const subject = describePeriodSubject(intel, dayType);
 
   if (isGoldilocks || category === "veryComfortable") {
-    return `${subject} should be easy to enjoy outside`;
+    return `${subject} looks good for a walk or some time outside`;
   }
 
   if (category === "comfortable") {
-    return `${subject} should work well for most plans`;
+    return `${subject} should be comfortable for most outdoor plans`;
   }
 
   if (category === "slightlyUncomfortable") {
@@ -251,30 +251,29 @@ function describeComfortSetup(intel, category, isGoldilocks, dayType) {
 function describeTemperature(intel) {
   const t = getTemp(intel);
 
-  if (t <= 35) return "cold air hangs on";
-  if (t <= 50) return "it starts cool";
-  if (t <= 75) return "temperatures stay mild";
-  if (t <= 88) return "it turns warmer by afternoon";
-  return "heat builds through the afternoon";
+  if (t <= 35) return "cold temperatures";
+  if (t <= 50) return "cool temperatures";
+  if (t <= 75) return "mild temperatures";
+  if (t <= 88) return "warm temperatures";
+  return "hot weather";
 }
 
 function describeMoisture(intel) {
   const dp = getDewpoint(intel);
 
-  if (dp < 50) return "the air stays dry";
-  if (dp < 60) return "humidity stays manageable";
-  if (dp < 67) return "humidity is a little more noticeable";
-  return "the air feels muggy";
+  if (dp < 60) return "without much humidity";
+  if (dp < 67) return "with some humidity";
+  return "with muggy air";
 }
 
 function describeWind(intel) {
   const gust = getGust(intel);
   const wind = getWind(intel);
 
-  if (gust >= 30) return "gusts show up at times";
-  if (wind >= 15) return "winds become noticeable";
-  if (wind >= 7) return "a light breeze develops";
-  return "winds stay light";
+  if (gust >= 30) return "occasional strong gusts";
+  if (wind >= 15) return "a steady breeze";
+  if (wind >= 7) return "a light breeze";
+  return "light winds";
 }
 
 function describeSky(intel) {
@@ -404,15 +403,12 @@ function buildNarrative(intel, dayType, category, isGoldilocks) {
 
   const temporalFrame = temporal.choose(dayType, isGoldilocks);
   const setup = describeComfortSetup(safeIntel, category, isGoldilocks, dayType);
-  const details = [
-    describeTemperature(safeIntel),
-    describeWind(safeIntel),
-    describeMoisture(safeIntel),
-    describeSky(safeIntel)
-  ].filter(Boolean);
+  // Keep this paragraph about comfort. The adjacent sky read describes clouds
+  // and light; this period summary must not invent sunshine during the night.
+  const details = `Expect ${describeTemperature(safeIntel)} and ${describeWind(safeIntel)}, ${describeMoisture(safeIntel)}.`;
 
   return {
-    narrative: polishNarrative(`${setup}. ${sentenceCase(joinClauses(details))}.`),
+    narrative: polishNarrative(`${setup}. ${details}`),
     temporal: temporalFrame
   };
 

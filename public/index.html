@@ -2,11 +2,27 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="description" content="Hyper-local Asheville weather from meteorologist Tim Ballisty: current conditions, FeelScore, forecasts, live sky views, and outdoor guidance." />
+  <link rel="canonical" href="https://avlweather.com/" />
+  <meta property="og:title" content="Asheville Weather | 828 Weather Direct" />
+  <meta property="og:description" content="Hyper-local Asheville weather from meteorologist Tim Ballisty: current conditions, FeelScore, forecasts, live sky views, and outdoor guidance." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://avlweather.com/" />
+  <meta property="og:image" content="https://avlweather.com/images/828-brand-card.png" />
+  <meta property="og:image:alt" content="828 Weather Direct brand mark" />
+  <meta property="og:site_name" content="828 Weather Direct" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Asheville Weather | 828 Weather Direct" />
+  <meta name="twitter:description" content="Hyper-local Asheville weather from meteorologist Tim Ballisty: current conditions, FeelScore, forecasts, live sky views, and outdoor guidance." />
+  <meta name="twitter:image" content="https://avlweather.com/images/828-brand-card.png" />
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://avlweather.com/#organization","name":"828 Weather Direct","url":"https://avlweather.com/","logo":"https://avlweather.com/images/828-brand-card.png"},{"@type":"WebSite","@id":"https://avlweather.com/#website","name":"828 Weather Direct","url":"https://avlweather.com/","description":"Hyper-local Asheville weather from meteorologist Tim Ballisty: current conditions, FeelScore, forecasts, live sky views, and outdoor guidance.","publisher":{"@id":"https://avlweather.com/#organization"}}]}
+  </script>
   <title>828 Weather Direct</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="/css/app-v2.css?v=20260728-alert-images" />
   <link rel="stylesheet" href="/css/rainfall-context.css?v=20260808" />
-  <link rel="stylesheet" href="/css/visual-intelligence.css?v=20260901-comfort-labels" />
+  <link rel="stylesheet" href="/css/visual-intelligence.css?v=20261012-chart-contrast" />
   <style>
     :root {
       --ink: #142033;
@@ -691,14 +707,32 @@
 
     @media (min-width: 561px) {
       .feel-panel {
-        align-content: stretch;
-        grid-template-rows: auto auto auto minmax(0, 1fr);
+        align-content: start;
+        grid-template-rows: none;
+        align-self: stretch;
       }
 
       .feel-panel .fs-temp-markers {
         display: grid;
-        grid-template-rows: auto repeat(3, minmax(58px, 1fr)) auto;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-rows: auto auto;
         margin-top: 2px;
+      }
+
+      .feel-panel .fs-temp-title {
+        grid-column: 1 / -1;
+      }
+
+      .feel-panel .fs-temp-marker {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 7px;
+        border-bottom: 0;
+        padding-bottom: 0;
+      }
+
+      .feel-panel .fs-temp-marker + .fs-temp-marker {
+        border-left: 1px solid rgba(255, 253, 248, 0.14);
+        padding-left: 12px;
       }
     }
 
@@ -1653,6 +1687,19 @@
 
     .tomorrow-card .module-title {
       margin-bottom: 0;
+    }
+
+    .tomorrow-score-group {
+      display: grid;
+      justify-items: center;
+      gap: 5px;
+    }
+
+    .tomorrow-score-label {
+      color: var(--blue-dark);
+      font-size: 0.7rem;
+      font-weight: 900;
+      letter-spacing: 0.04em;
     }
 
     .tomorrow-score {
@@ -3711,7 +3758,8 @@
 
       .now-panel .fs-headline {
         margin-top: 8px;
-        font-size: 3rem;
+        font-size: 2.35rem;
+        line-height: 1.08;
       }
 
       .now-panel .fs-subhead {
@@ -3755,7 +3803,7 @@
 
       .feel-panel .fs-temp-markers {
         gap: 4px;
-        grid-template-rows: auto repeat(3, auto) auto;
+        grid-template-rows: auto auto;
         padding: 11px 12px;
       }
 
@@ -3773,7 +3821,8 @@
 
       .feel-panel .fs-temp-context {
         padding: 8px 10px;
-        font-size: 0.74rem;
+        font-size: 0.82rem;
+        line-height: 1.4;
       }
     }
 
@@ -3928,7 +3977,7 @@
       }
 
       .feel-panel .fs-temp-mobile-toggle {
-        display: grid;
+        display: none;
         grid-template-columns: minmax(0, 1fr) auto;
         align-items: center;
         gap: 10px;
@@ -3984,7 +4033,7 @@
       }
 
       .feel-panel .fs-temp-markers {
-        display: none;
+        display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 0;
         padding: 0;
@@ -4311,6 +4360,68 @@
       -webkit-line-clamp: 3;
     }
 
+    .now-panel #northDowntownContext {
+      margin: 8px 0 0;
+      padding: 14px 16px;
+      border: 1px solid rgba(255, 200, 115, 0.36);
+      border-left: 4px solid var(--gold);
+      border-radius: 12px;
+      color: #fff8e8;
+      background: linear-gradient(110deg, rgba(245, 125, 35, 0.18), rgba(255, 253, 248, 0.06));
+      box-shadow: inset 0 1px 0 rgba(255, 253, 248, 0.07);
+      font-size: clamp(0.86rem, 1.1vw, 0.96rem);
+      line-height: 1.5;
+    }
+
+    .feel-panel .fs-why-label,
+    .fs-best-window-label {
+      display: block;
+      margin: 0 0 7px;
+      font-size: 0.68rem;
+      font-weight: 900;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: #a2e2ae;
+    }
+
+    .fs-why-copy {
+      margin: 0;
+      color: #fffdf8;
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .feel-panel .fs-bullets ul:not([hidden]) { margin-top: 9px; }
+    .feel-panel .fs-bullets ul[hidden] { display: none; }
+
+    .fs-best-window {
+      padding: 13px 15px;
+      border: 1px solid rgba(123, 211, 137, 0.42);
+      border-left: 4px solid #7bd389;
+      border-radius: 12px;
+      background: linear-gradient(115deg, rgba(123, 211, 137, 0.2), rgba(255, 253, 248, 0.04));
+    }
+
+    .fs-best-window[hidden] { display: none; }
+    .fs-best-window-time {
+      display: block;
+      font-family: Georgia, 'Times New Roman', serif;
+      color: #fffdf8;
+      font-size: clamp(1.2rem, 2vw, 1.5rem);
+      line-height: 1.2;
+    }
+    .fs-best-window-detail { display: block; margin-top: 5px; color: #a2e2ae; font-size: 0.78rem; }
+
+    .station-context-kicker {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--gold);
+      font-size: 0.68rem;
+      font-weight: 900;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
     .pulse-archive-cta {
       position: relative;
       z-index: 1;
@@ -4352,7 +4463,6 @@
   <link rel="stylesheet" href="/css/brand-lockup.css?v=20260805-brand2" />
   <link rel="stylesheet" href="/css/site-chrome.css?v=20260908-global-nav" />
   <script defer src="/js/site-chrome.js?v=20260908-global-nav"></script>
-<link rel="stylesheet" href="/css/fog-index.css">
   <link rel="stylesheet" href="/css/storm-headquarters.css" />
   <link rel="stylesheet" href="/css/editorial-rich-text.css" />
 </head>
@@ -4463,7 +4573,6 @@
                 <small class="rain-window" id="heroRainWindow" hidden></small>
               </div>
             </div>
-            <section data-fog-index aria-label="Neighborhood fog potential"></section>
             <p class="fs-subhead" id="northDowntownContext" hidden></p>
           </div>
           <aside class="feel-panel" aria-label="Current FeelScore">
@@ -4487,11 +4596,9 @@
               </div>
             </div>
             <div class="fs-bullets">
-              <ul id="liveFeelScoreBullets">
-                <li>Current weather feed loading</li>
-                <li>Hourly comfort math pending</li>
-                <li>Local observations syncing</li>
-              </ul>
+              <span class="fs-why-label" id="liveFeelScoreWhyTitle">Why it feels this way</span>
+              <p class="fs-why-copy" id="liveFeelScoreWhy">Waiting for current weather readings.</p>
+              <ul id="liveFeelScoreBullets" hidden></ul>
             </div>
             <button class="fs-temp-mobile-toggle" id="liveTempMobileToggle" type="button" aria-expanded="false" aria-controls="liveTempMarkers">
               <span class="fs-temp-mobile-copy">
@@ -4514,7 +4621,12 @@
                 <span id="liveTempMarkerThreeLabel">9 PM</span>
                 <b id="liveTempMarkerThree">--</b>
               </div>
-              <div class="fs-temp-context" id="liveTempContext" aria-live="polite"></div>
+            </div>
+            <div class="fs-temp-context" id="liveTempContext" aria-live="polite"></div>
+            <div class="fs-best-window" id="liveBestWindow" aria-live="polite" hidden>
+              <span class="fs-best-window-label">Best time to get outside</span>
+              <strong class="fs-best-window-time" id="liveBestWindowTime"></strong>
+              <span class="fs-best-window-detail" id="liveBestWindowDetail"></span>
             </div>
           </aside>
         </div>
@@ -4645,7 +4757,7 @@
         <aside class="tomorrow-card">
           <div class="module-title">
             <div class="kicker">Tomorrow</div>
-            <div class="tomorrow-score" id="tomorrowScore">79</div>
+            <div class="tomorrow-score-group"><span class="tomorrow-score-label">FeelScore</span><div class="tomorrow-score" id="tomorrowScore">79</div></div>
           </div>
           <div class="tomorrow-headline-row">
             <span class="tomorrow-weather-icon" id="tomorrowIcon" aria-hidden="true">🌤️</span>
@@ -4742,14 +4854,14 @@
 
       <section class="fold-tool-row" aria-label="Homepage tool row">
         <article class="fold-tool-card update substack-feature" id="latestSubstackCard">
-          <a class="substack-thumb-card" id="substackThumbLink" href="https://timothyballisty.substack.com/p/the-story-of-ashevilles-wild-spring" target="_blank" rel="noopener noreferrer" aria-label="Open latest 828 Weather Update on Substack">
+          <a class="substack-thumb-card" id="substackThumbLink" href="https://timothyballisty.substack.com/p/the-story-of-ashevilles-wild-spring" target="_blank" rel="noopener noreferrer" aria-label="Open featured 828 Weather Update on Substack">
             <img
               id="substackThumb"
               src="/images/828-weather-update-default.png"
-              alt="Latest 828 Weather Update thumbnail"
+              alt="828 Weather Update thumbnail"
               loading="lazy"
             />
-            <span class="substack-thumb-label">Latest Substack</span>
+            <span class="substack-thumb-label" id="substackStatus">Featured Substack</span>
           </a>
           <div>
             <div class="kicker">828 Weather Update</div>
@@ -4760,7 +4872,7 @@
             </p>
             <div class="substack-meta" id="substackMeta">Published June 4, 2026</div>
             <div class="fold-tool-actions">
-              <a id="substackLink" href="https://timothyballisty.substack.com/p/the-story-of-ashevilles-wild-spring" target="_blank" rel="noopener noreferrer">Read latest update</a>
+              <a id="substackLink" href="https://timothyballisty.substack.com/p/the-story-of-ashevilles-wild-spring" target="_blank" rel="noopener noreferrer">Read featured update</a>
               <a href="forecast.html">Open Forecast</a>
             </div>
           </div>
@@ -5129,6 +5241,7 @@
   </div>
 
   <script type="module">
+    import { rainfallDate, headlineForPulse } from "./js/intel/homepage-copy.js";
     import { homepageEditorialMode } from "./js/intel/homepage-editorial.js";
     import { renderHeadquarters } from "./js/storm-headquarters.js";
     import { sanitizeEditorialHtml } from "./js/intel/editorial-html.js";
@@ -5146,6 +5259,8 @@
     import { buildTomorrowSummary } from "./js/intel/tomorrow-summary.js?v=20260811-tomorrow-emoji";
     import { mergePublishedTomorrowSummary } from "./js/intel/tomorrow-published.js?v=20260811-tomorrow-emoji";
     import { buildTemperaturePath } from "./js/intel/temperature-path.js?v=20260806-temp-path";
+    import { buildTemperatureTakeaway } from "./js/intel/temperature-takeaway.js";
+    import { comfortExplanation, bestWindowSummary } from "./js/intel/feelscore-insight.js";
     import {
       cleanHikingText,
       homeHikingBestBet,
@@ -5154,7 +5269,7 @@
       homeHikingSummary,
       homeHikingUseCare
     } from "./js/hiking-home-card.js?v=20260607-narrative";
-    import { buildHumanActionIntelFS } from "./js/intel/human-action-feelscore.js?v=20260812-future-feelscore";
+    import { buildHumanActionIntelFS } from "./js/intel/human-action-feelscore.js?v=20261012-human-comfort-copy";
     import { buildSkyConditionRead } from "./js/intel/sky-read.js?v=20260902-solar-language-v1";
     import { rememberStationObservation, stationWeatherSummary, withStationContext } from "./js/intel/station-lightning.js";
     import {
@@ -5203,6 +5318,9 @@
         forecastHour: visualForecastHour,
         precipOverride: latestPrecipOverride
       });
+      const explanation = comfortExplanation({ currentHour, forecastHour: visualForecastHour, precipOverride: latestPrecipOverride, score: document.querySelector('#liveFeelScoreValue').textContent });
+      setText('#liveFeelScoreWhyTitle', explanation.title);
+      setText('#liveFeelScoreWhy', explanation.text);
     }
 
     function labelize(value) {
@@ -5454,7 +5572,15 @@
       latestNorthDowntownObservation = rememberStationObservation(station);
       const node = document.querySelector('#northDowntownContext');
       const text = stationWeatherSummary(latestNorthDowntownObservation, Date.now(), { surface: 'current' });
-      node.textContent = text;
+      node.replaceChildren();
+      if (text) {
+        const label = document.createElement('span');
+        label.className = 'station-context-kicker';
+        label.textContent = 'North Downtown · Local station';
+        const summary = document.createElement('span');
+        summary.textContent = text;
+        node.append(label, summary);
+      }
       node.hidden = !text;
     }
     setInterval(() => renderNorthDowntownContext(), 30_000);
@@ -5880,7 +6006,7 @@
         : "";
     }
 
-    function renderSubstackCard(post = LATEST_SUBSTACK_FALLBACK) {
+    function renderSubstackCard(post = LATEST_SUBSTACK_FALLBACK, isLatest = false) {
       const title = cleanSubstackText(post.title || LATEST_SUBSTACK_FALLBACK.title);
       const link = post.link || LATEST_SUBSTACK_FALLBACK.link;
       const excerpt = shortSubstackExcerpt(post.description || post.contentSnippet || LATEST_SUBSTACK_FALLBACK.description);
@@ -5903,6 +6029,10 @@
       document.querySelector("#substackMeta").textContent = formatSubstackDate(post.pubDate || post.isoDate || LATEST_SUBSTACK_FALLBACK.pubDate);
       document.querySelector("#substackLink").href = link;
       document.querySelector("#substackThumbLink").href = link;
+      document.querySelector("#substackStatus").textContent = isLatest ? "Latest Substack" : "Featured Substack";
+      document.querySelector("#substackLink").textContent = isLatest ? "Read latest update" : "Read featured update";
+      document.querySelector("#substackThumbLink").setAttribute("aria-label", `${isLatest ? "Open latest" : "Open featured"} 828 Weather Update on Substack`);
+      thumbnail.alt = title;
       thumbnail.onerror = () => {
         thumbnail.onerror = null;
         thumbnail.src = SUBSTACK_DEFAULT_IMAGE;
@@ -5916,7 +6046,7 @@
       try {
         const post = await fetchRouteJson("substack-articles");
         if (post?.title && post?.link) {
-          renderSubstackCard(post);
+          renderSubstackCard(post, Number.isFinite(Date.parse(post.pubDate || post.isoDate || "")));
         }
       } catch (error) {
         console.warn("Substack module using local fallback", error);
@@ -6119,11 +6249,6 @@
       return Number.isFinite(amount) ? `${amount.toFixed(2)}\"` : "--";
     }
 
-    function rainfallDate(value) {
-      const match = String(value || "").match(/^(\d{4})(\d{2})(\d{2})$/);
-      return match ? `${match[3]}/${match[2]}/${match[1]}` : "--/--/----";
-    }
-
     function rainfallHeadline(w14, w90) {
       if (w14.percentOfNormal >= 115 && w90.percentOfNormal < 100) return "Recent rain is helping, but the 90-day deficit remains.";
       if (w90.percentOfNormal >= 110) return "Asheville's 90-day rainfall is running wetter than normal.";
@@ -6317,9 +6442,7 @@
     }
 
     function pulseHeadline(pulse = {}) {
-      const candidate = String(pulse.headline || pulse.title || "").trim();
-      if (candidate && !/^(828\s+)?weather\s+pulse$/i.test(candidate)) return candidate;
-      return "What I'm watching in the weather right now.";
+      return headlineForPulse(pulse, htmlToPlainText(pulse.text || pulse.body || pulse.content || ""));
     }
 
     function pulseArchiveHref(item = {}) {
@@ -6942,7 +7065,7 @@
         ?.setAttribute("aria-label", `What to wear: ${wearCue.text}`);
 
       document.querySelector("#liveFeelScoreHeadline").textContent =
-        feelscore.headline || "Reading the current comfort signal.";
+        (feelscore.headline || "Reading the current comfort signal.").replace(/,\s*with only a subtle (?:FeelScore|comfort) dip\.?$/i, "");
       document.querySelector("#liveFeelScoreSubhead").textContent =
         feelscore.subHeadline || feelscore.narrative || "Temperature, humidity, dew point, and wind are shaping how the air feels.";
 
@@ -6969,8 +7092,10 @@
           className: "uv-alert"
         });
       }
-      if (bullets.length) {
-        document.querySelector("#liveFeelScoreBullets").innerHTML = bullets
+      const alerts = bullets.filter(bullet => /rain|shower|storm|lightning|snow|ice|UV|sun protection/i.test(typeof bullet === 'string' ? bullet : bullet?.text || ''));
+      document.querySelector('#liveFeelScoreBullets').hidden = alerts.length === 0;
+      if (alerts.length) {
+        document.querySelector("#liveFeelScoreBullets").innerHTML = alerts
           .slice(0, 3)
           .map((bullet) => {
             const text = typeof bullet === "string" ? bullet : bullet.text;
@@ -7015,13 +7140,14 @@
       const contextEl = document.querySelector("#liveTempContext");
       if (contextEl) {
         contextEl.replaceChildren();
-        if (temperaturePath.callout) {
+        const takeaway = temperaturePath.callout || buildTemperatureTakeaway(temperaturePath.slots);
+        if (takeaway) {
           const emoji = document.createElement("span");
           emoji.className = "fs-temp-context-emoji";
           emoji.setAttribute("aria-hidden", "true");
-          emoji.textContent = temperaturePath.callout.emoji;
+          emoji.textContent = takeaway.emoji;
           const text = document.createElement("span");
-          text.textContent = temperaturePath.callout.text;
+          text.textContent = takeaway.text;
           contextEl.append(emoji, text);
         }
       }
@@ -7155,11 +7281,17 @@
           displayCurrentHour
         ];
         renderLiveFeelScore(...latestFeelScoreRenderInputs, latestPrecipOverride);
-        renderComfortCurve("#comfortCurve", {
+        const comfortCurve = renderComfortCurve("#comfortCurve", {
           hourly,
           daily,
           currentHour: displayCurrentHour || currentHour
         });
+        const best = bestWindowSummary(comfortCurve);
+        document.querySelector('#liveBestWindow').hidden = !best;
+        if (best) {
+          setText('#liveBestWindowTime', best.window);
+          setText('#liveBestWindowDetail', best.detail);
+        }
         latestVisualWeatherInputs = {
           currentHour: displayCurrentHour || currentHour,
           forecastHour: closestCurrentForecastHour(hourly)
@@ -7469,6 +7601,5 @@
 
   </script>
 
-<script type="module" src="/js/fog-index.js"></script>
 </body>
 </html>

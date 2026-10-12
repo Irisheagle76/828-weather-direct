@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { buildHumanActionIntelFS } from "../public/js/intel/human-action-feelscore.js";
+import { assemble } from "../public/js/intel/synthesizer/assemble.js";
 
 function localTimestamp(year, month, day, hour) {
   return new Date(year, month - 1, day, hour, 0, 0, 0).getTime();
@@ -66,6 +67,25 @@ test("comfortable future conditions retain the standard narrative", () => {
 
   assert.doesNotMatch(result.feelscore.narrative, /FEELSCORE falls to around/);
   assert.doesNotMatch(result.feelscore.narrative, /extended time outside uncomfortable/);
+});
+
+test("evening comfort copy uses plain language without promising afternoon warmth or sunshine", () => {
+  const result = assemble.assemble({ signals: { temp: 70, dewPoint: 55, wind: 7, windGust: 12, cloudCover: 50 } }, 'tonight', 'veryComfortable', true);
+  assert.match(result.narrative, /Tonight looks good for a walk/);
+  assert.match(result.narrative, /mild temperatures and a light breeze, without much humidity/);
+  assert.doesNotMatch(result.narrative, /sun|afternoon|manageable|develops/i);
+});
+
+test("warmer evenings and humid air retain their real conditions in the new copy", () => {
+  const result = assemble.assemble({ signals: { temp: 82, dewPoint: 69, wind: 2 } }, 'tonight', 'slightlyUncomfortable', false);
+  assert.match(result.narrative, /warm temperatures and light winds, with muggy air/);
+  assert.doesNotMatch(result.narrative, /afternoon|without much humidity/i);
+});
+
+test("rain still takes precedence over a comfortable evening score", () => {
+  const result = assemble.assemble({ signals: { temp: 70, dewPoint: 55, wind: 7, precipProbability: 0.8 } }, 'tonight', 'veryComfortable', true);
+  assert.match(result.narrative, /rain|wet/i);
+  assert.doesNotMatch(result.narrative, /looks good for a walk/);
 });
 
 test("an afternoon already in uncomfortable territory keeps the stronger narrative", () => {

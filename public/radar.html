@@ -2,6 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <link rel="canonical" href="https://avlweather.com/radar.html" />
+  <meta property="og:title" content="Radar &amp; Satellite | 828 Weather Direct" />
+  <meta property="og:description" content="Live radar and animated satellite imagery for Asheville, Western North Carolina, and the Southeast United States." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://avlweather.com/radar.html" />
+  <meta property="og:image" content="https://avlweather.com/images/828-brand-card.png" />
+  <meta property="og:image:alt" content="828 Weather Direct brand mark" />
+  <meta property="og:site_name" content="828 Weather Direct" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Radar &amp; Satellite | 828 Weather Direct" />
+  <meta name="twitter:description" content="Live radar and animated satellite imagery for Asheville, Western North Carolina, and the Southeast United States." />
+  <meta name="twitter:image" content="https://avlweather.com/images/828-brand-card.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Live radar and animated satellite imagery for Asheville, Western North Carolina, and the Southeast United States." />
   <meta name="theme-color" content="#081a3c" />
@@ -399,7 +411,9 @@
       z-index: 1;
     }
 
-    .leaflet-tile-pane {
+    /* Filter tiles individually: the pane has zero-size bounds, which can clip
+       its filtered contents when the browser recomposites during scrolling. */
+    .leaflet-tile {
       filter: saturate(0.78) contrast(0.98) hue-rotate(355deg);
     }
 
@@ -1501,6 +1515,18 @@
     }).setView(views.local.center, views.local.zoom);
 
     L.control.zoom({ position: "topright" }).addTo(map);
+
+    // Leaflet tracks window resize; also handle container changes and restored tabs.
+    let mapResizeFrame;
+    function refreshMapSize() {
+      cancelAnimationFrame(mapResizeFrame);
+      mapResizeFrame = requestAnimationFrame(() => map.invalidateSize({ pan: false, animate: false }));
+    }
+    new ResizeObserver(refreshMapSize).observe(document.querySelector("#radarMap"));
+    window.addEventListener("pageshow", refreshMapSize);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) refreshMapSize();
+    });
 
     L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png?key=cb1_2kfn_1_24209ca1d94b951e0bed8b3f", {
       maxZoom: 19,

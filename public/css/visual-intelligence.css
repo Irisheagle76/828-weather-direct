@@ -2,7 +2,7 @@
   --comfort-curve-cool: #6ea8ff;
   --comfort-curve-good: #63c979;
   --comfort-curve-warm: #f7c873;
-  --comfort-curve-night: rgba(9, 22, 54, 0.42);
+  --comfort-curve-night: rgba(9, 22, 54, 0.2);
   --comfort-curve-grid: rgba(20, 32, 51, 0.09);
   --ingredient-accent: var(--blue, #0f4cc4);
 }
@@ -528,7 +528,7 @@
 }
 
 .comfort-curve-zone-label {
-  fill: rgba(20, 32, 51, 0.42);
+  fill: rgba(20, 32, 51, 0.75);
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.08em;

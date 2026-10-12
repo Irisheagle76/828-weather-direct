@@ -1,4 +1,4 @@
-import { assemble } from "./assemble.js?v=20260526-natural-narrative";
+import { assemble } from "./assemble.js?v=20261012-human-comfort-copy";
 import { cleanPhrase } from "./voice-filter.js";
 import { buildHumanVoice } from "../human-voice.js";
 
