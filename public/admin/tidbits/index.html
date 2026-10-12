@@ -736,8 +736,8 @@
         <p id="current-event-status">Checking current event…</p>
         <button type="button" id="edit-current-event" hidden>Edit current event headquarters</button>
 
-        <label for="hq-images">Post images (up to 12)</label>
-        <input type="file" id="hq-images" accept="image/*" multiple style="display:block" />
+        <label for="hq-images">Post images or videos (up to 12)</label>
+        <input type="file" id="hq-images" accept="image/*,video/*" multiple style="display:block" />
         <p>New images replace the gallery. Leave empty to keep the existing gallery.</p>
         <div id="hq-gallery-preview" style="display:flex;gap:8px;flex-wrap:wrap"></div>
       </div>
@@ -819,10 +819,15 @@ import { renderHeadquarters } from "/js/storm-headquarters.js";
   const hqEnabled = document.getElementById("hq-enabled");
   const hqImages = document.getElementById("hq-images");
   const hqGalleryPreview = document.getElementById("hq-gallery-preview");
-  function previewHeadquartersGallery(urls) {
+  let galleryPreviewUrls = [];
+  function previewHeadquartersGallery(urls, types = []) {
+    galleryPreviewUrls.forEach(url => URL.revokeObjectURL(url));
+    galleryPreviewUrls = urls.filter(url => url.startsWith('blob:'));
     hqGalleryPreview.replaceChildren();
-    for (const url of urls) {
-      const img = document.createElement("img");
+    for (const [index, url] of urls.entries()) {
+      const isVideo = types[index] === 'video' || /\.(mp4|mov|webm)(?:$|\?)/i.test(url) || url.includes('/video/');
+      const img = document.createElement(isVideo ? 'video' : 'img');
+      if (isVideo) { img.controls = true; img.muted = true; img.playsInline = true; img.preload = 'metadata'; }
       img.src = url;
       img.alt = "Headquarters image preview";
       img.style.cssText = "width:120px;height:90px;object-fit:contain;background:#eef2f7";
@@ -831,10 +836,9 @@ import { renderHeadquarters } from "/js/storm-headquarters.js";
   }
   hqImages.addEventListener("change", () => {
     const files = [...hqImages.files];
-    if (files.length > 12) { hqImages.value = ""; setStatus("Choose up to 12 images", "error"); return; }
+    if (files.length > 12) { hqImages.value = ""; setStatus("Choose up to 12 images or videos", "error"); return; }
     const urls = files.map(file => URL.createObjectURL(file));
-    previewHeadquartersGallery(urls);
-    hqGalleryPreview.querySelectorAll("img").forEach(img => img.onload = () => URL.revokeObjectURL(img.src));
+    previewHeadquartersGallery(urls, files.map(file => file.type.startsWith('video/') ? 'video' : 'image'));
   });
   hqEnabled.addEventListener("change", scheduleDraftSave);
   const DRAFT_KEY = '828_pulse_draft_v1';
@@ -1557,7 +1561,7 @@ function updateTimestamp() {
     const html = editor.innerHTML.trim();
     if (publicationType.value === 'event') {
       previewHint.style.display = 'none';
-      renderHeadquarters(preview, {title: eventTitle.value.trim() || 'Weather Event Headquarters', text: html, gallery: headquartersGallery, mediaUrl: currentMediaUrl, mediaType: currentMediaType, timestamp: Date.now()});
+      renderHeadquarters(preview, {title: eventTitle.value.trim() || 'Weather Event Headquarters', text: html, gallery: headquartersGallery, mediaUrl: currentMediaUrl, mediaType: currentMediaType, timestamp: Date.now()}, {preview: true});
       return;
     }
     const hasContent = html.length > 0;
@@ -1706,7 +1710,7 @@ function updateTimestamp() {
       if (hqImages.files.length) {
         const nextGallery = [];
         for (const file of hqImages.files) {
-          setStatus("Uploading headquarters images...", "busy");
+          setStatus("Uploading post media...", "busy");
           const uploaded = await uploadPulseMedia(file);
           nextGallery.push(uploaded.mediaUrl);
         }

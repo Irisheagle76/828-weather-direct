@@ -11,3 +11,24 @@ export function getPulseMedia(post = {}) {
   }
   return { url: '', mediaType: null };
 }
+
+export function getEventMedia(post = {}, { preview = false } = {}) {
+  const entries = [
+    { url: post.mediaUrl || post.image, mediaType: post.mediaType },
+    ...(Array.isArray(post.gallery) ? post.gallery.slice(0, 12).map(url => ({ url })) : [])
+  ];
+  const seen = new Set();
+  return entries.flatMap(entry => {
+    if (typeof entry.url !== 'string' || seen.has(entry.url)) return [];
+    try {
+      const protocol = new URL(entry.url).protocol;
+      if (protocol !== 'https:' && !(preview && ['http:', 'blob:'].includes(protocol))) return [];
+      const media = protocol === 'blob:'
+        ? { url: entry.url, mediaType: entry.mediaType || 'image' }
+        : getPulseMedia({ mediaUrl: entry.url, mediaType: entry.mediaType });
+      if (!media.url) return [];
+      seen.add(media.url);
+      return [media];
+    } catch { return []; }
+  });
+}

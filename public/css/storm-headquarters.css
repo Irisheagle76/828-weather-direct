@@ -6,10 +6,10 @@
 .storm-hq-body { white-space: pre-wrap; overflow-wrap: anywhere; max-width: 85ch; font-size: clamp(16px, 2vw, 18px); line-height: 1.7; margin: 24px 0; }
 .storm-hq-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 14px; }
 .storm-hq-gallery button { min-width: 0; padding: 0; border: 1px solid #ccd8eb; border-radius: 12px; overflow: hidden; background: #eef2f7; color: #0f4cc4; cursor: zoom-in; }
-.storm-hq-gallery img { display: block; width: 100%; height: 190px; object-fit: contain; }
+.storm-hq-gallery img, .storm-hq-gallery video { display: block; width: 100%; height: 190px; object-fit: contain; }
 .storm-hq-gallery span { display: block; padding: 10px; background: white; font-size: 12px; }
 .storm-hq-gallery button:focus-visible, .storm-hq-dialog button:focus-visible { outline: 3px solid #f57d23; outline-offset: 3px; }
 .storm-hq-dialog { max-width: 95vw; max-height: 94dvh; padding: 14px; border: 0; border-radius: 12px; background: #fffdf8; }
 .storm-hq-dialog::backdrop { background: #07152bdd; }
 .storm-hq-dialog button { display: block; margin: 0 0 10px auto; padding: 8px 16px; cursor: pointer; }
-.storm-hq-dialog img { display: block; max-width: 90vw; max-height: 80dvh; object-fit: contain; }
+.storm-hq-dialog img, .storm-hq-dialog video { display: block; max-width: 90vw; max-height: 80dvh; object-fit: contain; }
