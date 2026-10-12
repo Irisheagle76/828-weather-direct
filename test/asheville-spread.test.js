@@ -11,9 +11,9 @@ import { harmonizePressureObservations, stationToElevationAdjustedPressureMb } f
 import { assessObservation } from "../lib/asheville-spread/quality.js";
 import { buildAshevilleSpread } from "../lib/asheville-spread/service.js";
 
-test("station registry contains 29 unique active physical stations and deduplicates Grove Arcade", () => {
-  assert.equal(ASHEVILLE_STATIONS.length, 29);
-  assert.equal(new Set(ASHEVILLE_STATIONS.map((station) => station.id)).size, 29);
+test("station registry contains 31 unique active physical stations and deduplicates Grove Arcade", () => {
+  assert.equal(ASHEVILLE_STATIONS.length, 31);
+  assert.equal(new Set(ASHEVILLE_STATIONS.map((station) => station.id)).size, 31);
 
   const aliases = ASHEVILLE_STATIONS.flatMap((station) => station.aliases);
   assert.equal(new Set(aliases).size, aliases.length);

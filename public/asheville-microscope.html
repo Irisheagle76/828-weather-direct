@@ -1343,6 +1343,23 @@
     </div>
 
     <main class="avl-page-content">
+      <style>
+        #avl-microscope-page .avl-terrain-invite { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 24px; margin-bottom: 28px; border: 1px solid #bed2cb; border-left: 5px solid #009f98; border-radius: 16px; background: linear-gradient(120deg, #edf8f3, #f5f8ff); color: #13213a; }
+        #avl-microscope-page .avl-terrain-invite h2 { margin: 5px 0 8px; font-size: clamp(22px, 3vw, 28px); line-height: 1.2; }
+        #avl-microscope-page .avl-terrain-invite p { margin: 0; max-width: 620px; line-height: 1.6; }
+        #avl-microscope-page .avl-terrain-invite a { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 10px 18px; border-radius: 999px; background: #071d49; color: #fff; font-weight: 800; text-decoration: none; }
+        #avl-microscope-page .avl-terrain-invite a:hover { background: #1056cf; }
+        #avl-microscope-page .avl-terrain-invite a:focus-visible { outline: 3px solid #1056cf; outline-offset: 4px; }
+        @media (max-width: 760px) { #avl-microscope-page .avl-terrain-invite { align-items: stretch; flex-direction: column; gap: 18px; padding: 20px; } }
+      </style>
+      <section class="avl-terrain-invite" aria-labelledby="avl-terrain-title">
+        <div>
+          <div class="avl-section-kicker">Station Terrain · Interactive map</div>
+          <h2 id="avl-terrain-title">See the weather across valleys and ridges.</h2>
+          <p>Explore station observations on Asheville’s 3D terrain. Tilt, rotate, and compare temperature, dew point, wind, and rainfall across the network.</p>
+        </div>
+        <a href="/asheville-microscope-terrain.html">Explore stations in 3D <span aria-hidden="true">&nbsp;→</span></a>
+      </section>
       <section class="avl-briefing" aria-labelledby="avl-now-title">
         <div class="avl-section-head">
           <div><div class="avl-section-kicker">Your six-signal briefing</div><h2 id="avl-now-title">Asheville right now</h2></div>

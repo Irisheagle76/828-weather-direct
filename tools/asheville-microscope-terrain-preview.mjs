@@ -39,6 +39,22 @@ const server = createServer(async (request, response) => {
       return;
     }
 
+    const previewAssets = {
+      "/js/station-profile.js": ["../public/js/station-profile.js", "text/javascript; charset=utf-8"],
+      "/js/asheville-microscope-public-insights.js": ["../public/js/asheville-microscope-public-insights.js", "text/javascript; charset=utf-8"],
+      "/js/asheville-microscope-lab-analysis.js": ["../public/js/asheville-microscope-lab-analysis.js", "text/javascript; charset=utf-8"],
+      "/css/asheville-microscope-public-insights.css": ["../public/css/asheville-microscope-public-insights.css", "text/css; charset=utf-8"],
+      "/asheville-microscope.html": ["../public/asheville-microscope.html", "text/html; charset=utf-8"],
+      "/images/828-brand-card.png": ["../public/images/828-brand-card.png", "image/png"],
+      "/images/828-weather-direct-logo.webp": ["../public/images/828-weather-direct-logo.webp", "image/webp"]
+    };
+    if (Object.hasOwn(previewAssets, url.pathname)) {
+      const [assetPath, contentType] = previewAssets[url.pathname];
+      const body = await readFile(new URL(assetPath, import.meta.url));
+      response.writeHead(200, { "content-type": contentType, "cache-control": "no-store" });
+      response.end(body);
+      return;
+    }
     response.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
     response.end("Not found");
   } catch (error) {
