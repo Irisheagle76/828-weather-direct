@@ -1,3 +1,4 @@
+import { initNotificationSettings } from './notifications.js';
 import { mobileRadiance } from './radiance.js';
 import { sunPositionCard } from "./sun-position.js";
 import { buildSkyConditionRead } from "/js/intel/sky-read.js";
@@ -624,6 +625,7 @@ async function init() {
   $("#todayLabel").textContent = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "long", month: "long", day: "numeric" }).format(new Date());
   if (previewStates) $("#previewBanner").hidden = false;
   bindEvents();
+  initNotificationSettings();
   setInterval(() => { const card = document.querySelector(".daylight-curve"); if (card && !document.hidden) card.outerHTML = sunPositionCard(Date.now(), sunsetInfo()); }, 60000);
   navigate(location.hash.slice(1) || "home", { updateHash: false });
   await loadCore();

@@ -6,6 +6,8 @@
   <meta name="theme-color" content="#071a38" />
   <meta name="description" content="828 Weather Direct mobile prototype for Asheville and Western North Carolina." />
   <title>828 Weather Direct Mobile</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="/828-brand-card.png" />
   <link rel="stylesheet" href="./mobile.css" />
 </head>
 <body>
@@ -197,6 +199,7 @@
           <div id="moreDetailContent"></div>
         </section>
 
+        <section class="panel notification-settings"><p class="kicker">Notifications</p><h2>Choose your updates</h2><p>Receive updates even when the app is closed.</p><label><input type="checkbox" id="notifyAlerts" /> Alerts from Tim</label><label><input type="checkbox" id="notifyPulse" /> 828 Pulse updates</label><button type="button" id="saveNotifications" class="product-link">Enable selected notifications</button><button type="button" id="disableNotifications" class="back-button">Turn notifications off</button><p id="notificationStatus" role="status"></p></section>
         <section class="future-products panel">
           <p class="kicker">Built to expand</p>
           <p>Asheville Microscope, Fall Explorer, Undercast Alert and future 828 products can join this shelf later.</p>

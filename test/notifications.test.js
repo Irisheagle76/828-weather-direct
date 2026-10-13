@@ -159,3 +159,15 @@ test("hosted storage errors fail closed instead of reporting a durable subscript
 
   await assert.rejects(store.saveSubscription(subscription(1)), /storage offline/);
 });
+
+test('notification preferences persist and legacy updates do not silently opt into Pulse', async () => {
+  const store = createSubscriptionStore({ client: createRedisMock() });
+  const sub = subscription(91);
+  await store.saveSubscription(sub);
+  assert.deepEqual((await store.getAllSubscriptions())[0].preferences, {alerts:true,pulse:false});
+  await store.saveSubscription({...sub,preferences:{alerts:false,pulse:true}});
+  await store.saveSubscription(sub);
+  assert.deepEqual((await store.getAllSubscriptions())[0].preferences, {alerts:false,pulse:true});
+  await store.saveSubscription({...sub,preferences:{alerts:false,pulse:false}});
+  assert.deepEqual((await store.getAllSubscriptions())[0].preferences, {alerts:false,pulse:false});
+});
