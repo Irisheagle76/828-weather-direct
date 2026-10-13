@@ -6174,8 +6174,8 @@
 
     async function hydrateHomeHikingCard() {
       try {
-        const source = isProductionHost() ? HIKING_GUIDANCE_RAW_URL : "data/hiking-guidance.json";
-        const res = await fetch(`${source}?t=${Date.now()}`, { cache: "no-store" });
+        const source = "/api/router?route=hiking/current";
+        const res = await fetch(`${source}&t=${Date.now()}`, { cache: "no-store" });
         if (!res.ok) throw new Error(`Hiking guidance failed: ${res.status}`);
         renderHomeHikingCard(await res.json());
       } catch (error) {
