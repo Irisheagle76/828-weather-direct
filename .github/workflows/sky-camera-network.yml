@@ -6,7 +6,7 @@ on:
 permissions:
   contents: write
 concurrency:
-  group: scheduled-data-refresh
+  group: sky-camera-network-capture
   cancel-in-progress: false
 jobs:
   capture:
