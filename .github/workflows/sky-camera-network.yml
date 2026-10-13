@@ -1,12 +1,12 @@
 name: Sky camera network captures
 on:
   schedule:
-    - cron: '*/10 * * * *'
+    - cron: '3,13,23,33,43,53 * * * *'
   workflow_dispatch:
 permissions:
   contents: write
 concurrency:
-  group: scheduled-data-refresh
+  group: sky-camera-network-capture
   cancel-in-progress: false
 jobs:
   capture:
