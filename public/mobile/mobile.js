@@ -458,7 +458,7 @@ async function loadSky(force = false) {
 async function renderMoreView(view) {
   const renderId = ++detailRenderId;
   $("#moreMenu").hidden = true;
-  $(".future-products").hidden = true;
+  $(".notification-settings").hidden = true;
   $("#moreDetail").hidden = false;
   const target = $("#moreDetailContent");
   target.innerHTML = `<div class="empty-state">Loading ${escapeHtml(view)}…</div>`;
@@ -609,7 +609,7 @@ async function loadCore({ force = false, announce = false } = {}) {
 function bindEvents() {
   $$('[data-destination]').forEach((control) => control.addEventListener("click", (event) => { if (control.tagName === "A") event.preventDefault(); navigate(control.dataset.destination); }));
   $$('[data-more-view]').forEach((control) => control.addEventListener("click", () => { navigate("more"); renderMoreView(control.dataset.moreView); }));
-  $("#moreBack").addEventListener("click", () => { $("#moreDetail").hidden = true; $("#moreMenu").hidden = false; $(".future-products").hidden = false; });
+  $("#moreBack").addEventListener("click", () => { $("#moreDetail").hidden = true; $("#moreMenu").hidden = false; $(".notification-settings").hidden = false; });
   $("#refreshButton").addEventListener("click", () => loadCore({ force: true, announce: true }));
   $$('[data-feelscore-day]').forEach((button) => button.addEventListener("click", () => {
     state.activeDay = button.dataset.feelscoreDay;
