@@ -23,6 +23,7 @@ const previewStates = new URLSearchParams(location.search).get("preview") === "s
 const state = { weather: null, forecast: null, feelscore: null, pulse: null, article: null, hiking: null, sky: null, activeDay: "today", regionalLoaded: false };
 let toastTimer = null;
 let refreshTimer = null;
+let detailRenderId = 0;
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
@@ -456,6 +457,7 @@ async function loadSky(force = false) {
 }
 
 async function renderMoreView(view) {
+  const renderId = ++detailRenderId;
   $("#moreMenu").hidden = true;
   $(".future-products").hidden = true;
   $("#moreDetail").hidden = false;
@@ -501,8 +503,13 @@ async function renderMoreView(view) {
       if (elevationStations.length) target.insertAdjacentHTML("beforeend", `<section class="panel elevation-profile"><p class="kicker">${stale ? "Last published" : "Observed"} elevation profile</p><h2>Conditions up the mountain</h2><div class="elevation-chart">${elevationStations.map(station => `<div class="elevation-chart-row"><div><strong>${escapeHtml(station.name)}</strong><small>${Math.round(station.elevationFt).toLocaleString()} ft</small></div><div class="elevation-bar-track"><span style="width:${Math.min(100,Math.max(0,station.elevationFt / 6684 * 100))}%"></span></div><div class="elevation-weather"><strong>${Math.round(station.temperatureF)}°F</strong><small>${Number.isFinite(station.windMph) ? `${Math.round(station.windMph)} mph wind` : "Wind unavailable"}</small>${station.conditions ? `<small>${escapeHtml(station.conditions)}</small>` : ""}</div></div>`).join("")}</div><small>Bar length shows elevation relative to 6,684 ft. Temperatures are reported at each station.</small></section>`);
       target.insertAdjacentHTML("beforeend", `<h2 class="camera-section-title">Check the mountain views</h2>${cameraCards(CAMERAS.filter(c => c.mountain))}`);
     } else if (view === "sunset") {
+      target.innerHTML = `${sunPositionCard(Date.now(), sunsetInfo())}<section class="panel"><p class="kicker">Sky &amp; Sunset</p><h2>Updating the sky read</h2><p>Checking camera analysis and tonight’s outlook…</p></section>`;
+      const stormRequest = fetchJson(routeUrl('storm/current'), {ttl:90000}).catch(() => null);
+      const skyRequest = loadSky().catch(() => null);
       if (!state.weather) await loadCore();
-      const sky = await loadSky();
+      const sky = await skyRequest;
+      if (!sky) throw new Error("Sky analysis unavailable");
+      if (renderId !== detailRenderId || location.hash !== '#more') return;
       const timing = sunsetInfo();
       const age = Date.now() - Date.parse(sky.timestamp);
       const fresh = Number.isFinite(age) && age >= -60000 && age <= 10 * 60000 && ["live", "partial"].includes(sky.captureStatus);
@@ -510,7 +517,8 @@ async function renderMoreView(view) {
       const read = fresh ? buildSkyConditionRead({ camera: sky, verbosity: "narrative", surface: "sunset-radiance" }) : null;
       const atmosphere = buildAtmosphereNow(current.supplementalStation);
       const narrative = read?.narrative;
-      const storm = await fetchJson(routeUrl('storm/current'), {ttl:90000}).catch(() => null);
+      const storm = await stormRequest;
+      if (renderId !== detailRenderId || location.hash !== '#more') return;
       const radiance = fresh && storm && state.weather?.hourly?.length && timing.sunset ? mobileRadiance(state.weather, sky, read.skyIntel, storm) : null;
       const outlook = radiance ? `<section class="panel mobile-radiance"><p class="kicker">Evening outlook · Sunset Radiance</p><h2>${escapeHtml(radiance.title)}</h2><div class="radiance-score"><strong>${radiance.phase.state === 'closed' ? 'Closed' : radiance.score}</strong>${radiance.phase.state !== 'closed' ? '<span>out of 100</span>' : ''}</div><p>${escapeHtml(radiance.phase.label)}</p><p>${escapeHtml(radiance.detail)}</p><details><summary>What shapes tonight’s outlook</summary>${radiance.factors.map(f=>`<div class="radiance-factor"><strong>${escapeHtml(f.name)} · ${f.score}/100</strong><p>${escapeHtml(f.label)}</p><small>${escapeHtml(f.detail)}</small></div>`).join('')}</details></section>` : '<section class="panel"><p class="kicker">Evening outlook</p><h2>Radiance outlook unavailable</h2><p>Fresh sky, storm context and hourly forecast data are needed for tonight’s index.</p></section>';
 
