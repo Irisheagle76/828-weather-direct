@@ -420,3 +420,5 @@ button:focus-visible, a:focus-visible { outline: 3px solid #ff9e55; outline-offs
 .notification-settings label span { display:flex;flex-direction:column;gap:6px; }
 .notification-settings label small { font-size:.8rem;font-weight:450;color:#4a617d;line-height:1.5; }
 .notification-settings input { flex-shrink:0;margin-top:3px; }
+
+.notification-settings { margin-top: 11px; }
