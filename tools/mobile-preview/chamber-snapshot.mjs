@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
 import { CAMERAS } from "../../public/mobile/live-look.js";
 
 const camera = CAMERAS.find(camera => camera.id === "chamber");
@@ -37,7 +38,11 @@ export function refreshChamberSnapshot() {
   return pending;
 }
 
-function processEnvFfmpeg() { return process.env.MOBILE_PREVIEW_FFMPEG || "ffmpeg"; }
+function processEnvFfmpeg() {
+  if (process.env.MOBILE_PREVIEW_FFMPEG) return process.env.MOBILE_PREVIEW_FFMPEG;
+  try { return createRequire(import.meta.url)("ffmpeg-static") || "ffmpeg"; }
+  catch { return "ffmpeg"; }
+}
 
 export function startChamberSnapshots() {
   refreshChamberSnapshot();

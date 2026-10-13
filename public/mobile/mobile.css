@@ -323,3 +323,73 @@ button:focus-visible, a:focus-visible { outline: 3px solid #ff9e55; outline-offs
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }
+
+.sky-visual-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+.sky-visual-metric { display:flex; flex-direction:column; gap:9px; padding:16px 10px; border-radius:16px; background:#edf3fa; min-width:0; text-align:center; font-size:.8rem; }
+.sky-visual-metric strong { overflow-wrap:anywhere; color:#102b50; }
+.sky-symbol { font-size:2rem; color:#e97b24; }
+.sky-meter { height:7px; background:#d0ddec; border-radius:10px; overflow:hidden; }
+.sky-meter span { display:block; height:100%; background:#236cc6; border-radius:10px; }
+.sky-meter-unknown { background:repeating-linear-gradient(120deg,#d0ddec 0 5px,#e4ebf4 5px 10px); }
+.sunset-visual { overflow:hidden; }
+.sunset-horizon { position:relative; height:115px; margin:10px 0 20px; background:linear-gradient(#173657,#976d86 55%,#ffb263); border-radius:16px; overflow:hidden; }
+.sunset-orb { position:absolute; width:54px; height:54px; border-radius:50%; background:#ffda8c; bottom:17px; left:calc(50% - 27px); box-shadow:0 0 35px #ffcf7c; }
+.sunset-ridge { position:absolute; inset:65% 0 0; background:#173657; clip-path:polygon(0 65%,15% 30%,30% 55%,48% 15%,64% 55%,80% 20%,100% 60%,100% 100%,0 100%); }
+.sunset-timeline { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; border-top:3px solid #f59134; padding-top:12px; text-align:center; }
+.sunset-timeline span { display:flex; flex-direction:column; gap:6px; }
+.sunset-timeline small { color:#536b84; }.sunset-timeline strong { font-size:.85rem; }
+
+.hiking-score-visual { display:flex; align-items:center; gap:22px; margin:18px 0; }
+.hiking-score-dial { --score:0; flex-shrink:0; width:125px; height:125px; border-radius:50%; background:conic-gradient(#ff952e calc(var(--score) * 1%),#37506c 0); display:grid; place-items:center; }
+.hiking-score-dial > span { width:101px; height:101px; border-radius:50%; background:#102b50; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white; }
+.hiking-score-dial b { font-size:2.5rem; line-height:1.1; }.hiking-score-dial small { font-size:.75rem; }
+.hiking-score-dial.is-unknown { background:#37506c; }
+.hiking-score-caption { display:flex; flex-direction:column; gap:7px; }.hiking-score-caption > span { font-size:2rem; }.hiking-score-caption small { opacity:.8; }
+.hiking-condition-icon { display:block; color:#e57922; font-size:1.8rem; margin-bottom:5px; }
+.elevation-chart { display:flex; flex-direction:column; gap:20px; margin:22px 0; }
+.elevation-chart-row { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(40px,1fr) auto; align-items:center; gap:12px; font-size:.85rem; }
+.elevation-chart-row small { display:block; color:#536b84; margin-top:5px; }
+.elevation-bar-track { background:#e4edf6; height:14px; border-radius:10px; overflow:hidden; }.elevation-bar-track span { display:block; height:100%; background:linear-gradient(90deg,#4d9cb4,#236cc6); border-radius:10px; }
+@media(max-width:400px) { .hiking-score-visual { gap:14px; }.hiking-score-dial { width:105px;height:105px; }.hiking-score-dial > span { width:83px;height:83px; }.elevation-chart-row { gap:8px; font-size:.78rem; } }
+.hiking-action-grid { display:grid; gap:12px; margin:18px 0; }.hiking-action { display:flex; gap:14px; padding:16px; background:#edf3fa; border-radius:14px; }.hiking-action > span { flex-shrink:0; font-size:1.7rem; }.hiking-action p { margin:6px 0 0; font-size:.9rem; line-height:1.5; }
+.sun-position svg { display:block; width:100%; max-width:300px; margin:12px auto; }.sun-position svg text { fill:#173657; font-weight:700; font-size:15px; }
+.daylight-curve { background:linear-gradient(#e2edff,#fcfaf5); }.daylight-curve svg { display:block; width:100%; margin-bottom:-20px; }.light-endpoints { display:flex; justify-content:space-between; color:#1855b8; }.light-endpoints > div:last-child { text-align:right; }.light-endpoints strong { font-size:1.25rem; }.light-endpoints small,.light-summary small { display:block; color:#58718c; text-transform:uppercase; font-size:.65rem; letter-spacing:.05em; margin-top:5px; }.light-summary { display:grid; grid-template-columns:1fr; gap:14px; border-top:1px solid #c5d8ef; margin:18px 0; padding-top:18px; }.light-summary strong { font-size:1rem; }@media(min-width:500px) { .light-summary { grid-template-columns:1fr 1.5fr 1fr; }.light-summary > div+div { border-left:1px solid #c5d8ef;padding-left:12px; } }
+.curve-value-labels { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:12px 0 2px; color:#12335b; font-weight:800; font-size:.85rem; }.curve-value-labels span:last-child { color:#a54d0b; }
+
+/* Larger, color-coded current observations. */
+#currentCard .metric-grid > div { padding:14px 12px; background:linear-gradient(145deg,rgba(34,68,108,.95),rgba(8,32,66,.95)); }
+#currentCard .metric-grid dt { font-size:.78rem; color:#d4e3f5; }
+#currentCard .metric-grid dd { font-size:clamp(1.3rem,4.8vw,1.8rem); line-height:1.2; margin-top:6px; }
+#currentFeels { color:#ffc27b !important; }#currentDew { color:#71e1d4 !important; }
+#currentWind,#currentGust { color:#96d5ff !important; }
+#currentCard #currentPressure { color:#d0b5ff; font-size:clamp(1rem,3.8vw,1.45rem); }
+#currentCard .metric-grid dd small { font-size:.88rem; color:#e1d5fa; }
+@media(max-width:400px) { #currentCard .metric-grid > div { padding:12px 8px; }#currentCard .metric-grid dt { font-size:.7rem; }#currentCard .metric-grid dd small { font-size:.76rem; } }
+
+.hiking-recommendation .more-stats { gap:12px; }
+.hiking-recommendation .more-stats .hiking-context-card { padding:16px; border:0; border-top:4px solid currentColor; border-radius:16px; display:flex; flex-direction:column; gap:7px; }
+.hiking-recommendation .hiking-context-0 { color:#146492;background:#e3f3fd; }.hiking-recommendation .hiking-context-1 { color:#4856ad;background:#ededff; }.hiking-recommendation .hiking-context-2 { color:#906012;background:#fff2d8; }.hiking-recommendation .hiking-context-3 { color:#13766b;background:#e0f5ef; }
+.hiking-recommendation .more-stats strong { color:inherit;font-size:clamp(1.3rem,4.5vw,1.85rem);line-height:1.2; }
+.hiking-recommendation .more-stats span { color:inherit; }.hiking-recommendation .hiking-condition-icon { display:none; }
+.hiking-context-card svg { width:100%;height:48px;margin-top:5px; }.hiking-context-card small { font-size:.72rem;line-height:1.4; }
+.sky-card-graphic { width:100%;height:64px;color:#267baa; }.sky-visual-metric:nth-child(2) { background:#fff1da; }.sky-visual-metric:nth-child(2) .sky-card-graphic { color:#d47b15; }.sky-visual-metric:nth-child(3) { background:#e3f4ef; }.sky-visual-metric:nth-child(3) .sky-card-graphic { color:#16816c; }.sky-visual-metric strong { font-size:1.2rem; }.sky-visual-metric { padding:18px 10px; }
+
+.atmosphere-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:18px; }
+.atmosphere-card { min-width:0; padding:16px; border-radius:16px; background:#edf4fc; border:1px solid #d2e0ee; }
+.atmosphere-card h3 { margin:8px 0; font-size:.85rem; color:#4c647e; }
+.atmosphere-icon { font-size:1.65rem; color:#2378a6; }.atmosphere-value { display:block; font-size:1.15rem; line-height:1.35; color:#15385d; overflow-wrap:anywhere; }
+.atmosphere-card details { margin-top:14px; }.atmosphere-card summary { color:#235b99; font-size:.75rem; cursor:pointer; }.atmosphere-card details p { font-size:.8rem; line-height:1.5; margin:10px 0 0; }
+.atmosphere-card-1 { background:#fff4df;border-color:#f0dfbb; }.atmosphere-card-3 { background:#e7f5f0;border-color:#c5e4d9; }.atmosphere-card-4 { grid-column:1 / -1; background:#f1edfc;border-color:#ded4f1; }
+@media(max-width:370px) { .atmosphere-card { padding:12px; }.atmosphere-value { font-size:1rem; } }
+
+.comfort-bucket { border:1px solid #d1dfef; border-top:5px solid #e9a13c; background:linear-gradient(145deg,#fff7e5,#fffdf8); border-radius:18px; padding:20px; }
+.comfort-period-emoji { display:block;font-size:2.2rem;line-height:1.3;margin-bottom:8px; }.comfort-bucket .bucket-score { font-size:clamp(2.1rem,8vw,3rem);font-weight:950;letter-spacing:-.04em;line-height:1.2;color:#98520c;margin:12px 0 5px; }
+.comfort-period-morning { background:linear-gradient(145deg,#fff0d4,#fffaf0);border-top-color:#eea135; }
+.comfort-period-early-afternoon { background:linear-gradient(145deg,#e3f5ef,#f5fcf8);border-top-color:#229c79; }.comfort-period-early-afternoon .bucket-score { color:#146c53; }
+.comfort-period-evening { background:linear-gradient(145deg,#ffe9de,#fff6f0);border-top-color:#e88050; }.comfort-period-evening .bucket-score { color:#a44828; }
+.comfort-period-late-night { background:linear-gradient(145deg,#ece6ff,#f8f5ff);border-top-color:#8870ce; }.comfort-period-late-night .bucket-score { color:#6543a0; }
+.comfort-bucket.is-best { border:2px solid #1b8e70;border-top:5px solid #1b8e70;box-shadow:0 4px 16px #16836518; }.comfort-bucket.is-best > strong { color:#126d54; }
+[data-feelscore-day] { font-weight:850; }[data-feelscore-day].is-active { background:#175dc1;color:white;box-shadow:0 3px 10px #175dc130; }
+.hiking-takeaway { background:linear-gradient(120deg,#e4f5ec,#f5fbef);border-left-color:#228568; }.hiking-takeaway-text { font-size:1.15rem;font-weight:750;line-height:1.5;color:#174d3e; }.hiking-takeaway small { color:#466b5e; }
+.elevation-weather { text-align:right; }.elevation-weather small { font-size:.7rem; }
+.snapshot-time { display:block; margin:12px 0; padding:12px 14px; border-radius:10px; background:#102d50; color:#fff !important; font-size:.95rem !important; font-weight:800; line-height:1.5; }
