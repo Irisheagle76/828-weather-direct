@@ -13,7 +13,7 @@ export function initNotificationSettings() {
   async function persist(sub,prefs){const r=await fetch('/api/router?route=notifications/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...sub.toJSON(),preferences:prefs})});if(!r.ok)throw Error('Could not save preferences. Try again.');localStorage.setItem(preferenceKey,JSON.stringify(prefs));}
   async function update(disable){
     const prefs=disable?{alerts:false,pulse:false}:{alerts:alerts.checked,pulse:pulse.checked};
-    if(!disable && !prefs.alerts && !prefs.pulse){status.textContent='Choose Weather Heads-Up, Pulse Updates, or both.';return;}
+    if(!disable && !prefs.alerts && !prefs.pulse){status.textContent='Choose Weather Bulletin, Pulse Updates, or both.';return;}
     if(!disable && Notification.permission==='denied'){status.textContent='Notifications are blocked. Allow them in your browser or phone settings.';return;}
     // Request permission directly in the click handler, before asynchronous setup.
     const permission=!disable && Notification.permission==='default'?Notification.requestPermission():Promise.resolve(Notification.permission);
@@ -26,7 +26,7 @@ export function initNotificationSettings() {
       if(!disable && !sub){if(!keys.publicKey)throw Error('Notifications are not configured.');sub=await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:toBytes(keys.publicKey)});}
       if(sub){await persist(sub,prefs);if(disable)await sub.unsubscribe();}else localStorage.setItem(preferenceKey,JSON.stringify(prefs));
       alerts.checked=prefs.alerts;pulse.checked=prefs.pulse;
-      status.textContent=disable?'Notifications turned off.':'Preferences saved. Weather Heads-Up delivery is supported now; Pulse delivery is being connected next.';
+      status.textContent=disable?'Notifications turned off.':'Preferences saved. Weather Bulletin delivery is supported now; Pulse delivery is being connected next.';
       save.textContent='Save notification preferences';
     }catch(error){status.textContent=error.message || 'Unable to update notifications.';}finally{save.disabled=off.disabled=false;}
   }
