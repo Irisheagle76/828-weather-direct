@@ -741,6 +741,7 @@
         <p>New images replace the gallery. Leave empty to keep the existing gallery.</p>
         <div id="hq-gallery-preview" style="display:flex;gap:8px;flex-wrap:wrap"></div>
       </div>
+      <div class="field"><label><input type="checkbox" id="notify-pulse" /> Notify 828 Pulse Updates subscribers</label><p>Optional for a new regular Pulse. Editing a post or publishing Event Headquarters does not send a Pulse notification.</p></div>
       <div class="field publish-row">
         <button class="primary" id="publish">
           <span>Publish Pulse</span>
@@ -1736,7 +1737,14 @@ function updateTimestamp() {
         throw new Error(`API error: ${res.status} - ${text}`);
       }
 
-      setStatus(editingTimestamp ? "Updated" : "Published", "success");
+      const result = await res.json();
+      const push = result.pushResult;
+      let notice = editingTimestamp ? "Updated" : "Published";
+      if (document.getElementById("notify-pulse").checked) {
+        notice += push?.skipped ? " · Notification not sent (" + push.reason + ")" : " · Notifications: " + (push?.sent || 0) + " sent, " + (push?.failed || 0) + " failed";
+      }
+      setStatus(notice, "success");
+      document.getElementById("notify-pulse").checked = false;
       editor.innerHTML = "";
       currentMediaUrl = "";
       currentMediaType = null;
@@ -1751,7 +1759,7 @@ function updateTimestamp() {
 
       setTimeout(() => {
         setStatus("", null);
-      }, 2500);
+      }, 12000);
 
     } catch (err) {
       console.error(err);

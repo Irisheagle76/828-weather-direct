@@ -26,7 +26,7 @@ export function initNotificationSettings() {
       if(!disable && !sub){if(!keys.publicKey)throw Error('Notifications are not configured.');sub=await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:toBytes(keys.publicKey)});}
       if(sub){await persist(sub,prefs);if(disable)await sub.unsubscribe();}else localStorage.setItem(preferenceKey,JSON.stringify(prefs));
       alerts.checked=prefs.alerts;pulse.checked=prefs.pulse;
-      status.textContent=disable?'Notifications turned off.':'Preferences saved. Weather Bulletin delivery is supported now; Pulse delivery is being connected next.';
+      status.textContent=disable?'Notifications turned off.':'Preferences saved. You are subscribed to your selected updates.';
       save.textContent='Save notification preferences';
     }catch(error){status.textContent=error.message || 'Unable to update notifications.';}finally{save.disabled=off.disabled=false;}
   }
