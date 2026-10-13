@@ -412,3 +412,4 @@ button:focus-visible, a:focus-visible { outline: 3px solid #ff9e55; outline-offs
   .bucket-detail { margin-top:0;padding-top:10px; }
   .bucket-detail summary { font-size:.8rem; }
 }
+.mobile-radiance { background:linear-gradient(140deg,#172e52,#54324f);color:#fff; }.mobile-radiance h2,.mobile-radiance p { color:#fff; }.radiance-score { display:flex;gap:14px;align-items:baseline;margin:18px 0; }.radiance-score strong { font-size:3.5rem;line-height:1;color:#ffd292; }.radiance-score span { font-size:.9rem;font-weight:750; }.radiance-factor { padding:14px 0;border-top:1px solid #ffffff30; }.radiance-factor small { color:#e5ddee; }
