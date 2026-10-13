@@ -33,15 +33,6 @@ export function bindCameraFailures(root) {
     return response.json();
   }).then(status => {
     const captured = Date.parse(status.capturedAt || status.observedAt);
-    const stale = !Number.isFinite(captured) || captured > Date.now() + 60000 || Date.now() - captured > 10 * 60000 || status.refreshFailed || (status.status && status.status !== "ok");
-    const button = root.querySelector('[data-camera-id="chamber"]');
-    const image = button?.querySelector('img');
-    const fallback = button?.querySelector('.snapshot-fallback');
-    if (stale && image && fallback) {
-      image.hidden = true;
-      fallback.hidden = false;
-      fallback.textContent = 'Live camera available · tap to watch';
-    }
     captureTime.textContent = Number.isFinite(captured) ? `Captured ${new Date(captured).toLocaleString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" })}${Date.now() - captured > 10 * 60000 || status.refreshFailed || (status.status && status.status !== "ok") ? " · OLDER IMAGE — check live camera" : ` · ${Math.max(0, Math.floor((Date.now() - captured) / 60000))} min ago`}` : "Still capture unavailable · tap to watch live";
   }).catch(() => { captureTime.textContent = "Still capture unavailable · tap to watch live"; });
   root.querySelectorAll("[data-camera-id]").forEach(button => button.addEventListener("click", () => {
