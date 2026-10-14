@@ -1,3 +1,4 @@
+import { renderComfortCard } from './comfort-cards.js';
 import { initNotificationSettings } from './notifications.js';
 import { mobileRadiance } from './radiance.js';
 import { sunPositionCard } from "./sun-position.js";
@@ -283,8 +284,8 @@ function renderFeelScoreDetail() {
   const best = bestComfortWindow(buckets);
   $("#detailBestWindow").textContent = best ? `Best Window · ${formatTime(best.start)}–${formatTime(best.end)} · FEELSCORE ${best.min === best.max ? best.min : `${best.min}–${best.max}`}${best.min < 70 ? " · best available, but comfort is limited" : ""}` : "Best Window unavailable · not enough continuous hourly guidance.";
   const active = buckets.filter(b=>!b.passed && !(b.partial && b.count === 0));
-  const cards = active.map(bucket => `<section class="comfort-bucket comfort-period-${bucket.name.toLowerCase().replaceAll(" ", "-")}${best?.name === bucket.name ? " is-best" : ""}"><span class="comfort-period-emoji" aria-hidden="true">${({Morning:"🌅", "Early afternoon":"☀️", Evening:"🌇", "Late night":"🌙"})[bucket.name] || "🌤️"}</span><strong>${bucket.name}${best?.name === bucket.name ? " ★" : ""}</strong><small>${bucket.label}${bucket.partial && bucket.min != null ? " · remaining hours" : ""}</small><div class="bucket-score-inset"><span class="bucket-score">${bucket.min == null ? bucket.partial ? "Almost over" : "Unavailable" : bucket.min === bucket.max ? bucket.min : `${bucket.min}–${bucket.max}`}</span><small>${bucket.min != null ? "out of 100 · FEELSCORE" : bucket.partial ? "No full hourly reading remains in this window." : "Hourly guidance missing"}</small></div><div class="bucket-temperature"><span>Forecast temperature</span><strong>${bucket.tempMin == null ? "Unavailable" : bucket.tempMin === bucket.tempMax ? `${bucket.tempMin}°F` : `${bucket.tempMin}–${bucket.tempMax}°F`}</strong></div><details class="bucket-detail"><summary>Hourly temperatures &amp; comfort</summary><div class="bucket-hourly">${bucket.points.map(point => `<div><span>${escapeHtml(formatTime(point.hour.timestamp))}</span><strong>${Number.isFinite(point.hour.temperatureF) ? `${Math.round(point.hour.temperatureF)}°F` : "—"}</strong><span>FS ${Math.round(point.score*10)}/100</span></div>`).join("")}</div>${bucket.min != null ? `<p>${escapeHtml(bucket.takeaway)}</p><small>${bucket.count} hourly ${bucket.count === 1 ? "reading" : "readings"}${bucket.count < bucket.end-bucket.start && !bucket.partial ? " · limited coverage" : ""}</small>` : ""}</details></section>`).join("");
-  $("#detailBuckets").innerHTML = cards || `<p>No remaining time windows today.</p>`;
+  const cards = active.map(bucket => renderComfortCard(bucket, {best:best?.name === bucket.name,formatTime,escapeHtml})).join("");
+  $("#detailBuckets").innerHTML = cards ? '<p class="comfort-pair-explainer"><strong>Degrees tell you the temperature.</strong> FEELSCORE rates outdoor comfort from 0–100, using temperature, moisture, wind and weather.</p>' + cards : `<p>No remaining time windows today.</p>`;
 }
 
 function extractForecastUpdate(forecast = {}) {
