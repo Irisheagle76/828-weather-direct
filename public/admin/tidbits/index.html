@@ -1728,7 +1728,8 @@ function updateTimestamp() {
           text: html,
           mediaUrl,
           mediaType,
-          timestamp: editingTimestamp
+          timestamp: editingTimestamp,
+          sendPush: document.getElementById("notify-pulse").checked
         })
       });
 
