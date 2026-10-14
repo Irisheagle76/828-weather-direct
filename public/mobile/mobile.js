@@ -465,6 +465,7 @@ async function renderMoreView(view) {
   try {
     if (view === "hiking") {
       const payload = await loadHiking();
+      if (renderId !== detailRenderId || location.hash !== "#more") return;
       const g = payload.guidance || {};
       target.innerHTML = `<section class="panel more-hero"><p class="kicker">HikerScore</p><h2>${Number.isFinite(Number(g.hikerScore)) ? Math.round(Number(g.hikerScore)) : "--"} · ${escapeHtml(g.hikerScoreLabel || g.overall || "Trail guidance")}</h2><p>${escapeHtml(g.bestWindow || g.hikerNarrative || "Mountain conditions are updating.")}</p></section><section class="panel"><p class="kicker">Recommended elevation</p><h2>${escapeHtml(elevationRecommendation(g))}</h2><div class="more-stats"><div><span>Peak gust</span><strong>${Number.isFinite(Number(g.maxGust)) ? `${Math.round(Number(g.maxGust))} mph` : "--"}</strong></div><div><span>Mount Mitchell vs Asheville</span><strong>${Number.isFinite(Number(g.mitchellDrop)) ? `${Math.abs(Math.round(Number(g.mitchellDrop)))}°F ${Number(g.mitchellDrop) >= 0 ? "cooler" : "warmer"}` : "--"}</strong></div><div><span>Cloud / visibility</span><strong>${escapeHtml(g.fogRisk || "--")}</strong></div><div><span>Temperature range around Asheville</span><strong>${Number.isFinite(Number(g.localTempSpread)) ? `${Math.round(Number(g.localTempSpread))}°F` : "--"}</strong></div></div><p class="body-copy"><strong>Mount Mitchell vs Asheville:</strong> compares the summit station with the average of reporting Asheville-area stations. A cooler summit can mean packing an extra layer.</p><p class="body-copy"><strong>Temperature range around Asheville:</strong> the difference between the warmest and coolest reporting local stations. Larger differences mean local conditions vary more; your trail may differ.</p><a class="product-link" href="/hiking.html">Open full Hiking Guidance →</a></section>`;
       const score = typeof g.hikerScore === "number" && Number.isFinite(g.hikerScore) ? Math.min(100, Math.max(0, Math.round(g.hikerScore))) : null;
@@ -537,6 +538,7 @@ async function renderMoreView(view) {
     }
     bindCameraFailures(target);
   } catch (error) {
+    if (renderId !== detailRenderId || location.hash !== "#more") return;
     console.warn(`${view} detail unavailable`, error);
     target.innerHTML = `<div class="empty-state error-note">This product is temporarily unavailable. Please try again shortly.</div>`;
   }
@@ -561,7 +563,15 @@ async function loadRegional() {
   }
 }
 
+function showMoreMenu() {
+  $("#moreDetail").hidden = true;
+  $("#moreMenu").hidden = false;
+  $(".notification-settings").hidden = false;
+}
+
 function navigate(destination, { updateHash = true } = {}) {
+  ++detailRenderId;
+  if (destination === "more") showMoreMenu();
   if (!$("#screen-" + destination)) destination = "home";
   $$(".screen").forEach((screen) => { const active = screen.dataset.screen === destination; screen.hidden = !active; screen.classList.toggle("is-active", active); });
   $$("[data-destination]", $(".bottom-nav")).forEach((button) => { const active = button.dataset.destination === destination; button.classList.toggle("is-active", active); if (active) button.setAttribute("aria-current", "page"); else button.removeAttribute("aria-current"); });
@@ -609,7 +619,7 @@ async function loadCore({ force = false, announce = false } = {}) {
 function bindEvents() {
   $$('[data-destination]').forEach((control) => control.addEventListener("click", (event) => { if (control.tagName === "A") event.preventDefault(); navigate(control.dataset.destination); }));
   $$('[data-more-view]').forEach((control) => control.addEventListener("click", () => { navigate("more"); renderMoreView(control.dataset.moreView); }));
-  $("#moreBack").addEventListener("click", () => { $("#moreDetail").hidden = true; $("#moreMenu").hidden = false; $(".notification-settings").hidden = false; });
+  $("#moreBack").addEventListener("click", () => navigate("more"));
   $("#refreshButton").addEventListener("click", () => loadCore({ force: true, announce: true }));
   $$('[data-feelscore-day]').forEach((button) => button.addEventListener("click", () => {
     state.activeDay = button.dataset.feelscoreDay;
