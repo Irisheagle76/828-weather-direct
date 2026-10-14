@@ -1,3 +1,8 @@
+import { initNotificationSettings } from './notifications.js';
+import { mobileRadiance } from './radiance.js';
+import { sunPositionCard } from "./sun-position.js";
+import { buildSkyConditionRead } from "/js/intel/sky-read.js";
+import { buildAtmosphereNow } from "/js/intel/atmosphere-now.js";
 import { buildHumanActionIntelFS } from "/js/intel/human-action-feelscore.js";
 import { calculateComfort } from "/js/intel/comfort.js";
 import { isPulseFresh } from "/js/pulse-freshness.js";
@@ -19,6 +24,7 @@ const previewStates = new URLSearchParams(location.search).get("preview") === "s
 const state = { weather: null, forecast: null, feelscore: null, pulse: null, article: null, hiking: null, sky: null, activeDay: "today", regionalLoaded: false };
 let toastTimer = null;
 let refreshTimer = null;
+let detailRenderId = 0;
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
@@ -50,7 +56,7 @@ function sanitizePulseHtml(value = "") {
       Array.from(child.attributes).forEach((attr) => child.removeAttribute(attr.name));
       if (child.tagName === "A" && href) {
         try {
-          const url = new URL(href, location.origin);
+          const url = new URL(/^www\./i.test(href) ? `https://${href}` : href, location.origin);
           if (!["http:", "https:"].includes(url.protocol)) throw new Error("unsupported link");
           child.setAttribute("href", url.href);
           child.setAttribute("target", "_blank");
@@ -179,15 +185,14 @@ function renderTrend(target, hours = [], { anchorNow = true, label = "Next 18 ho
   const labels = [0, Math.round((plotted.length - 1) / 3), Math.round((plotted.length - 1) * 2 / 3), plotted.length - 1];
   target.setAttribute("aria-label", `Comfort Curve. ${summary}`);
   target.innerHTML = `<span class="curve-heading"><strong>Comfort Curve</strong><span>${escapeHtml(label)}</span></span>
+    <span class="curve-value-labels"><span>${anchorNow ? "Now" : "Starting"} · ${plotted[0].score}</span><span>★ Peak · ${best.score}</span></span>
     <svg viewBox="0 0 360 181" role="img" aria-label="${escapeHtml(summary)}">
       <rect class="curve-band" x="${left}" y="${y(100)}" width="317" height="${y(70) - y(100)}" rx="5" />
       ${[100, 70, 40, 0].map(score => `<line class="curve-grid" x1="${left}" x2="344" y1="${y(score)}" y2="${y(score)}" /><text class="curve-axis" x="20" y="${y(score) + 4}" text-anchor="end">${score}</text>`).join("")}
       <path class="curve-area" d="${path} L ${plotted.at(-1).x} ${bottom} L ${left} ${bottom} Z" />
       <path class="curve-line" d="${path}" />
       <circle class="curve-now" cx="${plotted[0].x}" cy="${plotted[0].y}" r="4" />
-      <text class="curve-score" x="${left}" y="${Math.max(15, plotted[0].y - 12)}" text-anchor="start">${anchorNow ? "Now · " : ""}${plotted[0].score}</text>
       <circle class="curve-best" cx="${best.x}" cy="${best.y}" r="5" />
-      <text class="curve-score" x="${best.x}" y="${Math.max(15, best.y - 12)}" text-anchor="${best.x > 285 ? "end" : "middle"}">${best === plotted[0] ? "" : `★ ${best.score}`}</text>
       ${labels.map(i => `<text class="curve-time" x="${plotted[i].x}" y="173" text-anchor="${i === 0 ? "start" : i === plotted.length - 1 ? "end" : "middle"}">${escapeHtml(formatTime(plotted[i].timestamp).replace(":00", ""))}</text>`).join("")}
     </svg><span class="curve-caption">Higher = more comfortable outside</span>`;
 }
@@ -277,11 +282,9 @@ function renderFeelScoreDetail() {
   const buckets = comfortTimeBuckets(state.weather?.hourly || [], selectedKey);
   const best = bestComfortWindow(buckets);
   $("#detailBestWindow").textContent = best ? `Best Window · ${formatTime(best.start)}–${formatTime(best.end)} · FEELSCORE ${best.min === best.max ? best.min : `${best.min}–${best.max}`}${best.min < 70 ? " · best available, but comfort is limited" : ""}` : "Best Window unavailable · not enough continuous hourly guidance.";
-  const active = buckets.filter(b=>!b.passed), passed = buckets.filter(b=>b.passed);
-  const cards = active.map(bucket => `<section class="comfort-bucket${best?.name === bucket.name ? " is-best" : ""}"><strong>${bucket.name}${best?.name === bucket.name ? " ★" : ""}</strong><small>${bucket.label}${bucket.partial && bucket.min != null ? " · remaining hours" : ""}</small><span class="bucket-score">${bucket.min == null ? bucket.partial ? "Almost over" : "Unavailable" : bucket.min === bucket.max ? bucket.min : `${bucket.min}–${bucket.max}`}</span><small>${bucket.min != null ? "FEELSCORE /100" : bucket.partial ? "No full hourly reading remains in this window." : "Hourly guidance missing"}</small>${bucket.tempMin != null ? `<small>${bucket.tempMin}–${bucket.tempMax}°F</small>` : ""}${bucket.min != null ? `<p>${escapeHtml(bucket.takeaway)}</p><small>${bucket.count} hourly readings${bucket.count < bucket.end-bucket.start && !bucket.partial ? " · limited coverage" : ""}</small>` : ""}</section>`).join("");
+  const active = buckets.filter(b=>!b.passed && !(b.partial && b.count === 0));
+  const cards = active.map(bucket => `<section class="comfort-bucket comfort-period-${bucket.name.toLowerCase().replaceAll(" ", "-")}${best?.name === bucket.name ? " is-best" : ""}"><span class="comfort-period-emoji" aria-hidden="true">${({Morning:"🌅", "Early afternoon":"☀️", Evening:"🌇", "Late night":"🌙"})[bucket.name] || "🌤️"}</span><strong>${bucket.name}${best?.name === bucket.name ? " ★" : ""}</strong><small>${bucket.label}${bucket.partial && bucket.min != null ? " · remaining hours" : ""}</small><div class="bucket-score-inset"><span class="bucket-score">${bucket.min == null ? bucket.partial ? "Almost over" : "Unavailable" : bucket.min === bucket.max ? bucket.min : `${bucket.min}–${bucket.max}`}</span><small>${bucket.min != null ? "out of 100 · FEELSCORE" : bucket.partial ? "No full hourly reading remains in this window." : "Hourly guidance missing"}</small></div><div class="bucket-temperature"><span>Forecast temperature</span><strong>${bucket.tempMin == null ? "Unavailable" : bucket.tempMin === bucket.tempMax ? `${bucket.tempMin}°F` : `${bucket.tempMin}–${bucket.tempMax}°F`}</strong></div><details class="bucket-detail"><summary>Hourly temperatures &amp; comfort</summary><div class="bucket-hourly">${bucket.points.map(point => `<div><span>${escapeHtml(formatTime(point.hour.timestamp))}</span><strong>${Number.isFinite(point.hour.temperatureF) ? `${Math.round(point.hour.temperatureF)}°F` : "—"}</strong><span>FS ${Math.round(point.score*10)}/100</span></div>`).join("")}</div>${bucket.min != null ? `<p>${escapeHtml(bucket.takeaway)}</p><small>${bucket.count} hourly ${bucket.count === 1 ? "reading" : "readings"}${bucket.count < bucket.end-bucket.start && !bucket.partial ? " · limited coverage" : ""}</small>` : ""}</details></section>`).join("");
   $("#detailBuckets").innerHTML = cards || `<p>No remaining time windows today.</p>`;
-  $("#detailPassed").hidden = !passed.length;
-  $("#detailPassedContent").textContent = passed.map(b=>`${b.name} · ${b.label} · passed`).join(" / ");
 }
 
 function extractForecastUpdate(forecast = {}) {
@@ -430,7 +433,7 @@ function renderHiking() {
 function sunsetInfo() {
   const today = (state.weather?.daily || []).find((day) => todayKey(day.timestamp) === todayKey());
   const sunset = Number(today?.sunset);
-  return { sunset, start: sunset ? sunset - 35 * 60000 : null, end: sunset ? sunset + 15 * 60000 : null };
+  return { sunrise: Number(today?.sunrise), sunset, start: sunset ? sunset - 35 * 60000 : null, end: sunset ? sunset + 15 * 60000 : null };
 }
 
 function renderSunsetContext() {
@@ -441,7 +444,7 @@ function renderSunsetContext() {
 
 async function loadHiking(force = false) {
   if (state.hiking && !force) return state.hiking;
-  state.hiking = await fetchJson("/data/hiking-guidance.json", { ttl: 15 * 60 * 1000, force });
+  state.hiking = await fetchJson(routeUrl("hiking/current"), { ttl: 5 * 60 * 1000, force });
   renderHiking();
   return state.hiking;
 }
@@ -453,8 +456,9 @@ async function loadSky(force = false) {
 }
 
 async function renderMoreView(view) {
+  const renderId = ++detailRenderId;
   $("#moreMenu").hidden = true;
-  $(".future-products").hidden = true;
+  $(".notification-settings").hidden = true;
   $("#moreDetail").hidden = false;
   const target = $("#moreDetailContent");
   target.innerHTML = `<div class="empty-state">Loading ${escapeHtml(view)}…</div>`;
@@ -462,28 +466,69 @@ async function renderMoreView(view) {
     if (view === "hiking") {
       const payload = await loadHiking();
       const g = payload.guidance || {};
-      target.innerHTML = `<section class="panel more-hero"><p class="kicker">HikerScore</p><h2>${Number.isFinite(Number(g.hikerScore)) ? Math.round(Number(g.hikerScore)) : "--"} · ${escapeHtml(g.hikerScoreLabel || g.overall || "Trail guidance")}</h2><p>${escapeHtml(g.bestWindow || g.hikerNarrative || "Mountain conditions are updating.")}</p></section><section class="panel"><p class="kicker">Recommended elevation</p><h2>${escapeHtml(elevationRecommendation(g))}</h2><div class="more-stats"><div><span>Peak gust</span><strong>${Number.isFinite(Number(g.maxGust)) ? `${Math.round(Number(g.maxGust))} mph` : "--"}</strong></div><div><span>Mitchell difference</span><strong>${Number.isFinite(Number(g.mitchellDrop)) ? `${Math.round(Number(g.mitchellDrop))}° cooler` : "--"}</strong></div><div><span>Cloud / visibility</span><strong>${escapeHtml(g.fogRisk || "--")}</strong></div><div><span>Asheville spread</span><strong>${Number.isFinite(Number(g.localTempSpread)) ? `${Math.round(Number(g.localTempSpread))}°` : "--"}</strong></div></div><a class="product-link" href="/hiking.html">Open full Hiking Guidance →</a></section>`;
+      target.innerHTML = `<section class="panel more-hero"><p class="kicker">HikerScore</p><h2>${Number.isFinite(Number(g.hikerScore)) ? Math.round(Number(g.hikerScore)) : "--"} · ${escapeHtml(g.hikerScoreLabel || g.overall || "Trail guidance")}</h2><p>${escapeHtml(g.bestWindow || g.hikerNarrative || "Mountain conditions are updating.")}</p></section><section class="panel"><p class="kicker">Recommended elevation</p><h2>${escapeHtml(elevationRecommendation(g))}</h2><div class="more-stats"><div><span>Peak gust</span><strong>${Number.isFinite(Number(g.maxGust)) ? `${Math.round(Number(g.maxGust))} mph` : "--"}</strong></div><div><span>Mount Mitchell vs Asheville</span><strong>${Number.isFinite(Number(g.mitchellDrop)) ? `${Math.abs(Math.round(Number(g.mitchellDrop)))}°F ${Number(g.mitchellDrop) >= 0 ? "cooler" : "warmer"}` : "--"}</strong></div><div><span>Cloud / visibility</span><strong>${escapeHtml(g.fogRisk || "--")}</strong></div><div><span>Temperature range around Asheville</span><strong>${Number.isFinite(Number(g.localTempSpread)) ? `${Math.round(Number(g.localTempSpread))}°F` : "--"}</strong></div></div><p class="body-copy"><strong>Mount Mitchell vs Asheville:</strong> compares the summit station with the average of reporting Asheville-area stations. A cooler summit can mean packing an extra layer.</p><p class="body-copy"><strong>Temperature range around Asheville:</strong> the difference between the warmest and coolest reporting local stations. Larger differences mean local conditions vary more; your trail may differ.</p><a class="product-link" href="/hiking.html">Open full Hiking Guidance →</a></section>`;
+      const score = typeof g.hikerScore === "number" && Number.isFinite(g.hikerScore) ? Math.min(100, Math.max(0, Math.round(g.hikerScore))) : null;
+      target.querySelector(".more-hero h2").insertAdjacentHTML("beforebegin", `<div class="hiking-score-visual"><div class="hiking-score-dial${score === null ? " is-unknown" : ""}" style="--score:${score ?? 0}" aria-label="HikerScore ${score ?? "unavailable"} out of 100"><span><b>${score ?? "—"}</b><small>/ 100</small></span></div><div class="hiking-score-caption"><span aria-hidden="true">🥾</span><strong>Outdoor conditions</strong><small>Higher scores favor hiking</small></div></div>`);
+      target.querySelectorAll(".more-stats > div").forEach((card, index) => card.insertAdjacentHTML("afterbegin", `<span class="hiking-condition-icon" aria-hidden="true">${["➜", "❄", "☁", "↕"][index]}</span>`));
+      const recommendationPanel = target.querySelector(".more-stats").closest("section");
+      recommendationPanel.classList.add("hiking-recommendation");
+      const contextGraphics = [
+        '<svg viewBox="0 0 160 50" aria-hidden="true"><path d="M10 14H110Q140 14 140 6M10 25H145M10 36H90Q120 36 120 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg><small>Wind on exposed ridges</small>',
+        '<svg viewBox="0 0 160 50" aria-hidden="true"><path d="M10 44L48 22L65 33L102 5L150 44Z" fill="currentColor" opacity=".22"/><path d="M96 12L102 5L110 14" fill="none" stroke="currentColor" stroke-width="3"/></svg><small>Summit compared with local stations</small>',
+        '<svg viewBox="0 0 160 50" aria-hidden="true"><path d="M15 36L55 9L87 36L117 17L150 36" fill="none" stroke="currentColor" stroke-width="3"/><path d="M10 28H145M20 37H150M10 45H130" stroke="currentColor" stroke-width="4" opacity=".4"/></svg><small>Fog / low-cloud potential</small>',
+        '<svg viewBox="0 0 160 50" aria-hidden="true"><circle cx="25" cy="25" r="10" fill="#268ac4"/><path d="M42 25H117M48 19L42 25L48 31M111 19L117 25L111 31" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="135" cy="25" r="10" fill="#d97720"/></svg><small>Coolest ↔ warmest local station</small>'
+      ];
+      recommendationPanel.querySelectorAll(".more-stats > div").forEach((card,index) => {
+        card.classList.add("hiking-context-card", `hiking-context-${index}`);
+        card.insertAdjacentHTML("beforeend", contextGraphics[index]);
+      });
       const age = Date.now() - Date.parse(payload.generatedAt);
-      const stale = !Number.isFinite(age) || age > 90 * 60000 || age < -5 * 60000;
-      target.insertAdjacentHTML("afterbegin", `<section class="panel product-status"><p class="kicker">Hiking Guide · 828 analysis</p><p>${stale ? "These are last-published conditions, not a current trail report. Check the mountain cameras before heading out." : "Published observations and the existing HikerScore engine—not a separate mobile forecast."}</p><small>${payload.generatedAt ? `Published ${escapeHtml(formatDate(payload.generatedAt))} · ${escapeHtml(formatTime(payload.generatedAt))}` : "Publication time unavailable"}</small></section>`);
+      const stale = !Number.isFinite(age) || age > 15 * 60000 || age < -5 * 60000 || (payload.quality && payload.quality.status !== "fresh");
+      const trailTakeaway = stale
+        ? "Check the latest mountain conditions before choosing your route."
+        : `${elevationRecommendation(g)}. ${Number.isFinite(g.mitchellDrop) && g.mitchellDrop >= 8 ? "Pack an extra layer for high peaks." : "Carry a light layer for exposed ridges."} ${g.fogRisk === "Elevated" ? "Watch for damp footing and low cloud." : "Bring water and sun protection for open trails."}`;
+      target.insertAdjacentHTML("afterbegin", `<section class="panel hiking-takeaway"><p class="kicker">${stale ? "Report needs an update" : "Your hiking outlook"}</p><p class="hiking-takeaway-text">${escapeHtml(trailTakeaway)}</p><small>${payload.generatedAt ? `Updated ${escapeHtml(formatDate(payload.generatedAt))} at ${escapeHtml(formatTime(payload.generatedAt))}` : "Update time unavailable"}${stale ? " · Conditions may have changed" : ""}</small></section>`);
       if (stale) target.querySelector(".more-hero .kicker").textContent = "Last published HikerScore";
+      const packItems = [
+        ["🧥", "Pack layers", !stale && Number.isFinite(g.mitchellDrop) && g.mitchellDrop >= 8 ? "High peaks are cooler than Asheville. Bring an insulating layer and a wind/rain shell for exposed ridges." : "Bring an extra layer and a wind/rain shell; summit weather can differ from the trailhead."],
+        ["💧", "Carry water & snacks", "Plan water for the full route and extra time. Drink regularly, pack snacks, and confirm refill locations instead of assuming streams are usable."],
+        ["☀", "Protect from sun", !stale && (g.maxUv >= 5 || g.maxSolar >= 500) ? "Published observations show stronger sun exposure. Pack sunscreen, a hat and sunglasses; take breaks in shade on open routes." : "Pack sunscreen, a hat and sunglasses for open trails, even when the air feels cool."],
+        ["🥾", "Choose traction", !stale && (g.fogRisk === "Elevated" || g.maxRainRate > 0) ? "Damp conditions are flagged. Wear shoes with good grip, watch wet leaves and rocks, and consider trekking poles." : "Wear footwear with good grip. Watch wet leaves, roots and rocks; check recent rain along your route."],
+        ["🧭", "Check before leaving", "Check the latest forecast, trail closures and mountain cameras. Carry an offline map and a headlamp, and share your route and return time."]
+      ];
+      target.querySelector(".more-hero").insertAdjacentHTML("afterend", `<section class="panel hiking-actions"><p class="kicker">Before you head out</p><h2>Pack for your route</h2><p>${stale ? "General packing checklist — the weather report is out of date. Check current conditions before deciding where to hike." : "Packing cues from the published conditions, plus essentials for any mountain hike."}</p><div class="hiking-action-grid">${packItems.map(([icon,title,detail]) => `<div class="hiking-action"><span aria-hidden="true">${icon}</span><div><strong>${title}</strong><p>${detail}</p></div></div>`).join("")}</div><a class="product-link" href="https://www.nps.gov/articles/hiking-safety.htm" target="_blank" rel="noopener noreferrer">NPS hiking preparation guide ↗</a></section>`);
       const stations = (payload.stations || []).filter(s => Number.isFinite(s.temperatureF)).sort((a,b) => (b.elevationFt || 0) - (a.elevationFt || 0)).slice(0, 4);
-      target.insertAdjacentHTML("beforeend", `<section class="panel"><p class="kicker">${stale ? "Last published" : "Reporting"} mountain conditions</p><div class="trail-stations">${stations.map(s => `<div><strong>${escapeHtml(s.name)}</strong><small>${Number.isFinite(s.elevationFt) ? `${Math.round(s.elevationFt).toLocaleString()} ft` : "Elevation unavailable"} · ${escapeHtml(s.conditions || "Sky unavailable")}</small><span>${Math.round(s.temperatureF)}°F · ${Number.isFinite(s.windMph) ? `${Math.round(s.windMph)} mph wind` : "Wind unavailable"}</span></div>`).join("")}</div><p class="body-copy">Station readings describe reporting locations, not every trail or exposed ridge.</p></section><h2 class="camera-section-title">Check the mountain views</h2>${cameraCards(CAMERAS.filter(c => c.mountain))}`);
+      const elevationStations = stations.filter(station => Number.isFinite(station.elevationFt));
+      if (elevationStations.length) target.insertAdjacentHTML("beforeend", `<section class="panel elevation-profile"><p class="kicker">${stale ? "Last published" : "Observed"} elevation profile</p><h2>Conditions up the mountain</h2><div class="elevation-chart">${elevationStations.map(station => `<div class="elevation-chart-row"><div><strong>${escapeHtml(station.name)}</strong><small>${Math.round(station.elevationFt).toLocaleString()} ft</small></div><div class="elevation-bar-track"><span style="width:${Math.min(100,Math.max(0,station.elevationFt / 6684 * 100))}%"></span></div><div class="elevation-weather"><strong>${Math.round(station.temperatureF)}°F</strong><small>${Number.isFinite(station.windMph) ? `${Math.round(station.windMph)} mph wind` : "Wind unavailable"}</small>${station.conditions ? `<small>${escapeHtml(station.conditions)}</small>` : ""}</div></div>`).join("")}</div><small>Bar length shows elevation relative to 6,684 ft. Temperatures are reported at each station.</small></section>`);
+      target.insertAdjacentHTML("beforeend", `<h2 class="camera-section-title">Check the mountain views</h2>${cameraCards(CAMERAS.filter(c => c.mountain))}`);
     } else if (view === "sunset") {
-      const sky = await loadSky();
+      target.innerHTML = `${sunPositionCard(Date.now(), sunsetInfo())}<section class="panel"><p class="kicker">Sky &amp; Sunset</p><h2>Updating the sky read</h2><p>Checking camera analysis and tonight’s outlook…</p></section>`;
+      const stormRequest = fetchJson(routeUrl('storm/current'), {ttl:90000}).catch(() => null);
+      const skyRequest = loadSky().catch(() => null);
+      if (!state.weather) await loadCore();
+      const sky = await skyRequest;
+      if (!sky) throw new Error("Sky analysis unavailable");
+      if (renderId !== detailRenderId || location.hash !== '#more') return;
       const timing = sunsetInfo();
-      const metrics = sky.metrics || {};
-      const image = "https://i.ytimg.com/vi/UxUU3Fc1vBw/maxresdefault_live.jpg";
-      target.innerHTML = `<section class="panel more-hero"><p class="kicker">Sunset Radiance</p><h2>${timing.sunset ? `Sunset ${escapeHtml(formatTime(timing.sunset))}` : "Tonight's sky read"}</h2><p>The authoritative Radiance score remains in the existing shared Sunset product while its inline algorithm is prepared for extraction.</p></section><section class="panel"><img class="camera-image" src="${image}?t=${Date.now()}" alt="Live western sky camera view near Asheville" /><div class="more-stats"><div><span>Best viewing window</span><strong>${timing.start ? `${formatTime(timing.start)}–${formatTime(timing.end)}` : "Updating"}</strong></div><div><span>Cloud trend</span><strong>${escapeHtml(String(sky.trend?.overallTrend || "Unknown").replaceAll("_", " "))}</strong></div><div><span>Western cloud read</span><strong>${Number.isFinite(Number(metrics.cloudCoverWest)) ? `${Math.round(Number(metrics.cloudCoverWest))}%` : "Unavailable"}</strong></div><div><span>Sky capture</span><strong>${escapeHtml(sky.captureStatus || "Updating")}</strong></div></div><a class="product-link" href="/828-sunset-radiance.html">Open full Radiance score →</a></section>`;
-      target.querySelector(".more-hero p:last-child").textContent = "Keep an eye on the western horizon. The full Sunset Radiance read brings together cloud texture, clearing, moisture and timing.";
-      const cameraImage = target.querySelector(".camera-image");
-      cameraImage.remove();
-      target.insertAdjacentHTML("beforeend", `<section class="panel product-status"><p class="kicker">828 Weather Direct sky analysis</p><p>${escapeHtml(sky.directionalComparison?.narrative || "The camera read is a snapshot, not a guarantee of sunset color.")}</p><small>Sky analysis ${escapeHtml(formatTime(sky.timestamp))}. Viewing window is a planning guide; color may be brief.</small></section>${cameraCards(CAMERAS.filter(c => c.id === "west"))}`);
-      const skyAge = Date.now() - Date.parse(sky.timestamp);
-      if (!Number.isFinite(skyAge) || skyAge > 10 * 60000 || sky.captureStatus !== "live") {
-        target.querySelector(".more-hero p:last-child").textContent = "The current sky analysis is unavailable or out of date. Check the camera source and the full Radiance read before making plans.";
-        target.querySelectorAll(".more-stats strong").forEach((value, index) => { if (index > 0) value.textContent = "Unavailable"; });
-      }
+      const age = Date.now() - Date.parse(sky.timestamp);
+      const fresh = Number.isFinite(age) && age >= -60000 && age <= 10 * 60000 && ["live", "partial"].includes(sky.captureStatus);
+      const current = state.weather?.current || state.weather?.current_conditions || {};
+      const read = fresh ? buildSkyConditionRead({ camera: sky, verbosity: "narrative", surface: "sunset-radiance" }) : null;
+      const atmosphere = buildAtmosphereNow(current.supplementalStation);
+      const narrative = read?.narrative;
+      const storm = await stormRequest;
+      if (renderId !== detailRenderId || location.hash !== '#more') return;
+      const radiance = fresh && storm && state.weather?.hourly?.length && timing.sunset ? mobileRadiance(state.weather, sky, read.skyIntel, storm) : null;
+      const outlook = radiance ? `<section class="panel mobile-radiance"><p class="kicker">Evening outlook · Sunset Radiance</p><h2>${escapeHtml(radiance.title)}</h2><div class="radiance-score"><strong>${radiance.phase.state === 'closed' ? 'Closed' : radiance.score}</strong>${radiance.phase.state !== 'closed' ? '<span>out of 100</span>' : ''}</div><p>${escapeHtml(radiance.phase.label)}</p><p>${escapeHtml(radiance.detail)}</p><details><summary>What shapes tonight’s outlook</summary>${radiance.factors.map(f=>`<div class="radiance-factor"><strong>${escapeHtml(f.name)} · ${f.score}/100</strong><p>${escapeHtml(f.label)}</p><small>${escapeHtml(f.detail)}</small></div>`).join('')}</details></section>` : '<section class="panel"><p class="kicker">Evening outlook</p><h2>Radiance outlook unavailable</h2><p>Fresh sky, storm context and hourly forecast data are needed for tonight’s index.</p></section>';
+
+      const visualMetric = (icon, label, value) => {
+        const number = typeof value === "string" && /^\d+(\.\d+)?%$/.test(value) ? Math.min(100, Math.max(0, parseFloat(value))) : null;
+        return `<div class="sky-visual-metric"><svg class="sky-card-graphic" viewBox="0 0 120 64" aria-hidden="true">${label === "Cloud coverage" ? `<path d="M25 49C5 49 5 26 24 25C24 5 53 1 63 20C84 7 104 23 97 37C117 48 99 60 85 54H25Z" fill="currentColor" opacity=".7"/>` : label === "Sunlight" ? `<circle cx="60" cy="32" r="17" fill="currentColor"/><path d="M60 3V10M60 54V61M31 32H38M82 32H89M39 11L44 16M76 48L81 53M39 53L44 48M76 16L81 11" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>` : `<path d="M60 5L85 15V34Q85 50 60 60Q35 50 35 34V15Z" fill="currentColor" opacity=".2"/><path d="M47 32L57 42L76 22" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>`}</svg><span>${label}</span><strong>${escapeHtml(value || "Unavailable")}</strong>${number !== null ? `<div class="sky-meter" role="meter" aria-label="${label}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${number}"><span style="width:${number}%"></span></div>` : `<div class="sky-meter sky-meter-unknown" aria-hidden="true"></div>`}</div>`;
+      };
+      target.innerHTML = `<section class="panel more-hero"><p class="kicker">Sky &amp; Sunset</p><h2>Sky Now</h2><details class="sky-now-explainer"><summary>What does Sky Now tell me?</summary><p>Sky Now reads the latest camera views for cloud cover, cloud texture and the light reaching Asheville. Near sunset, gaps toward the west can let low-angle sunlight illuminate clouds from below, while an open sky may produce a quieter glow. It describes the sky now; the evening Radiance outlook combines that view with forecast conditions and sunset timing.</p></details><p>${escapeHtml(fresh ? narrative?.headline || read.label : "Current sky analysis is unavailable or out of date.")}</p><p>${escapeHtml(fresh ? narrative?.detail || narrative?.observation || "" : "Check the camera source for the latest view.")}</p><small>${fresh ? `Sky analysis ${escapeHtml(formatTime(sky.timestamp))}` : "Fresh camera analysis unavailable"}</small></section>
+        ${sunPositionCard(Date.now(), timing)}<section class="panel"><p class="kicker">Camera sky read</p><div class="sky-visual-grid">${visualMetric("☁", "Cloud coverage", read?.cloudMetric)}${visualMetric("☀", "Sunlight", read?.sunlightMetric)}${visualMetric("◉", "Confidence", read?.confidenceMetric)}</div></section>
+        <section class="panel"><p class="kicker">Atmosphere Now · North Downtown</p><p>${escapeHtml(atmosphere.summary)}</p><div class="atmosphere-grid">${atmosphere.cards.map((card,index) => `<article class="atmosphere-card atmosphere-card-${index}"><span class="atmosphere-icon" aria-hidden="true">${["💧","☀","➜","☂","ϟ"][index]}</span><h3>${escapeHtml(card.title)}</h3><strong class="atmosphere-value">${escapeHtml(card.value)}</strong><details><summary>What this means</summary><p>${escapeHtml(card.detail)}</p></details></article>`).join("")}</div></section>
+        ${outlook}<section class="panel sunset-visual"><p class="kicker">Sunset Radiance</p><div class="sunset-horizon" aria-hidden="true"><span class="sunset-orb"></span><span class="sunset-ridge"></span></div><h2>${timing.sunset ? `Sunset ${escapeHtml(formatTime(timing.sunset))}` : "Sunset timing unavailable"}</h2><div class="sunset-timeline"><span><small>Window opens</small><strong>${timing.start ? escapeHtml(formatTime(timing.start)) : "Unavailable"}</strong></span><span><small>Sunset</small><strong>${timing.sunset ? escapeHtml(formatTime(timing.sunset)) : "Unavailable"}</strong></span><span><small>Window ends</small><strong>${timing.end ? escapeHtml(formatTime(timing.end)) : "Unavailable"}</strong></span></div><p>Best viewing window: ${timing.start ? `${escapeHtml(formatTime(timing.start))}–${escapeHtml(formatTime(timing.end))}` : "Unavailable"}. Color may be brief.</p><a class="product-link" href="/828-sunset-radiance.html">Open full Sky &amp; Sunset and Radiance score →</a></section><section class="panel"><a class="product-link" href="#live">See the cameras in Live Look →</a></section>`;
     } else if (view === "live") {
       target.innerHTML = `<section class="panel more-hero"><p class="kicker"><span class="pulse-beacon" aria-hidden="true"></span> Live Look</p><h2>See what the sky is doing.</h2><p>Three perspectives on the Asheville sky.</p></section><section class="panel product-status"><p>Tap a view to open its camera source. The Chamber live player loads on request. Image capture times are not verified; a loaded preview may still be old.</p></section>${cameraCards()}`;
     } else {
@@ -564,7 +609,7 @@ async function loadCore({ force = false, announce = false } = {}) {
 function bindEvents() {
   $$('[data-destination]').forEach((control) => control.addEventListener("click", (event) => { if (control.tagName === "A") event.preventDefault(); navigate(control.dataset.destination); }));
   $$('[data-more-view]').forEach((control) => control.addEventListener("click", () => { navigate("more"); renderMoreView(control.dataset.moreView); }));
-  $("#moreBack").addEventListener("click", () => { $("#moreDetail").hidden = true; $("#moreMenu").hidden = false; $(".future-products").hidden = false; });
+  $("#moreBack").addEventListener("click", () => { $("#moreDetail").hidden = true; $("#moreMenu").hidden = false; $(".notification-settings").hidden = false; });
   $("#refreshButton").addEventListener("click", () => loadCore({ force: true, announce: true }));
   $$('[data-feelscore-day]').forEach((button) => button.addEventListener("click", () => {
     state.activeDay = button.dataset.feelscoreDay;
@@ -580,6 +625,8 @@ async function init() {
   $("#todayLabel").textContent = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "long", month: "long", day: "numeric" }).format(new Date());
   if (previewStates) $("#previewBanner").hidden = false;
   bindEvents();
+  initNotificationSettings();
+  setInterval(() => { const card = document.querySelector(".daylight-curve"); if (card && !document.hidden) card.outerHTML = sunPositionCard(Date.now(), sunsetInfo()); }, 60000);
   navigate(location.hash.slice(1) || "home", { updateHash: false });
   await loadCore();
   clearInterval(refreshTimer);

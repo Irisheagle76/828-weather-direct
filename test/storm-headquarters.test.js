@@ -12,6 +12,7 @@ test('headquarters persists across ordinary Pulses, edits its gallery, and can b
   try {
     const source = (await readFile(new URL('../lib/api-routes/tidbits/pulse-write.js', import.meta.url), 'utf8'))
       .replace('import { kv } from "@vercel/kv";', 'const kv = globalThis.__hqTestKv;')
+      .replace('import { notifyPulse } from "../../notifications/pulse.js";', 'const notifyPulse = async () => ({ skipped: true });')
       .replace('import { requireAdminSession } from "../../adminAuth.js";', 'const requireAdminSession = () => true;');
     const { default: write } = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
     const publish = async body => {

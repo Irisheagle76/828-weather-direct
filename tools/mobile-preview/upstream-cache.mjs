@@ -2,7 +2,7 @@
 export function previewTtl(url) {
   const route = url.searchParams.get("route");
   if (route === "substack-articles") return 30 * 60_000;
-  if (route === "weather") return 10 * 60_000;
+  if (route === "weather") return 60_000;
   if (["alerts/latest", "tidbits/pulse-feed"].includes(route)) return 2 * 60_000;
   return 5 * 60_000;
 }
@@ -21,7 +21,10 @@ export function createUpstreamCache({ fetchImpl = fetch, now = Date.now } = {}) 
     const request = (async () => {
       let response;
       try {
-        const upstream = await fetchImpl(`https://avlweather.com${key}`, { signal: AbortSignal.timeout(15_000) });
+        const upstreamUrl = canonical.pathname === "/data/hiking-guidance.json"
+          ? "https://raw.githubusercontent.com/Irisheagle76/828-weather-direct/main/public/data/hiking-guidance.json"
+          : `https://avlweather.com${key}`;
+        const upstream = await fetchImpl(upstreamUrl, { signal: AbortSignal.timeout(15_000) });
         response = { status: upstream.status, type: upstream.headers.get("content-type") || "application/json", body: Buffer.from(await upstream.arrayBuffer()) };
       } catch {
         response = { status: 503, type: "application/json", body: Buffer.from(JSON.stringify({ error: "Published feed unavailable" })) };

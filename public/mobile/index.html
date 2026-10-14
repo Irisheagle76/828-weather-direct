@@ -6,6 +6,8 @@
   <meta name="theme-color" content="#071a38" />
   <meta name="description" content="828 Weather Direct mobile prototype for Asheville and Western North Carolina." />
   <title>828 Weather Direct Mobile</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="/828-brand-card.png" />
   <link rel="stylesheet" href="./mobile.css" />
 </head>
 <body>
@@ -127,7 +129,7 @@
           </button>
           <button class="context-card" type="button" data-more-view="sunset">
             <span class="context-icon sun" aria-hidden="true">◒</span>
-            <span><small>Sunset Radiance</small><strong id="homeSunsetLabel">Sky context</strong><em id="homeSunsetMeta">Open tonight's read</em></span>
+            <span><small>Sky &amp; Sunset</small><strong id="homeSunsetLabel">Sky context</strong><em id="homeSunsetMeta">Open tonight's read</em></span>
           </button>
         </section>
       </section>
@@ -157,8 +159,12 @@
           </div>
           <div class="comfort-window" id="detailBestWindow" role="status"></div>
           <div class="comfort-buckets" id="detailBuckets"></div>
-          <details class="feelscore-info" id="detailPassed" hidden><summary>Earlier windows today</summary><p id="detailPassedContent"></p></details>
-          <details class="feelscore-info"><summary>More info · Understanding FEELSCORE</summary><p>FEELSCORE combines temperature, moisture, wind and weather into a 0–100 comfort score. Higher scores mean greater weather comfort—not a safety rating or a promise that every activity will be suitable.</p><p>Each time window shows the lowest and highest available hourly scores, not an average. Windows use Eastern time and end at the stated time: 5–9 AM means 5 AM up to, but not including, 9 AM. Gaps between your four windows are intentional.</p><p>Best Window is the strongest continuous two-hour stretch within these windows, ranked by its lowest hourly score. It is a relative best, not necessarily comfortable. Today uses only upcoming hours; elapsed windows are tucked below. Missing guidance is never filled with current conditions.</p></details>
+          <details class="feelscore-info"><summary>What is FEELSCORE? · 0–100 scale</summary><p><strong>100 is the top score.</strong> FeelScore turns the weather into one quick comfort read. It blends temperature, humidity, dew point, and wind so the number reflects how the air actually feels, not just what the thermometer says.</p><div class="mobile-score-explainer"><h3>What raises it</h3><p>Mild temperatures, lower dew points, manageable humidity, and a gentle breeze push the score higher.</p><h3>What lowers it</h3><p>Heat, sticky humidity, sharp cold, strong wind, or a raw damp feel pull the score down.</p><div class="comfort-scale">
+            <div class="comfort-band" style="--band-color:#7bd389"><b>90-100</b><span><strong>Ideal:</strong> Goldilocks weather! Easy air, comfortable temperatures, and very little weather friction.</span></div>
+            <div class="comfort-band" style="--band-color:#5aa7ff"><b>70-89</b><span><strong>Pleasant:</strong> Most people will feel comfortable outdoors. One condition, such as warmth, coolness, humidity, or wind, may be noticeable but not disruptive.</span></div>
+            <div class="comfort-band" style="--band-color:#ffd166"><b>55-69</b><span><strong>Noticeable Weather:</strong> Conditions are still generally manageable, but the weather begins to influence how being outside feels. Extra warmth, chill, humidity, or wind may affect comfort.</span></div>
+            <div class="comfort-band" style="--band-color:#ff944d"><b>40-54</b><span><strong>Challenging:</strong> Comfort starts to require adjustment. Many people will notice persistent heat, cold, humidity, wind, or dampness while outdoors.</span></div>
+            <div class="comfort-band" style="--band-color:#ff6b6b"><b>&lt;40</b><span><strong>Harsh:</strong> Weather conditions dominate the experience. Heat, cold, humidity, wind, or precipitation may significantly reduce outdoor comfort.</span></div></div></div><p>Each time window shows the lowest and highest available hourly scores, not an average. Windows use Eastern time and end at the stated time: 5–9 AM means 5 AM up to, but not including, 9 AM. Gaps between your four windows are intentional.</p><p>Best Window is the strongest continuous two-hour stretch within these windows, ranked by its lowest hourly score. It is a relative best, not necessarily comfortable. Today uses only upcoming hours; elapsed windows are omitted. Missing guidance is never filled with current conditions.</p></details>
         </section>
         <section class="panel regional-panel">
           <div class="panel-heading"><div><p class="kicker">Regional FEELSCORE</p><h2>Mountains &amp; Foothills</h2></div></div>
@@ -184,7 +190,7 @@
         <div class="screen-intro"><div><p class="eyebrow">828 products</p><h1 id="moreTitle">More</h1></div></div>
         <div class="more-menu" id="moreMenu">
           <button type="button" data-more-view="hiking"><span class="more-icon">△</span><span><strong>Hiking</strong><small>HikerScore and elevation-aware trail guidance</small></span><span>→</span></button>
-          <button type="button" data-more-view="sunset"><span class="more-icon sun">◒</span><span><strong>Sunset Radiance</strong><small>Tonight's sky, timing and viewing context</small></span><span>→</span></button>
+          <button type="button" data-more-view="sunset"><span class="more-icon sun">◒</span><span><strong>Sky &amp; Sunset</strong><small>Sky Now, atmosphere and sunset timing</small></span><span>→</span></button>
           <button type="button" data-more-view="update"><span class="more-icon update">W</span><span><strong>828 Weather Update</strong><small>Tim's medium- and longer-range outlooks</small></span><span>→</span></button>
         </div>
 
@@ -193,10 +199,7 @@
           <div id="moreDetailContent"></div>
         </section>
 
-        <section class="future-products panel">
-          <p class="kicker">Built to expand</p>
-          <p>Asheville Microscope, Fall Explorer, Undercast Alert and future 828 products can join this shelf later.</p>
-        </section>
+        <section class="panel notification-settings"><p class="kicker">Notifications</p><h2>Choose your updates</h2><p>Receive updates even when the app is closed.</p><label><input type="checkbox" id="notifyAlerts" /> <span><strong>828 Weather Bulletin</strong><small>Notable to urgent weather events · infrequent</small><small>Tim’s updates on approaching winter storms, tropical systems, extreme heat or cold, and major pattern changes.</small></span></label><label><input type="checkbox" id="notifyPulse" /> <span><strong>828 Pulse Updates</strong><small>Daily to semi-daily</small><small>Quick observations, radar updates and notes on how the weather is unfolding.</small></span></label><button type="button" id="saveNotifications" class="product-link">Enable selected notifications</button><button type="button" id="disableNotifications" class="back-button">Turn notifications off</button><button type="button" id="testNotifications" class="back-button">Send a test to this device</button><p id="notificationStatus" role="status"></p></section>
       </section>
     </main>
 

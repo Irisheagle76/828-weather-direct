@@ -1,3 +1,4 @@
+import hikingCurrent from "../../lib/api-routes/hiking/current.js";
 import http from "node:http";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -16,6 +17,7 @@ async function servePublished(url, res) {
 const root = fileURLToPath(new URL("../../public/", import.meta.url));
 const types = { ".html": "text/html", ".css": "text/css", ".js": "text/javascript", ".json": "application/json", ".png": "image/png", ".jpg": "image/jpeg", ".svg": "image/svg+xml" };
 startChamberSnapshots();
+
 http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, "http://127.0.0.1:4174");
@@ -31,14 +33,23 @@ http.createServer(async (req, res) => {
     }
     // Local previews consume the same published hiking snapshot as production.
     if (url.pathname === "/data/hiking-guidance.json") {
+      try {
+        const body = await fs.readFile(path.join(root, 'data/hiking-guidance.json'));
+        const data = JSON.parse(body);
+        const age = Date.now() - Date.parse(data.generatedAt);
+        if (Number.isFinite(age) && age >= 0 && age < 90 * 60 * 1000) {
+          res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+          return res.end(body);
+        }
+      } catch {}
       return await servePublished(url, res);
     }
     if (url.pathname === "/api/router") {
-      if (["tempest/temperature-comparison", "mobile/feelscore-map"].includes(url.searchParams.get("route"))) {
+      if (["tempest/temperature-comparison", "mobile/feelscore-map", "hiking/current"].includes(url.searchParams.get("route"))) {
         req.query = Object.fromEntries(url.searchParams);
         res.status = code => { res.statusCode = code; return res; };
         res.json = data => { res.setHeader("Content-Type", "application/json"); res.end(JSON.stringify(data)); };
-        return await (url.searchParams.get("route") === "mobile/feelscore-map" ? feelscoreMap : comparison)(req, res);
+        return await (url.searchParams.get("route") === "hiking/current" ? hikingCurrent : url.searchParams.get("route") === "mobile/feelscore-map" ? feelscoreMap : comparison)(req, res);
       }
       return await servePublished(url, res);
     }
