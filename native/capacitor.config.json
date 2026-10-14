@@ -1,0 +1,8 @@
+{
+  "appId": "com.avlweather.app",
+  "appName": "828 Weather",
+  "webDir": "www",
+  "loggingBehavior": "debug",
+  "backgroundColor": "#071a38",
+  "plugins": { "CapacitorHttp": { "enabled": true } }
+}

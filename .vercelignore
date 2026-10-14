@@ -5,3 +5,5 @@ vercel-dev*.log
 radar-preview*.png
 
 .tmp*
+
+native/
