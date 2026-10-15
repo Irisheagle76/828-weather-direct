@@ -5,6 +5,7 @@ export const CAMERAS = [
   { id: "west", name: "Asheville · Western sky", context: "Watch the western horizon and approaching cloud cover.", image: "https://i.ytimg.com/vi/UxUU3Fc1vBw/maxresdefault_live.jpg", href: "https://www.youtube.com/watch?v=UxUU3Fc1vBw", mountain: false },
   { id: "chamber", name: "Asheville Chamber of Commerce", context: "A wide southwest-facing view toward Mount Pisgah.", embed: "https://plyhearst.videstra.live/?id=674b5cf0-55b3-49e2-a8da-bb57ce2ece92_8UIJMXTyGjrwwXziaJUoFLf9hWifZbKVtWF5D_&token=kswZPhLz4beUpNJK7w4Fgl8eu", href: "https://plyhearst.videstra.live/?id=674b5cf0-55b3-49e2-a8da-bb57ce2ece92_8UIJMXTyGjrwwXziaJUoFLf9hWifZbKVtWF5D_&token=kswZPhLz4beUpNJK7w4Fgl8eu", mountain: false },
   { id: "tower", name: "UNC Asheville Tower", context: "The latest south-facing view from the UNC Asheville Weather Tower.", image: "https://www.atms.unca.edu/currwx/towercam.jpg", href: "https://www.atms.unca.edu/currwx/towercam.jpg", mountain: false },
+  { id: "fairview", name: "Fairview toward Swannanoa", context: "A north-facing view from southeast of Asheville. Clouds over these ridges may differ from the sky over downtown.", image: "https://images.ambientweather.net/308398A68945/latest.jpg", href: "https://images.ambientweather.net/308398A68945/latest.jpg", label: "2,435 ft · North-facing regional view", mountain: false },
   { id: "mitchell", name: "Mount Mitchell", context: "A summit-level check on visibility and low cloud.", image: "https://nchighpeaks.org/cam11/up/image.jpg", href: "https://nchighpeaks.org/cam11/cam11view.php", mountain: true },
   { id: "waynesville", name: "Waynesville mountain camera", context: "Haywood County valley and ridge view for checking cloud base, mountain visibility, precipitation, and seasonal hiking conditions.", image: "https://images.ambientweather.net/083A8DFB4D15/latest.jpg", href: "https://www.wunderground.com/dashboard/pws/KNCWAYNE276", label: "4,009 ft · Forest-framed mountain view", linkLabel: "Open current weather ↗", mountain: true }
 ];
@@ -13,6 +14,10 @@ export function cameraCards(cameras = CAMERAS.filter(camera => !camera.mountain)
   // Match the desktop Tower cache bucket; use one identical URL for preview/link.
   const towerBucket = Math.floor(Date.now() / (15 * 60 * 1000));
   cameras = cameras.map(camera => {
+    if (camera.id === "fairview") {
+      const image = camera.image + "?v=" + Math.floor(Date.now() / 60000);
+      return { ...camera, image, href: image };
+    }
     if (camera.id !== "tower") return camera;
     const image = `${camera.image}${camera.image.includes("?") ? "&" : "?"}v=${towerBucket}`;
     return { ...camera, image, href: image };
