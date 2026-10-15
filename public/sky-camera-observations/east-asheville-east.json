@@ -1,9 +1,9 @@
 {
   "source": "east-asheville-east",
   "status": "ok",
-  "observedAt": "2026-10-15T21:47:43.088Z",
+  "observedAt": "2026-10-15T23:55:14.755Z",
   "timestampBasis": "received",
-  "attemptedAt": "2026-10-15T21:47:43.088Z",
-  "sha256": "f544f234ff5e441bd419ab77f0de3e840ffc55d0844143ea04d20991cfa4187d",
+  "attemptedAt": "2026-10-15T23:55:14.755Z",
+  "sha256": "eedfe80996c7a6837d886ac555aa48b2dfdc5919cf8eecc6d42397396bb8b881",
   "videoId": "qFAyk-cREVU"
 }
