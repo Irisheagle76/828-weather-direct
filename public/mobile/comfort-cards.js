@@ -1,4 +1,5 @@
-export function renderComfortCard(bucket,{best=false,formatTime,escapeHtml}){
+import {hourlyWeather} from './hourly-weather.js';
+export function renderComfortCard(bucket,{best=false,formatTime,escapeHtml,weatherFor=hourlyWeather}){
   const range=(min,max)=>min==null?'—':min===max?String(min):min+'–'+max;
   const score=range(bucket.min,bucket.max);
   const temperature=range(bucket.tempMin,bucket.tempMax);
@@ -9,7 +10,10 @@ export function renderComfortCard(bucket,{best=false,formatTime,escapeHtml}){
     '<div class="bucket-metrics"><div class="bucket-metric bucket-air"><span class="bucket-metric-label">Temperature</span><strong class="bucket-metric-value">'+temperature+(bucket.tempMin==null?'':'<span class="bucket-unit">°F</span>')+'</strong><small>Forecast air temperature</small></div>'+
     '<div class="bucket-metric bucket-comfort"><span class="bucket-metric-label">FEELSCORE</span><strong class="bucket-metric-value">'+score+'<span class="bucket-unit">/100</span></strong><small>Outdoor comfort index</small></div></div>'+
     '<p class="bucket-verdict">'+quality+'<span>Higher score = more comfortable</span></p>'+
-    '<details class="bucket-detail"><summary>Explore hour by hour</summary><div class="bucket-hourly"><div class="bucket-hourly-heading"><span>Time</span><span>Temp °F</span><span>FEELSCORE</span></div>'+
-    bucket.points.map(point=>'<div><span>'+escapeHtml(formatTime(point.hour.timestamp))+'</span><strong>'+(Number.isFinite(point.hour.temperatureF)?Math.round(point.hour.temperatureF)+'°F':'—')+'</strong><span>'+Math.round(point.score*10)+'/100</span></div>').join('')+
+    '<details class="bucket-detail"><summary>Explore hour by hour</summary><div class="bucket-hourly"><div class="bucket-hourly-heading"><span>Time</span><span>Sky</span><span>Temp °F</span><span>FEELSCORE</span></div>'+
+    bucket.points.map(point=>{
+      const weather=weatherFor(point.hour);
+      return '<div><span class="hourly-time">'+escapeHtml(formatTime(point.hour.timestamp))+(weather.probability>=20?'<small class="hourly-precip" aria-label="'+weather.probability+' percent chance of precipitation">💧 '+weather.probability+'% precip</small>':'')+'</span><span class="hourly-weather" role="img" aria-label="'+escapeHtml(weather.label)+'" title="'+escapeHtml(weather.label)+'">'+weather.icon+'</span><strong>'+(Number.isFinite(point.hour.temperatureF)?Math.round(point.hour.temperatureF)+'°F':'—')+'</strong><span>'+Math.round(point.score*10)+'/100</span></div>';
+    }).join('')+
     '</div>'+(bucket.min==null?'':'<p>'+escapeHtml(bucket.takeaway)+'</p>')+'</details></section>';
 }

@@ -448,3 +448,8 @@ button:focus-visible, a:focus-visible { outline: 3px solid #ff9e55; outline-offs
 @media(min-width:601px) { .bucket-heading { flex-wrap:wrap; }.bucket-best { width:100%; } }
 
 .comfort-buckets { grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr)); }
+
+.bucket-hourly > div { grid-template-columns:minmax(0,1fr) 30px auto auto;gap:8px;align-items:center; }
+.hourly-weather { text-align:center;font-size:1.35rem;line-height:1.3; }
+.hourly-time { min-width:0; }
+.bucket-hourly .hourly-precip { display:block;margin-top:4px;color:#1457a3;font-size:.62rem;font-weight:750;white-space:nowrap; }

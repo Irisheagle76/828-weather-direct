@@ -1,3 +1,4 @@
+import { hourlyWeather } from './hourly-weather.js';
 import { renderComfortCard } from './comfort-cards.js';
 import { initNotificationSettings } from './notifications.js';
 import { mobileRadiance } from './radiance.js';
@@ -284,7 +285,7 @@ function renderFeelScoreDetail() {
   const best = bestComfortWindow(buckets);
   $("#detailBestWindow").textContent = best ? `Best Window · ${formatTime(best.start)}–${formatTime(best.end)} · FEELSCORE ${best.min === best.max ? best.min : `${best.min}–${best.max}`}${best.min < 70 ? " · best available, but comfort is limited" : ""}` : "Best Window unavailable · not enough continuous hourly guidance.";
   const active = buckets.filter(b=>!b.passed && !(b.partial && b.count === 0));
-  const cards = active.map(bucket => renderComfortCard(bucket, {best:best?.name === bucket.name,formatTime,escapeHtml})).join("");
+  const cards = active.map(bucket => renderComfortCard(bucket, {best:best?.name === bucket.name,formatTime,escapeHtml,weatherFor:hour=>hourlyWeather(hour,state.weather?.daily || [])})).join("");
   $("#detailBuckets").innerHTML = cards ? '<p class="comfort-pair-explainer"><strong>Degrees tell you the temperature.</strong> FEELSCORE rates outdoor comfort from 0–100, using temperature, moisture, wind and weather.</p>' + cards : `<p>No remaining time windows today.</p>`;
 }
 
