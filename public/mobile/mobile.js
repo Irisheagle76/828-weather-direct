@@ -1,3 +1,5 @@
+import { hourlyWeather } from './hourly-weather.js';
+import { renderComfortCard } from './comfort-cards.js';
 import { initNotificationSettings } from './notifications.js';
 import { mobileRadiance } from './radiance.js';
 import { sunPositionCard } from "./sun-position.js";
@@ -283,8 +285,8 @@ function renderFeelScoreDetail() {
   const best = bestComfortWindow(buckets);
   $("#detailBestWindow").textContent = best ? `Best Window · ${formatTime(best.start)}–${formatTime(best.end)} · FEELSCORE ${best.min === best.max ? best.min : `${best.min}–${best.max}`}${best.min < 70 ? " · best available, but comfort is limited" : ""}` : "Best Window unavailable · not enough continuous hourly guidance.";
   const active = buckets.filter(b=>!b.passed && !(b.partial && b.count === 0));
-  const cards = active.map(bucket => `<section class="comfort-bucket comfort-period-${bucket.name.toLowerCase().replaceAll(" ", "-")}${best?.name === bucket.name ? " is-best" : ""}"><span class="comfort-period-emoji" aria-hidden="true">${({Morning:"🌅", "Early afternoon":"☀️", Evening:"🌇", "Late night":"🌙"})[bucket.name] || "🌤️"}</span><strong>${bucket.name}${best?.name === bucket.name ? " ★" : ""}</strong><small>${bucket.label}${bucket.partial && bucket.min != null ? " · remaining hours" : ""}</small><div class="bucket-score-inset"><span class="bucket-score">${bucket.min == null ? bucket.partial ? "Almost over" : "Unavailable" : bucket.min === bucket.max ? bucket.min : `${bucket.min}–${bucket.max}`}</span><small>${bucket.min != null ? "out of 100 · FEELSCORE" : bucket.partial ? "No full hourly reading remains in this window." : "Hourly guidance missing"}</small></div><div class="bucket-temperature"><span>Forecast temperature</span><strong>${bucket.tempMin == null ? "Unavailable" : bucket.tempMin === bucket.tempMax ? `${bucket.tempMin}°F` : `${bucket.tempMin}–${bucket.tempMax}°F`}</strong></div><details class="bucket-detail"><summary>Hourly temperatures &amp; comfort</summary><div class="bucket-hourly">${bucket.points.map(point => `<div><span>${escapeHtml(formatTime(point.hour.timestamp))}</span><strong>${Number.isFinite(point.hour.temperatureF) ? `${Math.round(point.hour.temperatureF)}°F` : "—"}</strong><span>FS ${Math.round(point.score*10)}/100</span></div>`).join("")}</div>${bucket.min != null ? `<p>${escapeHtml(bucket.takeaway)}</p><small>${bucket.count} hourly ${bucket.count === 1 ? "reading" : "readings"}${bucket.count < bucket.end-bucket.start && !bucket.partial ? " · limited coverage" : ""}</small>` : ""}</details></section>`).join("");
-  $("#detailBuckets").innerHTML = cards || `<p>No remaining time windows today.</p>`;
+  const cards = active.map(bucket => renderComfortCard(bucket, {best:best?.name === bucket.name,formatTime,escapeHtml,weatherFor:hour=>hourlyWeather(hour,state.weather?.daily || [])})).join("");
+  $("#detailBuckets").innerHTML = cards ? '<p class="comfort-pair-explainer"><strong>Degrees tell you the temperature.</strong> FEELSCORE rates outdoor comfort from 0–100, using temperature, moisture, wind and weather.</p>' + cards : `<p>No remaining time windows today.</p>`;
 }
 
 function extractForecastUpdate(forecast = {}) {
@@ -465,6 +467,7 @@ async function renderMoreView(view) {
   try {
     if (view === "hiking") {
       const payload = await loadHiking();
+      if (renderId !== detailRenderId || location.hash !== "#more") return;
       const g = payload.guidance || {};
       target.innerHTML = `<section class="panel more-hero"><p class="kicker">HikerScore</p><h2>${Number.isFinite(Number(g.hikerScore)) ? Math.round(Number(g.hikerScore)) : "--"} · ${escapeHtml(g.hikerScoreLabel || g.overall || "Trail guidance")}</h2><p>${escapeHtml(g.bestWindow || g.hikerNarrative || "Mountain conditions are updating.")}</p></section><section class="panel"><p class="kicker">Recommended elevation</p><h2>${escapeHtml(elevationRecommendation(g))}</h2><div class="more-stats"><div><span>Peak gust</span><strong>${Number.isFinite(Number(g.maxGust)) ? `${Math.round(Number(g.maxGust))} mph` : "--"}</strong></div><div><span>Mount Mitchell vs Asheville</span><strong>${Number.isFinite(Number(g.mitchellDrop)) ? `${Math.abs(Math.round(Number(g.mitchellDrop)))}°F ${Number(g.mitchellDrop) >= 0 ? "cooler" : "warmer"}` : "--"}</strong></div><div><span>Cloud / visibility</span><strong>${escapeHtml(g.fogRisk || "--")}</strong></div><div><span>Temperature range around Asheville</span><strong>${Number.isFinite(Number(g.localTempSpread)) ? `${Math.round(Number(g.localTempSpread))}°F` : "--"}</strong></div></div><p class="body-copy"><strong>Mount Mitchell vs Asheville:</strong> compares the summit station with the average of reporting Asheville-area stations. A cooler summit can mean packing an extra layer.</p><p class="body-copy"><strong>Temperature range around Asheville:</strong> the difference between the warmest and coolest reporting local stations. Larger differences mean local conditions vary more; your trail may differ.</p><a class="product-link" href="/hiking.html">Open full Hiking Guidance →</a></section>`;
       const score = typeof g.hikerScore === "number" && Number.isFinite(g.hikerScore) ? Math.min(100, Math.max(0, Math.round(g.hikerScore))) : null;
@@ -530,13 +533,14 @@ async function renderMoreView(view) {
         <section class="panel"><p class="kicker">Atmosphere Now · North Downtown</p><p>${escapeHtml(atmosphere.summary)}</p><div class="atmosphere-grid">${atmosphere.cards.map((card,index) => `<article class="atmosphere-card atmosphere-card-${index}"><span class="atmosphere-icon" aria-hidden="true">${["💧","☀","➜","☂","ϟ"][index]}</span><h3>${escapeHtml(card.title)}</h3><strong class="atmosphere-value">${escapeHtml(card.value)}</strong><details><summary>What this means</summary><p>${escapeHtml(card.detail)}</p></details></article>`).join("")}</div></section>
         ${outlook}<section class="panel sunset-visual"><p class="kicker">Sunset Radiance</p><div class="sunset-horizon" aria-hidden="true"><span class="sunset-orb"></span><span class="sunset-ridge"></span></div><h2>${timing.sunset ? `Sunset ${escapeHtml(formatTime(timing.sunset))}` : "Sunset timing unavailable"}</h2><div class="sunset-timeline"><span><small>Window opens</small><strong>${timing.start ? escapeHtml(formatTime(timing.start)) : "Unavailable"}</strong></span><span><small>Sunset</small><strong>${timing.sunset ? escapeHtml(formatTime(timing.sunset)) : "Unavailable"}</strong></span><span><small>Window ends</small><strong>${timing.end ? escapeHtml(formatTime(timing.end)) : "Unavailable"}</strong></span></div><p>Best viewing window: ${timing.start ? `${escapeHtml(formatTime(timing.start))}–${escapeHtml(formatTime(timing.end))}` : "Unavailable"}. Color may be brief.</p><a class="product-link" href="/828-sunset-radiance.html">Open full Sky &amp; Sunset and Radiance score →</a></section><section class="panel"><a class="product-link" href="#live">See the cameras in Live Look →</a></section>`;
     } else if (view === "live") {
-      target.innerHTML = `<section class="panel more-hero"><p class="kicker"><span class="pulse-beacon" aria-hidden="true"></span> Live Look</p><h2>See what the sky is doing.</h2><p>Three perspectives on the Asheville sky.</p></section><section class="panel product-status"><p>Tap a view to open its camera source. The Chamber live player loads on request. Image capture times are not verified; a loaded preview may still be old.</p></section>${cameraCards()}`;
+      target.innerHTML = `<section class="panel more-hero"><p class="kicker"><span class="pulse-beacon" aria-hidden="true"></span> Live Look</p><h2>See what the sky is doing.</h2><p>Camera views across Asheville and the surrounding mountains.</p></section><section class="panel product-status"><p>Tap a view to open its camera source. The Chamber live player loads on request. Image capture times are not verified; a loaded preview may still be old.</p></section>${cameraCards()}`;
     } else {
       const article = state.article;
       target.innerHTML = article?.link ? `<a class="panel editorial-card" href="${escapeHtml(article.link)}" target="_blank" rel="noopener noreferrer"><img src="${escapeHtml(article.ogImage || "/images/828-brand-card.png")}" alt="${escapeHtml(article.title || "828 Weather Update")} cover art" /><span class="editorial-body"><span class="kicker">Latest 828 Weather Update</span><strong class="panel-title">${escapeHtml(article.title || "828 Weather Update")}</strong><span class="body-copy">${escapeHtml(articleExcerpt(article.description))}</span><span class="editorial-meta">${escapeHtml(formatDate(article.pubDate, { year: "numeric" }))} · Read on Substack →</span></span></a>` : `<div class="empty-state">The latest 828 Weather Update is temporarily unavailable. <a href="https://timothyballisty.substack.com" target="_blank" rel="noopener noreferrer">Open the publication</a>.</div>`;
     }
     bindCameraFailures(target);
   } catch (error) {
+    if (renderId !== detailRenderId || location.hash !== "#more") return;
     console.warn(`${view} detail unavailable`, error);
     target.innerHTML = `<div class="empty-state error-note">This product is temporarily unavailable. Please try again shortly.</div>`;
   }
@@ -561,7 +565,15 @@ async function loadRegional() {
   }
 }
 
+function showMoreMenu() {
+  $("#moreDetail").hidden = true;
+  $("#moreMenu").hidden = false;
+  $(".notification-settings").hidden = false;
+}
+
 function navigate(destination, { updateHash = true } = {}) {
+  ++detailRenderId;
+  if (destination === "more") showMoreMenu();
   if (!$("#screen-" + destination)) destination = "home";
   $$(".screen").forEach((screen) => { const active = screen.dataset.screen === destination; screen.hidden = !active; screen.classList.toggle("is-active", active); });
   $$("[data-destination]", $(".bottom-nav")).forEach((button) => { const active = button.dataset.destination === destination; button.classList.toggle("is-active", active); if (active) button.setAttribute("aria-current", "page"); else button.removeAttribute("aria-current"); });
@@ -570,7 +582,7 @@ function navigate(destination, { updateHash = true } = {}) {
   if (destination === "feelscore") loadRegional().catch((error) => console.warn("Regional FEELSCORE unavailable", error));
   if (destination === "live") {
     const target = $("#liveLookContent");
-    target.innerHTML = `<section class="panel more-hero"><h2>See what the sky is doing.</h2><p>Three perspectives on the Asheville sky.</p></section>${cameraCards()}`;
+    target.innerHTML = `<section class="panel more-hero"><h2>See what the sky is doing.</h2><p>Camera views across Asheville and the surrounding mountains.</p></section>${cameraCards()}`;
     bindCameraFailures(target);
   }
   $("#mainContent").focus({ preventScroll: true });
@@ -609,7 +621,7 @@ async function loadCore({ force = false, announce = false } = {}) {
 function bindEvents() {
   $$('[data-destination]').forEach((control) => control.addEventListener("click", (event) => { if (control.tagName === "A") event.preventDefault(); navigate(control.dataset.destination); }));
   $$('[data-more-view]').forEach((control) => control.addEventListener("click", () => { navigate("more"); renderMoreView(control.dataset.moreView); }));
-  $("#moreBack").addEventListener("click", () => { $("#moreDetail").hidden = true; $("#moreMenu").hidden = false; $(".notification-settings").hidden = false; });
+  $("#moreBack").addEventListener("click", () => navigate("more"));
   $("#refreshButton").addEventListener("click", () => loadCore({ force: true, announce: true }));
   $$('[data-feelscore-day]').forEach((button) => button.addEventListener("click", () => {
     state.activeDay = button.dataset.feelscoreDay;
