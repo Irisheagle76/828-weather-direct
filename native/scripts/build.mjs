@@ -20,7 +20,8 @@ const plugin={
     });
   }
 };
-await build({entryPoints:[path.join(nativeRoot,'src','entry.js')],bundle:true,format:'esm',platform:'browser',target:['es2022'],outfile:path.join(output,'app.js'),plugins:[plugin],metafile:true}).then(async result=>{
+const androidPushConfigured=await fs.access(path.join(nativeRoot,'android/app/google-services.json')).then(()=>true).catch(()=>false);
+await build({define:{__ANDROID_PUSH_CONFIGURED__:JSON.stringify(androidPushConfigured)},entryPoints:[path.join(nativeRoot,'src','entry.js')],bundle:true,format:'esm',platform:'browser',target:['es2022'],outfile:path.join(output,'app.js'),plugins:[plugin],metafile:true}).then(async result=>{
   await fs.writeFile(path.join(output,'build-inputs.json'),JSON.stringify(Object.keys(result.metafile.inputs).map(p=>path.relative(path.resolve(nativeRoot,'..'),path.resolve(p))),null,2));
 });
 let html=await fs.readFile(path.join(publicRoot,'mobile','index.html'),'utf8');

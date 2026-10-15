@@ -19,7 +19,7 @@ test('packaged interface is local and omits admin pages and browser push registr
   assert.match(html,/src=".\/app.js"/);
   assert.doesNotMatch(html,/src=".\/mobile.js"/);
   assert.doesNotMatch(bundle,/serviceWorker.register/);
-  assert.match(bundle,/Native app notifications are being connected/);
+  assert.match(bundle,/Android notifications are awaiting/);
   const inputs=JSON.parse(await fs.readFile(new URL('../www/build-inputs.json',import.meta.url)));
   assert.ok(inputs.some(p=>p.replaceAll('\\','/').includes('public/mobile/mobile.js')));
   assert.ok(inputs.every(p=>!/(^|[\\/])(admin|lib|api)([\\/])|\.env/.test(p)));

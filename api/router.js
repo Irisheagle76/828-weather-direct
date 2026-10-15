@@ -17,6 +17,7 @@ const routes = {
   "hiking/current": () => import("../lib/api-routes/hiking/current.js"),
   "notifications/public-key": () => import("../lib/api-routes/notifications/public-key.js"),
   "notifications/status": () => import("../lib/api-routes/notifications/status.js"),
+  "notifications/native": () => import("../lib/api-routes/notifications/native.js"),
   "notifications/test": () => import("../lib/api-routes/notifications/test.js"),
   "notifications/subscribe": () => import("../lib/api-routes/notifications/subscribe.js"),
   "nowcast/current": () => import("../lib/api-routes/nowcast/current.js"),
