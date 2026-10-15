@@ -22,19 +22,42 @@ export function cameraCards(cameras = CAMERAS.filter(camera => !camera.mountain)
     : `<a class="panel live-look-card" href="${camera.href}" target="_blank" rel="noopener noreferrer"><div class="live-look-image"><img loading="lazy" decoding="async" src="${camera.image}" alt="${camera.name} camera view" /><span class="camera-unavailable" hidden>Camera preview unavailable · tap to check source</span></div><div class="live-look-copy"><p class="kicker">${camera.label || "Camera view"}</p><h2>${camera.name}</h2><p>${camera.context}</p><span class="product-link">${camera.linkLabel || "Open camera source ↗"}</span></div></a>`).join("")}</div>`;
 }
 
+const cameraRefreshTimers = new WeakMap();
+
 export function bindCameraFailures(root) {
+  if (cameraRefreshTimers.has(root)) clearInterval(cameraRefreshTimers.get(root));
   root.querySelectorAll("[data-camera-id]").forEach(button => {
     button.setAttribute("aria-label", "Open Asheville Chamber of Commerce live camera in a new tab");
     button.title = "Watch live in a new tab";
   });
   const captureTime = root.querySelector(".snapshot-time");
-  if (captureTime) fetch(localPreview ? "/mobile-preview/chamber-status.json" : `${chamberPublished}chamber-southwest.json`, { cache: "no-store" }).then(response => {
+  let refreshing = false;
+  const refresh = async () => {
+    if (!captureTime || refreshing || document.hidden || root.closest(".screen")?.hidden) return;
+    refreshing = true;
+    try { await fetch(localPreview ? "/mobile-preview/chamber-status.json" : `${chamberPublished}chamber-southwest.json`, { cache: "no-store" }).then(response => {
     if (!response.ok) throw new Error("Unavailable");
     return response.json();
-  }).then(status => {
+  }).then(async status => {
     const captured = Date.parse(status.capturedAt || status.observedAt);
+    const image = root.querySelector(".snapshot-camera img");
+    if (image && Number.isFinite(captured) && image.dataset.capture !== String(captured)) {
+      const url = localPreview ? "/mobile-preview/chamber.jpg?t=" + captured : chamberPublished + "chamber-southwest.jpg?t=" + (status.sha256 || captured);
+      await new Promise((resolve, reject) => { const preview = new Image(); const timer = setTimeout(() => reject(Error("Camera refresh timed out")), 12000); preview.onload = () => { clearTimeout(timer); resolve(); }; preview.onerror = () => { clearTimeout(timer); reject(Error("Camera refresh failed")); }; preview.src = url; });
+      if (!image.isConnected) return;
+      image.src = url; image.hidden = false; image.dataset.capture = String(captured);
+      const fallback = image.parentElement.querySelector(".snapshot-fallback");
+      if (fallback) fallback.hidden = true;
+    }
     captureTime.textContent = Number.isFinite(captured) ? `Captured ${new Date(captured).toLocaleString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" })}${Date.now() - captured > 10 * 60000 || status.refreshFailed || (status.status && status.status !== "ok") ? " · OLDER IMAGE — check live camera" : ` · ${Math.max(0, Math.floor((Date.now() - captured) / 60000))} min ago`}` : "Still capture unavailable · tap to watch live";
-  }).catch(() => { captureTime.textContent = "Still capture unavailable · tap to watch live"; });
+  });
+    } catch { if (!captureTime.textContent.startsWith("Captured")) captureTime.textContent = "Capture time unavailable · tap to watch live"; }
+    finally { refreshing = false; }
+  };
+  refresh();
+  const timer = setInterval(() => { if (!root.isConnected) { clearInterval(timer); return; } refresh(); }, 60000);
+  cameraRefreshTimers.set(root, timer);
+
   root.querySelectorAll("[data-camera-id]").forEach(button => button.addEventListener("click", () => {
     const camera = CAMERAS.find(entry => entry.id === button.dataset.cameraId);
     window.open(camera.href, "_blank", "noopener,noreferrer");
