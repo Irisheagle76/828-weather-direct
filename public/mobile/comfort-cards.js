@@ -13,7 +13,7 @@ export function renderComfortCard(bucket,{best=false,formatTime,escapeHtml,weath
     '<details class="bucket-detail"><summary>Explore hour by hour</summary><div class="bucket-hourly"><div class="bucket-hourly-heading"><span>Time</span><span>Sky</span><span>Temp °F</span><span>FEELSCORE</span></div>'+
     bucket.points.map(point=>{
       const weather=weatherFor(point.hour);
-      return '<div><span class="hourly-time">'+escapeHtml(formatTime(point.hour.timestamp))+(weather.probability>=20?'<small class="hourly-precip" aria-label="'+weather.probability+' percent chance of precipitation">💧 '+weather.probability+'% precip</small>':'')+'</span><span class="hourly-weather" role="img" aria-label="'+escapeHtml(weather.label)+'" title="'+escapeHtml(weather.label)+'">'+weather.icon+'</span><strong>'+(Number.isFinite(point.hour.temperatureF)?Math.round(point.hour.temperatureF)+'°F':'—')+'</strong><span>'+Math.round(point.score*10)+'/100</span></div>';
+      return '<div><span class="hourly-time">'+escapeHtml(formatTime(point.hour.timestamp))+(weather.probability>=20?'<small class="hourly-precip" aria-label="'+weather.probability+' percent chance of precipitation">💧 '+weather.probability+'% precip</small>':'')+'</span><span class="hourly-weather" role="img" aria-label="'+escapeHtml(weather.label)+'" title="'+escapeHtml(weather.label)+'">'+weather.icon+'</span><strong>'+(Number.isFinite(point.hour.temperatureF)?Math.round(point.hour.temperatureF)+'°F':'—')+'</strong><span class="hourly-score" aria-label="FEELSCORE '+Math.round(point.score*10)+'/100"><b>'+Math.round(point.score*10)+'</b><small>/100</small></span></div>';
     }).join('')+
     '</div>'+(bucket.min==null?'':'<p>'+escapeHtml(bucket.takeaway)+'</p>')+'</details></section>';
 }
