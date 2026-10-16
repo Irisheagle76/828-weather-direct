@@ -879,7 +879,8 @@ export async function updateHikingGuidance({ outputPath = jsonPath, fetcher = fe
   // Fetch errors can include authenticated URLs. Keep secrets out of logs and artifacts.
   const safeMessage = (value) => {
     let message = String(value);
-    for (const secret of Object.values(credentials).filter(Boolean)) {
+    const secrets = Object.entries(credentials).filter(([name, value]) => /key|token/i.test(name) && value).map(([, value]) => value);
+    for (const secret of secrets) {
       message = message.split(secret).join("[redacted]").split(encodeURIComponent(secret)).join("[redacted]");
     }
     return message.replace(/https?:\/\/[^\s"'<>]+/g, "[upstream URL redacted]");
@@ -899,8 +900,11 @@ export async function updateHikingGuidance({ outputPath = jsonPath, fetcher = fe
     };
     logger.info(JSON.stringify({ event: "hiking_refresh_coverage", ...quality }));
     for (const failure of quality.failures) {
+      const ownerStation = credentials.tempestToken && failure.id === `tempest-${credentials.tempestStationId}`;
       const hint = failure.provider === "tempest" && /401|403/.test(failure.reason)
-        ? "WeatherFlow rejected authorization; verify or replace the WEATHERFLOW_API_KEY GitHub Actions secret. JCC_TEMPEST_TOKEN only supplies the North Downtown station."
+        ? ownerStation
+          ? "Tempest rejected the residence station token; verify TEMPEST_TOKEN and TEMPEST_STATION_ID."
+          : "WeatherFlow rejected authorization; verify or replace the WEATHERFLOW_API_KEY GitHub Actions secret. Personal station tokens only supply their configured owner stations."
         : undefined;
       logger.warn(JSON.stringify({ event: "hiking_feed_failure", ...failure, hint }));
     }

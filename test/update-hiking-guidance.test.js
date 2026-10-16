@@ -34,7 +34,7 @@ function upstream({ rejectTempest = false, staleStation = null, lightning = fals
           lightning_strike_count_last_1hr: lightning ? 1 : 0
         }] });
       }
-      if (rejectTempest) return response({}, 401);
+      if (rejectTempest && url.searchParams.get("token") !== "home-secret") return response({}, 401);
       const stationId = url.searchParams.get("station_id");
       return response({ current_conditions: {
         time: NOW / 1000 - (stationId === staleStation ? 7200 : 0),
@@ -90,6 +90,47 @@ test("full coverage retains the current guidance, lightning alerts, and Mountain
   assert.doesNotMatch(payload.guidance.hikerNarrative, /Limited station coverage/);
   assert.deepEqual(payload.stations.find((s) => s.provider === "composite").componentStationIds, ["KNCBURNS29", "KNCBURNS30"]);
   assert.equal(context.logs.filter((log) => log.level === "warn").length, 0);
+});
+
+test("residence 127602 uses its owner token while JCC and other Tempest sources retain their credential paths", async (t) => {
+  const requests = [];
+  const provider = upstream({ rejectTempest: true });
+  const context = await refresh(t, {
+    credentials: { ...credentials, tempestToken: "home-secret", tempestStationId: "127602" },
+    fetcher: async (input, options) => {
+      const url = new URL(input);
+      if (url.hostname === "swd.weatherflow.com") requests.push(url);
+      return provider(input, options);
+    }
+  });
+  const payload = await context.run();
+  assert.equal(payload.quality.availableStations, 9);
+  assert.equal(payload.quality.failures.length, 8);
+  assert.equal(payload.stations.find((s) => s.id === "tempest-127602").health.usable, true);
+  assert.equal(payload.stations.find((s) => s.id === "tempest-144737").health.usable, true);
+  const ownerRequests = requests.filter((url) => url.searchParams.get("token") === "home-secret");
+  assert.equal(ownerRequests.length, 1);
+  assert.equal(ownerRequests[0].searchParams.get("station_id"), "127602");
+  assert.equal(ownerRequests[0].searchParams.has("api_key"), false);
+  assert.ok(requests.some((url) => url.pathname.endsWith("/observations/station/144737") && url.searchParams.get("token") === "jcc-secret"));
+  assert.ok(requests.filter((url) => url.searchParams.get("station_id") && url.searchParams.get("station_id") !== "127602").every((url) => url.searchParams.get("api_key") === "wf-secret" && !url.searchParams.has("token")));
+});
+
+test("an owner token without a matching station ID is never sent to other stations", async (t) => {
+  const context = await refresh(t, { credentials: { ...credentials, tempestToken: "home-secret", tempestStationId: "999999" }, fetcher: upstream({ rejectTempest: true }) });
+  const payload = await context.run();
+  assert.equal(payload.quality.availableStations, 8);
+  assert.equal(payload.stations.find((s) => s.id === "tempest-127602").health.usable, false);
+});
+
+test("residence authorization failures identify the owner token setting and preserve the station ID", async (t) => {
+  const context = await refresh(t, { credentials: { ...credentials, tempestToken: "invalid-home-secret", tempestStationId: "127602" }, fetcher: upstream({ rejectTempest: true }) });
+  const payload = await context.run();
+  const failure = payload.quality.failures.find((f) => f.id === "tempest-127602");
+  assert.match(failure.reason, /401/);
+  const diagnostic = context.logs.find((log) => log.event === "hiking_feed_failure" && log.id === "tempest-127602");
+  assert.match(diagnostic.hint, /TEMPEST_TOKEN and TEMPEST_STATION_ID/);
+  assert.doesNotMatch(JSON.stringify(context.logs), /invalid-home-secret/);
 });
 
 test("stale numeric readings are excluded from guidance and replaced with unavailable site metadata", async (t) => {

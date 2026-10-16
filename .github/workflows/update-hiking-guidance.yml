@@ -19,6 +19,8 @@ jobs:
     env:
       WEATHERFLOW_API_KEY: ${{ secrets.WEATHERFLOW_API_KEY }}
       JCC_TEMPEST_TOKEN: ${{ secrets.JCC_TEMPEST_TOKEN }}
+      TEMPEST_TOKEN: ${{ secrets.TEMPEST_TOKEN }}
+      TEMPEST_STATION_ID: "127602"
       WEATHER_UNDERGROUND_API_KEY: ${{ secrets.WEATHER_UNDERGROUND_API_KEY }}
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
     steps:

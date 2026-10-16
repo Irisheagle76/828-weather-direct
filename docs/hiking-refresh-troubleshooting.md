@@ -21,3 +21,9 @@ node --test test/update-hiking-guidance.test.js test/hiking-guidance.test.js tes
 ```
 
 The workflow runs these checks before fetching data. Tests cover the observed 401/partial-coverage failure, full coverage and lightning, stale readings, total outage, missing credentials, secret redaction, and memory-fallback rejection.
+
+## Owner-station credentials
+
+Residence station `127602` is owned by the same user as JCC. Its existing `TEMPEST_TOKEN` returned HTTP 200 during live testing, but the observation service previously ignored that token and used the rejected shared key. The updater now uses `TEMPEST_TOKEN` only when the requested station matches `TEMPEST_STATION_ID`; the workflow sets that ID to `127602` and reads the `TEMPEST_TOKEN` Actions secret. JCC `144737` keeps its separate `JCC_TEMPEST_TOKEN` path. Tokens are not sent to other configured stations.
+
+A live local writer check retrieved both owner stations and 9/17 usable sites; the other eight Tempest sites still returned HTTP 401. Scheduled use requires the `TEMPEST_TOKEN` secret to be populated in GitHub Actions; a local `.env.local` value does not populate that secret. No secret was uploaded or changed by this PR. Regression tests cover owner-token selection, station isolation, and actionable owner-credential errors.
