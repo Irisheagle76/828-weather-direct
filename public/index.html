@@ -5261,6 +5261,7 @@
     import { buildTemperaturePath } from "./js/intel/temperature-path.js?v=20260806-temp-path";
     import { buildTemperatureTakeaway } from "./js/intel/temperature-takeaway.js";
     import { comfortExplanation, bestWindowSummary } from "./js/intel/feelscore-insight.js";
+    import { forecastComfortCopy } from "./js/intel/forecast-comfort-context.js?v=20261016-outlook";
     import {
       cleanHikingText,
       homeHikingBestBet,
@@ -7064,10 +7065,13 @@
       document.querySelector("#liveFeelScoreWear")
         ?.setAttribute("aria-label", `What to wear: ${wearCue.text}`);
 
-      document.querySelector("#liveFeelScoreHeadline").textContent =
-        (feelscore.headline || "Reading the current comfort signal.").replace(/,\s*with only a subtle (?:FeelScore|comfort) dip\.?$/i, "");
-      document.querySelector("#liveFeelScoreSubhead").textContent =
-        feelscore.subHeadline || feelscore.narrative || "Temperature, humidity, dew point, and wind are shaping how the air feels.";
+      const outlook = forecastComfortCopy({ item: feelscore, hourly });
+      const summary = applyPrecipOverrideToNarrative({
+        headline: outlook.headline,
+        subHeadline: outlook.weatherNarrative
+      }, precipOverride);
+      document.querySelector("#liveFeelScoreHeadline").textContent = summary.headline;
+      document.querySelector("#liveFeelScoreSubhead").textContent = summary.subHeadline;
 
       const bullets = Array.isArray(feelscore.bullets) && feelscore.bullets.length
         ? feelscore.bullets.slice(0, 3)
