@@ -81,3 +81,10 @@ test('Asheville clock labels, current score and best window agree across device 
     if (original == null) delete process.env.TZ; else process.env.TZ = original;
   }
 });
+
+test('Shared current model forwards daily sunset timing to the forecast icon', () => {
+  const sunset = Date.parse('2026-12-16T21:15:00Z');
+  const time = sunset + 15 * 60000;
+  const model = buildCurrentComfort({ hourly: [{ timestamp: time, temperatureF: 42, dewpointF: 30, cloudCover: .5 }], daily: [{ sunrise: Date.parse('2026-12-16T12:30:00Z'), sunset }] }, { now: time });
+  assert.equal(model.copy.emoji, '🌙');
+});

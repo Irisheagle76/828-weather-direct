@@ -247,8 +247,8 @@ function renderFeelScore() {
 function renderFeelScoreDetail() {
   const item = state.activeDay === "tomorrow" ? state.feelscore?.tomorrow : state.feelscore?.feelscore;
   const copy = state.activeDay === "tomorrow"
-    ? forecastComfortCopy({ item, forecast: state.forecast || {}, hourly: state.weather?.hourly || [], tomorrow: true })
-    : state.currentComfort?.copy || forecastComfortCopy({ hourly: state.weather?.hourly || [] });
+    ? forecastComfortCopy({ item, forecast: state.forecast || {}, hourly: state.weather?.hourly || [], daily: state.weather?.daily || [], tomorrow: true })
+    : state.currentComfort?.copy || forecastComfortCopy({ hourly: state.weather?.hourly || [], daily: state.weather?.daily || [] });
   $("#detailEmoji").textContent = copy.emoji;
   $("#detailLabel").textContent = copy.headline;
   $("#detailNarrative").textContent = copy.weatherNarrative || "Hourly comfort guidance is updating.";

@@ -83,7 +83,7 @@ export function buildCurrentComfort(weather = {}, options = {}) {
   const score = comfortScore100(currentHour);
   const precipOverride = options.precipOverride ?? getCurrentPrecipOverride({ current, hourly, now, storage,
     radar: storm?.radar, lightningCount: storm?.weather?.lightningCount });
-  const outlook = forecastComfortCopy({ hourly, forecast, now });
+  const outlook = forecastComfortCopy({ hourly, daily: weather.daily || [], forecast, now });
   const summary = applyPrecipOverrideToNarrative({ headline: outlook.headline, subHeadline: outlook.weatherNarrative, narrative: outlook.weatherNarrative }, precipOverride);
   const copy = { ...outlook, headline: summary.headline, weatherNarrative: summary.subHeadline, narrative: summary.narrative };
   const curve = buildComfortCurveModel({ hourly, daily: weather.daily || [], currentHour, now, score: comfortScore100 });

@@ -1,4 +1,5 @@
 // Presentation only. Reads forecast hours; never recalculates FEELSCORE.
+import { findTodaySolarTimes } from './sky-time.js';
 const zone = "America/New_York";
 export function comfortDateKey(value) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: zone, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(value));
@@ -7,6 +8,15 @@ const number = value => value == null || value === "" ? null : Number.isFinite(N
 const timestamp = hour => { const t = number(hour.timestamp ?? hour.ts); return t == null ? NaN : t < 1e12 ? t * 1000 : t; };
 const localHourOf = time => Number(new Intl.DateTimeFormat("en-US", { timeZone: zone, hour: "numeric", hourCycle: "h23" }).format(new Date(time)));
 const percent = value => { const n = number(value); return n == null || n < 0 || n > 100 ? null : n <= 1 ? n * 100 : n; };
+function isNightAt(time, daily) {
+  const { sunriseAt, sunsetAt } = findTodaySolarTimes(daily, time);
+  if (Number.isFinite(sunriseAt) && Number.isFinite(sunsetAt) && sunriseAt < sunsetAt) {
+    return time < sunriseAt || time >= sunsetAt;
+  }
+  // Use Asheville time when daily solar guidance is unavailable.
+  const hour = localHourOf(time);
+  return hour < 6 || hour >= 18;
+}
 function timeLabel(hour, now, tomorrow) {
   const time = timestamp(hour);
   const clock = new Intl.DateTimeFormat("en-US", { timeZone: zone, hour: "numeric" }).format(new Date(time));
@@ -62,7 +72,7 @@ function skyState(hour) {
   return ({ 0: "clear", 1: "clear", 2: "mixed", 3: "cloudy" })[code] || null;
 }
 
-function skyStory(hours, now, tomorrow) {
+function skyStory(hours, now, tomorrow, daily) {
   const states = hours.map(hour => ({ hour, state: skyState(hour) }));
   const at = hour => timeLabel(hour, now, tomorrow);
   const hazards = { storms: ["Thunderstorms are possible", "⛈️"], ice: ["Freezing rain or drizzle is possible", "🌧️"], snow: ["Snow is possible", "🌨️"], rain: ["Rain is possible", "🌧️"], fog: ["Fog may limit visibility", "🌫️"] };
@@ -82,19 +92,35 @@ function skyStory(hours, now, tomorrow) {
       else if (states.every(s => s.state === first.state)) text = `${descriptions[first.state]} through ${at(last.hour)}.`;
       else text = `Cloud cover varies through ${at(last.hour)}.`;
       emoji = ({ clear: "🌤️", mixed: "⛅", cloudy: "☁️" })[last.state];
-      if (last.state === "clear" && (localHourOf(timestamp(last.hour)) >= 18 || localHourOf(timestamp(last.hour)) < 6)) emoji = "🌙";
+      if (["clear", "mixed"].includes(last.state) && isNightAt(timestamp(last.hour), daily)) emoji = "🌙";
     }
   }
   const wet = hours.find(h => percent(h.precipProbability) >= 30);
   if (!hazard && wet) {
     if (states.every(s => s.state === "clear")) text = "Mostly clear skies to start.";
     text += `${text ? " " : ""}Rain ${percent(wet.precipProbability) >= 60 ? "is likely" : "is possible"} around ${at(wet)} (${Math.round(percent(wet.precipProbability))}% chance).`;
-    emoji = "🌦️";
+    emoji = isNightAt(timestamp(wet), daily) ? "🌧️" : "🌦️";
   }
   return { text, emoji };
 }
 
-export function forecastComfortCopy({ item = {}, forecast = {}, hourly = [], tomorrow = false, now = Date.now() } = {}) {
+function windStory(hours, now, tomorrow) {
+  const gusts = hours.filter(h => number(h.windGust) != null);
+  const peakGust = gusts.reduce((best, h) => !best || number(h.windGust) > number(best.windGust) ? h : best, null);
+  const winds = hours.filter(h => number(h.windSpeed) != null);
+  const peakWind = winds.reduce((best, h) => !best || number(h.windSpeed) > number(best.windSpeed) ? h : best, null);
+  if (peakGust && number(peakGust.windGust) >= 20) {
+    const gust = Math.round(number(peakGust.windGust));
+    const description = gust >= 40 ? 'Strong wind gusts' : gust >= 30 ? 'Gusty winds' : 'A few gusts';
+    return `${description} could reach ${gust} mph around ${timeLabel(peakGust, now, tomorrow)}.`;
+  }
+  if (peakWind && number(peakWind.windSpeed) >= 12) {
+    return `Expect a steady breeze near ${Math.round(number(peakWind.windSpeed))} mph around ${timeLabel(peakWind, now, tomorrow)}.`;
+  }
+  return '';
+}
+
+export function forecastComfortCopy({ item = {}, forecast = {}, hourly = [], daily = [], tomorrow = false, now = Date.now() } = {}) {
   const date = new Date(`${comfortDateKey(now)}T12:00:00Z`);
   if (tomorrow) date.setUTCDate(date.getUTCDate() + 1);
   const key = date.toISOString().slice(0, 10);
@@ -116,8 +142,8 @@ export function forecastComfortCopy({ item = {}, forecast = {}, hourly = [], tom
     return { headline: "Comfort outlook updating", weatherNarrative: narrative, narrative, bullets: [], emoji: "🙂", caption: "Period-average FEELSCORE" };
   }
   const temperature = temperatureStory(temperatureHours, now, tomorrow);
-  const sky = skyStory(hours, now, tomorrow);
-  const weatherNarrative = [temperature.narrative, sky.text].filter(Boolean).join(" ");
+  const sky = skyStory(hours, now, tomorrow, daily);
+  const weatherNarrative = [temperature.narrative, sky.text, windStory(hours, now, tomorrow)].filter(Boolean).join(" ");
   const dewpoints = hours.map(h => number(h.dewpointF)).filter(t=>t!=null);
   const winds = hours.map(h => number(h.windSpeed)).filter(t=>t!=null);
   return { headline: temperature.headline, weatherNarrative, narrative: weatherNarrative, bullets: [dewpoints.length ? `Dew points ${Math.round(Math.min(...dewpoints))}–${Math.round(Math.max(...dewpoints))}°F` : null, winds.length ? `Wind up to ${Math.round(Math.max(...winds))} mph` : null].filter(Boolean), emoji: sky.emoji || (temperature.hot ? "🥵" : "🙂"), caption: tomorrow ? "Tomorrow · period-average FEELSCORE" : "Current period · average FEELSCORE" };

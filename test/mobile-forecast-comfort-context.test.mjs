@@ -152,3 +152,65 @@ test("Wintry weather and fog codes take priority over cloud cover", () => {
     assert.doesNotMatch(copy.weatherNarrative, /Mostly clear/);
   }
 });
+
+test("Screenshot: clear skies becoming partly cloudy after midnight use a moon", () => {
+  const start = Date.parse("2026-10-17T00:00:00Z"); // 8 PM Eastern
+  const hourly = series([64, 61, 58, 54, 51, 48], { cloudCover: .1 }, start);
+  hourly.at(-1).cloudCover = .5;
+  const copy = forecastComfortCopy({ now: start, hourly });
+  assert.equal(copy.headline, "Cooling down tonight");
+  assert.match(copy.weatherNarrative, /1 AM tomorrow/);
+  assert.equal(copy.emoji, "🌙");
+});
+
+test("Clear and partly cloudy icons respect seasonal sunrise and sunset", () => {
+  const summer = Date.parse("2026-06-16T23:00:00Z"); // 7 PM EDT, still daylight
+  const winter = Date.parse("2026-12-16T21:30:00Z"); // 4:30 PM EST, after this fixture's sunset
+  for (const [cloudCover, dayEmoji] of [[.1, "🌤️"], [.5, "⛅"]]) {
+    const day = forecastComfortCopy({ now: summer, hourly: series([72], { cloudCover }, summer), daily: [{ sunrise: Date.parse("2026-06-16T10:00:00Z"), sunset: Date.parse("2026-06-17T00:45:00Z") }] });
+    const night = forecastComfortCopy({ now: winter, hourly: series([42], { cloudCover }, winter), daily: [{ sunrise: Date.parse("2026-12-16T12:30:00Z"), sunset: Date.parse("2026-12-16T21:15:00Z") }] });
+    assert.equal(day.emoji, dayEmoji);
+    assert.equal(night.emoji, "🌙");
+  }
+});
+
+test("Pre-dawn mixed skies and overnight rain chances never use a sun icon", () => {
+  const dawn = Date.parse("2026-10-17T08:00:00Z"); // 4 AM EDT
+  const clear = forecastComfortCopy({ now: dawn, hourly: series([50], { cloudCover: .5 }, dawn) });
+  const rain = forecastComfortCopy({ now: dawn, hourly: series([50], { cloudCover: .5, precipProbability: .5 }, dawn) });
+  assert.equal(clear.emoji, "🌙");
+  assert.equal(rain.emoji, "🌧️");
+});
+
+test("Tonight's gusty winds are included in the visible narrative with peak timing", () => {
+  const start = Date.parse("2026-10-17T00:00:00Z");
+  const hourly = series([64, 61, 58, 54, 51, 48], { cloudCover: .5, windSpeed: 12, windGust: 22 }, start);
+  hourly[2].windGust = 38;
+  const copy = forecastComfortCopy({ now: start, hourly });
+  assert.equal(copy.emoji, "🌙");
+  assert.match(copy.weatherNarrative, /Gusty winds could reach 38 mph around 10 PM/);
+});
+
+test("Wind summary excludes elapsed gusts and keeps after-midnight timing explicit", () => {
+  const start = Date.parse("2026-10-17T00:00:00Z");
+  const hourly = series([64, 60, 56, 52, 50, 48], { windSpeed: 15 }, start);
+  hourly.at(-1).windGust = 45;
+  hourly.unshift({ timestamp: start - 3600000, temperatureF: 66, windGust: 70 });
+  const copy = forecastComfortCopy({ now: start, hourly });
+  assert.match(copy.weatherNarrative, /Strong wind gusts could reach 45 mph around 1 AM tomorrow/);
+  assert.doesNotMatch(copy.weatherNarrative, /70 mph/);
+});
+
+test("A notable sustained breeze is mentioned when gust guidance is absent", () => {
+  const copy = forecastComfortCopy({ now: afternoon, hourly: series([70, 68, 65], { windSpeed: 16 }) });
+  assert.match(copy.weatherNarrative, /steady breeze near 16 mph around 3 PM/);
+  assert.doesNotMatch(copy.weatherNarrative, /picks up/);
+  assert.doesNotMatch(copy.weatherNarrative, /gusts/i);
+});
+
+test("Light or missing wind data does not produce a gusty-wind claim", () => {
+  for (const wind of [{ windSpeed: 4, windGust: 10 }, { windSpeed: null, windGust: null }]) {
+    const copy = forecastComfortCopy({ now: afternoon, hourly: series([70, 68], wind) });
+    assert.doesNotMatch(copy.weatherNarrative, /gust|breeze|wind/i);
+  }
+});
