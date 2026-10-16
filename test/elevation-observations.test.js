@@ -17,7 +17,7 @@ test("station registry has unique IDs and one composite for the Mountain Air pai
 
 test("health checks reject stale and impossible readings and flag abrupt jumps", () => {
   resetObservationHealthHistory();
-  const station = STATION_BY_ID.get("tempest-128340");
+  const station = STATION_BY_ID.get("lake-junaluska");
   const base = observation(station, { observedAt: new Date(NOW - 5 * 60000).toISOString(), temperatureF: 40, humidityPct: 80 });
   assert.equal(evaluateObservationHealth(base, station, { now: NOW }).status, "healthy");
   const jump = observation(station, { observedAt: new Date(NOW).toISOString(), temperatureF: 60, humidityPct: 80 });

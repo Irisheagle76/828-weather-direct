@@ -1,3 +1,5 @@
+import { selectHikingProfileStations } from "./hiking-profile.js";
+
 const els = {
       hikerScore: document.querySelector("#hikerScore"),
       hikerLabel: document.querySelector("#hikerLabel"),
@@ -175,7 +177,15 @@ const els = {
         "Frying Pan / Pisgah Ridgeline": ["Frying Pan"],
         "Mount Mitchell": ["Mitchell"]
       };
-      return labels[label] || [label];
+      const currentLabels = {
+        "North Downtown": ["Downtown"], "Mid Asheville": ["Mid AVL"],
+        "Windy Ridge Trail": ["Windy Ridge"], "Webb Weather": ["Webb"],
+        "BeaucatcherWx": ["Beaucatcher"], "Spivey Mountain": ["Spivey"],
+        "Lake Junaluska": ["Junaluska"], "Wallace Mountain": ["Wallace"],
+        "Camp Daniel Boone": ["Camp Boone"], "Cold Mountain Station": ["Cold Mtn"],
+        "Alpine Village": ["Alpine"], "Park Place": ["Park Place"]
+      };
+      return currentLabels[label] || labels[label] || [label];
     }
 
     function temperatureClass(value) {
@@ -219,9 +229,9 @@ const els = {
     }
 
     function renderElevationProfile(stations = []) {
-      const ordered = stations
-        .slice()
-        .sort((a, b) => (a.elevationFt || 0) - (b.elevationFt || 0));
+      const ordered = selectHikingProfileStations(stations);
+      const coverage = document.querySelector("#hikingProfileCoverage");
+      if (coverage) coverage.textContent = `${ordered.length} selected reporting sites shown; all ${stations.length} sites are listed below. Lightning observations come from the two Asheville-area Tempest stations.`;
       const xSlots = ordered.map((_, index) => 145 + index * (810 / Math.max(1, ordered.length - 1)));
       const bottom = 460;
       const top = 102;
@@ -237,6 +247,10 @@ const els = {
         x: xSlots[index] || (145 + index * 150),
         y: yForElevation(station.elevationFt)
       }));
+      if (!points.length) {
+        els.elevationProfile.textContent = "Fresh station readings are unavailable for the elevation profile.";
+        return;
+      }
       const ridge = points.map((point) => `${point.x} ${point.y}`).join(" L ");
       const area = `M ${ridge} L 1065 ${bottom} L 55 ${bottom} Z`;
       const ticks = [7000, 6000, 5000, 4000, 3000, 2000, 1000]
@@ -275,7 +289,7 @@ const els = {
       }).join("");
 
       els.elevationProfile.innerHTML = `
-        <svg viewBox="0 0 1080 560" preserveAspectRatio="xMidYMid meet">
+        <svg viewBox="0 0 1080 560" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Selected reporting stations by elevation">
           <defs>
             <linearGradient id="profileFill" x1="0" x2="1" y1="1" y2="0">
               <stop offset="0%" stop-color="#5bd27c" />
@@ -336,9 +350,10 @@ const els = {
         },
         {
           title: "Ridge vs Valley",
-          body: Number(guidance.highStationSpread) <= 2
-            ? "High Asheville readings broadly agree, but exposed ridges can still change the feel."
-            : `The two high Asheville readings differ by about ${formatDegrees(guidance.highStationSpread)}, so ridge exposure matters.`
+          body: guidance.highStationSpread == null ? "Asheville ridge comparisons are unavailable."
+            : Number(guidance.highStationSpread) <= 2
+            ? "The reporting Asheville ridge sites broadly agree; exposed terrain can still change the feel."
+            : `The Asheville ridge readings span about ${formatDegrees(guidance.highStationSpread)}, so ridge exposure matters.`
         },
         {
           title: "Sun exposure",
@@ -363,7 +378,7 @@ const els = {
         {
           label: "High split",
           value: formatDegrees(guidance.highStationSpread),
-          body: "Difference between the two high Asheville readings."
+          body: "Temperature range among the reporting Asheville ridge sites."
         },
         {
           label: "Mitchell drop",

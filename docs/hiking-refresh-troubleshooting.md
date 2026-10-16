@@ -10,20 +10,37 @@ The updater now publishes usable live observations during partial outages, consi
 
 `hiking_refresh_coverage` logs show provider counts; `hiking_feed_failure` logs identify station, provider, and reason. WeatherFlow HTTP 401/403 includes a credential recovery hint. `hiking_refresh_failed` identifies fatal failures. Credential values and upstream URLs are redacted from these logs and published failure reasons.
 
-To restore the affected WeatherFlow stations, verify the integration credential's status with WeatherFlow and update the repository's `WEATHERFLOW_API_KEY` Actions secret if they issue a replacement. Keep the existing station IDs and requests. `JCC_TEMPEST_TOKEN` does not authorize the other stations. Confirm that subsequent runs show those stations reporting; publishing partial coverage alone does not repair upstream authorization.
+The owner chose Weather Underground replacements rather than restoring broad WeatherFlow access. The eight non-owned Tempest sites are replaced by the following WU sites; the two owner stations remain on Tempest. The existing WU stations, Mountain Air composite, and NC ECONet sources remain. The network now contains 19 displayed sites, including the two added Asheville sites.
 
-The hourly `7 * * * *` schedule, manual dispatch, source registry, provider requests, and Fall Explorer sampling are unchanged. Data commits include `[skip deploy]`; this workflow does not deploy or promote a release.
+| Previous site | WU replacement | Elevation (ft) | Latitude | Longitude |
+| --- | --- | ---: | ---: | ---: |
+| Western Pisgah High Shoulder / 186088 | Park Place / KNCWAYNE323 | 4209 | 35.458 | -82.965 |
+| Mount Mitchell East Slope / 100622 | Alpine Village / KNCBURNS167 | 3260 | 35.766 | -82.213 |
+| Southern Haywood East / 85173 | Cold Mountain Station / KNCCANTO128 | 3445 | 35.428 | -82.820 |
+| Southern Haywood West / 104977 | Camp Daniel Boone / KNCCANTO127 | 3257 | 35.392 | -82.898 |
+| Black Mountain / 88141 | Wallace Mountain / KNCBLACK209 | 2625 | 35.652 | -82.341 |
+| Waynesville / 128340 | Lake Junaluska / KNCLAKEJ3 | 2657 | 35.532 | -82.972 |
+| High Asheville North / 157700 | Webb Weather / KNCASHEV482 | 3000 | 35.652 | -82.495 |
+| High Asheville East / 160562 (regional substitute) | Windy Ridge Trail / KNCASHEV440 | 3209 | 35.666 | -82.497 |
+| Added | BeaucatcherWx / KNCASHEV288 | 2550 | 35.589 | -82.540 |
+| Added | Spivey Mountain / KNCASHEV307 | 3110 | 35.601 | -82.652 |
+
+Each replacement has its own physical-site identity and coordinates; Windy Ridge is north of Asheville and is not labeled as the old eastern station. The shared registry also feeds Fall Explorer calibration: replacement sites retain the corresponding regional roles and weights, but their new identities prevent old observations being attributed to a different physical site.
+
+All 19 sites contribute to guidance and remain in the station list. The elevation profile selects ten usable references spanning Asheville through Mount Mitchell; unavailable references are replaced with usable sites at distinct elevations. The existing horizontally scrollable mobile profile remains. WU readings do not supply the Tempest lightning fields; the page discloses that lightning observations now come from the two owner Tempest sites. No regional lightning coverage is implied.
+
+The hourly `7 * * * *` schedule, manual dispatch, provider request formats, freshness checks, and Fall Explorer sampling step are unchanged. The workflow no longer requires `WEATHERFLOW_API_KEY`. Data commits include `[skip deploy]`; this workflow does not deploy or promote a release.
 
 Local regression checks (no credentials or network required):
 
 ```sh
-node --test test/update-hiking-guidance.test.js test/hiking-guidance.test.js test/elevation-observations.test.js
+node --test test/update-hiking-guidance.test.js test/hiking-guidance.test.js test/hiking-profile.test.js test/elevation-observations.test.js test/fall-observations.test.js
 ```
 
-The workflow runs these checks before fetching data. Tests cover the observed 401/partial-coverage failure, full coverage and lightning, stale readings, total outage, missing credentials, secret redaction, and memory-fallback rejection.
+The workflow runs these checks before fetching data. Tests cover partial coverage, full coverage and lightning, stale readings, total outage, missing WU credentials, secret redaction, memory-fallback rejection, owner-token isolation, station metadata, profile selection, and the shared Fall registry. JCC failures preserve safe HTTP status codes and identify `JCC_TEMPEST_TOKEN` for authorization failures. The complete configured local suite passes 435 tests. A live writer check on October 16 at 12:56 UTC, with the shared WeatherFlow key disabled, retrieved 19/19 usable live sites with zero feed failures; all ten supplied WU stations reported successfully. This validates local credentials and provider access, not the presence of GitHub Actions secrets.
 
 ## Owner-station credentials
 
 Residence station `127602` is owned by the same user as JCC. Its existing `TEMPEST_TOKEN` returned HTTP 200 during live testing, but the observation service previously ignored that token and used the rejected shared key. The updater now uses `TEMPEST_TOKEN` only when the requested station matches `TEMPEST_STATION_ID`; the workflow sets that ID to `127602` and reads the `TEMPEST_TOKEN` Actions secret. JCC `144737` keeps its separate `JCC_TEMPEST_TOKEN` path. Tokens are not sent to other configured stations.
 
-A live local writer check retrieved both owner stations and 9/17 usable sites; the other eight Tempest sites still returned HTTP 401. Scheduled use requires the `TEMPEST_TOKEN` secret to be populated in GitHub Actions; a local `.env.local` value does not populate that secret. No secret was uploaded or changed by this PR. Regression tests cover owner-token selection, station isolation, and actionable owner-credential errors.
+Before the WU migration, a live local check retrieved both owner stations and 9/17 usable sites; the other eight Tempest sites returned HTTP 401. After migration, scheduled full coverage uses the existing `WEATHER_UNDERGROUND_API_KEY`, `JCC_TEMPEST_TOKEN`, and `TEMPEST_TOKEN` Actions secrets. A local `.env.local` value does not populate those secrets. No secret was uploaded or changed by this PR. A missing or rejected owner token produces a specific station failure and partial-coverage report while other sources continue. Zero usable live sites still fails without overwriting the previous artifact.

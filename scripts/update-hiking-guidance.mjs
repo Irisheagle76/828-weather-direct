@@ -887,7 +887,6 @@ export async function updateHikingGuidance({ outputPath = jsonPath, fetcher = fe
   };
   try {
     const missing = [
-      !credentials.weatherFlowApiKey && "WEATHERFLOW_API_KEY",
       !credentials.weatherUndergroundApiKey && "WEATHER_UNDERGROUND_API_KEY (or WU_API_KEY)"
     ].filter(Boolean);
     if (missing.length) throw new Error(`Missing required hiking credentials: ${missing.join(", ")}`);
@@ -902,9 +901,11 @@ export async function updateHikingGuidance({ outputPath = jsonPath, fetcher = fe
     for (const failure of quality.failures) {
       const ownerStation = credentials.tempestToken && failure.id === `tempest-${credentials.tempestStationId}`;
       const hint = failure.provider === "tempest" && /401|403/.test(failure.reason)
-        ? ownerStation
-          ? "Tempest rejected the residence station token; verify TEMPEST_TOKEN and TEMPEST_STATION_ID."
-          : "WeatherFlow rejected authorization; verify or replace the WEATHERFLOW_API_KEY GitHub Actions secret. Personal station tokens only supply their configured owner stations."
+        ? failure.id === "tempest-144737" && credentials.jccTempestToken
+          ? "Tempest rejected the JCC station token; verify JCC_TEMPEST_TOKEN."
+          : ownerStation
+            ? "Tempest rejected the residence station token; verify TEMPEST_TOKEN and TEMPEST_STATION_ID."
+            : "WeatherFlow rejected authorization; verify the station's owner token and matching station ID, or an authorized WEATHERFLOW_API_KEY."
         : undefined;
       logger.warn(JSON.stringify({ event: "hiking_feed_failure", ...failure, hint }));
     }

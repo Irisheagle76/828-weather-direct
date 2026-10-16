@@ -816,6 +816,12 @@
       height: auto;
     }
 
+    .profile-card .profile-coverage {
+      margin: 0 24px 18px;
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+
     .profile-bg {
       fill: #081426;
     }

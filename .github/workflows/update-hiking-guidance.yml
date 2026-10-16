@@ -17,7 +17,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      WEATHERFLOW_API_KEY: ${{ secrets.WEATHERFLOW_API_KEY }}
       JCC_TEMPEST_TOKEN: ${{ secrets.JCC_TEMPEST_TOKEN }}
       TEMPEST_TOKEN: ${{ secrets.TEMPEST_TOKEN }}
       TEMPEST_STATION_ID: "127602"
@@ -31,7 +30,7 @@ jobs:
           node-version: 24
 
       - name: Test hiking refresh and observation handling
-        run: node --test test/update-hiking-guidance.test.js test/hiking-guidance.test.js test/elevation-observations.test.js
+        run: node --test test/update-hiking-guidance.test.js test/hiking-guidance.test.js test/hiking-profile.test.js test/elevation-observations.test.js test/fall-observations.test.js
 
       - name: Refresh hiking guidance
         run: node scripts/update-hiking-guidance.mjs

@@ -15,8 +15,8 @@ test("normalizes fresh Waynesville and Black Mountain valley anchors", () => {
   const observations = normalizeFallObservations({
     generatedAt: new Date(NOW - 5 * 60000).toISOString(),
     stations: [
-      station("tempest-128340", "128340", "Waynesville / Haywood Valley", 2700, 37),
-      station("tempest-88141", "88141", "Black Mountain / Swannanoa Valley", 2661, 40)
+      station("lake-junaluska", "KNCLAKEJ3", "Lake Junaluska", 2657, 37),
+      station("wallace-mountain", "KNCBLACK209", "Wallace Mountain", 2625, 40)
     ]
   }, destinations, { now: NOW });
 
@@ -24,11 +24,11 @@ test("normalizes fresh Waynesville and Black Mountain valley anchors", () => {
   assert.equal(observations.availableAnchors, 2);
   assert.equal(observations.anchors[0].destinationId, "waynesville");
   assert.equal(observations.anchors[0].temperatureResidualF, -2);
-  assert.equal(observations.anchors[1].elevationFeet, 2661);
+  assert.equal(observations.anchors[1].elevationFeet, 2625);
 });
 
 test("rejects stale observations instead of treating them as ground truth", () => {
-  const stale = station("tempest-128340", "128340", "Waynesville / Haywood Valley", 2700, 37);
+  const stale = station("lake-junaluska", "KNCLAKEJ3", "Lake Junaluska", 2657, 37);
   stale.observedAt = new Date(NOW - 2 * 60 * 60000).toISOString();
   const observations = normalizeFallObservations({ generatedAt: stale.observedAt, stations: [stale] }, destinations, { now: NOW });
   assert.equal(observations.status, "stale");
@@ -39,14 +39,14 @@ test("rejects stale observations instead of treating them as ground truth", () =
 test("uses a low-weight elevation-adjusted comparison for a sheltered Pisgah approach station", () => {
   const observations = normalizeFallObservations({
     generatedAt: new Date(NOW - 5 * 60000).toISOString(),
-    stations: [station("tempest-104977", "104977", "Southern Haywood / Pisgah Approach West", 3284, 44)]
+    stations: [station("camp-daniel-boone", "KNCCANTO127", "Camp Daniel Boone", 3257, 44)]
   }, destinations, { now: NOW });
   const anchor = observations.anchors[0];
   assert.equal(anchor.destinationId, "graveyard");
   assert.equal(anchor.terrainRole, "sheltered-mid-elevation");
   assert.equal(anchor.comparisonMethod, "elevation-adjusted");
-  assert.equal(anchor.forecastTemperatureF, 46.4);
-  assert.equal(anchor.temperatureResidualF, -2.4);
+  assert.equal(anchor.forecastTemperatureF, 46.5);
+  assert.equal(anchor.temperatureResidualF, -2.5);
   assert.equal(anchor.weight, 0.35);
   assert.equal(anchor.sitingConfidence, "low");
 });
@@ -54,7 +54,7 @@ test("uses a low-weight elevation-adjusted comparison for a sheltered Pisgah app
 test("uses the forested Mount Mitchell east-slope station as a reduced-weight supporting anchor", () => {
   const observations = normalizeFallObservations({
     generatedAt: new Date(NOW - 5 * 60000).toISOString(),
-    stations: [station("tempest-100622", "100622", "Mount Mitchell East Slope / Alpine Village", 3264, 40)]
+    stations: [station("alpine-village", "KNCBURNS167", "Alpine Village", 3260, 40)]
   }, destinations, { now: NOW });
   const anchor = observations.anchors[0];
   assert.equal(anchor.destinationId, "mitchell");
@@ -70,14 +70,14 @@ test("uses the forested Mount Mitchell east-slope station as a reduced-weight su
 test("uses the western Pisgah high-shoulder station with more weight than lower approach references", () => {
   const observations = normalizeFallObservations({
     generatedAt: new Date(NOW - 5 * 60000).toISOString(),
-    stations: [station("tempest-186088", "186088", "Western Pisgah High Shoulder", 3989, 42)]
+    stations: [station("park-place", "KNCWAYNE323", "Park Place", 4209, 42)]
   }, destinations, { now: NOW });
   const anchor = observations.anchors[0];
   assert.equal(anchor.destinationId, "graveyard");
   assert.equal(anchor.terrainRole, "western-pisgah-high-shoulder");
   assert.equal(anchor.comparisonMethod, "elevation-adjusted");
-  assert.equal(anchor.forecastTemperatureF, 44);
-  assert.equal(anchor.temperatureResidualF, -2);
+  assert.equal(anchor.forecastTemperatureF, 43.2);
+  assert.equal(anchor.temperatureResidualF, -1.2);
   assert.equal(anchor.weight, 0.6);
   assert.equal(anchor.sitingConfidence, "low");
   assert.match(anchor.sitingNote, /exposure.*unverified/i);
@@ -131,6 +131,6 @@ function station(id, stationId, name, elevationFt, temperatureF) {
     humidityPct: 88,
     windMph: 1,
     gustMph: 2,
-    source: "Tempest"
+    source: "Weather Underground"
   };
 }
