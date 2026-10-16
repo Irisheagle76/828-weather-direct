@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import { forecastComfortCopy } from '../public/js/intel/forecast-comfort-context.js';
 import { applyPrecipOverrideToNarrative } from '../public/js/intel/precip-override.js';
+import { buildCurrentComfort } from '../public/js/intel/current-comfort.js';
 
 const html = fs.readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
 const renderer = html.slice(html.indexOf('    function renderLiveFeelScore('), html.indexOf('    function renderNextSix('));
@@ -18,6 +19,8 @@ function render(precipOverride = null, hours = hourly) {
   };
   const context = {
     document: { querySelector: element },
+    buildCurrentComfort: (weather, options) => buildCurrentComfort(weather, { ...options, now }),
+    latestComfortWeather: null, latestComfortStorm: null, latestPublishedForecast: null,
     forecastComfortCopy: options => forecastComfortCopy({ ...options, now }),
     applyPrecipOverrideToNarrative,
     primaryLiveHour: () => hourly[0], hasFeelScoreInputs: () => true,
@@ -39,14 +42,14 @@ test('Desktop renders the shared upcoming temperature and sky story while retain
   const elements = render();
   assert.equal(elements.get('#liveFeelScoreHeadline').textContent, 'Warm afternoon, cooler evening');
   assert.match(elements.get('#liveFeelScoreSubhead').textContent, /81°F at 3 PM to 60°F by 9 PM.*mostly clear skies/);
-  assert.equal(elements.get('#liveFeelScoreValue').textContent, 75);
+  assert.equal(elements.get('#liveFeelScoreValue').textContent, buildCurrentComfort({ hourly, current: hourly[0] }, { now }).score);
 });
 
 test('Desktop keeps observed rain and nearby lightning above the forecast outlook', () => {
   const elements = render({ active: true, mode: 'active', headline: 'Rain and lightning now', summary: 'Rain is falling at the station. Lightning is nearby.', bullets: ['Stay inside during lightning.'] });
   assert.equal(elements.get('#liveFeelScoreHeadline').textContent, 'Rain and lightning now');
   assert.match(elements.get('#liveFeelScoreSubhead').textContent, /Rain is falling/);
-  assert.equal(elements.get('#liveFeelScoreValue').textContent, 75);
+  assert.equal(elements.get('#liveFeelScoreValue').textContent, buildCurrentComfort({ hourly, current: hourly[0] }, { now }).score);
 });
 
 test('Desktop identifies unavailable forecast data instead of replaying an old summary', () => {

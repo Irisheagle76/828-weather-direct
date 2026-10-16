@@ -5261,7 +5261,7 @@
     import { buildTemperaturePath } from "./js/intel/temperature-path.js?v=20260806-temp-path";
     import { buildTemperatureTakeaway } from "./js/intel/temperature-takeaway.js";
     import { comfortExplanation, bestWindowSummary } from "./js/intel/feelscore-insight.js";
-    import { forecastComfortCopy } from "./js/intel/forecast-comfort-context.js?v=20261016-outlook";
+    import { buildCurrentComfort, COMFORT_REFRESH_MS, comfortScore100 as scoreComfortHour } from "./js/intel/current-comfort.js";
     import {
       cleanHikingText,
       homeHikingBestBet,
@@ -5301,6 +5301,8 @@
     let latestVisualWeatherInputs = null;
     let latestVisualCameraCloud = null;
     let latestFeelScoreRenderInputs = null;
+    let latestComfortWeather = null;
+    let latestComfortStorm = null;
     let latestPrecipOverride = null;
     let latestSunriseAt = null;
     let latestSunsetAt = null;
@@ -6721,41 +6723,11 @@
     }
 
     function comfortScore100(hour = {}) {
-      const raw = calculateComfort(hour)?.score;
-      if (!Number.isFinite(raw)) return null;
-      return Math.round(raw <= 10 ? raw * 10 : raw);
-    }
-
-    function normalizeScore100(value) {
-      const score = Number(value);
-      if (!Number.isFinite(score)) return null;
-      return Math.round(score <= 10 ? score * 10 : score);
+      return scoreComfortHour(hour);
     }
 
     function hasFeelScoreInputs(hour = {}) {
       return Boolean(hour) && Number.isFinite(Number(hour.temperatureF ?? hour.temp));
-    }
-
-    function nearTermFeelScore(hourly = [], currentHour = null) {
-      const candidates = [
-        ...(hasFeelScoreInputs(currentHour) && Number.isFinite(Number(currentHour.dewpointF ?? currentHour.dewPoint))
-          ? [currentHour]
-          : []),
-        ...hourly.filter((hour) => (
-          hour.timestamp >= Date.now() - 45 * 60 * 1000 &&
-          hour.timestamp <= Date.now() + 3 * 60 * 60 * 1000 &&
-          hasFeelScoreInputs(hour)
-        ))
-      ];
-      const scores = candidates
-        .map(comfortScore100)
-        .filter(Number.isFinite)
-        .slice(0, 4);
-      if (!scores.length) return null;
-      const weights = scores.map((_, index) => index === 0 ? 2 : 1);
-      const weighted = scores.reduce((sum, score, index) => sum + score * weights[index], 0);
-      const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
-      return Math.round(weighted / totalWeight);
     }
 
     function scoreLabel(score) {
@@ -7019,23 +6991,16 @@
     function renderLiveFeelScore(feelscore, hourly = [], daily = [], currentHour = null, displayCurrentHour = null, precipOverride = null) {
       if (!feelscore) return;
 
+      const currentComfort = buildCurrentComfort(latestComfortWeather || { hourly, daily, current: displayCurrentHour || currentHour }, {
+        forecast: latestPublishedForecast || {}, storm: latestComfortStorm || {},
+        precipOverride: latestComfortWeather ? undefined : precipOverride
+      });
+      precipOverride = currentComfort.precipOverride;
       feelscore = applyPrecipOverrideToNarrative(feelscore, precipOverride);
-
-      const liveHour = primaryLiveHour(hourly, currentHour);
-      const observedHour = hasFeelScoreInputs(displayCurrentHour) &&
-        Number.isFinite(Number(displayCurrentHour?.dewpointF ?? displayCurrentHour?.dewPoint))
-          ? displayCurrentHour
-          : null;
-      const scoringHour = observedHour || liveHour;
-      const payloadScore = normalizeScore100(feelscore.score);
-      const fallbackScore = nearTermFeelScore(hourly, currentHour);
-      const liveScore = comfortScore100(scoringHour);
-      const score = Number.isFinite(liveScore)
-        ? liveScore
-        : Number.isFinite(fallbackScore)
-          ? fallbackScore
-          : payloadScore;
-      const currentDisplayTemp = Number(displayCurrentHour?.temperatureF ?? liveHour?.temperatureF);
+      const liveHour = currentComfort.forecastHour;
+      const scoringHour = currentComfort.currentHour;
+      const score = currentComfort.score;
+      const currentDisplayTemp = scoringHour?.temperatureF;
       const scoreEl = document.querySelector("#liveFeelScoreValue");
       if (Number.isFinite(score)) {
         scoreEl.textContent = score;
@@ -7065,11 +7030,7 @@
       document.querySelector("#liveFeelScoreWear")
         ?.setAttribute("aria-label", `What to wear: ${wearCue.text}`);
 
-      const outlook = forecastComfortCopy({ item: feelscore, hourly });
-      const summary = applyPrecipOverrideToNarrative({
-        headline: outlook.headline,
-        subHeadline: outlook.weatherNarrative
-      }, precipOverride);
+      const summary = { headline: currentComfort.copy.headline, subHeadline: currentComfort.copy.weatherNarrative };
       document.querySelector("#liveFeelScoreHeadline").textContent = summary.headline;
       document.querySelector("#liveFeelScoreSubhead").textContent = summary.subHeadline;
 
@@ -7158,25 +7119,9 @@
     }
 
     function renderNextSix(hourly = [], currentHour = null) {
-      const future = hourly
-        .filter((hour) => hour.timestamp >= Date.now() - 30 * 60 * 1000 && Number.isFinite(hour.temperatureF))
-        .slice(0, 6);
+      const model = buildCurrentComfort(latestComfortWeather || { hourly, current: currentHour });
+      const future = model.nextHours;
       if (!future.length) return;
-
-      const currentTimestamp = Number(currentHour?.timestamp);
-      if (Number.isFinite(currentTimestamp) && Math.abs(future[0].timestamp - currentTimestamp) < 20 * 60 * 1000) {
-        const forecastHour = future[0];
-        future[0] = {
-          ...forecastHour,
-          temperatureF: currentHour.temperatureF ?? forecastHour.temperatureF,
-          dewpointF: currentHour.dewpointF ?? forecastHour.dewpointF,
-          relativeHumidity: currentHour.relativeHumidity ?? forecastHour.relativeHumidity,
-          windSpeed: currentHour.windSpeed ?? forecastHour.windSpeed,
-          windGust: currentHour.windGust ?? forecastHour.windGust,
-          precipAmount: currentHour.precipAmount ?? forecastHour.precipAmount,
-          timestamp: forecastHour.timestamp
-        };
-      }
 
       const scored = future.map((hour) => ({
         hour,
@@ -7250,6 +7195,8 @@
           fetchRouteJson("weather&type=hourly&lat=35.5951&lon=-82.5515"),
           fetchRouteJson("storm/current", { cacheBust: false }).catch(() => null)
         ]);
+        latestComfortWeather = weather;
+        latestComfortStorm = stormPayload;
         const hourly = (Array.isArray(weather?.hourly) ? weather.hourly : [])
           .map(normalizeWeatherHour)
           .filter(Boolean)
@@ -7285,11 +7232,8 @@
           displayCurrentHour
         ];
         renderLiveFeelScore(...latestFeelScoreRenderInputs, latestPrecipOverride);
-        const comfortCurve = renderComfortCurve("#comfortCurve", {
-          hourly,
-          daily,
-          currentHour: displayCurrentHour || currentHour
-        });
+        const currentComfort = buildCurrentComfort(weather, { forecast: latestPublishedForecast || {}, precipOverride: latestPrecipOverride });
+        const comfortCurve = renderComfortCurve("#comfortCurve", { model: currentComfort.curve });
         const best = bestWindowSummary(comfortCurve);
         document.querySelector('#liveBestWindow').hidden = !best;
         if (best) {
@@ -7473,7 +7417,7 @@
     await Promise.allSettled([liveComfortReady, skyReady]);
     hideHomeSplash(0);
     setInterval(hydrateObservationChips, 5 * 60 * 1000);
-    setInterval(hydrateLiveComfortModules, 60 * 1000);
+    setInterval(hydrateLiveComfortModules, COMFORT_REFRESH_MS);
     setInterval(hydrateSkyModule, 60 * 1000);
     setInterval(hydrateHomeHikingCard, 5 * 60 * 1000);
     setInterval(hydrateHomeWaterCard, 10 * 60 * 1000);

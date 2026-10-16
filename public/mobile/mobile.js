@@ -10,6 +10,7 @@ import { isPulseFresh } from "/js/pulse-freshness.js";
 import { drawRegionalMap, LABELS as MAP_LABELS } from "./regional-map.js";
 import { CAMERAS, cameraCards, bindCameraFailures } from "./live-look.js";
 import { forecastComfortCopy } from "/js/intel/forecast-comfort-context.js";
+import { buildCurrentComfort, COMFORT_REFRESH_MS, comfortScore100 as scoreComfortHour } from "/js/intel/current-comfort.js";
 import { comfortTimeBuckets, bestComfortWindow } from "/js/intel/comfort-time-buckets.js";
 
 const ASHEVILLE = { lat: 35.5951, lon: -82.5515 };
@@ -22,7 +23,7 @@ const WMO = {
 };
 const cache = new Map();
 const previewStates = new URLSearchParams(location.search).get("preview") === "states";
-const state = { weather: null, forecast: null, feelscore: null, pulse: null, article: null, hiking: null, sky: null, activeDay: "today", regionalLoaded: false };
+const state = { currentComfort: null, storm: null, weather: null, forecast: null, feelscore: null, pulse: null, article: null, hiking: null, sky: null, activeDay: "today", regionalLoaded: false };
 let toastTimer = null;
 let refreshTimer = null;
 let detailRenderId = 0;
@@ -130,11 +131,6 @@ function closestHour(hourly = [], now = Date.now()) {
   return [...hourly].filter((h) => Number.isFinite(Number(h?.timestamp))).sort((a, b) => Math.abs(Number(a.timestamp) - now) - Math.abs(Number(b.timestamp) - now))[0] || null;
 }
 
-function upcomingHours(hourly = [], count = 6) {
-  const now = Date.now() - 45 * 60 * 1000;
-  return hourly.filter((hour) => Number(hour?.timestamp) >= now).slice(0, count);
-}
-
 function conditionFor(hour = {}) {
   const code = Number(hour.weatherCode ?? hour.weather_code);
   if (WMO[code]) return { label: WMO[code][0], icon: WMO[code][1] };
@@ -143,38 +139,13 @@ function conditionFor(hour = {}) {
 }
 
 function comfortFor(hour) {
-  const result = hour ? calculateComfort(hour) : null;
-  return result && Number.isFinite(result.score) ? { ...result, score100: Math.round(result.score * 10) } : null;
-}
-
-function trendFor(hours = []) {
-  const scored = hours.map((hour) => comfortFor(hour)?.score100).filter(Number.isFinite);
-  if (scored.length < 2) return { label: "Steady", scores: scored };
-  const delta = scored.at(-1) - scored[0];
-  return { label: delta >= 7 ? "Improving" : delta <= -7 ? "Declining" : "Steady", scores: scored };
-}
-
-function bestWindow(hours = []) {
-  const scored = hours.map((hour) => ({ hour, comfort: comfortFor(hour) })).filter((item) => item.comfort);
-  if (!scored.length) return "Best window is updating.";
-  const best = scored.sort((a, b) => b.comfort.score100 - a.comfort.score100)[0];
-  return `Best upcoming comfort: ${formatTime(best.hour.timestamp)} · FEELSCORE ${best.comfort.score100}`;
-}
-
-function scoreLabel(score) {
-  if (score >= 85) return "Very comfortable";
-  if (score >= 70) return "Comfortable";
-  if (score >= 55) return "Slightly uncomfortable";
-  if (score >= 40) return "Uncomfortable";
-  return "Harsh";
+  const score100 = scoreComfortHour(hour);
+  return score100 == null ? null : { score100 };
 }
 
 function renderTrend(target, hours = [], { anchorNow = true, label = "Next 18 hours" } = {}) {
   // Presentation only: every plotted score comes from the existing comfort engine.
-  const points = hours.map(hour => ({ timestamp: Number(hour.timestamp), score: comfortFor(hour)?.score100 })).filter(p => Number.isFinite(p.timestamp) && Number.isFinite(p.score));
-  const currentScoreSource = state.feelscore?.feelscore?.score;
-  const currentScore = currentScoreSource == null ? NaN : Number(currentScoreSource);
-  if (anchorNow && Number.isFinite(currentScore)) points.unshift({ timestamp: Date.now(), score: Math.round(currentScore) });
+  const points = state.currentComfort?.curve?.points || [];
   target.hidden = points.length < 2;
   if (target.hidden) { target.innerHTML = ""; return; }
   const width = 360, left = 27, right = 16, top = 24, bottom = 150;
@@ -254,18 +225,19 @@ function renderTemperatureComparison(data) {
 function renderFeelScore() {
   const weather = state.weather || {};
   state.feelscore = buildHumanActionIntelFS({ ...weather, current: weather.current, tempest: weather.current, hourly: weather.hourly || [] });
-  const primary = state.feelscore?.feelscore;
-  const copy = forecastComfortCopy({ item: primary, forecast: state.forecast || {}, hourly: weather.hourly || [] });
-  const hours = upcomingHours(weather.hourly || []);
-  const trend = trendFor(hours);
-  const score = Math.round(Number(primary?.score));
+  const model = buildCurrentComfort(weather, { forecast: state.forecast || {}, storm: state.storm || {} });
+  state.currentComfort = model;
+  const copy = model.copy;
+  const hours = model.nextHours;
+  const trend = { label: model.curve?.trend?.label || "Updating" };
+  const score = model.score;
   $("#homeScore").textContent = Number.isFinite(score) ? score : "--";
+  $("#homeScore").setAttribute("aria-label", Number.isFinite(score) ? "Current FEELSCORE " + score + " out of 100" : "Current FEELSCORE unavailable");
   $("#homeScoreLabel").textContent = copy.headline;
-  $("#homeScoreNarrative").textContent = copy.weatherNarrative || "Hourly comfort guidance is updating.";
+  $("#homeScoreNarrative").textContent = copy.weatherNarrative;
   $("#homeScoreEmoji").textContent = copy.emoji;
-  const curveHours = (weather.hourly || []).filter(hour => Number(hour.timestamp) > Date.now()).slice(0, 18);
-  $("#homeBestWindow").textContent = bestWindow(curveHours);
-  renderTrend($("#homeTrend"), curveHours);
+  $("#homeBestWindow").textContent = model.best ? "Best upcoming comfort: " + model.best.window + " · " + model.best.detail : "Best window is updating.";
+  renderTrend($("#homeTrend"), []);
   $("#homeFeelScore").classList.remove("loading");
   renderHours($("#nextSix"), hours);
   $("#nextSixTrend").textContent = trend.label;
@@ -274,7 +246,9 @@ function renderFeelScore() {
 
 function renderFeelScoreDetail() {
   const item = state.activeDay === "tomorrow" ? state.feelscore?.tomorrow : state.feelscore?.feelscore;
-  const copy = forecastComfortCopy({ item, forecast: state.forecast || {}, hourly: state.weather?.hourly || [], tomorrow: state.activeDay === "tomorrow" });
+  const copy = state.activeDay === "tomorrow"
+    ? forecastComfortCopy({ item, forecast: state.forecast || {}, hourly: state.weather?.hourly || [], tomorrow: true })
+    : state.currentComfort?.copy || forecastComfortCopy({ hourly: state.weather?.hourly || [] });
   $("#detailEmoji").textContent = copy.emoji;
   $("#detailLabel").textContent = copy.headline;
   $("#detailNarrative").textContent = copy.weatherNarrative || "Hourly comfort guidance is updating.";
@@ -589,13 +563,15 @@ async function loadCore({ force = false, announce = false } = {}) {
   refreshButton.classList.add("is-spinning");
   $("#headerStatus").textContent = "Updating";
   const requests = [
-    fetchJson(routeUrl(`weather&type=hourly&lat=${ASHEVILLE.lat}&lon=${ASHEVILLE.lon}`), { ttl: 3 * 60 * 1000, force }),
+    fetchJson(routeUrl(`weather&type=hourly&lat=${ASHEVILLE.lat}&lon=${ASHEVILLE.lon}`), { ttl: COMFORT_REFRESH_MS, force }),
     fetchJson(routeUrl("alerts/latest"), { ttl: 60 * 1000, force }),
     fetchJson(routeUrl("forecast/latest"), { ttl: 60 * 1000, force }),
     fetchJson(routeUrl("tidbits/pulse-feed"), { ttl: 60 * 1000, force }),
-    fetchJson(routeUrl("substack-articles"), { ttl: 30 * 60 * 1000, force })
+    fetchJson(routeUrl("substack-articles"), { ttl: 30 * 60 * 1000, force }),
+    fetchJson(routeUrl("storm/current"), { ttl: COMFORT_REFRESH_MS, force })
   ];
-  const [weather, alerts, forecast, pulse, article] = await Promise.allSettled(requests);
+  const [weather, alerts, forecast, pulse, article, storm] = await Promise.allSettled(requests);
+  state.storm = storm.status === "fulfilled" ? storm.value : null;
   if (weather.status === "fulfilled") { state.weather = weather.value; renderCurrent(); renderFeelScore(); renderSunsetContext(); } else console.warn("Weather unavailable", weather.reason);
   if (alerts.status === "fulfilled") renderAlerts(alerts.value); else renderAlerts({ alerts: [] });
   if (forecast.status === "fulfilled") state.forecast = forecast.value;
@@ -638,7 +614,7 @@ async function init() {
   navigate(location.hash.slice(1) || "home", { updateHash: false });
   await loadCore();
   clearInterval(refreshTimer);
-  const previewInterval = ["127.0.0.1", "localhost"].includes(location.hostname) ? 2 * 60 * 1000 : 60 * 1000;
+  const previewInterval = ["127.0.0.1", "localhost"].includes(location.hostname) ? 2 * 60 * 1000 : COMFORT_REFRESH_MS;
   refreshTimer = setInterval(() => { if (document.visibilityState === "visible") loadCore(); }, previewInterval);
 }
 

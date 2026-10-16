@@ -287,7 +287,7 @@ function chartMarkup(model) {
 export function renderComfortCurve(target, options = {}) {
   const container = typeof target === "string" ? document.querySelector(target) : target;
   if (!container) return null;
-  const model = buildComfortCurveModel(options);
+  const model = options.model === undefined ? buildComfortCurveModel(options) : options.model;
   if (!model) {
     container.innerHTML = "";
     container.hidden = true;
