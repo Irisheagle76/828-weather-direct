@@ -816,9 +816,63 @@
       height: auto;
     }
 
+    .profile-card .profile-coverage {
+      margin: 0 24px 18px;
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+
     .profile-bg {
       fill: #081426;
     }
+
+    .profile-card .profile-help {
+      margin: 12px 24px 0;
+      font-size: 0.85rem;
+    }
+
+    .profile-site { cursor: pointer; outline: none; }
+    .profile-hit-area { fill: transparent; }
+    .profile-site:is(:hover, :focus-visible, [aria-expanded="true"]) .profile-dot {
+      stroke: #ffd166;
+      stroke-width: 9;
+    }
+
+    .profile-popover[hidden] { display: none; }
+    .profile-popover {
+      position: fixed;
+      z-index: 1000;
+      box-sizing: border-box;
+      width: min(320px, calc(100vw - 32px));
+      max-height: calc(100dvh - 32px);
+      overflow-y: auto;
+      padding: 18px;
+      border: 1px solid #75a9ff;
+      border-radius: 16px;
+      background: #0b1b33;
+      color: #fffdf8;
+      box-shadow: 0 12px 36px #0008;
+    }
+    .profile-popover h3 { margin: 0 32px 6px 0; font-size: 1.05rem; }
+    .profile-popover p { margin: 5px 0; font-size: 0.8rem; line-height: 1.5; color: #cddcff; }
+    .profile-popover-close {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 44px;
+      height: 44px;
+      border: 0;
+      border-radius: 10px;
+      color: #fffdf8;
+      background: transparent;
+      cursor: pointer;
+      font-size: 1.5rem;
+    }
+    .profile-popover dl { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+    .profile-popover dt { font-size: 0.75rem; color: #cddcff; }
+    .profile-popover dd { margin: 2px 0 0; font-weight: 800; }
+    .profile-popover a { display: inline-block; padding: 8px 0; color: #9ec1ff; font-size: 0.85rem; }
+    .profile-popover :focus-visible { outline: 2px solid #ffd166; outline-offset: 2px; }
 
     .profile-axis,
     .profile-stem,

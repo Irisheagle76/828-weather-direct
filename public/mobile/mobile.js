@@ -1,3 +1,4 @@
+import { hikingReportState, hikingNetworkMarkup } from './hiking-data.js';
 import { initNotificationSettings } from './notifications.js';
 import { mobileRadiance } from './radiance.js';
 import { sunPositionCard } from "./sun-position.js";
@@ -25,6 +26,8 @@ const state = { weather: null, forecast: null, feelscore: null, pulse: null, art
 let toastTimer = null;
 let refreshTimer = null;
 let detailRenderId = 0;
+let activeMoreView = null;
+let hikingLoadedAt = 0;
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
@@ -419,15 +422,15 @@ function elevationRecommendation(g = {}) {
 }
 
 function renderHiking() {
+  const report = hikingReportState(state.hiking || {});
   const g = state.hiking?.guidance || {};
-  const publishedAge = Date.now() - Date.parse(state.hiking?.generatedAt);
-  if (!Number.isFinite(publishedAge) || publishedAge > 90 * 60000 || publishedAge < -5 * 60000) {
+  if (report.stale) {
     $("#homeHikingLabel").textContent = "Check the mountain views";
     $("#homeHikingMeta").textContent = "Trail report needs an update";
     return;
   }
   $("#homeHikingLabel").textContent = g.hikerScoreLabel || g.overall || "Trail read";
-  $("#homeHikingMeta").textContent = Number.isFinite(Number(g.hikerScore)) ? `HikerScore ${Math.round(Number(g.hikerScore))}` : "Open HikerScore";
+  $("#homeHikingMeta").textContent = [report.score === null ? "Score unavailable" : `HikerScore ${report.score}`, `${report.available}/${report.requested} sites`, report.partial ? "Limited coverage" : ""].filter(Boolean).join(" · ");
 }
 
 function sunsetInfo() {
@@ -443,8 +446,9 @@ function renderSunsetContext() {
 }
 
 async function loadHiking(force = false) {
-  if (state.hiking && !force) return state.hiking;
+  if (state.hiking && !force && Date.now() - hikingLoadedAt < 5 * 60 * 1000) return state.hiking;
   state.hiking = await fetchJson(routeUrl("hiking/current"), { ttl: 5 * 60 * 1000, force });
+  hikingLoadedAt = Date.now();
   renderHiking();
   return state.hiking;
 }
@@ -456,6 +460,7 @@ async function loadSky(force = false) {
 }
 
 async function renderMoreView(view) {
+  activeMoreView = view;
   const renderId = ++detailRenderId;
   $("#moreMenu").hidden = true;
   $(".notification-settings").hidden = true;
@@ -465,8 +470,11 @@ async function renderMoreView(view) {
   try {
     if (view === "hiking") {
       const payload = await loadHiking();
-      const g = payload.guidance || {};
-      target.innerHTML = `<section class="panel more-hero"><p class="kicker">HikerScore</p><h2>${Number.isFinite(Number(g.hikerScore)) ? Math.round(Number(g.hikerScore)) : "--"} · ${escapeHtml(g.hikerScoreLabel || g.overall || "Trail guidance")}</h2><p>${escapeHtml(g.bestWindow || g.hikerNarrative || "Mountain conditions are updating.")}</p></section><section class="panel"><p class="kicker">Recommended elevation</p><h2>${escapeHtml(elevationRecommendation(g))}</h2><div class="more-stats"><div><span>Peak gust</span><strong>${Number.isFinite(Number(g.maxGust)) ? `${Math.round(Number(g.maxGust))} mph` : "--"}</strong></div><div><span>Mount Mitchell vs Asheville</span><strong>${Number.isFinite(Number(g.mitchellDrop)) ? `${Math.abs(Math.round(Number(g.mitchellDrop)))}°F ${Number(g.mitchellDrop) >= 0 ? "cooler" : "warmer"}` : "--"}</strong></div><div><span>Cloud / visibility</span><strong>${escapeHtml(g.fogRisk || "--")}</strong></div><div><span>Temperature range around Asheville</span><strong>${Number.isFinite(Number(g.localTempSpread)) ? `${Math.round(Number(g.localTempSpread))}°F` : "--"}</strong></div></div><p class="body-copy"><strong>Mount Mitchell vs Asheville:</strong> compares the summit station with the average of reporting Asheville-area stations. A cooler summit can mean packing an extra layer.</p><p class="body-copy"><strong>Temperature range around Asheville:</strong> the difference between the warmest and coolest reporting local stations. Larger differences mean local conditions vary more; your trail may differ.</p><a class="product-link" href="/hiking.html">Open full Hiking Guidance →</a></section>`;
+      if (renderId !== detailRenderId || location.hash !== "#more") return;
+      const report = hikingReportState(payload);
+      const { stale } = report;
+      const g = stale ? {} : payload.guidance || {};
+      target.innerHTML = `<section class="panel more-hero"><p class="kicker">HikerScore</p><h2>${Number.isFinite(g.hikerScore) ? Math.round(Number(g.hikerScore)) : "--"} · ${escapeHtml(g.hikerScoreLabel || g.overall || "Trail guidance")}</h2><p>${escapeHtml(g.bestWindow || g.hikerNarrative || "Mountain conditions are updating.")}</p></section><section class="panel"><p class="kicker">Recommended elevation</p><h2>${escapeHtml(stale ? "Check current mountain conditions" : elevationRecommendation(g))}</h2><div class="more-stats"><div><span>Peak gust</span><strong>${Number.isFinite(g.maxGust) ? `${Math.round(Number(g.maxGust))} mph` : "--"}</strong></div><div><span>Mount Mitchell vs Asheville</span><strong>${Number.isFinite(g.mitchellDrop) ? `${Math.abs(Math.round(Number(g.mitchellDrop)))}°F ${Number(g.mitchellDrop) >= 0 ? "cooler" : "warmer"}` : "--"}</strong></div><div><span>Cloud / visibility</span><strong>${escapeHtml(g.fogRisk || "--")}</strong></div><div><span>Temperature range around Asheville</span><strong>${Number.isFinite(g.localTempSpread) ? `${Math.round(Number(g.localTempSpread))}°F` : "--"}</strong></div></div><p class="body-copy"><strong>Mount Mitchell vs Asheville:</strong> compares the summit station with the average of reporting Asheville-area stations. A cooler summit can mean packing an extra layer.</p><p class="body-copy"><strong>Temperature range around Asheville:</strong> the difference between the warmest and coolest reporting local stations. Larger differences mean local conditions vary more; your trail may differ.</p><a class="product-link" href="/hiking.html">Open full Hiking Guidance →</a></section>`;
       const score = typeof g.hikerScore === "number" && Number.isFinite(g.hikerScore) ? Math.min(100, Math.max(0, Math.round(g.hikerScore))) : null;
       target.querySelector(".more-hero h2").insertAdjacentHTML("beforebegin", `<div class="hiking-score-visual"><div class="hiking-score-dial${score === null ? " is-unknown" : ""}" style="--score:${score ?? 0}" aria-label="HikerScore ${score ?? "unavailable"} out of 100"><span><b>${score ?? "—"}</b><small>/ 100</small></span></div><div class="hiking-score-caption"><span aria-hidden="true">🥾</span><strong>Outdoor conditions</strong><small>Higher scores favor hiking</small></div></div>`);
       target.querySelectorAll(".more-stats > div").forEach((card, index) => card.insertAdjacentHTML("afterbegin", `<span class="hiking-condition-icon" aria-hidden="true">${["➜", "❄", "☁", "↕"][index]}</span>`));
@@ -482,13 +490,12 @@ async function renderMoreView(view) {
         card.classList.add("hiking-context-card", `hiking-context-${index}`);
         card.insertAdjacentHTML("beforeend", contextGraphics[index]);
       });
-      const age = Date.now() - Date.parse(payload.generatedAt);
-      const stale = !Number.isFinite(age) || age > 15 * 60000 || age < -5 * 60000 || (payload.quality && payload.quality.status !== "fresh");
       const trailTakeaway = stale
         ? "Check the latest mountain conditions before choosing your route."
         : `${elevationRecommendation(g)}. ${Number.isFinite(g.mitchellDrop) && g.mitchellDrop >= 8 ? "Pack an extra layer for high peaks." : "Carry a light layer for exposed ridges."} ${g.fogRisk === "Elevated" ? "Watch for damp footing and low cloud." : "Bring water and sun protection for open trails."}`;
       target.insertAdjacentHTML("afterbegin", `<section class="panel hiking-takeaway"><p class="kicker">${stale ? "Report needs an update" : "Your hiking outlook"}</p><p class="hiking-takeaway-text">${escapeHtml(trailTakeaway)}</p><small>${payload.generatedAt ? `Updated ${escapeHtml(formatDate(payload.generatedAt))} at ${escapeHtml(formatTime(payload.generatedAt))}` : "Update time unavailable"}${stale ? " · Conditions may have changed" : ""}</small></section>`);
-      if (stale) target.querySelector(".more-hero .kicker").textContent = "Last published HikerScore";
+      if (report.partial) target.querySelector(".hiking-takeaway").insertAdjacentHTML("beforeend", `<p class="hiking-coverage-warning">Limited coverage: ${report.available} of ${report.requested} sites reporting. Missing sites cannot rule out wind, rain, or lightning.</p>`);
+      if (stale) target.querySelector(".more-hero .kicker").textContent = "HikerScore unavailable";
       const packItems = [
         ["🧥", "Pack layers", !stale && Number.isFinite(g.mitchellDrop) && g.mitchellDrop >= 8 ? "High peaks are cooler than Asheville. Bring an insulating layer and a wind/rain shell for exposed ridges." : "Bring an extra layer and a wind/rain shell; summit weather can differ from the trailhead."],
         ["💧", "Carry water & snacks", "Plan water for the full route and extra time. Drink regularly, pack snacks, and confirm refill locations instead of assuming streams are usable."],
@@ -497,9 +504,7 @@ async function renderMoreView(view) {
         ["🧭", "Check before leaving", "Check the latest forecast, trail closures and mountain cameras. Carry an offline map and a headlamp, and share your route and return time."]
       ];
       target.querySelector(".more-hero").insertAdjacentHTML("afterend", `<section class="panel hiking-actions"><p class="kicker">Before you head out</p><h2>Pack for your route</h2><p>${stale ? "General packing checklist — the weather report is out of date. Check current conditions before deciding where to hike." : "Packing cues from the published conditions, plus essentials for any mountain hike."}</p><div class="hiking-action-grid">${packItems.map(([icon,title,detail]) => `<div class="hiking-action"><span aria-hidden="true">${icon}</span><div><strong>${title}</strong><p>${detail}</p></div></div>`).join("")}</div><a class="product-link" href="https://www.nps.gov/articles/hiking-safety.htm" target="_blank" rel="noopener noreferrer">NPS hiking preparation guide ↗</a></section>`);
-      const stations = (payload.stations || []).filter(s => Number.isFinite(s.temperatureF)).sort((a,b) => (b.elevationFt || 0) - (a.elevationFt || 0)).slice(0, 4);
-      const elevationStations = stations.filter(station => Number.isFinite(station.elevationFt));
-      if (elevationStations.length) target.insertAdjacentHTML("beforeend", `<section class="panel elevation-profile"><p class="kicker">${stale ? "Last published" : "Observed"} elevation profile</p><h2>Conditions up the mountain</h2><div class="elevation-chart">${elevationStations.map(station => `<div class="elevation-chart-row"><div><strong>${escapeHtml(station.name)}</strong><small>${Math.round(station.elevationFt).toLocaleString()} ft</small></div><div class="elevation-bar-track"><span style="width:${Math.min(100,Math.max(0,station.elevationFt / 6684 * 100))}%"></span></div><div class="elevation-weather"><strong>${Math.round(station.temperatureF)}°F</strong><small>${Number.isFinite(station.windMph) ? `${Math.round(station.windMph)} mph wind` : "Wind unavailable"}</small>${station.conditions ? `<small>${escapeHtml(station.conditions)}</small>` : ""}</div></div>`).join("")}</div><small>Bar length shows elevation relative to 6,684 ft. Temperatures are reported at each station.</small></section>`);
+      target.insertAdjacentHTML("beforeend", hikingNetworkMarkup(payload));
       target.insertAdjacentHTML("beforeend", `<h2 class="camera-section-title">Check the mountain views</h2>${cameraCards(CAMERAS.filter(c => c.mountain))}`);
     } else if (view === "sunset") {
       target.innerHTML = `${sunPositionCard(Date.now(), sunsetInfo())}<section class="panel"><p class="kicker">Sky &amp; Sunset</p><h2>Updating the sky read</h2><p>Checking camera analysis and tonight’s outlook…</p></section>`;
@@ -600,7 +605,10 @@ async function loadCore({ force = false, announce = false } = {}) {
   renderPulse();
   if (article.status === "fulfilled") state.article = article.value;
   renderArticle();
-  loadHiking(force).catch((error) => console.warn("Hiking summary unavailable", error));
+  const previousHiking = state.hiking;
+  loadHiking(force).then(payload => {
+    if (payload !== previousHiking && activeMoreView === "hiking" && location.hash === "#more" && !$("#moreDetail").hidden) renderMoreView("hiking");
+  }).catch((error) => console.warn("Hiking summary unavailable", error));
   refreshButton.classList.remove("is-spinning");
   $("#headerStatus").textContent = weather.status === "fulfilled" ? `Updated ${formatTime(Date.now())}` : "Some data unavailable";
   if (announce) showToast(weather.status === "fulfilled" ? "828 weather data refreshed." : "Some weather data could not refresh.");

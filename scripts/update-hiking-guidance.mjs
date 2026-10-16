@@ -1,8 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { OBSERVATION_STATIONS, STATION_BY_ID, stationsForProvider } from "../lib/observations/registry.js";
-import { getElevationObservations } from "../lib/observations/service.js";
+import { environmentCredentials, getElevationObservations } from "../lib/observations/service.js";
 import { analyzeHikingStations } from "../lib/hiking/guidance.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -875,46 +875,81 @@ function renderHtml(payload) {
 `;
 }
 
-const previous = await readPrevious();
-const previousById = new Map((previous?.stations || []).map((s) => [s.id, s]));
-if (!weatherFlowKey || !weatherUndergroundKey) {
-  throw new Error("Hiking refresh requires WEATHERFLOW_API_KEY and WEATHER_UNDERGROUND_API_KEY before writing a new artifact");
-}
-const observationPayload = await getElevationObservations({ force: true, fallbackUrl: null });
-const observationById = new Map(observationPayload.stations.map((station) => [station.id, station]));
-const failureById = new Map(observationPayload.quality.failures.map((failure) => [failure.id, failure]));
-const stations = OBSERVATION_STATIONS
-  .filter((station) => !station.componentOnly && station.provider !== "composite")
-  .map((definition) => {
-    const observation = observationById.get(definition.id);
-    if (observation) return { ...observation, error: failureById.get(definition.id)?.reason || null };
-    const failure = failureById.get(definition.id);
-    return {
-      id: definition.id,
-      stationId: definition.providerStationId,
-      provider: definition.provider,
-      source: definition.provider,
-      name: definition.name,
-      role: definition.role,
-      elevationFt: definition.elevationFt,
-      url: definition.url,
-      lat: definition.latitude,
-      lon: definition.longitude,
-      status: "unavailable",
-      error: failure?.reason || "No observation returned"
-    };
-  });
-const composites = observationPayload.stations.filter((station) => station.provider === "composite");
-stations.push(...composites);
-if (observationPayload.quality.status !== "fresh") {
-  throw new Error(`Hiking observation refresh is ${observationPayload.quality.status}: ${observationPayload.quality.failures.length} feed failures; refusing to write a partial artifact`);
-}
-const payload = {
-  generatedAt: new Date().toISOString(),
-  stations,
-  guidance: analyzeHikingStations(stations)
-};
+export async function updateHikingGuidance({ outputPath = jsonPath, fetcher = fetch, credentials = environmentCredentials(), now = Date.now(), logger = console } = {}) {
+  // Fetch errors can include authenticated URLs. Keep secrets out of logs and artifacts.
+  const safeMessage = (value) => {
+    let message = String(value);
+    const secrets = Object.entries(credentials).filter(([name, value]) => /key|token/i.test(name) && value).map(([, value]) => value);
+    for (const secret of secrets) {
+      message = message.split(secret).join("[redacted]").split(encodeURIComponent(secret)).join("[redacted]");
+    }
+    return message.replace(/https?:\/\/[^\s"'<>]+/g, "[upstream URL redacted]");
+  };
+  try {
+    const missing = [
+      !credentials.weatherUndergroundApiKey && "WEATHER_UNDERGROUND_API_KEY (or WU_API_KEY)"
+    ].filter(Boolean);
+    if (missing.length) throw new Error(`Missing required hiking credentials: ${missing.join(", ")}`);
 
-await fs.mkdir(outDir, { recursive: true });
-await fs.writeFile(jsonPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
-console.log(`Updated ${path.relative(root, jsonPath)}; live hiking page reads this data client-side.`);
+    // Never relabel an old artifact or cached observation as a successful refresh.
+    const observations = await getElevationObservations({ now, fetcher, credentials, force: true, fallbackUrl: null });
+    const quality = {
+      ...observations.quality,
+      failures: observations.quality.failures.map((failure) => ({ ...failure, reason: safeMessage(failure.reason) }))
+    };
+    logger.info(JSON.stringify({ event: "hiking_refresh_coverage", ...quality }));
+    for (const failure of quality.failures) {
+      const ownerStation = credentials.tempestToken && failure.id === `tempest-${credentials.tempestStationId}`;
+      const hint = failure.provider === "tempest" && /401|403/.test(failure.reason)
+        ? failure.id === "tempest-144737" && credentials.jccTempestToken
+          ? "Tempest rejected the JCC station token; verify JCC_TEMPEST_TOKEN."
+          : ownerStation
+            ? "Tempest rejected the residence station token; verify TEMPEST_TOKEN and TEMPEST_STATION_ID."
+            : "WeatherFlow rejected authorization; verify the station's owner token and matching station ID, or an authorized WEATHERFLOW_API_KEY."
+        : undefined;
+      logger.warn(JSON.stringify({ event: "hiking_feed_failure", ...failure, hint }));
+    }
+
+    const usable = observations.stations.filter((station) => station.health?.usable === true && station.retrievalMode === "live" && Number.isFinite(station.temperatureF));
+    if (!usable.length) throw new Error("No usable live hiking observations; preserving the previous artifact");
+
+    const byId = new Map(usable.map((station) => [station.id, station]));
+    const failureById = new Map(quality.failures.map((failure) => [failure.id, failure]));
+    const stations = OBSERVATION_STATIONS.filter((station) => !station.componentOnly).map((definition) => {
+      if (byId.has(definition.id)) return { ...byId.get(definition.id), error: null };
+      // Keep every configured site visible, without publishing stale/invalid measurements.
+      return {
+        id: definition.id, stationId: definition.providerStationId, provider: definition.provider,
+        source: definition.provider, name: definition.name, role: definition.role, elevationFt: definition.elevationFt,
+        url: definition.url, lat: definition.latitude, lon: definition.longitude,
+        status: "unavailable", health: { usable: false },
+        error: failureById.get(definition.id)?.reason || "No usable live observation returned"
+      };
+    });
+    const guidance = analyzeHikingStations(usable, { now });
+    if (usable.length < quality.requestedStations) {
+      const warning = `Limited station coverage: ${usable.length} of ${quality.requestedStations} sites reporting. Check current conditions for your route; unavailable sites cannot rule out wind, rain, or lightning.`;
+      guidance.hikerNarrative = `${warning} ${guidance.hikerNarrative}`;
+      guidance.routeWarnings.push(warning);
+    }
+    const payload = { generatedAt: new Date(now).toISOString(), stations, quality, guidance };
+    await fs.mkdir(path.dirname(outputPath), { recursive: true });
+    const temporaryPath = `${outputPath}.${process.pid}.tmp`;
+    try {
+      await fs.writeFile(temporaryPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+      await fs.rename(temporaryPath, outputPath);
+    } finally {
+      await fs.rm(temporaryPath, { force: true });
+    }
+    logger.info(JSON.stringify({ event: "hiking_refresh_written", path: path.relative(root, outputPath), quality: quality.status, available: usable.length, requested: quality.requestedStations }));
+    return payload;
+  } catch (error) {
+    const message = safeMessage(error.message);
+    logger.error(JSON.stringify({ event: "hiking_refresh_failed", message }));
+    throw new Error(message);
+  }
+}
+
+if (process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url) {
+  updateHikingGuidance().catch(() => { process.exitCode = 1; });
+}

@@ -6,8 +6,8 @@ test("recalculates hiking guidance from the current station temperatures", () =>
   const stations = [
     station("tempest-144737", 2137, 72, 65),
     station("tempest-127602", 2316, 70, 64),
-    station("tempest-160562", 3363, 68, 61),
-    station("tempest-157700", 3371, 66, 60),
+    station("windy-ridge-trail", 3209, 68, 61, "wunderground"),
+    station("webb-weather", 3000, 66, 60, "wunderground"),
     station("mount-mitchell", 6215, 55, 45, "econet")
   ];
 
@@ -52,8 +52,8 @@ test("pleasant Asheville hiking does not stack regional extremes or sun penaltie
   const local = [
     { ...station("tempest-144737", 2137, 74.3, 59.5), uv: 5.68, solarWm2: 729 },
     { ...station("tempest-127602", 2316, 72, 56), uv: 6, solarWm2: 754 },
-    { ...station("tempest-160562", 3363, 75, 59), uv: 6, solarWm2: 725 },
-    { ...station("tempest-157700", 3371, 64, 57), uv: 0, solarWm2: 37 }
+    { ...station("windy-ridge-trail", 3209, 75, 59, "wunderground"), uv: 6, solarWm2: 725 },
+    { ...station("webb-weather", 3000, 64, 57, "wunderground"), uv: 0, solarWm2: 37 }
   ];
   const regional = [
     { ...station("mount-mitchell", 6215, 54.1, 42.7, "econet"), gustMph: 37 },
