@@ -23,7 +23,7 @@
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebPage","name":"Asheville and Blue Ridge Hiking Weather","url":"https://avlweather.com/hiking.html","description":"Elevation-aware trail weather guidance for Asheville and the Blue Ridge Mountains.","isPartOf":{"@type":"WebSite","name":"828 Weather Direct","url":"https://avlweather.com/"},"about":{"@type":"Place","name":"Blue Ridge Mountains"},"author":{"@type":"Person","name":"Tim Ballisty","jobTitle":"Meteorologist","url":"https://avlweather.com/about.html"},"publisher":{"@type":"Organization","name":"828 Weather Direct","url":"https://avlweather.com/"}}
   </script>
-  <link rel="stylesheet" href="css/hiking.css?v=20261012-observation-times" />
+  <link rel="stylesheet" href="css/hiking.css?v=20261016-profile-conditions" />
   <link rel="stylesheet" href="/css/brand-lockup.css?v=20260805-brand2" />
   <link rel="stylesheet" href="/css/site-chrome.css?v=20260908-global-nav" />
   <script defer src="/js/site-chrome.js?v=20260908-global-nav"></script>
@@ -230,7 +230,8 @@
           </p>
         </div>
       </div>
-      <div class="profile-art" id="elevationProfile" role="img" aria-label="Elevation profile of Asheville-area weather readings up to Mount Mitchell"></div>
+      <p class="profile-help">Hover or focus a station for conditions. Tap or click to keep them open; tap again or press Escape to close.</p>
+      <div class="profile-art" id="elevationProfile" role="group" aria-label="Interactive elevation profile of Asheville-area weather readings up to Mount Mitchell"></div>
       <p class="profile-coverage" id="hikingProfileCoverage"></p>
       <div class="profile-temperature-key" aria-label="Temperature color key">
         <span><i class="temp-swatch temp-cool"></i>Cool</span>
@@ -305,7 +306,7 @@
     </div>
   </footer>
 
-  <script type="module" src="js/hiking-page.js?v=20261016-wu-stations"></script>
+  <script type="module" src="js/hiking-page.js?v=20261016-profile-conditions"></script>
   <script type="module" src="js/sky-index.js?v=20260807-continuous-index"></script>
 </body>
 </html>

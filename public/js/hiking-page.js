@@ -1,4 +1,5 @@
 import { selectHikingProfileStations } from "./hiking-profile.js";
+import { attachProfileDetails } from "./hiking-profile-details.js";
 
 const els = {
       hikerScore: document.querySelector("#hikerScore"),
@@ -40,6 +41,7 @@ const els = {
     const NARRATIVE_PREVIEW_CHARS = 200;
     let isNarrativeExpanded = false;
     let fullNarrative = "";
+    let clearProfileDetails = () => {};
 
     function round(value) {
       return Number.isFinite(value) ? Math.round(value) : "--";
@@ -229,6 +231,7 @@ const els = {
     }
 
     function renderElevationProfile(stations = []) {
+      clearProfileDetails();
       const ordered = selectHikingProfileStations(stations);
       const coverage = document.querySelector("#hikingProfileCoverage");
       if (coverage) coverage.textContent = `${ordered.length} selected reporting sites shown; all ${stations.length} sites are listed below. Lightning observations come from the two Asheville-area Tempest stations.`;
@@ -276,10 +279,11 @@ const els = {
         activeLanes[lane] = x + labelWidth / 2;
         const elevationY = labelY + 24;
         return `
-          <g class="profile-site">
+          <g class="profile-site" data-profile-station="${station.id}" role="button" tabindex="0" aria-label="${station.name}: current conditions" aria-expanded="false" aria-controls="hikingProfileDetails">
             <line class="profile-stem" x1="${x}" y1="${y + 13}" x2="${x}" y2="${bottom}" />
             <line class="profile-label-stem" x1="${x}" y1="${Math.max(46, labelY + 8)}" x2="${x}" y2="${Math.max(46, y - 15)}" />
             <circle class="profile-dot" cx="${x}" cy="${y}" r="12" />
+            <circle class="profile-hit-area" cx="${x}" cy="${y}" r="25" />
             <text class="profile-name" x="${x}" y="${labelY}" text-anchor="middle">${labelLines}</text>
             <text class="profile-elev" x="${x}" y="${elevationY}" text-anchor="middle">${station.elevationFt || "--"} ft</text>
             <circle class="profile-base-dot" cx="${x}" cy="${bottom}" r="5" />
@@ -289,7 +293,7 @@ const els = {
       }).join("");
 
       els.elevationProfile.innerHTML = `
-        <svg viewBox="0 0 1080 560" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Selected reporting stations by elevation">
+        <svg viewBox="0 0 1080 560" preserveAspectRatio="xMidYMid meet" role="group" aria-label="Selected reporting stations by elevation">
           <defs>
             <linearGradient id="profileFill" x1="0" x2="1" y1="1" y2="0">
               <stop offset="0%" stop-color="#5bd27c" />
@@ -307,6 +311,7 @@ const els = {
           ${sites}
         </svg>
       `;
+      clearProfileDetails = attachProfileDetails(els.elevationProfile, ordered, { observationTime });
     }
 
     function renderStations(stations = []) {
