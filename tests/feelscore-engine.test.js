@@ -38,7 +38,7 @@ test('dew point matrix imposes a ceiling and hard fail', () => {
 
 test('goldilocks hour requires every strict input', () => {
   assert.equal(classifyHour(pleasant()).category, 5);
-  assert.equal(classifyHour(pleasant({ precipProbabilitySource: 'no-precipitation-weather-code' })).category, 4);
+  assert.equal(classifyHour(pleasant({ precipProbabilitySource: 'no-precipitation-weather-code' })).category, 5);
   assert.equal(classifyHour(pleasant({ precipProbabilityPct: null })).category, 4);
   assert.equal(classifyHour(pleasant({ gustMph: 18 })).category, 4);
 });

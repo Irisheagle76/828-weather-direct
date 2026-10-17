@@ -7,7 +7,7 @@ import * as shapefile from 'shapefile';
 import tzlookup from 'tz-lookup';
 import { gridPointsOnLand } from '../lib/feelscore/geo.js';
 import { parseDwmlBatch } from '../lib/feelscore/nws-dwml.js';
-import { CATEGORIES, ENGINE_VERSION, scorePeriod } from '../lib/feelscore/summer-v1.6.js';
+import { CATEGORIES, ENGINE_VERSION, GOLDILOCKS_CRITERIA, scorePeriod } from '../lib/feelscore/summer-v1.6.js';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const CACHE_DIR = path.join(ROOT, '.cache', 'feelscore');
@@ -283,6 +283,7 @@ async function main() {
     product: 'FEELSCORE — Pleasant Weather Forecast',
     tagline: 'Where will it feel best?',
     engine: ENGINE_VERSION,
+    goldilocksCriteria: GOLDILOCKS_CRITERIA,
     generatedAt: new Date().toISOString(),
     forecastDate,
     forecastWindow: '12–3 PM local time',
