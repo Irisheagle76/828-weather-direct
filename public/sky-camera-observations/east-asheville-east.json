@@ -1,6 +1,9 @@
 {
   "source": "east-asheville-east",
-  "status": "unavailable",
-  "attemptedAt": "2026-10-18T23:20:24.842Z",
-  "reason": "Current live broadcast could not be verified"
+  "status": "ok",
+  "observedAt": "2026-10-19T01:22:38.720Z",
+  "timestampBasis": "received",
+  "attemptedAt": "2026-10-19T01:22:38.720Z",
+  "sha256": "88ff4878d7b5829e007d55701310134cab38f63b5456dae8ca834fb69c60256d",
+  "videoId": "7gYlhfqsz8A"
 }
