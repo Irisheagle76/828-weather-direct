@@ -43,7 +43,7 @@
     </nav>
   </div>
 </header>
-<section id="avl-microscope-page" data-metric="temperature" aria-label="Asheville Under the Microscope">
+<section id="avl-microscope-page" data-load-state="loading" data-metric="temperature" aria-label="Asheville Under the Microscope">
   <style>
     #avl-microscope-page {
       --avl-page-navy: #071d49;
@@ -1320,6 +1320,18 @@
     }
   </style>
 
+  <style>
+    #avl-microscope-page:not([data-load-state="ready"]) .avl-hero-reading,
+    #avl-microscope-page:not([data-load-state="ready"]) .avl-sitebar,
+    #avl-microscope-page:not([data-load-state="ready"]) .avl-page-content,
+    #avl-microscope-page:not([data-load-state="ready"]) .avl-page-footer { display: none; }
+    #avl-microscope-page[data-load-state="ready"] .avl-loading-panel { display: none; }
+    #avl-microscope-page .avl-loading-panel { padding: clamp(24px, 6vw, 56px); background: #edf8f7; color: #13213a; text-align: center; }
+    #avl-microscope-page .avl-loading-panel h2 { margin: 0 0 12px; font-size: clamp(24px, 5vw, 32px); }
+    #avl-microscope-page .avl-loading-panel p { margin: 0 auto; max-width: 540px; line-height: 1.6; }
+    #avl-microscope-page .avl-loading-panel button { margin-top: 20px; padding: 12px 24px; border: 0; border-radius: 24px; background: #071d49; color: white; font: inherit; cursor: pointer; }
+    #avl-microscope-page[data-load-state="loading"] .avl-loading-panel button { display: none; }
+  </style>
   <div class="avl-page-shell">
     <header class="avl-page-hero">
       <div class="avl-hero-reading">
@@ -1338,6 +1350,12 @@
         <p>One city, many microclimates. See how elevation, exposure, shade, and neighborhood geography are shaping the weather people are actually experiencing.</p>
       </div>
     </header>
+    <div class="avl-loading-panel" role="status" aria-live="polite">
+      <h2>Gathering neighborhood observations</h2>
+      <p>We’re collecting station reports and calculating the differences across Asheville. Current conditions will appear here shortly.</p>
+      <button type="button" onclick="location.reload()">Try again</button>
+      <noscript><p>Enable JavaScript to load current neighborhood observations.</p></noscript>
+    </div>
     <div class="avl-sitebar">
       <div class="avl-sitebar-status is-stale" id="avl-live-status" aria-live="polite"><span class="avl-live-dot"></span><strong>Archived September 5 snapshot</strong><span>· live update pending</span></div>
     </div>
@@ -1771,19 +1789,26 @@
                 freshness: station.quality.freshness
               };
             });
-          if (currentCore.length >= 2) stations = currentCore;
+          if (currentCore.length < 2) throw new Error('Not enough reporting stations');
+          stations = currentCore;
           updateSnapshotNarrative(payload);
-          lastSuccessfulSnapshotAt = payload.generatedAt;
           const { renderPublicInsights } = await import('./js/asheville-microscope-public-insights.js');
           renderPublicInsights(root, payload);
           render();
+          lastSuccessfulSnapshotAt = payload.generatedAt;
+          root.dataset.loadState = 'ready';
         } catch (error) {
           const status = root.querySelector('#avl-live-status');
           status.classList.add('is-stale');
           status.querySelector('strong').textContent = 'Live update unavailable';
           status.querySelector('span:last-child').textContent = lastSuccessfulSnapshotAt
             ? `· showing last successful update at ${formatSnapshotTime(lastSuccessfulSnapshotAt)}`
-            : '· showing archived September 5 example';
+            : '· waiting for current observations';
+          if (!lastSuccessfulSnapshotAt) {
+            root.dataset.loadState = 'error';
+            root.querySelector('.avl-loading-panel h2').textContent = 'Current observations are temporarily unavailable';
+            root.querySelector('.avl-loading-panel p').textContent = 'We couldn’t retrieve enough neighborhood reports. Please try again shortly.';
+          }
           if (lastSuccessfulSnapshotAt) {
             root.querySelector('.avl-hero-kicker').textContent = `Last update · ${formatSnapshotTime(lastSuccessfulSnapshotAt)}`;
             root.querySelector('.avl-page-footer span:last-child').textContent = `Last successful update · ${formatSnapshotTime(lastSuccessfulSnapshotAt)}`;
