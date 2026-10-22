@@ -23,6 +23,7 @@
   <link rel="stylesheet" href="/css/app-v2.css?v=20260728-alert-images" />
   <link rel="stylesheet" href="/css/rainfall-context.css?v=20260808" />
   <link rel="stylesheet" href="/css/visual-intelligence.css?v=20261012-chart-contrast" />
+  <link rel="stylesheet" href="/css/fire-curve.css?v=20261022" />
   <style>
     :root {
       --ink: #142033;
@@ -4882,30 +4883,33 @@
           <div class="fire-card-head">
             <div>
               <div class="kicker">Drought & Fire Threat</div>
-              <h2 id="fireHeadline">High fire risk needs a closer read.</h2>
+              <h2 id="fireHeadline">Checking fire weather conditions…</h2>
             </div>
             <button class="fire-info-toggle" id="fireInfoToggle" type="button" aria-expanded="false" aria-controls="fireInfoPanel">
               <span>i</span> More Info
             </button>
           </div>
           <div class="tool-snapshot">
-            <span class="tool-index"><strong id="droughtStressValue">92</strong> Drought stress</span>
-            <span class="tool-index"><strong id="fireThreatValue">65</strong> Fire threat</span>
+            <span class="tool-index"><strong id="droughtStressValue">--</strong> Drought stress</span>
+            <span class="tool-index"><strong id="fireThreatValue">--</strong> <span id="fireThreatCaption">Peak fire · next 24h</span></span>
           </div>
-          <p id="fireSummary">Very dry fuels are the main driver, even when wind and humidity are not extreme.</p>
+          <p id="fireSummary" aria-live="polite">Loading current observations and recent rainfall.</p>
+          <div id="fireOutlookCurve"></div>
+          <p id="fireDataStatus" class="kicker"></p>
+          <p>Local guidance for Asheville · <a href="https://www.weather.gov/gsp/fire_new" target="_blank" rel="noopener">Official NWS fire weather</a></p>
           <div class="fire-driver-grid" aria-label="Drought and fire threat drivers">
             <div class="fire-driver">
-              <b>Fuel dryness</b>
-              <strong id="fireFuelValue">Severe</strong>
-              <span id="fireFuelDriver">Soils and fuels are running very dry.</span>
+              <b>Drought background</b>
+              <strong id="fireFuelValue">--</strong>
+              <span id="fireFuelDriver">Recent moisture is updating.</span>
             </div>
             <div class="fire-driver">
-              <b>Humidity</b>
+              <b>Humidity now</b>
               <strong id="fireHumidityValue">--</strong>
               <span id="fireHumidityDriver">Humidity can limit spread when it stays elevated.</span>
             </div>
             <div class="fire-driver">
-              <b>Wind</b>
+              <b>Wind now</b>
               <strong id="fireWindValue">--</strong>
               <span id="fireWindDriver">Wind decides whether dry fuels become an active spread concern.</span>
             </div>
@@ -4927,7 +4931,7 @@
               <span id="fireSoilDetail">Soil stress is updating.</span>
             </div>
             <div class="fire-detail-card">
-              <b>Trend</b>
+              <b>Next 6 hours</b>
               <strong id="fireTrend">--</strong>
               <span id="fireTrendDetail">Next few hours are updating.</span>
             </div>
@@ -4963,7 +4967,8 @@
               <div class="fire-scale-card">
                 <h3>Fire Threat scale</h3>
                 <div class="fire-scale-list">
-                  <div class="fire-scale-row"><b>0-39</b><span>Moisture or calm weather limits spread potential.</span></div>
+                  <div class="fire-scale-row"><b>0-19</b><span>Low: current weather limits spread potential.</span></div>
+                  <div class="fire-scale-row"><b>20-39</b><span>Moderate: conditions can support ignition and spread.</span></div>
                   <div class="fire-scale-row"><b>40-59</b><span>Elevated: dry fuels, low humidity, or wind deserve attention.</span></div>
                   <div class="fire-scale-row"><b>60-79</b><span>High: ignition and spread become more concerning.</span></div>
                   <div class="fire-scale-row"><b>80-100</b><span>Extreme: very dry fuels and fire weather may align.</span></div>
@@ -4973,6 +4978,9 @@
             <ul class="fire-read-list">
               <li>Drought Stress changes more slowly because it tracks accumulated dryness.</li>
               <li>Fire Threat can rise quickly on breezy, dry afternoons.</li>
+              <li>The headline shows peak potential over the next 24 hours. Humid morning conditions may have a lower current score.</li>
+              <li>The dashed drought line holds the latest daily rainfall and soil analysis steady. It is not a forecast of hourly fuel moisture.</li>
+              <li>Spring and fall profiles automatically blend in and out through the year, emphasizing dry air, wind and recent dry spells. Spring represents exposed fuels before green-up; fall represents leaf-litter season. Calendar timing does not measure vegetation or fuel moisture and does not replace official fire guidance.</li>
               <li>High drought plus high fire threat means the landscape is primed and the day may activate that risk.</li>
               <li>Rain can lower fire threat quickly, but drought stress usually needs repeated or soaking rainfall.</li>
             </ul>
@@ -5241,6 +5249,7 @@
   </div>
 
   <script type="module">
+    import { renderFireCurve, firePresentation } from "./js/visuals/fire-curve.js?v=20261022";
     import { rainfallDate, headlineForPulse } from "./js/intel/homepage-copy.js";
     import { homepageEditorialMode } from "./js/intel/homepage-editorial.js";
     import { renderHeadquarters } from "./js/storm-headquarters.js";
@@ -5411,7 +5420,7 @@
     const RADAR_FORECAST_HOURS = 72;
     let liveRadarSignalActive = PRECIP_SIGNAL_ACTIVE;
     // Seasonal module: turn this back on when drought or fire conditions warrant homepage prominence.
-    const DROUGHT_FIRE_MODULE_ENABLED = false;
+    const DROUGHT_FIRE_MODULE_ENABLED = true;
     const SUBSTACK_CLOUDINARY_IMAGE_OVERRIDE = "";
     const SUBSTACK_DEFAULT_IMAGE = "/images/828-weather-update-default.png";
     const LATEST_SUBSTACK_FALLBACK = {
@@ -5421,32 +5430,6 @@
       description:
         "Drought concerns, early-season heat, record rainfall, and a fluctuating local climate. That was spring 2026 in Asheville.",
       ogImage: SUBSTACK_DEFAULT_IMAGE
-    };
-    const DROUGHT_FIRE_FALLBACK = {
-      DSS: 75,
-      FRI: 53,
-      fireDriver: "Elevated due to very dry fuels",
-      dssLabel: "Severe",
-      friLabel: "Elevated",
-      dssTrend: 2,
-      friTrend: 7,
-      weatherContext: {
-        tempF: 55,
-        rh: 96,
-        windGust: 2,
-        tempAnomalyF: -16,
-        daysSinceRain: 10
-      },
-      inputs: {
-        precip90d: 6.3,
-        precipNormal90d_in: 12.0,
-        precipDeficit90d_in: 5.7,
-        precipSinceSep1_in: 15.3,
-        precipNormalSinceSep1_in: 35.8,
-        precipDeficitSinceSep1_in: 20.5,
-        soilPercentile: 4
-      },
-      narrative: { headline: "Severe drought stress ongoing" }
     };
     let currentPulseMedia = { url: "", mediaType: null };
     let pulseExpirationTimer = null;
@@ -6342,9 +6325,9 @@
     }
 
     function renderDroughtFireCard(data) {
-      const dss = Number(data?.DSS);
-      const fri = Number(data?.FRI);
-      if (!Number.isFinite(dss) || !Number.isFinite(fri)) return;
+      const dss = data?.DSS;
+      const fri = data?.FRI;
+      if (![dss, fri].every(Number.isFinite)) throw new Error("Missing fire index scores");
       const inputs = data?.inputs || {};
       const weatherContext = data?.weatherContext || {};
       const rh = Number(weatherContext.rh);
@@ -6353,20 +6336,24 @@
       const deficit90 = Number(inputs.precipDeficit90d_in);
       const seasonalDeficit = Number(inputs.precipDeficitSinceSep1_in);
       const soil = Number(inputs.soilPercentile);
-      const dssTrend = Number(data?.dssTrend);
-      const friTrend = Number(data?.friTrend);
+      const dssTrend = data?.dssTrend;
+      const friTrend = data?.friTrend;
 
       updateText("#droughtStressValue", Math.round(dss));
-      updateText("#fireThreatValue", Math.round(fri));
-      updateText("#fireHeadline", fireHeadlineFor(dss, fri, data?.narrative?.headline));
-      updateText("#fireSummary", fireSummaryFor(data));
+      const presentation = firePresentation(data);
+      updateText("#fireThreatValue", Math.round(presentation.value));
+      updateText("#fireThreatCaption", presentation.caption);
+      updateText("#fireHeadline", presentation.headline);
+      updateText("#fireSummary", presentation.summary);
+      renderFireCurve("#fireOutlookCurve", data.outlook);
       updateText("#fireFuelValue", data?.dssLabel || (dss >= 70 ? "Severe" : dss >= 40 ? "Moderate" : "Limited"));
       updateText("#fireFuelDriver",
         Number.isFinite(soil) && soil <= 10
           ? `Soil moisture is near the ${Math.round(soil)}th percentile, so fuels remain stressed even before daily weather is added.`
           : dss >= 80 ? "Very dry fuels are carrying the background risk." :
             dss >= 60 ? "Dry fuels are a meaningful part of the risk." :
-            "Fuel dryness is not the dominant concern right now."
+            dss >= 20 ? "A dry background can support drying fine fuels as afternoon humidity falls." :
+            "The latest rainfall and soil data show limited drought stress."
       );
       updateText("#fireHumidityValue", Number.isFinite(rh) ? `${Math.round(rh)}%` : "--");
       updateText("#fireHumidityDriver",
@@ -6374,7 +6361,8 @@
           ? rh <= 25 ? "Very dry air would let fine fuels dry and ignite more easily." :
             rh <= 35 ? "Lower humidity is helping fuels dry during the day." :
             rh <= 55 ? "Humidity is not extreme, but it may only partially limit spread." :
-            "Humidity is currently a limiting factor for active spread."
+            Number.isFinite(data.outlook?.minimumHumidity) ? `Humid now; forecast humidity falls to ${Math.round(data.outlook.minimumHumidity)}% in the available outlook.` :
+            "Humidity currently limits spread; the afternoon outlook is unavailable."
           : "Humidity is a limiting factor unless the air dries out later."
       );
       updateText("#fireWindValue", Number.isFinite(windGust) ? `${Math.round(windGust)} mph` : "--");
@@ -6385,21 +6373,23 @@
             "Wind is not a major driver right now, but it remains the swing factor."
           : "Wind is the swing factor to monitor through the afternoon."
       );
-      updateText("#fireRain90", Number.isFinite(deficit90) ? `${formatInches(deficit90)} short` : "--");
+      updateText("#fireRain90", Number.isFinite(deficit90) ? `${formatInches(Math.abs(deficit90))} ${deficit90 >= 0 ? "short" : "above normal"}` : "--");
       updateText("#fireRain90Detail",
         Number.isFinite(inputs.precip90d) && Number.isFinite(inputs.precipNormal90d_in)
           ? `${inputs.precip90d.toFixed(1)} in observed vs. ${inputs.precipNormal90d_in.toFixed(1)} in normal.`
           : "Rolling rainfall deficit is updating."
       );
-      updateText("#fireSeasonRain", Number.isFinite(seasonalDeficit) ? `${formatInches(seasonalDeficit)} short` : "--");
+      updateText("#fireSeasonRain", Number.isFinite(seasonalDeficit) ? `${formatInches(Math.abs(seasonalDeficit))} ${seasonalDeficit >= 0 ? "short" : "above normal"}` : "--");
       updateText("#fireSeasonRainDetail",
         Number.isFinite(inputs.precipSinceSep1_in) && Number.isFinite(inputs.precipNormalSinceSep1_in)
-          ? `${inputs.precipSinceSep1_in.toFixed(1)} in since Sep. 1 vs. ${inputs.precipNormalSinceSep1_in.toFixed(1)} in normal.`
+          ? `${inputs.precipSinceSep1_in.toFixed(1)} in since Sep. 1, ${String(data.seasonalStart).slice(0, 4)} vs. ${inputs.precipNormalSinceSep1_in.toFixed(1)} in normal.`
           : "Seasonal rainfall deficit is updating."
       );
       updateText("#fireSoil", Number.isFinite(soil) ? labelSoilPercentile(soil) : "--");
       updateText("#fireSoilDetail", Number.isFinite(soil) ? `CPC soil moisture percentile near ${Math.round(soil)}%.` : "Soil stress is updating.");
-      updateText("#fireTrend", `${signedNumber(dssTrend)} drought / ${signedNumber(friTrend)} fire`);
+      updateText("#fireTrend", Number.isFinite(dssTrend) && Number.isFinite(friTrend) ? `${signedNumber(dssTrend)} drought / ${signedNumber(friTrend)} fire` : "Unavailable");
+      const dateLabel = value => /^\d{8}$/.test(value || "") ? `${value.slice(4, 6)}/${value.slice(6, 8)}/${value.slice(0, 4)}` : "unavailable";
+      updateText("#fireDataStatus", `Updated ${new Date(data.updatedAt).toLocaleTimeString("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit" })} ET · Rain through ${dateLabel(data.dataThrough)} · Soil ${dateLabel(data.soilDate)}`);
       updateText("#fireTrendDetail",
         Number.isFinite(tempF)
           ? `Current input: ${Math.round(tempF)}°F, ${Number.isFinite(rh) ? `${Math.round(rh)}% RH` : "RH pending"}, ${Number.isFinite(windGust) ? `${Math.round(windGust)} mph gust` : "wind pending"}.`
@@ -6412,12 +6402,16 @@
       if (!DROUGHT_FIRE_MODULE_ENABLED) return;
       if (card) card.hidden = false;
 
-      renderDroughtFireCard(DROUGHT_FIRE_FALLBACK);
-
       try {
         renderDroughtFireCard(await fetchRouteJson("drought-fire"));
       } catch (error) {
-        console.warn("Drought/fire module using local fallback", error);
+        for (const id of ["droughtStressValue", "fireThreatValue", "fireFuelValue", "fireHumidityValue", "fireWindValue", "fireRain90", "fireSeasonRain", "fireSoil", "fireTrend"]) updateText(`#${id}`, "--");
+        renderFireCurve("#fireOutlookCurve", null);
+        for (const id of ["fireFuelDriver", "fireHumidityDriver", "fireWindDriver", "fireRain90Detail", "fireSeasonRainDetail", "fireSoilDetail", "fireTrendDetail"]) updateText(`#${id}`, "Current data unavailable.");
+        updateText("#fireHeadline", "Fire weather data is temporarily unavailable.");
+        updateText("#fireSummary", "A current score needs fresh observations and complete NOAA rainfall and soil data. Check the NWS link for official guidance.");
+        updateText("#fireDataStatus", "No current score available");
+        console.warn("Drought/fire data unavailable", error);
       }
     }
 
@@ -7406,6 +7400,7 @@
     loadAndRenderAlerts(activeAlerts);
     hydrateSubstackCard();
     hydrateDroughtFireCard();
+    setInterval(hydrateDroughtFireCard, 10 * 60 * 1000);
     hydrateRainfallContext();
     hydrateHomeHikingCard();
     hydrateHomeWaterCard();

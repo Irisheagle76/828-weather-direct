@@ -1,0 +1,31 @@
+.fire-curve-card { margin: 24px 0; padding: 22px 24px 18px; border: 1px solid #ffffff25; border-radius: 20px; background: linear-gradient(155deg,#291e1ccc,#382320ba); box-shadow: 0 14px 34px #1a0d1220; }
+.fire-curve-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.fire-curve-eyebrow { color: #edc6ae; font: 700 10px/1.4 system-ui,sans-serif; letter-spacing: .15em; text-transform: uppercase; }
+.fold-tool-card.fire .fire-curve-header h3 { color: #fff5e8; font: 600 25px/1.2 Georgia,serif; letter-spacing: -.02em; margin: 5px 0 0; }
+.fire-curve-scale { font: 500 11px/1.5 system-ui,sans-serif; color: #dac7ba; text-align: right; }
+.fire-curve-legend { display: flex; flex-wrap: wrap; gap: 18px; margin: 18px 0 4px; font: 600 12px/1.4 system-ui,sans-serif; color: #f8e7da; }
+.fire-curve-legend span { display: inline-flex; gap: 7px; align-items: center; }
+.fire-curve-legend i { width: 24px; display: inline-block; border-top: 3px solid #ffad74; }
+.fire-curve-legend .drought-line-key { border-top: 2px dashed #9ae3d4; }
+.fire-curve-plot { width: 100%; }
+.fire-curve-plot svg { display: block; width: 100%; height: auto; overflow: visible; font-family: system-ui,sans-serif; }
+.fire-curve-inspect { display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; min-height: 36px; padding: 12px 0 6px; border-top: 1px solid #ffffff15; font: 500 12px/1.5 system-ui,sans-serif; }
+.fire-curve-inspect b { color: #fff1e4; margin-right: auto; }
+.fire-curve-inspect strong { font-size: 17px; }
+.fire-curve-fire { color: #ffbd8f; }
+.fire-curve-drought { color: #aae7da; }
+.fire-curve-inspect small { color: #dac7ba; font-size: 11px; }
+.fire-curve-slider-label { display: flex; align-items: center; gap: 14px; color: #d7c0b1; font: 500 10px/1.4 system-ui,sans-serif; }
+.fire-curve-slider { flex: 1; min-width: 0; height: 24px; accent-color: #ffad74; cursor: pointer; }
+.fire-curve-slider:focus-visible { outline: 2px solid #9ae3d4; outline-offset: 3px; border-radius: 4px; }
+.fold-tool-card.fire .fire-curve-note, .fold-tool-card.fire .fire-curve-empty { color: #cfb9aa; font: 400 11px/1.65 system-ui,sans-serif; margin: 10px 0 0; max-width: none; }
+@media(max-width:600px) {
+  .fire-curve-card { margin: 20px 0; padding: 18px 12px 14px; border-radius: 16px; }
+  .fire-curve-header { align-items: start; flex-direction: column; gap: 6px; }
+  .fold-tool-card.fire .fire-curve-header h3 { font-size: 23px; }
+  .fire-curve-scale { text-align: left; }
+  .fire-curve-legend { gap: 12px; font-size: 11px; }
+  .fire-curve-inspect { gap: 5px 14px; }
+  .fire-curve-inspect b { flex-basis: 100%; }
+  .fire-curve-inspect small { flex-basis: 100%; }
+}
