@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-22T18:28:36.276Z",
+  "generatedAt": "2026-10-22T22:15:04.745Z",
   "stations": [
     {
       "id": "tempest-144737",
@@ -12,17 +12,17 @@
       "url": "https://tempestwx.com/station/144737/grid",
       "lat": 35.606299,
       "lon": -82.547881,
-      "observedAt": "2026-10-22T18:28:28.000Z",
-      "temperatureF": 70.34,
-      "feelsLikeF": 70.34,
-      "dewPointF": 44.96,
-      "humidityPct": 40,
-      "windMph": 2.2369362921,
-      "gustMph": 3.57909806736,
-      "windDirection": "341deg",
-      "pressure": 30.12944175693,
-      "uv": 5.01,
-      "solarWm2": 662,
+      "observedAt": "2026-10-22T22:14:24.000Z",
+      "temperatureF": 64.04,
+      "feelsLikeF": 64.04,
+      "dewPointF": 43.34,
+      "humidityPct": 47,
+      "windMph": 1.78954903368,
+      "gustMph": 3.35540443815,
+      "windDirection": "17deg",
+      "pressure": 30.15306574341,
+      "uv": 0.17,
+      "solarWm2": 23,
       "rainTodayIn": 0,
       "rainRateInHr": 0,
       "lightningStrikes1h": 0,
@@ -34,7 +34,7 @@
         "status": "healthy",
         "score": 100,
         "usable": true,
-        "ageMinutes": 0,
+        "ageMinutes": 1,
         "maxAgeMinutes": 45,
         "issues": []
       },
@@ -327,7 +327,7 @@
       "health": {
         "usable": false
       },
-      "error": "The operation was aborted due to timeout"
+      "error": "NC ECONet FRYI returned no current observation"
     },
     {
       "id": "mount-mitchell",
@@ -344,7 +344,7 @@
       "health": {
         "usable": false
       },
-      "error": "The operation was aborted due to timeout"
+      "error": "NC ECONet MITC returned no current observation"
     }
   ],
   "quality": {
@@ -460,12 +460,12 @@
       {
         "id": "frying-pan-pisgah-ridgeline",
         "provider": "econet",
-        "reason": "The operation was aborted due to timeout"
+        "reason": "NC ECONet FRYI returned no current observation"
       },
       {
         "id": "mount-mitchell",
         "provider": "econet",
-        "reason": "The operation was aborted due to timeout"
+        "reason": "NC ECONet MITC returned no current observation"
       },
       {
         "id": "mountain-air-ridge-composite",
@@ -475,16 +475,16 @@
     ]
   },
   "guidance": {
-    "overall": "Great for Asheville-area hikes; watch sun exposure",
-    "bestWindow": "Forest shade is the friendliest choice; open ridges and pavement will feel warmer.",
-    "hikerNarrative": "Limited station coverage: 1 of 19 sites reporting. Check current conditions for your route; unavailable sites cannot rule out wind, rain, or lightning. Great for Asheville-area hikes; watch sun exposure. Forest shade is the friendliest choice; open ridges and pavement will feel warmer. Nearby readings span about 0degF; shade, slope, and exposure can change the feel. Check high-peak temperatures separately. ",
+    "overall": "Great for Asheville-area hikes",
+    "bestWindow": "Most nearby trails look friendly, with normal mountain checks.",
+    "hikerNarrative": "Limited station coverage: 1 of 19 sites reporting. Check current conditions for your route; unavailable sites cannot rule out wind, rain, or lightning. Great for Asheville-area hikes. Most nearby trails look friendly, with normal mountain checks. Nearby readings span about 0degF; shade, slope, and exposure can change the feel. Check high-peak temperatures separately. ",
     "scoreScope": "Asheville-area trails",
     "localConditions": {
       "fogRisk": "Low",
-      "maxUv": 5.01,
-      "maxSolar": 662,
-      "maxGust": 3.57909806736,
-      "maxTemp": 70.34,
+      "maxUv": 0.17,
+      "maxSolar": 23,
+      "maxGust": 3.35540443815,
+      "maxTemp": 64.04,
       "maxWbgt": null,
       "maxRainRate": 0,
       "maxRainToday": 0,
@@ -496,32 +496,27 @@
       "Limited station coverage: 1 of 19 sites reporting. Check current conditions for your route; unavailable sites cannot rule out wind, rain, or lightning."
     ],
     "bullets": [
-      "Great for Asheville-area hikes; watch sun exposure: Forest shade is the friendliest choice; open ridges and pavement will feel warmer.",
+      "Great for Asheville-area hikes: Most nearby trails look friendly, with normal mountain checks.",
       "Asheville-area spread is about 0degF.",
       "High Asheville readings broadly agree.",
       "Mount Mitchell comparison unavailable.",
       "Fog risk is not the lead concern.",
       "Wind is light at the reporting sites.",
-      "Sun exposure matters on open routes."
+      "Sun exposure is manageable right now."
     ],
-    "hikerScore": 86,
+    "hikerScore": 92,
     "hikerScoreLabel": "Great",
-    "hikerScoreFactors": [
-      {
-        "label": "Sun exposure",
-        "penalty": 6
-      }
-    ],
+    "hikerScoreFactors": [],
     "localTempSpread": 0,
     "highStationSpread": null,
     "lapseRate": null,
     "mitchellDrop": null,
     "wncLapseRate": null,
     "fogRisk": "Low",
-    "maxUv": 5.01,
-    "maxSolar": 662,
-    "maxGust": 3.6,
-    "maxTemp": 70.3,
+    "maxUv": 0.17,
+    "maxSolar": 23,
+    "maxGust": 3.4,
+    "maxTemp": 64,
     "maxWbgt": null,
     "maxRainRate": 0,
     "maxRainToday": 0,
