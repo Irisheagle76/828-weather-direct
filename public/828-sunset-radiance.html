@@ -641,6 +641,12 @@
       border: 0;
     }
 
+    .context-card.primary-assistant .context-media.drivenc-live { aspect-ratio: 16 / 9; min-height: 0; background: #081426; }
+    .context-media.drivenc-live::after { display: none; }
+    .drivenc-live video { display: block; width: 100%; height: 100%; aspect-ratio: 16 / 9; object-fit: contain; }
+    #driveNCPlay[hidden] { display: none; }
+    #driveNCPlay { cursor: pointer; border: 0; bottom: 54px; }
+
     .youtube-live-fallback {
       position: absolute;
       right: 12px;
@@ -1597,23 +1603,17 @@
 
         <div class="camera-desk-heading">
           <h3>Live Camera Desk</h3>
-          <p>Compare the Chamber, downtown, East Asheville, and UNC Asheville views, then look north from Fairview toward Swannanoa. Analysis availability is listed above.</p>
+          <p>Compare the downtown I-240 traffic camera, courthouse, and East Asheville views, then look north from Fairview toward Swannanoa. Analysis availability is listed above.</p>
         </div>
 
         <div class="sky-context-grid" aria-label="Live Asheville camera views">
           <article class="context-card primary-assistant">
-            <div class="context-media videstra-live">
-              <iframe
-                src="https://plyhearst.videstra.live/?id=674b5cf0-55b3-49e2-a8da-bb57ce2ece92_8UIJMXTyGjrwwXziaJUoFLf9hWifZbKVtWF5D_&amp;token=kswZPhLz4beUpNJK7w4Fgl8eu"
-                title="Live Asheville Area Chamber of Commerce camera"
-                loading="lazy"
-                referrerpolicy="strict-origin-when-cross-origin"
-                allow="autoplay; fullscreen; picture-in-picture"
-                allowfullscreen
-              ></iframe>
+            <div class="context-media drivenc-live">
+              <video id="driveNCVideo" controls muted playsinline preload="none" poster="https://www.drivenc.gov/map/Cctv/4204" aria-label="Live downtown I-240 traffic camera"></video>
+              <button id="driveNCPlay" class="youtube-live-fallback" type="button">Watch live</button>
             </div>
             <div class="context-copy">
-              <strong>Asheville Chamber of Commerce · Live.</strong> This camera faces southwest toward Mt. Pisgah, about 16 miles away, providing a wide visual cross-check for local cloud texture, visibility, and changing light. <a href="https://svrhearst.videstra.live/hls_output/674b5cf0-55b3-49e2-a8da-bb57ce2ece92_8UIJMXTyGjrwwXziaJUoFLf9hWifZbKVtWF5D__kswZPhLz4beUpNJK7w4Fgl8eu/index.m3u8" target="_blank" rel="noopener noreferrer">Open stream</a>.
+              <strong>Downtown I-240 traffic camera · DriveNC.</strong> A west-facing view along I-240 at Charlotte Street, with downtown Asheville and the western horizon in view. Select Watch live to start video. The preview is a camera still; its capture time is not verified. This view is not included in the automated sky analysis. <a href="https://www.drivenc.gov/map/Cctv/4204" target="_blank" rel="noopener noreferrer">Open latest still on DriveNC</a> · <a href="https://cfase04.services.ncdot.gov:8887/chan-5369_l/xflow.m3u8" target="_blank" rel="noopener noreferrer">Open live stream</a>. <span id="driveNCStatus" role="status"></span>
             </div>
           </article>
 
@@ -1650,23 +1650,7 @@
             </div>
           </article>
 
-          <article class="context-card station-card">
-            <button class="context-media station-camera unca-camera" type="button" data-lightbox-src="https://www.atms.unca.edu/currwx/towercam.jpg" data-lightbox-title="UNC Asheville Weather Tower">
-              <img id="uncaCameraImage" src="https://www.atms.unca.edu/currwx/towercam.jpg" alt="Latest south-facing camera image from the UNC Asheville Weather Tower" loading="lazy" />
-              <span class="context-label">
-                <span>South-facing view</span>
-                <strong>UNC Asheville Weather Tower</strong>
-              </span>
-            </button>
-            <div class="context-copy">
-              <strong>UNC Asheville · South.</strong> Looking back toward downtown Asheville from the Atmospheric Sciences tower. The image normally updates about every 15 minutes; older images are excluded from the sky read.
-              <div class="station-details" aria-label="UNC Asheville station details">
-                <span>2,357 ft</span>
-                <span>35.62180° N, 82.56606° W</span>
-              </div>
-              <a href="https://econet.climate.ncsu.edu/m/?id=UNCA" target="_blank" rel="noopener noreferrer">View EcoNet weather station</a> · <a href="https://www.atms.unca.edu/huang_wall.html" target="_blank" rel="noopener noreferrer">Weather Tower details</a>
-            </div>
-          </article>
+
           <article class="context-card station-card">
             <button class="context-media station-camera" type="button" data-lightbox-src="https://images.ambientweather.net/308398A68945/latest.jpg" data-lightbox-title="Fairview looking north toward Swannanoa">
               <img id="fairviewCameraImage" src="https://images.ambientweather.net/308398A68945/latest.jpg" alt="Fairview camera looking due north toward the ridges and sky around Swannanoa" loading="lazy" />
@@ -1805,7 +1789,7 @@
         </div>
 
         <div class="footer-meta">
-          <div>Sky image: YouTube live thumbnail snapshot analyzed by 828 Weather Direct, with UNCA EcoNet as a backup view.</div>
+          <div>Sky image: Available camera snapshots analyzed by 828 Weather Direct. Camera analysis availability is listed above.</div>
           <div>Satellite loop: NOAA/NESDIS GOES-East Southeast GeoColor imagery.</div>
           <div>Data: Tempest, NOAA/NWS, Open-Meteo, and local sky-camera signals where available.</div>
           <div>For general awareness only - not a substitute for official forecasts, warnings, or trail advisories.</div>
@@ -1816,6 +1800,7 @@
     </footer>
   </div>
 
+  <script type="module" src="/js/drivenc-camera.js"></script>
   <script type="module">
     import { buildAtmosphereNow } from "./js/intel/atmosphere-now.js";
     import { withStationSkyMeasurements, withStationContext } from "./js/intel/station-lightning.js";
