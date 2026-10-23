@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-23T13:19:35.921Z",
+  "generatedAt": "2026-10-23T18:14:50.421Z",
   "stations": [
     {
       "id": "tempest-144737",
@@ -12,17 +12,17 @@
       "url": "https://tempestwx.com/station/144737/grid",
       "lat": 35.606299,
       "lon": -82.547881,
-      "observedAt": "2026-10-23T13:19:08.000Z",
-      "temperatureF": 44.6,
-      "feelsLikeF": 42.620000000000005,
-      "dewPointF": 40.64,
-      "humidityPct": 86,
-      "windMph": 4.0264853257799995,
-      "gustMph": 5.592340730249999,
-      "windDirection": "214deg",
-      "pressure": 30.288903665670002,
-      "uv": 1.46,
-      "solarWm2": 197,
+      "observedAt": "2026-10-23T18:14:03.000Z",
+      "temperatureF": 66.02,
+      "feelsLikeF": 66.02,
+      "dewPointF": 37.58,
+      "humidityPct": 35,
+      "windMph": 2.46062992131,
+      "gustMph": 3.57909806736,
+      "windDirection": "22deg",
+      "pressure": 30.25346768595,
+      "uv": 5.02,
+      "solarWm2": 675,
       "rainTodayIn": 0,
       "rainRateInHr": 0,
       "lightningStrikes1h": 0,
@@ -34,7 +34,7 @@
         "status": "healthy",
         "score": 100,
         "usable": true,
-        "ageMinutes": 0,
+        "ageMinutes": 1,
         "maxAgeMinutes": 45,
         "issues": []
       },
@@ -316,42 +316,86 @@
       "id": "frying-pan-pisgah-ridgeline",
       "stationId": "FRYI",
       "provider": "econet",
-      "source": "econet",
+      "source": "NC ECONet",
       "name": "Frying Pan / Pisgah Ridgeline",
       "role": "Pisgah ridgeline reading",
       "elevationFt": 5000,
       "url": "https://econet.climate.ncsu.edu/m/?id=FRYI",
       "lat": 35.39357,
       "lon": -82.77427,
-      "status": "unavailable",
+      "observedAt": "2026-10-23T18:09:00.000Z",
+      "temperatureF": 59.2,
+      "feelsLikeF": 59.2,
+      "dewPointF": 32.4,
+      "humidityPct": 36,
+      "windMph": 0,
+      "gustMph": 2,
+      "windDirection": null,
+      "pressure": null,
+      "uv": null,
+      "solarWm2": null,
+      "rainTodayIn": null,
+      "rainRateInHr": null,
+      "lightningStrikes1h": null,
+      "lightningStrikes3h": null,
+      "componentStationIds": null,
+      "retrievalMode": "live",
+      "status": "live",
       "health": {
-        "usable": false
+        "status": "healthy",
+        "score": 100,
+        "usable": true,
+        "ageMinutes": 6,
+        "maxAgeMinutes": 90,
+        "issues": []
       },
-      "error": "NC ECONet FRYI returned no current observation"
+      "error": null
     },
     {
       "id": "mount-mitchell",
       "stationId": "MITC",
       "provider": "econet",
-      "source": "econet",
+      "source": "NC ECONet",
       "name": "Mount Mitchell",
       "role": "WNC high-peak reading",
       "elevationFt": 6215,
       "url": "https://econet.climate.ncsu.edu/m/?id=MITC",
       "lat": 35.75853,
       "lon": -82.27135,
-      "status": "unavailable",
+      "observedAt": "2026-10-23T18:05:00.000Z",
+      "temperatureF": 54.1,
+      "feelsLikeF": 54.1,
+      "dewPointF": 26,
+      "humidityPct": 33,
+      "windMph": 1,
+      "gustMph": 4,
+      "windDirection": null,
+      "pressure": null,
+      "uv": null,
+      "solarWm2": null,
+      "rainTodayIn": null,
+      "rainRateInHr": null,
+      "lightningStrikes1h": null,
+      "lightningStrikes3h": null,
+      "componentStationIds": null,
+      "retrievalMode": "live",
+      "status": "live",
       "health": {
-        "usable": false
+        "status": "healthy",
+        "score": 100,
+        "usable": true,
+        "ageMinutes": 10,
+        "maxAgeMinutes": 90,
+        "issues": []
       },
-      "error": "NC ECONet MITC returned no current observation"
+      "error": null
     }
   ],
   "quality": {
     "status": "partial",
     "requestedStations": 19,
-    "availableStations": 1,
-    "directLiveStations": 1,
+    "availableStations": 3,
+    "directLiveStations": 3,
     "fallbackStations": 0,
     "providers": {
       "tempest": {
@@ -364,7 +408,7 @@
       },
       "econet": {
         "requested": 2,
-        "available": 0
+        "available": 2
       },
       "composite": {
         "requested": 1,
@@ -458,16 +502,6 @@
         "reason": "Observation upstream failed (401)"
       },
       {
-        "id": "frying-pan-pisgah-ridgeline",
-        "provider": "econet",
-        "reason": "NC ECONet FRYI returned no current observation"
-      },
-      {
-        "id": "mount-mitchell",
-        "provider": "econet",
-        "reason": "NC ECONet MITC returned no current observation"
-      },
-      {
         "id": "mountain-air-ridge-composite",
         "provider": "composite",
         "reason": "Mountain Air Ridge Composite has no usable components"
@@ -475,16 +509,16 @@
     ]
   },
   "guidance": {
-    "overall": "Great for Asheville-area hikes; watch fog or damp trail risk",
-    "bestWindow": "Local air is nearly saturated; check the cameras for visibility and watch for damp footing.",
-    "hikerNarrative": "Limited station coverage: 1 of 19 sites reporting. Check current conditions for your route; unavailable sites cannot rule out wind, rain, or lightning. Great for Asheville-area hikes; watch fog or damp trail risk. Local air is nearly saturated; check the cameras for visibility and watch for damp footing. Nearby readings span about 0degF; shade, slope, and exposure can change the feel. Check high-peak temperatures separately. North Downtown reports near-saturated air. This alone does not confirm fog; check a current view of that area.",
+    "overall": "Great for Asheville-area hikes; watch sun exposure",
+    "bestWindow": "Forest shade is the friendliest choice; open ridges and pavement will feel warmer.",
+    "hikerNarrative": "Limited station coverage: 3 of 19 sites reporting. Check current conditions for your route; unavailable sites cannot rule out wind, rain, or lightning. Great for Asheville-area hikes; watch sun exposure. Forest shade is the friendliest choice; open ridges and pavement will feel warmer. Nearby readings span about 0degF; shade, slope, and exposure can change the feel. Mount Mitchell is about 12degF cooler than the Asheville-area readings; pack a layer for high peaks. ",
     "scoreScope": "Asheville-area trails",
     "localConditions": {
-      "fogRisk": "Elevated",
-      "maxUv": 1.46,
-      "maxSolar": 197,
-      "maxGust": 5.592340730249999,
-      "maxTemp": 44.6,
+      "fogRisk": "Low",
+      "maxUv": 5.02,
+      "maxSolar": 675,
+      "maxGust": 3.57909806736,
+      "maxTemp": 66.02,
       "maxWbgt": null,
       "maxRainRate": 0,
       "maxRainToday": 0,
@@ -493,36 +527,35 @@
       }
     },
     "routeWarnings": [
-      "North Downtown reports near-saturated air. This alone does not confirm fog; check a current view of that area.",
-      "Limited station coverage: 1 of 19 sites reporting. Check current conditions for your route; unavailable sites cannot rule out wind, rain, or lightning."
+      "Limited station coverage: 3 of 19 sites reporting. Check current conditions for your route; unavailable sites cannot rule out wind, rain, or lightning."
     ],
     "bullets": [
-      "Great for Asheville-area hikes; watch fog or damp trail risk: Local air is nearly saturated; check the cameras for visibility and watch for damp footing.",
+      "Great for Asheville-area hikes; watch sun exposure: Forest shade is the friendliest choice; open ridges and pavement will feel warmer.",
       "Asheville-area spread is about 0degF.",
       "High Asheville readings broadly agree.",
-      "Mount Mitchell comparison unavailable.",
-      "Near-saturated air is reported at a mountain station; check cameras before assuming fog.",
+      "Mount Mitchell is about 12degF cooler than the Asheville-area readings.",
+      "Fog risk is not the lead concern.",
       "Wind is light at the reporting sites.",
-      "Sun exposure is manageable right now."
+      "Sun exposure matters on open routes."
     ],
-    "hikerScore": 84,
+    "hikerScore": 86,
     "hikerScoreLabel": "Great",
     "hikerScoreFactors": [
       {
-        "label": "Fog or damp trail risk",
-        "penalty": 8
+        "label": "Sun exposure",
+        "penalty": 6
       }
     ],
     "localTempSpread": 0,
     "highStationSpread": null,
     "lapseRate": null,
-    "mitchellDrop": null,
-    "wncLapseRate": null,
-    "fogRisk": "Elevated",
-    "maxUv": 1.46,
-    "maxSolar": 197,
-    "maxGust": 5.6,
-    "maxTemp": 44.6,
+    "mitchellDrop": 11.9,
+    "wncLapseRate": 2.9,
+    "fogRisk": "Low",
+    "maxUv": 5.02,
+    "maxSolar": 675,
+    "maxGust": 4,
+    "maxTemp": 66,
     "maxWbgt": null,
     "maxRainRate": 0,
     "maxRainToday": 0,
