@@ -11,7 +11,8 @@ test("Sunset Radiance includes the DriveNC replacement as a visual camera view",
   assert.ok(html.includes('Live downtown I-240 traffic camera'));
   assert.ok(html.includes('not included in the automated sky analysis'));
   assert.ok(!html.includes('plyhearst.videstra.live'));
-  assert.doesNotMatch(html, /id="uncaCameraImage"|data-lightbox-title="UNC Asheville Weather Tower"/);
+  assert.match(html, /id="uncaCameraImage"/);
+  assert.match(html, /data-lightbox-title="UNC Asheville Weather Tower"/);
   assert.match(html, /Downtown I-240 traffic camera/);
   assert.match(html, /Live Camera Desk/);
   assert.match(html, /Live Buncombe County Courthouse camera on YouTube/);
