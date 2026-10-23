@@ -2078,11 +2078,11 @@
       if (location.protocol !== 'file:') {
         let lastVisibleRefresh = Date.now();
         const refreshIfVisible = () => {
-          if (document.hidden || Date.now() - lastVisibleRefresh < 60_000) return;
+          if (document.hidden || Date.now() - lastVisibleRefresh < 15 * 60_000) return;
           lastVisibleRefresh = Date.now();
           hydrateLiveData();
         };
-        setInterval(refreshIfVisible, 60_000);
+        setInterval(refreshIfVisible, 15 * 60_000);
         document.addEventListener('visibilitychange', refreshIfVisible);
       }
     })();

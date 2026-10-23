@@ -225,7 +225,7 @@
       closePopup(); updateStationSource(true);
     }));
     loadObservations();
-    setInterval(() => { if (!document.hidden) loadObservations(); }, 60_000);
+    setInterval(() => { if (!document.hidden) loadObservations(); }, 15 * 60_000);
 
     async function loadObservations() {
       const controller = new AbortController();
