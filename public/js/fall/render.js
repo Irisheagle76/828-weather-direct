@@ -1,3 +1,4 @@
+import { renderFoliageGraphic } from "./foliage-graphic.js";
 const $ = (selector) => document.querySelector(selector);
 const esc = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[char]);
 const formatUpdated = (value) => new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(value));
@@ -14,15 +15,23 @@ export function renderFallExplorer(model) {
   setText("#leafDrop", model.today.leafDropRisk.toUpperCase());
   setText("#todaySummary", model.today.summary);
   renderPeakTiming(model.season.peakTiming);
-
+  setText('#seasonHeading', model.presentation.heading);
+  setText('#seasonIntro', model.presentation.intro);
+  if (model.presentation.pastWindow) {
+    setText('#peakHeadline', `Estimated midpoint was near ${model.season.peakTiming.midpoint}`);
+    setText('#peakSeasonalNote', model.season.peakTiming.inputType === 'climatology' ? 'This was a historical baseline estimate; this season’s September warmth was not incorporated.' : 'This estimate used the supplied September temperature. It does not establish observed peak color.');
+  }
+  if (model.presentation.pastWindow) setText('#peakContext', 'The ' + model.season.peakTiming.planningWindow + ' planning window has passed for the Boone–Grandfather reference area at 2,500–4,000 ft. This does not establish the end of regional color.');
+  setText("#seasonOutlookHeadline", "Choose your scenery. Check the weather’s effect on leaves below.");
+  $("#remainingColor").innerHTML = renderFoliageGraphic(model.seasonOutlook.cards, model.presentation.lowerSeason);
   const recommendation = model.recommendations;
   $("#recommendations").innerHTML = [
-    recommendationCard("🏆", "Best bet today", recommendation.bestBet.name, `${stars(recommendation.bestBet.score)} <span>Best: ${esc(recommendation.bestBet.window)}</span>`, recommendation.bestBet.reason),
+    recommendationCard("🏆", "Best weather today", recommendation.bestBet.name, `${stars(recommendation.bestBet.score)} <span>Best: ${esc(recommendation.bestBet.window)}</span>`, recommendation.bestBet.reason),
     recommendationCard("📸", "Best photo window", recommendation.photoWindow.label, "Low-angle light", recommendation.photoWindow.reason),
-    recommendationCard("👀", "Best long-range views", recommendation.bestViews.name, `Visibility signal: ${ratingForView(recommendation.bestViews.score)}`, "Forecast visibility is supported by 828 summit-view signals where available."),
+    recommendationCard("👀", "Best long-range views", recommendation.bestViews.name, `Viewing conditions: ${ratingForView(recommendation.bestViews.score)}`, "A good option for distant mountain views. Check the camera before leaving; clear skies do not necessarily mean colorful trees."),
     recommendation.avoid
       ? recommendationCard("⚠️", "Maybe skip", recommendation.avoid.name, "Comparatively weaker", recommendation.avoid.reason, "caution")
-      : recommendationCard("✓", "No major weather concern", "No clear skip today", "Destinations are fairly even", "Recheck live cameras before committing to a high summit.", "good")
+      : recommendationCard("✓", "Choose the scenery you want", "Weather is similar across the stops", "Check the leaves before you go", "Use a recent camera view to choose between lower-slope color and mountain panoramas.", "good")
   ].join("");
 
   $("#elevationBands").innerHTML = model.elevation.bands.map((band) => `
@@ -44,22 +53,24 @@ export function renderFallExplorer(model) {
 
   $("#outlookGrid").innerHTML = model.outlook.map((day) => `
     <article class="outlook-card ${day.key === model.bestOutlook?.key ? "best" : ""}">
-      ${day.key === model.bestOutlook?.key ? '<div class="best-ribbon">🏆 Best fall day</div>' : ""}
+      ${day.key === model.bestOutlook?.key ? '<div class="best-ribbon">🏆 Best weather day</div>' : ""}
       <div class="outlook-day">${esc(day.day)}</div><div class="outlook-icon">${day.icon}</div>
       <h3>${esc(day.rating)}</h3><div class="outlook-score">${day.score} / 100</div>
       <ul>${day.details.map((detail) => `<li>${esc(detail)}</li>`).join("")}</ul>
     </article>`).join("");
   const watch = model.leafDropWatch;
-  if (watch && watch.leafDropRisk !== "Low") {
+  $("#leafDropWatch").hidden = true;
+  if (watch && ["Moderate", "High", "Very High"].includes(watch.leafDropRisk)) {
+    const before = model.outlook.filter(day => day.key < watch.key && day.leafDropRisk === "Low" && day.score >= 60).sort((a, b) => b.score - a.score)[0];
     $("#leafDropWatch").hidden = false;
-    $("#leafDropWatch").innerHTML = `<b>🍂 Leaf Drop Watch — ${esc(watch.day)}</b><span>${esc(watch.leafDropReason)}</span>`;
+    $("#leafDropWatch").innerHTML = `<b>🍂 Next change to watch — ${esc(watch.day)}</b><span>${esc(watch.leafDropReason)} ${before ? esc(`Consider ${before.day} beforehand for more favorable viewing weather.`) : "No earlier favorable day is identified in the available forecast."} Asheville-area forecast; check destination guidance for local differences.</span>`;
   }
 
-  $("#cameraGrid").innerHTML = model.cameras.map((camera) => `
+  $("#cameraGrid").innerHTML = [...model.cameras].sort((a, b) => model.presentation.lowerSeason ? (a.elevationFeet ?? Infinity) - (b.elevationFeet ?? Infinity) : 0).map((camera) => `
     <article class="camera-card">
       <a class="camera-media" href="${esc(camera.sourceUrl)}" target="_blank" rel="noopener noreferrer">
         ${cameraMedia(camera)}
-        <span class="live-badge"><i></i> ${camera.imageUrl ? "Live view" : "Live stream"}</span>
+        <span class="live-badge"><i></i> ${camera.imageUrl ? "Camera view" : "Source stream"}</span>
       </a>
       <div class="camera-copy"><div><h3>${esc(camera.name)}</h3><p>${cameraElevation(camera)} · ${esc(camera.region)}</p>${camera.sitingNote ? `<p class="camera-siting">${esc(camera.sitingNote)}</p>` : ""}</div><small>${cameraStatus(camera)}</small></div>
     </article>`).join("");
@@ -145,10 +156,10 @@ function cameraElevation(camera) {
     : `${camera.elevationFeet.toLocaleString()} ft`;
 }
 function cameraStatus(camera) {
-  const sourceLabel = `${camera.imageUrl ? "Live source" : "Video source"} · tap to open`;
+  const sourceLabel = `${camera.imageUrl ? "Capture time unverified" : "Video source"} · tap to open`;
   const status = `<span data-camera-status="${esc(camera.id)}">${sourceLabel}</span>`;
   return camera.rawDataUrl
     ? `${status}<br><a href="${esc(camera.rawDataUrl)}" target="_blank" rel="noopener noreferrer">Raw weather data</a>`
     : status;
 }
-function bindCameraStatus(cameras) { cameras.filter((camera) => camera.imageUrl).forEach((camera) => { const img = document.querySelector(`[data-camera-id="${camera.id}"]`); const status = document.querySelector(`[data-camera-status="${camera.id}"]`); img?.addEventListener("load", () => { status.textContent = `Checked ${new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(new Date())}`; }); img?.addEventListener("error", () => { status.textContent = "Image unavailable · open source"; }); }); }
+function bindCameraStatus(cameras) { cameras.filter((camera) => camera.imageUrl).forEach((camera) => { const img = document.querySelector(`[data-camera-id="${camera.id}"]`); const status = document.querySelector(`[data-camera-status="${camera.id}"]`); img?.addEventListener("load", () => { status.textContent = `Image loaded (capture time unverified) ${new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(new Date())}`; }); img?.addEventListener("error", () => { status.textContent = "Image unavailable · open source"; }); }); }

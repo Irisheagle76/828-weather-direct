@@ -18,7 +18,7 @@
   <meta name="description" content="Weather intelligence for experiencing fall in Asheville and Western North Carolina.">
   <title>828 Fall Explorer | Asheville Fall Weather Intelligence</title>
   <link rel="stylesheet" href="/css/brand-lockup.css?v=20260805-brand2">
-  <link rel="stylesheet" href="/css/fall.css?v=20261005-neufeld-credit">
+  <link rel="stylesheet" href="/css/fall.css?v=20261026-readable-method">
   <link rel="stylesheet" href="/css/site-chrome.css?v=20260908-global-nav">
   <script defer src="/js/site-chrome.js?v=20260908-global-nav"></script>
 </head>
@@ -42,9 +42,9 @@
       <div class="hero-inner">
         <div class="season-tag"><span>Seasonal intelligence</span><i></i><span id="updated">Loading live forecast</span></div>
         <h1><span aria-hidden="true">🍁</span> 828 Fall Explorer</h1>
-        <p class="hero-subtitle">Weather intelligence for experiencing fall in Western North Carolina</p>
-        <p class="hero-support">Not another foliage map. Find the best weather, views and timing for your fall adventure.</p>
-        <div class="story-nav" aria-label="Fall Explorer sections"><a href="#today">Today</a><span>→</span><a href="#where">Where</a><span>→</span><a href="#science">Why</a><span>→</span><a href="#season">Season</a><span>→</span><a href="#next">Next</a><span>→</span><a href="#live">Live</a></div>
+        <p class="hero-subtitle" id="seasonHeading">Weather intelligence for experiencing fall in Western North Carolina</p>
+        <p class="hero-support" id="seasonIntro">Find favorable weather, check camera views, and follow the changing display across elevations.</p>
+        <div class="story-nav" aria-label="Fall Explorer sections"><a href="#today">Today</a><span>→</span><a href="#where">Where</a><span>→</span><a href="#live">Live</a><span>→</span><a href="#next">Next</a><span>→</span><a href="#science">Why</a><span>→</span><a href="#season">Season</a></div>
       </div>
     </section>
 
@@ -52,7 +52,7 @@
     <section class="section today-section" id="today">
       <header class="section-heading"><div><div class="eyebrow">01 · The five-second read</div><h2>🍁 Today at a glance</h2></div><p>Is today worth it?</p></header>
       <div class="metric-grid">
-        <article class="metric-card featured"><span>🍁 Fall day</span><strong id="fallRating">Loading</strong><small id="fallScore">-- / 100</small></article>
+        <article class="metric-card featured"><span>🍁 Fall weather</span><strong id="fallRating">Loading</strong><small id="fallScore">-- / 100</small></article>
         <article class="metric-card"><span>👀 Mountain views</span><strong id="viewsScore">-- / 100</strong><small>Forecast + live summit signal</small></article>
         <article class="metric-card"><span>📸 Photography</span><strong id="photoRating">Loading</strong><small>Light, clouds and visibility</small></article>
         <article class="metric-card"><span>🌬️ Leaf drop risk</span><strong id="leafDrop">Loading</strong><small>Wind, rain and hard freeze</small></article>
@@ -62,12 +62,35 @@
 
     <section class="section" id="where">
       <header class="section-heading"><div><div class="eyebrow">02 · Make the call</div><h2>🏆 Where &amp; when</h2></div><p>Where should I go today, and when?</p></header>
+      <p class="camera-note">Looking for leaves? Start with the places below. Looking for a clear mountain view or a good time to take photos? Use today’s weather picks.</p>
       <div class="recommendation-grid" id="recommendations" aria-live="polite"></div>
+      <div class="color-heading" id="foliage-outlook"><div class="eyebrow">Planning your foliage trip</div><h2>🍂 Find your fall view</h2><p class="color-regional" id="seasonOutlookHeadline">Updating outlook</p></div>
+      <p class="camera-note">Seasonal starting points, not confirmed color. Check a dated camera view before going.</p>
+      <div class="foliage-graphic" id="remainingColor" aria-live="polite"><p>Loading retention and leaf-fall weather guidance.</p></div>
+      <details class="science-details foliage-method"><summary>How to read this outlook <span>+</span></summary>
+        <div class="foliage-method-copy">
+          <p><strong>Weather, not a leaf report.</strong> We use forecast wind, rain, cold and sunshine to estimate whether remaining leaves may last or fall.</p>
+          <p><strong>Elevation helps you choose.</strong> Higher slopes usually change earlier; lower slopes often hold color later. Actual timing varies.</p>
+          <p><strong>Check before you go.</strong> Current color and drought stress are unconfirmed. Forecast coverage varies by stop; select a destination above for its dates and details.</p>
+          <p class="foliage-method-sources">Learn more: <a href="https://www.noaa.gov/stories/cool-autumn-weather-reveals-nature-s-true-hues" target="_blank" rel="noopener noreferrer">NOAA: why leaves change</a> · <a href="https://www.nps.gov/grsm/planyourvisit/fallcolor.htm" target="_blank" rel="noopener noreferrer">NPS: fall color by elevation</a></p>
+        </div>
+      </details>
     </section>
+
+    <section class="section live-section" id="live">
+      <header class="section-heading"><div><div class="eyebrow">03 · Check the display</div><h2>📷 828 Fall Live</h2></div><p>Check remaining color before choosing a destination.</p></header>
+      <div class="camera-grid" id="cameraGrid"></div>
+      <p class="camera-note">Image load time is not capture time. Check the provider’s timestamp; undated images cannot confirm current color. Camera availability and refresh timing are controlled by each source. Open any image for its full live reference.</p>
+    </section>
+
+    <section class="next-wrap" id="next"><div class="section">
+      <header class="section-heading light"><div><div class="eyebrow">04 · Plan the week</div><h2>📅 What's next?</h2></div><p>Find the next favorable outing window.</p></header>
+      <div class="outlook-grid" id="outlookGrid"></div><div class="leaf-watch" id="leafDropWatch" hidden></div>
+    </div></section>
 
     <section class="science-wrap" id="science">
       <div class="section science-section">
-        <header class="science-heading"><div class="eyebrow">03 · Elevation intelligence</div><h2>🌡️ The science of the drop</h2><p>Watching autumn descend through Western North Carolina's elevation zones</p></header>
+        <header class="science-heading"><div class="eyebrow">05 · Elevation intelligence</div><h2>🌡️ The science of the drop</h2><p>Watching autumn descend through Western North Carolina's elevation zones</p></header>
         <div class="science-grid">
           <div class="elevation-card"><div class="elevation-card-head"><div><span>Tonight's cold descent</span><h3>Forecast lows by elevation</h3></div><div class="thermometer" aria-hidden="true"><i></i></div></div><div class="elevation-bands" id="elevationBands"></div></div>
           <aside class="threshold-card"><div class="threshold-icon">32°</div><div class="eyebrow">Estimated 32°F threshold</div><h3 id="freezeThreshold">Calculating tonight's elevation range</h3><p>This is a broad estimate from representative destination forecasts, checked against fresh local observations—not a precise contour or guarantee.</p><div class="cold-pool" id="coldPool" hidden><b>🏞️ Cold-air drainage possible</b><span>Sheltered valleys may cool faster than some mid-elevation slopes tonight.</span></div></aside>
@@ -77,12 +100,11 @@
     </section>
 
     <section class="section season-section" id="season">
-      <header class="section-heading"><div><div class="eyebrow">04 · Season progress</div><h2>🍂 The cold descent</h2></div><p>Observed cold milestones, from summit to valley</p></header>
-      <p>Shortening days drive the seasonal transition. Cool, frostless nights favor color; freezing is not required. Warm nights can delay progression, and cold milestones alone do not measure foliage color.</p>
-      <article class="peak-timing-card" aria-labelledby="peakTimingTitle">
+      <header class="section-heading"><div><div class="eyebrow">06 · Season progress</div><h2>🍂 The cold descent</h2></div><p>Observed cold milestones, from summit to valley</p></header>
+      <details class="peak-timing-card" id="peakTimingDetails"><summary>This season’s timing estimate</summary>
         <div class="peak-timing-lead">
           <div><div class="eyebrow">Experimental peak-timing signal</div><h3 id="peakTimingTitle"><span id="peakHeadline">Historical midpoint near</span> <span id="peakMidpoint">Oct 17</span></h3></div>
-          <p>For the Boone–Grandfather reference area at 2,500–4,000 ft. Use the broader <strong id="peakWindow">Oct 14–Oct 20</strong> planning window and verify color with live cameras.</p>
+          <p id="peakContext">For the Boone–Grandfather reference area at 2,500–4,000 ft. Use the broader <strong id="peakWindow">Oct 14–Oct 20</strong> planning window and verify color with live cameras.</p>
         </div>
         <p id="peakSeasonalNote">This season's September warmth has not been incorporated. A later peak is possible if warm nights persist; verify current color with live cameras.</p>
         <div class="peak-timing-metrics">
@@ -92,23 +114,16 @@
         </div>
         <aside class="peak-credit" aria-label="Research credit"><span class="peak-credit-leaf" aria-hidden="true"></span><div><span class="peak-credit-label">Research &amp; seasonal insight</span><p>Peak-timing research and September temperature data courtesy of <a href="https://fallcolorguy.org/about-fall-color-guy" target="_blank" rel="noopener noreferrer">Dr. Howard Neufeld, the Fall Color Guy</a>.</p><p class="peak-credit-note">The experimental calculation shown here applies his published research.</p></div></aside>
         <details class="peak-method"><summary>How this estimate is calculated <span>+</span></summary><div><p>The source analysis regressed 17 peak-color seasons against September daily mean temperature for 2008–2025, excluding hurricane-disrupted 2024. Its equation is October day = 1.9015 × September mean °F − 106.42, with R² = 0.62 and p &lt; .001.</p><p id="peakCaveat">A planning signal, not a predictive confidence interval. The relationship is sensitive to the unusually warm 2018 and 2019 seasons and does not quantify an elevation adjustment outside the calibrated band.</p><p>Rainfall and drought were not used to move the date because the source analysis found no significant timing relationship. They still matter for leaf loss, color quality and the day-to-day viewing experience.</p></div></details>
-      </article>
+      </details>
       <div class="season-layout"><div class="season-timeline" id="seasonTimeline"></div><aside class="method-note"><div class="eyebrow">Observed milestone archive</div><h3>Built for seasonal memory</h3><p>From its activation date, the archive preserves the first confirmed ≤40°, ≤36°, ≤32° and ≤28°F observation in each elevation band. Confirmation requires two consecutive hourly samples or two independent stations. “Approaching” remains forecast-only.</p><span id="observationMethod">Forecast status ≠ observed milestone</span></aside></div>
     </section>
 
-    <section class="next-wrap" id="next"><div class="section">
-      <header class="section-heading light"><div><div class="eyebrow">05 · Plan the week</div><h2>📅 What's next?</h2></div><p>Which day belongs to the Parkway?</p></header>
-      <div class="outlook-grid" id="outlookGrid"></div><div class="leaf-watch" id="leafDropWatch" hidden></div>
-    </div></section>
 
-    <section class="section live-section" id="live">
-      <header class="section-heading"><div><div class="eyebrow">06 · Ground truth</div><h2>📷 828 Fall Live</h2></div><p>See what the mountains actually look like right now.</p></header>
-      <div class="camera-grid" id="cameraGrid"></div>
-      <p class="camera-note">Camera availability and refresh timing are controlled by each source. Open any image for its full live reference.</p>
-    </section>
+
+
   </main>
 
   <footer data-site-footer><div><b>828 Weather Direct</b><p>Fall experience guidance with an experimental, elevation-limited peak-timing estimate—not a foliage percentage or guarantee. Forecast data: NOAA/NWS.</p></div><div><a href="/">Home</a><a href="/hiking.html">Hiking guidance</a><a href="/forecast.html">4-day forecast</a></div></footer>
-  <script type="module" src="/js/fall/app.js?v=20261005-neufeld-credit"></script>
+  <script type="module" src="/js/fall/app.js?v=20261026-readable-method"></script>
 </body>
 </html>

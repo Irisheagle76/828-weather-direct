@@ -13,6 +13,77 @@
 @media(max-width:620px){.peak-timing-card{padding:20px}.peak-timing-metrics{grid-template-columns:1fr}.peak-timing-metrics>div:last-child{grid-column:auto}}
 .camera-placeholder{display:flex;width:100%;height:100%;align-items:center;justify-content:center;flex-direction:column;gap:7px;color:#fff;background:radial-gradient(circle at 72% 22%,rgba(246,196,95,.26),transparent 28%),linear-gradient(145deg,#155784,#071a35)}
 .camera-placeholder span{display:grid;place-items:center;width:52px;height:52px;padding-left:3px;border:1px solid rgba(255,255,255,.45);border-radius:50%;background:rgba(255,255,255,.12);font-size:1.15rem}.camera-placeholder b{font-family:Georgia,"Times New Roman",serif;font-size:1.3rem}.camera-placeholder small{color:#c7d8ea}.camera-media:hover .camera-placeholder{background:radial-gradient(circle at 72% 22%,rgba(246,196,95,.34),transparent 30%),linear-gradient(145deg,#1b6598,#071a35)}
+.color-heading { margin-top: 2.5rem; }
+.remaining-color-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr)); gap: 1rem; }
+.color-card { padding: 1.25rem; border: 1px solid #d9cbb9; border-radius: 16px; background: #fffaf2; overflow-wrap: anywhere; }
+.color-card h3 { margin: .6rem 0 0; font-size: 1.15rem; }
+.color-card p { font-size: .92rem; line-height: 1.6; }
+.color-card details { margin: 1rem 0; font-size: .9rem; }
+.color-card summary { cursor: pointer; }
+.color-guidance { font-weight: 600; }
+.color-supportive { border-top: 4px solid #477348; }
+.color-exposed { border-top: 4px solid #bf8b39; }
+.color-pressure { border-top: 4px solid #9c563d; }
+.color-outlook-summary { margin: 1rem 0; padding: 1.25rem; border-left: 4px solid var(--orange); background: var(--white); }
+.color-outlook-summary h3 { margin-top: 0; }
+.color-outlook-summary p { line-height: 1.6; }
+.color-statistics { padding-top: .75rem; border-top: 1px solid var(--line); color: var(--muted); }
+.color-regional { font-weight: 700; color: var(--muted); }
+#foliageAnalysis article { border-top: 1px solid var(--line); padding-top: .5rem; }
+.consequence-details { margin: 0; }
+.consequence-details dt { font-weight: 700; margin-top: .75rem; }
+.consequence-details dd { margin: .2rem 0 0; line-height: 1.6; }
+
+.color-trip-advice { border-top: 1px solid var(--line); padding-top: .8rem; }
+.color-forecast-evidence { font-size: .85rem; color: var(--muted); }
+#seasonOutlookHeadline { font-weight: 400; line-height: 1.65; max-width: 75ch; }
+
+.foliage-graphic { border: 1px solid #d9d6ca; border-radius: 20px; overflow: hidden; background: #fffcf5; }
+.foliage-landscape { height: 105px; background: #eff2e9; }
+.foliage-landscape svg { width: 100%; height: 100%; display: block; }
+.foliage-zones { display: grid; grid-template-columns: 1fr 1fr; }
+.foliage-zone { min-width: 0; padding: 22px; }
+.foliage-zone + .foliage-zone { border-left: 1px solid #deded2; }
+.foliage-zone header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.foliage-zone-icon { font-size: 32px; }
+.foliage-zone h3 { margin: 0; font-size: 21px; color: #233f39; }
+.foliage-zone header p { margin: 4px 0 0; color: #5c6863; font-size: 13px; }
+.foliage-stop { border-top: 1px solid #e7e5db; }
+.foliage-stop summary { display: grid; grid-template-columns: minmax(0,1fr) auto 12px; gap: 10px; align-items: center; padding: 15px 0; cursor: pointer; list-style: none; }
+.foliage-stop summary::-webkit-details-marker { display: none; }
+.foliage-stop summary:focus-visible { outline: 2px solid #996125; outline-offset: 3px; }
+.foliage-stop-name { font-size: 14px; font-weight: 650; line-height: 1.35; }
+.foliage-signal { font-size: 11px; font-weight: 650; border-radius: 20px; padding: 5px 8px; white-space: nowrap; }
+.foliage-signal.gentle { color: #345b40; background: #e9f0e3; }
+.foliage-signal.watch { color: #814517; background: #fae7cb; }
+.foliage-signal.unknown { color: #52616a; background: #e8ecee; }
+.foliage-expand { color: #69766c; }
+.foliage-stop[open] .foliage-expand { transform: rotate(45deg); }
+.foliage-stop-detail { padding: 0 0 16px; font-size: 14px; line-height: 1.6; }
+.foliage-stop-detail p { margin: 0 0 12px; }
+.foliage-graphic-footer { display: flex; justify-content: space-between; gap: 16px; padding: 16px 22px; border-top: 1px solid #deded2; background: #f3f3e9; font-size: 12px; color: #52635a; }
+.foliage-graphic-footer a { font-weight: 700; }
+.foliage-legend { border-top: 1px solid #deded2; padding: 20px 22px; background: #f8f8ef; color: #34463f; }
+.foliage-legend h3 { margin: 0; font-size: 16px; }
+.foliage-legend > p { margin: 6px 0 16px; font-size: 13px; }
+.foliage-legend ul { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 18px; padding: 0; margin: 0; list-style: none; }
+.foliage-legend li > div { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 8px; }
+.foliage-legend li > span { display: block; font-size: 12px; line-height: 1.5; }
+.foliage-legend small { font-size: 11px; font-weight: 700; color: #34463f; }
+.foliage-method { background: #fffcf5; border: 1px solid #d9d6ca; border-radius: 12px; color: #233f39; }
+.foliage-method .foliage-method-copy { color: #34463f; max-width: 76ch; font-size: 15px; line-height: 1.65; }
+.foliage-method-copy p { margin: 0 0 14px; }
+.foliage-method-copy strong { color: #233f39; }
+.foliage-method-copy .foliage-method-sources { margin-bottom: 0; font-size: 13px; }
+.foliage-method-copy a { text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 700px) {
+  .foliage-zones { grid-template-columns: 1fr; }
+  .foliage-zone { padding: 18px; }
+  .foliage-zone + .foliage-zone { border-left: 0; border-top: 1px solid #deded2; }
+  .foliage-landscape { height: 75px; }
+  .foliage-graphic-footer { flex-direction: column; gap: 8px; }
+  .foliage-zone h3 { font-size: 19px; }
+}
 
 .peak-credit{display:flex;align-items:center;gap:24px;position:relative;margin-top:22px;padding:24px;border:1px solid var(--orange);border-left:5px solid var(--orange);border-radius:10px;background:linear-gradient(120deg,var(--navy),var(--navy2));color:var(--orange);box-shadow:0 8px 22px rgba(7,26,53,.12)}
 .peak-credit-label{font-size:.68rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase}

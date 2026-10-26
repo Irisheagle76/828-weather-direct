@@ -10,3 +10,7 @@
 - Use the dedicated `C:\Users\Tim\828codeproject\828-weather-direct-deploy` checkout only from its `deploy-production` branch, fast-forwarded to `origin/main`. Preserve its local `.gitignore` change.
 
 - Neighborhood fog potential is an unfinished experiment. Keep its homepage card and client integration out of production releases until the owner explicitly approves it. Preserve the underlying experiment and dedicated development preview.
+
+# Fall Explorer seasonal memory
+
+- Before preparing a new fall season or changing seasonal foliage guidance, read `docs/fall-season-playbook.md` for the 2026 decisions and next-year checklist.

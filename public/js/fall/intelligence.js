@@ -1,3 +1,5 @@
+import { seasonPresentation } from "./season-presentation.js";
+import { buildSeasonOutlook } from "./season-outlook.js";
 import { daylightInterval, hasSolarTimes } from "./daylight.js";
 import { CAMERAS, SEASON_MILESTONE_PREVIEW } from "./config.js";
 import { leafDropRisk, ratingForScore, scoreFallHours, viewScore } from "./scoring.js";
@@ -33,7 +35,7 @@ export function buildFallIntelligence(payload, skyPayload = null, { now = Date.n
   const avoid = worst && best && best.combined - worst.combined >= 12 ? worst : null;
   const bestWindow = findBestWindow(best.hours || todayHours, now);
   const elevation = buildElevationAnalysis(destinations, { now, observations: payload.observations });
-  const outlook = buildOutlook(asheville.hourly, asheville.daily);
+  const outlook = buildOutlook(asheville.hourly.filter(h => h.timestamp >= now), asheville.daily);
   const bestOutlook = outlook.slice().sort((a, b) => b.score - a.score)[0];
   const seasonYear = Number(payload.peakTiming?.seasonYear) || new Date(now).getFullYear();
   const peakTiming = estimatePeakTiming({
@@ -43,6 +45,7 @@ export function buildFallIntelligence(payload, skyPayload = null, { now = Date.n
   });
 
   return {
+    presentation: seasonPresentation(peakTiming, ranked, now),
     updated: payload.updated || new Date().toISOString(),
     source: payload.source || "828 forecast feed",
     today: {
@@ -60,10 +63,11 @@ export function buildFallIntelligence(payload, skyPayload = null, { now = Date.n
       avoid: avoid ? { name: avoid.name, reason: avoidReason(avoid) } : null
     },
     elevation,
+    seasonOutlook: buildSeasonOutlook(payload, { now }),
     season: { elevationBands: buildSeasonProgress(elevation, payload.milestones?.bands || SEASON_MILESTONE_PREVIEW), peakTiming, milestones: payload.milestones || null },
     outlook,
     bestOutlook,
-    leafDropWatch: outlook.slice().sort((a, b) => riskRank(b.leafDropRisk) - riskRank(a.leafDropRisk))[0],
+    leafDropWatch: outlook.find(day => ["Moderate", "High", "Very High"].includes(day.leafDropRisk)),
     cameras: CAMERAS,
     quality: {
       ...(payload.quality || {}),
