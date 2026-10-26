@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-26T19:09:52.528Z",
+  "generatedAt": "2026-10-26T23:45:19.549Z",
   "stations": [
     {
       "id": "tempest-144737",
@@ -12,17 +12,17 @@
       "url": "https://tempestwx.com/station/144737/grid",
       "lat": 35.606299,
       "lon": -82.547881,
-      "observedAt": "2026-10-26T19:09:48.000Z",
-      "temperatureF": 70.34,
-      "feelsLikeF": 70.34,
-      "dewPointF": 48.02,
-      "humidityPct": 45,
-      "windMph": 3.35540443815,
-      "gustMph": 5.144953471829999,
-      "windDirection": "4deg",
-      "pressure": 30.300715658909997,
-      "uv": 3.41,
-      "solarWm2": 464,
+      "observedAt": "2026-10-26T23:44:43.000Z",
+      "temperatureF": 53.06,
+      "feelsLikeF": 53.06,
+      "dewPointF": 48.74,
+      "humidityPct": 85,
+      "windMph": 0.22369362921,
+      "gustMph": 1.5658554044699997,
+      "windDirection": "214deg",
+      "pressure": 30.309574653840002,
+      "uv": 0,
+      "solarWm2": 0,
       "rainTodayIn": 0,
       "rainRateInHr": 0,
       "lightningStrikes1h": 0,
@@ -34,7 +34,7 @@
         "status": "healthy",
         "score": 100,
         "usable": true,
-        "ageMinutes": 0,
+        "ageMinutes": 1,
         "maxAgeMinutes": 45,
         "issues": []
       },
@@ -475,16 +475,16 @@
     ]
   },
   "guidance": {
-    "overall": "Great for Asheville-area hikes; watch sun exposure",
+    "overall": "Great for Asheville-area hikes; watch fog or damp trail risk",
     "bestWindow": "Most nearby trails look friendly, with normal mountain checks.",
-    "hikerNarrative": "Limited station coverage: 1 of 19 sites reporting. Check current conditions for your route; unavailable sites cannot rule out wind, rain, or lightning. Great for Asheville-area hikes; watch sun exposure. Most nearby trails look friendly, with normal mountain checks. Nearby readings span about 0degF; shade, slope, and exposure can change the feel. Check high-peak temperatures separately. ",
+    "hikerNarrative": "Limited station coverage: 1 of 19 sites reporting. Check current conditions for your route; unavailable sites cannot rule out wind, rain, or lightning. Great for Asheville-area hikes; watch fog or damp trail risk. Most nearby trails look friendly, with normal mountain checks. Nearby readings span about 0degF; shade, slope, and exposure can change the feel. Check high-peak temperatures separately. ",
     "scoreScope": "Asheville-area trails",
     "localConditions": {
-      "fogRisk": "Low",
-      "maxUv": 3.41,
-      "maxSolar": 464,
-      "maxGust": 5.144953471829999,
-      "maxTemp": 70.34,
+      "fogRisk": "Patchy pockets",
+      "maxUv": 0,
+      "maxSolar": 0,
+      "maxGust": 1.5658554044699997,
+      "maxTemp": 53.06,
       "maxWbgt": null,
       "maxRainRate": 0,
       "maxRainToday": 0,
@@ -496,7 +496,7 @@
       "Limited station coverage: 1 of 19 sites reporting. Check current conditions for your route; unavailable sites cannot rule out wind, rain, or lightning."
     ],
     "bullets": [
-      "Great for Asheville-area hikes; watch sun exposure: Most nearby trails look friendly, with normal mountain checks.",
+      "Great for Asheville-area hikes; watch fog or damp trail risk: Most nearby trails look friendly, with normal mountain checks.",
       "Asheville-area spread is about 0degF.",
       "High Asheville readings broadly agree.",
       "Mount Mitchell comparison unavailable.",
@@ -504,12 +504,12 @@
       "Wind is light at the reporting sites.",
       "Sun exposure is manageable right now."
     ],
-    "hikerScore": 89,
+    "hikerScore": 88,
     "hikerScoreLabel": "Great",
     "hikerScoreFactors": [
       {
-        "label": "Sun exposure",
-        "penalty": 2.8
+        "label": "Fog or damp trail risk",
+        "penalty": 4
       }
     ],
     "localTempSpread": 0,
@@ -517,11 +517,11 @@
     "lapseRate": null,
     "mitchellDrop": null,
     "wncLapseRate": null,
-    "fogRisk": "Low",
-    "maxUv": 3.41,
-    "maxSolar": 464,
-    "maxGust": 5.1,
-    "maxTemp": 70.3,
+    "fogRisk": "Patchy pockets",
+    "maxUv": 0,
+    "maxSolar": 0,
+    "maxGust": 1.6,
+    "maxTemp": 53.1,
     "maxWbgt": null,
     "maxRainRate": 0,
     "maxRainToday": 0,
