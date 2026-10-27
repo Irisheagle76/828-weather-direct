@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-26T23:45:19.549Z",
+  "generatedAt": "2026-10-27T04:50:41.042Z",
   "stations": [
     {
       "id": "tempest-144737",
@@ -12,15 +12,15 @@
       "url": "https://tempestwx.com/station/144737/grid",
       "lat": 35.606299,
       "lon": -82.547881,
-      "observedAt": "2026-10-26T23:44:43.000Z",
-      "temperatureF": 53.06,
-      "feelsLikeF": 53.06,
-      "dewPointF": 48.74,
-      "humidityPct": 85,
-      "windMph": 0.22369362921,
-      "gustMph": 1.5658554044699997,
-      "windDirection": "214deg",
-      "pressure": 30.309574653840002,
+      "observedAt": "2026-10-27T04:50:38.000Z",
+      "temperatureF": 44.239999999999995,
+      "feelsLikeF": 44.239999999999995,
+      "dewPointF": 43.16,
+      "humidityPct": 96,
+      "windMph": 0.67108088763,
+      "gustMph": 1.78954903368,
+      "windDirection": "358deg",
+      "pressure": 30.31548065046,
       "uv": 0,
       "solarWm2": 0,
       "rainTodayIn": 0,
@@ -34,7 +34,7 @@
         "status": "healthy",
         "score": 100,
         "usable": true,
-        "ageMinutes": 1,
+        "ageMinutes": 0,
         "maxAgeMinutes": 45,
         "issues": []
       },
@@ -476,15 +476,15 @@
   },
   "guidance": {
     "overall": "Great for Asheville-area hikes; watch fog or damp trail risk",
-    "bestWindow": "Most nearby trails look friendly, with normal mountain checks.",
-    "hikerNarrative": "Limited station coverage: 1 of 19 sites reporting. Check current conditions for your route; unavailable sites cannot rule out wind, rain, or lightning. Great for Asheville-area hikes; watch fog or damp trail risk. Most nearby trails look friendly, with normal mountain checks. Nearby readings span about 0degF; shade, slope, and exposure can change the feel. Check high-peak temperatures separately. ",
+    "bestWindow": "Local air is nearly saturated; check the cameras for visibility and watch for damp footing.",
+    "hikerNarrative": "Limited station coverage: 1 of 19 sites reporting. Check current conditions for your route; unavailable sites cannot rule out wind, rain, or lightning. Great for Asheville-area hikes; watch fog or damp trail risk. Local air is nearly saturated; check the cameras for visibility and watch for damp footing. Nearby readings span about 0degF; shade, slope, and exposure can change the feel. Check high-peak temperatures separately. North Downtown reports near-saturated air. This alone does not confirm fog; check a current view of that area.",
     "scoreScope": "Asheville-area trails",
     "localConditions": {
-      "fogRisk": "Patchy pockets",
+      "fogRisk": "Elevated",
       "maxUv": 0,
       "maxSolar": 0,
-      "maxGust": 1.5658554044699997,
-      "maxTemp": 53.06,
+      "maxGust": 1.78954903368,
+      "maxTemp": 44.239999999999995,
       "maxWbgt": null,
       "maxRainRate": 0,
       "maxRainToday": 0,
@@ -493,23 +493,24 @@
       }
     },
     "routeWarnings": [
+      "North Downtown reports near-saturated air. This alone does not confirm fog; check a current view of that area.",
       "Limited station coverage: 1 of 19 sites reporting. Check current conditions for your route; unavailable sites cannot rule out wind, rain, or lightning."
     ],
     "bullets": [
-      "Great for Asheville-area hikes; watch fog or damp trail risk: Most nearby trails look friendly, with normal mountain checks.",
+      "Great for Asheville-area hikes; watch fog or damp trail risk: Local air is nearly saturated; check the cameras for visibility and watch for damp footing.",
       "Asheville-area spread is about 0degF.",
       "High Asheville readings broadly agree.",
       "Mount Mitchell comparison unavailable.",
-      "Fog risk is not the lead concern.",
+      "Near-saturated air is reported at a mountain station; check cameras before assuming fog.",
       "Wind is light at the reporting sites.",
       "Sun exposure is manageable right now."
     ],
-    "hikerScore": 88,
+    "hikerScore": 84,
     "hikerScoreLabel": "Great",
     "hikerScoreFactors": [
       {
         "label": "Fog or damp trail risk",
-        "penalty": 4
+        "penalty": 8
       }
     ],
     "localTempSpread": 0,
@@ -517,11 +518,11 @@
     "lapseRate": null,
     "mitchellDrop": null,
     "wncLapseRate": null,
-    "fogRisk": "Patchy pockets",
+    "fogRisk": "Elevated",
     "maxUv": 0,
     "maxSolar": 0,
-    "maxGust": 1.6,
-    "maxTemp": 53.1,
+    "maxGust": 1.8,
+    "maxTemp": 44.2,
     "maxWbgt": null,
     "maxRainRate": 0,
     "maxRainToday": 0,
