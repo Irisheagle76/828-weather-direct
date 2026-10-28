@@ -3,6 +3,9 @@
     "deploymentEnabled": false
   },
   "functions": {
+    "api/router.js": {
+      "excludeFiles": "public/data/feelscore/**"
+    },
     "api/admin/page.js": {
       "includeFiles": "public/admin/**"
     }
