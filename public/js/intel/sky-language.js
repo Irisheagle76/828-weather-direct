@@ -217,6 +217,15 @@ function solarContextSentence(state) {
 
 export function generateSkyLanguage(state, { verbosity = "short", seed = null, surface = verbosity, remember = true } = {}) {
   if (!state) return verbosity === "narrative" ? { headline: "Sky read unavailable", detail: "Current weather observations will continue to provide a fallback." } : "Sky read unavailable";
+  if (state.isNight || state.solarRead?.phase === "night") {
+    const headline = "Night over Asheville";
+    const observation = "It is dark over Asheville. Camera cloud estimates are limited after dark.";
+    const interpretation = "The sun is below the horizon.";
+    const solarContext = "Check back in daylight for a visual sky and sunset assessment.";
+    return verbosity === "narrative"
+      ? { headline, detail: `${observation} ${interpretation} ${solarContext}`, observation, interpretation, solarContext, sunsetExpectation: solarContext }
+      : verbosity === "micro" ? "Night" : headline;
+  }
   const languageSeed = seed || `${state.timestamp}:${state.overall}:${surface}`;
   const recent = recentBySurface.get(surface) || [];
   let result;

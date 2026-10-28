@@ -1,8 +1,8 @@
 import { computeSkyIntel } from "./sky-intel.js?v=20260701-blue-sky-fog-veto";
 import { generateSkyNarrative } from "./sky-narrative.js";
 import { withStationContext } from "./station-lightning.js";
-import { buildSkyState } from "./sky-state.js?v=20261002-camera-network-v1";
-import { generateSkyLanguage } from "./sky-language.js?v=20261002-camera-network-v1";
+import { buildSkyState } from "./sky-state.js?v=20261027-night-sky-fix";
+import { generateSkyLanguage } from "./sky-language.js?v=20261027-night-sky-fix";
 
 export function labelizeSkyState(value) {
   if (!value) return "Unknown";
@@ -34,6 +34,7 @@ export function skyCloudMetricLabel(skyIntel) {
 }
 
 export function skySunlightMetricLabel(skyIntel) {
+  if (skyIntel?.isNight) return "After sunset";
   return skyIntel?.sunlightDetected ? labelizeSkyState(skyIntel.sunlightLevel) : "Low";
 }
 
@@ -80,14 +81,19 @@ export function buildSkyConditionRead({
   liveLabel = "Live Sky",
   weatherContext = null,
   verbosity = "short",
-  surface = "homepage"
+  surface = "homepage",
+  now = Date.now()
 } = {}) {
   const computedSkyIntel = applyWeatherContext(computeSkyIntel({ camera, previous, weatherContext }), weatherContext);
-  const skyState = buildSkyState({ camera, skyIntel: computedSkyIntel, weatherContext });
+  const skyState = buildSkyState({ camera, skyIntel: computedSkyIntel, weatherContext, now });
   const fogType = skyState?.fogState?.type;
   const fogLikely = ["likely", "confirmed"].includes(skyState?.fogState?.likelihood);
   const hasSharedCoverage = Number.isFinite(skyState?.cloudCoverageFraction);
-  const skyIntel = skyState && skyState.overall !== "unknown"
+  const skyIntel = skyState?.isNight
+    ? { ...(computedSkyIntel || {}), cloud: null, displayCloud: null, cloudCoverReliable: false,
+        cloudMetricLabel: "--", atmosphericState: "night", sunlightDetected: false,
+        sunlightLevel: "none", visualObscured: false, isNight: true, confidence: skyState.confidence }
+    : skyState && skyState.overall !== "unknown"
     ? {
         ...(computedSkyIntel || {}),
         cloud: hasSharedCoverage ? skyState.cloudCoverageFraction * 100 : computedSkyIntel?.cloud ?? null,
@@ -112,9 +118,9 @@ export function buildSkyConditionRead({
         type: skyState.overall
       }
     : language || legacyNarrative;
-  const baseNarrative = useLiveNarrative && liveNarrative ? liveNarrative : cameraNarrative;
+  const baseNarrative = !skyState.isNight && useLiveNarrative && liveNarrative ? liveNarrative : cameraNarrative;
   const narrative = withStationContext(baseNarrative, weatherContext?.supplementalStation);
-  const label = useLiveNarrative ? liveLabel : labelizeSkyState(skyIntel?.atmosphericState || skyState?.overall);
+  const label = skyState.isNight ? "Night" : useLiveNarrative ? liveLabel : labelizeSkyState(skyIntel?.atmosphericState || skyState?.overall);
 
   return {
     skyIntel,
@@ -122,7 +128,7 @@ export function buildSkyConditionRead({
     narrative,
     label,
     obscured: isObscuredSky(skyIntel),
-    cloudMetric: skyCloudMetricLabel(skyIntel) === "--" ? formatSkyPercent(skyState?.cloudCoverageFraction) : skyCloudMetricLabel(skyIntel),
+    cloudMetric: skyState.isNight ? "--" : skyCloudMetricLabel(skyIntel) === "--" ? formatSkyPercent(skyState?.cloudCoverageFraction) : skyCloudMetricLabel(skyIntel),
     sunlightMetric: skyIntel ? skySunlightMetricLabel(skyIntel) : labelizeSkyState(skyState?.lightQuality),
     confidenceMetric: formatSkyPercent(skyIntel?.confidence ?? skyState?.confidence)
   };

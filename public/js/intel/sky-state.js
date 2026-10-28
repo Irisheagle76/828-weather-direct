@@ -296,18 +296,20 @@ function reconcileDirectional(observations) {
 }
 
 export function buildSkyState({ camera = null, skyIntel = null, weatherContext = null, now = Date.now() } = {}) {
+  const phase = solarPhase(now, weatherContext?.sunriseAt ?? weatherContext?.sunrise, weatherContext?.sunsetAt ?? weatherContext?.sunset);
+  const isNight = phase === "night" || (!phase && camera?.metrics?.mode === "night");
   const supplied = Array.isArray(camera?.observations) ? camera.observations : [];
   const fallback = supplied.length ? null : synthesizedObservation(camera, skyIntel);
   const allObservations = [...supplied, ...(fallback ? [fallback] : [])];
-  const visual = allObservations.filter((observation) => usableObservation(observation, now));
+  const visual = isNight ? [] : allObservations.filter((observation) => usableObservation(observation, now));
   const satelliteObservation = visual.find((observation) => observation.kind === "satellite") || null;
   // Nearby valleys provide regional context, not an overhead measurement for downtown.
   const cameraVisual = visual.filter((observation) => observation.kind !== "satellite" && observation.scope !== "regional");
   const cameraViews = (camera?.cameraRegistry || allObservations.filter((o) => o.kind !== "satellite").map((o) => ({ id: o.source, name: o.label, orientation: o.orientation, scope: o.scope }))).map((source) => {
     const observation = allObservations.find((o) => o.source === source.id);
-    const usable = usableObservation(observation, now);
+    const usable = !isNight && usableObservation(observation, now);
     return { source: source.id, label: source.name || source.id, direction: source.orientation?.center || null,
-      scope: source.scope || "local", status: usable ? "current" : observation?.quality === "good" ? "stale" : observation?.quality || "offline",
+      scope: source.scope || "local", status: isNight ? "night" : usable ? "current" : observation?.quality === "good" ? "stale" : observation?.quality || "offline",
       timestamp: observation?.timestamp || null, timestampBasis: observation?.timestampBasis || "source",
       coverage: usable ? observation.coverage || coverageName(observation.coverageFraction) : null,
       coverageFraction: usable ? observation.coverageFraction : null };
@@ -349,15 +351,16 @@ export function buildSkyState({ camera = null, skyIntel = null, weatherContext =
     ? Math.min(0.95, weighted.reduce((sum, entry) => sum + entry.weight, 0) / weighted.length + (visual.length > 1 ? 0.12 : 0))
     : 0.3;
   const skyColor = bestVisual?.skyColor || (cloud != null && cloud > 0.88 ? "gray" : cloud != null && cloud < 0.35 ? "blue" : "blue_gray");
-  const sunVisibility = bestVisual?.sunVisibility || (cloud == null ? "uncertain" : cloud < 0.3 ? "mostly_unobstructed" : cloud < 0.7 ? "occasionally_filtered" : "mostly_hidden");
+  const sunVisibility = isNight ? "below_horizon" : bestVisual?.sunVisibility || (cloud == null ? "uncertain" : cloud < 0.3 ? "mostly_unobstructed" : cloud < 0.7 ? "occasionally_filtered" : "mostly_hidden");
   const west = directional.west;
   const solarRead = buildSolarRead({ now, weatherContext, cameraVisual, directional, fallbackSunVisibility: sunVisibility });
 
   return {
     schemaVersion: 1,
+    isNight,
     timestamp: camera?.timestamp || new Date(now).toISOString(),
     overall: overallName(cloud, obscured),
-    skyColor,
+    skyColor: isNight ? "dark" : skyColor,
     cloudCoverage: coverageName(cloud),
     cloudCoverageFraction: cloud == null ? null : Number(cloud.toFixed(2)),
     cloudTypes: cloudTypes.map((entry) => entry.type),
@@ -382,7 +385,7 @@ export function buildSkyState({ camera = null, skyIntel = null, weatherContext =
     confidence: Number(confidence.toFixed(2)),
     sunsetStructure: {
       westernHorizon: west?.coverageFraction == null ? "unknown" : west.coverageFraction < 0.35 ? "open" : west.coverageFraction < 0.75 ? "partly_open" : "blocked",
-      lightCanReachHorizon: !["mostly_hidden", "obscured"].includes(sunVisibility),
+      lightCanReachHorizon: !isNight && !["mostly_hidden", "obscured"].includes(sunVisibility),
       textureAvailable: textures.length > 0 || (cloud != null && cloud >= 0.25 && cloud <= 0.8)
     },
     sources: [...inputs.map((observation) => observation.source), ...(satelliteObservation ? [satelliteObservation.source] : [])],

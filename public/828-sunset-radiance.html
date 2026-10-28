@@ -1822,7 +1822,7 @@
   <script type="module">
     import { buildAtmosphereNow } from "./js/intel/atmosphere-now.js";
     import { withStationSkyMeasurements, withStationContext } from "./js/intel/station-lightning.js";
-    import { buildSkyConditionRead, isObscuredSky } from "./js/intel/sky-read.js?v=20261002-camera-network-v1";
+    import { buildSkyConditionRead, isObscuredSky } from "./js/intel/sky-read.js?v=20261027-night-sky-fix";
     import { buildDuskSkyFallback, getSkyTimePhase } from "./js/intel/sky-time.js?v=20260629-shared-sunset";
     import { applyPrecipOverrideToNarrative, getCurrentPrecipOverride, getPrecipSkyLabel } from "./js/intel/precip-override.js?v=20260811-shared-sky-label";
 
@@ -2306,9 +2306,10 @@
       const statusHumidity = pickNumber(forecastStatusHour, ["relativeHumidity", "relative_humidity", "humidity"]);
       const statusPrecip = pickNumber(forecastStatusHour, ["precipProbability", "precipitation_probability", "probabilityOfPrecipitation"]);
       const obscuredSky = isObscuredSky(state.skyIntel);
+      const isNight = state.skyIntel?.isNight === true;
       const cameraCloudAvailable = Number.isFinite(state.skyIntel?.cloud) && !obscuredSky;
       const displayCloud = cameraCloudAvailable ? state.skyIntel.cloud : statusCloud;
-      els.cloudStatus.textContent = isEarlySetup
+      els.cloudStatus.textContent = isNight ? "Camera clouds unavailable at night" : isEarlySetup
         ? (obscuredSky ? "Now clouds obscured" : `Now clouds ${statusPct(displayCloud, "Pending")}`)
         : (obscuredSky ? "Clouds obscured" : `Clouds ${statusPct(displayCloud, "Pending")}`);
       els.humidityStatus.textContent = isEarlySetup
@@ -2338,13 +2339,13 @@
 
       const wnwCloud = state.skyData?.metrics?.cloudCoverWest;
       const eneCloud = state.skyData?.metrics?.cloudCoverENE;
-      const hasWNW = !skyStale && Number.isFinite(wnwCloud);
-      const hasENE = !skyStale && Number.isFinite(eneCloud);
-      els.cloudMetric.textContent = skyStale ? "--" : hasWNW ? pct(wnwCloud) : obscuredSky ? "Obscured" : pct(displayCloud);
+      const hasWNW = !isNight && !skyStale && Number.isFinite(wnwCloud);
+      const hasENE = !isNight && !skyStale && Number.isFinite(eneCloud);
+      els.cloudMetric.textContent = isNight || skyStale ? "--" : hasWNW ? pct(wnwCloud) : obscuredSky ? "Obscured" : pct(displayCloud);
       els.cloudMetricLabel.textContent = hasWNW ? "Western sky clouds" : "Camera cloud cover";
       els.eneCloudMetric.textContent = hasENE ? pct(eneCloud) : "--";
       els.directionStatus.textContent = `West ${hasWNW ? pct(wnwCloud) : "--"} / ENE ${hasENE ? pct(eneCloud) : "--"}`;
-      els.lightMetric.textContent = skyStale
+      els.lightMetric.textContent = isNight ? "After sunset" : skyStale
         ? "--"
         : state.skyIntel?.sunlightDetected ? labelize(state.skyIntel.sunlightLevel) : "Low";
       els.confidenceMetric.textContent = skyStale ? "--" : pct(state.skyIntel?.confidence);
@@ -2574,9 +2575,9 @@
       state.narrative = skyRead.narrative;
       renderCameraCoverage(skyRead.skyState);
       const precipOverride = getSkyPrecipOverride();
-      const baseNarrative = skyStale ? buildLiveViewNarrative() : skyRead.narrative;
+      const baseNarrative = skyStale && !skyRead.skyState.isNight ? buildLiveViewNarrative() : skyRead.narrative;
       const liveNarrative = withStationContext(applyPrecipOverrideToNarrative(baseNarrative, precipOverride), buildSkyWeatherContext()?.supplementalStation);
-      const skyLabel = getPrecipSkyLabel(precipOverride) || (skyStale ? "Analysis delayed" : skyRead.label);
+      const skyLabel = skyRead.skyState.isNight ? "Night" : getPrecipSkyLabel(precipOverride) || (skyStale ? "Analysis delayed" : skyRead.label);
 
       els.skyChip.textContent = skyLabel;
       els.heroSky.textContent = skyLabel;
