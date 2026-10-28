@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-28T01:10:31.253Z",
+  "generatedAt": "2026-10-28T08:18:12.117Z",
   "stations": [
     {
       "id": "tempest-144737",
@@ -12,15 +12,15 @@
       "url": "https://tempestwx.com/station/144737/grid",
       "lat": 35.606299,
       "lon": -82.547881,
-      "observedAt": "2026-10-28T01:10:17.000Z",
-      "temperatureF": 59.36,
-      "feelsLikeF": 59.36,
-      "dewPointF": 43.7,
-      "humidityPct": 56,
-      "windMph": 1.78954903368,
-      "gustMph": 2.90801717973,
-      "windDirection": "238deg",
-      "pressure": 30.318433648770004,
+      "observedAt": "2026-10-28T08:18:10.000Z",
+      "temperatureF": 42.8,
+      "feelsLikeF": 42.8,
+      "dewPointF": 41.54,
+      "humidityPct": 95,
+      "windMph": 2.2369362921,
+      "gustMph": 3.1317108089399994,
+      "windDirection": "289deg",
+      "pressure": 30.333198640320003,
       "uv": 0,
       "solarWm2": 0,
       "rainTodayIn": 0,
@@ -475,16 +475,16 @@
     ]
   },
   "guidance": {
-    "overall": "Great for Asheville-area hikes",
-    "bestWindow": "Most nearby trails look friendly, with normal mountain checks.",
-    "hikerNarrative": "Limited station coverage: 1 of 19 sites reporting. Check current conditions for your route; unavailable sites cannot rule out wind, rain, or lightning. Great for Asheville-area hikes. Most nearby trails look friendly, with normal mountain checks. Nearby readings span about 0degF; shade, slope, and exposure can change the feel. Check high-peak temperatures separately. ",
+    "overall": "Great for Asheville-area hikes; watch fog or damp trail risk",
+    "bestWindow": "Local air is nearly saturated; check the cameras for visibility and watch for damp footing.",
+    "hikerNarrative": "Limited station coverage: 1 of 19 sites reporting. Check current conditions for your route; unavailable sites cannot rule out wind, rain, or lightning. Great for Asheville-area hikes; watch fog or damp trail risk. Local air is nearly saturated; check the cameras for visibility and watch for damp footing. Nearby readings span about 0degF; shade, slope, and exposure can change the feel. Check high-peak temperatures separately. North Downtown reports near-saturated air. This alone does not confirm fog; check a current view of that area.",
     "scoreScope": "Asheville-area trails",
     "localConditions": {
-      "fogRisk": "Low",
+      "fogRisk": "Elevated",
       "maxUv": 0,
       "maxSolar": 0,
-      "maxGust": 2.90801717973,
-      "maxTemp": 59.36,
+      "maxGust": 3.1317108089399994,
+      "maxTemp": 42.8,
       "maxWbgt": null,
       "maxRainRate": 0,
       "maxRainToday": 0,
@@ -493,30 +493,36 @@
       }
     },
     "routeWarnings": [
+      "North Downtown reports near-saturated air. This alone does not confirm fog; check a current view of that area.",
       "Limited station coverage: 1 of 19 sites reporting. Check current conditions for your route; unavailable sites cannot rule out wind, rain, or lightning."
     ],
     "bullets": [
-      "Great for Asheville-area hikes: Most nearby trails look friendly, with normal mountain checks.",
+      "Great for Asheville-area hikes; watch fog or damp trail risk: Local air is nearly saturated; check the cameras for visibility and watch for damp footing.",
       "Asheville-area spread is about 0degF.",
       "High Asheville readings broadly agree.",
       "Mount Mitchell comparison unavailable.",
-      "Fog risk is not the lead concern.",
+      "Near-saturated air is reported at a mountain station; check cameras before assuming fog.",
       "Wind is light at the reporting sites.",
       "Sun exposure is manageable right now."
     ],
-    "hikerScore": 92,
+    "hikerScore": 84,
     "hikerScoreLabel": "Great",
-    "hikerScoreFactors": [],
+    "hikerScoreFactors": [
+      {
+        "label": "Fog or damp trail risk",
+        "penalty": 8
+      }
+    ],
     "localTempSpread": 0,
     "highStationSpread": null,
     "lapseRate": null,
     "mitchellDrop": null,
     "wncLapseRate": null,
-    "fogRisk": "Low",
+    "fogRisk": "Elevated",
     "maxUv": 0,
     "maxSolar": 0,
-    "maxGust": 2.9,
-    "maxTemp": 59.4,
+    "maxGust": 3.1,
+    "maxTemp": 42.8,
     "maxWbgt": null,
     "maxRainRate": 0,
     "maxRainToday": 0,
