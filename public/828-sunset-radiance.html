@@ -641,11 +641,6 @@
       border: 0;
     }
 
-    .context-card.primary-assistant .context-media.drivenc-live { aspect-ratio: 16 / 9; min-height: 0; background: #081426; }
-    .context-media.drivenc-live::after { display: none; }
-    .drivenc-live video { display: block; width: 100%; height: 100%; aspect-ratio: 16 / 9; object-fit: contain; }
-    #driveNCPlay[hidden] { display: none; }
-    #driveNCPlay { cursor: pointer; border: 0; bottom: 54px; }
 
     .youtube-live-fallback {
       position: absolute;
@@ -1603,17 +1598,23 @@
 
         <div class="camera-desk-heading">
           <h3>Live Camera Desk</h3>
-          <p>Compare the downtown I-240 traffic camera, courthouse, East Asheville, and UNC Asheville views, then look north from Fairview toward Swannanoa. Analysis availability is listed above.</p>
+          <p>Compare the Chamber, courthouse, East Asheville, and UNC Asheville views, then look north from Fairview toward Swannanoa. A downtown I-240 traffic still appears below. Analysis availability is listed above.</p>
         </div>
 
         <div class="sky-context-grid" aria-label="Live Asheville camera views">
           <article class="context-card primary-assistant">
-            <div class="context-media drivenc-live">
-              <video id="driveNCVideo" controls muted playsinline preload="none" poster="https://www.drivenc.gov/map/Cctv/4204" aria-label="Live downtown I-240 traffic camera"></video>
-              <button id="driveNCPlay" class="youtube-live-fallback" type="button">Watch live</button>
+            <div class="context-media videstra-live">
+              <iframe
+                src="https://plyhearst.videstra.live/?id=674b5cf0-55b3-49e2-a8da-bb57ce2ece92_8UIJMXTyGjrwwXziaJUoFLf9hWifZbKVtWF5D_&amp;token=kswZPhLz4beUpNJK7w4Fgl8eu"
+                title="Live Asheville Area Chamber of Commerce camera"
+                loading="lazy"
+                referrerpolicy="strict-origin-when-cross-origin"
+                allow="autoplay; fullscreen; picture-in-picture"
+                allowfullscreen
+              ></iframe>
             </div>
             <div class="context-copy">
-              <strong>Downtown I-240 traffic camera · DriveNC.</strong> A west-facing view along I-240 at Charlotte Street, with downtown Asheville and the western horizon in view. Select Watch live to start video. The preview is a camera still; its capture time is not verified. This view is not included in the automated sky analysis. <a href="https://www.drivenc.gov/map/Cctv/4204" target="_blank" rel="noopener noreferrer">Open latest still on DriveNC</a> · <a href="https://cfase04.services.ncdot.gov:8887/chan-5369_l/xflow.m3u8" target="_blank" rel="noopener noreferrer">Open live stream</a>. <span id="driveNCStatus" role="status"></span>
+              <strong>Asheville Chamber of Commerce · Live.</strong> This camera faces southwest toward Mt. Pisgah, about 16 miles away, providing a wide visual cross-check for local cloud texture, visibility, and changing light. <a href="https://svrhearst.videstra.live/hls_output/674b5cf0-55b3-49e2-a8da-bb57ce2ece92_8UIJMXTyGjrwwXziaJUoFLf9hWifZbKVtWF5D__kswZPhLz4beUpNJK7w4Fgl8eu/index.m3u8" target="_blank" rel="noopener noreferrer">Open stream</a>.
             </div>
           </article>
 
@@ -1678,6 +1679,16 @@
               <strong>Fairview · North.</strong> A view toward Swannanoa from southeast of Asheville. Clouds here provide regional context and may differ from the sky over downtown.
               <div class="station-details" aria-label="Fairview camera location"><span>2,435 ft</span><span>35.51220° N, 82.39874° W</span></div>
               <a href="https://www.wunderground.com/dashboard/pws/KNCFAIRV101" target="_blank" rel="noopener noreferrer">View Fairview weather station</a>
+            </div>
+          </article>
+
+          <article class="context-card station-card">
+            <button class="context-media station-camera" type="button" data-lightbox-src="https://www.drivenc.gov/map/Cctv/4204" data-lightbox-title="Downtown I-240 traffic camera">
+              <img id="driveNCImage" src="https://www.drivenc.gov/map/Cctv/4204" alt="Downtown I-240 traffic camera still looking west at Charlotte Street" loading="lazy" />
+              <span class="context-label"><span>West-facing view</span><strong>Downtown I-240 traffic camera</strong></span>
+            </button>
+            <div class="context-copy">
+              <strong>Downtown I-240 traffic camera · DriveNC.</strong> A still view looking west along I-240 at Charlotte Street toward downtown Asheville and the western horizon. Capture time is not verified. This view is not included in the automated sky analysis. <a href="https://www.drivenc.gov/map/Cctv/4204" target="_blank" rel="noopener noreferrer">Open latest still on DriveNC</a>.
             </div>
           </article>
         </div>
@@ -1818,7 +1829,6 @@
     </footer>
   </div>
 
-  <script type="module" src="/js/drivenc-camera.js"></script>
   <script type="module">
     import { buildAtmosphereNow } from "./js/intel/atmosphere-now.js";
     import { withStationSkyMeasurements, withStationContext } from "./js/intel/station-lightning.js";
@@ -2396,6 +2406,8 @@
     }
 
     function refreshContextMedia() {
+      const traffic = document.querySelector('#driveNCImage');
+      if (traffic) traffic.src = bucketedCacheUrl('https://www.drivenc.gov/map/Cctv/4204', 60_000);
       const fairview = document.querySelector('#fairviewCameraImage');
       if (fairview) fairview.src = bucketedCacheUrl('https://images.ambientweather.net/308398A68945/latest.jpg', 60_000);
       if (els.uncaCameraImage) {
