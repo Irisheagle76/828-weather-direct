@@ -1,4 +1,5 @@
 const routes = {
+  "biltmore/current": () => import("../lib/api-routes/biltmore/current.js"),
   "se-feelscore": () => import("../lib/api-routes/se-feelscore.js"),
   "mobile/feelscore-map": () => import("../lib/api-routes/mobile/feelscore-map.js"),
   "asheville-spread": () => import("../lib/api-routes/asheville-spread.js"),
