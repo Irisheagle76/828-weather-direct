@@ -11,10 +11,15 @@ import { harmonizePressureObservations, stationToElevationAdjustedPressureMb } f
 import { assessObservation } from "../lib/asheville-spread/quality.js";
 import { buildAshevilleSpread } from "../lib/asheville-spread/service.js";
 
-test("station registry contains 31 unique active physical stations and deduplicates Grove Arcade", () => {
-  assert.equal(ASHEVILLE_STATIONS.length, 31);
-  assert.equal(new Set(ASHEVILLE_STATIONS.map((station) => station.id)).size, 31);
+test("station registry contains 32 unique active physical stations and deduplicates Grove Arcade", () => {
+  assert.equal(ASHEVILLE_STATIONS.length, 32);
+  assert.equal(new Set(ASHEVILLE_STATIONS.map((station) => station.id)).size, 32);
 
+  const village = ASHEVILLE_STATIONS.find(station => station.id === "biltmore-village");
+  assert.deepEqual(village.source, { provider: "tempest", stationId: "237451", deviceId: "1262759" });
+  assert.equal(village.elevationFt, 1998);
+  assert.equal(village.latitude, 35.56721);
+  assert.equal(village.longitude, -82.54092);
   const aliases = ASHEVILLE_STATIONS.flatMap((station) => station.aliases);
   assert.equal(new Set(aliases).size, aliases.length);
 
@@ -49,7 +54,7 @@ test("station registry contains 31 unique active physical stations and deduplica
     longitude: -82.68,
     precision: "neighborhood"
   });
-  for (const retiredId of ["biltmore-village", "asheville-high-school", "biltmore-estate"]) {
+  for (const retiredId of ["asheville-high-school", "biltmore-estate"]) {
     assert.equal(ASHEVILLE_STATIONS.some((station) => station.id === retiredId), false);
   }
 
