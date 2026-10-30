@@ -886,10 +886,6 @@ export async function updateHikingGuidance({ outputPath = jsonPath, fetcher = fe
     return message.replace(/https?:\/\/[^\s"'<>]+/g, "[upstream URL redacted]");
   };
   try {
-    const missing = [
-      !credentials.weatherUndergroundApiKey && "WEATHER_UNDERGROUND_API_KEY (or WU_API_KEY)"
-    ].filter(Boolean);
-    if (missing.length) throw new Error(`Missing required hiking credentials: ${missing.join(", ")}`);
 
     // Never relabel an old artifact or cached observation as a successful refresh.
     const observations = await getElevationObservations({ now, fetcher, credentials, force: true, fallbackUrl: null });
@@ -915,7 +911,7 @@ export async function updateHikingGuidance({ outputPath = jsonPath, fetcher = fe
 
     const byId = new Map(usable.map((station) => [station.id, station]));
     const failureById = new Map(quality.failures.map((failure) => [failure.id, failure]));
-    const stations = OBSERVATION_STATIONS.filter((station) => !station.componentOnly).map((definition) => {
+    const stations = OBSERVATION_STATIONS.filter((station) => !station.componentOnly && station.enabled !== false).map((definition) => {
       if (byId.has(definition.id)) return { ...byId.get(definition.id), error: null };
       // Keep every configured site visible, without publishing stale/invalid measurements.
       return {

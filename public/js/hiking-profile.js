@@ -1,10 +1,6 @@
 // Show a readable selection while keeping every source available in the station list.
 export const MAX_PROFILE_STATIONS = 10;
-const preferredIds = [
-  "tempest-144737", "tempest-127602", "beaucatcher-mountain", "spivey-mountain",
-  "windy-ridge-trail", "park-place", "max-patch", "frying-pan-pisgah-ridgeline",
-  "burnsville-northern-high-country", "mount-mitchell"
-];
+const preferredIds = ["nws-kavl", "econet-unca", "econet-flet", "econet-wayn", "econet-burn", "econet-bear", "tempest-144737", "tempest-127602", "frying-pan-pisgah-ridgeline", "mount-mitchell"];
 
 export function selectHikingProfileStations(stations = []) {
   const usable = stations.filter((station) => station.health?.usable !== false &&

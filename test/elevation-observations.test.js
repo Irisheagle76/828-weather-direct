@@ -28,7 +28,7 @@ test("health checks reject stale and impossible readings and flag abrupt jumps",
   assert.equal(evaluateObservationHealth(impossible, station, { now: NOW }).status, "invalid");
 });
 
-test("live service normalizes all providers and counts Mountain Air once", async () => {
+test("live service collects public sources and excludes archived WU", async () => {
   resetElevationObservationCache();
   let requests = 0;
   const payload = await getElevationObservations({
@@ -38,12 +38,14 @@ test("live service normalizes all providers and counts Mountain Air once", async
     credentials: { weatherFlowApiKey: "wf-test", weatherUndergroundApiKey: "wu-test" },
     fetcher: async (url, options = {}) => {
       requests += 1;
+      url = String(url);
       if (url.includes("weatherflow.com")) return response({ current_conditions: { time: NOW / 1000, air_temperature: 42, feels_like: 42, dew_point: 38, relative_humidity: 82, wind_avg: 2, wind_gust: 4, sea_level_pressure: 30.1, uv: 0, solar_radiation: 0, precip_rate: 0 } });
       if (url.includes("api.weather.com")) {
         const stationId = new URL(url).searchParams.get("stationId");
         return response({ observations: [{ stationID: stationId, obsTimeUtc: new Date(NOW - 2 * 60000).toISOString(), lat: 35.8, lon: -82.3, humidity: 80, winddir: 180, imperial: { temp: 41, heatIndex: 41, dewpt: 36, windSpeed: 3, windGust: stationId === "KNCBURNS30" ? 8 : 6, pressure: 30.1, precipRate: 0, precipTotal: 0 } }] });
       }
-      if (url.includes("climate.ncsu.edu")) return response({ latest: { ob: "2026-08-20 08:35:00", air_temp: 39, dew: 36, rh: 84, wind_speed: 5, wind_gust: 8, sr: 0 } });
+      if (url.includes("api.weather.gov")) return response({properties:{timestamp:new Date(NOW).toISOString(),temperature:{value:10,unitCode:"wmoUnit:degC"}}});
+      if (url.includes("climate.ncsu.edu")) return response({ ob_et: "2026-08-20 08:35:00", temp: 39, dew: 36, rh: 84, ws: 5, gust: 8, sr: 0 });
       throw new Error(`Unexpected URL ${url} ${options.method || "GET"}`);
     }
   });
@@ -51,8 +53,9 @@ test("live service normalizes all providers and counts Mountain Air once", async
   assert.equal(payload.quality.availableStations, payload.quality.requestedStations);
   assert.equal(payload.stations.filter((station) => station.id.startsWith("mountain-air-runway")).length, 0);
   const composite = payload.stations.find((station) => station.id === "mountain-air-ridge-composite");
-  assert.equal(composite.gustMph, 8);
-  assert.deepEqual(composite.componentStationIds, ["KNCBURNS29", "KNCBURNS30"]);
+  assert.equal(composite, undefined);
+  assert.ok(payload.stations.every(s => s.provider !== "wunderground"));
+  assert.ok(payload.stations.some(s => s.stationId === "KAVL"));
   const requestsAfterRefresh = requests;
   await getElevationObservations({ now: NOW + 60000, credentials: { weatherFlowApiKey: "wf-test", weatherUndergroundApiKey: "wu-test" }, fetcher: async () => { throw new Error("cache miss"); } });
   assert.equal(requests, requestsAfterRefresh);

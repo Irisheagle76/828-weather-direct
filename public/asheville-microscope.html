@@ -1557,28 +1557,18 @@
   </div>
 
   <script type="module">
+    import { scheduleObservationRefresh } from "./js/observation-refresh.js";
     import { stationProfileCards } from "./js/station-profile.js";
     (() => {
       const root = document.getElementById('avl-microscope-page');
       let stations = [
         { code: 'UN', name: 'UNC Asheville', area: 'Lookout Observatory', exposure: 'Fully unobstructed research tower', lat: 35.621802282303385, lon: -82.56608557099108, elevation: 2357, source: 'NC ECONet / UNC Asheville', temperature: 72.7, dewpoint: 68.8, wind: 2, solar: 411.5, freshness: 'fresh' },
         { code: 'HC', name: 'North Haw Creek', area: 'Haw Creek', exposure: 'Residential with trees', lat: 35.616, lon: -82.506, elevation: 2331, source: 'Tempest', temperature: 77, dewpoint: 71.6, wind: 2.2, solar: 461, freshness: 'fresh' },
-        { code: 'GP', name: 'Grove Park', area: 'North Asheville', exposure: 'Partly exposed residential', lat: 35.62653, lon: -82.54562, elevation: 2266, source: 'Weather Underground', temperature: 77.4, dewpoint: 71.8, wind: 0, solar: 48.4, freshness: 'fresh' },
-        { code: 'AR', name: 'Near AC Reynolds Middle School', area: 'East Asheville', exposure: 'Heavily forested', lat: 35.554948, lon: -82.491854, elevation: 2245, source: 'Weather Underground', temperature: 80.6, dewpoint: 72.7, wind: 0, solar: 421.9, freshness: 'fresh' },
         { code: 'GA', name: 'Grove Arcade', area: 'Downtown Asheville', exposure: 'Rooftop with little obstruction', lat: 35.595288, lon: -82.556713, elevation: 2240, source: 'NOAA / NCEI', temperature: 76.2, dewpoint: 72, wind: 0, solar: 454, freshness: 'fresh' },
-        { code: 'BC', name: 'Bent Creek', area: 'Bent Creek', exposure: 'Trees and grass', lat: 35.51094, lon: -82.6098, elevation: 2200, source: 'Weather Underground', temperature: 82.4, dewpoint: 72.1, wind: 1.8, solar: 434, freshness: 'fresh' },
-        { code: 'BP', name: 'Biltmore Park', area: 'South Asheville', exposure: 'Residential with grass', lat: 35.48901, lon: -82.55599, elevation: 2200, source: 'Weather Underground', temperature: 81.3, dewpoint: 72, wind: 1, solar: null, freshness: 'fresh' },
-        { code: 'SH', name: 'Sand Hill', area: 'Sand Hill community', exposure: 'Residential with trees', lat: 35.563883, lon: -82.654275, elevation: 2232, source: 'Weather Underground', temperature: 84.1, dewpoint: 73.5, wind: 1.7, solar: 421.7, freshness: 'fresh' },
-        { code: 'WA', name: 'West Asheville', area: 'West Asheville', exposure: 'Residential', lat: 35.584047, lon: -82.598074, elevation: 2174, source: 'Weather Underground', temperature: 78.8, dewpoint: 71.8, wind: 4.7, solar: 116.3, freshness: 'fresh' },
-        { code: 'BF', name: 'Biltmore Forest', area: 'Biltmore Forest', exposure: 'Heavily forested residential with grass', lat: 35.535242, lon: -82.541958, elevation: 2167, source: 'Weather Underground', temperature: 77.9, dewpoint: 73.4, wind: 0, solar: 11.3, freshness: 'fresh' },
-        { code: 'BD', name: 'Beaverdam / Country Club', area: 'North Asheville', exposure: 'Minimal obstruction', lat: 35.640983, lon: -82.54702, elevation: 2165, source: 'Weather Underground', temperature: 77.4, dewpoint: 72.1, wind: 1.1, solar: 460, freshness: 'fresh' },
-        { code: 'FP', name: 'Five Points Neighborhood', area: 'North Asheville', exposure: 'Trees and shrubbery', lat: 35.606835, lon: -82.557007, elevation: 2147, source: 'Weather Underground', temperature: 78.4, dewpoint: 73, wind: 0, solar: null, freshness: 'fresh' },
-        { code: 'BL', name: 'Biltmore Lake', area: 'Biltmore Lake', exposure: 'Residential, lakeside, and forested', lat: 35.532517, lon: -82.652317, elevation: 2107, source: 'Weather Underground', temperature: 78.1, dewpoint: 75.2, wind: 2.7, solar: 77.8, freshness: 'fresh' },
-        { code: 'EA', name: 'Asheville Municipal Golf Course', area: 'East Asheville', exposure: 'Residential with grass', lat: 35.58113, lon: -82.50498, elevation: 2106, source: 'Weather Underground', temperature: 76.6, dewpoint: 72, wind: 0, solar: null, freshness: 'fresh' },
-        { code: 'RD', name: 'River Arts District', area: 'River Arts District', exposure: 'Residential with trees and shrubs', lat: 35.58589, lon: -82.574944, elevation: 2100, source: 'Weather Underground', temperature: 82.9, dewpoint: 75.9, wind: 0, solar: 286.4, freshness: 'fresh' }
       ];
 
       const codeByStationId = {
+        'asheville-airport': 'AVL',
         'biltmore-village': 'BV',
         'beaucatcher-trail': 'BT',
         'randall-gap': 'RG',
@@ -1602,6 +1592,7 @@
       };
 
       const sourceLabels = {
+        nws: 'NOAA / NWS',
         tempest: 'Tempest',
         wunderground: 'Weather Underground',
         ncei: 'NOAA / NCEI',
@@ -1774,7 +1765,7 @@
           const payload = await response.json();
           const templates = new Map(stations.map((station) => [station.code, station]));
           const currentCore = payload.stations
-            .filter((station) => (station.scope || 'core') === 'core' && usableTemperature(station) && codeByStationId[station.id])
+            .filter((station) => ((station.scope || 'core') === 'core' || station.id === 'asheville-airport') && usableTemperature(station) && codeByStationId[station.id])
             .map((station) => {
               const template = templates.get(codeByStationId[station.id]) || {};
               const metadata = { code: codeByStationId[station.id], name: station.name, area: station.area, exposure: station.exposure, lat: station.location.latitude, lon: station.location.longitude, elevation: station.elevationFt };
@@ -2077,14 +2068,7 @@
       render();
       hydrateLiveData();
       if (location.protocol !== 'file:') {
-        let lastVisibleRefresh = Date.now();
-        const refreshIfVisible = () => {
-          if (document.hidden || Date.now() - lastVisibleRefresh < 15 * 60_000) return;
-          lastVisibleRefresh = Date.now();
-          hydrateLiveData();
-        };
-        setInterval(refreshIfVisible, 15 * 60_000);
-        document.addEventListener('visibilitychange', refreshIfVisible);
+        scheduleObservationRefresh(hydrateLiveData);
       }
     })();
   </script>

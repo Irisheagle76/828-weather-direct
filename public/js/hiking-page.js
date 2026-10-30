@@ -1,3 +1,4 @@
+import { scheduleObservationRefresh } from "./observation-refresh.js";
 import { selectHikingProfileStations } from "./hiking-profile.js";
 import { attachProfileDetails } from "./hiking-profile-details.js";
 
@@ -37,7 +38,7 @@ const els = {
     const WAYNESVILLE_CAM_URL = "https://images.ambientweather.net/083A8DFB4D15/latest.jpg";
     const HIKING_GUIDANCE_LIVE_URL = "/api/router?route=hiking/current";
     const HIKING_GUIDANCE_RAW_URL = "https://raw.githubusercontent.com/Irisheagle76/828-weather-direct/main/public/data/hiking-guidance.json";
-    const HIKING_REFRESH_MS = 5 * 60 * 1000;
+    const HIKING_REFRESH_MS = 30 * 60 * 1000;
     const NARRATIVE_PREVIEW_CHARS = 200;
     let isNarrativeExpanded = false;
     let fullNarrative = "";
@@ -433,13 +434,13 @@ const els = {
         reportTime.className = "station-updated";
         els.hikerHeadline.before(reportTime);
       }
-      reportTime.textContent = `${formatUpdate(data?.generatedAt)} · refreshes every 5 minutes. Score: ${guidance.scoreScope || "trail conditions"}; mountain exposure is checked separately.`;
+      reportTime.textContent = `${formatUpdate(data?.generatedAt)} · refreshes at :00 and :30. Score: ${guidance.scoreScope || "trail conditions"}; mountain exposure is checked separately.`;
       const reportAge = Date.now() - Date.parse(data?.generatedAt);
-      if (!Number.isFinite(reportAge) || reportAge > 15 * 60 * 1000) {
+      if (!Number.isFinite(reportAge) || reportAge > 45 * 60 * 1000) {
         els.hikerScore.textContent = "--";
         els.hikerLabel.textContent = "Needs update";
         els.hikerHeadline.textContent = "Station report needs an update. Check the latest mountain views.";
-        renderNarrative("These station readings are older than 15 minutes or their report time is unavailable. A current hiking score cannot be shown.");
+        renderNarrative("These station readings are older than 45 minutes or their report time is unavailable. A current hiking score cannot be shown.");
         els.bestBet.textContent = "Current trail assessment unavailable";
         els.localSpread.textContent = "--";
         els.mitchellDrop.textContent = "--";
@@ -513,7 +514,7 @@ const els = {
     });
 
     await loadHiking();
-    window.setInterval(loadHiking, HIKING_REFRESH_MS);
+    scheduleObservationRefresh(loadHiking);
     refreshMountainViews();
     window.setInterval(refreshMountainViews, 3 * 60 * 1000);
   

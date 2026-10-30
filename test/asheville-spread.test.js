@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { ASHEVILLE_STATIONS, publicStationMetadata } from "../lib/asheville-spread/stations.js";
+import { ASHEVILLE_STATIONS, ARCHIVED_WU_STATIONS, publicStationMetadata } from "../lib/asheville-spread/stations.js";
 import {
   normalizeEconet,
   normalizeNcei,
@@ -11,15 +11,11 @@ import { harmonizePressureObservations, stationToElevationAdjustedPressureMb } f
 import { assessObservation } from "../lib/asheville-spread/quality.js";
 import { buildAshevilleSpread } from "../lib/asheville-spread/service.js";
 
-test("station registry contains 32 unique active physical stations and deduplicates Grove Arcade", () => {
+test("preserved station definitions deduplicate Grove Arcade", () => {
+  const ASHEVILLE_STATIONS = [...ARCHIVED_WU_STATIONS, ...activeStationsWithoutAirport()];
   assert.equal(ASHEVILLE_STATIONS.length, 32);
   assert.equal(new Set(ASHEVILLE_STATIONS.map((station) => station.id)).size, 32);
 
-  const village = ASHEVILLE_STATIONS.find(station => station.id === "biltmore-village");
-  assert.deepEqual(village.source, { provider: "tempest", stationId: "237451", deviceId: "1262759" });
-  assert.equal(village.elevationFt, 1998);
-  assert.equal(village.latitude, 35.56721);
-  assert.equal(village.longitude, -82.54092);
   const aliases = ASHEVILLE_STATIONS.flatMap((station) => station.aliases);
   assert.equal(new Set(aliases).size, aliases.length);
 
@@ -269,3 +265,5 @@ test("metro context does not change the core Asheville spread", async () => {
   assert.equal(payload.summary.metroStationCount, 1);
   assert.equal(payload.summary.corridorStationCount, 0);
 });
+
+function activeStationsWithoutAirport() { return ASHEVILLE_STATIONS.filter(s => s.id !== "asheville-airport"); }

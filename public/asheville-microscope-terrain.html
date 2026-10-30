@@ -155,12 +155,13 @@
   </main>
   <footer data-site-footer></footer>
   <script type="module">
+    import { scheduleObservationRefresh } from "./js/observation-refresh.js";
     import * as maplibregl from "https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.mjs";
     const API_URL = "/api/router?route=asheville-spread";
     const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
     const TERRAIN_TILEJSON_URL = "https://tiles.mapterhorn.com/tilejson.json";
     const ASHEVILLE_VIEW = { center: [-82.5515, 35.5867], zoom: 12.2, pitch: 62, bearing: -18 };
-    const providerLabels = { tempest: "Tempest / WeatherFlow", wunderground: "Weather Underground", ncei: "NOAA / NCEI", econet: "NC ECONet", pwsweather: "PWSWeather", weatherlink: "WeatherLink" };
+    const providerLabels = { nws: "NOAA / NWS", tempest: "Tempest / WeatherFlow", wunderground: "Weather Underground", ncei: "NOAA / NCEI", econet: "NC ECONet", pwsweather: "PWSWeather", weatherlink: "WeatherLink" };
     const metrics = {
       temperatureF: { label: "Temperature", unit: "°F", digits: 1, stops: [35,"#315bff",55,"#00d9ff",72,"#bd45ff",86,"#ff2d95",100,"#ff304f"] },
       dewPointF: { label: "Dew point", unit: "°F", digits: 1, stops: [20,"#965cff",40,"#315bff",55,"#00d9ff",68,"#ff45d4",78,"#ff305e"] },
@@ -225,7 +226,7 @@
       closePopup(); updateStationSource(true);
     }));
     loadObservations();
-    setInterval(() => { if (!document.hidden) loadObservations(); }, 15 * 60_000);
+    scheduleObservationRefresh(loadObservations);
 
     async function loadObservations() {
       const controller = new AbortController();

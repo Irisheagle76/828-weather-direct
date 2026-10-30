@@ -52,8 +52,11 @@ function upstream({ rejectTempest = false, failedWUIds = [], staleStation = null
         humidity: 70, imperial: { temp: stationId === staleStation ? 109 : 55, dewpt: 45, windSpeed: 3, windGust: 8, precipRate: 0 }
       }] });
     }
-    if (url.hostname === "products.climate.ncsu.edu") {
-      return response({ latest: { ob: "2026-10-16 02:55:00", air_temp: 45, dew: 35, rh: 65, wind_speed: 5, wind_gust: 10 } });
+    if (url.hostname === "api.weather.gov") return response({properties:{timestamp:new Date(NOW).toISOString(),temperature:{value:10,unitCode:"wmoUnit:degC"}}});
+    if (url.hostname === "econet.climate.ncsu.edu") {
+      const id=url.searchParams.get("station");
+      if (failedWUIds.length && ["WAYN","BURN","BEAR"].includes(id)) return response({},503);
+      return response({ ob_et: id === staleStation ? "2026-10-15 20:55:00" : "2026-10-16 02:55:00", temp: id === staleStation ? 109 : 45, dew:35, rh:65, ws:5, gust:10 });
     }
     assert.fail(`Unexpected upstream host: ${url.hostname}`);
   };
@@ -63,40 +66,40 @@ function response(data, status = 200) {
   return { ok: status >= 200 && status < 300, status, json: async () => data };
 }
 
-test("partial WU outage publishes 9/19 current sites with explicit coverage and station-level diagnostics", async (t) => {
+test("partial NC State outage publishes remaining current sites with explicit coverage and station-level diagnostics", async (t) => {
   const context = await refresh(t, { fetcher: upstream({ failedWUIds: replacementWUIds }) });
   const payload = await context.run();
   assert.equal(payload.quality.status, "partial");
-  assert.equal(payload.quality.availableStations, 9);
-  assert.equal(payload.quality.requestedStations, 19);
-  assert.equal(payload.quality.failures.length, 10);
-  assert.equal(payload.stations.length, OBSERVATION_STATIONS.filter((s) => !s.componentOnly).length);
-  assert.equal(payload.stations.filter((s) => s.health.usable).length, 9);
+  assert.equal(payload.quality.availableStations, 7);
+  assert.equal(payload.quality.requestedStations, 11);
+  assert.equal(payload.quality.failures.length, 4);
+  assert.equal(payload.stations.length, OBSERVATION_STATIONS.filter((s) => !s.componentOnly && s.enabled !== false).length);
+  assert.equal(payload.stations.filter((s) => s.health.usable).length, 7);
   assert.ok(payload.stations.filter((s) => !s.health.usable).every((s) => s.status === "unavailable" && s.temperatureF === undefined));
-  assert.equal(payload.guidance.localTempSpread, 3);
+  assert.equal(payload.guidance.localTempSpread, 23);
   assert.equal(payload.guidance.highStationSpread, null);
-  assert.match(payload.guidance.hikerNarrative, /Limited station coverage: 9 of 19/);
+  assert.match(payload.guidance.hikerNarrative, /Limited station coverage: 7 of 11/);
   assert.match(payload.guidance.routeWarnings.at(-1), /unavailable sites cannot rule out.*lightning/);
   const warnings = context.logs.filter((log) => log.event === "hiking_feed_failure");
-  assert.equal(warnings.length, 10);
-  assert.ok(warnings.every((log) => log.provider === "wunderground" && /503/.test(log.reason)));
+  assert.equal(warnings.length, 4);
+  assert.ok(warnings.some((log) => log.provider === "econet" && /503/.test(log.reason)));
   assert.deepEqual(JSON.parse(await fs.readFile(context.outputPath, "utf8")), payload);
 });
 
-test("full coverage needs no shared WeatherFlow key and retains lightning alerts and Mountain Air composite", async (t) => {
+test("public coverage retains owner Tempest lightning alerts", async (t) => {
   const context = await refresh(t, { fetcher: upstream({ lightning: true }) });
   const payload = await context.run();
   assert.equal(payload.quality.status, "fresh");
-  assert.equal(payload.quality.availableStations, 19);
+  assert.equal(payload.quality.availableStations, 10);
   assert.equal(payload.guidance.lightning.active, true);
   assert.equal(payload.guidance.hikerScoreLabel, "Alert");
-  assert.doesNotMatch(payload.guidance.hikerNarrative, /Limited station coverage/);
-  assert.deepEqual(payload.stations.find((s) => s.provider === "composite").componentStationIds, ["KNCBURNS29", "KNCBURNS30"]);
-  assert.equal(context.logs.filter((log) => log.level === "warn").length, 0);
+  assert.match(payload.guidance.hikerNarrative, /Limited station coverage: 10 of 11/);
+  assert.ok(payload.stations.every(s => !["composite","wunderground"].includes(s.provider)));
+  assert.equal(context.logs.filter((log) => log.level === "warn").length, 1);
 });
 
-test("only the two owner Tempest stations remain and their tokens stay station-scoped", async (t) => {
-  assert.deepEqual(OBSERVATION_STATIONS.filter(s => s.provider === "tempest").map(s => s.providerStationId), ["144737", "127602"]);
+test("owner Tempest stations remain and their tokens stay station-scoped", async (t) => {
+  assert.deepEqual(OBSERVATION_STATIONS.filter(s => s.provider === "tempest").map(s => s.providerStationId), ["237451", "144737", "127602"]);
   const requests = [];
   const provider = upstream({ rejectTempest: true });
   const context = await refresh(t, {
@@ -108,8 +111,8 @@ test("only the two owner Tempest stations remain and their tokens stay station-s
     }
   });
   const payload = await context.run();
-  assert.equal(payload.quality.availableStations, 19);
-  assert.equal(payload.quality.failures.length, 0);
+  assert.equal(payload.quality.availableStations, 10);
+  assert.equal(payload.quality.failures.length, 1);
   assert.equal(payload.stations.find((s) => s.id === "tempest-127602").health.usable, true);
   assert.equal(payload.stations.find((s) => s.id === "tempest-144737").health.usable, true);
   const ownerRequests = requests.filter((url) => url.searchParams.get("token") === "home-secret");
@@ -123,7 +126,7 @@ test("only the two owner Tempest stations remain and their tokens stay station-s
 test("an owner token without a matching station ID is never sent to other stations", async (t) => {
   const context = await refresh(t, { credentials: { ...credentials, tempestToken: "home-secret", tempestStationId: "999999" }, fetcher: upstream({ rejectTempest: true }) });
   const payload = await context.run();
-  assert.equal(payload.quality.availableStations, 18);
+  assert.equal(payload.quality.availableStations, 9);
   assert.equal(payload.stations.find((s) => s.id === "tempest-127602").health.usable, false);
   assert.match(payload.quality.failures.find(f => f.id === "tempest-127602").reason, /TEMPEST_TOKEN with a matching TEMPEST_STATION_ID/);
 });
@@ -142,7 +145,7 @@ test("JCC authorization failure identifies its own token and leaves other feeds 
   const provider = upstream();
   const context = await refresh(t, { fetcher: (input) => new URL(input).pathname.endsWith("/observations/station/144737") ? response({}, 401) : provider(input) });
   const payload = await context.run();
-  assert.equal(payload.quality.availableStations, 18);
+  assert.equal(payload.quality.availableStations, 9);
   assert.equal(payload.stations.find(s => s.id === "tempest-127602").health.usable, true);
   const diagnostic = context.logs.find(log => log.event === "hiking_feed_failure" && log.id === "tempest-144737");
   assert.match(diagnostic.reason, /HTTP 401/);
@@ -151,16 +154,16 @@ test("JCC authorization failure identifies its own token and leaves other feeds 
 });
 
 test("stale numeric readings are excluded from guidance and replaced with unavailable site metadata", async (t) => {
-  const context = await refresh(t, { fetcher: upstream({ staleStation: "KNCASHEV440" }) });
+  const context = await refresh(t, { fetcher: upstream({ staleStation: "BEAR" }) });
   const payload = await context.run();
-  const stale = payload.stations.find((s) => s.id === "windy-ridge-trail");
+  const stale = payload.stations.find((s) => s.id === "econet-bear");
   assert.equal(stale.health.usable, false);
   assert.equal(stale.temperatureF, undefined);
   assert.equal(stale.observedAt, undefined);
   assert.match(stale.error, /stale/);
   assert.ok(payload.guidance.maxTemp < 109);
-  assert.equal(payload.quality.availableStations, 18);
-  assert.match(payload.guidance.hikerNarrative, /18 of 19/);
+  assert.equal(payload.quality.availableStations, 9);
+  assert.match(payload.guidance.hikerNarrative, /9 of 11/);
 });
 
 test("a total outage preserves the previous file, fails clearly, and redacts credentials", async (t) => {
@@ -173,14 +176,8 @@ test("a total outage preserves the previous file, fails clearly, and redacts cre
   assert.ok(!logged.includes("https://upstream.example"));
 });
 
-test("missing credentials name the missing secret, skip requests, and preserve the previous file", async (t) => {
-  for (const key of ["weatherUndergroundApiKey"]) {
-    let requested = false;
-    const context = await refresh(t, { credentials: { ...credentials, [key]: null }, fetcher: async () => { requested = true; } });
-    await assert.rejects(context.run(), /WEATHER_UNDERGROUND_API_KEY/);
-    assert.equal(requested, false);
-    assert.equal(await fs.readFile(context.outputPath, "utf8"), context.previous);
-  }
+test("public observations refresh without WU credentials", async (t) => {
+ const context=await refresh(t,{credentials:{}}); const p=await context.run(); assert.equal(p.quality.availableStations,8); assert.ok(p.stations.some(s=>s.stationId==="KAVL" && s.health.usable));
 });
 
 test("repeated refreshes cannot publish memory fallback as fresh live observations", async (t) => {

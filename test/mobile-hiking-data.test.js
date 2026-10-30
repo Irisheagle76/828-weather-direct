@@ -7,20 +7,20 @@ import { readFile } from "node:fs/promises";
 import vm from "node:vm";
 
 const NOW = Date.parse("2026-10-16T14:00:00Z");
-const sites = () => OBSERVATION_STATIONS.filter(station => !station.componentOnly).map(station => ({ ...station, temperatureF: 60, dewPointF: 55, windMph: 3, gustMph: 8, observedAt: new Date(NOW).toISOString(), health: { usable: true }, retrievalMode: "live" }));
-const observations = (stations = sites()) => ({ generatedAt: new Date(NOW).toISOString(), stations, quality: { requestedStations: 19, availableStations: stations.filter(s => s.health.usable).length, fallbackStations: 0, status: "fresh", failures: [] } });
+const sites = () => OBSERVATION_STATIONS.filter(station => !station.componentOnly && station.enabled !== false).map(station => ({ ...station, temperatureF: 60, dewPointF: 55, windMph: 3, gustMph: 8, observedAt: new Date(NOW).toISOString(), health: { usable: true }, retrievalMode: "live" }));
+const observations = (stations = sites()) => ({ generatedAt: new Date(NOW).toISOString(), stations, quality: { requestedStations: 11, availableStations: stations.filter(s => s.health.usable).length, fallbackStations: 0, status: "fresh", failures: [] } });
 
-test("mobile consumes the complete shared 19-site hiking payload and ten-site profile", () => {
+test("mobile consumes the complete shared 11-site hiking payload and ten-site profile", () => {
   const payload = hikingCurrentPayload(observations(), { now: NOW });
   const report = hikingReportState(payload, NOW);
-  assert.equal(report.requested, 19);
-  assert.equal(report.available, 19);
+  assert.equal(report.requested, 11);
+  assert.equal(report.available, 11);
   assert.equal(report.stale, false);
   const markup = hikingNetworkMarkup(payload, { now: NOW });
   assert.match(markup, /10 selected sites/);
-  assert.match(markup, /All 19 station readings/);
-  for (const name of ["Park Place", "Alpine Village", "Cold Mountain Station", "Camp Daniel Boone", "Wallace Mountain", "Lake Junaluska", "Webb Weather", "Windy Ridge Trail", "BeaucatcherWx", "Spivey Mountain"]) assert.ok(markup.includes(name));
-  assert.match(markup, /Lightning observations come from the two Asheville-area Tempest stations/);
+  assert.match(markup, /All 11 station readings/);
+  for (const name of ["Asheville Regional Airport", "Mills River", "Waynesville Research Station", "Burnsville Tower", "Bearwallow Mountain", "Mount Mitchell"]) assert.ok(markup.includes(name));
+  assert.match(markup, /Lightning observations come from available Asheville-area Tempest stations/);
 });
 
 test("missing or rejected sites remain visible without invalid measurements and trigger current partial coverage", () => {
@@ -28,12 +28,12 @@ test("missing or rejected sites remain visible without invalid measurements and 
   input.quality.status = "partial";
   const payload = hikingCurrentPayload(input, { now: NOW });
   const report = hikingReportState(payload, NOW);
-  assert.equal(payload.stations.length, 19);
+  assert.equal(payload.stations.length, 11);
   assert.equal(report.stale, false, "a recent partial report is distinct from an old report");
   assert.equal(report.partial, true);
-  assert.equal(report.available, 4);
-  assert.match(payload.guidance.hikerNarrative, /Limited station coverage: 4 of 19/);
-  const missing = payload.stations.find(s => s.id === "beaucatcher-mountain");
+  assert.equal(report.available, 10);
+  assert.match(payload.guidance.hikerNarrative, /Limited station coverage: 10 of 11/);
+  const missing = payload.stations.find(s => s.id === "nws-kavl");
   assert.equal(missing.health.usable, false);
   assert.equal(missing.temperatureF, undefined);
   assert.match(hikingNetworkMarkup(payload, { now: NOW }), /Current readings unavailable/);
@@ -49,7 +49,7 @@ test("a high coverage service status still exposes individual missing sites and 
 });
 
 test("mobile withholds a current score for stale, missing-time, unavailable, or future reports", () => {
-  for (const generatedAt of [undefined, new Date(NOW - 16 * 60000).toISOString(), new Date(NOW + 6 * 60000).toISOString()]) {
+  for (const generatedAt of [undefined, new Date(NOW - 46 * 60000).toISOString(), new Date(NOW + 6 * 60000).toISOString()]) {
     const payload = { ...observations(), generatedAt, guidance: { hikerScore: 90 } };
     assert.equal(hikingReportState(payload, NOW).stale, true);
     assert.equal(hikingReportState(payload, NOW).score, null);

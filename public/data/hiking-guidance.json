@@ -1,32 +1,49 @@
 {
-  "generatedAt": "2026-10-30T05:34:12.476Z",
+  "generatedAt": "2026-10-30T12:13:41.188Z",
   "stations": [
     {
-      "id": "tempest-144737",
-      "stationId": "144737",
+      "id": "tempest-237451",
+      "stationId": "237451",
       "provider": "tempest",
-      "source": "Tempest",
-      "name": "North Downtown",
-      "role": "supplemental downtown Asheville observation from Weather station on Clyde Street",
-      "elevationFt": 2137,
-      "url": "https://tempestwx.com/station/144737/grid",
-      "lat": 35.606299,
-      "lon": -82.547881,
-      "observedAt": "2026-10-30T05:33:23.000Z",
-      "temperatureF": 45.5,
-      "feelsLikeF": 45.5,
-      "dewPointF": 44.239999999999995,
-      "humidityPct": 95,
-      "windMph": 1.34216177526,
-      "gustMph": 1.78954903368,
-      "windDirection": "247deg",
-      "pressure": 30.256420684259997,
-      "uv": 0,
-      "solarWm2": 0,
-      "rainTodayIn": 0,
-      "rainRateInHr": 0,
-      "lightningStrikes1h": 0,
-      "lightningStrikes3h": 0,
+      "source": "tempest",
+      "name": "Biltmore Village",
+      "role": "Asheville valley reference",
+      "elevationFt": 1998,
+      "url": "https://tempestwx.com/station/237451/grid",
+      "lat": 35.56721,
+      "lon": -82.54092,
+      "status": "unavailable",
+      "health": {
+        "usable": false
+      },
+      "error": "Tempest 237451 has no credential; configure TEMPEST_TOKEN with a matching TEMPEST_STATION_ID (or an authorized WEATHERFLOW_API_KEY)"
+    },
+    {
+      "id": "nws-kavl",
+      "stationId": "KAVL",
+      "provider": "nws",
+      "source": "nws",
+      "name": "Asheville Regional Airport",
+      "role": "Southern metro reference; not summit wind",
+      "elevationFt": 2165,
+      "url": "https://www.weather.gov/wrh/timeseries?site=KAVL",
+      "lat": 35.43194,
+      "lon": -82.5375,
+      "observedAt": "2026-10-30T11:50:00+00:00",
+      "temperatureF": 44.6,
+      "feelsLikeF": 44.6,
+      "dewPointF": 42.8,
+      "humidityPct": 93.352,
+      "windMph": 0,
+      "gustMph": null,
+      "windDirection": null,
+      "pressure": null,
+      "uv": null,
+      "solarWm2": null,
+      "rainTodayIn": null,
+      "rainRateInHr": null,
+      "lightningStrikes1h": null,
+      "lightningStrikes3h": null,
       "componentStationIds": null,
       "retrievalMode": "live",
       "status": "live",
@@ -34,11 +51,223 @@
         "status": "healthy",
         "score": 100,
         "usable": true,
-        "ageMinutes": 1,
-        "maxAgeMinutes": 45,
+        "ageMinutes": 24,
+        "maxAgeMinutes": 120,
         "issues": []
       },
       "error": null
+    },
+    {
+      "id": "econet-unca",
+      "stationId": "UNCA",
+      "provider": "econet",
+      "source": "NC ECONet",
+      "name": "UNC Asheville",
+      "role": "North Asheville reference",
+      "elevationFt": 2367,
+      "url": "https://econet.climate.ncsu.edu/m/?id=UNCA",
+      "lat": 35.62233,
+      "lon": -82.56646,
+      "observedAt": "2026-10-30T12:09:00.000Z",
+      "temperatureF": 42.4,
+      "feelsLikeF": 42.4,
+      "dewPointF": 40.4,
+      "humidityPct": 92.7,
+      "windMph": 0,
+      "gustMph": 1,
+      "windDirection": null,
+      "pressure": null,
+      "uv": null,
+      "solarWm2": 18.32,
+      "rainTodayIn": null,
+      "rainRateInHr": null,
+      "lightningStrikes1h": null,
+      "lightningStrikes3h": null,
+      "componentStationIds": null,
+      "retrievalMode": "live",
+      "status": "live",
+      "health": {
+        "status": "healthy",
+        "score": 100,
+        "usable": true,
+        "ageMinutes": 5,
+        "maxAgeMinutes": 90,
+        "issues": []
+      },
+      "error": null
+    },
+    {
+      "id": "econet-flet",
+      "stationId": "FLET",
+      "provider": "econet",
+      "source": "NC ECONet",
+      "name": "Mills River",
+      "role": "Southern valley reference",
+      "elevationFt": 2067,
+      "url": "https://econet.climate.ncsu.edu/m/?id=FLET",
+      "lat": 35.42721,
+      "lon": -82.55888,
+      "observedAt": "2026-10-30T12:09:00.000Z",
+      "temperatureF": 40.5,
+      "feelsLikeF": 40.5,
+      "dewPointF": 40.5,
+      "humidityPct": 100,
+      "windMph": 0,
+      "gustMph": 0,
+      "windDirection": null,
+      "pressure": null,
+      "uv": null,
+      "solarWm2": 27.14,
+      "rainTodayIn": null,
+      "rainRateInHr": null,
+      "lightningStrikes1h": null,
+      "lightningStrikes3h": null,
+      "componentStationIds": null,
+      "retrievalMode": "live",
+      "status": "live",
+      "health": {
+        "status": "healthy",
+        "score": 100,
+        "usable": true,
+        "ageMinutes": 5,
+        "maxAgeMinutes": 90,
+        "issues": []
+      },
+      "error": null
+    },
+    {
+      "id": "econet-wayn",
+      "stationId": "WAYN",
+      "provider": "econet",
+      "source": "NC ECONet",
+      "name": "Waynesville Research Station",
+      "role": "Western valley reference",
+      "elevationFt": 2755,
+      "url": "https://econet.climate.ncsu.edu/m/?id=WAYN",
+      "lat": 35.48752,
+      "lon": -82.96768,
+      "observedAt": "2026-10-30T12:09:00.000Z",
+      "temperatureF": 35.6,
+      "feelsLikeF": 35.6,
+      "dewPointF": 35.6,
+      "humidityPct": 100,
+      "windMph": 0,
+      "gustMph": 0,
+      "windDirection": null,
+      "pressure": null,
+      "uv": null,
+      "solarWm2": 45.42,
+      "rainTodayIn": null,
+      "rainRateInHr": null,
+      "lightningStrikes1h": null,
+      "lightningStrikes3h": null,
+      "componentStationIds": null,
+      "retrievalMode": "live",
+      "status": "live",
+      "health": {
+        "status": "healthy",
+        "score": 100,
+        "usable": true,
+        "ageMinutes": 5,
+        "maxAgeMinutes": 90,
+        "issues": []
+      },
+      "error": null
+    },
+    {
+      "id": "econet-burn",
+      "stationId": "BURN",
+      "provider": "econet",
+      "source": "NC ECONet",
+      "name": "Burnsville Tower",
+      "role": "Northeastern valley reference",
+      "elevationFt": 2689,
+      "url": "https://econet.climate.ncsu.edu/m/?id=BURN",
+      "lat": 35.91904,
+      "lon": -82.26049,
+      "observedAt": "2026-10-30T12:10:00.000Z",
+      "temperatureF": 41.4,
+      "feelsLikeF": 41.4,
+      "dewPointF": 39.7,
+      "humidityPct": 93.9,
+      "windMph": 2,
+      "gustMph": 3,
+      "windDirection": null,
+      "pressure": null,
+      "uv": null,
+      "solarWm2": 27.63,
+      "rainTodayIn": null,
+      "rainRateInHr": null,
+      "lightningStrikes1h": null,
+      "lightningStrikes3h": null,
+      "componentStationIds": null,
+      "retrievalMode": "live",
+      "status": "live",
+      "health": {
+        "status": "healthy",
+        "score": 100,
+        "usable": true,
+        "ageMinutes": 4,
+        "maxAgeMinutes": 90,
+        "issues": []
+      },
+      "error": null
+    },
+    {
+      "id": "econet-bear",
+      "stationId": "BEAR",
+      "provider": "econet",
+      "source": "NC ECONet",
+      "name": "Bearwallow Mountain",
+      "role": "Southeastern ridge reference",
+      "elevationFt": 4219,
+      "url": "https://econet.climate.ncsu.edu/m/?id=BEAR",
+      "lat": 35.46135,
+      "lon": -82.35822,
+      "observedAt": "2026-10-30T12:09:00.000Z",
+      "temperatureF": 52.7,
+      "feelsLikeF": 52.7,
+      "dewPointF": 31.8,
+      "humidityPct": 44.4,
+      "windMph": 10,
+      "gustMph": 11,
+      "windDirection": null,
+      "pressure": null,
+      "uv": null,
+      "solarWm2": 26.92,
+      "rainTodayIn": null,
+      "rainRateInHr": null,
+      "lightningStrikes1h": null,
+      "lightningStrikes3h": null,
+      "componentStationIds": null,
+      "retrievalMode": "live",
+      "status": "live",
+      "health": {
+        "status": "healthy",
+        "score": 100,
+        "usable": true,
+        "ageMinutes": 5,
+        "maxAgeMinutes": 90,
+        "issues": []
+      },
+      "error": null
+    },
+    {
+      "id": "tempest-144737",
+      "stationId": "144737",
+      "provider": "tempest",
+      "source": "tempest",
+      "name": "North Downtown",
+      "role": "supplemental downtown Asheville observation from Weather station on Clyde Street",
+      "elevationFt": 2137,
+      "url": "https://tempestwx.com/station/144737/grid",
+      "lat": 35.606299,
+      "lon": -82.547881,
+      "status": "unavailable",
+      "health": {
+        "usable": false
+      },
+      "error": "Tempest 144737 has no credential; configure JCC_TEMPEST_TOKEN (or an authorized WEATHERFLOW_API_KEY)"
     },
     {
       "id": "tempest-127602",
@@ -58,282 +287,27 @@
       "error": "Tempest 127602 has no credential; configure TEMPEST_TOKEN with a matching TEMPEST_STATION_ID (or an authorized WEATHERFLOW_API_KEY)"
     },
     {
-      "id": "windy-ridge-trail",
-      "stationId": "KNCASHEV440",
-      "provider": "wunderground",
-      "source": "wunderground",
-      "name": "Windy Ridge Trail",
-      "role": "northern Asheville ridge reference",
-      "elevationFt": 3209,
-      "url": "https://www.wunderground.com/dashboard/pws/KNCASHEV440",
-      "lat": 35.666,
-      "lon": -82.497,
-      "status": "unavailable",
-      "health": {
-        "usable": false
-      },
-      "error": "Observation upstream failed (401)"
-    },
-    {
-      "id": "webb-weather",
-      "stationId": "KNCASHEV482",
-      "provider": "wunderground",
-      "source": "wunderground",
-      "name": "Webb Weather",
-      "role": "north Asheville temperature and moisture reference",
-      "elevationFt": 3000,
-      "url": "https://www.wunderground.com/dashboard/pws/KNCASHEV482",
-      "lat": 35.652,
-      "lon": -82.495,
-      "status": "unavailable",
-      "health": {
-        "usable": false
-      },
-      "error": "Observation upstream failed (401)"
-    },
-    {
-      "id": "beaucatcher-mountain",
-      "stationId": "KNCASHEV288",
-      "provider": "wunderground",
-      "source": "wunderground",
-      "name": "BeaucatcherWx",
-      "role": "Beaucatcher Mountain reference above central Asheville",
-      "elevationFt": 2550,
-      "url": "https://www.wunderground.com/dashboard/pws/KNCASHEV288",
-      "lat": 35.589,
-      "lon": -82.54,
-      "status": "unavailable",
-      "health": {
-        "usable": false
-      },
-      "error": "Observation upstream failed (401)"
-    },
-    {
-      "id": "spivey-mountain",
-      "stationId": "KNCASHEV307",
-      "provider": "wunderground",
-      "source": "wunderground",
-      "name": "Spivey Mountain",
-      "role": "western Asheville ridge reference",
-      "elevationFt": 3110,
-      "url": "https://www.wunderground.com/dashboard/pws/KNCASHEV307",
-      "lat": 35.601,
-      "lon": -82.652,
-      "status": "unavailable",
-      "health": {
-        "usable": false
-      },
-      "error": "Observation upstream failed (401)"
-    },
-    {
-      "id": "lake-junaluska",
-      "stationId": "KNCLAKEJ3",
-      "provider": "wunderground",
-      "source": "wunderground",
-      "name": "Lake Junaluska",
-      "role": "Haywood County valley-floor anchor",
-      "elevationFt": 2657,
-      "url": "https://www.wunderground.com/dashboard/pws/KNCLAKEJ3",
-      "lat": 35.532,
-      "lon": -82.972,
-      "status": "unavailable",
-      "health": {
-        "usable": false
-      },
-      "error": "Observation upstream failed (401)"
-    },
-    {
-      "id": "wallace-mountain",
-      "stationId": "KNCBLACK209",
-      "provider": "wunderground",
-      "source": "wunderground",
-      "name": "Wallace Mountain",
-      "role": "Black Mountain / Swannanoa Valley reference",
-      "elevationFt": 2625,
-      "url": "https://www.wunderground.com/dashboard/pws/KNCBLACK209",
-      "lat": 35.652,
-      "lon": -82.341,
-      "status": "unavailable",
-      "health": {
-        "usable": false
-      },
-      "error": "Observation upstream failed (401)"
-    },
-    {
-      "id": "camp-daniel-boone",
-      "stationId": "KNCCANTO127",
-      "provider": "wunderground",
-      "source": "wunderground",
-      "name": "Camp Daniel Boone",
-      "role": "western Pisgah approach temperature and moisture reference",
-      "elevationFt": 3257,
-      "url": "https://www.wunderground.com/dashboard/pws/KNCCANTO127",
-      "lat": 35.392,
-      "lon": -82.898,
-      "status": "unavailable",
-      "health": {
-        "usable": false
-      },
-      "error": "Observation upstream failed (401)"
-    },
-    {
-      "id": "cold-mountain-station",
-      "stationId": "KNCCANTO128",
-      "provider": "wunderground",
-      "source": "wunderground",
-      "name": "Cold Mountain Station",
-      "role": "eastern Pisgah approach temperature and moisture reference",
-      "elevationFt": 3445,
-      "url": "https://www.wunderground.com/dashboard/pws/KNCCANTO128",
-      "lat": 35.428,
-      "lon": -82.82,
-      "status": "unavailable",
-      "health": {
-        "usable": false
-      },
-      "error": "Observation upstream failed (401)"
-    },
-    {
-      "id": "alpine-village",
-      "stationId": "KNCBURNS167",
-      "provider": "wunderground",
-      "source": "wunderground",
-      "name": "Alpine Village",
-      "role": "forested Black Mountains east-slope reference",
-      "elevationFt": 3260,
-      "url": "https://www.wunderground.com/dashboard/pws/KNCBURNS167",
-      "lat": 35.766,
-      "lon": -82.213,
-      "status": "unavailable",
-      "health": {
-        "usable": false
-      },
-      "error": "Observation upstream failed (401)"
-    },
-    {
-      "id": "park-place",
-      "stationId": "KNCWAYNE323",
-      "provider": "wunderground",
-      "source": "wunderground",
-      "name": "Park Place",
-      "role": "western Haywood high-shoulder reference",
-      "elevationFt": 4209,
-      "url": "https://www.wunderground.com/dashboard/pws/KNCWAYNE323",
-      "lat": 35.458,
-      "lon": -82.965,
-      "status": "unavailable",
-      "health": {
-        "usable": false
-      },
-      "error": "Observation upstream failed (401)"
-    },
-    {
-      "id": "max-patch",
-      "stationId": "KTNDELRI5",
-      "provider": "wunderground",
-      "source": "wunderground",
-      "name": "Max Patch",
-      "role": "high-elevation bald reading",
-      "elevationFt": 4420,
-      "url": "https://www.wunderground.com/dashboard/pws/KTNDELRI5",
-      "lat": 35.795132,
-      "lon": -82.965416,
-      "status": "unavailable",
-      "health": {
-        "usable": false
-      },
-      "error": "Observation upstream failed (401)"
-    },
-    {
-      "id": "barnardsville-craggy-north-flank",
-      "stationId": "KNCBARNA15",
-      "provider": "wunderground",
-      "source": "wunderground",
-      "name": "Barnardsville / Craggy North Flank",
-      "role": "Craggy north-flank moisture and temperature reference",
-      "elevationFt": 3052,
-      "url": "https://www.wunderground.com/dashboard/pws/KNCBARNA15",
-      "lat": 35.748121736670676,
-      "lon": -82.45519548077138,
-      "status": "unavailable",
-      "health": {
-        "usable": false
-      },
-      "error": "Observation upstream failed (401)"
-    },
-    {
-      "id": "burnsville-northern-high-country",
-      "stationId": "KNCBURNS99",
-      "provider": "wunderground",
-      "source": "wunderground",
-      "name": "Burnsville Northern High Country",
-      "role": "northern high-country temperature and moisture anchor",
-      "elevationFt": 5330,
-      "url": "https://www.wunderground.com/dashboard/pws/KNCBURNS99",
-      "lat": 35.822,
-      "lon": -82.367,
-      "status": "unavailable",
-      "health": {
-        "usable": false
-      },
-      "error": "Observation upstream failed (401)"
-    },
-    {
-      "id": "laurel-ridge-craggy-south-flank",
-      "stationId": "KNCBLACK183",
-      "provider": "wunderground",
-      "source": "wunderground",
-      "name": "Laurel Ridge / Craggy South Flank",
-      "role": "Craggy south-flank temperature and moisture reference",
-      "elevationFt": 3501,
-      "url": "https://www.wunderground.com/dashboard/pws/KNCBLACK183",
-      "lat": 35.66,
-      "lon": -82.367,
-      "status": "unavailable",
-      "health": {
-        "usable": false
-      },
-      "error": "Observation upstream failed (401)"
-    },
-    {
-      "id": "mountain-air-ridge-composite",
-      "stationId": "KNCBURNS29+KNCBURNS30",
-      "provider": "composite",
-      "source": "composite",
-      "name": "Mountain Air Ridge Composite",
-      "role": "regional exposed high-country cross-check",
-      "elevationFt": 4375,
-      "url": "https://www.wunderground.com/dashboard/pws/KNCBURNS29",
-      "lat": 35.868494,
-      "lon": -82.341976,
-      "status": "unavailable",
-      "health": {
-        "usable": false
-      },
-      "error": "Mountain Air Ridge Composite has no usable components"
-    },
-    {
       "id": "frying-pan-pisgah-ridgeline",
       "stationId": "FRYI",
       "provider": "econet",
       "source": "NC ECONet",
       "name": "Frying Pan / Pisgah Ridgeline",
       "role": "Pisgah ridgeline reading",
-      "elevationFt": 5000,
+      "elevationFt": 5320,
       "url": "https://econet.climate.ncsu.edu/m/?id=FRYI",
       "lat": 35.39357,
       "lon": -82.77427,
-      "observedAt": "2026-10-30T05:29:00.000Z",
-      "temperatureF": 55.4,
-      "feelsLikeF": 55.4,
-      "dewPointF": 22.9,
-      "humidityPct": 28,
-      "windMph": 5,
-      "gustMph": 6,
+      "observedAt": "2026-10-30T12:09:00.000Z",
+      "temperatureF": 48.4,
+      "feelsLikeF": 48.4,
+      "dewPointF": 36.2,
+      "humidityPct": 62.3,
+      "windMph": 16,
+      "gustMph": 17,
       "windDirection": null,
       "pressure": null,
       "uv": null,
-      "solarWm2": null,
+      "solarWm2": 71.2,
       "rainTodayIn": null,
       "rainRateInHr": null,
       "lightningStrikes1h": null,
@@ -362,17 +336,17 @@
       "url": "https://econet.climate.ncsu.edu/m/?id=MITC",
       "lat": 35.75853,
       "lon": -82.27135,
-      "observedAt": "2026-10-30T05:25:00.000Z",
-      "temperatureF": 52.7,
-      "feelsLikeF": 52.7,
-      "dewPointF": 27.6,
-      "humidityPct": 38,
-      "windMph": 5,
-      "gustMph": 7,
+      "observedAt": "2026-10-30T12:05:00.000Z",
+      "temperatureF": 51.3,
+      "feelsLikeF": 51.3,
+      "dewPointF": -5.6,
+      "humidityPct": 9.1,
+      "windMph": 7,
+      "gustMph": 9,
       "windDirection": null,
       "pressure": null,
       "uv": null,
-      "solarWm2": null,
+      "solarWm2": 15.41,
       "rainTodayIn": null,
       "rainRateInHr": null,
       "lightningStrikes1h": null,
@@ -393,148 +367,77 @@
   ],
   "quality": {
     "status": "partial",
-    "requestedStations": 19,
-    "availableStations": 3,
-    "directLiveStations": 3,
+    "requestedStations": 11,
+    "availableStations": 8,
+    "directLiveStations": 8,
     "fallbackStations": 0,
     "providers": {
       "tempest": {
-        "requested": 2,
-        "available": 1
-      },
-      "wunderground": {
-        "requested": 14,
+        "requested": 3,
         "available": 0
       },
+      "nws": {
+        "requested": 1,
+        "available": 1
+      },
       "econet": {
-        "requested": 2,
-        "available": 2
+        "requested": 7,
+        "available": 7
+      },
+      "wunderground": {
+        "requested": 0,
+        "available": 0
       },
       "composite": {
-        "requested": 1,
+        "requested": 0,
         "available": 0
       }
     },
     "failures": [
       {
+        "id": "tempest-237451",
+        "provider": "tempest",
+        "reason": "Tempest 237451 has no credential; configure TEMPEST_TOKEN with a matching TEMPEST_STATION_ID (or an authorized WEATHERFLOW_API_KEY)"
+      },
+      {
+        "id": "tempest-144737",
+        "provider": "tempest",
+        "reason": "Tempest 144737 has no credential; configure JCC_TEMPEST_TOKEN (or an authorized WEATHERFLOW_API_KEY)"
+      },
+      {
         "id": "tempest-127602",
         "provider": "tempest",
         "reason": "Tempest 127602 has no credential; configure TEMPEST_TOKEN with a matching TEMPEST_STATION_ID (or an authorized WEATHERFLOW_API_KEY)"
-      },
-      {
-        "id": "windy-ridge-trail",
-        "provider": "wunderground",
-        "reason": "Observation upstream failed (401)"
-      },
-      {
-        "id": "webb-weather",
-        "provider": "wunderground",
-        "reason": "Observation upstream failed (401)"
-      },
-      {
-        "id": "beaucatcher-mountain",
-        "provider": "wunderground",
-        "reason": "Observation upstream failed (401)"
-      },
-      {
-        "id": "spivey-mountain",
-        "provider": "wunderground",
-        "reason": "Observation upstream failed (401)"
-      },
-      {
-        "id": "lake-junaluska",
-        "provider": "wunderground",
-        "reason": "Observation upstream failed (401)"
-      },
-      {
-        "id": "wallace-mountain",
-        "provider": "wunderground",
-        "reason": "Observation upstream failed (401)"
-      },
-      {
-        "id": "camp-daniel-boone",
-        "provider": "wunderground",
-        "reason": "Observation upstream failed (401)"
-      },
-      {
-        "id": "cold-mountain-station",
-        "provider": "wunderground",
-        "reason": "Observation upstream failed (401)"
-      },
-      {
-        "id": "alpine-village",
-        "provider": "wunderground",
-        "reason": "Observation upstream failed (401)"
-      },
-      {
-        "id": "park-place",
-        "provider": "wunderground",
-        "reason": "Observation upstream failed (401)"
-      },
-      {
-        "id": "max-patch",
-        "provider": "wunderground",
-        "reason": "Observation upstream failed (401)"
-      },
-      {
-        "id": "barnardsville-craggy-north-flank",
-        "provider": "wunderground",
-        "reason": "Observation upstream failed (401)"
-      },
-      {
-        "id": "burnsville-northern-high-country",
-        "provider": "wunderground",
-        "reason": "Observation upstream failed (401)"
-      },
-      {
-        "id": "laurel-ridge-craggy-south-flank",
-        "provider": "wunderground",
-        "reason": "Observation upstream failed (401)"
-      },
-      {
-        "id": "mountain-air-runway-14",
-        "provider": "wunderground",
-        "reason": "Observation upstream failed (401)"
-      },
-      {
-        "id": "mountain-air-runway-32",
-        "provider": "wunderground",
-        "reason": "Observation upstream failed (401)"
-      },
-      {
-        "id": "mountain-air-ridge-composite",
-        "provider": "composite",
-        "reason": "Mountain Air Ridge Composite has no usable components"
       }
     ]
   },
   "guidance": {
     "overall": "Great for Asheville-area hikes; watch fog or damp trail risk",
     "bestWindow": "Local air is nearly saturated; check the cameras for visibility and watch for damp footing.",
-    "hikerNarrative": "Limited station coverage: 3 of 19 sites reporting. Check current conditions for your route; unavailable sites cannot rule out wind, rain, or lightning. Great for Asheville-area hikes; watch fog or damp trail risk. Local air is nearly saturated; check the cameras for visibility and watch for damp footing. Nearby readings span about 0degF; shade, slope, and exposure can change the feel. Mount Mitchell is about -7degF cooler than the Asheville-area readings; pack a layer for high peaks. North Downtown reports near-saturated air. This alone does not confirm fog; check a current view of that area.",
+    "hikerNarrative": "Limited station coverage: 8 of 11 sites reporting. Check current conditions for your route; unavailable sites cannot rule out wind, rain, or lightning. Great for Asheville-area hikes; watch fog or damp trail risk. Local air is nearly saturated; check the cameras for visibility and watch for damp footing. Nearby readings span about 4degF; shade, slope, and exposure can change the feel. Mount Mitchell is about -9degF cooler than the Asheville-area readings; pack a layer for high peaks. Mills River reports near-saturated air. This alone does not confirm fog; check a current view of that area.",
     "scoreScope": "Asheville-area trails",
     "localConditions": {
       "fogRisk": "Elevated",
       "maxUv": 0,
-      "maxSolar": 0,
-      "maxGust": 1.78954903368,
-      "maxTemp": 45.5,
+      "maxSolar": 27.14,
+      "maxGust": 1,
+      "maxTemp": 44.6,
       "maxWbgt": null,
-      "maxRainRate": 0,
-      "maxRainToday": 0,
+      "maxRainRate": null,
+      "maxRainToday": null,
       "lightning": {
         "active": false
       }
     },
     "routeWarnings": [
-      "North Downtown reports near-saturated air. This alone does not confirm fog; check a current view of that area.",
-      "Limited station coverage: 3 of 19 sites reporting. Check current conditions for your route; unavailable sites cannot rule out wind, rain, or lightning."
+      "Mills River reports near-saturated air. This alone does not confirm fog; check a current view of that area.",
+      "Limited station coverage: 8 of 11 sites reporting. Check current conditions for your route; unavailable sites cannot rule out wind, rain, or lightning."
     ],
     "bullets": [
       "Great for Asheville-area hikes; watch fog or damp trail risk: Local air is nearly saturated; check the cameras for visibility and watch for damp footing.",
-      "Asheville-area spread is about 0degF.",
-      "High Asheville readings broadly agree.",
-      "Mount Mitchell is about -7degF cooler than the Asheville-area readings.",
+      "Asheville-area spread is about 4degF.",
+      "Not enough high Asheville readings for a comparison.",
+      "Mount Mitchell is about -9degF cooler than the Asheville-area readings.",
       "Near-saturated air is reported at a mountain station; check cameras before assuming fog.",
       "Wind is light at the reporting sites.",
       "Sun exposure is manageable right now."
@@ -547,16 +450,16 @@
         "penalty": 8
       }
     ],
-    "localTempSpread": 0,
+    "localTempSpread": 4.1,
     "highStationSpread": null,
     "lapseRate": null,
-    "mitchellDrop": -7.2,
-    "wncLapseRate": -1.8,
+    "mitchellDrop": -8.8,
+    "wncLapseRate": null,
     "fogRisk": "Elevated",
-    "maxUv": 0,
-    "maxSolar": 0,
-    "maxGust": 7,
-    "maxTemp": 55.4,
+    "maxUv": 1,
+    "maxSolar": 71,
+    "maxGust": 17,
+    "maxTemp": 52.7,
     "maxWbgt": null,
     "maxRainRate": 0,
     "maxRainToday": 0,
