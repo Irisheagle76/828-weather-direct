@@ -235,7 +235,7 @@ const els = {
       clearProfileDetails();
       const ordered = selectHikingProfileStations(stations);
       const coverage = document.querySelector("#hikingProfileCoverage");
-      if (coverage) coverage.textContent = `${ordered.length} selected reporting sites shown; all ${stations.length} sites are listed below. Lightning observations come from the two Asheville-area Tempest stations.`;
+      if (coverage) coverage.textContent = `${ordered.length} selected reporting sites shown; all ${stations.length} sites are listed below. Lightning observations come from available Asheville-area Tempest stations.`;
       const xSlots = ordered.map((_, index) => 145 + index * (810 / Math.max(1, ordered.length - 1)));
       const bottom = 460;
       const top = 102;
@@ -352,7 +352,7 @@ const els = {
       const comparisons = [
         {
           title: "Mountain vs Asheville",
-          body: guidance.mitchellDrop == null ? "Mount Mitchell observation is unavailable; check the summit camera and forecast separately." : `Mount Mitchell is about ${formatDegrees(guidance.mitchellDrop)} cooler than the Asheville-area readings.`
+          body: guidance.mitchellDrop == null ? "Mount Mitchell observation is unavailable; check the summit camera and forecast separately." : `Mount Mitchell is about ${formatDegrees(Math.abs(guidance.mitchellDrop))} ${guidance.mitchellDrop < 0 ? "warmer" : "cooler"} than the Asheville-area readings.`
         },
         {
           title: "Ridge vs Valley",
@@ -387,9 +387,9 @@ const els = {
           body: "Temperature range among the reporting Asheville ridge sites."
         },
         {
-          label: "Mitchell drop",
+          label: "Mitchell difference",
           value: formatDegrees(guidance.mitchellDrop),
-          body: "Cooling from Asheville-area readings to Mount Mitchell."
+          body: "Asheville minus Mount Mitchell; a negative value means the mountain is warmer."
         },
         {
           label: "Moisture signal",

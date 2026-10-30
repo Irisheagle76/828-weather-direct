@@ -108,3 +108,9 @@ test("unusable observations cannot lower the score or invent a current assessmen
   assert.equal(empty.hikerScoreLabel, "Unavailable");
   assert.match(empty.overall, /unavailable/);
 });
+
+test("inversions describe Mount Mitchell as warmer without negative cooling", () => {
+ const g=analyzeHikingStations([{id:"econet-unca",temperatureF:40,elevationFt:2367},{id:"mount-mitchell",temperatureF:50,elevationFt:6215}]);
+ assert.match(g.hikerNarrative,/10degF warmer/);
+ assert.doesNotMatch(g.hikerNarrative,/-10degF cooler/);
+});
