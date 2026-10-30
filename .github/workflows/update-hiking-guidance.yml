@@ -17,6 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
+      BILTMORE_TEMPEST_TOKEN: ${{ secrets.BILTMORE_TEMPEST_TOKEN }}
       JCC_TEMPEST_TOKEN: ${{ secrets.JCC_TEMPEST_TOKEN }}
       TEMPEST_TOKEN: ${{ secrets.TEMPEST_TOKEN }}
       TEMPEST_STATION_ID: "127602"

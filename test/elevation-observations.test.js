@@ -72,3 +72,10 @@ function observation(station, overrides = {}) {
 function response(body, status = 200) {
   return { ok: status >= 200 && status < 300, status, json: async () => body };
 }
+
+test("Biltmore uses its dedicated observation endpoint", async () => {
+ const {fetchProviderObservation}=await import("../lib/observations/providers.js");
+ const station=STATION_BY_ID.get("tempest-237451");
+ const result=await fetchProviderObservation(station,{credentials:{biltmoreTempestToken:"biltmore-test"},fetcher:async input=>{const u=new URL(input);assert.equal(u.pathname,"/swd/rest/observations/station/237451");assert.equal(u.searchParams.get("token"),"biltmore-test");return response({obs:[{timestamp:NOW/1000,air_temperature:20,relative_humidity:50,wind_avg:1}]});}});
+ assert.equal(result.temperatureF,68);
+});
