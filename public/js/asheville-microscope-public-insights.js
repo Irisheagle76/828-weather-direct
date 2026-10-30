@@ -32,13 +32,13 @@ export function pairGraphic(metric, firstName, secondName) {
 }
 
 export function publicSummary(payload) {
-  const core = (payload.stations || []).filter((station) => (station.scope || 'core') === 'core' && station.quality?.usable && Number.isFinite(station.observation?.temperatureF));
+  const core = (payload.stations || []).filter((station) => ((station.scope || 'core') === 'core' || station.id === 'asheville-airport') && station.quality?.usable && Number.isFinite(station.observation?.temperatureF));
   const stats = summarizeMetric(core, 'temperatureF');
   const index = stats.iqr <= 3 ? 0 : stats.iqr <= 5 ? 1 : stats.iqr <= 8 ? 2 : 3;
   const dry = core.filter((station) => !wet(station));
   const trend = robustElevationSlope(dry);
   const elevationSpan = dry.length ? Math.max(...dry.map((station) => station.elevationFt)) - Math.min(...dry.map((station) => station.elevationFt)) : 0;
-  return { core, stats, index, dry, trend, elevationSpan };
+  return { core, stats, index, dry, trend, elevationSpan, canSummarize: core.length >= 2 };
 }
 
 export function summaryMeters(stats) {
@@ -70,7 +70,7 @@ export function neighborhoodLineup(core, stats) {
     return `<circle cx="${position}" cy="${74+lane*20}" r="7" fill="${color}" stroke="#fff" stroke-width="1.5"><title>${escape(station.name)}: ${number(value)}°F</title></circle>`;
   });
   const height = 114 + Math.max(1,lanes.length)*20;
-  return `<div class="avl-neighborhood-lineup"><div class="avl-lineup-heading"><b>See how closely neighborhoods cluster</b><span>${core.length} dots · one per reporting neighborhood</span></div><svg viewBox="0 0 800 ${height}" role="img" aria-label="Neighborhood temperatures from ${number(stats.min)} to ${number(stats.max)} degrees Fahrenheit. The middle half falls between ${number(stats.q1)} and ${number(stats.q3)} degrees."><rect x="${x(stats.q1)-8}" y="52" width="${Math.max(16,x(stats.q3)-x(stats.q1)+16)}" height="${height-86}" rx="12" fill="#67e2c928" stroke="#67e2c960"/><text x="400" y="28" text-anchor="middle" fill="#8bf3dd">Highlighted band = middle half of neighborhoods</text><line x1="48" y1="${height-27}" x2="752" y2="${height-27}" stroke="#ffffff40" stroke-width="2"/>${dots.join('')}<text x="48" y="${height-5}" fill="#a5c8ff">${number(stats.min)}°F · coolest</text><text x="752" y="${height-5}" text-anchor="end" fill="#ffd078">${number(stats.max)}°F · warmest</text></svg><p>Dots close together mean similar temperatures. Separated dots show places that stand apart. Position shows temperature—not geography.</p></div>`;
+  return `<div class="avl-neighborhood-lineup"><div class="avl-lineup-heading"><b>See how closely neighborhoods cluster</b><span>${core.length} dots · one per reporting station</span></div><svg viewBox="0 0 800 ${height}" role="img" aria-label="Neighborhood temperatures from ${number(stats.min)} to ${number(stats.max)} degrees Fahrenheit. The middle half falls between ${number(stats.q1)} and ${number(stats.q3)} degrees."><rect x="${x(stats.q1)-8}" y="52" width="${Math.max(16,x(stats.q3)-x(stats.q1)+16)}" height="${height-86}" rx="12" fill="#67e2c928" stroke="#67e2c960"/><text x="400" y="28" text-anchor="middle" fill="#8bf3dd">Highlighted band = middle half of neighborhoods</text><line x1="48" y1="${height-27}" x2="752" y2="${height-27}" stroke="#ffffff40" stroke-width="2"/>${dots.join('')}<text x="48" y="${height-5}" fill="#a5c8ff">${number(stats.min)}°F · coolest</text><text x="752" y="${height-5}" text-anchor="end" fill="#ffd078">${number(stats.max)}°F · warmest</text></svg><p>Dots close together mean similar temperatures. Separated dots show places that stand apart. Position shows temperature—not geography.</p></div>`;
 }
 
 export function renderPublicInsights(root, payload) {
@@ -79,7 +79,7 @@ export function renderPublicInsights(root, payload) {
     link.id = 'avl-public-insights-css'; link.rel = 'stylesheet'; link.href = './css/asheville-microscope-public-insights.css';
     document.head.append(link);
   }
-  const { core, stats, index, dry, trend, elevationSpan } = publicSummary(payload);
+  const { core, stats, index, dry, trend, elevationSpan, canSummarize } = publicSummary(payload);
   let summary = root.querySelector('#avl-public-summary');
   if (!summary) {
     summary = document.createElement('section'); summary.id = 'avl-public-summary'; summary.className = 'avl-public-summary';
@@ -94,15 +94,15 @@ export function renderPublicInsights(root, payload) {
     : gust.spread >= 10
       ? `No active rain is reported at neighborhood stations with rain-rate data. Gusts differ by ${number(gust.spread)} mph, a reminder that wind exposure also varies across town.`
       : 'The temperature readings are closely clustered right now. Current readings alone cannot separate the effects of elevation, shade, exposure, or recent weather.';
-  summary.innerHTML = core.length < 6 ? '<h2 id="avl-consensus-title">Not enough neighborhoods are reporting</h2><p>At least six current readings are needed for this summary.</p>' : `
-    <div class="avl-public-kicker">Does one Asheville temperature tell the whole story?</div>
+  summary.innerHTML = !canSummarize ? '<h2 id="avl-consensus-title">Waiting for station comparisons</h2><p>A temperature comparison needs at least two usable station reports.</p>' : `
+    <div class="avl-public-kicker">Does one Asheville temperature tell the whole story?</div><p>${core.length} station reports included · airport observations normally update hourly${core.length < 4 ? " · limited coverage" : ""}.</p>
     <h2 id="avl-consensus-title">${categories[index]}</h2>
     <p class="avl-public-lead">${index === 0 && stats.spread >= 7 ? 'Most neighborhoods agree—but the warm and cool pockets still matter.' : ['Most neighborhoods are close in temperature right now.', 'Mostly—but not everywhere.', 'Your neighborhood makes a meaningful difference right now.', 'One reading misses substantial neighborhood differences.'][index]}</p>
     <div class="avl-public-scale" aria-label="Current category: ${categories[index]}">${categories.map((label, position) => `<div class="${position === index ? 'active' : ''}"${position === index ? ' aria-current="true"' : ''}><small>${position === index ? '✓ Current pattern' : 'Other pattern'}</small><span>${label}</span></div>`).join('')}</div>
-    <div class="avl-public-facts"><div><span>Middle half of neighborhoods</span><strong>${number(stats.q1)}°–${number(stats.q3)}°</strong>${middleMeter}</div><div><span>All reporting neighborhoods</span><strong>${number(stats.min)}°–${number(stats.max)}°</strong>${fullMeter}</div><div><span>Coolest-to-warmest gap</span><strong>${number(stats.spread)}°</strong>${gapMeter}</div></div>
+    <div class="avl-public-facts"><div><span>Middle half of neighborhoods</span><strong>${number(stats.q1)}°–${number(stats.q3)}°</strong>${middleMeter}</div><div><span>All reporting stations</span><strong>${number(stats.min)}°–${number(stats.max)}°</strong>${fullMeter}</div><div><span>Coolest-to-warmest gap</span><strong>${number(stats.spread)}°</strong>${gapMeter}</div></div>
     ${neighborhoodLineup(core, stats)}
     <div class="avl-public-explanation"><b>What else is in the picture?</b><p>${escape(explanation)}</p></div>
-    <details><summary>How is this decided?</summary><p>This compares ${core.length} current Asheville neighborhood readings—not the surrounding corridors. The category uses the temperature range containing the middle half of those readings: up to 3°F, 5°F, 8°F, or above 8°F. The full range keeps unusually warm and cool locations visible. These categories describe current conditions—not forecasts or safety guidance.</p></details>`;
+    <details><summary>How is this decided?</summary><p>This compares the latest usable reports from ${core.length} Asheville-area stations, including Asheville Regional Airport when available. Stations report on different schedules; KAVL normally reports hourly and remains eligible for up to two hours. Observation times appear with each station. The category uses the temperature range containing the middle half of those readings: up to 3°F, 5°F, 8°F, or above 8°F. The full range keeps unusually warm and cool locations visible. These categories describe current conditions—not forecasts or safety guidance.</p></details>`;
 
   // Elevation testing modules now live on Micronet.
 

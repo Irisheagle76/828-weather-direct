@@ -37,3 +37,12 @@ test('summary meters show a single point when all stations agree exactly', () =>
   assert.match(full, /Same reading at every station/);
   assert.match(gap, /--meter-fill:0\.0%/);
 });
+
+ test('six-station summary includes hourly KAVL and survives one missing report', () => {
+ const stations=Array.from({length:5},(_,i)=>station('core'+i,65+i));
+ stations.push({...station('asheville-airport',72,'metro'),quality:{usable:true,freshness:'delayed',ageMinutes:85}});
+ const full=publicSummary({stations});assert.equal(full.core.length,6);assert.equal(full.stats.max,72);assert.equal(full.canSummarize,true);
+ stations[0].quality.usable=false;assert.equal(publicSummary({stations}).canSummarize,true);
+ stations[5].quality.usable=false;assert.equal(publicSummary({stations}).stats.max,69);
+ assert.equal(publicSummary({stations:stations.slice(1,2)}).canSummarize,false);
+ });
