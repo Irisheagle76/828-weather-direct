@@ -5,13 +5,13 @@ import { OBSERVATION_STATIONS } from "../lib/observations/registry.js";
 
 const sites = () => OBSERVATION_STATIONS.filter(s => !s.componentOnly && s.enabled !== false).map(s => ({ ...s, temperatureF: 60, health: { usable: true } }));
 
-test("active public network keeps a ten-site elevation profile with owner, added Asheville, and summit references", () => {
+test("active public network keeps an eleven-site elevation profile with owner, added Asheville, and summit references", () => {
   const all = sites();
   const selected = selectHikingProfileStations(all);
   assert.equal(all.length, 11);
   assert.equal(selected.length, MAX_PROFILE_STATIONS);
   assert.equal(new Set(selected.map(s => s.id)).size, MAX_PROFILE_STATIONS);
-  for (const id of ["tempest-144737", "tempest-127602", "nws-kavl", "econet-bear", "frying-pan-pisgah-ridgeline", "mount-mitchell"]) assert.ok(selected.some(s => s.id === id));
+  for (const id of ["tempest-237451", "tempest-144737", "tempest-127602", "nws-kavl", "econet-bear", "frying-pan-pisgah-ridgeline", "mount-mitchell"]) assert.ok(selected.some(s => s.id === id));
   assert.deepEqual(selected.map(s => s.elevationFt), selected.map(s => s.elevationFt).sort((a, b) => a - b));
   assert.equal(all.length, 11, "profile selection does not remove station cards or guidance inputs");
 });

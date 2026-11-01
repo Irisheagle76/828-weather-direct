@@ -10,14 +10,14 @@ const NOW = Date.parse("2026-10-16T14:00:00Z");
 const sites = () => OBSERVATION_STATIONS.filter(station => !station.componentOnly && station.enabled !== false).map(station => ({ ...station, temperatureF: 60, dewPointF: 55, windMph: 3, gustMph: 8, observedAt: new Date(NOW).toISOString(), health: { usable: true }, retrievalMode: "live" }));
 const observations = (stations = sites()) => ({ generatedAt: new Date(NOW).toISOString(), stations, quality: { requestedStations: 11, availableStations: stations.filter(s => s.health.usable).length, fallbackStations: 0, status: "fresh", failures: [] } });
 
-test("mobile consumes the complete shared 11-site hiking payload and ten-site profile", () => {
+test("mobile consumes the complete shared 11-site hiking payload and eleven-site profile", () => {
   const payload = hikingCurrentPayload(observations(), { now: NOW });
   const report = hikingReportState(payload, NOW);
   assert.equal(report.requested, 11);
   assert.equal(report.available, 11);
   assert.equal(report.stale, false);
   const markup = hikingNetworkMarkup(payload, { now: NOW });
-  assert.match(markup, /10 selected sites/);
+  assert.match(markup, /11 selected sites/);
   assert.match(markup, /All 11 station readings/);
   for (const name of ["Asheville Regional Airport", "Mills River", "Waynesville Research Station", "Burnsville Tower", "Bearwallow Mountain", "Mount Mitchell"]) assert.ok(markup.includes(name));
   assert.match(markup, /Lightning observations come from available Asheville-area Tempest stations/);
