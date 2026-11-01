@@ -114,3 +114,11 @@ test("inversions describe Mount Mitchell as warmer without negative cooling", ()
  assert.match(g.hikerNarrative,/10degF warmer/);
  assert.doesNotMatch(g.hikerNarrative,/-10degF cooler/);
 });
+
+test("Biltmore Village contributes to Asheville guidance only when usable", () => {
+  const downtown = station("tempest-144737", 2137, 72, 60);
+  const biltmore = station("tempest-237451", 1998, 78, 62);
+  assert.equal(analyzeHikingStations([downtown, biltmore]).localTempSpread, 6);
+  assert.equal(analyzeHikingStations([downtown, { ...biltmore, health: { usable: false } }]).localTempSpread, 0);
+  assert.equal(analyzeHikingStations([downtown, { ...biltmore, temperatureF: null }]).localTempSpread, 0);
+});
