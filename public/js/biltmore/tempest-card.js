@@ -1,9 +1,11 @@
 // Presentation triggers only; these do not predict flooding or change official alerts.
 export const HEAVY_RATE = 0.30;
-export function stationState(source={}, now=Date.now()) {
+export function stationState(source={}, now=Date.now(), rainfall) {
  const o=source.observation||{},age=now-Date.parse(o.observedAt);
  const fresh=!source.unavailable&&!source.stale&&Number.isFinite(age)&&age>=-60000&&age<=10*60000;
- const rate=fresh&&Number.isFinite(o.precipitationRateInHr)?o.precipitationRateInHr:null;
+ const rainAge=now-Date.parse(rainfall?.observedAt);
+ const rainFresh=rainfall&&!rainfall.demo&&rainfall.stationId==='237451'&&!rainfall.unavailable&&!rainfall.stale&&Number.isFinite(rainAge)&&rainAge>=-60000&&rainAge<=10*60000;
+ const rate=rainfall===undefined?(fresh&&Number.isFinite(o.precipitationRateInHr)?o.precipitationRateInHr:null):(rainFresh&&Number.isFinite(rainfall.rainRateInHr)&&rainfall.rainRateInHr>=0?rainfall.rainRateInHr:null);
  const strikeAge=now-o.lightningStrikeLastAt;
  const recent=fresh&&Number.isFinite(o.lightningStrikeLastAt)&&o.lightningStrikeLastAt>0&&strikeAge>=0&&strikeAge<=30*60000;
  const active=recent||(fresh&&Number.isFinite(o.lightningStrikes1h)&&o.lightningStrikes1h>0);
@@ -16,13 +18,13 @@ export function compass(degrees){
  return ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'][Math.round(d/22.5)%16]+' · '+Math.round(d)+'°';
 }
 const n=(v,d=1)=>Number.isFinite(v)?v.toFixed(d):'—';
-export function renderTempest(source){
- const o=source?.observation||{},state=stationState(source),card=document.getElementById('tempest-card');
+export function renderTempest(source,rainfall){
+ const o=source?.observation||{},state=stationState(source,Date.now(),rainfall||{}),card=document.getElementById('tempest-card');
  card.dataset.emphasis=String(state.emphasis);
  document.getElementById('tempest-status').textContent=state.fresh?'LATEST OBSERVATION':'STALE / UNAVAILABLE';
  document.getElementById('tempest-event-title').textContent=state.title;
  document.getElementById('tempest-rate').textContent=n(state.rate,2)+' in/hr';
- document.getElementById('tempest-event-note').textContent=state.emphasis?'Rain rate and recent lightning deserve attention. Check the river and official alerts below.':'Latest reported station rain rate. Rain intensity can change between updates.';
+ document.getElementById('tempest-event-note').textContent=state.emphasis?'Rain rate and recent lightning deserve attention. Check the river and official alerts below.':(Number.isFinite(state.rate)?`Measured ${rainfall.sampleMinutes}-minute average · Updated ${new Date(rainfall.observedAt).toLocaleTimeString('en-US',{timeZone:'America/New_York',hour:'numeric',minute:'2-digit',timeZoneName:'short'})}. Rain intensity can change between updates.`:'Rain-rate observations unavailable or out of date; missing readings are not zero.');
  document.getElementById('tempest-lightning').textContent=state.fresh?(Number.isFinite(o.lightningStrikes1h)?o.lightningStrikes1h+' strikes detected · past hour':'Past-hour strike count unavailable'):'Lightning observations unavailable or out of date';
  const last=Number.isFinite(o.lightningStrikeLastAt)&&o.lightningStrikeLastAt>0?new Date(o.lightningStrikeLastAt).toLocaleString('en-US',{timeZone:'America/New_York',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'}):null;
  document.getElementById('tempest-strike-detail').textContent=last?'Last detection: '+last+' · '+n(o.lightningStrikeDistanceMi)+' mi (estimated). Detection is not a storm location.':'No last-detection time supplied. Missing data are not an all-clear.';

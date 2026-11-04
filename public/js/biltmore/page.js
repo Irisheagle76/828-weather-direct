@@ -57,7 +57,7 @@ function rainChart(rain){
  svg+=`<text x="52" y="204">${rain.demo?'Huntington Chase demo':'Biltmore'} · × missing · No gap filling</text></svg>`;el('rain-history-chart').innerHTML=svg;
 }
 function render(d){
- renderTempest(d.primary);
+ renderTempest(d.primary,d.rainfall);
  stamp('tempest-updated',d.primary,d.primary?.observation?.observedAt);
  renderForecast(d.forecast,d.river?.stage||[],d.noaa?.categories);renderWatershed(d.radar,d.basin);
  const points=d.river?.stage||[],last=points.at(-1),flow=d.river?.flow?.at(-1),c1=change(points,1),c3=change(points,3),c6=change(points,6);
