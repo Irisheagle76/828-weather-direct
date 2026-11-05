@@ -1,0 +1,3 @@
+# Expanded neighborhood panels
+
+Include Biltmore Lake / Candler (FW9022), Montreat (CW7566), and Fletcher (FW8612) in Asheville right now, the neighborhood footprint, One Asheville story, cross-section, and side-by-side comparisons. Use one shared membership predicate for all client panels. Five original city stations plus KAVL and these three yield nine reports when all are usable. Retain regional metadata, Terrain scopes, geographic coordinates, freshness filtering, and shared half-hour collection. Label the footprint as greater Asheville to avoid implying Montreat is within city limits. Clear the historical exposure example when no live elevation-matched pair qualifies.

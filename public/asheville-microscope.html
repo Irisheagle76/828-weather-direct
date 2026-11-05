@@ -1410,7 +1410,7 @@
         </div>
         <div class="avl-signals" aria-label="Additional current Asheville weather signals">
           <article class="avl-signal rain"><span>Rain footprint</span><strong>No active rain signal across reporting stations.</strong><p>The precipitation layer is watching for localized wet pockets.</p></article>
-          <article class="avl-signal moisture"><span>Moisture pocket</span><strong>River Arts District has the highest core dew point.</strong><p>Its 75.9° dew point is 7.1° above the open UNC Asheville tower.</p></article>
+          <article class="avl-signal moisture"><span>Moisture pocket</span><strong>River Arts District has the highest neighborhood dew point.</strong><p>Its 75.9° dew point is 7.1° above the open UNC Asheville tower.</p></article>
           <article class="avl-signal wind"><span>Wind exposure</span><strong>West Asheville owns the morning breeze.</strong><p>Its 4.7 mph sustained wind leads a core network where several sheltered stations remain calm.</p></article>
         </div>
       </section>
@@ -1418,7 +1418,7 @@
       <section class="avl-footprint" aria-labelledby="avl-footprint-title">
         <div class="avl-footprint-head">
           <div><div class="avl-section-kicker">15 current neighborhood stations</div><h2 id="avl-footprint-title">Asheville temperatures, neighborhood by neighborhood.</h2></div>
-          <p><strong>Simplified neighborhood layout—not to scale</strong>Each circle represents a weather station in its general part of Asheville. Spacing is adjusted for readability; positions are not exact. Blue circles are cooler, orange circles are warmer. Select one for its reading and local setting.</p>
+          <p><strong>Greater Asheville station layout—not to scale</strong>Each circle represents a weather station in Asheville or the selected surrounding communities. Spacing is adjusted for readability; positions are not exact. Blue circles are cooler, orange circles are warmer. Select one for its reading and local setting.</p>
           <div class="avl-map-note">
             <div class="avl-map-note-title"><span>Temperature key</span><strong>Circle color = observed temperature</strong></div>
             <i class="avl-map-gradient"></i>
@@ -1565,6 +1565,7 @@
   </div>
 
   <script type="module">
+    import { isNeighborhoodStation } from "./js/asheville-microscope-public-insights.js";
     import { scheduleObservationRefresh } from "./js/observation-refresh.js";
     import { stationProfileCards } from "./js/station-profile.js";
     (() => {
@@ -1577,6 +1578,9 @@
 
       const codeByStationId = {
         'asheville-airport': 'AVL',
+        'biltmore-lake-cwop': 'BL',
+        'montreat-cwop': 'MT',
+        'fletcher-cwop': 'FL',
         'biltmore-village': 'BV',
         'beaucatcher-trail': 'BT',
         'randall-gap': 'RG',
@@ -1594,7 +1598,6 @@
         'biltmore-forest': 'BF',
         'beaverdam-country-club': 'BD',
         'five-points-neighborhood': 'FP',
-        'biltmore-lake': 'BL',
         'east-asheville': 'EA',
         'river-arts-district': 'RD'
       };
@@ -1630,7 +1633,7 @@
 
       function updateSnapshotNarrative(payload) {
         const available = payload.stations.filter(usableTemperature);
-        const core = available.filter((station) => (station.scope || 'core') === 'core');
+        const core = available.filter(isNeighborhoodStation);
         const sortedCore = [...core].sort((a, b) => temperatureOf(a) - temperatureOf(b));
         const low = sortedCore[0];
         const high = sortedCore.at(-1);
@@ -1667,10 +1670,12 @@
           const warmer = cooler === matched.left ? matched.right : matched.left;
           stories[2].querySelector('strong').textContent = `Nearly identical elevation. A ${round(matched.temperatureGap)}° difference.`;
           stories[2].querySelector('p').textContent = `${cooler.name} and ${warmer.name} are only ${matched.elevationGap} vertical ${matched.elevationGap === 1 ? 'foot' : 'feet'} apart, putting neighborhood exposure in sharp focus.`;
-
+        } else {
+          stories[2].querySelector('strong').textContent = 'No close elevation match in the current reports.';
+          stories[2].querySelector('p').textContent = 'Compare stations individually; current readings alone cannot isolate exposure effects.';
         }
 
-        root.querySelector('.avl-footprint-head .avl-section-kicker').textContent = `${core.length} current neighborhood stations`;
+        root.querySelector('.avl-footprint-head .avl-section-kicker').textContent = `${core.length} reporting neighborhood and nearby stations`;
         const mapScale = root.querySelectorAll('.avl-map-scale span');
         mapScale[0].textContent = `${temperatureOf(low)}° coolest`;
         mapScale[1].textContent = `${midpoint}° midpoint`;
@@ -1766,7 +1771,7 @@
           const payload = await response.json();
           const templates = new Map(stations.map((station) => [station.code, station]));
           const currentCore = payload.stations
-            .filter((station) => ((station.scope || 'core') === 'core' || station.id === 'asheville-airport') && usableTemperature(station) && codeByStationId[station.id])
+            .filter((station) => isNeighborhoodStation(station) && usableTemperature(station) && codeByStationId[station.id])
             .map((station) => {
               const template = templates.get(codeByStationId[station.id]) || {};
               const metadata = { code: codeByStationId[station.id], name: station.name, area: station.area, exposure: station.exposure, lat: station.location.latitude, lon: station.location.longitude, elevation: station.elevationFt };

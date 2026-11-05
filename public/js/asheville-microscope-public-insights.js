@@ -31,8 +31,13 @@ export function pairGraphic(metric, firstName, secondName) {
   return `<svg class="avl-pair-graphic" viewBox="0 0 300 106" role="img" aria-label="${escape(firstName)}: ${text(metric.a)}; ${escape(secondName)}: ${text(metric.b)}"><line x1="28" y1="55" x2="272" y2="55" stroke="#ffffff25" stroke-width="8" stroke-linecap="round"/><line x1="${a}" y1="55" x2="${b}" y2="55" stroke="#ffffff90" stroke-width="5"/><line x1="${a}" y1="30" x2="${a}" y2="55" stroke="#68e2cb" stroke-width="2"/><line x1="${b}" y1="55" x2="${b}" y2="80" stroke="#ffbb59" stroke-width="2"/><circle cx="${a}" cy="55" r="10" fill="#68e2cb"/><circle cx="${b}" cy="55" r="6" fill="#ffbb59" stroke="#0a2046" stroke-width="2"/><text x="${a}" y="21" text-anchor="middle" fill="#8bf3dd">${text(metric.a)}</text><text x="${b}" y="100" text-anchor="middle" fill="#ffd078">${text(metric.b)}</text></svg>`;
 }
 
+// Owner-selected neighborhood coverage; geographic scope remains available to Terrain.
+export function isNeighborhoodStation(station) {
+  return (station.scope || 'core') === 'core' || ['asheville-airport', 'biltmore-lake-cwop', 'montreat-cwop', 'fletcher-cwop'].includes(station.id);
+}
+
 export function publicSummary(payload) {
-  const core = (payload.stations || []).filter((station) => ((station.scope || 'core') === 'core' || station.id === 'asheville-airport') && station.quality?.usable && Number.isFinite(station.observation?.temperatureF));
+  const core = (payload.stations || []).filter((station) => isNeighborhoodStation(station) && station.quality?.usable && Number.isFinite(station.observation?.temperatureF));
   const stats = summarizeMetric(core, 'temperatureF');
   const index = stats.iqr <= 3 ? 0 : stats.iqr <= 5 ? 1 : stats.iqr <= 8 ? 2 : 3;
   const dry = core.filter((station) => !wet(station));

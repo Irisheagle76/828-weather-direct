@@ -46,3 +46,13 @@ test('summary meters show a single point when all stations agree exactly', () =>
  stations[5].quality.usable=false;assert.equal(publicSummary({stations}).stats.max,69);
  assert.equal(publicSummary({stations:stations.slice(1,2)}).canSummarize,false);
  });
+
+test('selected nearby communities join the nine-station neighborhood summary, excluding other corridors', () => {
+ const stations=Array.from({length:5},(_,i)=>station('core'+i,65+i));
+ stations.push(station('asheville-airport',70,'metro'));
+ for (const [id,temp] of [['biltmore-lake-cwop',71],['montreat-cwop',60],['fletcher-cwop',72]]) stations.push({...station(id,temp,'corridor'),elevationFt:2200});
+ stations.push(station('flat-rock-cwop',90,'corridor'),station('alexander-cwop',40,'corridor'));
+ const result=publicSummary({stations});assert.equal(result.core.length,9);assert.equal(result.stats.min,60);assert.equal(result.stats.max,72);
+ stations.find(s=>s.id==='montreat-cwop').quality.usable=false;
+ assert.equal(publicSummary({stations}).core.length,8);assert.equal(publicSummary({stations}).stats.min,65);
+});
