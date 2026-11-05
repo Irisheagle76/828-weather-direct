@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeCwopXml, fetchCwop } from '../lib/asheville-spread/cwop.js';
+import { normalizeCwopXml, normalizeCwopRain, fetchCwop } from '../lib/asheville-spread/cwop.js';
 import { ASHEVILLE_STATIONS } from '../lib/asheville-spread/stations.js';
 import { assessObservation } from '../lib/asheville-spread/quality.js';
 const report = (time, fields='') => `<weatherReport><timeReceived>${time}</timeReceived><temperature>60</temperature><humidity>100</humidity><windSpeed>3</windSpeed><barometer>1019</barometer><rain1h>0.06</rain1h>${fields}</weatherReport>`;
@@ -14,7 +14,7 @@ test('CWOP selects newest timestamp, rejects station mismatch and invalid dates'
 });
 function cache(){const data=new Map();return {get:async k=>data.get(k),set:async(k,v,options)=>{if(options?.nx&&data.has(k))return null;data.set(k,v);return 'OK';}};}
 test('CWOP shared cooldown prevents cross-instance and slot-boundary duplicate fetches',async()=>{
- const client=cache();let calls=0;const fetchImpl=async()=>{calls++;return {ok:true,text:async()=>xml};};const now=Date.parse('2026-11-05T00:29:59Z');await fetchCwop(station,{cwopCache:client,fetchImpl,nowMs:now});await fetchCwop(station,{cwopCache:client,fetchImpl,nowMs:now+2000});await fetchCwop(station,{cwopCache:client,fetchImpl,nowMs:now+5000});assert.equal(calls,1);
+ const client=cache();let calls=0;const fetchImpl=async()=>{calls++;return {ok:true,text:async()=>xml};};const now=Date.parse('2026-11-05T00:29:59Z');await fetchCwop(station,{cwopCache:client,fetchImpl,nowMs:now});await fetchCwop(station,{cwopCache:client,fetchImpl,nowMs:now+2000});await fetchCwop(station,{cwopCache:client,fetchImpl,nowMs:now+5000});assert.equal(calls,2);
 });
 test('CWOP fails closed on shared-cache outage and retains old timestamps on source failure',async()=>{
  let calls=0;await assert.rejects(fetchCwop(station,{cwopCache:{get:async()=>{throw Error('offline')}},fetchImpl:async()=>{calls++;}}),{code:'shared_cache_unavailable'});assert.equal(calls,0);

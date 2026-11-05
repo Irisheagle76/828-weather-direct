@@ -57,6 +57,7 @@
     .toolbar button:hover, .toolbar button:focus-visible { border-color: var(--accent); outline: none; }
     .toolbar button[aria-pressed="true"] { color: #102018; border-color: var(--accent); background: var(--accent); }
     .map-shell { position: relative; min-height: clamp(570px,72vh,850px); overflow: hidden; border: 1px solid var(--line); background: #263b30; box-shadow: 0 30px 80px rgba(0,0,0,.28); }
+    #rainfall-coverage:empty { display: none; }
     #terrain-map { position: absolute; inset: 0; }
     .map-overlay { position: absolute; z-index: 3; top: 14px; left: 14px; width: min(350px,calc(100% - 104px)); padding: 13px 15px; border: 1px solid var(--line); border-radius: 3px; background: var(--panel); box-shadow: 0 12px 28px rgba(0,0,0,.24); backdrop-filter: blur(10px); pointer-events: none; }
     .network-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -129,7 +130,7 @@
         <button type="button" data-metric="temperatureF" aria-pressed="true">Temperature</button>
         <button type="button" data-metric="dewPointF" aria-pressed="false">Dew Point</button>
         <button type="button" data-metric="windMph" aria-pressed="false">Wind</button>
-        <button type="button" data-metric="precipitationRateInHr" aria-pressed="false">Rainfall</button>
+        <button type="button" data-metric="precipitation24HourIn" aria-pressed="false">24-hour rain</button>
       </div>
       <div class="scope-controls" role="group" aria-label="Station area">
         <span class="control-label">Area</span>
@@ -145,6 +146,7 @@
         <div class="network-line"><span>Normalized network</span><strong id="network-status">Loading observations…</strong></div>
         <p class="network-meta" id="network-meta">Drag to pan · scroll or pinch to zoom · right-drag or two-finger drag to rotate and tilt.</p>
       </div>
+      <p id="rainfall-coverage" aria-live="polite" style="position:absolute;bottom:48px;left:16px;right:16px;z-index:2;background:#17291f;color:#fff;padding:4px 8px;pointer-events:none"></p>
       <p class="notice" id="terrain-notice" role="alert"></p>
       <div class="legend" aria-label="Station quality legend"><span><i></i>Fresh</span><span><i class="delayed"></i>Delayed</span><span><i class="stale"></i>Stale / unusable</span><span><i class="incomplete"></i>Incomplete</span></div>
     </section>
@@ -166,7 +168,7 @@
       temperatureF: { label: "Temperature", unit: "°F", digits: 1, stops: [35,"#315bff",55,"#00d9ff",72,"#bd45ff",86,"#ff2d95",100,"#ff304f"] },
       dewPointF: { label: "Dew point", unit: "°F", digits: 1, stops: [20,"#965cff",40,"#315bff",55,"#00d9ff",68,"#ff45d4",78,"#ff305e"] },
       windMph: { label: "Wind", unit: " mph", digits: 1, stops: [0,"#eefaff",5,"#00dcff",12,"#315bff",25,"#8d52ff",45,"#ff36b7"] },
-      precipitationRateInHr: { label: "Rainfall rate", unit: " in/hr", digits: 2, stops: [0,"#f4fbff",.01,"#00dcff",.1,"#1478ff",.5,"#633cff",2,"#ff2dce"] }
+      precipitation24HourIn: { label: "Rainfall · past 24 hours", unit: " in", digits: 2, stops: [0,"#f4fbff",.1,"#00dcff",.5,"#1478ff",2,"#633cff",5,"#ff2dce"] }
     };
     const state = { payload: null, metric: "temperatureF", scope: "core", mapLoaded: false, popup: null };
     const map = new maplibregl.Map({ container: "terrain-map", style: MAP_STYLE_URL, ...ASHEVILLE_VIEW, minZoom: 8, maxZoom: 17, maxPitch: 85, antialias: true, attributionControl: false });
@@ -255,6 +257,7 @@
     function updateStationSource(fitMap) {
       if (!state.mapLoaded || !state.payload) return;
       const visible = state.payload.stations.filter(scopeMatches);
+      document.getElementById("rainfall-coverage").textContent = state.metric === "precipitation24HourIn" ? `Past 24 hours · ${visible.filter(s => metricValue(s, state.metric) != null && s.quality?.usable).length} of ${visible.length} stations with usable totals. A dash means unavailable, not zero.` : "";
       map.getSource("stations").setData({ type: "FeatureCollection", features: visible.filter(hasCoordinates).map(stationFeature) });
       if (fitMap && visible.some(hasCoordinates)) fitVisibleStations(visible.filter(hasCoordinates));
     }
@@ -281,7 +284,7 @@
       const html = `<article class="station-popup">
         <header class="popup-head"><span class="popup-provider">${escapeHtml(providerLabels[station.provider] || station.provider || "Unknown provider")}</span><h2>${escapeHtml(station.name)}</h2><p>${escapeHtml(station.area)} · ${formatNumber(station.elevationFt,0)} ft</p></header>
         <div class="popup-reading"><strong>${value == null ? "—" : escapeHtml(formatMetric(value,state.metric))}</strong><span>${escapeHtml(metric.label)}</span></div>
-        <div class="popup-grid">${popupFact("Temperature",formatObservation(observation?.temperatureF,"°F",1))}${popupFact("Dew point",formatObservation(observation?.dewPointF,"°F",1))}${popupFact("Wind",windSummary(observation))}${popupFact("Humidity",formatObservation(observation?.humidityPct,"%",0))}${popupFact("Sea-level pressure",formatObservation(observation?.seaLevelPressureMb," hPa",1))}${popupFact("Solar radiation",formatObservation(observation?.solarRadiationWm2," W/m²",0))}${popupFact("UV index",formatObservation(observation?.uvIndex,"",1))}${popupFact("Lightning · interval",formatObservation(observation?.lightningStrikeCount," detections",0))}${popupFact("Reported lightning distance",formatObservation(observation?.lightningStrikeDistanceMi," mi",1))}${popupFact("Last lightning",observation?.lightningStrikeLastAt ? formatTime(observation.lightningStrikeLastAt,true) : "Unavailable")}${popupFact("Rain rate",formatObservation(observation?.precipitationRateInHr," in/hr",2))}${popupFact("Rain · previous hour",formatObservation(observation?.precipitationLastHourIn," in",2))}${popupFact("Rain today",formatObservation(observation?.precipitationTodayIn," in",2))}${popupFact("Rain 24 hours",formatObservation(observation?.precipitation24HourIn," in",2))}${popupFact(observation?.timestampBasis === "received" ? "Report received" : "Observed",station.observation?.observedAt ? formatTime(station.observation.observedAt,true) : "Timestamp unavailable")}${popupFact("Update age",age == null ? "Unavailable" : age < 1 ? "Less than 1 minute" : `${Math.round(age)} minutes`)}${popupFact("Elevation",`${formatNumber(station.elevationFt,0)} ft`)}${popupFact("Coordinates",`${station.location.latitude}, ${station.location.longitude} · ${station.location.precision}`)}${popupFact("Station",station.providerStationId || "Unavailable")}</div>
+        <div class="popup-grid">${popupFact("Temperature",formatObservation(observation?.temperatureF,"°F",1))}${popupFact("Dew point",formatObservation(observation?.dewPointF,"°F",1))}${popupFact("Wind",windSummary(observation))}${popupFact("Humidity",formatObservation(observation?.humidityPct,"%",0))}${popupFact("Sea-level pressure",formatObservation(observation?.seaLevelPressureMb," hPa",1))}${popupFact("Solar radiation",formatObservation(observation?.solarRadiationWm2," W/m²",0))}${popupFact("UV index",formatObservation(observation?.uvIndex,"",1))}${popupFact("Lightning · interval",formatObservation(observation?.lightningStrikeCount," detections",0))}${popupFact("Reported lightning distance",formatObservation(observation?.lightningStrikeDistanceMi," mi",1))}${popupFact("Last lightning",observation?.lightningStrikeLastAt ? formatTime(observation.lightningStrikeLastAt,true) : "Unavailable")}${popupFact("Rain rate",formatObservation(observation?.precipitationRateInHr," in/hr",2))}${popupFact("Rain · previous hour",formatObservation(observation?.precipitationLastHourIn," in",2))}${popupFact("Rain today",formatObservation(observation?.precipitationTodayIn," in",2))}${popupFact("Rain · past 24 hours",formatObservation(observation?.precipitation24HourIn," in",2))}${observation?.precipitation24HourEndAt ? popupFact("Rain window ends",formatTime(observation.precipitation24HourEndAt,true)) : ""}${popupFact(observation?.timestampBasis === "received" ? "Report received" : "Observed",station.observation?.observedAt ? formatTime(station.observation.observedAt,true) : "Timestamp unavailable")}${popupFact("Update age",age == null ? "Unavailable" : age < 1 ? "Less than 1 minute" : `${Math.round(age)} minutes`)}${popupFact("Elevation",`${formatNumber(station.elevationFt,0)} ft`)}${popupFact("Coordinates",`${station.location.latitude}, ${station.location.longitude} · ${station.location.precision}`)}${popupFact("Station",station.providerStationId || "Unavailable")}</div>
         <p class="popup-quality ${qualityState}">${escapeHtml(qualityCopy)}</p></article>`;
       state.popup = new maplibregl.Popup({ closeButton: true, closeOnClick: true, offset: 12, maxWidth: "360px" }).setLngLat(lngLat).setHTML(html).addTo(map);
     }

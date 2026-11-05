@@ -33,7 +33,7 @@ test("station terrain is a production-ready Microscope page using the normalized
   assert.match(html, /72,"#bd45ff"/);
   assert.match(html, /68,"#ff45d4",78,"#ff305e"/);
   assert.match(html, /45,"#ff36b7"/);
-  assert.match(html, /2,"#ff2dce"/);
+  assert.match(html, /5,"#ff2dce"/);
   assert.match(html, /type: "circle"/);
   assert.doesNotMatch(html, /type:\s*["']heatmap["']/i);
 });
@@ -63,7 +63,7 @@ test("station terrain preserves observation provenance and unavailable states", 
 test("station terrain exposes every requested observation mode and popup detail", async () => {
   const html = await readFile(pageUrl, "utf8");
 
-  for (const label of ["Temperature", "Dew Point", "Wind", "Rainfall"]) {
+  for (const label of ["Temperature", "Dew Point", "Wind", "24-hour rain"]) {
     assert.match(html, new RegExp(`data-metric="[^"]+"[^>]*>${label}<`));
   }
   for (const field of [
