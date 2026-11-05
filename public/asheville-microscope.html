@@ -32,7 +32,8 @@
     #avl-microscope-page { max-width: 1180px; margin: 24px auto; }
     @media (min-width: 761px) { #avl-microscope-page { width: calc(100% - 32px); } }
     @media (max-width: 760px) { #avl-microscope-page { margin: 0; } }
-  </style>
+
+</style>
 </head>
 <body>
 <header data-site-header>
@@ -1369,7 +1370,14 @@
         #avl-microscope-page .avl-terrain-invite a:hover { background: #1056cf; }
         #avl-microscope-page .avl-terrain-invite a:focus-visible { outline: 3px solid #1056cf; outline-offset: 4px; }
         @media (max-width: 760px) { #avl-microscope-page .avl-terrain-invite { align-items: stretch; flex-direction: column; gap: 18px; padding: 20px; } }
-      </style>
+          #avl-microscope-page .avl-corridor-compass { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; min-height: 0; }
+    #avl-microscope-page .avl-corridor-compass .avl-corridor { position: static; transform: none; flex-direction: column; align-items: stretch; padding: 12px; border: 1px solid #ffffff30; border-radius: 16px; }
+    #avl-microscope-page .avl-corridor::before { content: attr(data-direction); font-weight: 800; text-transform: uppercase; }
+    #avl-microscope-page .avl-corridor-line, #avl-microscope-page .avl-asheville-core, #avl-microscope-page .avl-regional-insight, #avl-microscope-page .avl-corridor-label { display: none; }
+    #avl-microscope-page .avl-corridor-place:hover { transform: none; }
+    @media(max-width:600px) { #avl-microscope-page .avl-corridor-compass { display: none; } }
+
+</style>
       <section class="avl-terrain-invite" aria-labelledby="avl-terrain-title">
         <div>
           <div class="avl-section-kicker">Station Terrain · Interactive map</div>
@@ -1503,7 +1511,7 @@
           <div><div class="avl-section-kicker">Beyond Asheville</div><h2 id="avl-regional-title">Four ways weather enters the mountains.</h2></div>
           <p><strong>11.4° regional spread:</strong> UNC Asheville is coolest at 72.7° while Sand Hill is warmest at 84.1°. The city itself owns both regional bookends right now.</p>
         </div>
-        <div class="avl-corridor-compass" role="img" aria-label="Reporting regional stations around Asheville">
+        <div class="avl-corridor-compass" role="group" aria-label="Reporting regional stations around Asheville">
           <div class="avl-corridor-line vertical"></div>
           <div class="avl-corridor-line horizontal"></div>
           <div class="avl-asheville-core"><div><strong>Asheville</strong><span>Neighborhood microscope</span></div></div>
@@ -1513,28 +1521,28 @@
           <div class="avl-regional-insight west-read"><span>West read</span><strong>Loading regional observations…</strong></div>
           <div class="avl-regional-insight south-read"><span>South read</span><strong>Loading regional observations…</strong></div>
 
-          <div class="avl-corridor north">
+          <div class="avl-corridor north" data-direction="north">
 
 
 
           </div>
           <span class="avl-corridor-label north">North corridor</span>
 
-          <div class="avl-corridor east">
+          <div class="avl-corridor east" data-direction="east">
 
 
 
           </div>
           <span class="avl-corridor-label east">East corridor</span>
 
-          <div class="avl-corridor south">
+          <div class="avl-corridor south" data-direction="south">
 
 
 
           </div>
           <span class="avl-corridor-label south">South corridor</span>
 
-          <div class="avl-corridor west">
+          <div class="avl-corridor west" data-direction="west">
 
 
 
@@ -1544,7 +1552,7 @@
         <div class="avl-regional-key"><span><i class="inner"></i>Greater Asheville anchor</span><span><i></i>Mountain corridor station</span></div>
       </section>
       <section class="avl-network-footer" aria-label="About these weather observations">
-        <div><strong>Local readings, with local context.</strong><p>Neighborhood weather stations complement official observations. Conditions can vary with elevation and surroundings, and a station’s reading may not match every nearby address.</p></div>
+        <div><strong>Local readings, with local context.</strong><p>CWOP observations via FindU complement official and local network observations. Conditions can vary with elevation and surroundings, and a station’s reading may not match every nearby address.</p></div>
         <div class="avl-network-counts">
           <div class="avl-network-count"><b>30</b><span>Stations</span></div>
           <div class="avl-network-count"><b>27</b><span>Reporting</span></div>
@@ -1591,7 +1599,7 @@
         'river-arts-district': 'RD'
       };
 
-      const sourceLabels = {
+      const sourceLabels = { cwop: 'CWOP / FindU',
         nws: 'NOAA / NWS',
         tempest: 'Tempest',
         wunderground: 'Weather Underground',
@@ -1832,7 +1840,7 @@
           regional.querySelector('.avl-corridor-compass').after(mobileCorridors);
         }
         mobileCorridors.replaceChildren();
-        for (const [direction, title] of [['north', '↑ North · Woodfin to Mars Hill'], ['east', '→ East · Swannanoa to Old Fort'], ['south', '↓ South · Arden to Hendersonville'], ['west', '← West · Candler to Waynesville']]) {
+        for (const [direction, title] of [['north', '↑ North · Alexander to Burnsville'], ['east', '→ East · Montreat and mountain ridges'], ['south', '↓ South · Airport to Flat Rock'], ['west', '← West · Candler to Waynesville']]) {
           const panel = document.createElement('section');
           panel.className = 'avl-mobile-route';
           const heading = document.createElement('h3'); heading.textContent = title; panel.append(heading);

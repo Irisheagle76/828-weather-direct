@@ -6,7 +6,7 @@ import { buildAshevilleSpread } from '../lib/asheville-spread/service.js';
 
 test('active network omits archived WU stations and fetches KAVL without credentials', async () => {
   assert.equal(ARCHIVED_WU_STATIONS.length, 27);
-  assert.equal(ASHEVILLE_STATIONS.length, 11);
+  assert.equal(ASHEVILLE_STATIONS.length, 18);
   assert.ok(ASHEVILLE_STATIONS.every(s => s.source.provider !== 'wunderground'));
   const airport = ASHEVILLE_STATIONS.find(s => s.source.stationId === 'KAVL');
   await fetchStationObservation(airport, { env: {}, fetchImpl: async (url, options) => {
@@ -46,7 +46,7 @@ test('hourly airport stays usable while older rapid-reporting observations expir
 });
 
 test('regional ECONet additions provide valley and ridge coverage without changing the core', () => {
-  const regional = ASHEVILLE_STATIONS.filter(s => s.scope === 'corridor');
+  const regional = ASHEVILLE_STATIONS.filter(s => s.scope === 'corridor' && s.source.provider === 'econet');
   assert.deepEqual(regional.map(s => s.source.stationId).sort(), ['BEAR', 'BURN', 'FLET', 'FRYI', 'WAYN']);
   assert.ok(regional.every(s => s.source.provider === 'econet' && s.corridor && Number.isFinite(s.elevationFt)));
   assert.equal(ASHEVILLE_STATIONS.filter(s => !s.scope || s.scope === 'core').length, 5);
