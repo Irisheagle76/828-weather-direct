@@ -20,6 +20,6 @@ test('CWOP fails closed on shared-cache outage and retains old timestamps on sou
  let calls=0;await assert.rejects(fetchCwop(station,{cwopCache:{get:async()=>{throw Error('offline')}},fetchImpl:async()=>{calls++;}}),{code:'shared_cache_unavailable'});assert.equal(calls,0);
  const client=cache();const old=normalizeCwopXml(xml,'CW7566');await client.set('observations:cwop:v1:CW7566',{slot:0,observation:old});const result=await fetchCwop(station,{cwopCache:client,nowMs:Date.parse('2026-11-05T03:00Z'),fetchImpl:async()=>({ok:false})});assert.equal(result.observedAt,old.observedAt);assert.equal(assessObservation(result,Date.parse('2026-11-05T03:00Z'),station.freshness).usable,false);
 });
-test('seven unique CWOP stations have geographic metadata and regional scope',()=>{
- const stations=ASHEVILLE_STATIONS.filter(s=>s.source.provider==='cwop');assert.equal(stations.length,7);assert.equal(ASHEVILLE_STATIONS.length,18);assert.equal(new Set(ASHEVILLE_STATIONS.map(s=>s.id)).size,18);assert.ok(stations.every(s=>s.scope==='corridor'&&s.latitude>35&&s.latitude<36&&s.longitude< -82&&s.elevationFt>1900));
+test('eight unique CWOP stations have geographic metadata and regional scope',()=>{
+ const stations=ASHEVILLE_STATIONS.filter(s=>s.source.provider==='cwop');assert.equal(stations.length,8);assert.equal(ASHEVILLE_STATIONS.length,19);assert.equal(new Set(ASHEVILLE_STATIONS.map(s=>s.id)).size,19);assert.ok(stations.every(s=>s.scope==='corridor'&&s.latitude>35&&s.latitude<36&&s.longitude< -82&&s.elevationFt>1900));
 });
