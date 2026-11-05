@@ -266,4 +266,4 @@ test("metro context does not change the core Asheville spread", async () => {
   assert.equal(payload.summary.corridorStationCount, 0);
 });
 
-function activeStationsWithoutAirport() { return ASHEVILLE_STATIONS.filter(s => s.id !== "asheville-airport"); }
+function activeStationsWithoutAirport() { return ASHEVILLE_STATIONS.filter(s => s.id !== "asheville-airport" && s.scope !== "corridor"); }

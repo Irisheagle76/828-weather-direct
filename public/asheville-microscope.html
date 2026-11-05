@@ -1503,41 +1503,41 @@
           <div><div class="avl-section-kicker">Beyond Asheville</div><h2 id="avl-regional-title">Four ways weather enters the mountains.</h2></div>
           <p><strong>11.4° regional spread:</strong> UNC Asheville is coolest at 72.7° while Sand Hill is warmest at 84.1°. The city itself owns both regional bookends right now.</p>
         </div>
-        <div class="avl-corridor-compass" role="img" aria-label="Asheville at center, surrounded by Woodfin, Swannanoa, Arden, and Candler, then north, east, south, and west mountain corridors">
+        <div class="avl-corridor-compass" role="img" aria-label="Reporting regional stations around Asheville">
           <div class="avl-corridor-line vertical"></div>
           <div class="avl-corridor-line horizontal"></div>
           <div class="avl-asheville-core"><div><strong>Asheville</strong><span>Neighborhood microscope</span></div></div>
 
-          <div class="avl-regional-insight north-read"><span>North read</span><strong>Weaverville is 4.3° warmer than Woodfin, despite only 18 feet of elevation difference.</strong></div>
-          <div class="avl-regional-insight east-read"><span>East read</span><strong>Old Fort is 7.1° warmer than Black Mountain while sitting 1,130 feet lower.</strong></div>
-          <div class="avl-regional-insight west-read"><span>West read</span><strong>Waynesville nearly matches Candler while sitting 611 feet higher; Canton is the cool pocket.</strong></div>
-          <div class="avl-regional-insight south-read"><span>South read</span><strong>Fletcher is 4.1° warmer than Arden, while Arden and Hendersonville are only 0.4° apart.</strong></div>
+          <div class="avl-regional-insight north-read"><span>North read</span><strong>Loading regional observations…</strong></div>
+          <div class="avl-regional-insight east-read"><span>East read</span><strong>Loading regional observations…</strong></div>
+          <div class="avl-regional-insight west-read"><span>West read</span><strong>Loading regional observations…</strong></div>
+          <div class="avl-regional-insight south-read"><span>South read</span><strong>Loading regional observations…</strong></div>
 
           <div class="avl-corridor north">
-            <div class="avl-corridor-place inner"><strong>Woodfin</strong><span class="avl-place-reading"><b>77.4°</b><small>2,089 ft</small></span></div>
-            <div class="avl-corridor-place"><strong>Weaverville</strong><span class="avl-place-reading"><b>81.7°</b><small>2,107 ft</small></span></div>
-            <div class="avl-corridor-place"><strong>Mars Hill</strong><span class="avl-place-reading"><b>79.3°</b><small>2,329 ft</small></span></div>
+
+
+
           </div>
           <span class="avl-corridor-label north">North corridor</span>
 
           <div class="avl-corridor east">
-            <div class="avl-corridor-place inner"><strong>Swannanoa</strong><span class="avl-place-reading"><b>77.4°</b><small>2,182 ft</small></span></div>
-            <div class="avl-corridor-place"><strong>Black Mountain</strong><span class="avl-place-reading"><b>75.7°</b><small>2,574 ft</small></span></div>
-            <div class="avl-corridor-place"><strong>Old Fort</strong><span class="avl-place-reading"><b>82.8°</b><small>1,444 ft</small></span></div>
+
+
+
           </div>
           <span class="avl-corridor-label east">East corridor</span>
 
           <div class="avl-corridor south">
-            <div class="avl-corridor-place inner"><strong>Arden</strong><span class="avl-place-reading"><b>77.9°</b><small>2,295 ft</small></span></div>
-            <div class="avl-corridor-place"><strong>Fletcher</strong><span class="avl-place-reading"><b>82.0°</b><small>2,067 ft</small></span></div>
-            <div class="avl-corridor-place"><strong>Hendersonville</strong><span class="avl-place-reading"><b>78.3°</b><small>2,200 ft</small></span></div>
+
+
+
           </div>
           <span class="avl-corridor-label south">South corridor</span>
 
           <div class="avl-corridor west">
-            <div class="avl-corridor-place"><strong>Waynesville</strong><span class="avl-place-reading"><b>79.7°</b><small>2,800 ft</small></span></div>
-            <div class="avl-corridor-place"><strong>Canton</strong><span class="avl-place-reading"><b>75.6°</b><small>2,585 ft</small></span></div>
-            <div class="avl-corridor-place inner"><strong>Candler</strong><span class="avl-place-reading"><b>80.1°</b><small>2,189 ft</small></span></div>
+
+
+
           </div>
           <span class="avl-corridor-label west">West corridor</span>
         </div>
@@ -1703,38 +1703,31 @@
 
 
 
-        root.querySelectorAll('.avl-corridor-place').forEach((node) => {
-          const item = stationByName(available, node.querySelector('strong').textContent);
-          if (item) node.querySelector('.avl-place-reading b').textContent = `${temperatureOf(item)}°`;
-        });
-
-        const get = (name) => stationByName(available, name);
-        const woodfin = get('Woodfin');
-        const weaverville = get('Weaverville');
-        const marsHill = get('Mars Hill');
-        const swannanoa = get('Swannanoa');
-        const blackMountain = get('Black Mountain');
-        const oldFort = get('Old Fort');
-        const arden = get('Arden');
-        const fletcher = get('Fletcher');
-        const hendersonville = get('Hendersonville');
-        const candler = get('Candler');
-        const canton = get('Canton');
-        const waynesville = get('Waynesville');
-        const insights = root.querySelectorAll('.avl-regional-insight strong');
-        const temperatureComparison = (station, reference) => {
-          const difference = round(temperatureOf(station) - temperatureOf(reference));
-          return difference === 0
-            ? `the same temperature as ${reference.name}`
-            : `${Math.abs(difference)}° ${difference < 0 ? 'cooler' : 'warmer'} than ${reference.name}`;
-        };
-        if (woodfin && weaverville && marsHill) {
-          const north = [woodfin, weaverville, marsHill].sort((a, b) => temperatureOf(a) - temperatureOf(b));
-          insights[0].textContent = `${north.at(-1).name} is ${temperatureComparison(north.at(-1), north[0])} across the north approach.`;
+        for (const direction of ['north', 'east', 'south', 'west']) {
+          const group = available.filter(station => station.corridor === direction || (direction === 'south' && station.id === 'asheville-airport'));
+          const container = root.querySelector('.avl-corridor.' + direction);
+          container.querySelectorAll('.avl-corridor-place').forEach(node => node.remove());
+          for (const station of group) {
+            const place = document.createElement('div');
+            place.className = 'avl-corridor-place' + (station.scope === 'metro' ? ' inner' : '');
+            const name = document.createElement('strong');
+            name.textContent = station.name;
+            const reading = document.createElement('span');
+            reading.className = 'avl-place-reading';
+            const temperature = document.createElement('b');
+            temperature.textContent = temperatureOf(station) + '°';
+            const elevation = document.createElement('small');
+            elevation.textContent = station.elevationFt.toLocaleString() + ' ft';
+            reading.append(temperature, elevation);
+            place.append(name, reading);
+            container.append(place);
+          }
+          const insight = root.querySelector('.avl-regional-insight.' + direction + '-read strong');
+          insight.textContent = group.length
+            ? group.map(station => station.name + ': ' + temperatureOf(station) + '°').join(' · ')
+            : 'No usable reports in this corridor.';
         }
-        if (swannanoa && blackMountain && oldFort) insights[1].textContent = `Old Fort is ${temperatureComparison(oldFort, blackMountain)} while sitting 1,130 feet lower.`;
-        if (candler && canton && waynesville) insights[2].textContent = `Waynesville is ${temperatureComparison(waynesville, candler)} while sitting 611 feet higher; Canton is ${temperatureComparison(canton, candler)}.`;
-        if (arden && fletcher && hendersonville) insights[3].textContent = `Fletcher is ${temperatureComparison(fletcher, arden)}; Arden is ${temperatureComparison(arden, hendersonville)}.`;
+        root.querySelector('.avl-corridor-compass').setAttribute('aria-label', 'Reporting regional stations around Asheville');
 
         const moisture = [...core].sort((a, b) => a.observation.dewPointF - b.observation.dewPointF);
         const wind = [...core].sort((a, b) => a.observation.windMph - b.observation.windMph);
