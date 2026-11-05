@@ -6,7 +6,7 @@ import { buildAshevilleSpread } from '../lib/asheville-spread/service.js';
 
 test('active network omits archived WU stations and fetches KAVL without credentials', async () => {
   assert.equal(ARCHIVED_WU_STATIONS.length, 27);
-  assert.equal(ASHEVILLE_STATIONS.length, 19);
+  assert.equal(ASHEVILLE_STATIONS.length, 20);
   assert.ok(ASHEVILLE_STATIONS.every(s => s.source.provider !== 'wunderground'));
   const airport = ASHEVILLE_STATIONS.find(s => s.source.stationId === 'KAVL');
   await fetchStationObservation(airport, { env: {}, fetchImpl: async (url, options) => {

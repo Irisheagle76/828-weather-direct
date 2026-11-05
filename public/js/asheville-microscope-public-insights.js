@@ -33,7 +33,7 @@ export function pairGraphic(metric, firstName, secondName) {
 
 // Owner-selected neighborhood coverage; geographic scope remains available to Terrain.
 export function isNeighborhoodStation(station) {
-  return (station.scope || 'core') === 'core' || ['asheville-airport', 'enka-cwop', 'biltmore-lake-cwop', 'montreat-cwop', 'fletcher-cwop'].includes(station.id);
+  return (station.scope || 'core') === 'core' || ['asheville-airport', 'leicester-cwop', 'enka-cwop', 'biltmore-lake-cwop', 'montreat-cwop', 'fletcher-cwop'].includes(station.id);
 }
 
 export function publicSummary(payload) {
