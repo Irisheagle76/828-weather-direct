@@ -32,6 +32,9 @@ jobs:
         with:
           node-version: 24
 
+      - name: Install hiking refresh dependencies
+        run: npm ci --omit=dev --ignore-scripts --no-audit --no-fund
+
       - name: Test hiking refresh and observation handling
         run: node --test test/update-hiking-guidance.test.js test/hiking-guidance.test.js test/hiking-profile.test.js test/mobile-hiking-data.test.js test/elevation-observations.test.js test/fall-observations.test.js
 
