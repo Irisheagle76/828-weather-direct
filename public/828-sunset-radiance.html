@@ -1444,6 +1444,92 @@
       .atmosphere-card h4 { margin-bottom: 6px; }
       .atmosphere-card p { margin-bottom: 0; }
     }
+
+    /* Compact overview keeps live cameras close to the index on mobile. */
+    .hero { min-height: 0; padding: 28px 0; }
+    .hero-inner { display: block; }
+    .hero-copy h1 { font-size: clamp(30px, 5vw, 48px); }
+    .hero-strip, .status-bar { display: none; }
+    .hero-copy p { margin: 10px 0; }
+    .hero-actions { margin-top: 16px; }
+    .radiance-layout { grid-template-columns: 1fr 1fr; align-items: stretch; }
+    .index-top { padding: 24px; }
+    .index-score b { font-size: 64px; }
+    .sky-frame, .sky-frame img { min-height: 0; }
+    .sky-frame img { height: 260px; object-fit: cover; }
+    .sky-caption h2 { font-size: 28px; }
+    .sky-diagnostics { padding: 12px 0; }
+    .sky-panel > .sky-diagnostics { padding: 12px 16px; }
+    .sky-diagnostics summary { cursor: pointer; font-weight: 650; color: var(--blue-dark); }
+    .atmosphere-now { margin-top: 16px; padding: 18px; }
+    .atmosphere-now h3 { font-size: 19px; }
+    #atmosphereSummary { display: none; }
+    #atmosphereSource, .coverage-summary { margin: 8px 0; font-size: 13px; }
+    .atmosphere-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; overflow: visible; padding: 0; }
+    .atmosphere-grid > article { padding: 8px 0; background: none; border: 0; box-shadow: none; border-radius: 0; }
+    .atmosphere-card h4 { margin: 0 0 4px; font-size: 12px; }
+    .atmosphere-card b { font-size: 16px; line-height: 1.35; }
+    .atmosphere-grid > article:last-child { grid-column: auto; }
+    .coverage-summary strong { margin-right: 8px; }
+    #live-cameras { scroll-margin-top: 20px; }
+    @media (max-width: 700px) {
+      .radiance-layout { grid-template-columns: 1fr; gap: 14px; }
+      .sky-frame > img { display: none; }
+      .sky-frame::after { display: none; }
+      .sky-caption { position: static; padding: 16px; color: var(--ink); }
+      .sky-caption h2 { color: var(--ink); font-size: 22px; margin: 8px 0; }
+      .sky-caption p { color: var(--muted); font-size: 14px; }
+      .atmosphere-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .atmosphere-now { padding: 14px; }
+      .section { padding-top: 20px; padding-bottom: 20px; }
+    }
+
+    /* Defined surfaces retain the compact layout without flattening its hierarchy. */
+    #atmosphere { margin-top: 26px; border: 1px solid #ccd9e5; border-top: 4px solid #315c83; background: linear-gradient(135deg, #f0f5fa, #fffdf8 65%); box-shadow: 0 8px 24px #14203309; }
+    #atmosphereTitle { color: #173b5a; letter-spacing: -.02em; }
+    #atmosphereSource { margin: 6px 0 16px; }
+    #atmosphereCards { gap: 10px; }
+    #atmosphereCards > article { padding: 13px 12px; border: 1px solid #d6e0e8; border-top: 3px solid var(--accent); border-radius: 11px; background: linear-gradient(145deg, var(--tint), #fffdf8); box-shadow: 0 2px 5px #14203305; }
+    #atmosphereCards h4 { margin-bottom: 7px; }
+    #atmosphere .coverage-summary { display: flex; flex-wrap: wrap; gap: 5px 12px; align-items: baseline; padding: 12px 0 2px; }
+    #atmosphere .coverage-summary strong { color: #173b5a; }
+    #atmosphere > .sky-diagnostics { margin-top: 12px; padding: 0; background: #fffdf8; border: 1px solid #d5dfe8; border-radius: 12px; overflow: hidden; }
+    #atmosphere > .sky-diagnostics > summary { padding: 14px 16px; background: #e9f0f6; font-size: 14px; }
+    #atmosphere > .sky-diagnostics > summary:hover { background: #dde9f3; }
+    #atmosphere > .sky-diagnostics > summary:focus-visible { outline: 3px solid #17699a; outline-offset: -3px; }
+    #atmosphere > .sky-diagnostics[open] > summary { border-bottom: 1px solid #d5dfe8; }
+    #atmosphereDetails { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 24px; padding: 0 16px; }
+    #atmosphereDetails > p { margin: 0; padding: 14px 0; font-size: 13px; border-bottom: 1px solid #e4eaf0; }
+    #atmosphereDetails strong { display: block; color: #244561; margin-bottom: 5px; }
+    #atmosphere > .sky-diagnostics > p { margin: 14px 16px; padding: 12px; border-left: 3px solid #a3b8cb; background: #f3f6f9; font-size: 12px; line-height: 1.6; }
+    .coverage-heading { margin: 18px 16px 8px; color: #244561; font-size: 13px; }
+    #cameraCoverage { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 8px; padding: 0 16px 16px; }
+    #cameraCoverage .camera-view { padding: 12px 14px; border-radius: 8px; box-shadow: none; }
+    #cameraCoverage .camera-view h4 { font-size: 13px; margin-bottom: 5px; }
+    #cameraCoverage .camera-view strong { font-size: 13px; }
+    #cameraCoverage .camera-view p { font-size: 12px; }
+    @media (max-width: 700px) {
+      #atmosphere { margin-top: 20px; }
+      #atmosphereDetails { grid-template-columns: 1fr; }
+      #atmosphereCards > article { padding: 11px; }
+      #atmosphereCards > article:last-child { grid-column: 1 / -1; }
+    }
+
+    @media (max-width: 700px) {
+      .index-panel { padding: 0; }
+      .index-top { padding: 20px; }
+      .sky-caption { background: var(--white); }
+      .sky-caption h2 { line-height: 1.2; }
+      .sky-caption p { line-height: 1.55; }
+      .sky-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .sky-meta > div { min-width: 0; padding: 12px; }
+      .sky-meta b { font-size: 18px; overflow-wrap: anywhere; }
+      .sky-meta > div:last-child { grid-column: 1 / -1; }
+      .sky-diagnostics summary { min-height: 44px; line-height: 1.5; }
+      #atmosphere > .sky-diagnostics > summary { padding: 12px; }
+      #atmosphereDetails, #cameraCoverage { padding-left: 12px; padding-right: 12px; }
+      #atmosphereCards b { overflow-wrap: anywhere; }
+    }
   </style>
   <link rel="stylesheet" href="/css/brand-lockup.css?v=20260805-brand2" />
   <link rel="stylesheet" href="/css/site-chrome.css?v=20261107-mountain-header" />
@@ -1484,12 +1570,11 @@
           <div class="eyebrow">828 Weather Update</div>
           <h1>Asheville Sky &amp; Sunset</h1>
           <p>
-            Read the sky now with local observations and camera views across Asheville.
-            Follow Sunset Radiance as the evening light approaches.
+            Your sunset outlook, the sky right now, and live views across Asheville.
           </p>
           <div class="hero-actions">
-            <a class="button primary" id="primarySkyAction" href="#snapshot">See Sky Now</a>
-            <a class="button secondary" href="#atmosphere">Atmosphere Now</a>
+            <a class="button primary" id="primarySkyAction" href="#sunset-radiance">Sunset index</a>
+            <a class="button secondary" href="#live-cameras">Live cameras</a>
             <a class="button secondary" href="#timing">Plan sunset</a>
           </div>
         </div>
@@ -1504,7 +1589,7 @@
             <span>Overall Sunset Radiance Index for the Asheville sky</span>
           </div>
           <div class="stat">
-            <b id="heroSunset">--</b>
+            <b>Evening timing</b>
             <span>Next local sunset timing from the forecast feed</span>
           </div>
         </div>
@@ -1525,10 +1610,24 @@
 
       <section class="section">
         <div class="section-heading">
-          <h2>Sky Now</h2>
+          <h2>Sunset &amp; sky at a glance</h2>
         </div>
 
         <div class="radiance-layout">
+          <aside class="index-panel" id="sunset-radiance" aria-live="polite">
+            <div class="index-top">
+              <div class="index-label">Sunset index · evening outlook</div>
+              <p class="index-timing">Sunset <strong id="heroSunset">--</strong> · Asheville</p>
+              <div class="index-score"><b id="indexScore">--</b><span>/100</span></div>
+              <div class="index-title" id="indexTitle">Building the radiance read.</div>
+              <p class="index-detail" id="indexDetail">
+                Waiting for the camera and forecast signals to settle into a usable read.
+              </p>
+              <div class="meter" aria-hidden="true">
+                <div class="meter-fill" id="indexMeter"></div>
+              </div>
+            </div>
+          </aside>
           <article class="sky-panel">
             <div class="sky-frame">
               <img
@@ -1542,7 +1641,7 @@
                 <p id="skyDetail">The camera snapshot will update automatically.</p>
               </div>
             </div>
-            <div class="sky-meta" aria-label="Camera metrics">
+            <details class="sky-diagnostics"><summary>Snapshot details</summary><div class="sky-meta" aria-label="Camera metrics">
               <div>
                 <b id="cloudMetric">--</b>
                 <span id="cloudMetricLabel">Western sky clouds</span>
@@ -1571,21 +1670,10 @@
                 <span id="captureMetricLabel">Camera capture</span>
               </div>
             </div>
+            </details>
           </article>
 
-          <aside class="index-panel" id="sunset-radiance" aria-live="polite">
-            <div class="index-top">
-              <div class="index-label">Sunset Radiance · evening outlook</div>
-              <div class="index-score"><b id="indexScore">--</b><span>/100</span></div>
-              <div class="index-title" id="indexTitle">Building the radiance read.</div>
-              <p class="index-detail" id="indexDetail">
-                Waiting for the camera and forecast signals to settle into a usable read.
-              </p>
-              <div class="meter" aria-hidden="true">
-                <div class="meter-fill" id="indexMeter"></div>
-              </div>
-            </div>
-          </aside>
+
         </div>
 
         <section class="atmosphere-now" id="atmosphere" aria-labelledby="atmosphereTitle">
@@ -1593,15 +1681,19 @@
           <p id="atmosphereSummary" aria-live="polite">Waiting for fresh local observations.</p>
           <p id="atmosphereSource">North Downtown station · checking observation time</p>
           <div class="atmosphere-grid" id="atmosphereCards"></div>
-          <p>These measurements describe conditions at North Downtown. The sky read compares available camera views around Asheville; Fairview adds a separate view north toward Swannanoa. These are views of different parts of the sky, not complete overhead coverage. The North Asheville image is used for analysis only and is not displayed here. Cloud height, winds aloft, and storm movement need additional observations.</p>
-          <h3>Eyes on the sky</h3>
-          <p id="cameraCoverageSummary">Checking which camera views are available for analysis.</p>
-          <div id="cameraCoverage" class="camera-coverage" aria-live="polite"></div>
+          <p class="coverage-summary"><strong>Eyes on the sky</strong> <span id="cameraCoverageSummary">Checking camera views.</span></p>
+          <details class="sky-diagnostics">
+            <summary>Observation details &amp; camera coverage</summary>
+            <div id="atmosphereDetails"></div>
+            <p>Station readings describe local ground-level conditions, not cloud height or winds aloft. Camera estimates cover only the visible sky; night, stale, and obscured images are excluded. Fairview adds regional context. North Asheville is analysis-only.</p>
+            <h4 class="coverage-heading">Camera analysis availability</h4>
+            <div id="cameraCoverage" class="camera-coverage" aria-live="polite"></div>
+          </details>
         </section>
 
-        <div class="camera-desk-heading">
+        <div class="camera-desk-heading" id="live-cameras">
           <h3>Live Camera Desk</h3>
-          <p>Compare the Chamber, courthouse, East Asheville, and UNC Asheville views, then look north from Fairview toward Swannanoa. A downtown I-240 traffic still appears below. Analysis availability is listed above.</p>
+          <p>Look around Asheville. Tap a still image to enlarge it or open a live stream.</p>
         </div>
 
         <div class="sky-context-grid" aria-label="Live Asheville camera views">
@@ -2227,39 +2319,21 @@
       const current = state.weather?.current || state.weather?.current_conditions;
       const read = buildAtmosphereNow(current?.supplementalStation, { daylight: getTodayDaily(state.weather)?.sunset ? isCurrentDaylight() : null });
       document.querySelector('#atmosphereSummary').textContent = read.summary;
+      document.querySelector('#atmosphereSummary').style.display = read.available ? 'none' : 'block';
       document.querySelector('#atmosphereSource').textContent = read.available
         ? `North Downtown station · observed ${formatCaptureTime(new Date(read.timestamp).toISOString())} · local surface measurements`
         : 'North Downtown station · fresh observations unavailable';
       document.querySelector('#atmosphereCards').replaceChildren(...read.cards.map(card => {
         const article = document.createElement('article');
-        article.className = 'atmosphere-card';
-        article.dataset.tone = card.tone;
-        for (const [tag, value] of [['h4', card.title], ['b', card.value], ['p', card.detail]]) {
-          const element = document.createElement(tag);
-          element.textContent = value;
-          article.append(element);
-        }
-        if (card.meter) {
-          const gauge = document.createElement('div');
-          gauge.className = 'observation-meter';
-          const meter = document.createElement('meter');
-          meter.min = 0;
-          meter.max = card.meter.max;
-          meter.value = card.meter.value;
-          meter.setAttribute('aria-label', card.title);
-          meter.setAttribute('aria-valuetext', card.value);
-          const scale = document.createElement('div');
-          scale.className = 'observation-scale';
-          for (const label of [card.meter.low, card.meter.high]) {
-            const span = document.createElement('span'); span.textContent = label; scale.append(span);
-          }
-          gauge.append(meter, scale);
-          article.insertBefore(gauge, article.querySelector('p'));
-        } else if (card.status) {
-          const badge = document.createElement('span'); badge.className = 'observation-status'; badge.textContent = card.status;
-          article.insertBefore(badge, article.querySelector('p'));
+        article.className = 'atmosphere-card'; article.dataset.tone = card.tone;
+        for (const [tag, value] of [['h4', card.title], ['b', card.value]]) {
+          const element = document.createElement(tag); element.textContent = value; article.append(element);
         }
         return article;
+      }));
+      document.querySelector('#atmosphereDetails').replaceChildren(...(read.available ? read.cards : []).map(card => {
+        const p = document.createElement('p'); p.dataset.tone = card.tone; const label = document.createElement('strong');
+        label.textContent = card.title; const detail = document.createElement('span'); detail.textContent = card.detail; p.append(label, detail); return p;
       }));
     }
 
@@ -2267,14 +2341,14 @@
       const views = skyState?.cameraViews || [];
       const current = views.filter(view => view.status === 'current');
       document.querySelector('#cameraCoverageSummary').textContent = views.length
-        ? `${current.length} of ${views.length} camera views usable for this read. Estimates cover each visible slice of sky; thin high clouds can be missed. Night, stale, and obscured images are excluded.`
+        ? `${current.length} of ${views.length} views usable for cloud estimates. Live views below.`
         : 'Camera analysis is unavailable. Weather observations still provide context.';
       const descriptions = { offline: 'Analysis unavailable', stale: 'Image too old for this read', night: 'Too dark for a cloud estimate', obscured: 'View cannot be read reliably', dark: 'Too dark for a cloud estimate' };
       const coverages = { clear: 'Mostly blue sky', few: 'Mostly clear', scattered: 'Scattered clouds', broken: 'More clouds than openings', mostly_cloudy: 'Mostly cloudy', overcast: 'Overcast' };
       document.querySelector('#cameraCoverage').replaceChildren(...views.map(view => {
         const article = document.createElement('article'); article.className = 'camera-view';
         article.dataset.status = view.status; article.dataset.scope = view.scope;
-        const heading = document.createElement('h4'); heading.textContent = view.label;
+        const heading = document.createElement('h4'); heading.textContent = view.label === 'legacy-west-camera' || view.id === 'legacy-west-camera' ? 'Western sky snapshot' : view.label || 'Sky camera';
         const status = document.createElement('strong');
         status.textContent = view.status === 'current' ? coverages[view.coverage] || 'Current view available' : descriptions[view.status] || 'Analysis unavailable';
         const context = document.createElement('p');
@@ -2304,8 +2378,8 @@
       const sunsetFocus = !isClosed && !isEarlySetup;
       document.body.classList.toggle('sunset-focus', sunsetFocus);
       const primaryAction = document.querySelector('#primarySkyAction');
-      primaryAction.textContent = sunsetFocus ? 'See Sunset Radiance' : 'See Sky Now';
-      primaryAction.href = sunsetFocus ? '#sunset-radiance' : '#snapshot';
+      primaryAction.textContent = 'Sunset index';
+      primaryAction.href = '#sunset-radiance';
 
       els.heroScore.textContent = isClosed ? "Closed" : Number.isFinite(radiance.score) ? `${radiance.score}` : "--";
       els.indexScore.textContent = isClosed ? "Closed" : Number.isFinite(radiance.score) ? radiance.score : "--";
