@@ -373,13 +373,15 @@ test("afterglow language refers to lingering western light rather than the solar
 
 test("camera registry preserves orientation and enables the complete network", () => {
   const north = CAMERA_REGISTRY.find((camera) => camera.id === "north-asheville-south");
-  const east = CAMERA_REGISTRY.find((camera) => camera.id === "east-asheville-east");
+  const east = CAMERA_REGISTRY.find((camera) => camera.id === "fairview-north");
+  assert.ok(!CAMERA_REGISTRY.some(camera => camera.id === "east-asheville-east"));
   assert.deepEqual(north.orientation, { center: "south-southeast" });
   assert.match(north.snapshotUrl, /s28\.ipcamlive\.com/);
   assert.equal(east.enabled, true);
-  assert.equal(east.orientation.center, 'east-northeast');
+  assert.equal(east.orientation.center, 'north');
+  assert.equal(east.areaRole, 'eastern-area');
   assert.equal(north.displayAllowed, false);
-  assert.equal(CAMERA_REGISTRY.length, 6);
+  assert.equal(CAMERA_REGISTRY.length, 5);
   assert.ok(east.snapshotUrl);
 });
 

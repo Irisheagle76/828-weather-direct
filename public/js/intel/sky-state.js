@@ -298,14 +298,14 @@ function reconcileDirectional(observations) {
 export function buildSkyState({ camera = null, skyIntel = null, weatherContext = null, now = Date.now() } = {}) {
   const phase = solarPhase(now, weatherContext?.sunriseAt ?? weatherContext?.sunrise, weatherContext?.sunsetAt ?? weatherContext?.sunset);
   const isNight = phase === "night" || (!phase && camera?.metrics?.mode === "night");
-  const supplied = Array.isArray(camera?.observations) ? camera.observations : [];
+  const supplied = Array.isArray(camera?.observations) ? camera.observations.filter(o => o.source !== "east-asheville-east") : [];
   const fallback = supplied.length ? null : synthesizedObservation(camera, skyIntel);
   const allObservations = [...supplied, ...(fallback ? [fallback] : [])];
   const visual = isNight ? [] : allObservations.filter((observation) => usableObservation(observation, now));
   const satelliteObservation = visual.find((observation) => observation.kind === "satellite") || null;
   // Nearby valleys provide regional context, not an overhead measurement for downtown.
   const cameraVisual = visual.filter((observation) => observation.kind !== "satellite" && observation.scope !== "regional");
-  const cameraViews = (camera?.cameraRegistry || allObservations.filter((o) => o.kind !== "satellite").map((o) => ({ id: o.source, name: o.label, orientation: o.orientation, scope: o.scope }))).map((source) => {
+  const cameraViews = (camera?.cameraRegistry || allObservations.filter((o) => o.kind !== "satellite").map((o) => ({ id: o.source, name: o.label, orientation: o.orientation, scope: o.scope }))).filter(source => source.id !== "east-asheville-east" && source.enabled !== false).map((source) => {
     const observation = allObservations.find((o) => o.source === source.id);
     const usable = !isNight && usableObservation(observation, now);
     return { source: source.id, label: source.name || source.id, direction: source.orientation?.center || null,

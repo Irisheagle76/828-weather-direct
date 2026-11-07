@@ -1530,6 +1530,47 @@
       #atmosphereDetails, #cameraCoverage { padding-left: 12px; padding-right: 12px; }
       #atmosphereCards b { overflow-wrap: anywhere; }
     }
+
+    /* An editorial sky read; photography lives in the camera desk below. */
+    .sky-panel { background: #f3f7fc; border: 1px solid #cad9e8; box-shadow: 0 8px 24px #14203309; }
+    .sky-frame { min-height: 0; background: linear-gradient(125deg, #eef5fc, #fdf8ed); }
+    .sky-frame > img, .sky-frame > iframe, .sky-frame::after { display: none; }
+    .sky-caption { position: relative; inset: auto; padding: 28px; color: #142c46; background: transparent; }
+    .sky-card-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 18px; border-bottom: 1px solid #cbd9e5; }
+    .sky-card-label { color: #446580; font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    .sky-caption .sky-chip, body.radiance-closed .sky-caption .sky-chip { background: #e0ebf5; color: #244d72; border: 1px solid #bfcede; font-size: 11px; letter-spacing: .04em; padding: 6px 10px; }
+    .sky-caption h2 { margin: 22px 0 12px; max-width: 28ch; color: #142c46; font-size: clamp(24px, 2.6vw, 34px); line-height: 1.18; text-wrap: balance; }
+    .sky-caption p { margin: 0; max-width: 55ch; color: #445c70; font-size: 16px; line-height: 1.65; }
+    .sky-panel > .sky-diagnostics { padding: 0; border-top: 1px solid #cad9e8; background: #fffdf8; }
+    .sky-panel > .sky-diagnostics > summary { padding: 15px 24px; font-size: 14px; min-height: 48px; }
+    .sky-panel > .sky-diagnostics > summary:hover { background: #edf3f9; }
+    .sky-read-explanation { margin: 0; padding: 0 24px 18px; color: #52677a; font-size: 14px; line-height: 1.65; }
+    @media (max-width: 700px) {
+      .sky-caption { padding: 20px; }
+      .sky-card-heading { padding-bottom: 14px; }
+      .sky-caption h2 { font-size: 25px; margin-top: 18px; }
+      .sky-caption p { font-size: 15px; }
+      .sky-panel > .sky-diagnostics > summary { padding: 14px 20px; }
+      .sky-read-explanation { padding: 0 20px 16px; }
+    }
+
+    .sky-panel .sky-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 0 20px 16px; background: transparent; }
+    .sky-panel .sky-meta > div { --tile-accent: #326393; --tile-bg: #eaf3fc; min-width: 0; min-height: 0; padding: 14px; border: 1px solid #d5e0eb; border-top: 3px solid var(--tile-accent); border-radius: 12px; background: var(--tile-bg); }
+    .sky-panel .sky-meta > div:nth-child(2) { --tile-accent: #237a83; --tile-bg: #eaf7f5; }
+    .sky-panel .sky-meta > div:nth-child(3) { --tile-accent: #9a640b; --tile-bg: #fff5dc; }
+    .sky-panel .sky-meta > div:nth-child(4) { --tile-accent: #7952a5; --tile-bg: #f3edfa; }
+    .sky-panel .sky-meta > div:last-child { --tile-accent: #50677c; --tile-bg: #edf2f6; grid-column: 1 / -1; }
+    .sky-panel .sky-meta .sky-metric-icon { display: block; margin: 0 0 7px; font-size: 22px; line-height: 1; }
+    .sky-panel .sky-meta b { color: var(--tile-accent); font-size: 21px; line-height: 1.25; overflow-wrap: anywhere; }
+    .sky-panel .sky-meta span:not(.sky-metric-icon) { font-size: 12px; letter-spacing: 0; text-transform: none; line-height: 1.4; }
+    .sky-panel .sky-help { margin: 0 20px 18px; padding: 0; border: 1px solid #d5e0eb; border-radius: 10px; background: #f3f6fa; }
+    .sky-panel .sky-help summary { display: block; padding: 12px 14px; min-height: 44px; background: transparent; border: 0; border-radius: 10px; font-size: 13px; line-height: 1.5; cursor: pointer; }
+    .sky-panel .sky-help p { margin: 0; padding: 0 14px 14px; font-size: 14px; line-height: 1.6; color: #52677a; }
+    .radiance-layout { align-items: start; }
+    @media (max-width: 380px) { .sky-panel .sky-meta { padding-left: 12px; padding-right: 12px; gap: 8px; } .sky-panel .sky-meta > div { padding: 11px; } }
+
+    .fairview-wide .context-media { width: 100%; height: auto; aspect-ratio: auto; min-height: 0; }
+    .fairview-wide .context-media img { display: block; width: 100%; height: auto; min-height: 0; aspect-ratio: auto; object-fit: contain; }
   </style>
   <link rel="stylesheet" href="/css/brand-lockup.css?v=20260805-brand2" />
   <link rel="stylesheet" href="/css/site-chrome.css?v=20261107-mountain-header" />
@@ -1636,41 +1677,36 @@
                 alt="Current YouTube thumbnail from the rotating downtown Asheville western sky camera"
               />
               <div class="sky-caption">
-                <div class="sky-chip" id="skyChip">Loading</div>
+                <div class="sky-card-heading"><span class="sky-card-label">Sky right now</span><div class="sky-chip" id="skyChip">Loading</div></div>
                 <h2 id="skyHeadline">Reading the western sky.</h2>
                 <p id="skyDetail">The camera snapshot will update automatically.</p>
               </div>
             </div>
-            <details class="sky-diagnostics"><summary>Snapshot details</summary><div class="sky-meta" aria-label="Camera metrics">
-              <div>
-                <b id="cloudMetric">--</b>
+            <details class="sky-diagnostics"><summary>More about this sky read</summary><p id="skyReadExplanation" class="sky-read-explanation"></p><div class="sky-meta" aria-label="Camera metrics">
+              <div><span class="sky-metric-icon" aria-hidden="true">☁️</span><b id="cloudMetric">--</b>
                 <span id="cloudMetricLabel">Western sky clouds</span>
               </div>
-              <div>
-                <b id="eneCloudMetric">--</b>
-                <span>ENE East Asheville clouds</span>
+              <div><span class="sky-metric-icon" aria-hidden="true">🌤️</span><b id="fairviewCloudMetric">--</b>
+                <span>Fairview clouds · looking north</span>
               </div>
-              <div>
-                <b id="lightMetric">--</b>
+              <div><span class="sky-metric-icon" aria-hidden="true">☀️</span><b id="lightMetric">--</b>
                 <span>Sunlight signal</span>
               </div>
-              <div>
-                <b id="confidenceMetric">--</b>
+              <div><span class="sky-metric-icon" aria-hidden="true">🎯</span><b id="confidenceMetric">--</b>
                 <span>Sky read confidence</span>
+              </div>
+              <div><span class="sky-metric-icon" aria-hidden="true">🕒</span><b id="captureMetric">--</b>
+                <span id="captureMetricLabel">Camera capture</span>
+              </div>
+            </div>
+
                 <details class="sky-help">
-                  <summary>What is this?</summary>
+                  <summary>How confident is this sky read?</summary>
                   <p>
                     How confident the camera analysis is in its current sky read, based on cloud cover,
                     contrast, sunlight, blue-sky signal, fog, and night conditions.
                   </p>
-                </details>
-              </div>
-              <div>
-                <b id="captureMetric">--</b>
-                <span id="captureMetricLabel">Camera capture</span>
-              </div>
-            </div>
-            </details>
+                </details></details>
           </article>
 
 
@@ -1685,7 +1721,7 @@
           <details class="sky-diagnostics">
             <summary>Observation details &amp; camera coverage</summary>
             <div id="atmosphereDetails"></div>
-            <p>Station readings describe local ground-level conditions, not cloud height or winds aloft. Camera estimates cover only the visible sky; night, stale, and obscured images are excluded. Fairview adds regional context. North Asheville is analysis-only.</p>
+            <p>Station readings describe local ground-level conditions, not cloud height or winds aloft. Camera estimates cover only the visible sky; night, stale, and obscured images are excluded. Fairview provides eastern-area context while looking north toward Swannanoa. North Asheville is analysis-only.</p>
             <h4 class="coverage-heading">Camera analysis availability</h4>
             <div id="cameraCoverage" class="camera-coverage" aria-live="polite"></div>
           </details>
@@ -1728,24 +1764,20 @@
             </div>
           </article>
 
-          <article class="context-card">
-            <div class="context-media youtube-live">
-              <iframe
-                id="eastLiveIframe"
-                src="https://www.youtube.com/embed/live_stream?channel=UCf88ZzHs8HzzRMMO7OGKmYA&playsinline=1&rel=0&autoplay=1&mute=1&origin=https%3A%2F%2Favlweather.com"
-                title="Live East Asheville ENE sky camera on YouTube"
-                loading="lazy"
-                referrerpolicy="strict-origin-when-cross-origin"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowfullscreen
-              ></iframe>
-              <a id="eastLiveFallback" class="youtube-live-fallback" href="https://www.youtube.com/@tballisty/live" target="_blank" rel="noopener noreferrer">Open live feed</a>
-            </div>
+
+
+
+          <article class="context-card station-card primary-assistant fairview-wide">
+            <button class="context-media station-camera" type="button" data-lightbox-src="https://images.ambientweather.net/308398A68945/latest.jpg" data-lightbox-title="Fairview looking north toward Swannanoa">
+              <img id="fairviewCameraImage" src="https://images.ambientweather.net/308398A68945/latest.jpg" alt="Fairview camera looking due north toward the ridges and sky around Swannanoa" loading="lazy" />
+              <span class="context-label"><span>Eastern-area reference · looking north</span><strong>Fairview toward Swannanoa</strong></span>
+            </button>
             <div class="context-copy">
-              <strong>East Asheville · ENE.</strong> Directional cross-check for clouds east of the city. <a href="https://www.youtube.com/@tballisty/live" target="_blank" rel="noopener noreferrer">Open on YouTube</a>.
+              <strong>Fairview · North.</strong> A view toward Swannanoa from southeast of Asheville. Clouds here provide regional context and may differ from the sky over downtown.
+              <div class="station-details" aria-label="Fairview camera location"><span>2,435 ft</span><span>35.51220° N, 82.39874° W</span></div>
+              <a href="https://www.wunderground.com/dashboard/pws/KNCFAIRV101" target="_blank" rel="noopener noreferrer">View Fairview weather station</a>
             </div>
           </article>
-
 
           <article class="context-card station-card">
             <button class="context-media station-camera unca-camera" type="button" data-lightbox-src="https://www.atms.unca.edu/currwx/towercam.jpg" data-lightbox-title="UNC Asheville Weather Tower">
@@ -1765,17 +1797,7 @@
             </div>
           </article>
 
-          <article class="context-card station-card">
-            <button class="context-media station-camera" type="button" data-lightbox-src="https://images.ambientweather.net/308398A68945/latest.jpg" data-lightbox-title="Fairview looking north toward Swannanoa">
-              <img id="fairviewCameraImage" src="https://images.ambientweather.net/308398A68945/latest.jpg" alt="Fairview camera looking due north toward the ridges and sky around Swannanoa" loading="lazy" />
-              <span class="context-label"><span>North-facing regional view</span><strong>Fairview toward Swannanoa</strong></span>
-            </button>
-            <div class="context-copy">
-              <strong>Fairview · North.</strong> A view toward Swannanoa from southeast of Asheville. Clouds here provide regional context and may differ from the sky over downtown.
-              <div class="station-details" aria-label="Fairview camera location"><span>2,435 ft</span><span>35.51220° N, 82.39874° W</span></div>
-              <a href="https://www.wunderground.com/dashboard/pws/KNCFAIRV101" target="_blank" rel="noopener noreferrer">View Fairview weather station</a>
-            </div>
-          </article>
+
 
           <article class="context-card station-card">
             <button class="context-media station-camera" type="button" data-lightbox-src="https://www.drivenc.gov/map/Cctv/4204" data-lightbox-title="Downtown I-240 traffic camera">
@@ -1942,8 +1964,6 @@
     const OBSERVATION_REFRESH_MS = 3 * 60 * 1000;
     const SKY_STALE_MS = 20 * 60 * 1000;
     const LIVE_THUMBNAIL_URL = "https://i.ytimg.com/vi/UxUU3Fc1vBw/maxresdefault_live.jpg";
-    const EAST_LIVE_PERMANENT_URL = "https://www.youtube.com/@tballisty/live";
-    const EAST_LIVE_CHANNEL_EMBED_URL = "https://www.youtube.com/embed/live_stream?channel=UCf88ZzHs8HzzRMMO7OGKmYA&playsinline=1&rel=0&autoplay=1&mute=1&origin=https%3A%2F%2Favlweather.com";
     const SKYCAM_RAW_BASE = "https://raw.githubusercontent.com/Irisheagle76/828-weather-direct/main/public/js/sky-cam";
     const UNCA_CAMERA_URL = "https://www.atms.unca.edu/currwx/towercam.jpg";
     const UNCA_CACHE_BUCKET_MS = 15 * 60 * 1000;
@@ -1980,7 +2000,7 @@
       skyDetail: document.querySelector("#skyDetail"),
       cloudMetric: document.querySelector("#cloudMetric"),
       cloudMetricLabel: document.querySelector("#cloudMetricLabel"),
-      eneCloudMetric: document.querySelector("#eneCloudMetric"),
+      fairviewCloudMetric: document.querySelector("#fairviewCloudMetric"),
       lightMetric: document.querySelector("#lightMetric"),
       confidenceMetric: document.querySelector("#confidenceMetric"),
       captureMetric: document.querySelector("#captureMetric"),
@@ -2010,8 +2030,6 @@
       goldenWindow: document.querySelector("#goldenWindow"),
       solarPosition: document.querySelector("#solarPosition"),
       timelineCard: document.querySelector("#timelineCard"),
-      eastLiveIframe: document.querySelector("#eastLiveIframe"),
-      eastLiveFallback: document.querySelector("#eastLiveFallback")
     };
 
     function clamp(value, min = 0, max = 100) {
@@ -2078,32 +2096,6 @@
     function bucketedCacheUrl(url, bucketMs) {
       const bucket = Math.floor(Date.now() / bucketMs);
       return `${url}${url.includes("?") ? "&" : "?"}v=${encodeURIComponent(bucket)}`;
-    }
-
-    function eastLiveResolverUrl() {
-      return `/api/router?route=youtube/live&handle=tballisty&t=${encodeURIComponent(Date.now())}`;
-    }
-
-    async function resolveEastLivePlayer() {
-      if (!els.eastLiveIframe || !isProductionHost()) return;
-
-      try {
-        const res = await fetch(eastLiveResolverUrl(), { cache: "no-store" });
-        if (!res.ok) throw new Error("East Asheville live resolver failed");
-        const data = await res.json();
-        if (data?.embedUrl) {
-          if (els.eastLiveIframe.src !== data.embedUrl) els.eastLiveIframe.src = data.embedUrl;
-        } else {
-          els.eastLiveIframe.src = EAST_LIVE_CHANNEL_EMBED_URL;
-        }
-        if (els.eastLiveFallback) {
-          els.eastLiveFallback.href = EAST_LIVE_PERMANENT_URL;
-        }
-      } catch (error) {
-        console.warn("East Asheville live resolver unavailable", error);
-        els.eastLiveIframe.src = EAST_LIVE_CHANNEL_EMBED_URL;
-        if (els.eastLiveFallback) els.eastLiveFallback.href = EAST_LIVE_PERMANENT_URL;
-      }
     }
 
     function isSkyDataStale(value) {
@@ -2339,6 +2331,7 @@
 
     function renderCameraCoverage(skyState) {
       const views = skyState?.cameraViews || [];
+      state.cameraViews = views;
       const current = views.filter(view => view.status === 'current');
       document.querySelector('#cameraCoverageSummary').textContent = views.length
         ? `${current.length} of ${views.length} views usable for cloud estimates. Live views below.`
@@ -2425,13 +2418,14 @@
       els.windowCopy.textContent = isClosed ? "The evening radiance window has passed. Check back tomorrow as the next sunset setup develops." : radiance.factors[3].detail;
 
       const wnwCloud = state.skyData?.metrics?.cloudCoverWest;
-      const eneCloud = state.skyData?.metrics?.cloudCoverENE;
+      const fairview = state.cameraViews?.find(view => view.source === 'fairview-north' && view.status === 'current');
+      const eneCloud = Number.isFinite(fairview?.coverageFraction) ? fairview.coverageFraction * 100 : null;
       const hasWNW = !isNight && !skyStale && Number.isFinite(wnwCloud);
       const hasENE = !isNight && !skyStale && Number.isFinite(eneCloud);
       els.cloudMetric.textContent = isNight || skyStale ? "--" : hasWNW ? pct(wnwCloud) : obscuredSky ? "Obscured" : pct(displayCloud);
       els.cloudMetricLabel.textContent = hasWNW ? "Western sky clouds" : "Camera cloud cover";
-      els.eneCloudMetric.textContent = hasENE ? pct(eneCloud) : "--";
-      els.directionStatus.textContent = `West ${hasWNW ? pct(wnwCloud) : "--"} / ENE ${hasENE ? pct(eneCloud) : "--"}`;
+      els.fairviewCloudMetric.textContent = hasENE ? pct(eneCloud) : "--";
+      els.directionStatus.textContent = `West ${hasWNW ? pct(wnwCloud) : "--"} / Fairview ${hasENE ? pct(eneCloud) : "--"}`;
       els.lightMetric.textContent = isNight ? "After sunset" : skyStale
         ? "--"
         : state.skyIntel?.sunlightDetected ? labelize(state.skyIntel.sunlightLevel) : "Low";
@@ -2671,7 +2665,12 @@
       els.skyChip.textContent = skyLabel;
       els.heroSky.textContent = skyLabel;
       els.skyHeadline.textContent = liveNarrative?.headline || "Reading the western sky.";
-      els.skyDetail.textContent = liveNarrative?.detail || "The camera snapshot will update automatically.";
+      const fullDetail = skyStale && !skyRead.skyState.isNight
+        ? "Camera analysis is delayed. Check the live cameras below for the latest view."
+        : liveNarrative?.detail || "Checking the latest sky observations.";
+      const conciseDetail = fullDetail.match(/^.*?[.!?](?:\s|$)/)?.[0]?.trim() || fullDetail;
+      els.skyDetail.textContent = conciseDetail;
+      document.querySelector('#skyReadExplanation').textContent = fullDetail;
       els.liveStatus.textContent = `Western sky thumbnail analyzed ${formatCaptureTime(state.skyData?.timestamp)}`;
       els.captureMetric.textContent = skyStale ? "Analysis delayed" : "Current";
       els.captureMetricLabel.textContent = "Western sky YouTube still";
@@ -2889,10 +2888,9 @@
     setInterval(renderAtmosphere, 30_000);
     setupLightbox();
     refreshContextMedia();
-    await Promise.all([resolveEastLivePlayer(), loadSky(), loadWeather(), loadStorm()]);
+    await Promise.all([loadSky(), loadWeather(), loadStorm()]);
     setInterval(loadSky, OBSERVATION_REFRESH_MS);
     setInterval(refreshContextMedia, 5 * 60 * 1000);
-    setInterval(resolveEastLivePlayer, 5 * 60 * 1000);
     setInterval(loadWeather, OBSERVATION_REFRESH_MS);
     setInterval(loadStorm, OBSERVATION_REFRESH_MS);
   </script>

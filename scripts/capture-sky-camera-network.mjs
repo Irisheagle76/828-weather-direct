@@ -2,7 +2,6 @@ import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { promisify } from 'node:util';
 import { execFile } from 'node:child_process';
-import { extractLiveThumbnailVideo } from '../lib/sky/youtube-thumbnail.js';
 
 const run = promisify(execFile);
 const directory = new URL('../public/sky-camera-observations/', import.meta.url);
@@ -13,22 +12,12 @@ async function get(url) {
   if (!response.ok) throw new Error(`Source returned ${response.status}`);
   return response;
 }
-await Promise.all(['east-asheville-east', 'chamber-southwest'].map(async (source) => {
+await Promise.all(['chamber-southwest'].map(async (source) => {
   const attemptedAt = new Date().toISOString();
   let manifest;
   try {
     let buffer, observedAt, videoId, timestampBasis = 'received';
-    if (source === 'east-asheville-east') {
-      const live = extractLiveThumbnailVideo(await (await get('https://www.youtube.com/@tballisty/live')).text());
-      if (!live) throw new Error('Current live broadcast could not be verified');
-      videoId = live.videoId;
-      const response = await get(`https://i.ytimg.com/vi/${videoId}/maxresdefault_live.jpg?t=${Date.now()}`);
-      const modified = Date.parse(response.headers.get('last-modified') || '');
-      if (Number.isFinite(modified) && (Date.now() - modified > 15 * 60_000 || modified > Date.now() + 60_000)) throw new Error('Thumbnail timestamp is stale');
-      observedAt = Number.isFinite(modified) ? new Date(modified).toISOString() : attemptedAt;
-      timestampBasis = Number.isFinite(modified) ? 'source' : 'received';
-      buffer = Buffer.from(await response.arrayBuffer());
-    } else {
+    {
       // Capture a current HLS frame outside the serverless request path.
       const result = await run('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-rw_timeout', '20000000', '-live_start_index', '-1', '-i', chamberStream, '-frames:v', '1', '-vf', 'scale=1280:-2', '-f', 'image2pipe', '-vcodec', 'mjpeg', 'pipe:1'], { encoding: 'buffer', timeout: 45000, maxBuffer: 12 * 1024 * 1024 });
       buffer = result.stdout;

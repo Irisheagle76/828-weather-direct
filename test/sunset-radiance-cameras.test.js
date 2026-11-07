@@ -27,9 +27,13 @@ test("Sunset Radiance restores Chamber live video and places the traffic still l
   const driveNCIndex = html.indexOf('id="driveNCImage"');
   const chamberIndex = html.indexOf("Live Asheville Area Chamber of Commerce camera");
   const courthouseIndex = html.indexOf("Live Buncombe County Courthouse camera on YouTube");
-  const eastAshevilleIndex = html.indexOf("Live East Asheville ENE sky camera on YouTube");
+  const fairviewIndex = html.indexOf('id="fairviewCameraImage"');
+  assert.ok(!html.includes('id="eastLiveIframe"'));
+  assert.ok(!html.includes("resolveEastLivePlayer"));
 
   assert.ok(chamberIndex < courthouseIndex);
   assert.ok(driveNCIndex > html.indexOf('id="fairviewCameraImage"'));
-  assert.ok(courthouseIndex < eastAshevilleIndex, "East Asheville camera should follow the Courthouse camera");
+  assert.ok(courthouseIndex < fairviewIndex);
+  assert.ok(fairviewIndex < html.indexOf('id="uncaCameraImage"'));
+  assert.match(html, /primary-assistant fairview-wide/);
 });

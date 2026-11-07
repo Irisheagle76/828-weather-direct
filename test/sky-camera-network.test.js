@@ -63,3 +63,13 @@ test('night exposure cannot stand in for daylight and UNCA uses its current univ
   assert.ok(solarElevation(Date.parse('2026-12-21T23:00:00Z')) < -3);
   assert.match(CAMERA_REGISTRY.find(c => c.id === 'unca-south').snapshotUrl, /www\.atms\.unca\.edu\/currwx\/towercam\.jpg/);
 });
+
+test('retired East Asheville observations cannot influence the shared sky read', () => {
+ const state = buildSkyState({ now, camera: { cameraRegistry: [{id:'east-asheville-east',name:'Retired camera'}, ...CAMERA_REGISTRY], observations: [
+ observation('east-asheville-east', 1, { directional: { east: { coverageFraction: 1 } } }),
+ observation('downtown-asheville-west', .05, { directional: { west: { coverageFraction: .05 } } })
+ ] } });
+ assert.equal(state.cloudCoverageFraction, .05);
+ assert.equal(state.directional.east, undefined);
+ assert.ok(!state.cameraViews.some(v => v.source === 'east-asheville-east'));
+});
