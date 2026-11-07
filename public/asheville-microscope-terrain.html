@@ -27,8 +27,8 @@
   <link rel="preconnect" href="https://unpkg.com">
   <link rel="preconnect" href="https://tiles.openfreemap.org">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css">
-  <link rel="stylesheet" href="/css/site-chrome.css?v=20260908-global-nav">
-  <script defer src="/js/site-chrome.js?v=20260908-global-nav"></script>
+  <link rel="stylesheet" href="/css/site-chrome.css?v=20261107-mountain-header">
+  <script defer src="/js/site-chrome.js?v=20261107-mountain-header"></script>
   <style>
     :root { color-scheme: dark; --ink: #f4f2e9; --muted: #b7c1b9; --panel: rgba(15,29,23,.92); --line: rgba(239,244,233,.2); --accent: #b8e39a; --warn: #ffd27d; --navy: #071d49; --blue: #1056cf; --orange: #f47b20; }
     * { box-sizing: border-box; }
@@ -111,8 +111,25 @@
   <a class="skip-link" href="#main-content">Skip to station terrain</a>
   <header data-site-header>
     <div data-site-header-inner>
-      <a data-site-brand href="/" aria-label="828 Weather Direct home"><span class="site-brand-title"><span class="site-brand-828">828</span> Weather Direct</span><span class="site-brand-sub">Hyper-local Asheville forecast built by Tim Ballisty</span></a>
-      <nav data-site-nav aria-label="Primary navigation"></nav>
+      <a data-site-brand href="/" aria-label="828 Weather Direct home">
+          <img class="site-brand-emblem" src="/images/mountain-sunrise.png" alt="" width="150" height="50">
+          <span class="site-brand-title"><span class="site-brand-828">828</span> Weather Direct</span>
+          <span class="site-brand-sub">Hyper-local Asheville forecast by Tim Ballisty</span>
+        </a>
+      <nav class="site-nav" data-site-nav aria-label="Main navigation">
+        <a href="/">Home</a>
+        <a href="/forecast.html">Forecast</a>
+        <a href="/radar.html">Radar &amp; Satellite</a>
+        <a href="/se_feelscore.html">FEELSCORE</a>
+        <a href="/828-sunset-radiance.html">Sky &amp; Sunset</a>
+        <a href="/asheville-microscope.html">Microscope</a>
+        <a href="/hiking.html">Hiking</a>
+        <details class="site-nav-more"><summary>More</summary><div class="site-nav-menu">
+        <a href="/water.html">Water Conditions</a>
+        <a href="/i26-connector.html">I-26 Connector</a>
+        <a href="/pulse.html">Weather Pulse</a>
+        </div></details>
+      </nav>
     </div>
   </header>
   <main class="page" id="main-content">

@@ -15,6 +15,12 @@ Recorded October 25, 2026 at the owner's request. Start here when preparing Sept
 
 ## Late August / early September preparation
 
+### November 7, 2026 owner-approved seasonal closeout
+
+The owner requested retiring Fall Explorer from global navigation for the season and displaying a closing message at `/fall.html`, with a September 2027 return. Review the feature next summer before reopening. This is an editorial closeout of the feature, not a verified claim that every WNC location has lost its foliage.
+
+The complete 2026 interface and its module entry point are retained in the inert `fall-explorer-2026` template in `public/fall.html`. Calculations, modules, APIs, collection workflows, and historical data remain available. The closed page does not start the seasonal app. To reopen after review, restore the template contents as the active page, remove the closing message and its styles, restore navigation, and update seasonal metadata and inputs. Do not automatically reopen based only on the calendar. These changes are local until the release gate and approved promotion are completed.
+
 1. Read this file, the source investigation, foliage-outlook notes and deployment guards. Inspect current main and live production; do not assume this working checkout was shipped.
 2. Check every camera/source and timestamp convention; check destination coverage and road/access links before recommending trips.
 3. Confirm current-year observation archive and retained-history collection are running before the first cold events. Preserve prior years; never manufacture missed milestones.

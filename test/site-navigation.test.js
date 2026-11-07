@@ -11,7 +11,6 @@ const expectedLinks = [
   ["Water Conditions", "/water.html"],
   ["I-26 Connector", "/i26-connector.html"],
   ["Weather Pulse", "/pulse.html"],
-  ["Fall Explorer", "/fall.html"],
   ["Sky & Sunset", "/828-sunset-radiance.html"],
 ];
 
@@ -56,9 +55,15 @@ test("shared navigation has the approved public links", async () => {
 for (const page of publicPages) {
   test(`${page} uses the complete global navigation fallback`, async () => {
     const html = await readFile(new URL(`../public/${page}`, import.meta.url), "utf8");
-    assert.deepEqual(fallbackLinks(html), expectedLinks);
-    assert.match(html, /site-chrome\.css\?v=20260908-global-nav/);
-    assert.match(html, /site-chrome\.js\?v=20260908-global-nav/);
-    assert.doesNotMatch(html.match(/<nav[^>]*data-site-nav[^>]*>[\s\S]*?<\/nav>/i)[0], /microscope/i);
+    const homepageLinks = [
+      ...expectedLinks.slice(0, 4),
+      expectedLinks.at(-1),
+      ["Microscope", "/asheville-microscope.html"],
+      ...expectedLinks.slice(4, -1),
+    ];
+    assert.deepEqual(fallbackLinks(html), homepageLinks);
+    assert.match(html, /site-chrome\.css\?v=20261107-mountain-header/);
+    assert.match(html, /site-chrome\.js\?v=20261107-mountain-header/);
+
   });
 }

@@ -1,0 +1,27 @@
+/* Homepage masthead and paired weather cards. */
+.home-redesign .now-panel,
+.home-redesign .feel-panel { padding: 24px; }
+.home-redesign .now-panel { border-top-color: #ffc440; }
+.home-redesign .now-panel::before { display: none; }
+.home-redesign .fs-topline { min-height: 48px; gap: 12px; }
+.home-redesign .feelscore-mark { margin: 0; min-height: 42px; font-size: clamp(.95rem, 1.55vw, 1.15rem); letter-spacing: .07em; gap: 12px; }
+.home-redesign .conditions-mark { color: #fff; border-color: #ffe09a70; background: linear-gradient(90deg, #ffd26b25, #ffffff0d); }
+.home-redesign .conditions-mark::before { flex-shrink: 0; background: #ffc440; box-shadow: 0 0 0 7px #ffc44026; }
+.home-redesign .conditions-mark::after { background: #ffc440; }
+.conditions-updated { color: #cbd4e5; font-size: .76rem; }
+.conditions-location { color: #cbd4e5; font-size: .9rem; }
+.home-redesign .now-temp-row { gap: 16px; }
+.home-redesign .now-temp { font-size: clamp(5rem, 9vw, 7.2rem); }
+.home-redesign .now-condition { font-size: clamp(1.3rem, 2.1vw, 1.8rem); line-height: 1.15; }
+.conditions-details { color: #dbe5f4; font-size: .85rem; }
+.conditions-details summary { cursor: pointer; padding: 4px 0; }
+.conditions-detail-grid { display: flex; flex-wrap: wrap; gap: 12px 20px; padding-top: 12px; }
+@media (max-width: 900px) {
+  .home-redesign .feelscore-inner { grid-template-columns: 1fr; }
+  .home-redesign .now-panel, .home-redesign .feel-panel { padding: 20px; }
+  .home-redesign .feelscore-mark { flex-shrink: 0; font-size: .95rem; }
+  .home-redesign .fs-topline { flex-wrap: wrap; }
+}
+@media (max-width: 420px) {
+  .home-redesign .now-observation-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

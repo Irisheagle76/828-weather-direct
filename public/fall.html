@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <link rel="canonical" href="https://avlweather.com/fall.html" />
   <meta property="og:title" content="Asheville Fall Explorer | 828 Weather Direct" />
-  <meta property="og:description" content="Weather intelligence for experiencing fall in Asheville and Western North Carolina." />
+  <meta property="og:description" content="The 2026 season of 828 Fall Explorer has ended. Return in September 2027 for fall foliage guidance across Western North Carolina." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://avlweather.com/fall.html" />
   <meta property="og:image" content="https://avlweather.com/images/828-brand-card.png" />
@@ -12,30 +12,63 @@
   <meta property="og:site_name" content="828 Weather Direct" />
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="Asheville Fall Explorer | 828 Weather Direct" />
-  <meta name="twitter:description" content="Weather intelligence for experiencing fall in Asheville and Western North Carolina." />
+  <meta name="twitter:description" content="The 2026 season of 828 Fall Explorer has ended. Return in September 2027 for fall foliage guidance across Western North Carolina." />
   <meta name="twitter:image" content="https://avlweather.com/images/828-brand-card.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Weather intelligence for experiencing fall in Asheville and Western North Carolina.">
+  <meta name="description" content="The 2026 season of 828 Fall Explorer has ended. Return in September 2027 for fall foliage guidance across Western North Carolina.">
   <title>828 Fall Explorer | Asheville Fall Weather Intelligence</title>
   <link rel="stylesheet" href="/css/brand-lockup.css?v=20260805-brand2">
   <link rel="stylesheet" href="/css/fall.css?v=20261026-readable-method">
-  <link rel="stylesheet" href="/css/site-chrome.css?v=20260908-global-nav">
-  <script defer src="/js/site-chrome.js?v=20260908-global-nav"></script>
+  <link rel="stylesheet" href="/css/site-chrome.css?v=20261107-mountain-header">
+  <script defer src="/js/site-chrome.js?v=20261107-mountain-header"></script>
+<style>
+    .fall-season-closed { background: #faf7f1; color: #14213a; }
+    .season-closed { max-width: 760px; margin: clamp(36px, 7vw, 88px) auto; padding: 0 24px; }
+    .season-closed-name { color: #aa4900; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+    .season-closed h1 { font-size: clamp(2rem, 5vw, 3.4rem); line-height: 1.12; color: #09255f; margin: 16px 0 24px; }
+    .season-closed p { line-height: 1.65; }
+    .season-closed-lead { font-size: 1.3rem; font-weight: 650; }
+    .season-closed-links { display: flex; flex-wrap: wrap; gap: 16px 24px; margin-top: 28px; }
+    .season-closed-links a { color: #0f4cc4; font-weight: 700; text-underline-offset: 4px; }
+  </style>
 </head>
-<body class="is-loading">
-  <a class="skip-link" href="#main">Skip to fall conditions</a>
+<body class="fall-season-closed">
+  <a class="skip-link" href="#main">Skip to seasonal update</a>
   <header class="site-header" data-site-header>
     <div class="header-inner" data-site-header-inner>
       <a class="site-brand-lockup" data-site-brand href="/" aria-label="828 Weather Direct home">
-        <div class="brand-title site-brand-title"><span class="site-brand-828">828</span> Weather Direct</div>
-        <div class="brand-sub site-brand-sub">Hyper-local Asheville forecast built by Tim Ballisty</div>
-      </a>
+          <img class="site-brand-emblem" src="/images/mountain-sunrise.png" alt="" width="150" height="50">
+          <span class="site-brand-title"><span class="site-brand-828">828</span> Weather Direct</span>
+          <span class="site-brand-sub">Hyper-local Asheville forecast by Tim Ballisty</span>
+        </a>
       <nav class="nav-links" data-site-nav aria-label="Site navigation">
-        <a href="/">Home</a><a href="/forecast.html">Forecast</a><a href="/radar.html">Radar &amp; Satellite</a><a href="/se_feelscore.html">FEELSCORE</a><a href="/hiking.html">Hiking</a><a href="/water.html">Water Conditions</a><a href="/i26-connector.html">I-26 Connector</a><a href="/pulse.html">Weather Pulse</a><a class="active" href="/fall.html" aria-current="page">Fall Explorer</a><a href="/828-sunset-radiance.html">Sky &amp; Sunset</a>
+        <a href="/">Home</a>
+        <a href="/forecast.html">Forecast</a>
+        <a href="/radar.html">Radar &amp; Satellite</a>
+        <a href="/se_feelscore.html">FEELSCORE</a>
+        <a href="/828-sunset-radiance.html">Sky &amp; Sunset</a>
+        <a href="/asheville-microscope.html">Microscope</a>
+        <a href="/hiking.html">Hiking</a>
+        <details class="site-nav-more"><summary>More</summary><div class="site-nav-menu">
+        <a href="/water.html">Water Conditions</a>
+        <a href="/i26-connector.html">I-26 Connector</a>
+        <a href="/pulse.html">Weather Pulse</a>
+        </div></details>
       </nav>
     </div>
   </header>
 
+  <main id="main" class="season-closed">
+    <p class="season-closed-name">828 Fall Explorer</p>
+    <h1>Thank you for exploring fall with us.</h1>
+    <p class="season-closed-lead">Our 2026 fall foliage season has come to a close.</p>
+    <p>828 Fall Explorer will return in September 2027 with weather, mountain views, and foliage guidance for Western North Carolina.</p>
+    <p>Until then, explore the latest local forecast and hiking conditions.</p>
+    <div class="season-closed-links"><a href="/forecast.html">View the forecast</a><a href="/hiking.html">Explore hiking conditions</a></div>
+  </main>
+
+  <!-- Retained 2026 interface. See docs/fall-season-playbook.md before reopening. -->
+  <template id="fall-explorer-2026">
   <main id="main">
     <section class="fall-hero">
       <div class="ridge ridge-back"></div><div class="ridge ridge-front"></div>
@@ -123,7 +156,10 @@
 
   </main>
 
-  <footer data-site-footer><div><b>828 Weather Direct</b><p>Fall experience guidance with an experimental, elevation-limited peak-timing estimate—not a foliage percentage or guarantee. Forecast data: NOAA/NWS.</p></div><div><a href="/">Home</a><a href="/hiking.html">Hiking guidance</a><a href="/forecast.html">4-day forecast</a></div></footer>
   <script type="module" src="/js/fall/app.js?v=20261026-readable-method"></script>
+  </template>
+
+  <footer data-site-footer><div><b>828 Weather Direct</b><p>Fall experience guidance with an experimental, elevation-limited peak-timing estimate—not a foliage percentage or guarantee. Forecast data: NOAA/NWS.</p></div><div><a href="/">Home</a><a href="/hiking.html">Hiking guidance</a><a href="/forecast.html">4-day forecast</a></div></footer>
+
 </body>
 </html>

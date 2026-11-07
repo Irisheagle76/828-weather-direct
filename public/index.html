@@ -4462,12 +4462,13 @@
     }
   </style>
   <link rel="stylesheet" href="/css/brand-lockup.css?v=20260805-brand2" />
-  <link rel="stylesheet" href="/css/site-chrome.css?v=20260908-global-nav" />
-  <script defer src="/js/site-chrome.js?v=20260908-global-nav"></script>
+  <link rel="stylesheet" href="/css/site-chrome.css?v=20261107-mountain-header" />
+  <link rel="stylesheet" href="/css/home-masthead.css" />
+  <script defer src="/js/site-chrome.js?v=20261107-mountain-header"></script>
   <link rel="stylesheet" href="/css/storm-headquarters.css" />
   <link rel="stylesheet" href="/css/editorial-rich-text.css" />
 </head>
-<body class="splash-active">
+<body class="splash-active home-redesign">
   <div class="home-splash" id="homeSplash" role="status" aria-live="polite" aria-label="Loading 828 Weather Direct">
     <div class="home-splash-card">
       <div class="home-splash-sky" aria-hidden="true">
@@ -4490,35 +4491,29 @@
     <div class="mock-header-inner" data-site-header-inner>
       <div class="mock-brand-row">
         <a data-site-brand href="/" aria-label="828 Weather Direct home">
-          <div class="mock-brand-title site-brand-title"><span class="site-brand-828">828</span> Weather Direct</div>
-          <div class="mock-brand-sub site-brand-sub">Hyper-local Asheville forecast built by Tim Ballisty</div>
+          <img class="site-brand-emblem" src="/images/mountain-sunrise.png" alt="" width="150" height="50">
+          <span class="site-brand-title"><span class="site-brand-828">828</span> Weather Direct</span>
+          <span class="site-brand-sub">Hyper-local Asheville forecast by Tim Ballisty</span>
         </a>
         <button class="mock-notify" id="enableNotificationsBtn" type="button">Enable Notifications</button>
       </div>
 
       <nav class="site-nav" data-site-nav aria-label="Main navigation">
-        <a class="active" href="/" aria-current="page">Home</a>
+        <a href="/" class="active" aria-current="page">Home</a>
         <a href="/forecast.html">Forecast</a>
         <a href="/radar.html">Radar &amp; Satellite</a>
         <a href="/se_feelscore.html">FEELSCORE</a>
+        <a href="/828-sunset-radiance.html">Sky &amp; Sunset</a>
+        <a href="/asheville-microscope.html">Microscope</a>
         <a href="/hiking.html">Hiking</a>
+        <details class="site-nav-more"><summary>More</summary><div class="site-nav-menu">
         <a href="/water.html">Water Conditions</a>
         <a href="/i26-connector.html">I-26 Connector</a>
         <a href="/pulse.html">Weather Pulse</a>
-        <a href="/fall.html">Fall Explorer</a>
-        <a href="/828-sunset-radiance.html">Sky &amp; Sunset</a>
+        </div></details>
       </nav>
 
-      <div class="obs-row" aria-label="Current weather observations">
-        <div class="obs-chip live" id="obsUpdated">Updating obs</div>
-        <div class="obs-chip" id="obsTemp">Asheville --°</div>
-        <div class="obs-chip" id="obsDewpoint">Dew point --°</div>
-        <div class="obs-chip" id="obsHumidity">Humidity --</div>
-        <div class="obs-chip" id="obsWind">Wind -- mph</div>
-        <div class="obs-chip" id="obsPressure">Pressure --"</div>
-        <div class="obs-chip" id="obsRainChance">Peak rain chance today --</div>
-        <div class="obs-chip" id="obsClouds">Clouds --</div>
-      </div>
+
 
       <aside class="pulse-alert-strip" id="pulseAlertStrip" aria-labelledby="pulseAlertTitle" hidden>
         <div class="pulse-alert-copy">
@@ -4546,14 +4541,11 @@
       <section class="feelscore-mock" id="now" aria-label="Current conditions and FeelScore">
         <div class="feelscore-inner">
           <div class="now-panel" aria-label="Current Asheville conditions">
-            <div class="now-kicker">Current Conditions</div>
+            <div class="fs-topline"><h2 class="section-label feelscore-mark conditions-mark">Current Conditions</h2><span class="conditions-updated" id="obsUpdated">Updating obs</span></div>
+            <div class="conditions-location">Asheville, NC</div>
             <div class="now-temp-row">
               <div class="now-temp" id="heroCurrentTemp">--°</div>
               <div class="now-condition" id="heroSkyCondition">Reading the sky</div>
-            </div>
-            <div class="fs-headline" id="liveFeelScoreHeadline">Reading the current comfort signal.</div>
-            <div class="fs-subhead" id="liveFeelScoreSubhead">
-              Temperature, humidity, dew point, wind, and sky cover are loading before the full read appears.
             </div>
             <div class="now-observation-grid" aria-label="Current observation highlights">
               <div class="now-observation">
@@ -4573,6 +4565,18 @@
                 <span>Peak rain chance today</span>
                 <small class="rain-window" id="heroRainWindow" hidden></small>
               </div>
+            </div>
+            <details class="conditions-details">
+              <summary>More observations</summary>
+              <div class="conditions-detail-grid">
+                <span id="obsHumidity">Humidity --</span>
+                <span id="obsPressure">Pressure --</span>
+                <span id="obsClouds">Clouds --</span>
+              </div>
+            </details>
+            <div class="fs-headline" id="liveFeelScoreHeadline">Reading the current comfort signal.</div>
+            <div class="fs-subhead" id="liveFeelScoreSubhead">
+              Temperature, humidity, dew point, wind, and sky cover are loading before the full read appears.
             </div>
             <p class="fs-subhead" id="northDowntownContext" hidden></p>
           </div>

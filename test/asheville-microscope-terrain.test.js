@@ -10,12 +10,12 @@ test("station terrain is a production-ready Microscope page using the normalized
 
   assert.match(html, /<meta name="robots" content="index,follow,max-image-preview:large">/);
   assert.match(html, /<link rel="canonical" href="https:\/\/avlweather\.com\/asheville-microscope-terrain\.html">/);
-  assert.match(html, /href="\/css\/site-chrome\.css\?v=20260908-global-nav"/);
-  assert.match(html, /src="\/js\/site-chrome\.js\?v=20260908-global-nav"/);
+  assert.match(html, /href="\/css\/site-chrome\.css\?v=20261107-mountain-header"/);
+  assert.match(html, /src="\/js\/site-chrome\.js\?v=20261107-mountain-header"/);
   assert.match(html, /<header data-site-header>/);
   assert.match(html, /<div data-site-header-inner>/);
   assert.match(html, /<a data-site-brand/);
-  assert.match(html, /<nav data-site-nav/);
+  assert.match(html, /<nav\b[^>]*data-site-nav/);
   assert.match(html, /<footer data-site-footer><\/footer>/);
   assert.match(html, /const API_URL = "\/api\/router\?route=asheville-spread"/);
   assert.doesNotMatch(html, /api\.weather\.com|swd\.weatherflow\.com|api\.synopticdata\.com|econet\.climate\.ncsu\.edu/i);
