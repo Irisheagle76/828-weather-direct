@@ -7,6 +7,7 @@ const SITE_LINKS = [
   ["Sky & Sunset", "/828-sunset-radiance.html"],
   ["Microscope", "/asheville-microscope.html"],
   ["Hiking", "/hiking.html"],
+  ["Winter Pattern", "/awpi.html"],
   ["Water Conditions", "/water.html"],
   ["I-26 Connector", "/i26-connector.html"],
   ["Weather Pulse", "/pulse.html"],

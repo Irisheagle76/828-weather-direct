@@ -1,4 +1,6 @@
 const routes = {
+  "awpi/current": () => import("../lib/api-routes/awpi/current.js"),
+  "awpi/refresh": () => import("../lib/api-routes/awpi/refresh.js"),
   "biltmore/current": () => import("../lib/api-routes/biltmore/current.js"),
   "se-feelscore": () => import("../lib/api-routes/se-feelscore.js"),
   "mobile/feelscore-map": () => import("../lib/api-routes/mobile/feelscore-map.js"),
