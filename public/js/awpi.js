@@ -41,6 +41,7 @@ function durationText(p) {
 export function render(data) {
   $('updated').textContent = data.generatedAt ? `Calculated ${date(data.generatedAt)}` : 'No current assessment';
   $('status').textContent = data.stale || data.status === 'stale' ? 'STALE GUIDANCE — The last successful assessment is shown with its original dates. A refresh failed or the forecast is out of date.' : data.status === 'unavailable' ? 'Forecast unavailable — missing values are not treated as zero.' : data.status === 'partial' ? 'Partial guidance — some daily scores are unavailable. Review source freshness below.' : 'Experimental ensemble guidance · Scores are not probabilities · Confidence decreases with lead time';
+  if (data.refreshing) $('status').textContent = 'Updating in the background — showing the last saved assessment with its original dates and calculation time.';
   $('narrative').textContent = data.narrative || 'Current ensemble guidance is unavailable.';
   $('cards').innerHTML = components.map(([key, title, detail]) => `<article class="score-card ${key}"><h2>${title}</h2><div class="score">${number(data.summary?.[key])}<small> / 100</small></div><div class="category">${category(data.summary?.[key])}</div><div class="meter"><span style="width:${finite(data.summary?.[key]) ? data.summary[key] : 0}%"></span></div><p>${detail}<br>Strongest daily support in 14 days</p><p class="peak-callout"><strong>${esc(peakText(data.peaks?.[key]))}</strong></p><p>${esc(durationText(data.peaks?.[key]))}</p></article>`).join('');
   const days = data.days || [];
@@ -61,6 +62,15 @@ try {
   const data = await response.json();
   if (!data.status) throw new Error('Invalid assessment');
   render(data);
+  if (data.refreshing) {
+    setTimeout(async () => {
+      try {
+        const next = await fetch('/api/router?route=awpi/current', { cache: 'no-store', signal: AbortSignal.timeout(45000) });
+        const updated = await next.json();
+        if (updated.generatedAt && updated.status !== 'unavailable') render(updated);
+      } catch { /* Keep the dated assessment visible if the update cannot be retrieved. */ }
+    }, 20000);
+  }
 } catch {
   render({ status: 'unavailable', narrative: 'The current assessment could not be retrieved. Please try again later.' });
 }

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { calculateDays, scoreMember, summarize, peakDetails, peakWindows } from '../lib/awpi/engine.js';
 import { parseDaily, parseRoni, parseNino, collectSources } from '../lib/awpi/sources.js';
-import { buildAssessment, present } from '../lib/awpi/service.js';
+import { buildAssessment, present, getAssessment } from '../lib/awpi/service.js';
 import refreshHandler from '../lib/api-routes/awpi/refresh.js';
 
 const now = new Date('2026-11-09T15:00:00Z');
@@ -75,4 +75,30 @@ test('peak ties, separate events, zero and incomplete coverage are explicit', ()
   const days=[{date:'2026-11-10',cold:80,storm:0,snow:0,confidence:'Moderate'},{date:'2026-11-11',cold:80,storm:0,snow:0,confidence:'Low'},{date:'2026-11-12',cold:0,storm:80,snow:0,confidence:'Low'}];
   const p=peakDetails(days); assert.equal(p.cold.confidence,'Low');assert.equal(p.cold.dates.length,2);assert.equal(p.cold.favorableWindows[0].days,2);assert.equal(p.snow.score,0);assert.deepEqual(p.snow.dates,[]);
   days[1].snow=null;assert.equal(peakDetails(days).snow.score,null);
+});
+
+test('expired saved guidance returns before blocked upstream requests finish', async () => {
+  const previous = { generatedAt: '2026-11-08T15:00:00Z', days: [{date:'2026-11-08'}], summary:{cold:20}, status:'ready' };
+  let release;
+  const gate = new Promise(resolve => { release = resolve; });
+  let scheduled;
+  const fetcher = async () => { await gate; throw new Error('offline'); };
+  const store = { get: async () => previous };
+  try {
+    const result = await Promise.race([
+      getAssessment({now, store, fetcher, schedule: task => { scheduled = task; }}),
+      new Promise((_, reject) => { const timer = setTimeout(() => reject(new Error('blocked on upstream')), 500); timer.unref(); })
+    ]);
+    assert.equal(result.refreshing, true);
+    assert.equal(result.stale, true);
+    assert.equal(result.generatedAt, previous.generatedAt);
+    assert.equal(result.summary.cold, 20);
+    assert.ok(scheduled);
+  } finally { release(); await scheduled; }
+});
+test('no saved guidance still waits for the initial calculation', async () => {
+  let scheduled = false;
+  const result = await getAssessment({ now, store:{get:async()=>null}, fetcher:async()=>{throw new Error('offline');}, schedule:()=>{scheduled=true;} });
+  assert.equal(result.status, 'unavailable');
+  assert.equal(scheduled, false);
 });
