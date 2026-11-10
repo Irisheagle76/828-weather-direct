@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { calculateDays, scoreMember, summarize } from '../lib/awpi/engine.js';
+import { calculateDays, scoreMember, summarize, peakDetails, peakWindows } from '../lib/awpi/engine.js';
 import { parseDaily, parseRoni, parseNino, collectSources } from '../lib/awpi/sources.js';
 import { buildAssessment, present } from '../lib/awpi/service.js';
 import refreshHandler from '../lib/api-routes/awpi/refresh.js';
@@ -62,4 +62,17 @@ test('failed climate refresh retains the original observation with stale label',
   const cached = { ao: { status: 'ok', retrievedAt: '2026-11-01T00:00:00Z', data: { value: -1, date: '2026-10-31' } } };
   const result = await collectSources({ now, cached, fetcher: async () => { throw new Error('offline'); } });
   assert.equal(result.ao.data.value, -1); assert.equal(result.ao.status, 'stale'); assert.equal(result.ao.retrievedAt, cached.ao.retrievedAt);
+});
+
+test('one-day signal is not diluted by thirteen quiet days', () => {
+  const days = Array.from({length:14},(_,i)=>({date:'2026-11-'+String(i+10).padStart(2,'0'),cold:0,storm:0,snow:i===9?80:0,confidence:i<5?'Moderate':'Low'}));
+  assert.equal(summarize(days).snow,80);
+  const p=peakDetails(days).snow;
+  assert.deepEqual(p.dates,['2026-11-19']); assert.equal(p.confidence,'Low'); assert.equal(p.favorableWindows[0].days,1);
+  assert.equal(peakWindows(days)[1].snow,80);
+});
+test('peak ties, separate events, zero and incomplete coverage are explicit', () => {
+  const days=[{date:'2026-11-10',cold:80,storm:0,snow:0,confidence:'Moderate'},{date:'2026-11-11',cold:80,storm:0,snow:0,confidence:'Low'},{date:'2026-11-12',cold:0,storm:80,snow:0,confidence:'Low'}];
+  const p=peakDetails(days); assert.equal(p.cold.confidence,'Low');assert.equal(p.cold.dates.length,2);assert.equal(p.cold.favorableWindows[0].days,2);assert.equal(p.snow.score,0);assert.deepEqual(p.snow.dates,[]);
+  days[1].snow=null;assert.equal(peakDetails(days).snow.score,null);
 });

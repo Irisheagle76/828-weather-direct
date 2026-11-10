@@ -26,15 +26,27 @@ function chart(days) {
   return svg + '</svg>';
 }
 
+
+function peakText(p) {
+  if (!p || !finite(p.score)) return 'Insufficient data for this period';
+  if (p.score === 0) return 'No daily support signal in this period';
+  return 'Strongest ' + p.dates.map(date).join(', ') + ' · ' + p.confidence + ' confidence';
+}
+function durationText(p) {
+  if (!p || !finite(p.score)) return '';
+  if (!p.favorableDays) return 'No days reach favorable support (60+)';
+  return p.favorableWindows.map(w => (w.days === 1 ? date(w.start) + ': one-day opportunity' : date(w.start) + '–' + date(w.end) + ': ' + w.days + ' consecutive days') + ' at 60+').join('; ');
+}
+
 export function render(data) {
   $('updated').textContent = data.generatedAt ? `Calculated ${date(data.generatedAt)}` : 'No current assessment';
   $('status').textContent = data.stale || data.status === 'stale' ? 'STALE GUIDANCE — The last successful assessment is shown with its original dates. A refresh failed or the forecast is out of date.' : data.status === 'unavailable' ? 'Forecast unavailable — missing values are not treated as zero.' : data.status === 'partial' ? 'Partial guidance — some daily scores are unavailable. Review source freshness below.' : 'Experimental ensemble guidance · Scores are not probabilities · Confidence decreases with lead time';
   $('narrative').textContent = data.narrative || 'Current ensemble guidance is unavailable.';
-  $('cards').innerHTML = components.map(([key, title, detail]) => `<article class="score-card ${key}"><h2>${title}</h2><div class="score">${number(data.summary?.[key])}<small> / 100</small></div><div class="category">${category(data.summary?.[key])}</div><div class="meter"><span style="width:${finite(data.summary?.[key]) ? data.summary[key] : 0}%"></span></div><p>${detail}<br>14-day mean support</p></article>`).join('');
+  $('cards').innerHTML = components.map(([key, title, detail]) => `<article class="score-card ${key}"><h2>${title}</h2><div class="score">${number(data.summary?.[key])}<small> / 100</small></div><div class="category">${category(data.summary?.[key])}</div><div class="meter"><span style="width:${finite(data.summary?.[key]) ? data.summary[key] : 0}%"></span></div><p>${detail}<br>Strongest daily support in 14 days</p><p><strong>${esc(peakText(data.peaks?.[key]))}</strong></p><p>${esc(durationText(data.peaks?.[key]))}</p></article>`).join('');
   const days = data.days || [];
   $('chart').innerHTML = chart(days);
   $('daily').innerHTML = days.map(d => `<tr><td>${esc(date(d.date))}</td><td>${number(d.cold)}</td><td>${number(d.storm)}</td><td>${number(d.snow)}</td><td>${esc(d.confidence)}</td><td>${number(d.members?.cold)} / ${number(d.members?.storm)} / ${number(d.members?.snow)}</td></tr>`).join('');
-  $('windows').innerHTML = (data.windows || []).map(w => `<div class="window"><strong>${esc(w.label)}</strong>Cold ${number(w.cold)} · Storm ${number(w.storm)} · Snow ${number(w.snow)}<br>${esc(w.confidence)} confidence</div>`).join('');
+  $('windows').innerHTML = (data.windows || []).map(w => `<div class="window"><strong>${esc(w.label)}</strong>${components.map(([key, title]) => `<p>${title.split(' ')[0]} ${number(w[key])}<br>${esc(peakText(w.peaks?.[key]))}</p>`).join('')}</div>`).join('');
   const sources = data.sources || {};
   $('enso').innerHTML = [['roni','RONI (3-month relative anomaly)'],['nino34','Niño 3.4 (monthly anomaly)']].map(([key, title]) => { const s = sources[key]; return `<div class="reading"><div>${title}<small>${esc(s?.data?.period || 'No observation')} · ${esc(s?.status || 'unavailable')}</small></div><b>${signed(s?.data?.value)} °C</b></div>`; }).join('') + `<p>${esc(sources.roni?.data?.classification || 'Classification unavailable')}</p><p class="muted">RONI change from previous season: ${signed(sources.roni?.data?.value - sources.roni?.data?.previous)} °C. Recent values may be revised.</p>`;
   $('teleconnections').innerHTML = ['ao','nao','pna'].map(key => { const s = sources[key]; return `<div class="reading"><div>${key.toUpperCase()}<small>${esc(s?.data?.date ? date(s.data.date) : 'No observation')} · ${esc(s?.status || 'unavailable')}</small></div><b>${signed(s?.data?.value)}</b></div>`; }).join('');
