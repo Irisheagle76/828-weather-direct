@@ -42,3 +42,7 @@ Important corrections to the ChatGPT handoff:
 ## Release
 
 Run the AWPI tests and the full repository suite, check actual upstream responses, and inspect desktop/mobile behavior and missing-source states. The repository's production gate remains in force: stage from current main, include required fixes, verify the staged build, then explicitly approve promotion. Keep custom-domain auto-assignment disabled. No unrelated local experiments belong in the AWPI release.
+
+## Homepage release — November 10, 2026
+
+The homepage introduces AWPI with a compact winter-pattern card and a link to the complete outlook. All three indicators refer to the same date: the highest daily snow-support score, breaking ties by cold support and then earliest date. This is a highlight, not a prediction of an event. Saved assessments retain their original timestamps; missing and stale guidance are explicitly labeled. The full page retains daily scores, timing, confidence, source freshness, and experimental-method limitations.

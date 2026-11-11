@@ -4467,6 +4467,7 @@
   <script defer src="/js/site-chrome.js?v=20261107-mountain-header"></script>
   <link rel="stylesheet" href="/css/storm-headquarters.css" />
   <link rel="stylesheet" href="/css/editorial-rich-text.css" />
+  <link rel="stylesheet" href="/css/awpi-teaser.css?v=20261110" />
 </head>
 <body class="splash-active home-redesign">
   <div class="home-splash" id="homeSplash" role="status" aria-live="polite" aria-label="Loading 828 Weather Direct">
@@ -4816,6 +4817,24 @@
           </div>
           <a class="forecast-invitation-link" href="/forecast.html">Read the 4-Day Forecast &rarr;</a>
         </aside>
+      </section>
+
+      <section id="awpi-preview" aria-labelledby="awpiHomeTitle">
+        <div>
+          <div class="awpi-kicker">Asheville Winter Pattern Index</div>
+          <h2 id="awpiHomeTitle">Asheville Winter Watch</h2>
+          <p data-awpi-headline aria-live="polite">Checking the latest winter pattern…</p>
+          <p data-awpi-date>Cold, moisture, and snow support for one shared forecast date.</p>
+        </div>
+        <div>
+          <div class="awpi-signals" aria-label="Support on the highlighted date">
+            <div><span>Cold</span><strong data-awpi-cold>—</strong></div>
+            <div><span>Moisture</span><strong data-awpi-storm>—</strong></div>
+            <div><span>Snow setup</span><strong data-awpi-snow>—</strong></div>
+          </div>
+          <a class="awpi-link" href="/awpi.html">Explore the 14-day AWPI outlook &rarr;</a>
+        </div>
+        <p class="awpi-meta" data-awpi-meta>Experimental guidance · Not a weather alert</p>
       </section>
 
       <section class="pulse-card-lite" id="pulse-preview" aria-labelledby="pulseShelfTitle" hidden>
@@ -7548,5 +7567,6 @@
 
   </script>
 
+  <script type="module" src="/js/awpi-teaser.js?v=20261110"></script>
 </body>
 </html>
