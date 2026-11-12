@@ -4604,10 +4604,7 @@
               <p class="fs-why-copy" id="liveFeelScoreWhy">Waiting for current weather readings.</p>
               <ul id="liveFeelScoreBullets" hidden></ul>
             </div>
-            <div class="wear-section"><div class="panel-kicker">👕 What to wear</div><h3 class="panel-heading" id="wearHeadline">Checking layers</h3><p class="panel-copy" id="wearDetail">Clothing guidance is loading.</p>                <div class="fs-wear-cue" id="liveFeelScoreWear" aria-label="What to wear: checking conditions">
-                  <span class="fs-wear-emoji" id="liveFeelScoreWearEmoji" aria-hidden="true">👕</span>
-                  <span id="liveFeelScoreWearText">Checking layers</span>
-                </div></div>
+            <div class="wear-section"><div class="panel-kicker">👕 What to wear</div><h3 class="panel-heading" id="wearHeadline">Checking layers</h3><p class="panel-copy" id="wearDetail">Clothing guidance is loading.</p></div>
             <div class="heads-section" id="headsSection"><div class="panel-kicker" id="headsLabel">📉 Heads up · later today</div><h3 class="panel-heading" id="headsAction">Plan your layers for later.</h3><div class="fs-temp-context" id="liveTempContext" aria-live="polite"></div></div>
             <div><div class="panel-kicker">How it will feel</div><div class="comfort-trend" id="comfortTrend" aria-live="polite"></div></div>
             <div class="fs-best-window" id="liveBestWindow" aria-live="polite" hidden>
@@ -6994,17 +6991,16 @@
         ...(scoringHour || {}),
         temperatureF: currentDisplayTemp
       }, precipOverride, score);
-      setText("#liveFeelScoreWearEmoji", wearCue.emoji);
-      setText("#liveFeelScoreWearText", wearCue.text);
-      document.querySelector("#liveFeelScoreWear")
-        ?.setAttribute("aria-label", `What to wear: ${wearCue.text}`);
+
+
+
 
       const clockHour = localHourNumber(Date.now()) % 24;
       const outlook = forecastComfortCopy({ hourly: currentComfort.hourly, daily, forecast: latestPublishedForecast || {}, horizonHours: clockHour >= 18 || clockHour < 6 ? 12 : Math.max(6, 24 - clockHour) });
       const summary = applyPrecipOverrideToNarrative({ headline: outlook.headline, subHeadline: outlook.weatherNarrative }, precipOverride);
       setText('#weatherOutlookLabel', clockHour >= 18 || clockHour < 6 ? 'Tonight into morning' : clockHour >= 12 ? 'This afternoon into tonight' : 'The rest of today');
       setText('#headsLabel', clockHour >= 18 || clockHour < 6 ? '📉 Heads up · overnight' : clockHour >= 12 ? '📉 Heads up · this evening' : '📉 Heads up · later today');
-      setText('#wearHeadline', wearCue.text);
+      setText('#wearHeadline', [wearCue.emoji, wearCue.text].filter(Boolean).join(' '));
       setText('#wearDetail', clothingDetail(wearCue.text));
       const skyHour = { ...liveHour, ...scoringHour, cloudCover: scoringHour?.cloudCover ?? liveHour?.cloudCover, weatherCode: liveHour?.weatherCode };
       setText('#heroSkyIcon', iconGlyph(weatherIcon(skyHour)));
