@@ -49,7 +49,7 @@ test('route with unavailable observations returns no score and no stack', async 
 
 test('homepage fire card handles live success and failure without canned scores', async () => {
   const html = fs.readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
-  assert.match(html, /DROUGHT_FIRE_MODULE_ENABLED = true/);
+  assert.match(html, /DROUGHT_FIRE_MODULE_ENABLED = false/);
   assert.doesNotMatch(html, /DROUGHT_FIRE_FALLBACK/);
   const start = html.indexOf('    function renderDroughtFireCard(');
   const end = html.indexOf('    function htmlToPlainText(', start);
@@ -67,6 +67,16 @@ test('homepage fire card handles live success and failure without canned scores'
     }
   });
   vm.runInContext(html.slice(start,end),ctx);
+  ctx.DROUGHT_FIRE_MODULE_ENABLED = false;
+  ctx.fetchRouteJson = async () => { throw new Error('Disabled card must not fetch'); };
+  await vm.runInContext('hydrateDroughtFireCard()',ctx);
+  assert.equal(card.hidden, true);
+  assert.deepEqual(texts, {});
+  ctx.DROUGHT_FIRE_MODULE_ENABLED = true;
+  ctx.fetchRouteJson = async () => {
+    if (fail) throw new Error('offline');
+    return { DSS:30, FRI:25, updatedAt:'2026-10-22T12:00:00Z', dataThrough:'20261020', soilDate:'20261020', seasonalStart:'20260901', inputs:{precipDeficit90d_in:-2, precipDeficitSinceSep1_in:-1}, weatherContext:{rh:50,windGust:5,tempF:60} };
+  };
   await vm.runInContext('hydrateDroughtFireCard()',ctx);
   assert.equal(card.hidden,false);
   assert.equal(texts['#fireThreatValue'],25);

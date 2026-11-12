@@ -2142,6 +2142,8 @@
         linear-gradient(135deg, #081a3c, #0f4cc4);
     }
 
+    #droughtFireCard[hidden] { display: none; }
+
     .fold-tool-card.fire {
       grid-column: 1 / -1;
       min-height: 0;
@@ -5443,7 +5445,7 @@
     const RADAR_FORECAST_HOURS = 72;
     let liveRadarSignalActive = PRECIP_SIGNAL_ACTIVE;
     // Seasonal module: turn this back on when drought or fire conditions warrant homepage prominence.
-    const DROUGHT_FIRE_MODULE_ENABLED = true;
+    const DROUGHT_FIRE_MODULE_ENABLED = false;
     const SUBSTACK_CLOUDINARY_IMAGE_OVERRIDE = "";
     const SUBSTACK_DEFAULT_IMAGE = "/images/828-weather-update-default.png";
     const LATEST_SUBSTACK_FALLBACK = {
