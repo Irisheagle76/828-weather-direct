@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import { buildCurrentComfort, COMFORT_REFRESH_MS } from '../public/js/intel/current-comfort.js';
 import { applyPrecipOverrideToNarrative } from '../public/js/intel/precip-override.js';
+import { forecastComfortCopy } from '../public/js/intel/forecast-comfort-context.js';
+import { clothingDetail, headsUpAction } from '../public/js/intel/home-weather-panels.js';
 
 const html = fs.readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
 const web = fs.readFileSync(new URL('../public/mobile/mobile.js', import.meta.url), 'utf8');
@@ -27,6 +29,8 @@ function renderDesktop(weather, storm) {
   const model = shared(weather, { storm });
   vm.runInNewContext(desktop + '\nrenderLiveFeelScore({score:50,bullets:[]}, weather.hourly, [], null, null, override);', {
     document: { querySelector: query }, weather, override: model.precipOverride, buildCurrentComfort: shared,
+    localHourNumber: () => 14, forecastComfortCopy: options => forecastComfortCopy({...options,now}), clothingDetail, headsUpAction,
+    weatherIcon: () => 'Cloudy', iconGlyph: () => '☁️', getPrecipSkyLabel: () => 'Rain',
     latestComfortWeather: weather, latestComfortStorm: storm, latestPublishedForecast: null, applyPrecipOverrideToNarrative,
     scoreLabel: () => 'Pleasant', feelScoreStateEmoji: () => '🙂',
     setText: (selector, text) => { query(selector).textContent = text; },
@@ -53,7 +57,13 @@ for (const [client, script] of clients) for (const [scenario, current, storm] of
   ['nearby storms', { timestamp: now, air_temperature: 22, dew_point: 12, wind_avg: 1, rainRate: 0, lightningStrikeCount: 3, lightningStrikeDistance: 2 }, { radar: { available: true, ageMinutes: 1, nearestEchoMiles: 1, echoPixels: 8 } }],
   ['stale observations', { timestamp: now - 3600000, air_temperature: 0, dew_point: -5 }, null],
   ['missing observations', null, null]
-]) test(`Desktop and ${client} render equal scores and weather copy with ${scenario}`, () => {
+]) test(`Desktop and ${client} retain equal current scores with ${scenario} while desktop expands the outlook`, () => {
   const weather = { current, hourly };
-  assert.deepEqual(renderMobile(script, weather, storm), renderDesktop(weather, storm));
+  const mobile = renderMobile(script, weather, storm), desktop = renderDesktop(weather, storm);
+  assert.equal(mobile.score, desktop.score);
+  const model = shared(weather,{storm});
+  const outlook = forecastComfortCopy({hourly:model.hourly,now,horizonHours:10});
+  const expected = applyPrecipOverrideToNarrative({headline:outlook.headline,subHeadline:outlook.weatherNarrative},model.precipOverride);
+  assert.equal(desktop.headline,expected.headline);
+  assert.equal(desktop.narrative,expected.subHeadline);
 });

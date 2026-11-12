@@ -1,0 +1,59 @@
+/* Approved weather/comfort split. Scoped to the homepage hero. */
+#now .now-panel,#now .feel-panel{padding:24px;gap:20px;min-width:0;grid-template-columns:minmax(0,1fr)}
+#now .now-panel>*,#now .feel-panel>*{min-width:0}
+#now .now-panel::before,#now .feel-panel::before{display:none}
+#now .now-panel{border-top-color:#ffcd73;background:linear-gradient(140deg,#111d36,#173568)}
+#now .feel-panel{background:linear-gradient(140deg,#09323e,#0c5557)}
+#now .feelscore-mark{white-space:nowrap;font-size:clamp(13px,1.5vw,22px);letter-spacing:.045em;padding:12px 15px;gap:12px}
+#now .fs-topline{margin-bottom:4px}
+#now .conditions-location{display:none}
+#now .now-temp-row{flex-wrap:nowrap;align-items:center;gap:22px;margin:0}
+#now .now-temp{font-size:clamp(76px,8vw,120px);line-height:1}
+#now .now-condition{font:700 20px/1.25 Arial,Helvetica,sans-serif;color:#f8fafc;padding:0}
+#now .hero-sky-icon{font-size:46px;line-height:1.1;display:block;margin-bottom:8px;background:none}
+#now .now-observation-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;border-block:1px solid #ffffff26;padding:16px 0}
+#now .now-observation{background:none;border:0;border-radius:0;min-height:0;padding:0}
+#now .now-observation strong{font:700 24px/1.2 Arial,Helvetica,sans-serif}
+#now .now-observation span{font:400 12px/1.3 Arial,Helvetica,sans-serif;letter-spacing:0;text-transform:none}
+#now .observation-symbol{font-size:20px;margin-bottom:8px;display:block}
+#now .panel-kicker{display:inline-flex;align-items:center;gap:8px;width:fit-content;max-width:100%;padding:8px 10px;border:1px solid #ffffff16;border-radius:7px;box-shadow:inset 3px 0 0 #ffcd7370;background:#ffffff12;color:#ffcd73;font:800 12px/1.4 Arial,Helvetica,sans-serif;letter-spacing:1px;text-transform:uppercase}
+#now .feel-panel .panel-kicker{background:#83d99b14;color:#83d99b;box-shadow:inset 3px 0 0 #83d99b70}
+#now .fs-headline,#now .panel-heading{font:400 clamp(24px,2.3vw,32px)/1.15 Georgia,serif;color:#f8fafc;margin:10px 0}
+#now .fs-subhead,#now .fs-why-copy,#now .panel-copy,#now .fs-temp-context{font:400 15px/1.6 Arial,Helvetica,sans-serif;letter-spacing:normal;color:#d5e1ed;margin:0}
+#now .fs-bullets{padding:0;border:0;border-radius:0;background:none;min-height:0;margin:0}
+#now .fs-why-label{display:none}
+#now .fs-bullets ul{font:400 14px/1.5 Arial,Helvetica,sans-serif}
+#now .fs-row{grid-template-columns:130px minmax(0,1fr);gap:22px;margin:0}
+#now .fs-score{width:130px;height:130px;max-width:130px;font-size:84px}
+#now .fs-word{font-size:clamp(32px,3.7vw,52px)}
+#now .fs-state-emoji{border:0;background:none;box-shadow:none;font-size:32px;width:auto;height:auto}
+#now .wear-section{border-top:1px solid #ffffff26;padding-top:20px}
+#now .fs-wear-cue{margin:14px 0 0}
+#now .fs-temp-context{display:block;padding:0;background:none;border:0;border-radius:0;box-shadow:none}
+#now .fs-temp-context-emoji{margin-right:6px}
+#now .comfort-trend{display:flex;justify-content:space-between;gap:12px;margin-top:14px}
+#now .comfort-trend>div{display:flex;flex-direction:column;gap:5px;flex:1;min-width:0}
+#now .comfort-trend .trend-emoji{font-size:28px}
+#now .comfort-trend small{color:#b7d5d2;font:400 12px/1.3 Arial,sans-serif}
+#now .comfort-trend b{font:500 14px/1.3 Arial,sans-serif;color:#f8fafc}
+#now .fs-best-window{border:0;border-top:1px solid #ffffff26;border-radius:0;padding:16px 0 0;background:none;box-shadow:none}
+#now .fs-best-window-time{font:500 18px/1.3 Arial,sans-serif}
+#now .fs-best-window-label,#now .fs-best-window-detail{font:400 13px/1.4 Arial,sans-serif}
+#now .hour-strip-header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px}
+#now .hour-arrows{display:flex;gap:6px}
+#now .hour-arrows button{border:1px solid #ffffff35;background:#ffffff12;color:#fff;border-radius:8px;min-width:36px;min-height:36px;font-size:20px;cursor:pointer}
+#now .hour-arrows button:disabled{opacity:.3;cursor:default}
+#now #nextSixHourRow{display:flex;flex-wrap:nowrap;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:thin;scrollbar-color:#ffcd7380 #ffffff0c;padding-bottom:10px;overscroll-behavior-x:contain}
+#now .weather-hour{display:flex;flex-direction:column;align-items:center;gap:9px;flex:0 0 calc((100% - 16px)/3);min-width:0;background:#ffffff09;border-radius:10px;padding:14px 4px;scroll-snap-align:start;color:#f8fafc;font:400 12px/1.3 Arial,sans-serif}
+#now .weather-hour .sky-emoji{font-family:'Segoe UI Emoji','Apple Color Emoji',sans-serif;font-size:34px;line-height:1.2;background:none;border:0;box-shadow:none}
+#now .weather-hour strong{font-size:26px}
+#now .weather-hour small{font-size:12px;color:#c5d3e6}
+#now .weather-hour .gust{color:#ffcd73;font-weight:700}
+#now .conditions-details{margin:8px 0 0;color:#c5d3e6;font:400 13px/1.5 Arial,sans-serif}
+#now .conditions-updated{font:400 12px/1.4 Arial,sans-serif;color:#bac9de}
+#now #northDowntownContext{margin-top:12px;padding:0;border:0;background:none;font-size:13px}
+#now [hidden]{display:none!important}
+@media(min-width:1300px){#now .weather-hour{flex-basis:calc((100% - 40px)/6)}}
+@media(max-width:760px){#now .feelscore-inner{grid-template-columns:1fr}#now .feelscore-mark{font-size:17px}#now .now-panel,#now .feel-panel{padding:22px}#now .fs-row{grid-template-columns:120px minmax(0,1fr)}#now .fs-score{width:120px;height:120px;font-size:76px}}
+@media(max-width:380px){#now .now-panel,#now .feel-panel{padding:16px 12px}#now .feelscore-mark{font-size:14px;padding:10px;letter-spacing:0;gap:8px}#now .fs-row{gap:14px}#now .now-temp-row{gap:14px}#now .now-condition{font-size:18px}}
+@media(pointer:coarse){#now .hour-arrows button{min-width:44px;min-height:44px}}

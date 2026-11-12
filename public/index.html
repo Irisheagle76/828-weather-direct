@@ -4470,6 +4470,7 @@
   <link rel="stylesheet" href="/css/storm-headquarters.css" />
   <link rel="stylesheet" href="/css/editorial-rich-text.css" />
   <link rel="stylesheet" href="/css/awpi-teaser.css?v=20261110" />
+<link rel="stylesheet" href="/css/home-weather-panels.css?v=20261112-panels">
 </head>
 <body class="splash-active home-redesign">
   <div class="home-splash" id="homeSplash" role="status" aria-live="polite" aria-label="Loading 828 Weather Direct">
@@ -4544,44 +4545,42 @@
       <section class="feelscore-mock" id="now" aria-label="Current conditions and FeelScore">
         <div class="feelscore-inner">
           <div class="now-panel" aria-label="Current Asheville conditions">
-            <div class="fs-topline"><h2 class="section-label feelscore-mark conditions-mark">Current Conditions</h2><span class="conditions-updated" id="obsUpdated">Updating obs</span></div>
+            <div class="fs-topline"><h2 class="section-label feelscore-mark conditions-mark">Current + Next 6 Hours</h2></div>
             <div class="conditions-location">Asheville, NC</div>
             <div class="now-temp-row">
               <div class="now-temp" id="heroCurrentTemp">--°</div>
-              <div class="now-condition" id="heroSkyCondition">Reading the sky</div>
+              <div><span class="hero-sky-icon" id="heroSkyIcon" aria-hidden="true">⛅</span><div class="now-condition" id="heroSkyCondition">Reading the sky</div></div>
             </div>
             <div class="now-observation-grid" aria-label="Current observation highlights">
               <div class="now-observation">
-                <strong id="heroFeelsLike">--°</strong>
-                <span>Feels like</span>
-              </div>
-              <div class="now-observation">
-                <strong id="heroDewpoint">--°</strong>
+                <i class="observation-symbol" aria-hidden="true">💧</i><strong id="heroDewpoint">--°</strong>
                 <span>Dew point</span>
               </div>
               <div class="now-observation">
-                <strong id="heroWind">-- mph</strong>
+                <i class="observation-symbol" aria-hidden="true">🍃</i><strong id="heroWind">-- mph</strong>
                 <span>Wind</span>
               </div>
               <div class="now-observation">
-                <strong id="heroRainChance">--</strong>
+                <i class="observation-symbol" aria-hidden="true">☔</i><strong id="heroRainChance">--</strong>
                 <span>Peak rain chance today</span>
                 <small class="rain-window" id="heroRainWindow" hidden></small>
               </div>
             </div>
-            <details class="conditions-details">
+
+            <div class="weather-outlook"><div class="panel-kicker" id="weatherOutlookLabel">The rest of today</div><div class="fs-headline" id="liveFeelScoreHeadline">Reading the current comfort signal.</div>
+            <div class="fs-subhead" id="liveFeelScoreSubhead">
+              Temperature, humidity, dew point, wind, and sky cover are loading before the full read appears.
+            </div>
+            </div>
+            <div class="weather-hours"><div class="hour-strip-header"><span class="panel-kicker">◷ Next 6 Hours</span><div class="hour-arrows"><button type="button" id="hoursEarlier" aria-label="Earlier forecast hours">←</button><button type="button" id="hoursLater" aria-label="Later forecast hours">→</button></div></div><div id="nextSixHourRow" role="region" aria-label="Next six hours; scroll horizontally for later hours" tabindex="0"><p class="panel-copy">Hourly forecast loading…</p></div></div>
+            <div><span class="conditions-updated" id="obsUpdated">Updating obs</span>            <details class="conditions-details">
               <summary>More observations</summary>
               <div class="conditions-detail-grid">
                 <span id="obsHumidity">Humidity --</span>
                 <span id="obsPressure">Pressure --</span>
                 <span id="obsClouds">Clouds --</span>
               </div>
-            </details>
-            <div class="fs-headline" id="liveFeelScoreHeadline">Reading the current comfort signal.</div>
-            <div class="fs-subhead" id="liveFeelScoreSubhead">
-              Temperature, humidity, dew point, wind, and sky cover are loading before the full read appears.
-            </div>
-            <p class="fs-subhead" id="northDowntownContext" hidden></p>
+            </details><p class="fs-subhead" id="northDowntownContext" hidden></p></div>
           </div>
           <aside class="feel-panel" aria-label="Current FeelScore">
             <div class="fs-topline">
@@ -4597,10 +4596,7 @@
                   <span class="fs-state-emoji" id="liveFeelScoreEmoji" aria-hidden="true">⏳</span>
                   <div class="fs-word" id="liveFeelScoreLabel">Updating</div>
                 </div>
-                <div class="fs-wear-cue" id="liveFeelScoreWear" aria-label="What to wear: checking conditions">
-                  <span class="fs-wear-emoji" id="liveFeelScoreWearEmoji" aria-hidden="true">👕</span>
-                  <span id="liveFeelScoreWearText">Checking layers</span>
-                </div>
+<span class="fs-now-caption">Right now</span>
               </div>
             </div>
             <div class="fs-bullets">
@@ -4608,29 +4604,12 @@
               <p class="fs-why-copy" id="liveFeelScoreWhy">Waiting for current weather readings.</p>
               <ul id="liveFeelScoreBullets" hidden></ul>
             </div>
-            <button class="fs-temp-mobile-toggle" id="liveTempMobileToggle" type="button" aria-expanded="false" aria-controls="liveTempMarkers">
-              <span class="fs-temp-mobile-copy">
-                <span class="fs-temp-mobile-label">Temperature path</span>
-                <span class="fs-temp-mobile-summary" id="liveTempMobileSummary">Tap to view temperatures</span>
-              </span>
-              <span class="fs-temp-mobile-chevron" aria-hidden="true">⌄</span>
-            </button>
-            <div class="fs-temp-markers" id="liveTempMarkers" aria-label="Important temperature markers">
-              <div class="fs-temp-title">Temperature path</div>
-              <div class="fs-temp-marker">
-                <span id="liveTempMarkerOneLabel">Now</span>
-                <b id="liveTempMarkerOne">--</b>
-              </div>
-              <div class="fs-temp-marker">
-                <span id="liveTempMarkerTwoLabel">Mid-afternoon</span>
-                <b id="liveTempMarkerTwo">--</b>
-              </div>
-              <div class="fs-temp-marker">
-                <span id="liveTempMarkerThreeLabel">9 PM</span>
-                <b id="liveTempMarkerThree">--</b>
-              </div>
-            </div>
-            <div class="fs-temp-context" id="liveTempContext" aria-live="polite"></div>
+            <div class="wear-section"><div class="panel-kicker">👕 What to wear</div><h3 class="panel-heading" id="wearHeadline">Checking layers</h3><p class="panel-copy" id="wearDetail">Clothing guidance is loading.</p>                <div class="fs-wear-cue" id="liveFeelScoreWear" aria-label="What to wear: checking conditions">
+                  <span class="fs-wear-emoji" id="liveFeelScoreWearEmoji" aria-hidden="true">👕</span>
+                  <span id="liveFeelScoreWearText">Checking layers</span>
+                </div></div>
+            <div class="heads-section" id="headsSection"><div class="panel-kicker" id="headsLabel">📉 Heads up · later today</div><h3 class="panel-heading" id="headsAction">Plan your layers for later.</h3><div class="fs-temp-context" id="liveTempContext" aria-live="polite"></div></div>
+            <div><div class="panel-kicker">How it will feel</div><div class="comfort-trend" id="comfortTrend" aria-live="polite"></div></div>
             <div class="fs-best-window" id="liveBestWindow" aria-live="polite" hidden>
               <span class="fs-best-window-label">Best time to get outside</span>
               <strong class="fs-best-window-time" id="liveBestWindowTime"></strong>
@@ -4638,17 +4617,7 @@
             </div>
           </aside>
         </div>
-        <section class="visual-intelligence-cluster" aria-labelledby="visualIntelligenceTitle">
-          <header class="visual-intelligence-cluster-header">
-            <div>
-              <div class="visual-intelligence-cluster-kicker">FeelScore details</div>
-              <h2 id="visualIntelligenceTitle">Why it feels this way—and when it gets better.</h2>
-            </div>
-            <p>Current ingredients and the next 18-hour comfort trend, in one view.</p>
-          </header>
-          <div id="weatherIngredients" class="weather-ingredients-host" aria-live="polite"></div>
-          <div id="comfortCurve" class="comfort-curve-host" aria-live="polite"></div>
-        </section>
+
       </section>
 
       <section class="sky-home-module" id="skyHomeModule" aria-label="Current Asheville sky conditions">
@@ -4735,31 +4704,7 @@
         </div>
       </section>
 
-      <section class="content-grid" aria-label="Next six FeelScore outlook">
-        <div class="next-six">
-          <div class="module-title">
-            <div>
-              <div class="kicker">Near-term comfort outlook</div>
-              <h2>FeelScore next few hours</h2>
-            </div>
-            <div class="best-pill" id="nextSixBestScore">86</div>
-          </div>
-          <div id="nextSixRibbon" class="feelscore-ribbon-host"></div>
-          <div class="hour-row" id="nextSixHourRow">
-            <div class="hour-card best"><b>11 AM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-mild"><em>Temp</em><strong>70°</strong></span><span class="hour-fs-value fs-great"><em>FeelScore</em> <strong>86</strong></span></div></div>
-            <div class="hour-card"><b>12 PM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-mild"><em>Temp</em><strong>72°</strong></span><span class="hour-fs-value fs-great"><em>FeelScore</em> <strong>84</strong></span></div></div>
-            <div class="hour-card"><b>1 PM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-warm"><em>Temp</em><strong>73°</strong></span><span class="hour-fs-value fs-great"><em>FeelScore</em> <strong>82</strong></span></div></div>
-            <div class="hour-card"><b>2 PM</b><span class="icon sky-rain">🌧</span><div class="hour-values"><span class="hour-temp-value temp-warm"><em>Temp</em><strong>74°</strong></span><span class="hour-fs-value fs-good"><em>FeelScore</em> <strong>76</strong></span></div></div>
-            <div class="hour-card"><b>3 PM</b><span class="icon sky-cloudy">☁</span><div class="hour-values"><span class="hour-temp-value temp-hot"><em>Temp</em><strong>75°</strong></span><span class="hour-fs-value fs-good"><em>FeelScore</em> <strong>78</strong></span></div></div>
-            <div class="hour-card"><b>4 PM</b><span class="icon sky-partly">⛅</span><div class="hour-values"><span class="hour-temp-value temp-hot"><em>Temp</em><strong>75°</strong></span><span class="hour-fs-value fs-good"><em>FeelScore</em> <strong>80</strong></span></div></div>
-          </div>
-          <p class="editorial" id="nextSixEditorial">
-            The Next 6 remains the practical timing strip. The Current Sky card above gives it a visual proof point:
-            overcast, bright, dim, clearing, foggy, or stormy.
-          </p>
-        </div>
 
-      </section>
 
       <section class="forecast-pair" aria-label="Tomorrow and four-day forecast">
         <aside class="tomorrow-card">
@@ -5294,6 +5239,8 @@
     import { mergePublishedTomorrowSummary } from "./js/intel/tomorrow-published.js?v=20260811-tomorrow-emoji";
     import { buildTemperaturePath } from "./js/intel/temperature-path.js?v=20260806-temp-path";
     import { buildTemperatureTakeaway } from "./js/intel/temperature-takeaway.js";
+    import { hourlyWind, clothingDetail, comfortFeel, headsUpAction } from "./js/intel/home-weather-panels.js?v=20261112";
+    import { forecastComfortCopy } from "./js/intel/forecast-comfort-context.js?v=20261112-horizon";
     import { comfortExplanation, bestWindowSummary } from "./js/intel/feelscore-insight.js";
     import { buildCurrentComfort, COMFORT_REFRESH_MS, comfortScore100 as scoreComfortHour } from "./js/intel/current-comfort.js";
     import {
@@ -6823,7 +6770,10 @@
       const cloud = Number(hour.cloudCover);
       const cloudPct = Number.isFinite(cloud) ? (cloud > 1 ? cloud / 100 : cloud) : null;
       const hourNumber = Number.isFinite(hour.timestamp) ? localHourNumber(hour.timestamp) : localHour();
-      const night = hourNumber < 7 || hourNumber >= 20;
+      const solar = findTodaySolarTimes(latestComfortWeather?.daily || [], hour.timestamp || Date.now());
+      const night = Number.isFinite(solar.sunriseAt) && Number.isFinite(solar.sunsetAt)
+        ? (hour.timestamp || Date.now()) < solar.sunriseAt || (hour.timestamp || Date.now()) >= solar.sunsetAt
+        : hourNumber < 7 || hourNumber >= 18;
       if (precip > 0.02 || pop >= 0.45 || [51, 53, 55, 61, 63, 65, 80, 81, 82, 95, 96, 99].includes(code)) return "Rain";
       if ([71, 73, 75, 77, 85, 86].includes(code)) return "Snow";
       if ([45, 48].includes(code)) return "Fog";
@@ -6836,14 +6786,14 @@
 
     function iconGlyph(label) {
       return {
-        Rain: "🌧",
-        Snow: "❄",
-        Fog: "≋",
-        Cloudy: "☁",
+        Rain: "🌧️",
+        Snow: "🌨️",
+        Fog: "🌫️",
+        Cloudy: "☁️",
         Partly: "⛅",
-        PartlyNight: "☾",
-        Moon: "☾",
-        Clear: "☀"
+        PartlyNight: "🌙",
+        Moon: "🌙",
+        Clear: "☀️"
       }[label] || "☁";
     }
 
@@ -7049,7 +6999,16 @@
       document.querySelector("#liveFeelScoreWear")
         ?.setAttribute("aria-label", `What to wear: ${wearCue.text}`);
 
-      const summary = { headline: currentComfort.copy.headline, subHeadline: currentComfort.copy.weatherNarrative };
+      const clockHour = localHourNumber(Date.now()) % 24;
+      const outlook = forecastComfortCopy({ hourly: currentComfort.hourly, daily, forecast: latestPublishedForecast || {}, horizonHours: clockHour >= 18 || clockHour < 6 ? 12 : Math.max(6, 24 - clockHour) });
+      const summary = applyPrecipOverrideToNarrative({ headline: outlook.headline, subHeadline: outlook.weatherNarrative }, precipOverride);
+      setText('#weatherOutlookLabel', clockHour >= 18 || clockHour < 6 ? 'Tonight into morning' : clockHour >= 12 ? 'This afternoon into tonight' : 'The rest of today');
+      setText('#headsLabel', clockHour >= 18 || clockHour < 6 ? '📉 Heads up · overnight' : clockHour >= 12 ? '📉 Heads up · this evening' : '📉 Heads up · later today');
+      setText('#wearHeadline', wearCue.text);
+      setText('#wearDetail', clothingDetail(wearCue.text));
+      const skyHour = { ...liveHour, ...scoringHour, cloudCover: scoringHour?.cloudCover ?? liveHour?.cloudCover, weatherCode: liveHour?.weatherCode };
+      setText('#heroSkyIcon', iconGlyph(weatherIcon(skyHour)));
+      setText('#heroSkyCondition', precipOverride?.active ? getPrecipSkyLabel(precipOverride) || 'Rain nearby' : ({Partly:'Partly cloudy', PartlyNight:'Partly cloudy',Moon:'Clear',Clear:'Clear',Cloudy:'Cloudy',Rain:'Rain',Snow:'Snow',Fog:'Fog'})[weatherIcon(skyHour)] || 'Current sky');
       document.querySelector("#liveFeelScoreHeadline").textContent = summary.headline;
       document.querySelector("#liveFeelScoreSubhead").textContent = summary.subHeadline;
 
@@ -7125,6 +7084,8 @@
       if (contextEl) {
         contextEl.replaceChildren();
         const takeaway = temperaturePath.callout || buildTemperatureTakeaway(temperaturePath.slots);
+        document.querySelector('#headsSection').hidden = !takeaway;
+        setText('#headsAction', headsUpAction(takeaway, currentComfort.nextHours));
         if (takeaway) {
           const emoji = document.createElement("span");
           emoji.className = "fs-temp-context-emoji";
@@ -7140,42 +7101,21 @@
     function renderNextSix(hourly = [], currentHour = null) {
       const model = buildCurrentComfort(latestComfortWeather || { hourly, current: currentHour });
       const future = model.nextHours;
-      if (!future.length) return;
-
-      const scored = future.map((hour) => ({
-        hour,
-        score: comfortScore100(hour)
-      }));
-      const validScores = scored.map((item) => item.score).filter(Number.isFinite);
-      const best = validScores.length ? Math.max(...validScores) : null;
-      const firstHour = formatHour(future[0].timestamp);
-      const lastHour = formatHour(future[future.length - 1].timestamp);
-
-      if (Number.isFinite(best)) {
-        document.querySelector("#nextSixBestScore").textContent = best;
-      }
-      renderFeelscoreRibbon("#nextSixRibbon", scored);
-
-      document.querySelector("#nextSixHourRow").innerHTML = scored.map(({ hour, score }) => {
+      const strip = document.querySelector('#nextSixHourRow');
+      if (!future.length) { strip.innerHTML = '<p class="panel-copy">Hourly guidance is unavailable. Please check the full forecast.</p>'; document.querySelector('#comfortTrend').replaceChildren(); return; }
+      const offset = strip.scrollLeft;
+      strip.innerHTML = future.map(hour => {
+        const wind = hourlyWind(hour);
         const icon = weatherIcon(hour);
-        const temp = Math.round(hour.temperatureF);
-        const isBest = Number.isFinite(score) && score === best;
-        const context = getAdaptiveHourContext(hour);
-        return `
-          <div class="hour-card ${isBest ? "best" : ""}" aria-label="${formatHour(hour.timestamp)}, ${temp} degrees, FeelScore ${Number.isFinite(score) ? score : "unavailable"}${context ? `, ${context.ariaLabel}` : ""}">
-            <b>${formatHour(hour.timestamp)}</b>
-            <span class="icon ${iconClass(icon)}" title="${icon}">${iconGlyph(icon)}</span>
-            <div class="hour-values">
-              <span class="hour-temp-value ${tempClass(temp)}"><em>Temp</em><strong>${temp}°</strong></span>
-              <span class="hour-fs-value ${fsClass(score)}"><em>FeelScore</em> <strong>${Number.isFinite(score) ? score : "--"}</strong></span>
-              ${context ? `<span class="hour-context ${context.type}">${context.label}</span>` : ""}
-            </div>
-          </div>
-        `;
-      }).join("");
-
-      document.querySelector("#nextSixEditorial").textContent =
-        `The next few hours now run from ${firstHour} through ${lastHour}, using the live hourly forecast and FeelScore math.`;
+        const temp = hour.temperatureF == null ? '--' : Math.round(hour.temperatureF);
+        return '<div class="weather-hour"><b>' + formatHour(hour.timestamp) + '</b><span class="sky-emoji" role="img" aria-label="' + icon + '">' + iconGlyph(icon) + '</span><strong>' + temp + '°</strong><small>Rain ' + formatPercent(hour.precipProbability) + '</small>' + (wind.speed != null ? '<small>🍃 ' + wind.speed + ' mph</small>' : '') + (wind.gust != null ? '<small class="gust">Gust ' + wind.gust + ' mph</small>' : '') + '</div>';
+      }).join('');
+      strip.scrollLeft = offset;
+      const trend = [model.currentHour, future[Math.min(2, future.length-1)], future.at(-1)];
+      document.querySelector('#comfortTrend').innerHTML = trend.map((hour,index) => {
+        const feel = comfortFeel(hour || {});
+        return '<div><span class="trend-emoji" aria-hidden="true">' + feel.emoji + '</span><small>' + (index === 0 ? 'Now' : formatHour(hour.timestamp)) + '</small><b>' + feel.label + '</b></div>';
+      }).join('');
     }
 
     function summarizeTomorrow(hourly = [], daily = [], fallback = {}) {
@@ -7252,7 +7192,7 @@
         ];
         renderLiveFeelScore(...latestFeelScoreRenderInputs, latestPrecipOverride);
         const currentComfort = buildCurrentComfort(weather, { forecast: latestPublishedForecast || {}, precipOverride: latestPrecipOverride });
-        const comfortCurve = renderComfortCurve("#comfortCurve", { model: currentComfort.curve });
+        const comfortCurve = currentComfort.curve;
         const best = bestWindowSummary(comfortCurve);
         document.querySelector('#liveBestWindow').hidden = !best;
         if (best) {
@@ -7409,7 +7349,7 @@
         document.querySelector("#skyHomeCapture").textContent = "Live western stream";
         document.querySelector("#skyHomeHeadline").textContent = skyNarrative?.headline || "Reading the Asheville sky.";
         document.querySelector("#skyHomeDetail").textContent = skyNarrative?.detail || "The camera snapshot adds visual context to the forecast.";
-        setText("#heroSkyCondition", skyNarrative?.headline || skyLabel || "Current sky");
+        // The hero shows concise weather; the camera narrative stays in Current Sky.
         document.querySelector("#skyHomeCloud").textContent = nighttimeFallback ? "--" : daylightNightMismatch ? pct(skyCloud) : skyRead.cloudMetric;
         document.querySelector("#skyHomeLight").textContent = nighttimeFallback ? "Night" : daylightNightMismatch ? (metrics.sunlightDetected ? labelize(metrics.sunlightLevel) : "Low") : skyRead.sunlightMetric;
         document.querySelector("#skyHomeConfidence").textContent = nighttimeFallback ? "Low" : daylightNightMismatch ? pct(skyConfidence) : skyRead.confidenceMetric;
@@ -7420,6 +7360,15 @@
       }
     }
 
+    const hourStrip = document.querySelector('#nextSixHourRow');
+    const earlierHours = document.querySelector('#hoursEarlier');
+    const laterHours = document.querySelector('#hoursLater');
+    function syncHourControls() { earlierHours.disabled = hourStrip.scrollLeft < 2; laterHours.disabled = hourStrip.scrollLeft + hourStrip.clientWidth >= hourStrip.scrollWidth - 2; }
+    [earlierHours, laterHours].forEach((button,index) => button.addEventListener('click', () => hourStrip.scrollBy({left:(index ? 1 : -1)*(hourStrip.clientWidth+8),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})));
+    hourStrip.addEventListener('scroll',syncHourControls,{passive:true});
+    new ResizeObserver(syncHourControls).observe(hourStrip);
+    new MutationObserver(syncHourControls).observe(hourStrip,{childList:true});
+    syncHourControls();
     applyConditionalHomepageFeatures();
     const activeAlerts = document.querySelector("#active-alerts");
     loadAndRenderAlerts(activeAlerts);

@@ -5,6 +5,7 @@ import vm from 'node:vm';
 import { forecastComfortCopy } from '../public/js/intel/forecast-comfort-context.js';
 import { applyPrecipOverrideToNarrative } from '../public/js/intel/precip-override.js';
 import { buildCurrentComfort } from '../public/js/intel/current-comfort.js';
+import { clothingDetail, headsUpAction } from '../public/js/intel/home-weather-panels.js';
 
 const html = fs.readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
 const renderer = html.slice(html.indexOf('    function renderLiveFeelScore('), html.indexOf('    function renderNextSix('));
@@ -19,6 +20,8 @@ function render(precipOverride = null, hours = hourly) {
   };
   const context = {
     document: { querySelector: element },
+    localHourNumber: () => 15, clothingDetail, headsUpAction,
+    weatherIcon: () => 'Cloudy', iconGlyph: () => '☁️', getPrecipSkyLabel: () => 'Rain',
     buildCurrentComfort: (weather, options) => buildCurrentComfort(weather, { ...options, now }),
     latestComfortWeather: null, latestComfortStorm: null, latestPublishedForecast: null,
     forecastComfortCopy: options => forecastComfortCopy({ ...options, now }),

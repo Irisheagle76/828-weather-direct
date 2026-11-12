@@ -45,7 +45,7 @@ test("homepage keeps the data-driven mountain scene out of the live conditions h
 
   assert.doesNotMatch(html, /id="blueRidgeWeatherScene"/);
   assert.doesNotMatch(html, /renderBlueRidgeWeatherScene/);
-  assert.match(html, /class="visual-intelligence-cluster"/);
+  assert.doesNotMatch(html, /class="visual-intelligence-cluster"/);
 });
 
 test("homepage Sunset Radiance promotion is evidence-gated instead of clock-only", async () => {

@@ -120,11 +120,11 @@ function windStory(hours, now, tomorrow) {
   return '';
 }
 
-export function forecastComfortCopy({ item = {}, forecast = {}, hourly = [], daily = [], tomorrow = false, now = Date.now() } = {}) {
+export function forecastComfortCopy({ item = {}, forecast = {}, hourly = [], daily = [], tomorrow = false, horizonHours = 6, now = Date.now() } = {}) {
   const date = new Date(`${comfortDateKey(now)}T12:00:00Z`);
   if (tomorrow) date.setUTCDate(date.getUTCDate() + 1);
   const key = date.toISOString().slice(0, 10);
-  const hours = hourly.filter(h => Number.isFinite(timestamp(h)) && (tomorrow ? comfortDateKey(timestamp(h)) === key : timestamp(h) >= now && timestamp(h) <= now + 6 * 3600000)).sort((a,b) => timestamp(a)-timestamp(b));
+  const hours = hourly.filter(h => Number.isFinite(timestamp(h)) && (tomorrow ? comfortDateKey(timestamp(h)) === key : timestamp(h) >= now && timestamp(h) <= now + Math.max(1, Math.min(24, horizonHours)) * 3600000)).sort((a,b) => timestamp(a)-timestamp(b));
   const authored = forecast.days?.[key];
   const temperatureHours = hours.filter(h => number(h.temperatureF) != null);
   const localHour = Number(new Intl.DateTimeFormat("en-US", { timeZone: zone, hour: "numeric", hourCycle: "h23" }).format(new Date(now)));
