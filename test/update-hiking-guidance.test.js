@@ -24,9 +24,14 @@ async function refresh(t, options = {}) {
 }
 
 // Exercise the actual observation service, health checks, composite, analyzer, and writer.
-function upstream({ rejectTempest = false, failedWUIds = [], staleStation = null, lightning = false } = {}) {
+function upstream({ snowDepth = null, rejectTempest = false, failedWUIds = [], staleStation = null, lightning = false } = {}) {
   return async (input) => {
     const url = new URL(input);
+    if (url.hostname === "api.open-meteo.com") {
+      if (!snowDepth) return response({}, 503);
+      assert.equal(url.searchParams.get("hourly"), "snow_depth");
+      return response(snowDepth);
+    }
     if (url.hostname === "swd.weatherflow.com") {
       if (url.pathname.includes("/observations/station/")) {
         return response({ status: { status_code: 0 }, station_id: 144737, obs: [{
@@ -190,4 +195,18 @@ test("repeated refreshes cannot publish memory fallback as fresh live observatio
   }), /No usable live hiking observations/);
   assert.equal(payload.quality.status, "fresh");
   assert.equal(await fs.readFile(context.outputPath, "utf8"), before);
+});
+
+test("scheduled hiking refresh publishes valid snow-depth estimates and drops stale or missing samples", async (t) => {
+  const sample = (depth, age = 0) => ({
+    hourly_units: { snow_depth: "m" },
+    hourly: { time: [(NOW - age) / 1000], snow_depth: [depth] }
+  });
+  const context = await refresh(t, { fetcher: upstream({
+    snowDepth: [sample(0.0508), sample(0.15, 7200000), sample(null)]
+  }) });
+  const { guidance } = await context.run();
+  assert.deepEqual(guidance.snowDepth.map(({ id, depthIn }) => [id, depthIn]), [["asheville", 2]]);
+  assert.equal(guidance.localConditions.snowDepthIn, 2);
+  assert.match(guidance.bestWindow, /Modeled snow depth near Asheville is about 2 in/);
 });

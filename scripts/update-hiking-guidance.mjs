@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { OBSERVATION_STATIONS, STATION_BY_ID, stationsForProvider } from "../lib/observations/registry.js";
 import { environmentCredentials, getElevationObservations } from "../lib/observations/service.js";
+import { getHikingSnowDepth } from "../lib/hiking/snow-depth.js";
 import { analyzeHikingStations } from "../lib/hiking/guidance.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -888,7 +889,10 @@ export async function updateHikingGuidance({ outputPath = jsonPath, fetcher = fe
   try {
 
     // Never relabel an old artifact or cached observation as a successful refresh.
-    const observations = await getElevationObservations({ now, fetcher, credentials, force: true, fallbackUrl: null });
+    const [observations, snowDepth] = await Promise.all([
+      getElevationObservations({ now, fetcher, credentials, force: true, fallbackUrl: null }),
+      getHikingSnowDepth({ now, fetcher })
+    ]);
     const quality = {
       ...observations.quality,
       failures: observations.quality.failures.map((failure) => ({ ...failure, reason: safeMessage(failure.reason) }))
@@ -922,7 +926,7 @@ export async function updateHikingGuidance({ outputPath = jsonPath, fetcher = fe
         error: failureById.get(definition.id)?.reason || "No usable live observation returned"
       };
     });
-    const guidance = analyzeHikingStations(usable, { now });
+    const guidance = analyzeHikingStations(usable, { now, snowDepth });
     if (usable.length < quality.requestedStations) {
       const warning = `Limited station coverage: ${usable.length} of ${quality.requestedStations} sites reporting. Check current conditions for your route; unavailable sites cannot rule out wind, rain, or lightning.`;
       guidance.hikerNarrative = `${warning} ${guidance.hikerNarrative}`;

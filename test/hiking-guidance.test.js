@@ -82,6 +82,30 @@ test("local heat, rain and wind lower the score and the narrative agrees", () =>
   assert.doesNotMatch(guidance.bestWindow, /friendly|Good overall/);
 });
 
+test("cold, damp Asheville trails lose their Great rating even without rain or strong gusts", () => {
+  const downtown = { ...station("tempest-144737", 2137, 42, 40), windMph: 9, gustMph: 12 };
+  const unca = { ...station("econet-unca", 2367, 38, 34, "econet"), windMph: 4, gustMph: 10 };
+  const mitchell = { ...station("mount-mitchell", 6215, 23, 22, "econet"), windMph: 20, gustMph: 26 };
+  const guidance = analyzeHikingStations([downtown, unca, mitchell]);
+
+  assert.equal(guidance.hikerScore, 49);
+  assert.equal(guidance.hikerScoreLabel, "Use care");
+  assert.deepEqual(guidance.hikerScoreFactors.map(({ label }) => label), ["Cold exposure", "Fog or damp trail risk"]);
+  assert.match(guidance.bestWindow, /feel around 36degF.*damp footing/);
+  assert.equal(guidance.hikerScore, analyzeHikingStations([downtown, unca]).hikerScore);
+  assert.match(guidance.routeWarnings.join(" "), /mount-mitchell.*26 mph/);
+});
+
+test("missing sustained wind uses the air temperature for cold exposure", () => {
+  const local = { ...station("tempest-144737", 2137, 45, 25), windMph: null, gustMph: 12 };
+  const guidance = analyzeHikingStations([local]);
+
+  assert.equal(guidance.localConditions.apparentTempF, 45);
+  assert.equal(guidance.hikerScore, 81);
+  assert.ok(analyzeHikingStations([{ ...local, windMph: 10 }]).hikerScore < 81);
+  assert.equal(analyzeHikingStations([{ ...local, temperatureF: 52 }]).hikerScore, 92);
+});
+
 test("regional lightning still overrides pleasant local conditions", () => {
   const guidance = analyzeHikingStations([
     station("tempest-144737", 2137, 72, 50),
@@ -121,4 +145,34 @@ test("Biltmore Village contributes to Asheville guidance only when usable", () =
   assert.equal(analyzeHikingStations([downtown, biltmore]).localTempSpread, 6);
   assert.equal(analyzeHikingStations([downtown, { ...biltmore, health: { usable: false } }]).localTempSpread, 0);
   assert.equal(analyzeHikingStations([downtown, { ...biltmore, temperatureF: null }]).localTempSpread, 0);
+});
+
+test("winter footing penalties depend on local evidence and preserve a mild dry winter day", () => {
+  const dry = station("nws-kavl", 2165, 56, 31, "nws");
+  assert.equal(analyzeHikingStations([dry]).hikerScore, 92);
+
+  const cold = { ...dry, temperatureF: 31 };
+  const coldDry = analyzeHikingStations([cold]);
+  assert.equal(coldDry.localConditions.refreezePossible, false);
+  const wet = analyzeHikingStations([{ ...cold, precipitationLastHourIn: 0.03 }]);
+  assert.equal(wet.hikerScore, coldDry.hikerScore - 25);
+  assert.match(wet.bestWindow, /risk of icy footing/);
+
+  const freezingRain = analyzeHikingStations([{ ...cold, weatherDescription: "Light Freezing Rain" }]);
+  assert.equal(freezingRain.hikerScoreLabel, "Use care");
+  assert.match(freezingRain.bestWindow, /Wintry precipitation reported/);
+  const snow = analyzeHikingStations([{ ...cold, weatherDescription: "Light Snow" }]);
+  assert.equal(snow.hikerScore, coldDry.hikerScore - 18);
+  assert.match(snow.bestWindow, /Snow reported/);
+});
+
+test("only Asheville's modeled snow depth lowers the Asheville trail score", () => {
+  const local = station("nws-kavl", 2165, 48, 30, "nws");
+  const mountainSnow = { id: "mount-mitchell", name: "Mount Mitchell", depthIn: 6 };
+  const regional = analyzeHikingStations([local], { snowDepth: [mountainSnow] });
+  assert.equal(regional.hikerScore, analyzeHikingStations([local]).hikerScore);
+  assert.match(regional.routeWarnings.join(" "), /Mount Mitchell.*estimated 6 in/);
+  const snowy = analyzeHikingStations([local], { snowDepth: [mountainSnow, { id: "asheville", depthIn: 3 }] });
+  assert.equal(snowy.hikerScore, regional.hikerScore - 23);
+  assert.match(snowy.bestWindow, /Modeled snow depth near Asheville is about 3 in/);
 });
