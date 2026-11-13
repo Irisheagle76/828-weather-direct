@@ -1956,7 +1956,15 @@ function updateJson() {
   const showAll = el("readerPreviewMode").value === "all";
   overview.hidden = !showAll;
   el("readerDayPreview").hidden = showAll;
-  if (showAll) overview.innerHTML = Object.values(draft.days).map(day => `<article class="group">
+  if (!showAll) return;
+  const selected = draft.days[el("date").value];
+  const bottomLine = selected?.bottomLine?.trim();
+  const intro = bottomLine ? `<section class="forecast-bottom-line">
+    <h2>Today’s Bottom Line</h2>
+    <p>${escapeHtml(bottomLine)}</p>
+    <small>Preview for ${escapeHtml(formatPreviewDay(selected.date))} before 3 PM Asheville time.</small>
+  </section>` : "";
+  overview.innerHTML = intro + Object.values(draft.days).map(day => `<article class="group">
     <div class="group-title">${escapeHtml(formatPreviewDay(day.date))}</div>
     <strong>${escapeHtml(day.headline || "No headline yet")}</strong>
     <p>${escapeHtml(day.narrative || "")}</p>
