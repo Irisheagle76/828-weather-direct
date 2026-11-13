@@ -723,6 +723,14 @@ details[open] > summary { margin-bottom: 10px; }
       <div class="hint">Author the forecast first. System guidance is optional background.</div>
     </div>
 
+    <section class="group" aria-labelledby="todayBottomLineTitle">
+      <h2 id="todayBottomLineTitle">Today’s Bottom Line</h2>
+      <label for="todayBottomLine">Today in Asheville · <span id="todayBottomLineDate"></span></label>
+      <textarea id="todayBottomLine" maxlength="300" disabled></textarea>
+      <p class="hint">Appears in the app until 3 PM Asheville time. This does not change your four-day forecast.</p>
+      <button id="saveTodayBottomLine" class="btn primary" type="button" disabled>Publish Today’s Bottom Line</button>
+      <p id="todayBottomLineResult" role="status"></p>
+    </section>
     <div class="day-strip" id="dayStrip"></div>
 
 <div class="actions composer-actions">      <button class="btn primary" id="generateBtn" type="button">Generate Draft</button>
@@ -748,7 +756,7 @@ details[open] > summary { margin-bottom: 10px; }
     </div>
     <div class="group">
       <div class="group-title">Core Forecast</div>
-      <label for="bottomLine">Today’s Bottom Line (optional)</label>
+      <label for="bottomLine">Bottom Line for this future date (optional)</label>
       <textarea id="bottomLine" maxlength="300" aria-describedby="bottomLineHelp bottomLineStatus"></textarea>
       <p class="hint" id="bottomLineHelp">Appears on Home and Forecast only on the date you’re editing, from midnight until 3 PM Asheville time.</p>
       <p class="hint" id="bottomLineStatus" role="status"></p>
@@ -1287,6 +1295,7 @@ async function init() {
   loadSignalFields();
   initDayStrip();
   bindEvents();
+  initTodayBottomLine();
 
   const forecastDates = getForecastDates();
   el("date").min = forecastDates[0];
@@ -1295,6 +1304,41 @@ async function init() {
     ? state.activeDate
     : forecastDates[0];
   selectDate(firstDate, { saveCurrent: false });
+}
+
+async function initTodayBottomLine() {
+  const format = new Intl.DateTimeFormat("en-US", {timeZone:"America/New_York", year:"numeric", month:"2-digit", day:"2-digit"});
+  const parts = Object.fromEntries(format.formatToParts().map(({type,value}) => [type,value]));
+  const date = [parts.year,parts.month,parts.day].join("-");
+  const input = el("todayBottomLine"), button = el("saveTodayBottomLine"), status = el("todayBottomLineResult");
+  el("todayBottomLineDate").textContent = formatPreviewDay(date);
+  const request = async (route, options) => {
+    const response = await fetch("/api/router?route=" + route, options);
+    const result = await response.json();
+    if (!response.ok) throw Error(result.error || "Request failed.");
+    return result;
+  };
+  try {
+    const latest = await request("forecast/latest", {cache:"no-store"});
+    input.value = latest.days?.[date]?.bottomLine || "";
+  } catch {
+    status.textContent = "Could not load today’s note. Reload to try again.";
+    return;
+  }
+  input.disabled = button.disabled = false;
+  button.addEventListener("click", async () => {
+    button.disabled = true;
+    const text = input.value.trim();
+    try {
+      await request("forecast/bottom-line", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({date,text})});
+      const hour = Number(new Intl.DateTimeFormat("en-US", {timeZone:"America/New_York", hour:"numeric", hourCycle:"h23"}).format(new Date()));
+      status.textContent = !text ? "Today’s Bottom Line removed." : hour >= 15 ? "Saved. Today’s 3 PM cutoff has passed." : "Published for today until 3 PM Asheville time.";
+    } catch (error) {
+      status.textContent = error.message;
+    } finally {
+      button.disabled = false;
+    }
+  });
 }
 
 async function loadOptionalForecastEngine() {
