@@ -20,6 +20,7 @@ function isNightAt(time, daily) {
 function timeLabel(hour, now, tomorrow) {
   const time = timestamp(hour);
   const clock = new Intl.DateTimeFormat("en-US", { timeZone: zone, hour: "numeric" }).format(new Date(time));
+  if (clock === "12 AM" && !tomorrow && comfortDateKey(time) !== comfortDateKey(now)) return "midnight";
   return !tomorrow && comfortDateKey(time) !== comfortDateKey(now) ? `${clock} tomorrow` : clock;
 }
 
@@ -33,22 +34,28 @@ function temperatureStory(hours, now, tomorrow) {
   const opening = tomorrow ? "Tomorrow, temperatures" : "Temperatures";
   const warmth = high >= 85 ? "Hot" : high >= 80 ? "Warm" : high >= 65 ? "Mild" : high >= 50 ? "Cool" : "Chilly";
   const eveningAhead = !tomorrow && localHourOf(now) >= 12 && localHourOf(now) < 17 && hours.some(h => localHourOf(timestamp(h)) >= 17 && comfortDateKey(timestamp(h)) === comfortDateKey(now));
+  const staysCold = high < 50;
+  const coldHeadline = tomorrow ? "Staying cold tomorrow" : "Staying cold";
   let headline, narrative;
   if (hours.length === 1) {
     headline = "Limited hourly outlook";
     narrative = `${opening} look to be near ${start}°F at ${at(first)}. More hourly detail is still coming in.`;
   } else if (peak !== first && peak !== last && high - start >= 3 && high - end >= 3) {
-    headline = eveningAhead ? `${warmth} afternoon, cooler evening` : "Warming up, then cooling off";
-    narrative = `${opening} rise from around ${start}°F at ${at(first)} to near ${high}°F around ${at(peak)}, then ease to ${end}°F by ${at(last)}.`;
+    headline = staysCold ? coldHeadline : eveningAhead ? `${warmth} afternoon, cooler evening` : "Warming up, then cooling off";
+    narrative = staysCold
+      ? `${opening} top out near ${high}°F around ${at(peak)}, then fall to ${end}°F by ${at(last)}.`
+      : `${opening} rise from around ${start}°F at ${at(first)} to near ${high}°F around ${at(peak)}, then ease to ${end}°F by ${at(last)}.`;
   } else if (trough !== first && trough !== last && start - low >= 3 && end - low >= 3) {
-    headline = "Cooler first, then warming up";
-    narrative = `${opening} dip from around ${start}°F at ${at(first)} to ${low}°F around ${at(trough)}, then recover to ${end}°F by ${at(last)}.`;
+    headline = staysCold ? coldHeadline : "Cooler first, then warming up";
+    narrative = `${opening} dip from around ${start}°F at ${at(first)} to ${low}°F around ${at(trough)}, then ${staysCold ? "rise back" : "recover"} to ${end}°F by ${at(last)}.`;
   } else if (end - start <= -3) {
     headline = eveningAhead ? `${warmth} afternoon, cooler evening` : localHourOf(now) >= 17 && !tomorrow ? "Cooling down tonight" : "Turning cooler";
     narrative = `${opening} fall from around ${start}°F at ${at(first)} to ${end}°F by ${at(last)}.`;
   } else if (end - start >= 3) {
-    headline = `${high >= 85 ? "Turning hot" : "Warming up"}${tomorrow ? " tomorrow" : ""}`;
-    narrative = `${opening} climb from around ${start}°F at ${at(first)} to ${end}°F by ${at(last)}.`;
+    headline = staysCold ? coldHeadline : `${high >= 85 ? "Turning hot" : "Warming up"}${tomorrow ? " tomorrow" : ""}`;
+    narrative = staysCold
+      ? `${opening} stay cold, reaching about ${high}°F around ${at(peak)}.`
+      : `${opening} climb from around ${start}°F at ${at(first)} to ${end}°F by ${at(last)}.`;
   } else {
     headline = high - low < 3 ? `${warmth} and fairly steady` : "Temperatures go up and down";
     narrative = high - low < 3

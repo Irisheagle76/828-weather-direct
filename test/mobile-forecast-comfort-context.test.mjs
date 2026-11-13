@@ -214,3 +214,21 @@ test("Light or missing wind data does not produce a gusty-wind claim", () => {
     assert.doesNotMatch(copy.weatherNarrative, /gust|breeze|wind/i);
   }
 });
+
+test("A small rise on a cold day leads with the low afternoon peak", () => {
+  const morning = Date.parse("2026-11-13T12:00:00Z"); // 7 AM Eastern
+  const hourly = series([38, 38, 39, 40, 40, 41, 42, 41, 40, 39, 38, 37, 36, 36, 35, 35, 34, 34], {}, morning);
+  hourly.forEach((h, i) => { h.cloudCover = i < 14 ? 90 : 10; });
+  hourly[15].windGust = 26;
+  const copy = forecastComfortCopy({ now: morning, hourly, horizonHours: 17 });
+  assert.equal(copy.headline, "Staying cold");
+  assert.equal(copy.weatherNarrative, "Temperatures top out near 42°F around 1 PM, then fall to 34°F by midnight. Clouds give way to mostly clear skies by midnight. A few gusts could reach 26 mph around 10 PM.");
+});
+
+test("Other cold temperature rebounds keep the cold headline", () => {
+  for (const temps of [[38, 40, 42], [42, 37, 40]]) {
+    const copy = forecastComfortCopy({ now: afternoon, hourly: series(temps) });
+    assert.equal(copy.headline, "Staying cold");
+    assert.match(copy.weatherNarrative, /40°F|42°F/);
+  }
+});
