@@ -1320,7 +1320,7 @@ async function initTodayBottomLine() {
   };
   try {
     const latest = await request("forecast/latest", {cache:"no-store"});
-    input.value = latest.days?.[date]?.bottomLine || "";
+    input.value = (latest.todayBottomLine?.date === date ? latest.todayBottomLine.text : latest.days?.[date]?.bottomLine) || "";
   } catch {
     status.textContent = "Could not load today’s note. Reload to try again.";
     return;
