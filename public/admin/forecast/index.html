@@ -700,23 +700,23 @@ pre {
 .automatic-status-grid span { display:block; color:var(--muted); font-size:.75rem; margin-bottom:4px; }
 .automatic-actions { display:flex; flex-wrap:wrap; gap:10px; }
 #automaticOutput { max-height:360px; overflow:auto; white-space:pre-wrap; margin-top:12px; font-size:.78rem; }
+
+.composer-shell { align-items: start; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+.composer-shell > .panel { min-width: 0; }
+.preview-stack { align-self: start; top: 16px; }
+.composer-actions { margin: 12px 0; }
+details.group > summary, details.json-card > summary { cursor: pointer; font-weight: 800; padding: 6px 0; }
+details[open] > summary { margin-bottom: 10px; }
+.preview-stack h2 { margin: 0; }
+@media (max-width: 860px) { .composer-shell { grid-template-columns: minmax(0,1fr); } }
+.preview-switch { margin-bottom: 12px; }
+#readerDayPreview[hidden] { display: none; }
 </style>
+<link rel="stylesheet" href="/css/forecast-bottom-line.css">
 </head>
 
 <body>
 <main class="composer-shell">
-  <section class="panel" aria-labelledby="automaticForecastTitle">
-    <div class="panel-header">
-      <h1 id="automaticForecastTitle">Automatic Forecast</h1>
-      <div class="hint">Vacation-mode status and safe preview controls.</div>
-    </div>
-    <div class="automatic-status-grid" id="automaticStatus"><div>Loading status…</div></div>
-    <div class="automatic-actions">
-      <button class="btn" id="automaticDryRunBtn" type="button">Run Dry-Run Preview</button>
-      <button class="btn" id="automaticPublishBtn" type="button">Run Authorized Update</button>
-    </div>
-    <pre id="automaticOutput" hidden></pre>
-  </section>
   <section class="panel">
     <div class="panel-header">
       <h1>Forecast Composer</h1>
@@ -725,6 +725,9 @@ pre {
 
     <div class="day-strip" id="dayStrip"></div>
 
+<div class="actions composer-actions">      <button class="btn primary" id="generateBtn" type="button">Generate Draft</button>
+      <button class="btn primary" id="publishBtn" type="button">Publish Forecast</button>
+</div>
     <div class="group">
       <div class="group-title">Day</div>
       <div class="field-grid">
@@ -743,90 +746,17 @@ pre {
         </div>
       </div>
     </div>
-
-    <div class="group">
-      <div class="group-title">System Guidance</div>
-      <div id="systemBox" class="system-box">Guidance will appear here if your forecast engine is available.</div>
-    </div>
-
-    <div class="group">
-      <div class="group-title">Tim's Forecast Board</div>
-      <label for="boardHeadline">Board Headline</label>
-      <input id="boardHeadline" placeholder="A warmer stretch with a few afternoon wrinkles" />
-
-      <label for="boardSummary">Board Summary</label>
-      <textarea id="boardSummary" placeholder="Write the top-level forecast read: what matters most, how confident you are, and what people should watch."></textarea>
-    </div>
-
-    <div class="group">
-      <div class="group-title">Week Ahead Signals</div>
-
-      <div class="field-grid four">
-        <div class="field">
-          <label for="rainRisk">Rain Risk</label>
-          <select id="rainRisk">
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="comfortTrend">Comfort Trend</label>
-          <select id="comfortTrend">
-            <option value="steady">Steady</option>
-            <option value="improving">Improving</option>
-            <option value="declining">Declining</option>
-            <option value="mixed">Mixed</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="bestOutdoorDay">Best Outdoor Day</label>
-          <input id="bestOutdoorDay" placeholder="Thursday" />
-        </div>
-        <div class="field">
-          <label for="forecastConfidence">Forecast Confidence</label>
-          <input id="forecastConfidence" type="number" min="0" max="100" placeholder="80" />
-        </div>
-      </div>
-
-      <div class="field-grid three">
-        <div class="field">
-          <label for="signalWeatherPattern">Weather Pattern</label>
-          <input id="signalWeatherPattern" placeholder="Warm to unsettled, cooler late week" />
-        </div>
-        <div class="field">
-          <label for="signalTemperatureTrend">Temperature Trend</label>
-          <input id="signalTemperatureTrend" placeholder="Above normal, easing late" />
-        </div>
-      </div>
-
-      <div class="field-grid three">
-        <div class="field">
-          <label for="signalRainfallTrend">Rainfall Trend</label>
-          <input id="signalRainfallTrend" placeholder="Hit-or-miss storms" />
-        </div>
-        <div class="field">
-          <label for="signalMountainVisibility">Mountain Visibility</label>
-          <input id="signalMountainVisibility" placeholder="Best early week" />
-        </div>
-        <div class="field">
-          <label for="signalWindSignal">Wind Signal</label>
-          <input id="signalWindSignal" placeholder="Breezier behind the front" />
-        </div>
-      </div>
-
-      <div id="weekAheadSignalEditor" class="signal-editor"></div>
-    </div>
-
     <div class="group">
       <div class="group-title">Core Forecast</div>
+      <label for="bottomLine">Today’s Bottom Line (optional)</label>
+      <textarea id="bottomLine" maxlength="300" aria-describedby="bottomLineHelp"></textarea>
+      <p class="hint" id="bottomLineHelp">Shows on Home and Forecast on this forecast date until 3 PM Asheville time.</p>
       <label for="headline">Headline</label>
       <input id="headline" placeholder="Warm with building afternoon clouds" />
 
       <label for="narrative">Narrative</label>
       <textarea id="narrative" placeholder="Write this like the meteorologist. What changes through the day, what matters locally, and what should people actually expect?"></textarea>
     </div>
-
     <div class="group">
       <div class="group-title">Temperatures And Wind</div>
       <div class="field-grid three">
@@ -891,9 +821,7 @@ pre {
         </div>
       </div>
     </div>
-
-    <div class="group">
-      <div class="group-title">Weather Setup &amp; Day Evolution</div>
+<details class="group"><summary>Weather Setup &amp; Day Evolution</summary>
       <p class="weather-setup-note">Choose how the weather begins and what changes. These choices set the public icons. Use Timeline for the details in words.</p>
       <div class="field-grid">
         <div class="field">
@@ -1025,10 +953,8 @@ pre {
           <input id="bestWindow" placeholder="Morning through early afternoon" />
         </div>
       </div>
-    </div>
-
-    <div class="group">
-      <div class="group-title">Timeline</div>
+</details>
+<details class="group"><summary>Timeline</summary>
       <div class="timeline-grid">
         <div class="field">
           <label for="morning">Morning</label>
@@ -1047,20 +973,97 @@ pre {
           <input id="evening" placeholder="Activity fades after sunset" />
         </div>
       </div>
-    </div>
-
-    <div class="group">
-      <div class="group-title">Local Flavor</div>
+</details>
+<details class="group"><summary>Local Flavor</summary>
       <label for="localNote">Local Note</label>
       <input id="localNote" placeholder="Higher terrain may hang onto clouds longer." />
 
       <label for="signals">Signals / Tags</label>
       <input id="signals" placeholder="building clouds, isolated storms, humid feel" />
+</details>
+<details class="group"><summary>Tim's Forecast Board</summary>
+      <label for="boardHeadline">Board Headline</label>
+      <input id="boardHeadline" placeholder="A warmer stretch with a few afternoon wrinkles" />
+
+      <label for="boardSummary">Board Summary</label>
+      <textarea id="boardSummary" placeholder="Write the top-level forecast read: what matters most, how confident you are, and what people should watch."></textarea>
+</details>
+<details class="group"><summary>Week Ahead Signals</summary>
+
+      <div class="field-grid four">
+        <div class="field">
+          <label for="rainRisk">Rain Risk</label>
+          <select id="rainRisk">
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="comfortTrend">Comfort Trend</label>
+          <select id="comfortTrend">
+            <option value="steady">Steady</option>
+            <option value="improving">Improving</option>
+            <option value="declining">Declining</option>
+            <option value="mixed">Mixed</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="bestOutdoorDay">Best Outdoor Day</label>
+          <input id="bestOutdoorDay" placeholder="Thursday" />
+        </div>
+        <div class="field">
+          <label for="forecastConfidence">Forecast Confidence</label>
+          <input id="forecastConfidence" type="number" min="0" max="100" placeholder="80" />
+        </div>
+      </div>
+
+      <div class="field-grid three">
+        <div class="field">
+          <label for="signalWeatherPattern">Weather Pattern</label>
+          <input id="signalWeatherPattern" placeholder="Warm to unsettled, cooler late week" />
+        </div>
+        <div class="field">
+          <label for="signalTemperatureTrend">Temperature Trend</label>
+          <input id="signalTemperatureTrend" placeholder="Above normal, easing late" />
+        </div>
+      </div>
+
+      <div class="field-grid three">
+        <div class="field">
+          <label for="signalRainfallTrend">Rainfall Trend</label>
+          <input id="signalRainfallTrend" placeholder="Hit-or-miss storms" />
+        </div>
+        <div class="field">
+          <label for="signalMountainVisibility">Mountain Visibility</label>
+          <input id="signalMountainVisibility" placeholder="Best early week" />
+        </div>
+        <div class="field">
+          <label for="signalWindSignal">Wind Signal</label>
+          <input id="signalWindSignal" placeholder="Breezier behind the front" />
+        </div>
+      </div>
+
+      <div id="weekAheadSignalEditor" class="signal-editor"></div>
+</details>
+<details class="group"><summary>System Guidance</summary>
+      <div id="systemBox" class="system-box">Guidance will appear here if your forecast engine is available.</div>
+</details>
+  <details class="group"><summary>Automatic forecast</summary>
+    <div class="panel-header">
+      <h1 id="automaticForecastTitle">Automatic Forecast</h1>
+      <div class="hint">Vacation-mode status and safe preview controls.</div>
     </div>
+    <div class="automatic-status-grid" id="automaticStatus"><div>Loading status…</div></div>
+    <div class="automatic-actions">
+      <button class="btn" id="automaticDryRunBtn" type="button">Run Dry-Run Preview</button>
+      <button class="btn" id="automaticPublishBtn" type="button">Run Authorized Update</button>
+    </div>
+    <pre id="automaticOutput" hidden></pre>
+  </details>
+
 
     <div class="actions">
-      <button class="btn primary" id="generateBtn" type="button">Generate Draft</button>
-      <button class="btn primary" id="publishBtn" type="button">Publish Forecast</button>
       <button class="btn" id="copyDayBtn" type="button">Copy Day JSON</button>
       <button class="btn" id="copyAllBtn" type="button">Copy 4-Day JSON</button>
       <button class="btn warn" id="clearBtn" type="button">Clear Day</button>
@@ -1069,11 +1072,13 @@ pre {
 
   <section class="panel preview-stack">
     <div class="panel-header">
-      <h1>Preview</h1>
-      <div class="hint">This mirrors the forecast page content model.</div>
+      <h2>Reader Preview</h2>
+      <div class="hint">Draft · Not published. Updates as you edit.</div>
     </div>
 
-    <article class="forecast-card">
+    <div class="preview-switch"><label for="readerPreviewMode">Preview view</label><select id="readerPreviewMode"><option value="day">Selected day</option><option value="all">4-day forecast</option></select></div>
+    <div id="readerForecastOverview" hidden></div>
+    <div id="readerDayPreview"><section id="previewBottomLine" class="forecast-bottom-line" hidden><h2>Today’s Bottom Line</h2><p></p></section><article class="forecast-card">
       <div class="row-top">
         <div class="day" id="previewDay">Tomorrow</div>
         <div id="previewProgression"><div class="icon">☀</div></div>
@@ -1122,15 +1127,16 @@ pre {
       <div class="local-note" id="previewLocal">Local insight will appear here.</div>
       <div class="confidence-note" id="previewConfidence">Confidence: high</div>
     </article>
+    </div>
 
-    <div class="json-card">
+    <details class="json-card"><summary>Composer output · JSON</summary>
       <div class="json-head">
         <div class="json-title">Composer Output</div>
         <button class="btn" id="copyVisibleBtn" type="button">Copy Visible JSON</button>
       </div>
       <pre id="jsonOutput"></pre>
       <div class="copy-status" id="copyStatus"></div>
-    </div>
+    </details>
   </section>
 </main>
 
@@ -1139,6 +1145,7 @@ pre {
 const { getDayProgression, skyIcon, skyCondition } = globalThis.ForecastDayProgression;
 const FIELD_IDS = [
   "confidence",
+  "bottomLine",
   "headline",
   "narrative",
   "high",
@@ -1384,6 +1391,7 @@ function bindEvents() {
   el("publishBtn").addEventListener("click", publishForecast);
   el("copyDayBtn").addEventListener("click", () => copyText(JSON.stringify(getActiveDayForecast(), null, 2)));
   el("copyAllBtn").addEventListener("click", () => copyText(JSON.stringify(buildPublishedForecast(), null, 2)));
+  el("readerPreviewMode").addEventListener("change", updateJson);
   el("copyVisibleBtn").addEventListener("click", () => copyText(el("jsonOutput").textContent));
 }
 
@@ -1756,6 +1764,7 @@ function normalizeDayForPublish(day) {
 
   return {
     date: day.date,
+    bottomLine: emptyToNull(day.bottomLine),
     headline: emptyToNull(day.headline),
     narrative: emptyToNull(day.narrative),
     high: toNumberOrNull(day.high),
@@ -1873,6 +1882,9 @@ function updatePreview() {
   const day = { ...state.days[state.activeDate], ...readForm() };
   const tags = parseTags(day.signals);
 
+  const bottomLine = el("bottomLine").value.trim();
+  el("previewBottomLine").hidden = !bottomLine;
+  el("previewBottomLine").querySelector("p").textContent = bottomLine;
   el("previewDay").textContent = formatPreviewDay(day.date);
   const publishedDay = normalizeDayForPublish(day);
   const progression = getDayProgression(publishedDay, publishedDay.icon || "○", publishedDay.condition || "Choose opening weather");
@@ -1938,7 +1950,19 @@ function syncWindState() {
 }
 
 function updateJson() {
-  el("jsonOutput").textContent = JSON.stringify(buildPublishedForecast(), null, 2);
+  const draft = buildPublishedForecast();
+  el("jsonOutput").textContent = JSON.stringify(draft, null, 2);
+  const overview = el("readerForecastOverview");
+  const showAll = el("readerPreviewMode").value === "all";
+  overview.hidden = !showAll;
+  el("readerDayPreview").hidden = showAll;
+  if (showAll) overview.innerHTML = Object.values(draft.days).map(day => `<article class="group">
+    <div class="group-title">${escapeHtml(formatPreviewDay(day.date))}</div>
+    <strong>${escapeHtml(day.headline || "No headline yet")}</strong>
+    <p>${escapeHtml(day.narrative || "")}</p>
+    <span>High ${day.high == null ? "—" : day.high + "°"} · Low ${day.low == null ? "—" : day.low + "°"}</span>
+  </article>`).join("");
+
 }
 
 function persist() {
@@ -2104,6 +2128,7 @@ function composerDayFromPublished(dateStr, day = {}) {
   return {
     date: dateStr,
     confidence: confidenceToComposerValue(day.confidence),
+    bottomLine: day.bottomLine || "",
     headline: day.headline || "",
     narrative: day.narrative || "",
     high: valueToInput(day.high),
