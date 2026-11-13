@@ -749,8 +749,9 @@ details[open] > summary { margin-bottom: 10px; }
     <div class="group">
       <div class="group-title">Core Forecast</div>
       <label for="bottomLine">Today’s Bottom Line (optional)</label>
-      <textarea id="bottomLine" maxlength="300" aria-describedby="bottomLineHelp"></textarea>
-      <p class="hint" id="bottomLineHelp">Shows on Home and Forecast on this forecast date until 3 PM Asheville time.</p>
+      <textarea id="bottomLine" maxlength="300" aria-describedby="bottomLineHelp bottomLineStatus"></textarea>
+      <p class="hint" id="bottomLineHelp">Appears on Home and Forecast only on the date you’re editing, from midnight until 3 PM Asheville time.</p>
+      <p class="hint" id="bottomLineStatus" role="status"></p>
       <label for="headline">Headline</label>
       <input id="headline" placeholder="Warm with building afternoon clouds" />
 
@@ -1078,7 +1079,7 @@ details[open] > summary { margin-bottom: 10px; }
 
     <div class="preview-switch"><label for="readerPreviewMode">Preview view</label><select id="readerPreviewMode"><option value="day">Selected day</option><option value="all">4-day forecast</option></select></div>
     <div id="readerForecastOverview" hidden></div>
-    <div id="readerDayPreview"><section id="previewBottomLine" class="forecast-bottom-line" hidden><h2>Today’s Bottom Line</h2><p></p></section><article class="forecast-card">
+    <div id="readerDayPreview"><section id="previewBottomLine" class="forecast-bottom-line" hidden><h2>Today’s Bottom Line</h2><p></p><small id="previewBottomLineStatus"></small></section><article class="forecast-card">
       <div class="row-top">
         <div class="day" id="previewDay">Tomorrow</div>
         <div id="previewProgression"><div class="icon">☀</div></div>
@@ -1882,7 +1883,24 @@ function updatePreview() {
   const day = { ...state.days[state.activeDate], ...readForm() };
   const tags = parseTags(day.signals);
 
+  const now = new Date();
+  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", hourCycle: "h23"
+  }).formatToParts(now).map(({type, value}) => [type, value]));
+  const today = [parts.year, parts.month, parts.day].join("-");
+  const date = el("date").value;
+  const dayLabel = date ? new Intl.DateTimeFormat("en-US", {
+    timeZone: "UTC", weekday: "long", month: "short", day: "numeric"
+  }).format(new Date(date + "T12:00:00Z")) : "";
+  const status = !date ? "Select a forecast date."
+    : date > today ? "Scheduled for " + dayLabel + " if published. It will not appear today."
+    : date < today ? "This forecast date has passed. The card will not appear."
+    : Number(parts.hour) >= 15 ? "Today’s 3 PM cutoff has passed. The card will not appear."
+    : "For today, " + dayLabel + ". If published, it can appear until 3 PM.";
+  el("bottomLineStatus").textContent = status;
   const bottomLine = el("bottomLine").value.trim();
+  el("previewBottomLineStatus").textContent = "Draft preview · " + status;
   el("previewBottomLine").hidden = !bottomLine;
   el("previewBottomLine").querySelector("p").textContent = bottomLine;
   el("previewDay").textContent = formatPreviewDay(day.date);
