@@ -9,6 +9,7 @@
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="apple-touch-icon" href="/828-brand-card.png" />
   <link rel="stylesheet" href="./mobile.css" />
+<link rel="stylesheet" href="/css/forecast-bottom-line.css">
 </head>
 <body>
   <a class="skip-link" href="#mainContent">Skip to weather</a>
@@ -66,6 +67,7 @@
           <p class="temperature-comparison" id="currentComparison" aria-live="polite" hidden></p>
         </section>
 
+        <section id="homeBottomLine" class="forecast-bottom-line" hidden><h2>Today’s Bottom Line</h2><p></p></section>
         <button class="panel feelscore-panel loading panel-button" id="homeFeelScore" type="button" data-destination="feelscore" aria-label="Open FEELSCORE">
           <span class="accent-rule" aria-hidden="true"></span>
           <span class="panel-heading">
@@ -143,6 +145,7 @@
           <p id="forecastSummary">Loading the human-written forecast.</p>
           <div class="signal-chips" id="forecastSignals"></div>
         </section>
+        <section id="forecastBottomLine" class="forecast-bottom-line" hidden><h2>Today’s Bottom Line</h2><p></p></section>
         <div class="forecast-list" id="forecastDays"></div>
       </section>
 

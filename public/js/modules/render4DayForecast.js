@@ -1,3 +1,4 @@
+import { showBottomLine } from "../forecast-bottom-line.js";
 // ============================================================
 // TIM'S FORECAST BOARD (MANUAL-FIRST, BACKWARD COMPATIBLE)
 // ============================================================
@@ -35,12 +36,14 @@ export async function render4DayForecast(container) {
   const board = buildBoard(forecastOverrides, days);
 
   container.innerHTML = `
+    <section id="forecastBottomLine" class="forecast-bottom-line" hidden><h2>Today’s Bottom Line</h2><p></p></section>
     ${renderBoardHero(board)}
     ${renderForecastDays(days)}
     ${renderWeekAheadSignals(forecastOverrides.weekAheadSignals, board)}
     ${renderForecastStory(days)}
   `;
 
+  showBottomLine(container.querySelector("#forecastBottomLine"), forecastOverrides);
   initWeekAheadCarousel(container);
 }
 
