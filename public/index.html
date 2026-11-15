@@ -5766,7 +5766,7 @@
       const endHour = Math.min(24, remaining[endIndex].forecastTime.hour + 1);
       return {
         chance,
-        window: `Highest ${formatRainWindowHour(startHour)}–${formatRainWindowHour(endHour)}`
+        window: chance >= 0.2 ? `Highest ${formatRainWindowHour(startHour)}–${formatRainWindowHour(endHour)}` : null
       };
     }
 
