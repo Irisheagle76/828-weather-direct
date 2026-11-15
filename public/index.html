@@ -4471,6 +4471,7 @@
   <link rel="stylesheet" href="/css/editorial-rich-text.css" />
   <link rel="stylesheet" href="/css/awpi-teaser.css?v=20261110" />
 <link rel="stylesheet" href="/css/home-weather-panels.css?v=20261112-panels">
+<link rel="stylesheet" href="/css/forecast-bottom-line.css">
 </head>
 <body class="splash-active home-redesign">
   <div class="home-splash" id="homeSplash" role="status" aria-live="polite" aria-label="Loading 828 Weather Direct">
@@ -4582,6 +4583,7 @@
               </div>
             </details><p class="fs-subhead" id="northDowntownContext" hidden></p></div>
           </div>
+          <section style="grid-column: 1 / -1" id="homeBottomLine" class="forecast-bottom-line" hidden><h2>Today’s Bottom Line</h2><p></p></section>
           <aside class="feel-panel" aria-label="Current FeelScore">
             <div class="fs-topline">
               <div class="section-label feelscore-mark">FeelScore</div>
@@ -5216,6 +5218,7 @@
   </div>
 
   <script type="module">
+    import { showBottomLine } from "/js/forecast-bottom-line.js";
     import { renderFireCurve, firePresentation } from "./js/visuals/fire-curve.js?v=20261022";
     import { rainfallDate, headlineForPulse } from "./js/intel/homepage-copy.js";
     import { homepageEditorialMode } from "./js/intel/homepage-editorial.js";
@@ -6067,6 +6070,7 @@
       try {
         const forecast = await fetchRouteJson("forecast/latest");
         latestPublishedForecast = forecast;
+        showBottomLine(document.getElementById("homeBottomLine"), forecast);
         updateText("#homeForecastRainRisk", formatForecastSignal(forecast?.rainRisk));
         updateText("#homeForecastComfortTrend", formatForecastSignal(forecast?.comfortTrend));
         updateText("#homeForecastBestDay", formatForecastSignal(forecast?.bestOutdoorDay, "To be decided"));

@@ -1,3 +1,4 @@
+import { showBottomLine } from "../js/forecast-bottom-line.js";
 import { hikingReportState, hikingNetworkMarkup } from './hiking-data.js';
 import { initNotificationSettings } from './notifications.js';
 import { mobileRadiance } from './radiance.js';
@@ -323,6 +324,8 @@ function forecastIcon(day) {
 }
 
 function renderForecast() {
+  showBottomLine($("#homeBottomLine"), state.forecast);
+  showBottomLine($("#forecastBottomLine"), state.forecast);
   const forecast = state.forecast || {};
   const days = forecastDays();
   $("#forecastHeadline").textContent = forecast.boardHeadline || days[0]?.headline || "Latest Asheville outlook";
