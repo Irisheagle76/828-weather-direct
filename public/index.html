@@ -5640,12 +5640,12 @@
     }
 
     function toF(value) {
-      const n = Number(value);
+      const n = value == null ? NaN : Number(value);
       return Number.isFinite(n) ? (n * 9) / 5 + 32 : null;
     }
 
     function toMph(value) {
-      const n = Number(value);
+      const n = value == null ? NaN : Number(value);
       return Number.isFinite(n) ? n * 2.237 : null;
     }
 
@@ -5664,6 +5664,7 @@
       const firstHour = Array.isArray(weather.hourly) ? weather.hourly[0] || {} : {};
       const remainingRain = remainderOfDayRainSummary(weather.hourly);
       return {
+        stationName: current.stationId === "237451" ? "Biltmore Village Tempest" : null,
         tempF: current.temperatureF ?? current.tempF ?? toF(current.air_temperature) ?? firstHour.temperatureF,
         dewF: current.dewpointF ?? current.dewPoint ?? toF(current.dew_point) ?? firstHour.dewpointF,
         humidity: current.relativeHumidity ?? current.relative_humidity ?? current.humidity ?? firstHour.relativeHumidity,
@@ -5822,7 +5823,7 @@
       const rain = Number(obs.rainChance);
       const clouds = Number(obs.clouds);
 
-      setText("#obsUpdated", formatObsAge(obs.timestamp));
+      setText("#obsUpdated", obs.stationName ? `${formatObsAge(obs.timestamp)} · ${obs.stationName}` : "Forecast estimate · Biltmore Village station unavailable");
       setText("#obsTemp", `Asheville ${Number.isFinite(temp) ? `${Math.round(temp)}°` : "--°"}`);
       setText("#obsDewpoint", `Dew point ${Number.isFinite(dew) ? `${Math.round(dew)}°` : "--°"}`);
       setText("#obsHumidity", `Humidity ${Number.isFinite(humidity) ? `${Math.round(humidity)}%` : "--"}`);
@@ -5861,7 +5862,7 @@
 
     async function hydrateObservationChips() {
       try {
-        const weather = await fetchRouteJson("weather&type=hourly&lat=35.5951&lon=-82.5515");
+        const weather = await fetchRouteJson("weather&type=hourly&lat=35.5951&lon=-82.5515&primary=biltmore");
         updateRadarHomeSignalFromWeather(weather);
         renderObservationChips(normalizeObsFromWeather(weather));
       } catch (error) {
@@ -7145,7 +7146,7 @@
     async function hydrateLiveComfortModules() {
       try {
         const [weather, stormPayload] = await Promise.all([
-          fetchRouteJson("weather&type=hourly&lat=35.5951&lon=-82.5515"),
+          fetchRouteJson("weather&type=hourly&lat=35.5951&lon=-82.5515&primary=biltmore"),
           fetchRouteJson("storm/current", { cacheBust: false }).catch(() => null)
         ]);
         latestComfortWeather = weather;
@@ -7229,7 +7230,7 @@
         // wording expires promptly when Tempest returns to zero.
         {
           try {
-            const weather = await fetchRouteJson("weather&type=hourly&lat=35.5951&lon=-82.5515", { cacheBust: false });
+            const weather = await fetchRouteJson("weather&type=hourly&lat=35.5951&lon=-82.5515&primary=biltmore", { cacheBust: false });
             const hourly = (Array.isArray(weather?.hourly) ? weather.hourly : [])
               .map(normalizeWeatherHour)
               .filter(Boolean)
