@@ -5527,7 +5527,7 @@
 
 
     function buildSkyWeatherContext(hour = null, current = null) {
-      renderNorthDowntownContext(current?.supplementalStation);
+
       if (!hour && !current) return null;
       const solarSource = current || hour || {};
       const supplementalStation = rememberStationObservation(current?.supplementalStation);
