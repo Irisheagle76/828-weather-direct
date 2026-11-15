@@ -4471,6 +4471,7 @@
   <link rel="stylesheet" href="/css/editorial-rich-text.css" />
   <link rel="stylesheet" href="/css/awpi-teaser.css?v=20261110" />
 <link rel="stylesheet" href="/css/home-weather-panels.css?v=20261112-panels">
+<link rel="stylesheet" href="/css/forecast-bottom-line.css">
 </head>
 <body class="splash-active home-redesign">
   <div class="home-splash" id="homeSplash" role="status" aria-live="polite" aria-label="Loading 828 Weather Direct">
@@ -4558,29 +4559,29 @@
               </div>
               <div class="now-observation">
                 <i class="observation-symbol" aria-hidden="true">🍃</i><strong id="heroWind">-- mph</strong>
-                <span>Wind</span>
+                <span>Wind</span><small id="heroWindGust" class="observation-detail">Gust — mph</small>
+              </div>
+              <div class="now-observation">
+                <i class="observation-symbol" aria-hidden="true">◴</i><strong id="heroPressure">— inHg</strong>
+                <span>Barometer</span><small id="heroPressureTrend" class="observation-detail">Trend unavailable</small>
               </div>
               <div class="now-observation">
                 <i class="observation-symbol" aria-hidden="true">☔</i><strong id="heroRainChance">--</strong>
-                <span>Peak rain chance today</span>
+                <span>Rain today</span>
                 <small class="rain-window" id="heroRainWindow" hidden></small>
               </div>
             </div>
 
+            <section id="homeBottomLine" class="forecast-bottom-line" aria-labelledby="homeBottomLineTitle" hidden><span class="bottom-line-eyebrow">Your day at a glance</span><h2 id="homeBottomLineTitle">Today&#8217;s Bottom Line</h2><p></p></section>
             <div class="weather-outlook"><div class="panel-kicker" id="weatherOutlookLabel">The rest of today</div><div class="fs-headline" id="liveFeelScoreHeadline">Reading the current comfort signal.</div>
             <div class="fs-subhead" id="liveFeelScoreSubhead">
               Temperature, humidity, dew point, wind, and sky cover are loading before the full read appears.
             </div>
             </div>
             <div class="weather-hours"><div class="hour-strip-header"><span class="panel-kicker">◷ Next 6 Hours</span><div class="hour-arrows"><button type="button" id="hoursEarlier" aria-label="Earlier forecast hours">←</button><button type="button" id="hoursLater" aria-label="Later forecast hours">→</button></div></div><div id="nextSixHourRow" role="region" aria-label="Next six hours; scroll horizontally for later hours" tabindex="0"><p class="panel-copy">Hourly forecast loading…</p></div></div>
-            <div><span class="conditions-updated" id="obsUpdated">Updating obs</span>            <details class="conditions-details">
-              <summary>More observations</summary>
-              <div class="conditions-detail-grid">
-                <span id="obsHumidity">Humidity --</span>
-                <span id="obsPressure">Pressure --</span>
-                <span id="obsClouds">Clouds --</span>
-              </div>
-            </details><p class="fs-subhead" id="northDowntownContext" hidden></p></div>
+            <div class="observations-footer"><span class="conditions-updated" id="obsUpdated">Updating obs</span>
+              <a class="terrain-map-link" href="/asheville-microscope-terrain.html"><svg viewBox="0 0 40 32" aria-hidden="true" focusable="false"><path d="M2 27 14 7l8 12 5-8 11 16Z"/><path d="m10 14 4 3 4-3M24 16l3 3 3-3"/></svg><span><strong>More Local Observations</strong><span class="terrain-map-action">Explore the Terrain Map</span><small>Live neighborhood weather across Asheville</small></span><span class="terrain-map-arrow" aria-hidden="true">&rarr;</span></a>
+            </div>
           </div>
           <aside class="feel-panel" aria-label="Current FeelScore">
             <div class="fs-topline">
@@ -5216,6 +5217,8 @@
   </div>
 
   <script type="module">
+    import { windReading, pressureReading } from "/js/home-observation-format.js";
+    import { showBottomLine } from "/js/forecast-bottom-line.js";
     import { renderFireCurve, firePresentation } from "./js/visuals/fire-curve.js?v=20261022";
     import { rainfallDate, headlineForPulse } from "./js/intel/homepage-copy.js";
     import { homepageEditorialMode } from "./js/intel/homepage-editorial.js";
@@ -5522,23 +5525,6 @@
       return n > 1 ? n / 100 : n;
     }
 
-    let latestNorthDowntownObservation = null;
-    function renderNorthDowntownContext(station = latestNorthDowntownObservation) {
-      latestNorthDowntownObservation = rememberStationObservation(station);
-      const node = document.querySelector('#northDowntownContext');
-      const text = stationWeatherSummary(latestNorthDowntownObservation, Date.now(), { surface: 'current' });
-      node.replaceChildren();
-      if (text) {
-        const label = document.createElement('span');
-        label.className = 'station-context-kicker';
-        label.textContent = 'North Downtown · Local station';
-        const summary = document.createElement('span');
-        summary.textContent = text;
-        node.append(label, summary);
-      }
-      node.hidden = !text;
-    }
-    setInterval(() => renderNorthDowntownContext(), 30_000);
 
     function buildSkyWeatherContext(hour = null, current = null) {
       renderNorthDowntownContext(current?.supplementalStation);
@@ -5664,8 +5650,8 @@
     }
 
     function hpaToInHg(value) {
-      const n = Number(value);
-      return Number.isFinite(n) ? n * 0.02953 : null;
+      const n = value == null || value === "" ? NaN : Number(value);
+      return Number.isFinite(n) && n > 0 ? n * 0.02953 : null;
     }
 
     function setText(selector, value) {
@@ -5682,6 +5668,9 @@
         dewF: current.dewpointF ?? current.dewPoint ?? toF(current.dew_point) ?? firstHour.dewpointF,
         humidity: current.relativeHumidity ?? current.relative_humidity ?? current.humidity ?? firstHour.relativeHumidity,
         windMph: current.windSpeed ?? current.wind ?? toMph(current.wind_avg) ?? firstHour.windSpeed,
+        windDirection: current.wind_direction ?? current.windDirection ?? null,
+        windGustMph: current.wind_gust == null ? (current.windGust ?? null) : toMph(current.wind_gust),
+        pressureTrend: current.pressure_trend ?? null,
         pressure: hpaToInHg(current.sea_level_pressure ?? current.pressure ?? current.pressure_msl ?? current.barometric_pressure),
         rainChance: remainingRain?.chance ?? firstHour.precipProbability ?? current.precipProbability,
         rainWindow: remainingRain?.window ?? null,
@@ -5784,7 +5773,7 @@
     async function fetchOpenMeteoObsFallback() {
       const url = [
         "https://api.open-meteo.com/v1/forecast?latitude=35.5951&longitude=-82.5515",
-        "current=temperature_2m,relative_humidity_2m,dew_point_2m,precipitation,pressure_msl,cloud_cover,wind_speed_10m",
+        "current=temperature_2m,relative_humidity_2m,dew_point_2m,precipitation,pressure_msl,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m",
         "hourly=precipitation,precipitation_probability,weather_code,cloud_cover",
         "temperature_unit=fahrenheit",
         "wind_speed_unit=mph",
@@ -5807,6 +5796,9 @@
         dewF: current.dew_point_2m,
         humidity: current.relative_humidity_2m,
         windMph: current.wind_speed_10m,
+        windDirection: current.wind_direction_10m,
+        windGustMph: current.wind_gusts_10m,
+        pressureTrend: null,
         pressure: hpaToInHg(current.pressure_msl),
         rainChance: fallbackRain?.chance ?? null,
         rainWindow: fallbackRain?.window ?? null,
@@ -5840,7 +5832,12 @@
       setText("#heroCurrentTemp", Number.isFinite(temp) ? `${Math.round(temp)}°` : "--°");
       setText("#heroFeelsLike", Number.isFinite(temp) ? `${Math.round(temp)}°` : "--°");
       setText("#heroDewpoint", Number.isFinite(dew) ? `${Math.round(dew)}°` : "--°");
-      setText("#heroWind", Number.isFinite(wind) ? `${Math.round(wind)} mph` : "-- mph");
+      const windDisplay = windReading(obs.windMph, obs.windDirection, obs.windGustMph);
+      const pressureDisplay = pressureReading(obs.pressure, obs.pressureTrend);
+      setText("#heroWind", windDisplay.value);
+      setText("#heroWindGust", windDisplay.detail);
+      setText("#heroPressure", pressureDisplay.value);
+      setText("#heroPressureTrend", pressureDisplay.detail);
       setText("#heroRainChance", Number.isFinite(rain) ? pct(rain) : "--");
       const heroRainWindow = document.querySelector("#heroRainWindow");
       if (heroRainWindow) {
@@ -6067,6 +6064,7 @@
       try {
         const forecast = await fetchRouteJson("forecast/latest");
         latestPublishedForecast = forecast;
+        showBottomLine(document.getElementById("homeBottomLine"), forecast);
         updateText("#homeForecastRainRisk", formatForecastSignal(forecast?.rainRisk));
         updateText("#homeForecastComfortTrend", formatForecastSignal(forecast?.comfortTrend));
         updateText("#homeForecastBestDay", formatForecastSignal(forecast?.bestOutdoorDay, "To be decided"));

@@ -49,11 +49,37 @@
 #now .weather-hour strong{font-size:26px}
 #now .weather-hour small{font-size:12px;color:#c5d3e6}
 #now .weather-hour .gust{color:#ffcd73;font-weight:700}
-#now .conditions-details{margin:8px 0 0;color:#c5d3e6;font:400 13px/1.5 Arial,sans-serif}
 #now .conditions-updated{font:400 12px/1.4 Arial,sans-serif;color:#bac9de}
-#now #northDowntownContext{margin-top:12px;padding:0;border:0;background:none;font-size:13px}
 #now [hidden]{display:none!important}
 @media(min-width:1300px){#now .weather-hour{flex-basis:calc((100% - 40px)/6)}}
 @media(max-width:760px){#now .feelscore-inner{grid-template-columns:1fr}#now .feelscore-mark{font-size:17px}#now .now-panel,#now .feel-panel{padding:22px}#now .fs-row{grid-template-columns:120px minmax(0,1fr)}#now .fs-score{width:120px;height:120px;font-size:76px}}
 @media(max-width:380px){#now .now-panel,#now .feel-panel{padding:16px 12px}#now .feelscore-mark{font-size:14px;padding:10px;letter-spacing:0;gap:8px}#now .fs-row{gap:14px}#now .now-temp-row{gap:14px}#now .now-condition{font-size:18px}}
 @media(pointer:coarse){#now .hour-arrows button{min-width:44px;min-height:44px}}
+
+/* Daily editorial note and neighborhood observation navigation. */
+#now #homeBottomLine{position:relative;isolation:isolate;overflow:hidden;margin:0;padding:23px 24px 24px;border:1px solid #ffe1a1;border-left:5px solid #f47a20;border-radius:16px;background:linear-gradient(115deg,#fff3d5 0%,#ffda8c 65%,#ffc166 100%);color:#142742;box-shadow:0 8px 26px #020d2538,inset 0 1px 0 #ffffffb3}
+#now #homeBottomLine::after{content:"";position:absolute;z-index:-1;width:150px;height:150px;border:22px solid #ffffff26;border-radius:50%;right:-65px;top:-65px;pointer-events:none}
+#now .bottom-line-eyebrow{display:block;margin-bottom:8px;color:#74420f;font:800 10px/1.4 Arial,sans-serif;letter-spacing:1.7px;text-transform:uppercase}
+#now #homeBottomLine h2{margin:0 0 10px;color:#142742;font:800 clamp(21px,2vw,27px)/1.15 Arial,sans-serif;letter-spacing:-.5px}
+#now #homeBottomLine p{margin:0;color:#20334c;font:500 17px/1.6 Arial,sans-serif;overflow-wrap:anywhere}
+#now .observations-footer{border-top:1px solid #ffffff26;padding-top:16px}
+#now .terrain-map-link{display:flex;align-items:center;gap:13px;padding:15px;margin-top:10px;border:1px solid #81d6c354;border-radius:10px;background:linear-gradient(110deg,#24596580,#1c4d6850);color:#e3fff4;text-decoration:none;transition:background .15s ease,border-color .15s ease}
+#now .terrain-map-link svg{flex:0 0 38px;width:38px;height:32px;fill:none;stroke:#9ce3c7;stroke-width:1.8;stroke-linejoin:round}
+#now .terrain-map-link strong{display:block;font:700 14px/1.4 Arial,sans-serif}
+#now .terrain-map-link small{display:block;margin-top:4px;color:#c1d9e2;font:400 12px/1.5 Arial,sans-serif}
+#now .terrain-map-arrow{margin-left:auto;font-size:24px;color:#9ce3c7}
+#now .terrain-map-link:hover{background:#28657590;border-color:#9ce3c7}
+#now .terrain-map-link:focus-visible{outline:3px solid #ffcd73;outline-offset:3px}
+@media(max-width:480px){#now #homeBottomLine{padding:20px}#now #homeBottomLine p{font-size:16px}}
+@media(prefers-reduced-motion:reduce){#now .observations-toggle,#now .terrain-map-link{transition:none}}
+
+#now .terrain-map-action{display:block;margin-top:4px;color:#9ce3c7;font:600 13px/1.4 Arial,sans-serif}
+
+/* Four compact readings remain together on one row. */
+#now .now-observation-grid{grid-template-columns:.65fr 1.2fr 1.25fr .85fr;gap:10px;align-items:start}
+#now .now-observation strong{font-size:clamp(13px,1.5vw,20px);white-space:nowrap;letter-spacing:-.3px}
+#now .observation-symbol{font-size:17px;margin-bottom:6px}
+#now .now-observation span{font-size:11px;margin-top:5px}
+#now .observation-detail{display:block;margin-top:5px;color:#d5e1ed;font:500 11px/1.4 Arial,sans-serif;white-space:nowrap}
+#now .rain-window{font-size:10px;line-height:1.4;margin-top:5px}
+@media(max-width:480px){#now .now-observation-grid{gap:6px}#now .now-observation strong{font-size:13px}#now .now-observation span,#now .observation-detail{font-size:10px}#now .observation-symbol{font-size:15px}}
