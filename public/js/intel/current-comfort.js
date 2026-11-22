@@ -79,15 +79,18 @@ export function buildCurrentComfort(weather = {}, options = {}) {
   const fresh = observation && now - observation.timestamp >= -60000 && now - observation.timestamp <= 20 * 60000;
   const forecastHour = hourly.filter(h => Math.abs(h.timestamp - now) <= 90 * 60000 && comfortScore100(h) != null)
     .sort((a, b) => Math.abs(a.timestamp - now) - Math.abs(b.timestamp - now))[0] || null;
-  const currentHour = fresh && comfortScore100(observation) != null ? { ...observation, ts: now, timestamp: now } : forecastHour;
-  const score = comfortScore100(currentHour);
+  const baseCurrentHour = fresh && comfortScore100(observation) != null ? { ...observation, ts: now, timestamp: now } : forecastHour;
   const precipOverride = options.precipOverride ?? getCurrentPrecipOverride({ current, hourly, now, storage,
     radar: storm?.radar, lightningCount: storm?.weather?.lightningCount });
+  const currentHour = baseCurrentHour && precipOverride?.mode === 'active'
+    ? { ...baseCurrentHour, activePrecipitation: true, precipSeverity: precipOverride.severity, precipType: precipOverride.type }
+    : baseCurrentHour;
+  const score = comfortScore100(currentHour);
   const outlook = forecastComfortCopy({ hourly, daily: weather.daily || [], forecast, now });
   const summary = applyPrecipOverrideToNarrative({ headline: outlook.headline, subHeadline: outlook.weatherNarrative, narrative: outlook.weatherNarrative }, precipOverride);
   const copy = { ...outlook, headline: summary.headline, weatherNarrative: summary.subHeadline, narrative: summary.narrative };
   const curve = buildComfortCurveModel({ hourly, daily: weather.daily || [], currentHour, now, score: comfortScore100 });
-  return { score, label: comfortScoreLabel(score), source: currentHour === forecastHour ? forecastHour ? 'forecast' : 'unavailable' : 'observation',
+  return { score, label: comfortScoreLabel(score), source: baseCurrentHour === forecastHour ? forecastHour ? 'forecast' : 'unavailable' : 'observation',
     currentHour, forecastHour, hourly, copy, precipOverride, curve, best: bestWindowSummary(curve, now),
     nextHours: upcomingComfortHours(hourly, currentHour, now) };
 }

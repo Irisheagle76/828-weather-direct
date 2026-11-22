@@ -52,6 +52,9 @@ test('Observed rain and lightning override fair-weather wording on every consume
   assert.equal(model.precipOverride.mode, 'active');
   assert.match(model.copy.headline, /rain|storm/i);
   assert.doesNotMatch(model.copy.weatherNarrative, /Mostly clear skies through/);
+  const dry = buildCurrentComfort({ current: { ...current, rainRate: 0 }, hourly }, { now });
+  assert.ok(model.score < dry.score);
+  assert.equal(model.currentHour.activePrecipitation, true);
 });
 
 test('Radar context and observed nearby lightning use the existing storm override', () => {

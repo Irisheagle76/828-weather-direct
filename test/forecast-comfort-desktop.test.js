@@ -49,10 +49,11 @@ test('Desktop renders the shared upcoming temperature and sky story while retain
 });
 
 test('Desktop keeps observed rain and nearby lightning above the forecast outlook', () => {
-  const elements = render({ active: true, mode: 'active', headline: 'Rain and lightning now', summary: 'Rain is falling at the station. Lightning is nearby.', bullets: ['Stay inside during lightning.'] });
+  const precipOverride = { active: true, mode: 'active', type: 'rain', severity: 'light', headline: 'Rain and lightning now', summary: 'Rain is falling at the station. Lightning is nearby.', bullets: ['Stay inside during lightning.'] };
+  const elements = render(precipOverride);
   assert.equal(elements.get('#liveFeelScoreHeadline').textContent, 'Rain and lightning now');
   assert.match(elements.get('#liveFeelScoreSubhead').textContent, /Rain is falling/);
-  assert.equal(elements.get('#liveFeelScoreValue').textContent, buildCurrentComfort({ hourly, current: hourly[0] }, { now }).score);
+  assert.equal(elements.get('#liveFeelScoreValue').textContent, buildCurrentComfort({ hourly, current: hourly[0] }, { now, precipOverride }).score);
 });
 
 test('Desktop identifies unavailable forecast data instead of replaying an old summary', () => {

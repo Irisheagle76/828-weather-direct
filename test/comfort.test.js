@@ -18,9 +18,52 @@ function scoreAt(temperatureF, dewpointF) {
 }
 
 test("FeelScore uses the field-calibrated humid-heat model", () => {
-  assert.equal(FEELSCORE_CALIBRATION.version, "2026-08-07-humid-heat-v1");
+  assert.equal(FEELSCORE_CALIBRATION.version, "2026-11-22-all-season-v2");
   assert.equal(FEELSCORE_CALIBRATION.dewpoint.muggyF, 65);
   assert.equal(FEELSCORE_CALIBRATION.dewpoint.veryMuggyF, 67);
+});
+
+test("cool near-saturated air gets a raw-damp penalty", () => {
+  const dry = calculateComfort({
+    temperatureF: 57,
+    dewpointF: 40,
+    relativeHumidity: 50,
+    windSpeed: 0,
+    timestamp: Date.parse("2026-11-22T22:00:00-05:00")
+  });
+  const damp = calculateComfort({
+    temperatureF: 57,
+    dewpointF: 55,
+    relativeHumidity: 94,
+    windSpeed: 0,
+    timestamp: Date.parse("2026-11-22T22:00:00-05:00")
+  });
+
+  assert.equal(damp.flags.rawDamp, true);
+  assert.ok(damp.rawDampPenalty >= 0.12);
+  assert.ok(damp.score * 10 <= 67);
+  assert.ok(damp.score < dry.score);
+});
+
+test("active rain directly lowers the current comfort score", () => {
+  const hour = {
+    temperatureF: 57,
+    dewpointF: 55,
+    relativeHumidity: 94,
+    windSpeed: 0,
+    timestamp: Date.parse("2026-11-22T22:00:00-05:00")
+  };
+  const dry = calculateComfort(hour);
+  const raining = calculateComfort({
+    ...hour,
+    activePrecipitation: true,
+    precipSeverity: "light",
+    precipType: "rain"
+  });
+
+  assert.equal(raining.weatherPenalty, 0.10);
+  assert.equal(Math.round((dry.score - raining.score) * 10), 10);
+  assert.ok(raining.score * 10 < FEELSCORE_CALIBRATION.scoreBands.pleasant);
 });
 
 test("warm air with a 68 degree dew point is not rated pleasant", () => {

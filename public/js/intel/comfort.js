@@ -6,7 +6,7 @@ import { LOCATION } from "../config/location.js";
 // this calibration and its regression matrix together when field observations
 // reveal that the model does not match how conditions actually feel outdoors.
 export const FEELSCORE_CALIBRATION = Object.freeze({
-  version: "2026-08-07-humid-heat-v1",
+  version: "2026-11-22-all-season-v2",
   temperature: Object.freeze({
     idealMinF: 65,
     idealMaxF: 75,
@@ -17,6 +17,14 @@ export const FEELSCORE_CALIBRATION = Object.freeze({
     muggyF: 65,
     veryMuggyF: 67,
     oppressiveF: 70
+  }),
+  rawDamp: Object.freeze({
+    maxTemperatureF: 65,
+    saturatedSpreadF: 2,
+    drySpreadF: 10,
+    humidityFloorPct: 75,
+    humidityFullPct: 95,
+    maxPenalty: 0.25
   }),
   scoreBands: Object.freeze({
     ideal: 90,
@@ -142,6 +150,35 @@ function computeHumidHeatPenalty(temp, dew) {
   return 0.04 + heatLoad * 0.08 + moistureLoad * 0.06;
 }
 
+function computeRawDampPenalty(temp, dew, relativeHumidity) {
+  if (!Number.isFinite(temp) || !Number.isFinite(dew)) return 0;
+
+  const raw = FEELSCORE_CALIBRATION.rawDamp;
+  if (temp >= raw.maxTemperatureF) return 0;
+
+  const coolLoad = clamp((raw.maxTemperatureF - temp) / 15, 0, 1);
+  const dewpointSpread = Math.max(0, temp - dew);
+  const spreadLoad = clamp(
+    (raw.drySpreadF - dewpointSpread) /
+      (raw.drySpreadF - raw.saturatedSpreadF),
+    0,
+    1
+  );
+  const humidityLoad = Number.isFinite(relativeHumidity)
+    ? clamp(
+        (relativeHumidity - raw.humidityFloorPct) /
+          (raw.humidityFullPct - raw.humidityFloorPct),
+        0,
+        1
+      )
+    : spreadLoad;
+
+  // Cool air becomes distinctly raw when it is close to saturation. Use the
+  // stronger of measured relative humidity and the temperature/dew-point
+  // spread so every consumer behaves consistently when one field is absent.
+  return coolLoad * Math.max(spreadLoad, humidityLoad) * raw.maxPenalty;
+}
+
 function computeWindPenalty(wind) {
   if (!Number.isFinite(wind)) return 0;
 
@@ -205,7 +242,15 @@ function computeWeatherDisruptionPenalty(hour = {}) {
 
   let precipPenalty = 0;
 
-  if (amount >= 0.25) precipPenalty = 0.22;
+  if (hour.activePrecipitation === true) {
+    precipPenalty = hour.precipSeverity === "heavy"
+      ? 0.22
+      : hour.precipSeverity === "moderate"
+        ? 0.16
+        : hour.precipType === "drizzle"
+          ? 0.07
+          : 0.10;
+  } else if (amount >= 0.25) precipPenalty = 0.22;
   else if (amount >= 0.10) precipPenalty = 0.16;
   else if (amount >= 0.03) precipPenalty = 0.10;
   else if (amount >= 0.005) precipPenalty = 0.05;
@@ -253,7 +298,7 @@ function computeWeatherDisruptionPenalty(hour = {}) {
 // SCORE
 // ============================================================
 
-function computeComfortScore(temp, dew, wind, elev, weatherPenalty = 0) {
+function computeComfortScore(temp, dew, wind, elev, weatherPenalty = 0, rawDampPenalty = 0) {
   if (temp == null) return null;
 
   const t = computeTemperaturePenalty(temp);
@@ -266,6 +311,7 @@ function computeComfortScore(temp, dew, wind, elev, weatherPenalty = 0) {
     (t * 0.55) +
     (d * 0.45) +
     humidHeat +
+    rawDampPenalty +
     w -
     s +
     weatherPenalty;
@@ -315,6 +361,9 @@ function computeComfort(hour) {
   const wind =
     num(hour.wind ?? hour.windSpeed ?? hour.wind_speed) ?? 0;
 
+  const relativeHumidity =
+    num(hour.relativeHumidity ?? hour.relative_humidity ?? hour.rh ?? hour.humidity);
+
   const timestamp = normalizeTimestamp(
     hour.ts ?? hour.timestamp ?? hour.obsTimeLocal
   );
@@ -326,13 +375,15 @@ function computeComfort(hour) {
   );
 
   const weatherPenalty = computeWeatherDisruptionPenalty(hour);
+  const rawDampPenalty = computeRawDampPenalty(temp, dew, relativeHumidity);
 
   const score = computeComfortScore(
     temp,
     dew,
     wind,
     elev,
-    weatherPenalty
+    weatherPenalty,
+    rawDampPenalty
   );
 
   return {
@@ -344,7 +395,8 @@ function computeComfort(hour) {
     temp,
     dewpoint: dew,
     windSpeed: wind,
-    weatherPenalty
+    weatherPenalty,
+    rawDampPenalty
   };
 }
 
@@ -399,11 +451,13 @@ export function calculateComfort(hour) {
     temp: result.temp,
     dewPoint: result.dewpoint,
     weatherPenalty: result.weatherPenalty,
+    rawDampPenalty: result.rawDampPenalty,
 
     flags: {
       veryHot: result.temp >= 88,
       veryHumid: Number.isFinite(result.dewpoint) && result.dewpoint >= 67,
       crisp: Number.isFinite(result.dewpoint) && result.dewpoint < 55,
+      rawDamp: result.rawDampPenalty >= 0.05,
       windy: result.windSpeed >= 12
     },
 
