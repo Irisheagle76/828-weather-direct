@@ -4968,7 +4968,7 @@
       <section class="fold-tool-row outdoor-tool-row" aria-label="Outdoor decision cards">
         <article class="fold-tool-card hiking">
           <div class="kicker">Hiking Guidance</div>
-          <h2 id="homeHikingHeadline">Pick the trail by the mountain mood.</h2>
+          <h2 id="homeHikingHeadline">Loading current trail guidance.</h2>
           <div class="hiking-mini-profile" aria-hidden="true">
             <span class="hiking-mini-line"></span>
             <span class="hiking-mini-label">Elevation read</span>
@@ -4983,17 +4983,16 @@
             </div>
           </div>
           <div class="tool-snapshot">
-            <span class="tool-index"><strong id="homeHikerScore">82</strong> HikerScore</span>
-            <span class="tool-index"><strong>15°</strong> Mitchell drop</span>
+            <span class="tool-index"><strong id="homeHikerScore">--</strong> HikerScore</span>
+            <span class="tool-index"><strong>--</strong> Mitchell vs Asheville</span>
           </div>
           <p id="homeHikingSummary">
-            Lower and mid-elevation trails look manageable, while Mount Mitchell and exposed ridges
-            still deserve a separate wind, cloud, and layer check.
+            Waiting for current station observations.
           </p>
           <div class="hiking-callouts" aria-label="Hiking guidance preview details">
             <div class="hiking-callout">
               <b>Best bet</b>
-              <span id="homeHikingBestBet">Lower to mid-elevation trails where cloud cover helps comfort.</span>
+              <span id="homeHikingBestBet">Check current observations before choosing a route.</span>
             </div>
             <div class="hiking-callout">
               <b>Use care</b>
@@ -5243,14 +5242,7 @@
     import { forecastComfortCopy } from "./js/intel/forecast-comfort-context.js?v=20261113-cold";
     import { comfortExplanation, bestWindowSummary } from "./js/intel/feelscore-insight.js";
     import { buildCurrentComfort, COMFORT_REFRESH_MS, comfortScore100 as scoreComfortHour } from "./js/intel/current-comfort.js";
-    import {
-      cleanHikingText,
-      homeHikingBestBet,
-      homeHikingHeadline,
-      homeHikingScore,
-      homeHikingSummary,
-      homeHikingUseCare
-    } from "./js/hiking-home-card.js?v=20260607-narrative";
+    import { homeHikingPresentation } from "./js/hiking-home-card.js?v=20261122-shared-score";
     import { buildHumanActionIntelFS } from "./js/intel/human-action-feelscore.js?v=20261012-human-comfort-copy";
     import { buildSkyConditionRead } from "./js/intel/sky-read.js?v=20261027-night-sky-fix";
     import { rememberStationObservation, stationWeatherSummary, withStationContext } from "./js/intel/station-lightning.js";
@@ -6113,17 +6105,15 @@
     }
 
     function renderHomeHikingCard(data = {}) {
-      const guidance = data?.guidance || {};
-      const score = homeHikingScore(guidance);
-      const mitchellDrop = Number(guidance.mitchellDrop);
+      const view = homeHikingPresentation(data);
       const dropEl = document.querySelector(".fold-tool-card.hiking .tool-snapshot .tool-index:nth-child(2) strong");
 
-      updateText("#homeHikingHeadline", homeHikingHeadline(guidance));
-      updateText("#homeHikerScore", score);
-      if (dropEl && Number.isFinite(mitchellDrop)) dropEl.textContent = `${Math.round(mitchellDrop)}\u00b0`;
-      updateText("#homeHikingSummary", cleanHikingText(homeHikingSummary(guidance)));
-      updateText("#homeHikingBestBet", homeHikingBestBet(guidance));
-      updateText("#homeHikingUseCare", homeHikingUseCare(guidance));
+      updateText("#homeHikingHeadline", view.headline);
+      updateText("#homeHikerScore", view.score ?? "--");
+      if (dropEl) dropEl.textContent = view.mitchellDrop;
+      updateText("#homeHikingSummary", view.summary);
+      updateText("#homeHikingBestBet", view.bestBet);
+      updateText("#homeHikingUseCare", view.useCare);
     }
 
     async function hydrateHomeHikingCard() {
@@ -6133,7 +6123,8 @@
         if (!res.ok) throw new Error(`Hiking guidance failed: ${res.status}`);
         renderHomeHikingCard(await res.json());
       } catch (error) {
-        console.warn("Homepage hiking module using fallback copy", error);
+        renderHomeHikingCard();
+        console.warn("Homepage hiking observations unavailable", error);
       }
     }
 

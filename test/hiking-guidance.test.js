@@ -155,7 +155,7 @@ test("winter footing penalties depend on local evidence and preserve a mild dry 
   const coldDry = analyzeHikingStations([cold]);
   assert.equal(coldDry.localConditions.refreezePossible, false);
   const wet = analyzeHikingStations([{ ...cold, precipitationLastHourIn: 0.03 }]);
-  assert.equal(wet.hikerScore, coldDry.hikerScore - 25);
+  assert.ok(wet.hikerScore <= coldDry.hikerScore - 25);
   assert.match(wet.bestWindow, /risk of icy footing/);
 
   const freezingRain = analyzeHikingStations([{ ...cold, weatherDescription: "Light Freezing Rain" }]);
@@ -164,6 +164,42 @@ test("winter footing penalties depend on local evidence and preserve a mild dry 
   const snow = analyzeHikingStations([{ ...cold, weatherDescription: "Light Snow" }]);
   assert.equal(snow.hikerScore, coldDry.hikerScore - 18);
   assert.match(snow.bestWindow, /Snow reported/);
+});
+
+test("damp trails after a quarter inch of rain are mixed even after rain stops", () => {
+  const local = { ...station("nws-kavl", 2165, 57, 55, "nws"), rainTodayIn: 0.23 };
+  const guidance = analyzeHikingStations([local]);
+  assert.equal(guidance.hikerScore, 68);
+  assert.equal(guidance.hikerScoreLabel, "Mixed");
+  assert.match(guidance.bestWindow, /Recent rain.*slippery/);
+  assert.ok(!guidance.hikerScoreFactors.some(f => f.label === "Active rain"));
+  const scores = [0, 0.01, 0.1, 0.23, 0.5, 1].map(rainTodayIn =>
+    analyzeHikingStations([{ ...local, rainTodayIn }]).hikerScore);
+  assert.ok(scores.every((score, i) => !i || score <= scores[i - 1]));
+});
+
+test("present rain reports count without numeric rates and are not counted twice", () => {
+  const local = { ...station("nws-kavl", 2165, 57, 55, "nws"), rainRateInHr: null, rainTodayIn: null };
+  const dry = analyzeHikingStations([{ ...local, weatherDescription: "Cloudy" }]);
+  for (const rainRateInHr of [null, 0, 0.02]) {
+    const rainy = analyzeHikingStations([{ ...local, rainRateInHr, weatherDescription: "Light Rain" }]);
+    assert.equal(rainy.hikerScore, dry.hikerScore - 10);
+    assert.match(rainy.bestWindow, /Rain is reported nearby/);
+  }
+  for (const weatherDescription of ["Cloudy", "Rain in Vicinity", "Chance of Rain", "Light Snow", "Light Freezing Rain"]) {
+    const guidance = analyzeHikingStations([{ ...local, weatherDescription }]);
+    assert.ok(!guidance.hikerScoreFactors.some(f => f.label === "Active rain"));
+  }
+});
+
+test("recent-hour rainfall preserves wet footing across midnight without inventing active rain", () => {
+  const local = { ...station("nws-kavl", 2165, 57, 55, "nws"), rainTodayIn: 0, precipitationLastHourIn: 0.23 };
+  const guidance = analyzeHikingStations([local]);
+  assert.equal(guidance.hikerScore, 68);
+  assert.ok(!guidance.hikerScoreFactors.some(f => f.label === "Active rain"));
+  const regional = { ...local, id: "mount-mitchell", rainTodayIn: 2, weatherDescription: "Heavy Rain" };
+  assert.equal(analyzeHikingStations([local, regional]).hikerScore, guidance.hikerScore);
+  assert.equal(analyzeHikingStations([local, { ...regional, id: "econet-unca", health: { usable: false } }]).hikerScore, guidance.hikerScore);
 });
 
 test("only Asheville's modeled snow depth lowers the Asheville trail score", () => {

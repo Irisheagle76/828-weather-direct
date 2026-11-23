@@ -18,7 +18,7 @@ function scoreAt(temperatureF, dewpointF) {
 }
 
 test("FeelScore uses the field-calibrated humid-heat model", () => {
-  assert.equal(FEELSCORE_CALIBRATION.version, "2026-11-22-all-season-v2");
+  assert.equal(FEELSCORE_CALIBRATION.version, "2026-11-22-observed-exposure-v3");
   assert.equal(FEELSCORE_CALIBRATION.dewpoint.muggyF, 65);
   assert.equal(FEELSCORE_CALIBRATION.dewpoint.veryMuggyF, 67);
 });
@@ -75,7 +75,7 @@ test("warm air with a 68 degree dew point is not rated pleasant", () => {
   });
 
   assert.equal(comfort.score, 5.3);
-  assert.equal(comfort.label, "Mixed");
+  assert.equal(comfort.label, "Challenging");
   assert.equal(comfort.flags.veryHumid, true);
 });
 
@@ -88,7 +88,7 @@ test("mild air with a low dew point remains comfortable", () => {
   });
 
   assert.ok(comfort.score >= 9);
-  assert.equal(comfort.label, "Comfortable");
+  assert.equal(comfort.label, "Ideal");
 });
 
 test("the same warm temperature becomes steadily less comfortable as moisture rises", () => {

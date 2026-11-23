@@ -6,7 +6,7 @@ import { LOCATION } from "../config/location.js";
 // this calibration and its regression matrix together when field observations
 // reveal that the model does not match how conditions actually feel outdoors.
 export const FEELSCORE_CALIBRATION = Object.freeze({
-  version: "2026-11-22-all-season-v2",
+  version: "2026-11-22-observed-exposure-v3",
   temperature: Object.freeze({
     idealMinF: 65,
     idealMaxF: 75,
@@ -45,6 +45,7 @@ function clamp(val, min, max) {
 }
 
 function num(v) {
+  if (v == null || v === "") return null;
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
 }
@@ -298,13 +299,13 @@ function computeWeatherDisruptionPenalty(hour = {}) {
 // SCORE
 // ============================================================
 
-function computeComfortScore(temp, dew, wind, elev, weatherPenalty = 0, rawDampPenalty = 0) {
+function computeComfortScore(temp, dew, wind, elev, weatherPenalty = 0, rawDampPenalty = 0, solarExposure = 0) {
   if (temp == null) return null;
 
   const t = computeTemperaturePenalty(temp);
   const d = computeDewPenalty(dew);
   const w = computeWindPenalty(wind);
-  const s = computeSolarBonus(temp, elev);
+  const s = computeSolarBonus(temp, elev) * solarExposure;
   const humidHeat = computeHumidHeatPenalty(temp, dew);
 
   const raw =
@@ -327,10 +328,13 @@ function computeComfortScore(temp, dew, wind, elev, weatherPenalty = 0, rawDampP
 // ============================================================
 
 function getCategory(score) {
-  if (score >= 80) return "Comfortable";
-  if (score >= 65) return "Pleasant";
-  if (score >= 50) return "Mixed";
-  return "Uncomfortable";
+  return comfortScoreLabel(score);
+}
+
+export function comfortScoreLabel(score) {
+  if (!Number.isFinite(score)) return 'Updating';
+  const bands = FEELSCORE_CALIBRATION.scoreBands;
+  return score >= bands.ideal ? 'Ideal' : score >= bands.great ? 'Great' : score >= bands.pleasant ? 'Pleasant' : score >= bands.noticeable ? 'Noticeable' : score >= bands.challenging ? 'Challenging' : 'Harsh';
 }
 
 function getEmoji(score) {
@@ -376,6 +380,12 @@ function computeComfort(hour) {
 
   const weatherPenalty = computeWeatherDisruptionPenalty(hour);
   const rawDampPenalty = computeRawDampPenalty(temp, dew, relativeHumidity);
+  // Radiation is measured W/m²; normalized forecast cloud cover is a 0–1
+  // fraction. Missing exposure evidence earns no invented sunshine credit.
+  const radiation = num(hour.solar_radiation ?? hour.solarRadiation ?? hour.solarWm2);
+  const cloud = num(hour.cloudCover);
+  const solarExposure = radiation != null && radiation >= 0 ? clamp(radiation / 600, 0, 1)
+    : cloud != null && cloud >= 0 && cloud <= 1 ? 1 - cloud : 0;
 
   const score = computeComfortScore(
     temp,
@@ -383,7 +393,8 @@ function computeComfort(hour) {
     wind,
     elev,
     weatherPenalty,
-    rawDampPenalty
+    rawDampPenalty,
+    solarExposure
   );
 
   return {

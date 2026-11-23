@@ -1,4 +1,5 @@
-import { calculateComfort, FEELSCORE_CALIBRATION } from './comfort.js';
+import { calculateComfort, comfortScoreLabel } from './comfort.js';
+export { comfortScoreLabel } from './comfort.js';
 import { forecastComfortCopy } from './forecast-comfort-context.js';
 import { getCurrentPrecipOverride, applyPrecipOverrideToNarrative } from './precip-override.js';
 import { buildComfortCurveModel } from '../visuals/comfort-curve.js';
@@ -55,11 +56,6 @@ export function comfortScore100(hour) {
   return Number.isFinite(score) ? Math.round(score * 10) : null;
 }
 
-export function comfortScoreLabel(score) {
-  if (!Number.isFinite(score)) return 'Updating';
-  const bands = FEELSCORE_CALIBRATION.scoreBands;
-  return score >= bands.ideal ? 'Ideal' : score >= bands.great ? 'Great' : score >= bands.pleasant ? 'Pleasant' : score >= bands.noticeable ? 'Noticeable' : score >= bands.challenging ? 'Challenging' : 'Harsh';
-}
 
 export function upcomingComfortHours(hourly, currentHour, now = Date.now()) {
   const future = hourly.filter(h => h.timestamp >= now - 30 * 60000 && h.temperatureF != null).slice(0, 6);

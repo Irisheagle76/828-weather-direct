@@ -25,7 +25,7 @@ test('best window labels tomorrow and midnight explicitly using the shared curve
   assert.equal(next.detail, 'Peak FeelScore 98 · Ideal');
   const overnight = bestWindowSummary(model('2026-10-13T03:00:00Z', '2026-10-13T05:00:00Z', 82), now);
   assert.equal(overnight.window, 'Today, 11 PM–Tomorrow 1 AM');
-  assert.equal(overnight.detail, 'Peak FeelScore 82 · Pleasant');
+  assert.equal(overnight.detail, 'Peak FeelScore 82 · Great');
   assert.equal(bestWindowSummary(null), null);
 });
 

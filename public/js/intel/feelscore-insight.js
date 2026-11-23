@@ -1,4 +1,4 @@
-import { FEELSCORE_CALIBRATION } from './comfort.js';
+import { FEELSCORE_CALIBRATION, calculateComfort, comfortScoreLabel } from './comfort.js';
 
 const number = value => value == null || value === '' ? null : Number.isFinite(Number(value)) ? Number(value) : null;
 
@@ -10,7 +10,8 @@ export function comfortExplanation({ currentHour = {}, forecastHour = {}, precip
   const parts = [];
   const { idealMinF, idealMaxF } = FEELSCORE_CALIBRATION.temperature;
   if (temperature != null) parts.push(temperature < 45 ? 'Cold air' : temperature < idealMinF ? 'Cool temperatures' : temperature <= idealMaxF ? 'Mild temperatures' : temperature < 85 ? 'Warm temperatures' : 'Hot temperatures');
-  if (dew != null) parts.push(dew < FEELSCORE_CALIBRATION.dewpoint.noticeableF ? 'manageable humidity' : dew < FEELSCORE_CALIBRATION.dewpoint.veryMuggyF ? 'noticeable humidity' : 'muggy air');
+  const rawDamp = calculateComfort({ ...currentHour, temperatureF: temperature, dewpointF: dew }).flags.rawDamp;
+  if (dew != null) parts.push(rawDamp ? 'damp air close to saturation' : dew < FEELSCORE_CALIBRATION.dewpoint.noticeableF ? 'manageable humidity' : dew < FEELSCORE_CALIBRATION.dewpoint.veryMuggyF ? 'noticeable humidity' : 'muggy air');
   if (wind != null) parts.push(gust >= 25 ? 'strong gusts' : wind < 4 ? 'very little wind' : wind < 10 ? 'a light breeze' : 'breezy conditions');
   const rain = precipOverride?.mode === 'active';
   if (!parts.length) return { title: 'Why it feels this way', text: rain ? 'Rain is affecting outdoor comfort right now.' : 'Waiting for current weather readings.' };
@@ -38,7 +39,6 @@ export function bestWindowSummary(model, now = Date.now()) {
   const sameDate = dateKey(best.start) === dateKey(best.end);
   const window = sameDate ? `${dayLabel(best.start)}, ${clock(best.start)}–${clock(best.end)}` : `${dayLabel(best.start)}, ${clock(best.start)}–${dayLabel(best.end)} ${clock(best.end)}`;
   const peak = Math.round(best.peak);
-  const bands = FEELSCORE_CALIBRATION.scoreBands;
-  const label = peak >= bands.ideal ? 'Ideal' : peak >= bands.pleasant ? 'Pleasant' : peak >= bands.noticeable ? 'Noticeable' : peak >= bands.challenging ? 'Challenging' : 'Harsh';
+  const label = comfortScoreLabel(peak);
   return { window, detail: `Peak FeelScore ${peak} · ${label}` };
 }
