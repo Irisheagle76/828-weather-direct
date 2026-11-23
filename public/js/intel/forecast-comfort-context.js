@@ -19,9 +19,13 @@ function isNightAt(time, daily) {
 }
 function timeLabel(hour, now, tomorrow) {
   const time = timestamp(hour);
-  const clock = new Intl.DateTimeFormat("en-US", { timeZone: zone, hour: "numeric" }).format(new Date(time));
-  if (clock === "12 AM" && !tomorrow && comfortDateKey(time) !== comfortDateKey(now)) return "midnight";
-  return !tomorrow && comfortDateKey(time) !== comfortDateKey(now) ? `${clock} tomorrow` : clock;
+  const parts = new Intl.DateTimeFormat("en-US", { timeZone: zone, hour: "numeric", minute: "2-digit" }).formatToParts(time);
+  const get = type => parts.find(part => part.type === type)?.value;
+  const exactHour = get("minute") === "00";
+  const twelve = exactHour && get("hour") === "12";
+  const clock = twelve ? get("dayPeriod") === "AM" ? "midnight" : "noon"
+    : get("hour") + (exactHour ? "" : ":" + get("minute")) + " " + get("dayPeriod");
+  return clock !== "midnight" && !tomorrow && comfortDateKey(time) !== comfortDateKey(now) ? `${clock} tomorrow` : clock;
 }
 
 function temperatureStory(hours, now, tomorrow) {
@@ -41,7 +45,7 @@ function temperatureStory(hours, now, tomorrow) {
     headline = "Limited hourly outlook";
     narrative = `${opening} look to be near ${start}°F at ${at(first)}. More hourly detail is still coming in.`;
   } else if (peak !== first && peak !== last && high - start >= 3 && high - end >= 3) {
-    headline = staysCold ? coldHeadline : eveningAhead ? `${warmth} afternoon, cooler evening` : "Warming up, then cooling off";
+    headline = staysCold ? coldHeadline : `Near ${high}°F around ${at(peak)}, ${end}°F by ${at(last)}`;
     narrative = staysCold
       ? `${opening} top out near ${high}°F around ${at(peak)}, then fall to ${end}°F by ${at(last)}.`
       : `${opening} rise from around ${start}°F at ${at(first)} to near ${high}°F around ${at(peak)}, then ease to ${end}°F by ${at(last)}.`;
@@ -57,7 +61,7 @@ function temperatureStory(hours, now, tomorrow) {
       ? `${opening} stay cold, reaching about ${high}°F around ${at(peak)}.`
       : `${opening} climb from around ${start}°F at ${at(first)} to ${end}°F by ${at(last)}.`;
   } else {
-    headline = high - low < 3 ? `${warmth} and fairly steady` : "Temperatures go up and down";
+    headline = high - low < 3 ? `${warmth} and fairly steady` : `${low}–${high}°F through ${at(last)}`;
     narrative = high - low < 3
       ? `${opening} hold near ${start}°F through ${at(last)}.`
       : `${opening} vary between ${low} and ${high}°F through ${at(last)}, ending near ${end}°F.`;
@@ -80,15 +84,25 @@ function skyState(hour) {
 }
 
 function skyStory(hours, now, tomorrow, daily) {
-  const states = hours.map(hour => ({ hour, state: skyState(hour) }));
+  const states = hours.map(hour => {
+    let state = skyState(hour);
+    const chance = percent(hour.precipProbability);
+    // A rain code alone must not spotlight a known minimal rain chance.
+    // Missing probability remains unknown rather than being treated as zero.
+    if (state === "rain" && chance != null && chance < 20) {
+      state = skyState({ ...hour, weatherCode: null, weather_code: null });
+    }
+    return { hour, state };
+  });
   const at = hour => timeLabel(hour, now, tomorrow);
   const hazards = { storms: ["Thunderstorms are possible", "⛈️"], ice: ["Freezing rain or drizzle is possible", "🌧️"], snow: ["Snow is possible", "🌨️"], rain: ["Rain is possible", "🌧️"], fog: ["Fog may limit visibility", "🌫️"] };
   // Include impactful weather even when the first and last hours are clear.
   const hazard = ["storms", "ice", "snow", "rain", "fog"].map(kind => states.find(s => s.state === kind)).find(Boolean);
-  let text = "", emoji = null;
+  let text = "", emoji = null, headline = null;
   if (hazard) {
     [text, emoji] = hazards[hazard.state];
     text += ` around ${at(hazard.hour)}.`;
+    headline = text.slice(0, -1);
   } else {
     const first = states[0], last = states.at(-1);
     const descriptions = { clear: "Mostly clear skies", mixed: "A mix of clouds and clear breaks", cloudy: "Mostly cloudy skies" };
@@ -102,13 +116,14 @@ function skyStory(hours, now, tomorrow, daily) {
       if (["clear", "mixed"].includes(last.state) && isNightAt(timestamp(last.hour), daily)) emoji = "🌙";
     }
   }
-  const wet = hours.find(h => percent(h.precipProbability) >= 30);
+  const wet = hours.find(h => percent(h.precipProbability) >= 20);
   if (!hazard && wet) {
     if (states.every(s => s.state === "clear")) text = "Mostly clear skies to start.";
     text += `${text ? " " : ""}Rain ${percent(wet.precipProbability) >= 60 ? "is likely" : "is possible"} around ${at(wet)} (${Math.round(percent(wet.precipProbability))}% chance).`;
+    headline = `Rain ${percent(wet.precipProbability) >= 60 ? "likely" : "possible"} around ${at(wet)}`;
     emoji = isNightAt(timestamp(wet), daily) ? "🌧️" : "🌦️";
   }
-  return { text, emoji };
+  return { text, emoji, headline, impactful: Boolean(hazard || wet) };
 }
 
 function windStory(hours, now, tomorrow) {
@@ -150,7 +165,14 @@ export function forecastComfortCopy({ item = {}, forecast = {}, hourly = [], dai
   }
   const temperature = temperatureStory(temperatureHours, now, tomorrow);
   const sky = skyStory(hours, now, tomorrow, daily);
-  const weatherNarrative = [temperature.narrative, sky.text, windStory(hours, now, tomorrow)].filter(Boolean).join(" ");
+  const wind = windStory(hours, now, tomorrow);
+  const peakGust = hours.filter(h => number(h.windGust) != null).reduce((best, h) => !best || number(h.windGust) > number(best.windGust) ? h : best, null);
+  const windHeadline = peakGust && number(peakGust.windGust) >= 25
+    ? `Gusts near ${Math.round(number(peakGust.windGust))} mph around ${timeLabel(peakGust, now, tomorrow)}` : null;
+  temperature.headline = sky.headline || windHeadline || temperature.headline;
+  const weatherNarrative = (sky.impactful ? [sky.text, wind, temperature.narrative]
+    : windHeadline ? [wind, temperature.narrative, sky.text]
+    : [temperature.narrative, sky.text, wind]).filter(Boolean).join(" ");
   const dewpoints = hours.map(h => number(h.dewpointF)).filter(t=>t!=null);
   const winds = hours.map(h => number(h.windSpeed)).filter(t=>t!=null);
   return { headline: temperature.headline, weatherNarrative, narrative: weatherNarrative, bullets: [dewpoints.length ? `Dew points ${Math.round(Math.min(...dewpoints))}–${Math.round(Math.max(...dewpoints))}°F` : null, winds.length ? `Wind up to ${Math.round(Math.max(...winds))} mph` : null].filter(Boolean), emoji: sky.emoji || (temperature.hot ? "🥵" : "🙂"), caption: tomorrow ? "Tomorrow · period-average FEELSCORE" : "Current period · average FEELSCORE" };

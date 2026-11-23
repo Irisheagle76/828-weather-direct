@@ -37,6 +37,7 @@ test("Screenshot scenario explains warm afternoon becoming cooler with clearing 
 test("Afternoon warmup and evening cooldown retain the intervening peak", () => {
   const copy = forecastComfortCopy({ now: afternoon, hourly: series([78, 84, 80, 76, 72, 68, 65], { cloudCover: 15 }) });
   assert.match(copy.weatherNarrative, /78°F at 3 PM to near 84°F around 4 PM, then ease to 65°F by 9 PM/);
+  assert.equal(copy.headline, "Near 84°F around 4 PM, 65°F by 9 PM");
   assert.match(copy.weatherNarrative, /Mostly clear skies/);
 });
 
@@ -68,6 +69,8 @@ test("Thunderstorm hour is mentioned even between clear endpoints", () => {
   hourly[2].weatherCode = 95;
   const copy = forecastComfortCopy({ now: afternoon, hourly });
   assert.match(copy.weatherNarrative, /Thunderstorms are possible around 5 PM/);
+  assert.equal(copy.headline, "Thunderstorms are possible around 5 PM");
+  assert.ok(copy.weatherNarrative.startsWith("Thunderstorms"));
   assert.doesNotMatch(copy.weatherNarrative, /Mostly clear skies through|dry/);
   assert.equal(copy.emoji, "⛈️");
 });
@@ -221,8 +224,8 @@ test("A small rise on a cold day leads with the low afternoon peak", () => {
   hourly.forEach((h, i) => { h.cloudCover = i < 14 ? 90 : 10; });
   hourly[15].windGust = 26;
   const copy = forecastComfortCopy({ now: morning, hourly, horizonHours: 17 });
-  assert.equal(copy.headline, "Staying cold");
-  assert.equal(copy.weatherNarrative, "Temperatures top out near 42°F around 1 PM, then fall to 34°F by midnight. Clouds give way to mostly clear skies by midnight. A few gusts could reach 26 mph around 10 PM.");
+  assert.equal(copy.headline, "Gusts near 26 mph around 10 PM");
+  assert.equal(copy.weatherNarrative, "A few gusts could reach 26 mph around 10 PM. Temperatures top out near 42°F around 1 PM, then fall to 34°F by midnight. Clouds give way to mostly clear skies by midnight.");
 });
 
 test("Other cold temperature rebounds keep the cold headline", () => {
@@ -232,3 +235,30 @@ test("Other cold temperature rebounds keep the cold headline", () => {
     assert.match(copy.weatherNarrative, /40°F|42°F/);
   }
 });
+
+test("Rain below 20 percent stays out of the card even with a rain code", () => {
+  for (const precipProbability of [0, .1, .19, 19, 19.9]) {
+    for (const cloudCover of [null, 90]) {
+      const copy = forecastComfortCopy({ now: afternoon, hourly: series([70, 68, 65], { weatherCode: 61, precipProbability, cloudCover }) });
+      assert.doesNotMatch(copy.headline + copy.weatherNarrative + copy.brief, /rain|drizzle/i);
+      assert.ok(!["🌧️", "🌦️"].includes(copy.emoji));
+    }
+  }
+});
+
+test("Rain at 20 percent is eligible and timing skips earlier minimal chances", () => {
+  for (const chance of [.2, 20]) {
+    const hourly = series([70, 68, 65], { weatherCode: 61, precipProbability: .1 });
+    hourly[2].precipProbability = chance;
+    const copy = forecastComfortCopy({ now: afternoon, hourly });
+    assert.equal(copy.headline, "Rain is possible around 5 PM");
+    const probabilityOnly = forecastComfortCopy({ now: afternoon, hourly: series([70, 68], { precipProbability: chance }) });
+    assert.equal(probabilityOnly.headline, "Rain possible around 3 PM");
+  }
+});
+
+test("Rain with unknown probability is not mistaken for a minimal chance", () => {
+  const copy = forecastComfortCopy({ now: afternoon, hourly: series([70, 68], { weatherCode: 61 }) });
+  assert.match(copy.headline, /Rain is possible/);
+});
+
